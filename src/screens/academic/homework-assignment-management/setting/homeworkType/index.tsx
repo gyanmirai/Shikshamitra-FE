@@ -163,6 +163,7 @@ const HomeworkTypeCreation = () => {
           open={addHomeworkTypeDialog}
           onClose={handleClose}
           editData={selectedData}
+          existingTypes={homeworkTypeData?.data ?? []}
         />
       </CustomDialog>
 

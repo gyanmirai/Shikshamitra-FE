@@ -13,7 +13,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Grid, TextField, Typography, Autocomplete } from '@mui/material';
+import { Box, Grid, Checkbox, TextField, Typography, Autocomplete } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
@@ -278,8 +278,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       loading={isTableLoading || isFetchingSubjects}
                       getOptionLabel={(option: any) =>
                         option?.electiveGroupName ||
-                        option?.subjects?.[0]?.subjectName ||
                         option?.subjectName ||
+                        option?.subjects?.[0]?.subjectName ||
                         option?.name ||
                         ''
                       }
@@ -294,26 +294,65 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         return !!optId && optId === valId;
                       }}
                       size="small"
+                      disableCloseOnSelect
+                      renderOption={(optionProps, option, { selected }) => {
+                        const label =
+                          option?.electiveGroupName ||
+                          option?.subjectName ||
+                          option?.subjects?.[0]?.subjectName ||
+                          option?.name ||
+                          '';
+                        return (
+                          <li
+                            {...optionProps}
+                            key={
+                              option?.electiveGroupId ||
+                              option?.subjects?.[0]?.subjectId ||
+                              option?.id
+                            }
+                          >
+                            <Checkbox checked={selected} size="small" sx={{ mr: 0.5, p: 0.5 }} />
+                            {label}
+                          </li>
+                        );
+                      }}
                       value={formik.values.subjects}
                       onChange={(event, value) => {
-                        const normalizedSubjects = value.map((sub: any, index: number) => ({
-                          ...sub,
-                          subjectId:
-                            sub.electiveGroupId || sub?.subjects?.[0]?.subjectId || sub.subjectId,
-                          subjectName:
-                            sub?.electiveGroupName ||
-                            sub.subjects?.[0]?.subjectName ||
-                            sub.subjectName ||
-                            '',
-                          examDate: sub?.examDate || null,
-                          startTime: sub?.startTime || null,
-                          endTime: sub?.endTime || null,
-                          totalMarks: sub?.totalMarks ?? '',
-                          passingMarks: sub?.passingMarks ?? '',
-                          notes: sub?.notes || '',
-                          subjectCode: sub?.subjects?.[0]?.subjectCode || sub.subjectCode || '',
-                          subjectColor: sub?.subjectColor || '#9E9E9E',
-                        }));
+                        const normalizedSubjects = value.map((sub: any, index: number) => {
+                          const isElective = !!sub.electiveGroupId;
+                          return {
+                            ...sub,
+                            subjectId:
+                              sub.electiveGroupId || sub?.subjects?.[0]?.subjectId || sub.subjectId,
+                            subjectName:
+                              sub?.electiveGroupName ||
+                              sub.subjects?.[0]?.subjectName ||
+                              sub.subjectName ||
+                              '',
+                            examDate: sub?.examDate || null,
+                            startTime: sub?.startTime || null,
+                            endTime: sub?.endTime || null,
+                            totalMarks: sub?.totalMarks ?? '',
+                            passingMarks: sub?.passingMarks ?? '',
+                            notes: sub?.notes || '',
+                            // Elective groups have no meaningful single subjectCode
+                            subjectCode: isElective
+                              ? ''
+                              : sub?.subjects?.[0]?.subjectCode || sub.subjectCode || '',
+                            // API returns `color`, not `subjectColor` — map correctly
+                            subjectColor: sub?.color || sub?.subjectColor || '#9E9E9E',
+                            // Ensure schedulingMode is always initialized for elective groups
+                            schedulingMode:
+                              sub.schedulingMode ?? (isElective ? 'separate' : undefined),
+                            // Normalize nested subjects array: ensure each subject has subjectColor
+                            subjects: isElective
+                              ? (sub.subjects ?? []).map((s: any) => ({
+                                  ...s,
+                                  subjectColor: s.color || s.subjectColor || '#9E9E9E',
+                                }))
+                              : sub.subjects,
+                          };
+                        });
 
                         formik.setFieldValue('subjects', normalizedSubjects);
                         formik.setFieldTouched('subjects', false);

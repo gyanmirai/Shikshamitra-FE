@@ -28,9 +28,11 @@ import {
   Stack,
   Switch,
   Button,
+  Backdrop,
   TextField,
   Typography,
   DialogActions,
+  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 import {
@@ -404,9 +406,26 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   }, [setFieldValue, values.endDate, values.halfDay, values.startDate]);
 
   const requestedUnits = countLeaveUnits(values.startDate, values.endDate, values.halfDay);
+  const isLeaveRequestSubmitting = isSubmitting || isLoading || isApproveLoading || isRejectLoading;
 
   return (
     <>
+      <Backdrop
+        open={isLeaveRequestSubmitting}
+        sx={{
+          zIndex: (theme) => theme.zIndex.modal + 1,
+          color: 'primary.main',
+          backgroundColor: 'rgba(255, 255, 255, 0.45)',
+          backdropFilter: 'blur(2px)',
+        }}
+      >
+        <Stack spacing={1.5} alignItems="center">
+          <CircularProgress color="inherit" />
+          <Typography variant="body2" fontWeight={600} color="text.primary">
+            Submitting...
+          </Typography>
+        </Stack>
+      </Backdrop>
       <DialogScrollContent>
         <BackPopUpChecked initialValues={initialValues} currentValues={values}>
           <Grid container spacing={3}>
@@ -742,6 +761,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           variant="outlined"
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          disabled={isLeaveRequestSubmitting}
           onClick={(e) => {
             handleClose?.(e, false);
             resetForm();
@@ -751,7 +771,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         </Button>
         {!editData && (
           <LoadingButton
-            loading={isSubmitting || isLoading}
+            loading={isLeaveRequestSubmitting}
             startIcon={<Iconify icon={GlobalIcons.submit} width={20} height={20} />}
             onClick={(e: any) => {
               handleSubmit(e);
@@ -766,12 +786,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
         {editData && normalizeLeaveStatus(values.status) !== 'APPROVED' && (
           <LoadingButton
-            loading={isSubmitting || isApproveLoading || isRejectLoading}
+            loading={isLeaveRequestSubmitting}
             onClick={(e: any) => {
               handleSubmit(e);
             }}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
-            disabled={isSubmitting || isApproveLoading || isRejectLoading}
+            disabled={isLeaveRequestSubmitting}
             size="small"
           >
             {normalizeLeaveStatus(values.status) === 'REJECTED' ? 'Approve' : 'Update Status'}

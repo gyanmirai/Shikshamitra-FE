@@ -25,7 +25,6 @@ import {
 } from 'src/enums/assignment-submission-status';
 
 import AssignGrade from './assignMarksForm';
-import AssignMarksForText from './assignMarksForText';
 
 import type { IStudentSubmissionsProps } from '../type';
 import type { TStudentGrade } from '../../homeworkCreation/type';
@@ -36,6 +35,28 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   selectedDivision,
   selectedSubject,
 }) => {
+  const resolveTotalMarks = React.useCallback(
+    (row: any): number => {
+      const candidates = [
+        row?.totalMarks,
+        row?.assignmentTotalMarks,
+        row?.maxMarks,
+        selectedAssignment?.totalMarks,
+      ];
+
+      const parsed = candidates
+        .map((candidate) => Number(candidate))
+        .find((value) => Number.isFinite(value) && value > 0);
+
+      if (parsed !== undefined) {
+        return parsed;
+      }
+
+      return 25;
+    },
+    [selectedAssignment?.totalMarks]
+  );
+
   // Local state for selected students
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -104,7 +125,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         ].includes(row.status) && (
           <MenuItem
             onClick={() => {
-              setSelectedStudent(row as TStudentGrade);
+              setSelectedStudent({
+                ...(row as TStudentGrade),
+                totalMarks: resolveTotalMarks(row),
+              });
               viewSubmissionDialog.onTrue();
               pop.onClose();
             }}
@@ -118,7 +142,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         {row.status === AssignmentSubmissionStatus.Reviewed && (
           <MenuItem
             onClick={() => {
-              setSelectedStudent(row as TStudentGrade);
+              setSelectedStudent({
+                ...(row as TStudentGrade),
+                totalMarks: resolveTotalMarks(row),
+              });
               viewSubmissionDialog.onTrue();
               pop.onClose();
             }}
@@ -137,7 +164,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         )}
       </MenuList>
     ),
-    [viewSubmissionDialog]
+    [resolveTotalMarks, viewSubmissionDialog]
   );
 
   /**
@@ -280,7 +307,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               return (
                 <Box
                   onClick={() => {
-                    setSelectedStudent(row as TStudentGrade);
+                    setSelectedStudent({
+                      ...(row as TStudentGrade),
+                      totalMarks: resolveTotalMarks(row),
+                    });
                     viewSubmissionDialog.onTrue();
                   }}
                   sx={{
@@ -395,22 +425,14 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           </Box>
         }
         maxWidth="sm"
+        hasForm={false}
       >
-        {selectedAssignment?.submissionType === 1 ? (
-          <AssignGrade
-            data={selectedStudent}
-            onClose={handleClose}
-            isEdit
-            assignmentId={selectedAssignment?.id}
-          />
-        ) : (
-          <AssignMarksForText
-            data={selectedStudent}
-            onClose={handleClose}
-            isEdit
-            assignmentId={selectedAssignment?.id}
-          />
-        )}
+        <AssignGrade
+          data={selectedStudent}
+          onClose={handleClose}
+          isEdit
+          assignmentId={selectedAssignment?.id}
+        />
       </CustomDialog>
     </>
   );

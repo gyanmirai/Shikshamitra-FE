@@ -9,11 +9,14 @@ import {
   isAdminFromProfile,
   resolveLeaveCenterTab,
   isActiveEmployeeOption,
+  getLeaveAttachmentLabel,
   isDateWithinAcademicYear,
   getAcademicYearStartMonth,
   getLeaveCenterVisibleTabs,
   buildEmployeeSelectOptions,
+  APPLY_LEAVE_ROW_ACTION_LABELS,
   buildCreateLeaveRequestFormData,
+  buildLeaveAttachmentDownloadPath,
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
   shouldDisableMonthBeforeAcademicYearStart,
@@ -80,6 +83,23 @@ describe('leave request payload mapping', () => {
     });
 
     expect(formData.get('halfDay')).toBe('true');
+  });
+});
+
+describe('leave attachment helpers', () => {
+  it('builds HR and self attachment download paths', () => {
+    expect(buildLeaveAttachmentDownloadPath('leave-1', 'hr')).toBe(
+      '/leave-management/leave-1/attachment/download'
+    );
+    expect(buildLeaveAttachmentDownloadPath('leave-1', 'self')).toBe(
+      '/leave-management/my/leave-1/attachment/download'
+    );
+  });
+
+  it('uses attachment metadata for the link label when available', () => {
+    expect(getLeaveAttachmentLabel({ attachmentFileName: 'medical.pdf' })).toBe('medical.pdf');
+    expect(getLeaveAttachmentLabel({ id: '12345678-1234' })).toBe('leave-attachment-12345678');
+    expect(getLeaveAttachmentLabel({})).toBe('View attachment');
   });
 });
 
@@ -256,5 +276,13 @@ describe('leave center tab visibility', () => {
     expect(resolveLeaveCenterTab('balance', ['my-requests', 'balance'], 'my-requests')).toBe(
       'balance'
     );
+  });
+});
+
+describe('apply leave row actions', () => {
+  it('keeps approval actions out of My Requests', () => {
+    expect([...APPLY_LEAVE_ROW_ACTION_LABELS]).toEqual(['View', 'Cancel']);
+    expect(APPLY_LEAVE_ROW_ACTION_LABELS).not.toContain('Approve');
+    expect(APPLY_LEAVE_ROW_ACTION_LABELS).not.toContain('Reject');
   });
 });

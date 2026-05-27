@@ -7,6 +7,7 @@ export interface IAssignmentTypeFormProps {
   open: { value: boolean; onFalse: () => void };
   onClose: (e: any, isSubmit: boolean) => void;
   editData?: IAssignmentType | null;
+  existingTypes?: IAssignmentType[];
 }
 
 export interface IAssignmentTypeTableProps {

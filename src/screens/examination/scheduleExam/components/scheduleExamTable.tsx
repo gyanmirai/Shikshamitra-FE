@@ -22,8 +22,6 @@ import {
   useUpdateExamStatusMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
-import ViewTimetableComp from './viewTimetableComp';
-
 import type { IExamFormValues, IScheduledExamTableProps } from '../type';
 
 const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
@@ -214,15 +212,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           columns={[
             { id: 'examName', label: 'Exam Name', align: 'left' },
             { id: 'examTypeName', label: 'Exam Type', align: 'left' },
-            {
-              id: 'standardName',
-              label: 'Class',
-              align: 'left',
-              filterType: 'number',
-              children: (row): React.ReactNode => (
-                <ViewTimetableComp examData={row as IExamFormValues} />
-              ),
-            },
+            { id: 'standardName', label: 'Class', align: 'left', filterType: 'number' },
             {
               id: 'divisions',
               label: 'Divisions',
@@ -245,9 +235,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                   <ThreeDotsActions
                     actions={(prop) => actions({ ...prop, row })}
                     placement="right-top"
-                    // showViewIcon
+                    showViewIcon
                     showDeleteIcon
                     showEditIcon
+                    handleViewClick={() => onViewTimetable?.(row as IExamFormValues)}
                     handleDeleteClick={() => {
                       onDelete?.(row as IExamFormValues);
                     }}
@@ -291,15 +282,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           columns={[
             { id: 'examName', label: 'Exam Name', align: 'left', sticky: true },
             { id: 'examType', label: 'Exam Type', align: 'left' },
-            {
-              id: 'className',
-              label: 'Class',
-              align: 'left',
-              filterType: 'number',
-              children: (row): React.ReactNode => (
-                <ViewTimetableComp examData={row as IExamFormValues} />
-              ),
-            },
+            { id: 'className', label: 'Class', align: 'left', filterType: 'number' },
             {
               id: 'divisions',
               label: 'Divisions',

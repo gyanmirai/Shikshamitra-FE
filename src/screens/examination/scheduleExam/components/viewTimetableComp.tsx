@@ -1,7 +1,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { Box, Typography } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetExamScheduleQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
@@ -24,6 +24,34 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
 
   if (!examData) return null;
 
+  // Normalize subjects from the schedule API response.
+  // Elective group entries: expand each electiveGroupSubject into its own row,
+  // falling back to group-level schedule data (backend stores schedule at group level).
+  const normalizedSubjects = (scheduleDetails?.subjects || []).flatMap((s: any) => {
+    if (
+      s.electiveGroupId &&
+      Array.isArray(s.electiveGroupSubjects) &&
+      s.electiveGroupSubjects.length > 0
+    ) {
+      return s.electiveGroupSubjects.map((sub: any) => ({
+        subjectId: sub.subjectId,
+        subjectName: sub.subjectName || '',
+        subjectCode: sub.subjectCode || sub.code || '',
+        subjectColor: sub.color || sub.subjectColor || s.electiveGroupColor || '#9E9E9E',
+        electiveGroupName: s.electiveGroupName || '',
+        // Per-subject schedule if set; otherwise fall back to group-level
+        examDate: sub.examDate ?? s.examDate,
+        startTime: sub.startTime ?? s.startTime,
+        endTime: sub.endTime ?? s.endTime,
+        totalMarks: sub.totalMarks ?? s.totalMarks,
+        passingMarks: sub.passingMarks ?? s.passingMarks,
+        notes: sub.notes ?? s.notes,
+      }));
+    }
+    // Core subject
+    return [{ ...s, subjectColor: s.color || s.subjectColor || '#9E9E9E' }];
+  });
+
   return (
     <CustomizableTable
       tableId="subjects-table"
@@ -41,7 +69,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           isSort: true,
           render(value, row) {
             return (
-              <Box key={value.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Box
                   sx={{
                     width: 4,
@@ -50,9 +78,21 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
                     backgroundColor: row.subjectColor,
                   }}
                 />
-                <Typography variant="caption">
-                  {value} ({row.subjectCode})
-                </Typography>
+                <Box>
+                  <Typography variant="caption" display="block">
+                    {value}
+                    {row.subjectCode ? ` (${row.subjectCode})` : ''}
+                  </Typography>
+                  {row.electiveGroupName && (
+                    <Chip
+                      label={row.electiveGroupName}
+                      size="small"
+                      color="warning"
+                      variant="soft"
+                      sx={{ fontSize: '0.62rem', height: 16, mt: 0.25 }}
+                    />
+                  )}
+                </Box>
               </Box>
             );
           },
@@ -64,11 +104,14 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           isFilter: true,
           filterType: 'date',
           isSort: true,
-          render: (value) => (
-            <Typography variant="caption" gutterBottom>
-              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
-            </Typography>
-          ),
+          render: (value) => {
+            const d = dayjs(value);
+            return (
+              <Typography variant="caption" gutterBottom>
+                {d.isValid() ? d.format('DD-MM-YYYY') : '-'}
+              </Typography>
+            );
+          },
         },
         {
           id: 'startTime',
@@ -76,11 +119,14 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           align: 'left',
           isFilter: true,
           isSort: true,
-          render: (value) => (
-            <Typography variant="caption" gutterBottom>
-              {value ? dayjs(value).format('hh:mm A') : '-'}
-            </Typography>
-          ),
+          render: (value) => {
+            const d = dayjs(value);
+            return (
+              <Typography variant="caption" gutterBottom>
+                {d.isValid() ? d.format('hh:mm A') : '-'}
+              </Typography>
+            );
+          },
         },
         {
           id: 'endTime',
@@ -88,11 +134,14 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           align: 'left',
           isFilter: true,
           isSort: true,
-          render: (value) => (
-            <Typography variant="caption" gutterBottom>
-              {value ? dayjs(value).format('hh:mm A') : '-'}
-            </Typography>
-          ),
+          render: (value) => {
+            const d = dayjs(value);
+            return (
+              <Typography variant="caption" gutterBottom>
+                {d.isValid() ? d.format('hh:mm A') : '-'}
+              </Typography>
+            );
+          },
         },
         {
           id: 'totalMarks',
@@ -110,8 +159,16 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           isFilter: true,
           isSort: true,
         },
+        {
+          id: 'notes',
+          label: 'Notes',
+          align: 'left',
+          isFilter: true,
+          isSort: true,
+          render: (value: any) => <Typography variant="caption">{value || '-'}</Typography>,
+        },
       ]}
-      data={scheduleDetails?.subjects || []}
+      data={normalizedSubjects}
     />
   );
 };

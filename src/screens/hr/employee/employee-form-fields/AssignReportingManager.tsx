@@ -236,7 +236,12 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
   const theme = useTheme();
   const { setFieldValue } = formik;
 
-  const [employeeParams, setEmployeeParams] = useState({ page: 1, pageSize: 500, search: '' });
+  const [employeeParams, setEmployeeParams] = useState({
+    page: 1,
+    pageSize: 500,
+    search: '',
+    status: 'Active',
+  });
 
   // ── State 1: basic dropdown selection (lightweight list data) ──────────────
   const [selectedManager, setSelectedManager] = useState<any>(

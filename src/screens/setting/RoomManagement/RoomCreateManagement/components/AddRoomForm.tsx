@@ -150,6 +150,20 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
     );
   }, [buildings, formik.values.building]);
 
+  useEffect(() => {
+    const rows = Number(formik.values.benchesPerRow);
+    const cols = Number(formik.values.benchesPerColumn);
+    const total = rows * cols;
+    formik.setFieldValue('totalBenches', total > 0 ? total : '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.benchesPerRow, formik.values.benchesPerColumn]);
+
+  useEffect(() => {
+    const total = Number(formik.values.totalBenches) * Number(formik.values.benchCapacity);
+    formik.setFieldValue('capacity', total > 0 ? total : '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.totalBenches, formik.values.benchCapacity]);
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
@@ -177,24 +191,6 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     onBlur={formik.handleBlur}
                     error={formik.touched.roomName && Boolean(formik.errors.roomName)}
                     helperText={(formik.touched.roomName && formik.errors.roomName) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={formik.touched.capacity && !!formik.errors.capacity}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Capacity (Total) *"
-                    name="capacity"
-                    type="number"
-                    value={formik.values.capacity}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    inputProps={{ min: 0, max: 100 }}
-                    error={formik.touched.capacity && Boolean(formik.errors.capacity)}
-                    helperText={(formik.touched.capacity && formik.errors.capacity) as string}
                   />
                 </ShakingTextField>
               </Grid>
@@ -269,48 +265,6 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
             <SectionCard title="Benches Details">
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={formik.touched.totalBenches && !!formik.errors.totalBenches}
-                >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Total Benches *"
-                    name="totalBenches"
-                    type="number"
-                    value={formik.values.totalBenches}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.totalBenches && Boolean(formik.errors.totalBenches)}
-                    helperText={
-                      (formik.touched.totalBenches && formik.errors.totalBenches) as string
-                    }
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={formik.touched.benchCapacity && !!formik.errors.benchCapacity}
-                >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Bench Capacity *"
-                    name="benchCapacity"
-                    type="number"
-                    value={formik.values.benchCapacity}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.benchCapacity && Boolean(formik.errors.benchCapacity)}
-                    helperText={
-                      (formik.touched.benchCapacity && formik.errors.benchCapacity) as string
-                    }
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
                   error={formik.touched.benchesPerRow && !!formik.errors.benchesPerRow}
                 >
                   <TextField
@@ -349,6 +303,68 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     helperText={
                       (formik.touched.benchesPerColumn && formik.errors.benchesPerColumn) as string
                     }
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField
+                  error={formik.touched.benchCapacity && !!formik.errors.benchCapacity}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Bench Capacity *"
+                    name="benchCapacity"
+                    type="number"
+                    value={formik.values.benchCapacity}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.benchCapacity && Boolean(formik.errors.benchCapacity)}
+                    helperText={
+                      (formik.touched.benchCapacity && formik.errors.benchCapacity) as string
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField
+                  error={formik.touched.totalBenches && !!formik.errors.totalBenches}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Total Benches *"
+                    name="totalBenches"
+                    type="number"
+                    value={formik.values.totalBenches}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled
+                    error={formik.touched.totalBenches && Boolean(formik.errors.totalBenches)}
+                    helperText={
+                      (formik.touched.totalBenches && formik.errors.totalBenches) as string
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={formik.touched.capacity && !!formik.errors.capacity}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Capacity (Total) *"
+                    name="capacity"
+                    type="number"
+                    value={formik.values.capacity}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    inputProps={{ min: 0, max: 100 }}
+                    disabled
+                    error={formik.touched.capacity && Boolean(formik.errors.capacity)}
+                    helperText={(formik.touched.capacity && formik.errors.capacity) as string}
                   />
                 </ShakingTextField>
               </Grid>

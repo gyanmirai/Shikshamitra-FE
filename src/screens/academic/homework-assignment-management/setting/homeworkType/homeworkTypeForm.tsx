@@ -2,12 +2,12 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useRef, useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -22,8 +22,20 @@ import {
 
 import type { IHomeworkTypeFormProps } from './type';
 
-const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, editData }) => {
+const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
+  open,
+  onClose,
+  editData,
+  existingTypes = [],
+}) => {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const existingNames = useMemo(
+    () => new Set<string>(existingTypes.map((t) => t.homeworkTypeName.trim().toLowerCase())),
+    [existingTypes]
+  );
+  const existingNamesRef = useRef<Set<string>>(new Set());
+  existingNamesRef.current = existingNames;
 
   const [addHomeworkType, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -41,7 +53,15 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
-      homeworkTypeName: Yup.string().required('Name is required'),
+      homeworkTypeName: Yup.string()
+        .required('Name is required')
+        .test('unique-homework-type', 'This homework type already exists', (value) => {
+          if (!value?.trim()) return true;
+          const trimmed = value.trim().toLowerCase();
+          // Allow saving the same name when editing the current record
+          if (editData && editData.homeworkTypeName.trim().toLowerCase() === trimmed) return true;
+          return !existingNamesRef.current.has(trimmed);
+        }),
     }),
     onSubmit: async (values) => {
       try {

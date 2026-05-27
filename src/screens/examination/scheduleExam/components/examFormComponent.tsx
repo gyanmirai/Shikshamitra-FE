@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
-import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { Box, Chip, Tooltip } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -80,7 +79,10 @@ const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
         alignItems: 'center',
         borderBottom: '1px solid',
         borderColor: 'divider',
-        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+        bgcolor: 'background.paper',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
       }}
     >
       {examName && (
@@ -242,37 +244,53 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
   const allSteps = [SelectExam, ExamDetails, RoomDetails, ExamReviewStep4];
 
   return (
-    <CustomStepperWithFormik
-      initialValues={{ ...defaultExamFormValues, examId: editData?.examId || '' }}
-      steps={steps}
-      activeStep={activeStep}
-      handleBack={() => setActiveStep((prev) => prev - 1)}
-      validateOnChange={false}
-      validationSchema={stepValidationSchemas[activeStep]}
-      handleNext={(isLastStep, values, formik, setIsLoading) => {
-        handleSave(isLastStep, values, formik, setIsLoading, false);
-      }}
-      onSave={(isLastStep, values, formik, setIsLoading) => {
-        handleSave(isLastStep, values, formik, setIsLoading, true);
-      }}
-      onStepClick={(index) => {
-        if (editData) {
-          setActiveStep(index);
-        } else if (index < activeStep) {
-          setActiveStep(index);
-        }
-      }}
-      isDisabledLabel={!editData}
-      renderItem={({ formik, activeStep: step }) => (
-        <NewExamStepForm
-          activeStep={step}
-          formik={formik}
-          editData={editData}
-          allSteps={allSteps}
-          setActiveStep={setActiveStep}
-        />
-      )}
-    />
+    <Box
+      sx={(theme) => ({
+        width: '100%',
+        height: '100%',
+        '& .MuiStepper-root': {
+          pt: 2,
+          pb: 1.5,
+        },
+        ...theme.applyStyles('dark', {
+          '& .MuiStepConnector-line': {
+            borderColor: `${theme.vars.palette.grey[600]} !important`,
+          },
+        }),
+      })}
+    >
+      <CustomStepperWithFormik
+        initialValues={{ ...defaultExamFormValues, examId: editData?.examId || '' }}
+        steps={steps}
+        activeStep={activeStep}
+        handleBack={() => setActiveStep((prev) => prev - 1)}
+        validateOnChange={false}
+        validationSchema={stepValidationSchemas[activeStep]}
+        handleNext={(isLastStep, values, formik, setIsLoading) => {
+          handleSave(isLastStep, values, formik, setIsLoading, false);
+        }}
+        onSave={(isLastStep, values, formik, setIsLoading) => {
+          handleSave(isLastStep, values, formik, setIsLoading, true);
+        }}
+        onStepClick={(index) => {
+          if (editData) {
+            setActiveStep(index);
+          } else if (index < activeStep) {
+            setActiveStep(index);
+          }
+        }}
+        isDisabledLabel={!editData}
+        renderItem={({ formik, activeStep: step }) => (
+          <NewExamStepForm
+            activeStep={step}
+            formik={formik}
+            editData={editData}
+            allSteps={allSteps}
+            setActiveStep={setActiveStep}
+          />
+        )}
+      />
+    </Box>
   );
 };
 

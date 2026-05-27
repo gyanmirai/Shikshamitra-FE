@@ -9,26 +9,18 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useSession } from 'next-auth/react';
 import { useTheme } from '@mui/material/styles';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Chart, useChart } from 'src/components/chart';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import {
   useRejectLeaveRequestMutation,
   useApproveLeaveRequestMutation,
 } from 'src/redux/hr/leaveApi';
-import {
-  type HRDashboardSummary,
-  type HRDashboardInsight,
-  type HRDashboardCelebration,
-  type HRDashboardLeaveRequest,
-  buildHRDashboardDefaultParams,
-  useGetHRDashboardSummaryQuery,
-} from 'src/redux/hr/hrDashboardApi';
 import {
   Box,
   Card,
@@ -44,11 +36,21 @@ import {
   TextField,
   CardHeader,
   Typography,
-  IconButton,
   DialogTitle,
   DialogContent,
   DialogActions,
 } from '@mui/material';
+import {
+  type HRDashboardSummary,
+  type HRDashboardInsight,
+  parseHRDashboardPayload,
+  type HRDashboardCelebration,
+  type HRDashboardLeaveRequest,
+  useGetHRDashboardPreviewQuery,
+  useRefreshHRDashboardPreviewMutation,
+} from 'src/redux/hr/hrDashboardApi';
+
+import { HrDashboardPreviewShell } from './components/HrDashboardPreviewShell';
 
 const EmployeeProfileDashboard = dynamic(() => import('../employee/employee-dashboard'));
 
@@ -699,9 +701,27 @@ const StaffSnapshotCard = ({
 );
 
 const AdminDashboard = () => {
-  const dashboardParams = useMemo(() => buildHRDashboardDefaultParams(), []);
-  const { data, isLoading, isFetching, isError, refetch } =
-    useGetHRDashboardSummaryQuery(dashboardParams);
+  const {
+    data: preview,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useGetHRDashboardPreviewQuery('Main', { pollingInterval: 0 });
+  const [refreshPreview, { isLoading: isRefreshStarting }] = useRefreshHRDashboardPreviewMutation();
+  const data = useMemo(() => parseHRDashboardPayload<HRDashboardSummary>(preview), [preview]);
+
+  useEffect(() => {
+    if (preview?.status === 'Empty') {
+      refreshPreview('Main');
+    }
+  }, [preview?.status, refreshPreview]);
+
+  useEffect(() => {
+    if (preview?.status !== 'Refreshing') return undefined;
+    const id = window.setInterval(() => refetch(), 5000);
+    return () => window.clearInterval(id);
+  }, [preview?.status, refetch]);
 
   const metrics = useMemo<DashboardMetric[]>(() => {
     if (!data) return [];
@@ -776,7 +796,7 @@ const AdminDashboard = () => {
     return <DashboardSkeleton />;
   }
 
-  if (isError || !data) {
+  if (isError) {
     return (
       <Alert
         severity="error"
@@ -791,28 +811,30 @@ const AdminDashboard = () => {
     );
   }
 
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pb: 2 }}>
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        alignItems={{ xs: 'stretch', md: 'flex-start' }}
-        justifyContent="space-between"
-        spacing={1.25}
+  if (!data) {
+    return (
+      <HrDashboardPreviewShell
+        title="HR Dashboard"
+        preview={preview}
+        isFetching={isFetching}
+        isRefreshing={isRefreshStarting}
+        onRefresh={() => refreshPreview('Main')}
       >
-        <Box>
-          <Typography variant="h4">HR Dashboard</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Real-time staff operations for {dayjs(data.date).format('DD MMM YYYY')}
-          </Typography>
-        </Box>
-        <Stack
-          direction="row"
-          spacing={0.75}
-          useFlexGap
-          flexWrap="wrap"
-          justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
-          sx={{ pt: { md: 0.25 } }}
-        >
+        <DashboardSkeleton />
+      </HrDashboardPreviewShell>
+    );
+  }
+
+  return (
+    <HrDashboardPreviewShell
+      title="HR Dashboard"
+      subtitle={`Stored staff operations preview for ${dayjs(data.date).format('DD MMM YYYY')}`}
+      preview={preview}
+      isFetching={isFetching}
+      isRefreshing={isRefreshStarting}
+      onRefresh={() => refreshPreview('Main')}
+      actions={
+        <>
           <Button
             component={Link}
             href={hrPaths.employee.list}
@@ -833,21 +855,9 @@ const AdminDashboard = () => {
           >
             Reports
           </Button>
-          <IconButton
-            onClick={() => refetch()}
-            disabled={isFetching}
-            size="small"
-            sx={{
-              width: 36,
-              height: 36,
-              border: (theme) => `1px solid ${theme.palette.divider}`,
-            }}
-          >
-            <Iconify icon="solar:refresh-linear" />
-          </IconButton>
-        </Stack>
-      </Stack>
-
+        </>
+      }
+    >
       <Grid container spacing={1.5}>
         {metrics.map((metric) => (
           <Grid key={metric.title} size={{ xs: 12, sm: 6, md: 3 }}>
@@ -882,7 +892,7 @@ const AdminDashboard = () => {
           <StaffSnapshotCard employees={data.workforce.recentEmployees} />
         </Grid>
       </Grid>
-    </Box>
+    </HrDashboardPreviewShell>
   );
 };
 
