@@ -53,7 +53,18 @@ describe('HR policy UI utilities', () => {
   it('formats raw ISO timestamp values for version comparison fallback display', () => {
     expect(cleanVersionDisplayValue('20260525T10:19:04.4720646+00:00')).toContain('25 May 2026');
     expect(cleanVersionDisplayValue('20260525T10:19:04.4720646+00:00')).not.toContain('T');
+    expect(cleanVersionDisplayValue('20250601T00:00:00+00:00')).toContain('01 Jun 2025');
+    expect(cleanVersionDisplayValue('20250601T00:00:00+00:00')).not.toContain('T');
     expect(cleanVersionDisplayValue('2026-06-01T00:00:00')).toContain('01 Jun 2026');
     expect(cleanVersionDisplayValue('2026-06-01T00:00:00')).not.toContain('T');
+  });
+
+  it('hides raw references and raw payloads for version comparison fallback display', () => {
+    expect(cleanVersionDisplayValue('297f91e4-1d0c-4c6e-b823-7df6f0c8f9a7')).toBe(
+      'Unknown reference'
+    );
+    expect(cleanVersionDisplayValue('{"id":"297f91e4-1d0c-4c6e-b823-7df6f0c8f9a7"}')).toBe(
+      'ID: Unknown reference'
+    );
   });
 });

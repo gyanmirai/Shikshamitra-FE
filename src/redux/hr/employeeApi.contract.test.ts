@@ -4,6 +4,7 @@ import { employeeType } from 'src/redux/tagTypes';
 import {
   buildWorkExperienceUrl,
   buildEmployeeSubresourceUrl,
+  buildEmployeeListQueryParams,
   employeePayrollInvalidationTags,
 } from './employeeApi';
 
@@ -42,5 +43,29 @@ describe('employeeApi contracts', () => {
         employeeType.runPayroll,
       ])
     );
+  });
+
+  it('builds employee list params with boolean teaching filters and without empty values', () => {
+    expect(
+      buildEmployeeListQueryParams({
+        page: 2,
+        pageSize: 25,
+        search: '',
+        mediumStageId: '',
+        status: 'Active',
+        isTeaching: 'true',
+      })
+    ).toEqual({
+      page: 2,
+      pageSize: 25,
+      status: 'Active',
+      isTeaching: true,
+    });
+
+    expect(buildEmployeeListQueryParams({ isTeaching: false })).toEqual({
+      page: 1,
+      pageSize: 10,
+      isTeaching: false,
+    });
   });
 });

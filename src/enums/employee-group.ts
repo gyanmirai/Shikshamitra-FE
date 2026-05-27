@@ -9,10 +9,10 @@ export const EmployeeGroupTypeArray = Array.from(
 export const EmployeeGroupTypeFilter = [
   {
     label: 'Teaching',
-    value: EmployeeGroupType.Teaching,
+    value: true,
   },
   {
     label: 'Non Teaching',
-    value: EmployeeGroupType['Non Teaching'],
+    value: false,
   },
 ];
