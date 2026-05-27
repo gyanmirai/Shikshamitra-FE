@@ -17,6 +17,7 @@ export interface FeeHeadGroupProps {
   selectedMonths: string[];
   formik: RefundFormik;
   showValidation: boolean;
+  mode?: 'refund' | 'adjustment';
   onToggleMonth: (month: string, dueFeeId: string) => void;
   onToggleAll: () => void;
 }
@@ -26,10 +27,12 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   selectedMonths,
   formik,
   showValidation,
+  mode = 'refund',
   onToggleMonth,
   onToggleAll,
 }): React.ReactElement => {
   const theme = useTheme();
+  const isAdj = mode === 'adjustment';
   const [open, setOpen] = useState(true);
 
   /**
@@ -117,7 +120,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
 
       <Collapse in={open} timeout={250}>
         <Divider />
-        <RefundColHeader />
+        <RefundColHeader mode={mode} />
 
         {visibleItems.map((item, idx) => {
           const refundable = Math.max(0, item.refundable);
@@ -162,7 +165,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
                 </strong>
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Max refundable:{' '}
+                {isAdj ? 'Max adjustable' : 'Max refundable'}:{' '}
                 <strong style={{ color: theme.palette.success.main }}>
                   {formatCurrency(totalRefundable)}
                 </strong>
@@ -174,7 +177,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
                   fontWeight={700}
                   sx={{ fontVariantNumeric: 'tabular-nums' }}
                 >
-                  Refund: {formatCurrency(totalRefundInput)}
+                  {isAdj ? 'Adjustment' : 'Refund'}: {formatCurrency(totalRefundInput)}
                 </Typography>
               )}
             </Box>

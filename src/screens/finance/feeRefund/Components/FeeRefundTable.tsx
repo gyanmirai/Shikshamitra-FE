@@ -166,7 +166,7 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
             maxWidth: 150,
           },
           {
-            id: 'standardDivision',
+            id: 'class',
             label: 'Class/Div',
             isFilter: true,
             align: 'left',
@@ -174,7 +174,7 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
             minWidth: 100,
             maxWidth: 150,
             render(value, row) {
-              return `${row.standard} / ${row.division}`;
+              return `${row.class} / ${row.division}`;
             },
           },
           {

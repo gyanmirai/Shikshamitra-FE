@@ -9,9 +9,12 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import type { RefundFormik, IFeeHeadPayment } from '../types';
 import type { IFeeHeadRefundItem } from '../initialValuesAndValidation';
 
+type RefundMode = 'refund' | 'adjustment';
+
 interface OverallSummaryCardProps {
   feeHeads: IFeeHeadPayment[];
   formik: RefundFormik;
+  mode?: RefundMode;
 }
 
 interface ISummaryTotals {
@@ -25,7 +28,9 @@ interface ISummaryTotals {
 const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
   feeHeads,
   formik,
+  mode = 'refund',
 }): React.ReactElement => {
+  const isAdj = mode === 'adjustment';
   const theme = useTheme();
 
   /**
@@ -82,27 +87,27 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
       highlight: false,
     },
     {
-      label: 'Already Refunded',
+      label: isAdj ? 'Already Adjusted' : 'Already Refunded',
       value: totalRefunded,
       icon: 'solar:arrow-left-up-bold',
       accent: theme.palette.warning.dark,
       accentBg: alpha(theme.palette.warning.main, 0.07),
       accentBorder: alpha(theme.palette.warning.main, 0.2),
-      sub: 'Previous refunds',
+      sub: isAdj ? 'Previous adjustments' : 'Previous refunds',
       highlight: false,
     },
     {
-      label: 'Max Refundable',
+      label: isAdj ? 'Max Adjustable' : 'Max Refundable',
       value: totalRefundable,
       icon: 'solar:shield-check-bold',
       accent: theme.palette.success.main,
       accentBg: alpha(theme.palette.success.main, 0.07),
       accentBorder: alpha(theme.palette.success.main, 0.2),
-      sub: 'Available to refund',
+      sub: isAdj ? 'Available to adjust' : 'Available to refund',
       highlight: false,
     },
     {
-      label: 'Refund Requested',
+      label: isAdj ? 'Adjustment Requested' : 'Refund Requested',
       value: totalRefundInput,
       icon: 'solar:money-bag-bold',
       accent: theme.palette.primary.main,
@@ -130,7 +135,7 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
           color="text.secondary"
           sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 10 }}
         >
-          Refund Summary
+          {isAdj ? 'Adjustment Summary' : 'Refund Summary'}
         </Typography>
         {totalSelectedMonths > 0 && (
           <Chip
