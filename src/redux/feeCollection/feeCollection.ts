@@ -178,18 +178,13 @@ export interface StudentFeeDetailsDto {
 
 // ─── Collect fee input types ──────────────────────────────────────────────────
 
-export interface DueFeeAllocation {
+export interface DueFeePayment {
   dueFeeId: string;
-  amount: number;
-}
-
-export interface SelectedFeeHead {
   feeHeadId: string;
   amount: number;
-  allocations?: DueFeeAllocation[];
 }
 
-export interface SelectedCharge {
+export interface ChargePayment {
   chargeId: string;
   amount: number;
 }
@@ -203,17 +198,18 @@ export interface FeePayment {
 export interface CollectFeeInput {
   studentId: string;
   academicYearId: string;
-  totalAmount: number;
-  receivedAmount?: number;
   notes?: string;
-  selectedFeeHeads: SelectedFeeHead[];
-  selectedCharges?: SelectedCharge[];
+  bankReceiptConfirmed?: boolean;
+  dueFeePayments: DueFeePayment[];
+  chargePayments: ChargePayment[];
   payments: FeePayment[];
 }
 
 export interface CollectFeeOutput {
   id: string;
   receiptNumber: string;
+  feeReceiptNumber?: string;
+  feeReceiptId?: string;
   studentId: string;
   academicYearId: string;
   totalAmount: number;
@@ -224,6 +220,8 @@ export interface CollectFeeOutput {
   receiptUrl?: string;
   paidFeeHeads: { feeHeadId: string; feeHeadName: string; amountPaid: number }[];
   paidCharges?: { chargeId: string; chargeName: string; amountPaid: number }[];
+  receivedAmount: number;
+  paidDueFees: { dueFeeId: string; feeHeadId: string; amountPaid: number }[];
 }
 
 // ─── RTK Query slice ──────────────────────────────────────────────────────────

@@ -66,6 +66,11 @@ import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
 import { StudentFeeSummaryCard } from '../Components/StudentFeesSummaryCard';
 import FeeCollectionPreviewDialog from './preview/FeeCollectionPreviewDialog';
 import FeeLedgerFilterBar, { FEE_LEDGER_INITIAL_FILTERS } from './FeeLedgerFilterBar';
+import {
+  allocatePayment,
+  type AllocatedFeeRow,
+  type AllocatedChargeRow,
+} from './preview/paymentAllocationUtils';
 
 import type { FeeLedgerFilters } from './FeeLedgerFilterBar';
 import type {
@@ -505,59 +510,65 @@ const FeeCollectComponentForm = ({
   // Final submission: collects fee and generates receipt immediately
   const handleFinalCollect = async () => {
     try {
-      const feeHeadGroups: Record<
-        string,
-        { amount: number; allocations: { dueFeeId: string; amount: number }[] }
-      > = {};
-      formik.values.selectedItems.forEach((item) => {
-        if (!feeHeadGroups[item.feeHeadId]) {
-          feeHeadGroups[item.feeHeadId] = { amount: 0, allocations: [] };
-        }
-        feeHeadGroups[item.feeHeadId].amount += item.dueAmount;
-
-        // period format is "YYYY-MM" (e.g. "2026-06"), dueFeeIdMap key uses 0-based FeeMonth
-        const [yearStr, monthStr] = item.period.split('-');
-        const feeMonthIdx = Number(monthStr) - 1; // convert 1-based to 0-based FeeMonth
-        const dueFeeId =
-          item.dueFeeId ?? dueFeeIdMap[`${item.feeHeadId}|${feeMonthIdx}|${yearStr}`];
-        if (dueFeeId) {
-          feeHeadGroups[item.feeHeadId].allocations.push({ dueFeeId, amount: item.dueAmount });
-        }
-      });
-
       const receivedAmount = Number(
         String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, '')
       );
 
+      const paymentMethodNum = Number(
+        Object.entries(PaymentMethodLabels).find(
+          ([, label]) => label === formik.values.payment.paymentMethod
+        )?.[0] ?? 0
+      );
+
+      const isCashierDecided =
+        paymentMethodNum !== 0 && paymentMethodNum !== 1 && paymentMethodNum !== 2;
+
+      const allocation = allocatePayment(
+        formik.values.selectedItems,
+        chargesData.filter((c) => formik.values.charges.includes(c.chargeId)),
+        feeHeadMap,
+        receivedAmount
+      );
+
+      const dueFeePayments = allocation.allocatedRows
+        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.paidAmount > 0)
+        .map((r) => {
+          const matchingItem = formik.values.selectedItems.find(
+            (item) => `${item.feeHeadId}-${item.period}` === r.key
+          );
+          if (!matchingItem) {
+            throw new Error(`Matching item not found for key ${r.key}`);
+          }
+          const [yearStr, monthStr] = matchingItem.period.split('-');
+          const feeMonthIdx = Number(monthStr) - 1;
+          const dueFeeId =
+            matchingItem.dueFeeId ??
+            dueFeeIdMap[`${matchingItem.feeHeadId}|${feeMonthIdx}|${yearStr}`];
+
+          return {
+            dueFeeId,
+            feeHeadId: matchingItem.feeHeadId,
+            amount: r.paidAmount,
+          };
+        });
+
+      const chargePayments = allocation.allocatedRows
+        .filter((r): r is AllocatedChargeRow => r.type === 'charge' && r.paidAmount > 0)
+        .map((r) => ({
+          chargeId: r.key,
+          amount: r.paidAmount,
+        }));
+
       await collectFee({
         studentId: String(student?.id ?? ''),
         academicYearId: currentYear?.id ?? '',
-        totalAmount: subtotal,
-        receivedAmount,
         notes: formik.values.remarks ?? undefined,
-        selectedFeeHeads: Object.entries(feeHeadGroups).map(
-          ([feeHeadId, group]: [
-            string,
-            { amount: number; allocations: { dueFeeId: string; amount: number }[] },
-          ]) => ({
-            feeHeadId,
-            amount: group.amount,
-            allocations: group.allocations.length > 0 ? group.allocations : undefined,
-          })
-        ),
-        selectedCharges:
-          formik.values.charges.length > 0
-            ? chargesData
-                .filter((c) => formik.values.charges.includes(c.chargeId))
-                .map((c) => ({ chargeId: c.chargeId, amount: c.amount }))
-            : undefined,
+        bankReceiptConfirmed: isCashierDecided ? true : undefined,
+        dueFeePayments,
+        chargePayments,
         payments: [
           {
-            paymentMethod: Number(
-              Object.entries(PaymentMethodLabels).find(
-                ([, label]) => label === formik.values.payment.paymentMethod
-              )?.[0] ?? 0
-            ),
+            paymentMethod: paymentMethodNum,
             amount: receivedAmount,
             details: Object.fromEntries(
               Object.entries(formik.values.payment.details)
@@ -571,7 +582,8 @@ const FeeCollectComponentForm = ({
       toast.success('Fee collected successfully');
       setFinalReviewOpen(false);
       onCancel?.(null, true);
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error('Failed to collect fee. Please try again.');
       setFinalReviewOpen(false);
     }
@@ -580,62 +592,68 @@ const FeeCollectComponentForm = ({
   // Save as pending verification (non-cash): calls API with pending status
   const handleSavePending = async () => {
     try {
-      const feeHeadGroups: Record<
-        string,
-        { amount: number; allocations: { dueFeeId: string; amount: number }[] }
-      > = {};
-      formik.values.selectedItems.forEach((item) => {
-        if (!feeHeadGroups[item.feeHeadId]) {
-          feeHeadGroups[item.feeHeadId] = { amount: 0, allocations: [] };
-        }
-        feeHeadGroups[item.feeHeadId].amount += item.dueAmount;
-
-        // period format is "YYYY-MM" (e.g. "2026-06"), dueFeeIdMap key uses 0-based FeeMonth
-        const [yearStr, monthStr] = item.period.split('-');
-        const feeMonthIdx = Number(monthStr) - 1; // convert 1-based to 0-based FeeMonth
-        const dueFeeId =
-          item.dueFeeId ?? dueFeeIdMap[`${item.feeHeadId}|${feeMonthIdx}|${yearStr}`];
-        if (dueFeeId) {
-          feeHeadGroups[item.feeHeadId].allocations.push({ dueFeeId, amount: item.dueAmount });
-        }
-      });
-
       const receivedAmount = Number(
         String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, '')
       );
 
+      const paymentMethodNum = Number(
+        Object.entries(PaymentMethodLabels).find(
+          ([, label]) => label === formik.values.payment.paymentMethod
+        )?.[0] ?? 0
+      );
+
+      const isCashierDecided =
+        paymentMethodNum !== 0 && paymentMethodNum !== 1 && paymentMethodNum !== 2;
+
+      const allocation = allocatePayment(
+        formik.values.selectedItems,
+        chargesData.filter((c) => formik.values.charges.includes(c.chargeId)),
+        feeHeadMap,
+        receivedAmount
+      );
+
+      const dueFeePayments = allocation.allocatedRows
+        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.paidAmount > 0)
+        .map((r) => {
+          const matchingItem = formik.values.selectedItems.find(
+            (item) => `${item.feeHeadId}-${item.period}` === r.key
+          );
+          if (!matchingItem) {
+            throw new Error(`Matching item not found for key ${r.key}`);
+          }
+          const [yearStr, monthStr] = matchingItem.period.split('-');
+          const feeMonthIdx = Number(monthStr) - 1;
+          const dueFeeId =
+            matchingItem.dueFeeId ??
+            dueFeeIdMap[`${matchingItem.feeHeadId}|${feeMonthIdx}|${yearStr}`];
+
+          return {
+            dueFeeId,
+            feeHeadId: matchingItem.feeHeadId,
+            amount: r.paidAmount,
+          };
+        });
+
+      const chargePayments = allocation.allocatedRows
+        .filter((r): r is AllocatedChargeRow => r.type === 'charge' && r.paidAmount > 0)
+        .map((r) => ({
+          chargeId: r.key,
+          amount: r.paidAmount,
+        }));
+
       await collectFee({
         studentId: String(student?.id ?? ''),
         academicYearId: currentYear?.id ?? '',
-        totalAmount: subtotal,
-        receivedAmount,
-        notes: `[PENDING_VERIFICATION] ${formik.values.remarks ?? ''}`.trim(),
-        selectedFeeHeads: Object.entries(feeHeadGroups).map(
-          ([feeHeadId, group]: [
-            string,
-            { amount: number; allocations: { dueFeeId: string; amount: number }[] },
-          ]) => ({
-            feeHeadId,
-            amount: group.amount,
-            allocations: group.allocations.length > 0 ? group.allocations : undefined,
-          })
-        ),
-        selectedCharges:
-          formik.values.charges.length > 0
-            ? chargesData
-                .filter((c) => formik.values.charges.includes(c.chargeId))
-                .map((c) => ({ chargeId: c.chargeId, amount: c.amount }))
-            : undefined,
+        notes: formik.values.remarks ?? undefined,
+        bankReceiptConfirmed: isCashierDecided ? false : undefined,
+        dueFeePayments,
+        chargePayments,
         payments: [
           {
-            paymentMethod: Number(
-              Object.entries(PaymentMethodLabels).find(
-                ([, label]) => label === formik.values.payment.paymentMethod
-              )?.[0] ?? 0
-            ),
+            paymentMethod: paymentMethodNum,
             amount: receivedAmount,
             details: Object.fromEntries(
-              Object.entries({ ...formik.values.payment.details, verificationStatus: 'pending' })
+              Object.entries(formik.values.payment.details)
                 .filter(([, v]) => v != null && v !== '')
                 .map(([k, v]) => [k, dayjs.isDayjs(v) ? v.format('YYYY-MM-DD') : String(v)])
             ),
@@ -646,7 +664,8 @@ const FeeCollectComponentForm = ({
       toast.success('Payment saved as pending verification');
       setFinalReviewOpen(false);
       onCancel?.(null, true);
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error('Failed to save payment. Please try again.');
       setFinalReviewOpen(false);
     }

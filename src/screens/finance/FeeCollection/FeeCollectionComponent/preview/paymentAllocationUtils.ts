@@ -48,7 +48,7 @@ const resolveAllocationStatus = (
   originalAmount: number
 ): FeeCollectionStatusType => {
   if (paidAmount <= 0) return FeeCollectionStatusType.Pending;
-  if (paidAmount < originalAmount) return FeeCollectionStatusType.Pending;
+  if (paidAmount < originalAmount) return FeeCollectionStatusType.Partial;
   return FeeCollectionStatusType.Paid;
 };
 
