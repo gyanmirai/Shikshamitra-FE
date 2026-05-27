@@ -26,6 +26,7 @@ export interface IFeeTableProps {
   onDelete: (row: IFeeData) => void;
   onCollectFee: (row: IFeeData) => void;
   onView: (row: IFeeData) => void;
+  onGiveAdjustment: (row: IFeeData) => void;
 }
 // Fee term details (monthly/quarterly/etc.)
 export interface IFeeTerm {
@@ -225,6 +226,7 @@ export interface FeeCollectionPayment {
 
 export interface FeeCollectionFormValues {
   studentId: string;
+  studentName: string;
   selectedItems: SelectedItem[];
   charges: string[]; // array of charge IDs
   subtotal: number;

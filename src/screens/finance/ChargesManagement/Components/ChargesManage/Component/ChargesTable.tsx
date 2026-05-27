@@ -247,7 +247,7 @@ const ChargesTable = ({
             sticky: true,
             render: (value, row) => (
               <Typography variant="caption" fontSize="13px">
-                {value || '-'} ({row.grNumber})
+                {value || '-'} {row.grNumber && `(${row.grNumber})`}
               </Typography>
             ),
           },

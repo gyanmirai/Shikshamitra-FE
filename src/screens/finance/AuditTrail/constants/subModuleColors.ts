@@ -11,3 +11,32 @@ export const FINANCE_AUDIT_SUBMODULE_COLORS: Record<string, string> = {
   [FinanceAuditSubModule.EXPENSE_TRACKING]: '#795548',
   [FinanceAuditSubModule.ADJUSTMENTS]: '#607D8B',
 };
+
+const COLOR_ALIASES: Record<string, string> = {
+  red: '#F44336',
+  purple: '#9C27B0',
+  blue: '#3F51B5',
+  brown: '#795548',
+  'light blue': '#00BCD4',
+  lightblue: '#00BCD4',
+  grey: '#607D8B',
+  gray: '#607D8B',
+};
+
+const normalizeAuditColor = (rawColor: string): string => {
+  const safeColor = (rawColor || '').trim();
+  if (!safeColor) return '#607D8B';
+
+  const colorKey = safeColor.toLowerCase();
+  if (COLOR_ALIASES[colorKey]) return COLOR_ALIASES[colorKey];
+
+  const compactKey = colorKey.replace(/\s+/g, '');
+  if (COLOR_ALIASES[compactKey]) return COLOR_ALIASES[compactKey];
+
+  return safeColor;
+};
+
+export const resolveFinanceAuditColor = (color?: string) => normalizeAuditColor(color || '#607D8B');
+
+export const getFinanceAuditSubModuleColor = (subModule?: string) =>
+  normalizeAuditColor(FINANCE_AUDIT_SUBMODULE_COLORS[subModule || ''] || '#607D8B');

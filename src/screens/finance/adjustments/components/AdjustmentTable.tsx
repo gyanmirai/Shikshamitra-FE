@@ -9,8 +9,8 @@ import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Tab, Card, Tabs, Avatar } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
@@ -162,24 +162,16 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
         columns={[
           {
             id: 'studentName',
-            label: 'Student Name',
+            label: 'Name(Gr No.)',
             align: 'left',
-            width: 180,
-            minWidth: 160,
+            width: 150,
+            minWidth: 150,
             maxWidth: 220,
             sticky: true,
-            render: (value: any, row: any) => (
-              <Box display="flex" alignItems="center" gap={1}>
-                <Avatar sx={{ width: 32, height: 32, fontSize: 13 }}>
-                  {String(value ?? '').charAt(0)}
-                </Avatar>
-                <Box>
-                  <Box sx={{ fontWeight: 600, fontSize: 13 }}>{value}</Box>
-                  {row.studentGrNo && (
-                    <Box sx={{ fontSize: 11, color: 'text.disabled' }}>{row.studentGrNo}</Box>
-                  )}
-                </Box>
-              </Box>
+            render: (value, row) => (
+              <Typography variant="caption" fontSize="13px">
+                {value || '-'} {row.grNumber && `(${row.grNumber})`}
+              </Typography>
             ),
           },
           {
@@ -187,8 +179,8 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             label: 'Class/Div',
             isFilter: true,
             align: 'left',
-            width: 120,
-            minWidth: 100,
+            width: 100,
+            minWidth: 80,
             maxWidth: 150,
             render: (_v: any, row: any) =>
               row.className && row.divisionName
@@ -202,7 +194,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             isFilter: true,
             filterType: 'number' as any,
             width: 100,
-            minWidth: 90,
+            minWidth: 100,
             maxWidth: 130,
           },
           {
@@ -237,21 +229,6 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             maxWidth: 200,
           },
           {
-            id: 'status',
-            label: 'Status',
-            align: 'left',
-            isFilter: true,
-            width: 110,
-            minWidth: 90,
-            maxWidth: 140,
-            sticky: true,
-            render: (value: any) => {
-              const statusKey = value as unknown as AdjustmentStatusEnum;
-              const color = (ADJUSTMENT_STATUS_COLORS[statusKey] ?? 'default') as LabelColor;
-              return <Label color={color}>{value}</Label>;
-            },
-          },
-          {
             id: 'requestedBy',
             label: 'Requested By',
             align: 'left',
@@ -276,6 +253,21 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
                     year: 'numeric',
                   })
                 : '-',
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            align: 'left',
+            isFilter: true,
+            width: 110,
+            minWidth: 90,
+            maxWidth: 140,
+            sticky: true,
+            render: (value: any) => {
+              const statusKey = value as unknown as AdjustmentStatusEnum;
+              const color = (ADJUSTMENT_STATUS_COLORS[statusKey] ?? 'default') as LabelColor;
+              return <Label color={color}>{value}</Label>;
+            },
           },
           {
             id: 'actions',

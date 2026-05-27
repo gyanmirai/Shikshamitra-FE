@@ -32,9 +32,8 @@ export const FeeMonthOptions = [
 
 export enum FeeCollectionStatusType {
   Pending,
+  Partial,
   Paid,
-  Overdue,
-  Reversed,
 }
 
 export const FeeCollectionStatusOptions = [
@@ -43,22 +42,17 @@ export const FeeCollectionStatusOptions = [
     value: FeeCollectionStatusType.Pending,
   },
   {
+    label: 'Partial',
+    value: FeeCollectionStatusType.Partial,
+  },
+  {
     label: 'Paid',
     value: FeeCollectionStatusType.Paid,
-  },
-  {
-    label: 'Overdue',
-    value: FeeCollectionStatusType.Overdue,
-  },
-  {
-    label: 'Reversed',
-    value: FeeCollectionStatusType.Reversed,
   },
 ];
 
 export const FeeCollectionStatusTypeColors: Record<FeeCollectionStatusType, LabelColor> = {
   [FeeCollectionStatusType.Paid]: 'success',
   [FeeCollectionStatusType.Pending]: 'warning',
-  [FeeCollectionStatusType.Overdue]: 'error',
-  [FeeCollectionStatusType.Reversed]: 'default',
+  [FeeCollectionStatusType.Partial]: 'info',
 };

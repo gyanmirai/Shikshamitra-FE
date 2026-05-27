@@ -8,11 +8,11 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useEffect } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -39,12 +39,18 @@ import {
 import type { IAdjustmentFormProps } from '../types/adjustment.types';
 import type { IAdjustmentFullFormValues } from '../types/adjustmentFormValues';
 
-const AdjustmentForm: React.FC<IAdjustmentFormProps> = ({ onCancel, onSubmit }) => {
+const AdjustmentForm: React.FC<
+  IAdjustmentFormProps & { hideStudentInfoForm?: boolean; initialData?: any }
+> = ({ onCancel, onSubmit, hideStudentInfoForm = false, initialData }) => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [hasFeePaymentRecords, setHasFeePaymentRecords] = useState(true);
 
   const formik = useFormik<IAdjustmentFullFormValues>({
-    initialValues: buildAdjustmentInitialValues(),
+    initialValues: {
+      ...buildAdjustmentInitialValues(),
+      ...initialData, // Pre-fill form with student fee structure details
+    },
     validationSchema: buildAdjustmentValidationSchema(),
     validateOnBlur: true,
     validateOnChange: true,
@@ -91,40 +97,42 @@ const AdjustmentForm: React.FC<IAdjustmentFormProps> = ({ onCancel, onSubmit }) 
       <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
         <Box sx={{ p: { xs: 1, md: 2 }, pb: 1 }}>
           <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-            {/* ── Student Information Card ── */}
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 1.5,
-                mb: 1.5,
-                borderRadius: 2,
-                transition: 'box-shadow 0.2s ease',
-                '&:hover': { boxShadow: 4 },
-              }}
-            >
-              <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                <Iconify
-                  icon="solar:users-group-rounded-bold-duotone"
-                  width={18}
-                  sx={{ color: 'primary.main' }}
-                />
-                <Box>
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    Student Information
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Select board, class, and student to proceed
-                  </Typography>
-                </Box>
-              </Stack>
-              <Divider sx={{ mb: 2 }} />
-              <AdjustmentGeneralInfoCard formik={formik} />
-            </Paper>
+            {!hideStudentInfoForm && (
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 1.5,
+                  mb: 1.5,
+                  borderRadius: 2,
+                  transition: 'box-shadow 0.2s ease',
+                  '&:hover': { boxShadow: 4 },
+                }}
+              >
+                <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                  <Iconify
+                    icon="solar:users-group-rounded-bold-duotone"
+                    width={18}
+                    sx={{ color: 'primary.main' }}
+                  />
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      Student Information
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Select board, class, and student to proceed
+                    </Typography>
+                  </Box>
+                </Stack>
+                <Divider sx={{ mb: 2 }} />
+                <AdjustmentGeneralInfoCard formik={formik} />
+              </Paper>
+            )}
 
             {/* ── Fee Head-wise Details (same as refund) ── */}
             <FeeHeadRefundTable
               formik={formik as any}
               mode="adjustment"
+              onHasRecords={setHasFeePaymentRecords}
               showError={
                 !!(formik.touched.feeHeadRefunds && formik.errors.feeHeadRefunds) &&
                 typeof formik.errors.feeHeadRefunds === 'string'
@@ -137,65 +145,67 @@ const AdjustmentForm: React.FC<IAdjustmentFormProps> = ({ onCancel, onSubmit }) 
             />
 
             {/* ── Adjustment Details ── */}
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 1.5,
-                mb: 1.5,
-                borderRadius: 2,
-                transition: 'box-shadow 0.2s ease',
-                '&:hover': { boxShadow: 4 },
-              }}
-            >
-              <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                <Iconify icon="mdi:tune-variant" width={18} sx={{ color: 'warning.main' }} />
-                <Box>
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    Adjustment Details
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Specify the type, amount, and reason for this adjustment
-                  </Typography>
-                </Box>
-              </Stack>
-              <Divider sx={{ mb: 2 }} />
+            {hasFeePaymentRecords && (
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 1.5,
+                  mb: 1.5,
+                  borderRadius: 2,
+                  transition: 'box-shadow 0.2s ease',
+                  '&:hover': { boxShadow: 4 },
+                }}
+              >
+                <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                  <Iconify icon="mdi:tune-variant" width={18} sx={{ color: 'warning.main' }} />
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      Adjustment Details
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Specify the type, amount, and reason for this adjustment
+                    </Typography>
+                  </Box>
+                </Stack>
+                <Divider sx={{ mb: 2 }} />
 
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField error={!!(touched.adjustmentType && errors.adjustmentType)}>
-                    <CustomSelect
-                      label="Adjustment Type *"
-                      options={ADJUSTMENT_TYPE_OPTIONS}
-                      labelKey="label"
-                      valueKey="value"
-                      value={values.adjustmentType}
-                      onChange={(val) => setFieldValue('adjustmentType', val)}
-                      error={!!errors.adjustmentType && touched.adjustmentType}
-                      helperText={(touched.adjustmentType && errors.adjustmentType) as string}
-                      formControlProps={{ fullWidth: true }}
-                    />
-                  </ShakingTextField>
-                </Grid>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <ShakingTextField error={!!(touched.adjustmentType && errors.adjustmentType)}>
+                      <CustomSelect
+                        label="Adjustment Type *"
+                        options={ADJUSTMENT_TYPE_OPTIONS}
+                        labelKey="label"
+                        valueKey="value"
+                        value={values.adjustmentType}
+                        onChange={(val) => setFieldValue('adjustmentType', val)}
+                        error={!!errors.adjustmentType && touched.adjustmentType}
+                        helperText={(touched.adjustmentType && errors.adjustmentType) as string}
+                        formControlProps={{ fullWidth: true }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-                <Grid size={{ xs: 12 }}>
-                  <ShakingTextField error={!!(touched.reason && errors.reason)}>
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={3}
-                      label="Reason *"
-                      name="reason"
-                      placeholder="Provide a clear reason for the adjustment..."
-                      value={values.reason}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      error={!!(touched.reason && errors.reason)}
-                      helperText={(touched.reason && errors.reason) as string}
-                    />
-                  </ShakingTextField>
+                  <Grid size={{ xs: 12 }}>
+                    <ShakingTextField error={!!(touched.reason && errors.reason)}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        label="Reason *"
+                        name="reason"
+                        placeholder="Provide a clear reason for the adjustment..."
+                        value={values.reason}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={!!(touched.reason && errors.reason)}
+                        helperText={(touched.reason && errors.reason) as string}
+                      />
+                    </ShakingTextField>
+                  </Grid>
                 </Grid>
-              </Grid>
-            </Paper>
+              </Paper>
+            )}
           </BackPopUpChecked>
         </Box>
       </Scrollbar>
@@ -218,7 +228,6 @@ const AdjustmentForm: React.FC<IAdjustmentFormProps> = ({ onCancel, onSubmit }) 
           flexWrap="wrap"
           gap={1.5}
         >
-          {/* Left: selection summary */}
           <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
             {totalSelectedMonths > 0 ? (
               <>
@@ -247,7 +256,6 @@ const AdjustmentForm: React.FC<IAdjustmentFormProps> = ({ onCancel, onSubmit }) 
             )}
           </Box>
 
-          {/* Right: actions */}
           <Box display="flex" alignItems="center" gap={1.5}>
             <Divider
               orientation="vertical"
