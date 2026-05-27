@@ -269,6 +269,11 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
                 const selectedRooms = roomOptions.filter((r: any) =>
                   selectedRoomIds.includes(r.id)
                 );
+                const hasError =
+                  formik.values.isRoomAssign &&
+                  formik.submitCount > 0 &&
+                  selectedRoomIds.length === 0;
+                const helperText = hasError ? 'Room is required' : '';
 
                 return (
                   <Autocomplete
@@ -306,7 +311,13 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
                     }
                     sx={{ minWidth: { xs: 220, md: 380 } }}
                     renderInput={(params) => (
-                      <TextField {...params} label="Select Room(s)" size="small" />
+                      <TextField
+                        {...params}
+                        label="Select Room(s)"
+                        size="small"
+                        error={hasError}
+                        helperText={helperText}
+                      />
                     )}
                   />
                 );

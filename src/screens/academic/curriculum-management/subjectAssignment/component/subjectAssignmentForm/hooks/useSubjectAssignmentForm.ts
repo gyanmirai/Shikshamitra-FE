@@ -142,53 +142,76 @@ export function useSubjectAssignmentForm({
   /**
    * Memoization Justification:
    * Checks if a subject/group already exists in the table to prevent duplicates.
-   * Depends on subjectTableData which changes on refetch — memoizing avoids
-   * recalculating the filter closure on every render.
+   * Accepts the full option item to support cross-type duplicate detection:
+   * - Core subject blocked if already assigned as Core OR within an existing Elective group
+   * - Elective group blocked if already assigned OR if any of its subjects are assigned as Core
+   * In edit mode, the record being edited is excluded so its own subjects remain selectable.
    */
   const checkIfSubjectExists = useCallback(
-    (currentId: string) =>
-      subjectTableData?.data?.items?.some(
-        (subject: {
-          subjectType?: number;
-          subjects?: Array<{ subjectId?: string }>;
-          electiveGroupId?: string;
-        }) => {
-          if (subject.subjectType === SubjectType.Core) {
-            return subject.subjects?.[0]?.subjectId === currentId;
+    (option: { id: string; subjectType: number; subjects?: Array<{ id: string }> }) => {
+      const items: Array<{
+        id?: string;
+        subjectType?: number;
+        subjects?: Array<{ subjectId?: string }>;
+        electiveGroupId?: string;
+      }> = subjectTableData?.data?.items || [];
+
+      const itemsToCheck = isEdit && data?.id ? items.filter((item) => item.id !== data.id) : items;
+
+      return itemsToCheck.some((item) => {
+        if (option.subjectType === SubjectType.Core) {
+          if (item.subjectType === SubjectType.Core) {
+            return item.subjects?.[0]?.subjectId === option.id;
           }
-          return subject.electiveGroupId === currentId;
+          // Already present inside an Elective group in another record
+          return item.subjects?.some((s) => s.subjectId === option.id) ?? false;
         }
-      ),
-    [subjectTableData?.data?.items]
+
+        // Elective group: already assigned as the same group in another record
+        if (item.electiveGroupId === option.id) return true;
+        // One or more of this group's subjects are already assigned as Core in another record
+        if (item.subjectType === SubjectType.Core) {
+          const groupSubjectIds = new Set((option.subjects || []).map((s) => s.id));
+          return item.subjects?.some((s) => groupSubjectIds.has(s.subjectId ?? '')) ?? false;
+        }
+        return false;
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [subjectTableData?.data?.items, isEdit, data?.id]
   );
 
   /**
    * Memoization Justification:
    * Transforms raw API response into dropdown-compatible option objects.
    * Prevents re-mapping on every render when source data hasn't changed.
+   * Filter is applied in both create and edit modes — edit mode relies on
+   * checkIfSubjectExists excluding the current record's own subjects.
    */
   const subjectsOptions = useMemo(
     () =>
-      (!isEdit
-        ? subjectOptionsData?.data?.filter((item: { id: string }) => !checkIfSubjectExists(item.id))
-        : subjectOptionsData?.data
-      )?.map(
-        (item: {
-          id: string;
-          name: string;
-          subjectType: number;
-          color: string;
-          subjects: unknown[];
-        }) => ({
-          ...item,
-          label: item.name,
-          value: item.id,
-          type: item.subjectType,
-          color: item.color,
-          subjects: item.subjects,
-        })
-      ) || [],
-    [isEdit, subjectOptionsData?.data, checkIfSubjectExists]
+      subjectOptionsData?.data
+        ?.filter(
+          (item: { id: string; subjectType: number; subjects?: Array<{ id: string }> }) =>
+            !checkIfSubjectExists(item)
+        )
+        ?.map(
+          (item: {
+            id: string;
+            name: string;
+            subjectType: number;
+            color: string;
+            subjects: unknown[];
+          }) => ({
+            ...item,
+            label: item.name,
+            value: item.id,
+            type: item.subjectType,
+            color: item.color,
+            subjects: item.subjects,
+          })
+        ) ?? [],
+    [subjectOptionsData?.data, checkIfSubjectExists]
   );
 
   /**

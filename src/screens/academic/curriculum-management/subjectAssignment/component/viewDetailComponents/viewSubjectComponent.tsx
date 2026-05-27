@@ -257,47 +257,53 @@ export const ViewSubject = ({ subject, classId, classes }: IViewSubjectProps) =>
           }}
         >
           {(subjectAssignmentData?.data?.subjects as ISubjectDetail[] | undefined)?.map(
-            (sub: ISubjectDetail) =>
-              expandedSubject === sub.subjectCode && (
-                <React.Fragment key={sub.subjectCode}>
-                  <Box
-                    sx={{
-                      px: 2,
-                      pt: 2,
-                      bgcolor: () => varAlpha(theme.palette.grey['500Channel'], 0.04),
-                      borderBottom: `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Tabs
-                      value={tabs.value}
-                      onChange={tabs.onChange}
+            (sub: ISubjectDetail) => {
+              // Ensure classId (standardId) is always populated for child components
+              // (assignment detail API sets standardId on the parent, not on each subject)
+              const enrichedSub: ISubjectDetail = sub.classId ? sub : { ...sub, classId };
+              return (
+                enrichedSub.subjectCode === expandedSubject && (
+                  <React.Fragment key={enrichedSub.subjectCode}>
+                    <Box
                       sx={{
-                        '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' },
-                        '& .MuiTab-root': { minHeight: 48, minWidth: 100, mr: 1 },
+                        px: 2,
+                        pt: 2,
+                        bgcolor: () => varAlpha(theme.palette.grey['500Channel'], 0.04),
+                        borderBottom: `1px solid ${theme.palette.divider}`,
                       }}
                     >
-                      {TABS.map((tab) => (
-                        <Tab
-                          key={tab.value}
-                          value={tab.value}
-                          icon={tab.icon}
-                          iconPosition="start"
-                          label={tab.label}
-                          disableRipple
-                        />
-                      ))}
-                    </Tabs>
-                  </Box>
+                      <Tabs
+                        value={tabs.value}
+                        onChange={tabs.onChange}
+                        sx={{
+                          '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' },
+                          '& .MuiTab-root': { minHeight: 48, minWidth: 100, mr: 1 },
+                        }}
+                      >
+                        {TABS.map((tab) => (
+                          <Tab
+                            key={tab.value}
+                            value={tab.value}
+                            icon={tab.icon}
+                            iconPosition="start"
+                            label={tab.label}
+                            disableRipple
+                          />
+                        ))}
+                      </Tabs>
+                    </Box>
 
-                  <Box sx={{ flexGrow: 1, overflow: 'hidden', p: 3 }}>
-                    <Scrollbar sx={{ height: '100%' }}>
-                      {currentActiveComponent?.component && (
-                        <currentActiveComponent.component tabs={tabs} subject={sub} />
-                      )}
-                    </Scrollbar>
-                  </Box>
-                </React.Fragment>
-              )
+                    <Box sx={{ flexGrow: 1, overflow: 'hidden', p: 3 }}>
+                      <Scrollbar sx={{ height: '100%' }}>
+                        {currentActiveComponent?.component && (
+                          <currentActiveComponent.component tabs={tabs} subject={enrichedSub} />
+                        )}
+                      </Scrollbar>
+                    </Box>
+                  </React.Fragment>
+                )
+              );
+            }
           )}
         </Card>
       </Grid>

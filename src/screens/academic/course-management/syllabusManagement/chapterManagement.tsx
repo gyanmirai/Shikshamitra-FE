@@ -208,6 +208,7 @@ const Subjects = () => {
             subject={subject}
             classId={classId}
             subjectId={subjectId}
+            existingChapters={chapterResponse || []}
           />
         </Card>
       ) : (

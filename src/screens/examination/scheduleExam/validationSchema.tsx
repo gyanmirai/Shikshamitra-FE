@@ -174,8 +174,62 @@ export const validationSchema = [
       }),
   }),
 
-  // Step 2: Additional validation (if needed)
-  yup.object().shape({}),
+  // Step 2: Room assignment validation
+  yup.object().shape({
+    roomDetails: yup
+      .mixed()
+      .test('room-assignment-required', 'Room is required', function (roomDetails) {
+        const values = this.parent as any;
+        if (!values?.isRoomAssign) return true;
+        const roomDetailsMap = (roomDetails ?? {}) as any;
+
+        const selectedDivisionIds: string[] = (values?.divisions ?? []).filter(
+          (id: string) => id !== 'all'
+        );
+        const allSubjects: any[] = values?.subjects ?? [];
+        let firstMissingPath: string | null = null;
+
+        const hasMissingRoom = allSubjects.some((subject) => {
+          // Elective group: validate each nested subject separately (roomDetails keyed by subjectId)
+          if (subject?.electiveGroupId && Array.isArray(subject?.subjects)) {
+            return subject.subjects.some((nested: any) => {
+              const nestedSubjectId = nested?.subjectId;
+              if (!nestedSubjectId) return false;
+
+              return selectedDivisionIds.some((divisionId) => {
+                const roomIds = roomDetailsMap?.[nestedSubjectId]?.[divisionId]?.roomIds ?? [];
+                const isMissing = !Array.isArray(roomIds) || roomIds.length === 0;
+                if (isMissing && !firstMissingPath) {
+                  firstMissingPath = `roomDetails.${nestedSubjectId}.${divisionId}.roomIds`;
+                }
+                return isMissing;
+              });
+            });
+          }
+
+          const subjectId = subject?.subjectId;
+          if (!subjectId) return false;
+
+          return selectedDivisionIds.some((divisionId) => {
+            const roomIds = roomDetailsMap?.[subjectId]?.[divisionId]?.roomIds ?? [];
+            const isMissing = !Array.isArray(roomIds) || roomIds.length === 0;
+            if (isMissing && !firstMissingPath) {
+              firstMissingPath = `roomDetails.${subjectId}.${divisionId}.roomIds`;
+            }
+            return isMissing;
+          });
+        });
+
+        if (hasMissingRoom && firstMissingPath) {
+          return this.createError({
+            path: firstMissingPath,
+            message: 'Room is required',
+          });
+        }
+
+        return true;
+      }),
+  }),
 
   // Step 3: Assign Teacher & Review
   yup.object().shape({}),
