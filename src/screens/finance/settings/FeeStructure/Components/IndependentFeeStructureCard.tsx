@@ -104,13 +104,19 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   const formik = useFormik({
     initialValues: {
       name: initialData.name,
-      feeHeads: initialData.feeHeads,
+      feeHeads: initialData.feeHeads.map((fh) => ({
+        ...fh,
+        // API returns `payableMonth`; the form field is `paybleMonth` (legacy typo) — normalise here
+        paybleMonth: fh.paybleMonth ?? (fh as any).payableMonth,
+        payableYear: fh.payableYear ?? (fh as any).payableYear,
+      })),
     },
     validationSchema: feeStructureSchema,
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: () => {},
   });
+  console.log('formik values', formik.values);
   const addFeeHeadDialog = useBoolean();
   const deleteDlg = useBoolean();
   const lockDlg = useBoolean();
@@ -220,10 +226,14 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         });
         const newId = saved._id ?? saved.id;
         setCardId(newId);
+        const savedFeeHeads = (saved.feeHeads ?? formik.values.feeHeads).map((fh: any) => ({
+          ...fh,
+          paybleMonth: fh.paybleMonth ?? fh.payableMonth,
+        }));
         formik.resetForm({
           values: {
             name: saved.name ?? formik.values.name,
-            feeHeads: saved.feeHeads ?? formik.values.feeHeads,
+            feeHeads: savedFeeHeads,
           },
         });
         setIsEditing(false);
@@ -236,10 +246,14 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
           classId: initialData.classId,
           body: { name: formik.values.name, feeHeads: feeHeadsPayload },
         });
+        const updatedFeeHeads = (saved?.feeHeads ?? formik.values.feeHeads).map((fh: any) => ({
+          ...fh,
+          paybleMonth: fh.paybleMonth ?? fh.payableMonth,
+        }));
         formik.resetForm({
           values: {
             name: saved?.name ?? formik.values.name,
-            feeHeads: saved?.feeHeads ?? formik.values.feeHeads,
+            feeHeads: updatedFeeHeads,
           },
         });
         setIsEditing(false);

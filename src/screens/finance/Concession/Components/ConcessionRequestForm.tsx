@@ -264,6 +264,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
       }
     },
   });
+  useEffect(() => {
+    formik.resetForm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear?.id]); // Log formik values on every change for debugging
 
   const { values, touched, errors, setFieldValue } = formik;
 
@@ -571,7 +575,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                 </Grid>
                 {/* 3. Fee Summary */}
                 {values.studentId && totalFees > 0 && (
-                  <Grid size={{ xs: 12 }}>
+                  <Grid size={{ xs: 12 }} pb={1}>
                     <Grid container spacing={2}>
                       {[
                         {

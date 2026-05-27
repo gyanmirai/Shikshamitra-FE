@@ -49,8 +49,10 @@ const CreditCardTable = ({
     () => [
       {
         id: 'studentName',
-        label: 'Student Name',
-        minWidth: '150px',
+        label: 'Name(Gr No.)',
+        width: 180,
+        minWidth: 150,
+        maxWidth: 220,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -64,7 +66,9 @@ const CreditCardTable = ({
       {
         id: 'board',
         label: 'Board/Medium',
-        minWidth: '120px',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -77,7 +81,9 @@ const CreditCardTable = ({
       {
         id: 'amount',
         label: 'Amount',
-        minWidth: '100px',
+        width: 110,
+        minWidth: 100,
+        maxWidth: 140,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -88,7 +94,9 @@ const CreditCardTable = ({
       {
         id: 'cardHolderName',
         label: 'Card Holder Name',
-        minWidth: '190px',
+        width: 210,
+        minWidth: 190,
+        maxWidth: 260,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -96,7 +104,9 @@ const CreditCardTable = ({
       {
         id: 'last4Digits',
         label: 'Last 4 Digits of Card',
-        minWidth: '180px',
+        width: 200,
+        minWidth: 180,
+        maxWidth: 240,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -104,7 +114,9 @@ const CreditCardTable = ({
       {
         id: 'transactionId',
         label: 'Transaction ID',
-        minWidth: '140px',
+        width: 160,
+        minWidth: 140,
+        maxWidth: 200,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -112,7 +124,9 @@ const CreditCardTable = ({
       {
         id: 'paymentDate',
         label: 'Payment Date',
-        minWidth: '140px',
+        width: 160,
+        minWidth: 140,
+        maxWidth: 200,
         align: 'left',
         isFilter: true,
         filterType: 'date',
@@ -120,7 +134,9 @@ const CreditCardTable = ({
       {
         id: 'class',
         label: 'Class',
-        minWidth: '80px',
+        width: 96,
+        minWidth: 80,
+        maxWidth: 120,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -133,7 +149,9 @@ const CreditCardTable = ({
       {
         id: 'rollNumber',
         label: 'Roll No.',
-        minWidth: '120px',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'number',
@@ -141,7 +159,9 @@ const CreditCardTable = ({
       {
         id: 'remarks',
         label: 'Remarks',
-        minWidth: '200px',
+        width: 220,
+        minWidth: 180,
+        maxWidth: 280,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -150,7 +170,9 @@ const CreditCardTable = ({
         id: 'status',
         sticky: true,
         label: 'Status',
-        minWidth: '100px',
+        width: 110,
+        minWidth: 100,
+        maxWidth: 140,
         align: 'left',
         isFilter: true,
         filterType: 'enum',
@@ -167,6 +189,9 @@ const CreditCardTable = ({
         isFilter: false,
         sticky: true,
         align: 'left',
+        width: 100,
+        minWidth: 80,
+        maxWidth: 120,
         render(value, row: any) {
           if (!canApproveReject) return null;
           return (
@@ -216,7 +241,7 @@ const CreditCardTable = ({
   );
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomizableTable
         tableId="credit-card-table"
         isLoading={isLoading}
@@ -249,7 +274,7 @@ const CreditCardTable = ({
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 

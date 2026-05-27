@@ -105,10 +105,12 @@ const FeeLedgerFilterBar = ({
 
   const feeHeadOptions = [
     { id: 'All', name: 'All' },
-    ...(studentFeeStructureData?.feeHeads?.map((fh: any) => ({
-      id: fh.feeHeadId,
-      name: fh.feeHeadName,
-    })) || []),
+    ...(studentFeeStructureData?.feeHeads ?? [])
+      .filter((fh: any) => fh.isSelected === true)
+      .map((fh: any) => ({
+        id: fh.feeHeadId,
+        name: fh.feeHeadName,
+      })),
   ];
 
   return (

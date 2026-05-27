@@ -56,8 +56,11 @@ const DemandDraftTable = ({
     () => [
       {
         id: 'studentName',
-        label: 'Student Name',
-        minWidth: '150px',
+        label: 'Name(Gr No.)',
+
+        width: 180,
+        minWidth: 150,
+        maxWidth: 220,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -71,7 +74,9 @@ const DemandDraftTable = ({
       {
         id: 'board',
         label: 'Board/Medium',
-        minWidth: '120px',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -84,7 +89,9 @@ const DemandDraftTable = ({
       {
         id: 'ddNumber',
         label: 'DD Number',
-        minWidth: '120px',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -92,7 +99,9 @@ const DemandDraftTable = ({
       {
         id: 'bankName',
         label: 'Bank Name',
-        minWidth: '130px',
+        width: 150,
+        minWidth: 130,
+        maxWidth: 190,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -100,7 +109,9 @@ const DemandDraftTable = ({
       {
         id: 'amount',
         label: 'Amount',
-        minWidth: '80px',
+        width: 96,
+        minWidth: 80,
+        maxWidth: 120,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -111,7 +122,9 @@ const DemandDraftTable = ({
       {
         id: 'receivedDDDate',
         label: 'DD Date',
-        minWidth: '100px',
+        width: 120,
+        minWidth: 100,
+        maxWidth: 160,
         align: 'left',
         isFilter: true,
         filterType: 'date',
@@ -119,7 +132,9 @@ const DemandDraftTable = ({
       {
         id: 'class',
         label: 'Class',
-        minWidth: '80px',
+        width: 96,
+        minWidth: 80,
+        maxWidth: 120,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -132,7 +147,9 @@ const DemandDraftTable = ({
       {
         id: 'rollNumber',
         label: 'Roll No.',
-        minWidth: '120px',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'number',
@@ -140,7 +157,9 @@ const DemandDraftTable = ({
       {
         id: 'remarks',
         label: 'Remarks',
-        minWidth: '200px',
+        width: 220,
+        minWidth: 180,
+        maxWidth: 280,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -149,7 +168,9 @@ const DemandDraftTable = ({
         id: 'status',
         sticky: true,
         label: 'Status',
-        minWidth: '100px',
+        width: 110,
+        minWidth: 100,
+        maxWidth: 140,
         align: 'left',
         isFilter: true,
         filterType: 'enum',
@@ -166,6 +187,9 @@ const DemandDraftTable = ({
         isFilter: false,
         sticky: true,
         align: 'left',
+        width: 100,
+        minWidth: 80,
+        maxWidth: 120,
         render(value, row: any) {
           if (!canApproveReject) return null;
           return (
@@ -215,7 +239,7 @@ const DemandDraftTable = ({
   );
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomizableTable
         isLoading={isLoading}
         noDataText={<>No Demand Draft Data Available </>}
@@ -248,7 +272,7 @@ const DemandDraftTable = ({
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 

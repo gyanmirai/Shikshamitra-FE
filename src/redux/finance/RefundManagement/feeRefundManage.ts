@@ -35,6 +35,30 @@ export interface FeeRefundRequestDto {
   className: string | null;
   divisionName: string | null;
   studentContactNo: string | null;
+
+  // Extended view fields
+  refundRequestId: string | null;
+  totalFeeHeads: number | null;
+  totalPaidAmount: number | null;
+  totalRefundedAmount: number | null;
+  feeHeads: FeeRefundFeeHeadDto[] | null;
+}
+
+export interface FeeRefundFeeHeadMonthDto {
+  installmentId: string;
+  month: string;
+  total: number;
+  paid: number;
+  refundAmount: number;
+  status: number;
+}
+
+export interface FeeRefundFeeHeadDto {
+  feeHeadId: string;
+  feeHeadName: string;
+  totalPaid: number;
+  totalRefunded: number;
+  items: FeeRefundFeeHeadMonthDto[];
 }
 
 export interface PagedRefundResult {

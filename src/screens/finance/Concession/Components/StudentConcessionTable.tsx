@@ -199,18 +199,17 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   useEffect(() => {
     if (currentYear?.boards) {
       setBoards(currentYear.boards);
-      if (!selectedBoard) {
-        onBoardChange(currentYear.boards[0].id);
-        onMediumChange(currentYear.boards[0].educationMediums[0].id);
-      }
+      onBoardChange(currentYear.boards[0].id);
+      onMediumChange(currentYear.boards[0].educationMediums[0].id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentYear.boards]);
 
   useEffect(() => {
-    const board = currentYear?.boards?.find((item: any) => item.id === selectedBoard);
-    setMediums(board?.educationMediums || []);
-  }, [selectedBoard, currentYear?.boards]);
+    setBoards(currentYear?.boards);
+    const board = boards?.find((item: any) => item.id === selectedBoard);
+    setMediums((board as unknown as Medium)?.educationMediums || []);
+  }, [boards, currentYear?.boards, selectedBoard]);
 
   // Fetch concession requests from API
   const {
@@ -237,8 +236,8 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   // Filter items by tab
   const filteredItems = useMemo(
-    () => DUMMY_CONCESSION_DATA.filter((item: any) => item.status === tabs.value),
-    [tabs.value]
+    () => allItems.filter((item: any) => item.status === tabs.value),
+    [allItems, tabs.value]
   );
 
   const concessionCounts = useMemo(
@@ -342,22 +341,34 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
         columns={[
           {
             id: 'studentName',
-            label: 'Student Name',
+            label: 'Name(Gr No.)',
             align: 'left',
             sticky: true,
-            minWidth: 150,
+            width: 150,
+            minWidth: 100,
+            maxWidth: 150,
             render: (value, row) => (
               <Typography variant="caption" fontSize="13px">
                 {value || '-'} ({row.grNumber})
               </Typography>
             ),
           },
-          { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 80, filterType: 'number' },
+          {
+            id: 'rollNo',
+            label: 'Roll No.',
+            align: 'left',
+            width: 96,
+            minWidth: 80,
+            maxWidth: 120,
+            filterType: 'number',
+          },
           {
             id: 'standardName',
             label: 'Class/Div',
             align: 'left',
+            width: 110,
             minWidth: 90,
+            maxWidth: 140,
             render: (value, row) => (
               <Typography variant="caption" fontSize="13px">
                 {value || '-'}-{row.divisionName}
@@ -368,12 +379,16 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
             id: 'concessionTypeName',
             label: 'Concession Type',
             align: 'left',
+            width: 160,
             minWidth: 140,
+            maxWidth: 200,
           },
           {
             id: 'concessionAmount',
             label: 'Amount',
+            width: 130,
             minWidth: 110,
+            maxWidth: 160,
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
                 {formatNumber(value || 0, 'INR')}
@@ -384,7 +399,9 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
             id: 'createdAt',
             label: 'Requested On',
             align: 'left',
+            width: 140,
             minWidth: 120,
+            maxWidth: 160,
             render: (value) =>
               value ? (
                 <Typography variant="caption" fontSize="13px">
@@ -398,7 +415,8 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
             id: 'actions',
             label: 'Action',
             align: 'left',
-            minWidth: 40,
+            width: 80,
+            minWidth: 64,
             isSort: false,
             isFilter: false,
             sticky: true,
