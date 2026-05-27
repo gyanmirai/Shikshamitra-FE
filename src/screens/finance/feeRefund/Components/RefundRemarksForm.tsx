@@ -23,8 +23,10 @@ import {
 } from '@mui/material';
 
 import StudentRefundInfo from './StudentRefundInfo';
+import RefundFeeHeadViewTable from './RefundFeeHeadViewTable';
 
 import type { IStudentFeeData, IRefundFormProps } from '../type';
+import type { IRefundFeeHeadItem } from './RefundFeeHeadViewTable';
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -81,9 +83,9 @@ const mapDtoToStudentFeeData = (dto: FeeRefundRequestDto): IStudentFeeData => ({
   grNo: dto.studentGrNo != null ? String(dto.studentGrNo) : '',
   rollNo: dto.studentRollNo != null ? String(dto.studentRollNo) : '',
   contactNo: dto.studentContactNo ?? '',
-  totalPaidFees: dto.totalAmount ?? 0,
+  totalPaidFees: dto.totalPaidAmount ?? 0,
   totalPendingFees: 0,
-  refundAmount: dto.totalAmount ?? 0,
+  refundAmount: dto.lines?.reduce((sum, l) => sum + (l.amount ?? 0), 0) ?? 0,
   requestDate: dto.creationTime
     ? new Date(dto.creationTime).toLocaleDateString('en-IN', {
         day: '2-digit',
@@ -121,23 +123,24 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
   const dto = refundDetail as FeeRefundRequestDto | undefined;
   const displayStudent = dto ? mapDtoToStudentFeeData(dto) : student;
 
+  const currentRequestAmount = dto?.lines?.reduce((sum, l) => sum + (l.amount ?? 0), 0) ?? 0;
+
   const infoItems = [
     {
-      label: 'Amount Applicable For Refund',
-      value: displayStudent?.totalPaidFees ? formatCurrency(displayStudent.totalPaidFees) : 'N/A',
+      label: 'Total Paid Amount',
+      value: dto?.totalPaidAmount != null ? formatCurrency(dto.totalPaidAmount) : 'N/A',
     },
     {
-      label: 'Refund Amount',
-      value:
-        displayStudent?.refundAmount != null ? formatCurrency(displayStudent.refundAmount) : 'N/A',
+      label: 'Total Refunded Amount',
+      value: dto?.totalRefundedAmount != null ? formatCurrency(dto.totalRefundedAmount) : 'N/A',
+    },
+    {
+      label: 'Current Refund Request',
+      value: currentRequestAmount > 0 ? formatCurrency(currentRequestAmount) : 'N/A',
     },
     {
       label: 'Refund Method',
       value: displayStudent?.refundMethod || 'N/A',
-    },
-    {
-      label: 'Reason of Refund',
-      value: displayStudent?.reason || 'N/A',
     },
   ];
 
@@ -162,10 +165,10 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
                 overflow: 'hidden',
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'stretch' }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch' }}>
                 {infoItems.map((item, idx, arr) => (
                   <React.Fragment key={item.label}>
-                    <Box sx={{ flex: 1, px: 3, py: 2 }}>
+                    <Box sx={{ flex: '1 1 180px', px: 3, py: 2 }}>
                       <Typography
                         variant="overline"
                         sx={{
@@ -191,98 +194,29 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
               </Box>
             </Card>
 
-            {/* Refund Lines */}
-            {dto?.lines && dto.lines.length > 0 && (
+            {/* Fee Head Refund Table */}
+            {dto?.feeHeads && dto.feeHeads.length > 0 && (
               <>
                 <Typography variant="subtitle2" fontWeight={700} mb={1}>
-                  Refund Lines ({dto.lines.length})
+                  Fee Head-Wise Refund Details
                 </Typography>
-                <Card variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden', mb: 2 }}>
-                  {/* Header */}
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    px={2}
-                    py={1}
-                    sx={{
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      bgcolor: 'background.neutral',
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      color="text.disabled"
-                      fontWeight={700}
-                      textTransform="uppercase"
-                      sx={{ flex: 1, letterSpacing: '0.7px', fontSize: '10px' }}
-                    >
-                      #
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.disabled"
-                      fontWeight={700}
-                      textTransform="uppercase"
-                      sx={{ flex: 3, letterSpacing: '0.7px', fontSize: '10px' }}
-                    >
-                      Due Fee ID
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.disabled"
-                      fontWeight={700}
-                      textTransform="uppercase"
-                      sx={{
-                        width: 120,
-                        textAlign: 'right',
-                        letterSpacing: '0.7px',
-                        fontSize: '10px',
-                      }}
-                    >
-                      Amount
-                    </Typography>
-                  </Box>
-                  {dto.lines.map((line, idx) => (
-                    <Box
-                      key={line.id}
-                      display="flex"
-                      alignItems="center"
-                      px={2}
-                      py={1}
-                      sx={{
-                        borderBottom: idx < dto.lines.length - 1 ? '1px solid' : 'none',
-                        borderColor: 'divider',
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ flex: 1 }}>
-                        {idx + 1}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          flex: 3,
-                          fontFamily: 'monospace',
-                          fontSize: '0.75rem',
-                          color: 'text.secondary',
-                        }}
-                      >
-                        {line.dueFeeId}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          width: 120,
-                          textAlign: 'right',
-                          fontWeight: 600,
-                          fontVariantNumeric: 'tabular-nums',
-                        }}
-                      >
-                        {formatCurrency(line.amount)}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Card>
+                <RefundFeeHeadViewTable
+                  data={dto.feeHeads.map(
+                    (fh): IRefundFeeHeadItem => ({
+                      feeHeadId: fh.feeHeadId,
+                      feeHeadName: fh.feeHeadName,
+                      totalPaid: fh.totalPaid,
+                      totalRefunded: fh.totalRefunded,
+                      items: fh.items.map((item) => ({
+                        month: item.month,
+                        total: item.total,
+                        paid: item.paid,
+                        refundAmount: item.refundAmount,
+                        status: item.status,
+                      })),
+                    })
+                  )}
+                />
               </>
             )}
 
@@ -341,9 +275,8 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
           }
           return (
             <Button
-              variant="soft"
-              color="outlined"
-              onClick={onClose}
+              variant="outlined"
+              onClick={(e) => onClose(e, false)}
               size="small"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
             >

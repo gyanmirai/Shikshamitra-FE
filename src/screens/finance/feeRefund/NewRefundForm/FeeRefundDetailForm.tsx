@@ -1,7 +1,7 @@
 // FeeRefundDetailsForm.tsx
 import dayjs from 'dayjs';
-import React from 'react';
 import { getIn } from 'formik';
+import React, { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
@@ -21,6 +21,7 @@ export default function FeeRefundDetailsForm({
   formik: RefundFormik;
 }): React.ReactElement {
   const theme = useTheme();
+  const [hasPaymentRecords, setHasPaymentRecords] = useState(false);
 
   return (
     <Box display="flex" flexDirection="column" gap={1} mt={0}>
@@ -36,10 +37,11 @@ export default function FeeRefundDetailsForm({
             ? (formik.errors.feeHeadRefunds as string)
             : undefined
         }
+        onHasRecords={setHasPaymentRecords}
       />
 
       {/* ── Refund Payment Details Card ── */}
-      {formik.values.studentId && (
+      {formik.values.studentId && hasPaymentRecords && (
         <Box
           sx={{
             p: 1.5,

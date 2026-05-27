@@ -73,6 +73,12 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   onClose,
   assignmentId,
 }: IAssignGradeProps) => {
+  const resolveTotalMarks = (value: unknown): number => {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    return 25;
+  };
+
   const marksInputRef = useRef<HTMLInputElement>(null);
   const [activeQuickScore, setActiveQuickScore] = useState<string | null>(null);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
@@ -91,9 +97,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       marks: typeof data?.marks === 'number' ? data.marks : '',
-      totalMarks: typeof data?.totalMarks === 'number' ? data.totalMarks : 25,
+      totalMarks: resolveTotalMarks((data as any)?.totalMarks),
       feedback: data?.feedback || '',
     },
     validationSchema: Yup.object({
@@ -110,7 +117,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
           academicMediumId: (medium as any)?.id,
           body: {
             marks: values.marks,
-            totalMarks: values.totalMarks,
+            totalMarks: resolveTotalMarks(values.totalMarks),
             feedback: values.feedback,
           },
         }).unwrap();

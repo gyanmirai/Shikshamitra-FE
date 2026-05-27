@@ -21,7 +21,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetHrAuditEventsQuery } from 'src/redux/hr/hr-policy-api';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   toHrAuditLabel,
   formatHrAuditValue,
@@ -183,6 +183,7 @@ const RunPayroll = () => {
   const [previewReadiness, setPreviewReadiness] = useState<PayrollReadiness | null>(null);
   const [previewError, setPreviewError] = useState<PayrollPreviewError | null>(null);
   const [previewIsGenerated, setPreviewIsGenerated] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'load' | 'refresh' | null>(null);
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
   const [activeRow, setActiveRow] = useState<PayrollRow | null>(null);
   const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
@@ -198,6 +199,8 @@ const RunPayroll = () => {
 
   const selectedMonthKey = month?.format('YYYY-MM') ?? '';
   const isDataForSelectedMonth = Boolean(selectedMonthKey) && loadedMonthKey === selectedMonthKey;
+  const latestPreviewRequestRef = useRef(0);
+  const lastAutoLoadedMonthRef = useRef<string | null>(null);
   const {
     data: readinessData,
     isLoading: readinessLoading,
@@ -205,10 +208,13 @@ const RunPayroll = () => {
     refetch: refetchReadiness,
   } = useGetRunPayrollReadinessQuery({ month: selectedMonthKey }, { skip: !selectedMonthKey });
 
-  const [fetchRunPayrollPreview, { isLoading: previewLoading }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useLazyGetRunPayrollPreviewQuery,
-  });
+  const [fetchRunPayrollPreview, { isLoading: previewLoading, isFetching: previewFetching }] =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useLazyGetRunPayrollPreviewQuery,
+    });
+  const previewBusy = previewLoading || previewFetching || previewMode !== null;
+  const isPreviewRefreshing = previewMode === 'refresh';
 
   const [markReviewed, { isLoading: markLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -381,6 +387,10 @@ const RunPayroll = () => {
   const loadPreview = useCallback(
     async (forceRefresh = false) => {
       if (!selectedMonthKey) return;
+      const requestId = latestPreviewRequestRef.current + 1;
+      latestPreviewRequestRef.current = requestId;
+      const requestedMonthKey = selectedMonthKey;
+      setPreviewMode(forceRefresh ? 'refresh' : 'load');
       try {
         let readiness: PayrollReadiness | null = null;
         let isGenerated = false;
@@ -395,7 +405,7 @@ const RunPayroll = () => {
 
           const response = await fetchRunPayrollPreview(
             {
-              month: selectedMonthKey,
+              month: requestedMonthKey,
               page,
               pageSize: PAYROLL_REGISTER_PAGE_SIZE,
               forceRefresh: forceRefresh && page === 0,
@@ -412,12 +422,18 @@ const RunPayroll = () => {
         };
 
         const allItems = await loadPage(0, 1, []);
+        if (
+          latestPreviewRequestRef.current !== requestId ||
+          requestedMonthKey !== (month?.format('YYYY-MM') ?? '')
+        ) {
+          return;
+        }
 
         setPreviewItems(allItems);
         setPreviewReadiness(readiness);
         setPreviewError(null);
         setPreviewIsGenerated(isGenerated);
-        setLoadedMonthKey(selectedMonthKey);
+        setLoadedMonthKey(requestedMonthKey);
         // Auto-collapse insights once data is loaded to focus on the table after 3 seconds
         if (allItems.length > 0) {
           setTimeout(() => {
@@ -426,24 +442,49 @@ const RunPayroll = () => {
         }
         refetchReadiness();
       } catch (error: any) {
+        if (
+          latestPreviewRequestRef.current !== requestId ||
+          requestedMonthKey !== (month?.format('YYYY-MM') ?? '')
+        ) {
+          return;
+        }
         setPreviewItems([]);
         setPreviewReadiness(null);
-        setPreviewError(getPayrollPreviewError(error, selectedMonthKey));
+        setPreviewError(getPayrollPreviewError(error, requestedMonthKey));
         setPreviewIsGenerated(false);
         setLoadedMonthKey(null);
+      } finally {
+        if (latestPreviewRequestRef.current === requestId) {
+          setPreviewMode(null);
+        }
       }
     },
-    [fetchRunPayrollPreview, refetchReadiness, selectedMonthKey]
+    [fetchRunPayrollPreview, month, refetchReadiness, selectedMonthKey]
   );
 
   useEffect(() => {
+    latestPreviewRequestRef.current += 1;
+    if (!selectedMonthKey) {
+      lastAutoLoadedMonthRef.current = null;
+    }
     setLoadedMonthKey(null);
     setPreviewItems([]);
     setPreviewReadiness(null);
     setPreviewError(null);
     setPreviewIsGenerated(false);
+    setPreviewMode(null);
     setSelectedEmployeeIds([]);
+    setActiveRow(null);
+    setAdjustmentDraft({ name: '', amount: '', isEarning: 'true', reason: '' });
+    setEditingAdjustmentId(null);
   }, [selectedMonthKey]);
+
+  useEffect(() => {
+    if (!selectedMonthKey) return;
+    if (lastAutoLoadedMonthRef.current === selectedMonthKey) return;
+    lastAutoLoadedMonthRef.current = selectedMonthKey;
+    loadPreview(false);
+  }, [loadPreview, selectedMonthKey]);
 
   useEffect(() => {
     if (!readinessData || isDataForSelectedMonth) return;
@@ -831,6 +872,14 @@ const RunPayroll = () => {
             : { label: 'Select month', color: 'default' as const };
   const readinessActions = new Set(previewReadiness?.recommendedActions || []);
   const showReadinessPanel = Boolean(previewReadiness || previewError || readinessBusy);
+  const previewButtonIcon = isDataForSelectedMonth ? 'solar:refresh-linear' : 'solar:eye-bold';
+  const previewButtonLabel = previewBusy
+    ? isPreviewRefreshing
+      ? 'Refreshing preview...'
+      : 'Loading preview...'
+    : isDataForSelectedMonth
+      ? 'Refresh preview'
+      : 'Load preview';
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -869,13 +918,13 @@ const RunPayroll = () => {
         />
         <LoadingButton
           variant="contained"
-          loading={previewLoading}
+          loading={previewBusy}
           size="small"
-          disabled={!month}
-          startIcon={<Iconify icon="solar:rocket-bold" />}
-          onClick={() => loadPreview(true)}
+          disabled={!month || previewBusy}
+          startIcon={<Iconify icon={previewButtonIcon} />}
+          onClick={() => loadPreview(isDataForSelectedMonth)}
         >
-          {isDataForSelectedMonth ? 'Refresh preview' : 'Generate preview'}
+          {previewButtonLabel}
         </LoadingButton>
         <Tooltip title="Refreshes readiness counts only. Use Refresh preview to recompute payroll rows.">
           <span>
@@ -883,7 +932,7 @@ const RunPayroll = () => {
               variant="outlined"
               loading={readinessBusy}
               size="small"
-              disabled={!month}
+              disabled={!month || previewBusy}
               startIcon={<Iconify icon="solar:refresh-linear" />}
               onClick={() => refetchReadiness()}
             >
@@ -982,18 +1031,19 @@ const RunPayroll = () => {
                   <Chip size="small" color={monthStatus.color} label={monthStatus.label} />
                 </Stack>
                 <Typography variant="body2" color="text.secondary">
-                  Generate the payroll preview when setup is ready. Review the rows, fix any setup
-                  gaps, then lock reviewed rows when payroll is ready.
+                  Load the saved payroll preview when setup is ready. Review the rows, fix any setup
+                  gaps, and use Refresh preview only when rows need to be recomputed.
                 </Typography>
               </Box>
               <LoadingButton
                 size="small"
                 variant="outlined"
-                loading={previewLoading}
+                loading={previewBusy}
+                disabled={previewBusy}
                 startIcon={<Iconify icon="solar:refresh-linear" />}
-                onClick={() => (previewError ? loadPreview(true) : refetchReadiness())}
+                onClick={() => (previewError ? loadPreview(false) : refetchReadiness())}
               >
-                {previewError ? 'Retry Preview' : 'Refresh Status'}
+                {previewError ? 'Retry preview load' : 'Refresh Status'}
               </LoadingButton>
             </Stack>
 
@@ -1004,7 +1054,7 @@ const RunPayroll = () => {
                   ? dayjs(`${previewError.month || selectedMonthKey}-01`).format('MMMM YYYY')
                   : selectedMonthKey}
                 . {previewError.errorCode ? `Error code: ${previewError.errorCode}. ` : ''}
-                Use Retry Preview after checking attendance and payroll policy setup.
+                Use Retry preview load after checking attendance and payroll policy setup.
               </Alert>
             ) : null}
 
@@ -1168,14 +1218,14 @@ const RunPayroll = () => {
           noDataText={
             !isDataForSelectedMonth && selectedMonthKey ? (
               <>
-                This month is not loaded yet. Use <strong>Generate preview</strong> above.
+                This month is not loaded yet. Use <strong>Load preview</strong> above.
               </>
             ) : (
-              <>No payroll rows for this month after the last run.</>
+              <>No payroll preview rows found for this month. Refresh preview to recompute.</>
             )
           }
           tableId="payroll-monthly-workbench-table"
-          isLoading={previewLoading}
+          isLoading={previewBusy}
           columns={columns}
           data={tableData}
           wrapperProps={{

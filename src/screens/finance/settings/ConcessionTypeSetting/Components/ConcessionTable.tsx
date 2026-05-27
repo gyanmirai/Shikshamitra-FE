@@ -32,9 +32,10 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         id: 'name',
         label: 'Name',
         align: 'left',
-        width: 200,
-        minWidth: 160,
-        maxWidth: 260,
+        width: 150,
+        minWidth: 150,
+        maxWidth: 200,
+        sticky: true,
       },
       {
         id: 'description',

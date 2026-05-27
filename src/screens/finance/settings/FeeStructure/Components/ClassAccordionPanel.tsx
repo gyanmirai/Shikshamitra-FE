@@ -39,7 +39,8 @@ const mapToCardModel = (
     isOptional: fh.isOptional ?? false,
     isRefundable: fh.isRefundable ?? false,
     // paymentTermId: fh.paymentTermId ?? '',
-    // paybleMonth: fh.paybleMonth ?? [],
+    paybleMonth: fh.payableMonth ?? null,
+    payableYear: fh.payableYear ?? null,
   })),
   status: raw.status,
   classId,
@@ -84,7 +85,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
   const serverCards: IClassWiseFeeStructureCard[] = rawServerStructures
     .map((raw: any) => mapToCardModel(raw, classId, feeStructureMetaDataId))
     .filter((card) => !card._id || !deletedServerIds.has(card._id));
-
+  console.log('serverCards====', serverCards);
   const allCards = [
     ...serverCards.map((card) => ({
       card,

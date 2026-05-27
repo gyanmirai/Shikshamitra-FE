@@ -49,8 +49,10 @@ const UpiTable = ({
     () => [
       {
         id: 'studentName',
-        label: 'Student Name',
-        minWidth: '150px',
+        label: 'Name(Gr No.)',
+        width: 180,
+        minWidth: 150,
+        maxWidth: 220,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -64,7 +66,9 @@ const UpiTable = ({
       {
         id: 'board',
         label: 'Board/Medium',
-        minWidth: '120px',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -77,7 +81,9 @@ const UpiTable = ({
       {
         id: 'amount',
         label: 'Amount',
-        minWidth: '120px',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -88,7 +94,9 @@ const UpiTable = ({
       {
         id: 'upiId',
         label: 'UPI ID/VPA',
-        minWidth: '180px',
+        width: 200,
+        minWidth: 180,
+        maxWidth: 240,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -96,7 +104,9 @@ const UpiTable = ({
       {
         id: 'transactionId',
         label: 'Transaction ID',
-        minWidth: '140px',
+        width: 160,
+        minWidth: 140,
+        maxWidth: 200,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -104,7 +114,9 @@ const UpiTable = ({
       {
         id: 'paymentDate',
         label: 'Payment Date',
-        minWidth: '140px',
+        width: 160,
+        minWidth: 140,
+        maxWidth: 200,
         align: 'left',
         isFilter: true,
         filterType: 'date',
@@ -112,7 +124,9 @@ const UpiTable = ({
       {
         id: 'class',
         label: 'Class',
-        minWidth: '80px',
+        width: 96,
+        minWidth: 80,
+        maxWidth: 120,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -125,7 +139,9 @@ const UpiTable = ({
       {
         id: 'rollNumber',
         label: 'Roll No.',
-        minWidth: '120px',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'number',
@@ -133,7 +149,9 @@ const UpiTable = ({
       {
         id: 'remarks',
         label: 'Remarks',
-        minWidth: '200px',
+        width: 220,
+        minWidth: 180,
+        maxWidth: 280,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -142,7 +160,9 @@ const UpiTable = ({
         id: 'status',
         sticky: true,
         label: 'Status',
-        minWidth: '100px',
+        width: 110,
+        minWidth: 100,
+        maxWidth: 140,
         align: 'left',
         isFilter: true,
         filterType: 'enum',
@@ -159,6 +179,9 @@ const UpiTable = ({
         isFilter: false,
         sticky: true,
         align: 'left',
+        width: 100,
+        minWidth: 80,
+        maxWidth: 120,
         render(value, row: any) {
           if (!canApproveReject) return null;
           return (
@@ -208,7 +231,7 @@ const UpiTable = ({
   );
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomizableTable
         tableId="upi-table"
         columns={columns}
@@ -241,7 +264,7 @@ const UpiTable = ({
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 

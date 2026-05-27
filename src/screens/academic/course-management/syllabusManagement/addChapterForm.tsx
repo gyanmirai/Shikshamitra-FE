@@ -56,6 +56,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   subject,
   classId,
   subjectId,
+  existingChapters = [],
 }: IAddNewChapterProps) => {
   // State for managing uploaded documents and their metadata
   // const [documents, setDocuments] = useState<IDocument[]>(initialValues?.documents || []);
@@ -80,7 +81,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
 
   const formik = useFormik<IChapterFormValues>({
     initialValues: getChapterInitialValues(initialValues),
-    validationSchema: getChapterValidationSchema(currentYear),
+    validationSchema: getChapterValidationSchema(currentYear, existingChapters, initialValues?.id),
     onSubmit: async (values) => {
       try {
         if (!classId || !subjectId) {
@@ -94,30 +95,49 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           (doc): doc is string => typeof doc === 'string' && Boolean(doc)
         );
 
-        const payload = {
-          assignedSubjectId: subjectId,
-          chapterNo: values.chapterNo,
-          chapterName: values.chapterName.trim(),
-          startDate: dateConvertor(values?.startDate?.format(dateFormat) || '', false),
-          endDate: dateConvertor(values?.endDate?.format(dateFormat) || '', false),
-          description: values.description,
-          documents,
-        };
+        // Shared formatted dates
+        const formattedStartDate = dateConvertor(
+          values?.startDate?.format(dateFormat) || '',
+          false
+        );
+        const formattedEndDate = dateConvertor(values?.endDate?.format(dateFormat) || '', false);
 
         if (initialValues) {
-          // For update, include the chapter ID
+          // --- PUT PAYLOAD (Different Keys) ---
           const updatePayload = {
             id: initialValues.id,
-            body: payload,
+            body: {
+              assignedSubjectId: subjectId,
+              chapterNumber: values.chapterNo, // Changed from chapterNo
+              chapterName: values.chapterName.trim(),
+              chapterStartTime: formattedStartDate, // Changed from startDate
+              chapterEndTime: formattedEndDate, // Changed from endDate
+              description: values.description,
+              documents,
+            },
           };
+
           await updateChapter(updatePayload).unwrap();
+
           shikshaMitraToast.success({
-            message: `Chapter ${values.chapterNo} : ${values.chapterName} has been updated successfully for ${subject} in ${className}`,
+            message: `Chapter ${values.chapterNo} updated successfully`,
           });
         } else {
-          await addChapter({ standardId: classId, subjectId, body: payload }).unwrap();
+          // --- POST PAYLOAD ---
+          const postPayload = {
+            assignedSubjectId: subjectId,
+            chapterNo: values.chapterNo,
+            chapterName: values.chapterName.trim(),
+            startDate: formattedStartDate,
+            endDate: formattedEndDate,
+            description: values.description,
+            documents,
+          };
+
+          await addChapter({ standardId: classId, subjectId, body: postPayload }).unwrap();
+
           shikshaMitraToast.success({
-            message: `Chapter ${values.chapterNo} : ${values.chapterName} has been added successfully to ${subject} in ${className}`,
+            message: `Chapter ${values.chapterNo} added successfully`,
           });
         }
         onClose(null, true);

@@ -39,6 +39,8 @@ interface FeeHeadRefundTableProps {
   formik: RefundFormik;
   showError?: boolean;
   errorMessage?: string;
+  onHasRecords?: (has: boolean) => void;
+  mode?: 'refund' | 'adjustment';
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -47,8 +49,11 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   formik,
   showError,
   errorMessage,
+  onHasRecords,
+  mode = 'refund',
 }): React.ReactElement | null => {
   const theme = useTheme();
+  const isAdj = mode === 'adjustment';
   const { studentId } = formik.values;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -96,7 +101,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
             m.paid >= m.total
               ? FeeCollectionStatusType.Paid
               : m.paid > 0
-                ? FeeCollectionStatusType.Partial
+                ? FeeCollectionStatusType.Pending
                 : FeeCollectionStatusType.Pending,
         })
       ),
@@ -210,10 +215,14 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   const feeHeadsWithPayments = feeHeads.filter((fh) => fh.items.some((m) => m.paid > 0));
 
+  // Notify parent whether any payment records exist
+  onHasRecords?.(feeHeadsWithPayments.length > 0);
+
   if (feeHeadsWithPayments.length === 0) {
     return (
       <Alert severity="info" sx={{ borderRadius: 3 }}>
-        No fee payment records found for this student.
+        No fee payment records found for this student. Refunds can only be raised for students with
+        existing fee payments.
       </Alert>
     );
   }
@@ -221,7 +230,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   return (
     <Box>
       {/* ── Overall Summary KPI Cards ── */}
-      <OverallSummaryCard feeHeads={feeHeadsWithPayments} formik={formik} />
+      <OverallSummaryCard feeHeads={feeHeadsWithPayments} formik={formik} mode={mode} />
 
       {/* ── Validation error ── */}
       {showError && errorMessage && (
@@ -264,11 +273,12 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
           </Box>
           <Box>
             <Typography variant="body2" fontWeight={600} color="info.main" sx={{ lineHeight: 1.3 }}>
-              How to create a refund request
+              {isAdj ? 'How to create an adjustment request' : 'How to create a refund request'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Select fee months below to calculate the refund request automatically. Enter the
-              refund amount for each selected month.
+              {isAdj
+                ? 'Select fee months below to calculate the adjustment automatically. Enter the adjustment amount for each selected month.'
+                : 'Select fee months below to calculate the refund request automatically. Enter the refund amount for each selected month.'}
             </Typography>
           </Box>
         </Box>
@@ -282,7 +292,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
           color="text.secondary"
           sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 10 }}
         >
-          Fee Head-wise Refund Details
+          {isAdj ? 'Fee Head-Wise Adjustment Details' : 'Fee Head-Wise Refund Details'}
         </Typography>
         <Box
           sx={{
@@ -303,6 +313,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
           selectedMonths={selectedMonths[feeHead.feeHeadId] ?? []}
           formik={formik}
           showValidation={showValidation}
+          mode={mode}
           onToggleMonth={(month, dueFeeId) => toggleMonth(feeHead.feeHeadId, month, dueFeeId)}
           onToggleAll={() => toggleAll(feeHead)}
         />

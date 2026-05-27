@@ -39,6 +39,8 @@ export const financePaths = {
   },
   reports: '/finance/reports',
   notification: '/finance/finance-notification',
+  auditTrail: '/finance/audit-trail',
+  adjustments: '/finance/adjustments',
   // Legacy paths (kept for backward compatibility)
   feeCollection: '/finance/fee-collection',
   charges: '/finance/charge-management',
@@ -99,6 +101,8 @@ export const financePermissions = {
   },
   reports: `${defaultModulePermissionName}${defaultFinancePermissionName}Reports`,
   notification: `${defaultModulePermissionName}${defaultFinancePermissionName}Notification`,
+  auditTrail: `${defaultModulePermissionName}${defaultFinancePermissionName}AuditTrail`,
+  adjustments: `${defaultModulePermissionName}${defaultFinancePermissionName}Adjustments`,
   // Legacy permissions (kept for backward compatibility)
   invoiceReceipt: `${defaultModulePermissionName}${defaultFinancePermissionName}InvoiceReceipt`,
   settings: {
@@ -353,6 +357,24 @@ const financeModule = {
           shortcutKeyName: 'Alt+F+N',
           permissionName: financePermissions.notification,
           icon: menuIconView('mdi:bell-outline'),
+        },
+        {
+          title: 'Audit Trail',
+          path: financePaths.auditTrail,
+          _action: 'finance-audit-trail',
+          shortcutKey: 'Alt+F+A',
+          shortcutKeyName: 'Alt+F+A',
+          permissionName: financePermissions.auditTrail,
+          icon: menuIconView('mdi:clipboard-text-clock-outline'),
+        },
+        {
+          title: 'Adjustments',
+          path: financePaths.adjustments,
+          _action: 'finance-adjustments',
+          shortcutKey: 'Alt+F+J',
+          shortcutKeyName: 'Alt+F+J',
+          permissionName: financePermissions.adjustments,
+          icon: menuIconView('mdi:tune-variant'),
         },
       ],
     },

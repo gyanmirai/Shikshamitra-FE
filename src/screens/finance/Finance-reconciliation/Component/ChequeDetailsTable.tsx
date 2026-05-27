@@ -48,8 +48,10 @@ const ChequeDetailsForm = ({
     () => [
       {
         id: 'studentName',
-        label: 'Student Name',
-        minWidth: '150px',
+        label: 'Name(Gr No.)',
+        width: 180,
+        minWidth: 150,
+        maxWidth: 220,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -63,7 +65,9 @@ const ChequeDetailsForm = ({
       {
         id: 'board',
         label: 'Board/Medium',
-        minWidth: '120px',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -76,7 +80,9 @@ const ChequeDetailsForm = ({
       {
         id: 'chequeNo',
         label: 'Cheque No.',
-        minWidth: '120px',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'number',
@@ -84,7 +90,9 @@ const ChequeDetailsForm = ({
       {
         id: 'bankName',
         label: 'Bank Name',
-        minWidth: '130px',
+        width: 150,
+        minWidth: 130,
+        maxWidth: 190,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -92,7 +100,9 @@ const ChequeDetailsForm = ({
       {
         id: 'amount',
         label: 'Amount',
-        minWidth: '80px',
+        width: 96,
+        minWidth: 80,
+        maxWidth: 120,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -103,7 +113,9 @@ const ChequeDetailsForm = ({
       {
         id: 'receivedChequeDate',
         label: 'Cheque Date',
-        minWidth: '200px',
+        width: 160,
+        minWidth: 140,
+        maxWidth: 200,
         align: 'left',
         isFilter: true,
         filterType: 'date',
@@ -111,7 +123,9 @@ const ChequeDetailsForm = ({
       {
         id: 'class',
         label: 'Class',
-        minWidth: '80px',
+        width: 96,
+        minWidth: 80,
+        maxWidth: 120,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -124,7 +138,9 @@ const ChequeDetailsForm = ({
       {
         id: 'rollNumber',
         label: 'Roll No.',
-        minWidth: '120px',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'number',
@@ -132,7 +148,9 @@ const ChequeDetailsForm = ({
       {
         id: 'remarks',
         label: 'Remarks',
-        minWidth: '200px',
+        width: 220,
+        minWidth: 180,
+        maxWidth: 280,
         align: 'left',
         isFilter: true,
         filterType: 'string',
@@ -158,7 +176,9 @@ const ChequeDetailsForm = ({
         id: 'status',
         sticky: true,
         label: 'Status',
-        minWidth: '100px',
+        width: 110,
+        minWidth: 100,
+        maxWidth: 140,
         align: 'left',
         isFilter: true,
         filterType: 'enum',
@@ -175,7 +195,9 @@ const ChequeDetailsForm = ({
         isFilter: false,
         sticky: true,
         align: 'left',
-        minWidth: 40,
+        width: 100,
+        minWidth: 80,
+        maxWidth: 120,
         render(value, row: any) {
           if (!canApproveReject) return null;
           return (
@@ -225,7 +247,7 @@ const ChequeDetailsForm = ({
   );
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomizableTable
         isLoading={isLoading}
         noDataText={<>No Cheque Data Found </>}
@@ -233,7 +255,6 @@ const ChequeDetailsForm = ({
         columns={columns}
         data={data}
       />
-
       <CustomDialog
         open={isDialog.value}
         handleClose={isDialog.onFalse}
@@ -259,7 +280,7 @@ const ChequeDetailsForm = ({
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 
