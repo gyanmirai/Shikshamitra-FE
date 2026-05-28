@@ -2,19 +2,21 @@
 
 import type { Variants } from 'framer-motion';
 
-import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import relativeTime from 'dayjs/plugin/relativeTime';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Box, Card, Grid, Avatar, Divider, Tooltip, Typography, IconButton } from '@mui/material';
+import {
+  toHrAuditLabel,
+  formatHrAuditValue,
+  formatHrAuditDateTime,
+  formatHrAuditRelativeTime,
+} from 'src/utils/hr-audit-format';
 
 import { FINANCE_AUDIT_SUBMODULE_COLORS } from '../constants/subModuleColors';
 
 import type { FinanceAuditLog } from '../types/financeAudit.types';
-
-dayjs.extend(relativeTime);
 
 interface AuditCardProps {
   log: FinanceAuditLog;
@@ -96,11 +98,14 @@ const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
     .slice(0, 4)
     .map((key) => ({
       key,
-      before: beforeData[key] ?? '-',
-      after: afterData[key] ?? '-',
+      label: toHrAuditLabel(key),
+      before: formatHrAuditValue(beforeData[key]),
+      after: formatHrAuditValue(afterData[key]),
     }));
 
-  const deviceInfo = log.device || log.afterData?.device || log.beforeData?.device || '-';
+  const deviceInfo = formatHrAuditValue(
+    log.device || log.afterData?.device || log.beforeData?.device
+  );
 
   const studentGrNo =
     log.studentGrNo ||
@@ -117,14 +122,14 @@ const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
     '-';
 
   const detailItems = [
-    { label: 'IP Address', value: log.ipAddress || '-' },
+    { label: 'IP Address', value: formatHrAuditValue(log.ipAddress) },
     { label: 'Device', value: deviceInfo },
-    { label: 'Student ID', value: log.studentId || '-' },
-    { label: 'GR No.', value: studentGrNo },
-    { label: 'Roll No.', value: studentRollNo },
+    { label: 'Student ID', value: formatHrAuditValue(log.studentId) },
+    { label: 'GR No.', value: formatHrAuditValue(studentGrNo) },
+    { label: 'Roll No.', value: formatHrAuditValue(studentRollNo) },
     {
       label: 'Paid At',
-      value: dayjs(log.createdAt).format('YYYY-MM-DD  HH:mm'),
+      value: formatHrAuditValue(log.createdAt),
     },
   ];
 
@@ -198,11 +203,7 @@ const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
             {log.action.replace(/_/g, ' ')}
           </Label>
           <Box sx={{ flexGrow: 1 }} />
-          <Tooltip
-            title={dayjs(log.createdAt).format('DD MMM YYYY, hh:mm A')}
-            arrow
-            placement="top"
-          >
+          <Tooltip title={formatHrAuditDateTime(log.createdAt)} arrow placement="top">
             <Box
               sx={{
                 display: 'flex',
@@ -217,7 +218,7 @@ const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
             >
               <Iconify icon="mdi:clock-outline" width={13} sx={{ color: 'text.disabled' }} />
               <Typography variant="caption" color="text.disabled" sx={{ fontSize: 11 }}>
-                {dayjs(log.createdAt).fromNow()}
+                {formatHrAuditRelativeTime(log.createdAt)}
               </Typography>
             </Box>
           </Tooltip>
@@ -290,27 +291,47 @@ const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
                   gap: 0.6,
                   px: 1,
                   py: 0.55,
+                  maxWidth: '100%',
                   borderRadius: 1,
                   border: '1px solid',
                   borderColor: 'divider',
                   bgcolor: 'background.neutral',
                 }}
               >
-                <Typography variant="caption" sx={{ fontSize: 11, color: 'text.secondary' }}>
-                  {entry.key}
+                <Typography
+                  variant="caption"
+                  sx={{ fontSize: 11, color: 'text.secondary', flexShrink: 0 }}
+                >
+                  {entry.label}
                 </Typography>
                 <Typography
                   variant="caption"
-                  sx={{ fontSize: 11, color: 'error.main', textDecoration: 'line-through' }}
+                  sx={{
+                    fontSize: 11,
+                    color: 'error.main',
+                    textDecoration: 'line-through',
+                    minWidth: 0,
+                    overflowWrap: 'anywhere',
+                  }}
                 >
-                  {String(entry.before)}
+                  {entry.before}
                 </Typography>
-                <Iconify icon="mdi:arrow-right-thin" width={12} sx={{ color: 'text.disabled' }} />
+                <Iconify
+                  icon="mdi:arrow-right-thin"
+                  width={12}
+                  sx={{ color: 'text.disabled', flexShrink: 0 }}
+                />
                 <Typography
                   variant="caption"
-                  sx={{ fontSize: 11, color: 'success.main', fontWeight: 700 }}
+                  sx={{
+                    fontSize: 11,
+                    color: 'success.main',
+                    fontWeight: 700,
+                    minWidth: 0,
+                    overflowWrap: 'anywhere',
+                  }}
                 >
-                  {String(entry.after)}
+                  {entry.after}
                 </Typography>
               </Box>
             ))}

@@ -54,6 +54,7 @@ export interface ICustomizableTableProps {
   ) => void;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onServerSearch?: (searchTerm: string) => void;
+  onServerFilter?: (filters: IParams['filters']) => void;
   totalCount?: number;
   maxServerRowsPerPage?: number;
   handleRowClick?: (row: IData, index: number) => void;
