@@ -41,6 +41,8 @@ export interface IPersonalInformationResponse {
   pinCode: string;
   profilePicture?: string | null;
   thumbnailPicture?: string | null;
+  adharNo?: string | null;
+  panNo?: string | null;
 }
 
 export interface IFamilyMemberDetails {
