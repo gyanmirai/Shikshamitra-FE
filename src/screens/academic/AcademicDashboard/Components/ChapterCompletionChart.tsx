@@ -115,7 +115,7 @@ const ChapterCompletionChart = () => {
             onChange={(val) => setClasses(val as string)}
             labelKey="name"
             valueKey="id"
-            formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+            formControlProps={{ sx: { minWidth: '150px', width: '100%' } }}
           />
 
           <CustomSelect
@@ -125,7 +125,7 @@ const ChapterCompletionChart = () => {
             onChange={(val) => setDivision(val as string)}
             labelKey="name"
             valueKey="id"
-            formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+            formControlProps={{ sx: { minWidth: '150px', width: '100%' } }}
             disabled={!classes}
           />
         </Box>

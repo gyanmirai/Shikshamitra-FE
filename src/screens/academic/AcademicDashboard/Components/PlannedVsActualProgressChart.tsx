@@ -101,7 +101,7 @@ const PlannedVsActualProgressChart = () => {
               onChange={(val) => setClasses(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { minWidth: '90px' } }}
+              formControlProps={{ sx: { minWidth: '150px' } }}
             />
             <CustomSelect
               options={allDivision}
@@ -110,7 +110,7 @@ const PlannedVsActualProgressChart = () => {
               onChange={(val) => setDivision(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { minWidth: '90px' } }}
+              formControlProps={{ sx: { minWidth: '150px' } }}
               disabled={!classes}
             />
           </Box>

@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
-import { Box, Card, Typography } from '@mui/material';
-import CustomizableView from 'src/components/customizable-view';
+import { Box, Card, Grid, Typography } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
@@ -106,7 +105,7 @@ const SummaryCard = ({ title, value, icon, status = 'info', path, helper }: ICar
 );
 
 const SummaryCards = () => {
-  const [cards, setCards] = useState<IDashboardCardItem[]>([
+  const cards: IDashboardCardItem[] = [
     {
       id: 'CARD_ACADEMIC_HEALTH',
       icon: 'healthicons:health-worker-outline',
@@ -179,19 +178,16 @@ const SummaryCards = () => {
       helper: 'Highest avg performance',
       width: 3,
     },
-  ]);
-
-  const dashBoardSections = cards.reduce((acc: { [key: string]: React.JSX.Element }, card) => {
-    acc[card.id] = <SummaryCard {...card} />;
-    return acc;
-  }, {});
+  ];
 
   return (
-    <CustomizableView
-      sections={cards}
-      setSections={setCards}
-      dashBoardSections={dashBoardSections}
-    />
+    <Grid container spacing={1}>
+      {cards.map((card) => (
+        <Grid key={card.id} size={{ xs: 12, md: card.width ?? 3 }}>
+          <SummaryCard {...card} />
+        </Grid>
+      ))}
+    </Grid>
   );
 };
 

@@ -113,7 +113,7 @@ const METRICS: AcademicMetric[] = [
     value: '1,248',
     icon: 'solar:users-group-two-rounded-bold',
     color: 'primary',
-    helper: '6 active classes',
+    helper: '12  classes',
   },
   {
     title: 'Total Teachers',
@@ -182,9 +182,6 @@ const AcademicDashboardScreen = () => (
     >
       <Box>
         <Typography variant="h4">Academic Dashboard</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Academic Year 2025-26
-        </Typography>
       </Box>
       <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" justifyContent="flex-end">
         <Button
