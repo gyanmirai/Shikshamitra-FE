@@ -1,7 +1,6 @@
 'use client';
 
 import type React from 'react';
-import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
@@ -11,19 +10,22 @@ import { useFormik } from 'formik';
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { CSS } from '@dnd-kit/utilities';
-import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
+import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
+import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
 import {
   arrayMove,
   useSortable,
@@ -40,22 +42,25 @@ import {
 } from '@dnd-kit/core';
 import {
   Box,
-  Grid,
   Card,
+  Grid,
   Button,
   Divider,
   MenuItem,
   TextField,
-  Typography,
   IconButton,
+  Typography,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
 import {
   type ChargeDetail,
   type FeeLedgerLine,
   type FeeLedgerMonth,
+  type CollectFeeOutput,
   useCollectFeeMutation,
   useGetCollectFormQuery,
+  useDownloadFeeReceiptPdfMutation,
 } from 'src/redux/feeCollection/feeCollection';
 
 import FeeLedgerList from './FeeLedgerList';
@@ -83,6 +88,13 @@ import type {
   FeeCollectionFormValues,
 } from '../Components/type';
 
+type GeneratedReceipt = {
+  id: string;
+  receiptNumber?: string;
+};
+
+const toPaise = (amount: number): number => Math.round((amount + Number.EPSILON) * 100);
+
 const buildDetailsForMethod = (method: string): Record<string, any> => {
   const config = paymentMethodsConfig[method as keyof typeof paymentMethodsConfig] ?? [];
   const details: Record<string, any> = {};
@@ -92,6 +104,23 @@ const buildDetailsForMethod = (method: string): Record<string, any> => {
     }
   });
   return details;
+};
+
+const normalizeDetailValue = (value: unknown): string => {
+  if (value == null) return '';
+  if (typeof value === 'string') return value.trim();
+  return String(value).trim();
+};
+
+const formatBankAccountOption = (account: any): string => {
+  const bankName = typeof account?.bankName === 'string' ? account.bankName.trim() : '';
+  const ifscCode = typeof account?.ifscCode === 'string' ? account.ifscCode.trim() : '';
+  const accountNumber =
+    typeof account?.accountNumber === 'string' ? account.accountNumber.trim() : '';
+
+  if (bankName && ifscCode) return `${bankName} (${ifscCode})`;
+  if (bankName && accountNumber) return `${bankName} (${accountNumber})`;
+  return bankName || ifscCode || accountNumber;
 };
 
 // ─── Validation ────────────────────────────────────────────────────────────────
@@ -253,6 +282,33 @@ const normalizeMonth = (month: string | number): FeeMonth =>
     ? month
     : ((FeeMonth[month as keyof typeof FeeMonth] as unknown as FeeMonth) ?? 0);
 
+const normalizeStatus = (
+  status: FeeLedgerLine['status'],
+  paid: number,
+  due: number
+): FeeCollectionStatusType => {
+  if (typeof status === 'number' && FeeCollectionStatusType[status] !== undefined) {
+    return status as FeeCollectionStatusType;
+  }
+
+  if (typeof status === 'string') {
+    const statusEnum = FeeCollectionStatusType[status as keyof typeof FeeCollectionStatusType];
+    if (typeof statusEnum === 'number') {
+      return statusEnum;
+    }
+  }
+
+  if (due <= 0) {
+    return FeeCollectionStatusType.Paid;
+  }
+
+  if (paid > 0 && due > 0) {
+    return FeeCollectionStatusType.Partial;
+  }
+
+  return FeeCollectionStatusType.Pending;
+};
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 const FeeCollectComponentForm = ({
@@ -268,6 +324,9 @@ const FeeCollectComponentForm = ({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [finalReviewOpen, setFinalReviewOpen] = useState(false);
   const [feeStructureDialogOpen, setFeeStructureDialogOpen] = useState(false);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [generatedReceipt, setGeneratedReceipt] = useState<GeneratedReceipt | null>(null);
+  const [receiptBlobUrl, setReceiptBlobUrl] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   // ── Fetch collect form data from V2 API ────────────────────────────────────
@@ -286,9 +345,30 @@ const FeeCollectComponentForm = ({
     options: { skip: !student?.id || !currentYear?.id },
   });
 
+  const {
+    data: bankAccountsData,
+    isLoading: bankAccountsLoading,
+    isFetching: bankAccountsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBankAccountQuery,
+    params: { academicYearId: currentYear?.id ?? '' },
+    options: { skip: !currentYear?.id },
+  });
+
   const [collectFee, { isLoading: collectLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCollectFeeMutation,
+  });
+
+  const [downloadFeeReceiptPdf, { isLoading: receiptPdfLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDownloadFeeReceiptPdfMutation,
+    popupConfig: {
+      error: true,
+      errorMessage: 'Unable to load receipt preview',
+      success: false,
+    },
   });
 
   const formData = collectFormData;
@@ -308,10 +388,7 @@ const FeeCollectComponentForm = ({
           total: item.total,
           paid: item.paid,
           due: item.due,
-          status:
-            item.status === FeeCollectionStatusType.Paid || item.status === 'Paid'
-              ? FeeCollectionStatusType.Paid
-              : FeeCollectionStatusType.Pending,
+          status: normalizeStatus(item.status, item.paid, item.due),
         })),
       })) as FeeLedgerData['monthWise'],
       feeHeadWise: Object.values(
@@ -325,10 +402,7 @@ const FeeCollectComponentForm = ({
               total: item.total,
               paid: item.paid,
               due: item.due,
-              status:
-                item.status === FeeCollectionStatusType.Paid || item.status === 'Paid'
-                  ? FeeCollectionStatusType.Paid
-                  : FeeCollectionStatusType.Pending,
+              status: normalizeStatus(item.status, item.paid, item.due),
             }))
           )
           .reduce((acc: Record<string, any>, line) => {
@@ -424,6 +498,22 @@ const FeeCollectComponentForm = ({
     [formData]
   );
 
+  const bankAccountOptions = useMemo(() => {
+    const bankAccountItems = Array.isArray(bankAccountsData?.items)
+      ? bankAccountsData.items
+      : Array.isArray(bankAccountsData?.data)
+        ? bankAccountsData.data
+        : Array.isArray(bankAccountsData)
+          ? bankAccountsData
+          : [];
+
+    return bankAccountItems
+      .map(formatBankAccountOption)
+      .filter((option): option is string => Boolean(option));
+  }, [bankAccountsData]);
+
+  const isBankAccountsBusy = bankAccountsLoading || bankAccountsFetching;
+
   const dueFeeIdMap = useMemo(() => {
     const map: Record<string, string> = {};
     (formData?.ledger ?? []).forEach((m: FeeLedgerMonth) => {
@@ -443,16 +533,61 @@ const FeeCollectComponentForm = ({
     validateOnChange: true,
     validate: (values) => {
       const errors: any = {};
-      if (!values.payment.amount) return errors;
       const itemsTotal = values.selectedItems.reduce((s, i) => s + i.dueAmount, 0);
       const chargesTotal = (chargesData ?? [])
         .filter((c) => values.charges.includes(c.chargeId))
         .reduce((s, c) => s + c.amount, 0);
       const total = itemsTotal + chargesTotal;
       const paid = Number(String(values.payment.amount).replace(/[₹,\s]/g, ''));
-      if (!Number.isNaN(paid) && total > 0 && paid > total) {
-        errors.payment = { amount: `Amount cannot exceed ₹${formatNumber(total)}` };
+      const totalPaise = toPaise(total);
+      const paidPaise = toPaise(Number.isNaN(paid) ? 0 : paid);
+      if (totalPaise > 0 && paidPaise > totalPaise) {
+        errors.payment = { amount: `Amount cannot exceed ₹${formatNumber(totalPaise / 100)}` };
       }
+
+      const activeMethodFields =
+        paymentMethodsConfig[
+          values.payment.paymentMethod as keyof typeof paymentMethodsConfig
+        ]?.filter((field: IPaymentFieldConfig) => field.name !== 'amount') ?? [];
+
+      const detailErrors: Record<string, string> = {};
+
+      activeMethodFields.forEach((field: IPaymentFieldConfig) => {
+        const rawValue = values.payment.details?.[field.name];
+
+        if (field.type === 'date') {
+          if (!rawValue) {
+            detailErrors[field.name] = `${field.label} is required`;
+            return;
+          }
+          const dateValue = dayjs(rawValue);
+          if (!dateValue.isValid()) {
+            detailErrors[field.name] = `Invalid ${field.label}`;
+          }
+          return;
+        }
+
+        const stringValue = normalizeDetailValue(rawValue);
+        if (!stringValue) {
+          detailErrors[field.name] = `${field.label} is required`;
+          return;
+        }
+
+        if (field.pattern) {
+          const regex = new RegExp(field.pattern);
+          if (!regex.test(stringValue)) {
+            detailErrors[field.name] = field.patternMessage || `Invalid ${field.label}`;
+          }
+        }
+      });
+
+      if (Object.keys(detailErrors).length > 0) {
+        errors.payment = {
+          ...(errors.payment ?? {}),
+          details: detailErrors,
+        };
+      }
+
       return errors;
     },
     onSubmit: () => {
@@ -475,7 +610,8 @@ const FeeCollectComponentForm = ({
     return Number.isNaN(n) ? 0 : n;
   }, [formik.values.payment.amount]);
 
-  const balance = finalAmount - totalAllocated;
+  const balancePaise = toPaise(finalAmount) - toPaise(totalAllocated);
+  const balance = balancePaise / 100;
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSelectionChange = (items: SelectedItem[]) =>
@@ -500,6 +636,31 @@ const FeeCollectComponentForm = ({
       ...formik.values.payment,
       details: { ...formik.values.payment.details, [detailKey]: value },
     });
+
+  const buildPaymentPayload = (paymentMethodNum: number, receivedAmount: number) => [
+    {
+      paymentMethod: paymentMethodNum,
+      amount: receivedAmount,
+      details: Object.fromEntries(
+        Object.entries(formik.values.payment.details)
+          .filter(([, v]) => v != null && v !== '')
+          .map(([k, v]) => [k, dayjs.isDayjs(v) ? v.format('YYYY-MM-DD') : String(v)])
+      ),
+    },
+  ];
+
+  const loadReceiptPdf = async (receiptId: string) => {
+    try {
+      const blob = await downloadFeeReceiptPdf(receiptId).unwrap();
+      const objectUrl = URL.createObjectURL(blob);
+      setReceiptBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return objectUrl;
+      });
+    } catch {
+      setReceiptBlobUrl(null);
+    }
+  };
 
   // Opens the FinalPaymentReviewDialog from the preview dialog
   const handlePreviewConfirm = () => {
@@ -559,29 +720,21 @@ const FeeCollectComponentForm = ({
           amount: r.paidAmount,
         }));
 
-      await collectFee({
+      const collectResponse = await collectFee({
         studentId: String(student?.id ?? ''),
         academicYearId: currentYear?.id ?? '',
         notes: formik.values.remarks ?? undefined,
-        bankReceiptConfirmed: isCashierDecided ? true : undefined,
+        paymentConfirmed: isCashierDecided ? true : undefined,
         dueFeePayments,
         chargePayments,
-        payments: [
-          {
-            paymentMethod: paymentMethodNum,
-            amount: receivedAmount,
-            details: Object.fromEntries(
-              Object.entries(formik.values.payment.details)
-                .filter(([, v]) => v != null && v !== '')
-                .map(([k, v]) => [k, dayjs.isDayjs(v) ? v.format('YYYY-MM-DD') : String(v)])
-            ),
-          },
-        ],
+        payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
       }).unwrap();
 
       toast.success('Fee collected successfully');
       setFinalReviewOpen(false);
-      onCancel?.(null, true);
+      if (!(await showGeneratedReceiptDialog(collectResponse))) {
+        onCancel?.(null, true);
+      }
     } catch (err) {
       console.error(err);
       toast.error('Failed to collect fee. Please try again.');
@@ -641,29 +794,21 @@ const FeeCollectComponentForm = ({
           amount: r.paidAmount,
         }));
 
-      await collectFee({
+      const collectResponse = await collectFee({
         studentId: String(student?.id ?? ''),
         academicYearId: currentYear?.id ?? '',
         notes: formik.values.remarks ?? undefined,
-        bankReceiptConfirmed: isCashierDecided ? false : undefined,
+        paymentConfirmed: isCashierDecided ? false : undefined,
         dueFeePayments,
         chargePayments,
-        payments: [
-          {
-            paymentMethod: paymentMethodNum,
-            amount: receivedAmount,
-            details: Object.fromEntries(
-              Object.entries(formik.values.payment.details)
-                .filter(([, v]) => v != null && v !== '')
-                .map(([k, v]) => [k, dayjs.isDayjs(v) ? v.format('YYYY-MM-DD') : String(v)])
-            ),
-          },
-        ],
+        payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
       }).unwrap();
 
       toast.success('Payment saved as pending verification');
       setFinalReviewOpen(false);
-      onCancel?.(null, true);
+      if (!(await showGeneratedReceiptDialog(collectResponse))) {
+        onCancel?.(null, true);
+      }
     } catch (err) {
       console.error(err);
       toast.error('Failed to save payment. Please try again.');
@@ -720,6 +865,13 @@ const FeeCollectComponentForm = ({
     return map;
   }, [ledgerData]);
 
+  useEffect(
+    () => () => {
+      if (receiptBlobUrl) URL.revokeObjectURL(receiptBlobUrl);
+    },
+    [receiptBlobUrl]
+  );
+
   // ── Show skeleton while loading ─────────────────────────────────────────────
   if (collectFormLoading || collectFormFetching) {
     return <FeeCollectionFormSkeleton />;
@@ -733,6 +885,46 @@ const FeeCollectComponentForm = ({
     if (isSubmit) {
       refetchCollectForm();
     }
+  };
+
+  const showGeneratedReceiptDialog = async (collectResponse: CollectFeeOutput) => {
+    const receiptId = collectResponse.feeReceiptId ?? collectResponse.id;
+    if (!receiptId) return false;
+
+    setGeneratedReceipt({
+      id: receiptId,
+      receiptNumber: collectResponse.feeReceiptNumber ?? collectResponse.receiptNumber,
+    });
+    setReceiptBlobUrl(null);
+    setReceiptDialogOpen(true);
+    await loadReceiptPdf(receiptId);
+    return true;
+  };
+
+  const handleOpenReceiptInNewTab = () => {
+    if (!receiptBlobUrl) return;
+    window.open(receiptBlobUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleDownloadReceipt = () => {
+    if (!generatedReceipt || !receiptBlobUrl) return;
+    const anchor = document.createElement('a');
+    anchor.href = receiptBlobUrl;
+    anchor.download = `receipt-${generatedReceipt.receiptNumber ?? generatedReceipt.id}.pdf`;
+    anchor.target = '_blank';
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+  };
+
+  const handleReceiptDialogClose = () => {
+    setReceiptDialogOpen(false);
+    setGeneratedReceipt(null);
+    if (receiptBlobUrl) {
+      URL.revokeObjectURL(receiptBlobUrl);
+      setReceiptBlobUrl(null);
+    }
+    onCancel?.(null, true);
   };
 
   // if (isFeeStructureAssigned === false) {
@@ -1127,7 +1319,7 @@ const FeeCollectComponentForm = ({
             {/* Checkout header */}
             <Box
               pb={0.75}
-              mb={1}
+              mb={1.5}
               sx={{ borderBottom: (t) => `1px solid ${alpha(t.palette.divider, 0.4)}` }}
             >
               <Typography
@@ -1175,22 +1367,48 @@ const FeeCollectComponentForm = ({
 
                   <Divider sx={{ my: 1.5 }} />
 
-                  {/* ── Payment Method Dropdown ── */}
-                  <TextField
-                    select
-                    fullWidth
-                    size="small"
-                    label="Payment Method"
-                    value={formik.values.payment.paymentMethod}
-                    disabled={finalAmount === 0}
-                    onChange={(e) => handlePaymentMethodChange(e.target.value)}
-                    sx={{ mb: 1.5 }}
+                  {/* ── Payment Method Dropdown (config-driven, matches refund form) ── */}
+                  <ShakingTextField
+                    error={
+                      !!(
+                        (formik.touched.payment?.paymentMethod || formik.submitCount > 0) &&
+                        formik.errors.payment?.paymentMethod
+                      )
+                    }
                   >
-                    <MenuItem value="Cash">Cash</MenuItem>
-                    <MenuItem value="UPI">UPI</MenuItem>
-                    <MenuItem value="Cheque">Cheque</MenuItem>
-                    <MenuItem value="Online Payment Gateway">Online Payment Gateway</MenuItem>
-                  </TextField>
+                    <TextField
+                      select
+                      fullWidth
+                      size="small"
+                      label="Payment Method *"
+                      name="payment.paymentMethod"
+                      value={formik.values.payment.paymentMethod}
+                      disabled={finalAmount === 0}
+                      onChange={(e) => {
+                        handlePaymentMethodChange(e.target.value);
+                        formik.setFieldTouched('payment.paymentMethod', true);
+                      }}
+                      onBlur={formik.handleBlur}
+                      error={
+                        !!(
+                          (formik.touched.payment?.paymentMethod || formik.submitCount > 0) &&
+                          formik.errors.payment?.paymentMethod
+                        )
+                      }
+                      helperText={
+                        ((formik.touched.payment?.paymentMethod || formik.submitCount > 0) &&
+                          (formik.errors.payment?.paymentMethod as string)) ||
+                        ''
+                      }
+                      sx={{ mb: 1.5 }}
+                    >
+                      {Object.keys(paymentMethodsConfig).map((method) => (
+                        <MenuItem key={method} value={method}>
+                          {method.charAt(0).toUpperCase() + method.slice(1)}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </ShakingTextField>
 
                   {/* ── Amount Tendered ── */}
                   {formik.values.payment.paymentMethod && (
@@ -1210,67 +1428,77 @@ const FeeCollectComponentForm = ({
                       >
                         Amount Tendered
                       </Typography>
-                      <NumericFormatCustom
-                        fullWidth
-                        size="small"
-                        label="Amount *"
-                        value={formik.values.payment.amount ?? ''}
-                        onChange={(e: any) => {
-                          const raw = e.target.value.replace(/[₹,\s]/g, '');
-                          updatePayment('amount', raw);
-                        }}
+                      <ShakingTextField
                         error={Boolean(
-                          formik.touched.payment?.amount && formik.errors.payment?.amount
+                          (formik.touched.payment?.amount || formik.submitCount > 0) &&
+                          formik.errors.payment?.amount
                         )}
-                        helperText={
-                          formik.touched.payment?.amount
-                            ? (formik.errors.payment?.amount as string)
-                            : ''
-                        }
-                      />
+                      >
+                        <NumericFormatCustom
+                          fullWidth
+                          size="small"
+                          label="Amount *"
+                          value={formik.values.payment.amount ?? ''}
+                          onChange={(e: any) => {
+                            const raw = e.target.value.replace(/[₹,\s]/g, '');
+                            updatePayment('amount', raw);
+                          }}
+                          error={Boolean(
+                            (formik.touched.payment?.amount || formik.submitCount > 0) &&
+                            formik.errors.payment?.amount
+                          )}
+                          helperText={
+                            formik.touched.payment?.amount || formik.submitCount > 0
+                              ? (formik.errors.payment?.amount as string)
+                              : ''
+                          }
+                        />
+                      </ShakingTextField>
+                      <Grid container spacing={2} mt={2}>
+                        {/* Extra payment details (cheque, upi, etc.) */}
+                        {(
+                          paymentMethodsConfig[
+                            formik.values.payment.paymentMethod as keyof typeof paymentMethodsConfig
+                          ] ?? []
+                        )
+                          .filter((field: IPaymentFieldConfig) => field.name !== 'amount')
+                          .map((field: IPaymentFieldConfig) => {
+                            const fieldPath = `payment.details.${field.name}`;
+                            const isBankAccountField = field.name === 'bankAccount';
+                            const selectOptions = isBankAccountField
+                              ? bankAccountOptions
+                              : (field.options ?? []);
+                            const value = formik.values.payment.details[field.name];
+                            const error = (formik.errors.payment?.details as any)?.[field.name];
+                            const touched = (formik.touched.payment?.details as any)?.[field.name];
 
-                      {/* Extra payment details (cheque, upi, etc.) */}
-                      {(
-                        paymentMethodsConfig[
-                          formik.values.payment.paymentMethod as keyof typeof paymentMethodsConfig
-                        ] ?? []
-                      ).filter((f: IPaymentFieldConfig) => f.name !== 'amount').length > 0 && (
-                        <Grid container spacing={1.5} mt={0.5}>
-                          {(
-                            paymentMethodsConfig[
-                              formik.values.payment
-                                .paymentMethod as keyof typeof paymentMethodsConfig
-                            ] ?? []
-                          )
-                            .filter((f: IPaymentFieldConfig) => f.name !== 'amount')
-                            .map((field: IPaymentFieldConfig) => {
-                              const fieldPath = `payment.details.${field.name}`;
-                              const fieldValue = formik.values.payment.details[field.name];
-                              const isTouched = (formik.touched.payment?.details as any)?.[
-                                field.name
-                              ];
-                              const errorMsg = (formik.errors.payment?.details as any)?.[
-                                field.name
-                              ];
-
-                              return (
-                                <Grid
-                                  size={{ xs: 12, sm: 6 }}
-                                  key={`${formik.values.payment.paymentMethod}-${field.name}`}
+                            return (
+                              <Grid
+                                size={{ xs: 12, sm: 6 }}
+                                key={`${formik.values.payment.paymentMethod}-${field.name}`}
+                              >
+                                <ShakingTextField
+                                  error={Boolean((touched || formik.submitCount > 0) && error)}
                                 >
                                   {field.type === 'date' ? (
                                     <DatePicker
-                                      label={`${field.label}${field.required ? ' *' : ''}`}
-                                      value={fieldValue ? dayjs(fieldValue as Dayjs) : null}
+                                      label={`${field.label} *`}
                                       format="DD/MM/YYYY"
+                                      value={value ? dayjs(value) : null}
                                       onChange={(date) => formik.setFieldValue(fieldPath, date)}
                                       sx={{ width: '100%' }}
                                       slotProps={{
                                         textField: {
                                           size: 'small',
                                           fullWidth: true,
-                                          error: isTouched && Boolean(errorMsg),
-                                          helperText: isTouched ? errorMsg : '',
+                                          error: Boolean(
+                                            (touched || formik.submitCount > 0) && error
+                                          ),
+                                          helperText:
+                                            (touched || formik.submitCount > 0) &&
+                                            typeof error === 'string'
+                                              ? error
+                                              : '',
                                         },
                                       }}
                                     />
@@ -1278,46 +1506,101 @@ const FeeCollectComponentForm = ({
                                     <TextField
                                       select
                                       fullWidth
-                                      label={`${field.label}${field.required ? ' *' : ''}`}
-                                      value={fieldValue ?? ''}
+                                      label={`${field.label} *`}
+                                      name={fieldPath}
+                                      value={value || ''}
+                                      onChange={formik.handleChange}
+                                      onBlur={formik.handleBlur}
+                                      disabled={isBankAccountField && isBankAccountsBusy}
                                       size="small"
-                                      onChange={(e) =>
-                                        updatePaymentDetail(field.name, e.target.value)
+                                      error={Boolean((touched || formik.submitCount > 0) && error)}
+                                      helperText={
+                                        (touched || formik.submitCount > 0) &&
+                                        typeof error === 'string'
+                                          ? error
+                                          : isBankAccountField && isBankAccountsBusy
+                                            ? 'Loading bank accounts...'
+                                            : isBankAccountField && selectOptions.length === 0
+                                              ? 'No bank accounts available'
+                                              : ''
                                       }
-                                      error={isTouched && Boolean(errorMsg)}
-                                      helperText={isTouched ? errorMsg : ''}
                                     >
-                                      {field.options?.map((opt) => (
-                                        <MenuItem key={opt} value={opt}>
-                                          {opt}
+                                      {isBankAccountField && isBankAccountsBusy ? (
+                                        <MenuItem disabled value="">
+                                          Loading bank accounts...
                                         </MenuItem>
-                                      ))}
+                                      ) : selectOptions.length === 0 ? (
+                                        <MenuItem disabled value="">
+                                          No options available
+                                        </MenuItem>
+                                      ) : (
+                                        selectOptions.map((opt) => (
+                                          <MenuItem key={opt} value={opt}>
+                                            {opt}
+                                          </MenuItem>
+                                        ))
+                                      )}
                                     </TextField>
+                                  ) : field.type === 'multiline' ? (
+                                    <TextField
+                                      fullWidth
+                                      multiline
+                                      minRows={2}
+                                      size="small"
+                                      label={`${field.label} *`}
+                                      name={fieldPath}
+                                      value={value || ''}
+                                      onChange={formik.handleChange}
+                                      onBlur={formik.handleBlur}
+                                      error={Boolean((touched || formik.submitCount > 0) && error)}
+                                      helperText={
+                                        (touched || formik.submitCount > 0) &&
+                                        typeof error === 'string'
+                                          ? error
+                                          : ''
+                                      }
+                                    />
                                   ) : (
-                                    <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                      <TextField
-                                        fullWidth
-                                        size="small"
-                                        type={field.type}
-                                        label={`${field.label}${field.required ? ' *' : ''}`}
-                                        value={fieldValue ?? ''}
-                                        onChange={(e) => {
-                                          const { value: val } = e.target;
-                                          if (field.pattern && val !== '') {
-                                            if (!/^[a-zA-Z0-9 ]*$/.test(val)) return;
+                                    <TextField
+                                      fullWidth
+                                      type={field.type}
+                                      size="small"
+                                      label={`${field.label} *`}
+                                      name={fieldPath}
+                                      value={value || ''}
+                                      onChange={(e) => {
+                                        const newValue = e.target.value;
+                                        if (field.pattern) {
+                                          if (newValue === '') {
+                                            formik.setFieldValue(fieldPath, newValue);
+                                            return;
                                           }
-                                          updatePaymentDetail(field.name, val);
-                                        }}
-                                        error={isTouched && Boolean(errorMsg)}
-                                        helperText={isTouched ? errorMsg : ''}
-                                      />
-                                    </ShakingTextField>
+                                          const allowedChars = 'a-zA-Z0-9 ';
+                                          const typingRegex = new RegExp(`^[${allowedChars}]*$`);
+                                          if (!typingRegex.test(newValue)) return;
+                                        }
+                                        formik.setFieldValue(fieldPath, newValue);
+                                      }}
+                                      onBlur={formik.handleBlur}
+                                      error={Boolean((touched || formik.submitCount > 0) && error)}
+                                      helperText={
+                                        (touched || formik.submitCount > 0) &&
+                                        typeof error === 'string'
+                                          ? error
+                                          : ''
+                                      }
+                                      inputProps={
+                                        field.type === 'number'
+                                          ? { min: field.min, max: field.max }
+                                          : {}
+                                      }
+                                    />
                                   )}
-                                </Grid>
-                              );
-                            })}
-                        </Grid>
-                      )}
+                                </ShakingTextField>
+                              </Grid>
+                            );
+                          })}
+                      </Grid>
                     </Box>
                   )}
 
@@ -1330,9 +1613,9 @@ const FeeCollectComponentForm = ({
                         borderRadius: 1.25,
                         border: (t) => `1px solid ${alpha(t.palette.divider, 0.7)}`,
                         bgcolor:
-                          balance === 0
+                          balancePaise === 0
                             ? alpha(theme.palette.success.main, 0.08)
-                            : balance > 0
+                            : balancePaise > 0
                               ? alpha(theme.palette.warning.main, 0.08)
                               : alpha(theme.palette.error.main, 0.08),
                       }}
@@ -1346,9 +1629,9 @@ const FeeCollectComponentForm = ({
                           fontWeight={700}
                           sx={{ fontVariantNumeric: 'tabular-nums' }}
                           color={
-                            balance === 0
+                            balancePaise === 0
                               ? 'success.main'
-                              : balance > 0
+                              : balancePaise > 0
                                 ? 'warning.main'
                                 : 'error.main'
                           }
@@ -1392,8 +1675,8 @@ const FeeCollectComponentForm = ({
         }}
       >
         <Box display="flex" justifyContent="flex-end" gap={1} alignItems="center" width="100%">
-          {balance < 0 && (
-            <Box flex={2} display="flex" justifyContent="center">
+          {balancePaise < 0 && (
+            <Box flex={2} display="flex" justifyContent="center" ml={4}>
               <Typography variant="caption" color="error" textAlign="center">
                 Total allocated <strong>(₹ {formatNumber(totalAllocated)})</strong> exceeds the
                 payable amount <strong>(₹{formatNumber(finalAmount)})</strong>. Please reduce
@@ -1432,6 +1715,110 @@ const FeeCollectComponentForm = ({
           </LoadingButton>
         </Box>
       </DialogActions>
+
+      <CustomDialog
+        open={receiptDialogOpen}
+        handleClose={handleReceiptDialogClose}
+        title={
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            gap={1}
+            width="100%"
+          >
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <Typography variant="h6">
+                Receipt Preview
+                {generatedReceipt?.receiptNumber ? ` (${generatedReceipt.receiptNumber})` : ''}
+              </Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                sx={{ textAlign: 'justify' }}
+                title="You can update the subject details including name and color."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <IconButton
+                size="small"
+                onClick={handleOpenReceiptInNewTab}
+                disabled={!receiptBlobUrl}
+              >
+                <Iconify icon="solar:open-in-new-window-bold" width={18} />
+              </IconButton>
+              <IconButton size="small" onClick={handleDownloadReceipt} disabled={!receiptBlobUrl}>
+                <Iconify icon="solar:download-minimalistic-bold" width={18} />
+              </IconButton>
+            </Box>
+          </Box>
+        }
+        maxWidth="md"
+        hasForm={false}
+      >
+        <Box sx={{ p: 0, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
+          <Box sx={{ p: 0, flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            {receiptPdfLoading ? (
+              <Box
+                sx={{
+                  width: '100%',
+                  height: { xs: '65vh', md: '70vh' },
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'column',
+                  gap: 1,
+                }}
+              >
+                <CircularProgress size={28} />
+                <Typography variant="body2" color="text.secondary">
+                  Loading receipt preview...
+                </Typography>
+              </Box>
+            ) : receiptBlobUrl ? (
+              <Box sx={{ width: '100%', height: { xs: '65vh', md: '70vh' } }}>
+                <iframe
+                  title="Fee Receipt PDF"
+                  src={receiptBlobUrl}
+                  style={{ border: 'none', width: '100%', height: '100%' }}
+                />
+              </Box>
+            ) : (
+              <Box p={2}>
+                <Typography variant="body2" color="text.secondary">
+                  Receipt preview is not available right now. Please retry loading.
+                </Typography>
+                {generatedReceipt?.id && (
+                  <Button sx={{ mt: 1.5 }} onClick={() => loadReceiptPdf(generatedReceipt.id)}>
+                    Retry loading
+                  </Button>
+                )}
+              </Box>
+            )}
+          </Box>
+          <DialogActions sx={{ borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.45)}` }}>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.download} />}
+              onClick={handleDownloadReceipt}
+              disabled={!receiptBlobUrl}
+            >
+              Download
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={handleReceiptDialogClose}
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+            >
+              Done
+            </Button>
+          </DialogActions>
+        </Box>
+      </CustomDialog>
 
       {/* ── Fee Collection Preview Dialog ── */}
       <FeeCollectionPreviewDialog

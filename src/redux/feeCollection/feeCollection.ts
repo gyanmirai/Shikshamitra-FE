@@ -5,6 +5,7 @@ import { financeModuleType } from 'src/redux/tagTypes';
 import { financeModuleApi } from '../finance/financeModuleApi';
 
 export const FEE_COLLECTION_V2_BASE_URL = '/v2/fee-collections';
+export const FEE_RECEIPT_BASE_URL = '/v1/fee-receipts';
 
 type StudentIdArg = string | { studentId: string };
 
@@ -199,7 +200,7 @@ export interface CollectFeeInput {
   studentId: string;
   academicYearId: string;
   notes?: string;
-  bankReceiptConfirmed?: boolean;
+  paymentConfirmed?: boolean;
   dueFeePayments: DueFeePayment[];
   chargePayments: ChargePayment[];
   payments: FeePayment[];
@@ -288,6 +289,18 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.feeCollection, financeModuleType.feeDetails],
     }),
+
+    /**
+     * GET /v1/fee-receipts/{id}/pdf
+     * Returns receipt PDF as Blob for authenticated preview/download.
+     */
+    downloadFeeReceiptPdf: builder.mutation<Blob, string>({
+      query: (receiptId) => ({
+        url: `${FEE_RECEIPT_BASE_URL}/${receiptId}/pdf`,
+        method: 'GET',
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
   }),
   overrideExisting: true,
 });
@@ -297,4 +310,5 @@ export const {
   useGetCollectFormQuery,
   useGetStudentFeeDetailsQuery,
   useCollectFeeMutation,
+  useDownloadFeeReceiptPdfMutation,
 } = feeCollectionApi;

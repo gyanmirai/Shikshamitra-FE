@@ -36,6 +36,7 @@ export enum FeeCollectionStatusType {
   Overdue = 2,
   Reversed = 3,
   Partial = 4,
+  InReconciliation = 5,
 }
 
 export const FeeCollectionStatusOptions = [
@@ -59,6 +60,10 @@ export const FeeCollectionStatusOptions = [
     label: 'Partial',
     value: FeeCollectionStatusType.Partial,
   },
+  {
+    label: 'In Reconciliation',
+    value: FeeCollectionStatusType.InReconciliation,
+  },
 ];
 
 export const FeeCollectionStatusTypeColors: Record<FeeCollectionStatusType, LabelColor> = {
@@ -67,4 +72,5 @@ export const FeeCollectionStatusTypeColors: Record<FeeCollectionStatusType, Labe
   [FeeCollectionStatusType.Overdue]: 'error',
   [FeeCollectionStatusType.Reversed]: 'default',
   [FeeCollectionStatusType.Partial]: 'info',
+  [FeeCollectionStatusType.InReconciliation]: 'primary',
 };
