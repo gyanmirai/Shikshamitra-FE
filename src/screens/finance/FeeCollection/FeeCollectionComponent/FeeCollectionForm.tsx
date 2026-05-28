@@ -5,20 +5,20 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
-import { toast } from 'sonner';
 import { useFormik } from 'formik';
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { CSS } from '@dnd-kit/utilities';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -509,7 +509,7 @@ const FeeCollectComponentForm = ({
 
     return bankAccountItems
       .map(formatBankAccountOption)
-      .filter((option): option is string => Boolean(option));
+      .filter((option: any): option is string => Boolean(option));
   }, [bankAccountsData]);
 
   const isBankAccountsBusy = bankAccountsLoading || bankAccountsFetching;
@@ -730,14 +730,14 @@ const FeeCollectComponentForm = ({
         payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
       }).unwrap();
 
-      toast.success('Fee collected successfully');
+      shikshaMitraToast.success({ message: 'Fee collected successfully' });
       setFinalReviewOpen(false);
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
         onCancel?.(null, true);
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to collect fee. Please try again.');
+      shikshaMitraToast.error({ message: 'Failed to collect fee. Please try again.' });
       setFinalReviewOpen(false);
     }
   };
@@ -804,14 +804,14 @@ const FeeCollectComponentForm = ({
         payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
       }).unwrap();
 
-      toast.success('Payment saved as pending verification');
+      shikshaMitraToast.success({ message: 'Payment saved as pending verification' });
       setFinalReviewOpen(false);
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
         onCancel?.(null, true);
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to save payment. Please try again.');
+      shikshaMitraToast.error({ message: 'Failed to save payment. Please try again.' });
       setFinalReviewOpen(false);
     }
   };
@@ -1534,7 +1534,7 @@ const FeeCollectComponentForm = ({
                                           No options available
                                         </MenuItem>
                                       ) : (
-                                        selectOptions.map((opt) => (
+                                        selectOptions.map((opt: any) => (
                                           <MenuItem key={opt} value={opt}>
                                             {opt}
                                           </MenuItem>
