@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { Box, Grid } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 
-import SummaryCards from '../AcademicDashboard/Components/SummaryCards';
+import SummaryCards from './Components/SummaryCards';
 import { PerformersList } from '../AcademicDashboard/Components/Performers';
 import AcademicDashboardExams from '../dashboard/components/AcademicDashboardExams';
 import SubjectPassFailChart from '../AcademicDashboard/Components/SubjectPassFailChart';

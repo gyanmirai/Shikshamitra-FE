@@ -30,7 +30,6 @@ import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { TimePicker, DatePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import {
   Box,
   Card,
@@ -339,7 +338,6 @@ export default EntranceExamSlots;
 interface IRoomOption {
   id: string;
   roomName: string;
-  buildingId: string;
   buildingName: string;
   floorName: string;
   capacity: number;
@@ -366,11 +364,6 @@ export const SlotsForm = ({
     currentQueryAndMutation: useGetRoomsQuery,
   });
 
-  const { data: buildings, isLoading: isBuildingsLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBuildingsQuery,
-  });
-
   // Flatten API response into typed option objects
   const roomOptions: IRoomOption[] = useMemo(
     () =>
@@ -378,7 +371,6 @@ export const SlotsForm = ({
         id: room.id,
         roomName: room.roomName ?? '',
         buildingName: room.buildingName ?? '',
-        buildingId: room.buildingId ?? '',
         floorName: room.floorName ?? '',
         capacity: room.capacity ?? 0,
         label: `${room.buildingName ?? ''} › ${room.floorName ?? ''} › ${room.roomName ?? ''}`,
@@ -392,30 +384,24 @@ export const SlotsForm = ({
 
   // Hydrate cascading state in edit mode once data is available
   useEffect(() => {
-    if (editData?.roomNo && roomOptions.length > 0 && !selectedRoom) {
+    if ((editData?.roomNo || editData?.roomId) && roomOptions.length > 0 && !selectedRoom) {
       const match = roomOptions.find(
-        (r) => r.roomName === editData.roomNo || r.id === editData.roomNo
+        (r) =>
+          r.roomName === editData.roomNo || r.id === editData.roomNo || r.id === editData.roomId
       );
       if (match) {
         setSelectedRoom(match);
-        formik.setFieldValue('buildingId', match.buildingId);
-        const buildingFloors =
-          (buildings ?? []).find((b: any) => b.id === match.buildingId)?.floors ?? [];
-        const floor = buildingFloors.find((f: any) => f.floorName === match.floorName);
-        if (floor) {
-          formik.setFieldValue('floorId', floor.id);
-        }
+        formik.setFieldValue('roomId', match.id);
         formik.setFieldValue('roomNo', match.roomName);
       }
     }
     // Reset when dialog closes
     if (!editData) {
       setSelectedRoom(null);
-      formik.setFieldValue('buildingId', '');
-      formik.setFieldValue('floorId', '');
+      formik.setFieldValue('roomId', '');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editData, roomOptions, buildings]);
+  }, [editData, roomOptions]);
 
   // Hook for adding a new entrance exam slot
   const [addSlot, { isLoading }] = useQueryAndMutation({
@@ -435,9 +421,7 @@ export const SlotsForm = ({
       endDateTime: editData?.endDateTime ? dayjs(editData?.endDateTime, 'hh:mm A') : null,
       duration: editData?.duration || '',
       studentLimit: editData?.studentLimit || '',
-      buildingId: editData?.buildingId || '',
-      floorId: editData?.floorId || '',
-      roomNo: editData?.roomNo || '',
+      roomId: editData?.roomId || '',
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
@@ -472,9 +456,7 @@ export const SlotsForm = ({
       studentLimit: Yup.number()
         .min(1, 'Student Limit must be greater than 0')
         .required('Student Limit is required'),
-      buildingId: Yup.string().required('Building is required'),
-      floorId: Yup.string().required('Floor is required'),
-      roomNo: Yup.string().required('Room No. is required'),
+      roomId: Yup.string().required('Room is required'),
     }),
     onSubmit: async (values, formikHelpers) => {
       const newDate = date?.format('DD/MM/YYYY');
@@ -501,7 +483,7 @@ export const SlotsForm = ({
                     )
                   : null,
               studentLimit: values.studentLimit,
-              roomNo: values.roomNo,
+              roomId: values.roomId,
             },
           }).unwrap();
           shikshaMitraToast.success({
@@ -524,9 +506,7 @@ export const SlotsForm = ({
                   )
                 : null,
             studentLimit: values.studentLimit,
-            buildingId: values.buildingId,
-            floorId: values.floorId,
-            roomNo: values.roomNo,
+            roomId: values.roomId,
           }).unwrap();
           shikshaMitraToast.success({
             message: `${values.slotName} exam slot added successfully`,
@@ -689,18 +669,10 @@ export const SlotsForm = ({
               </Grid>
             </Grid>
             {/* ---- Single Room selection with grouped Autocomplete ---- */}
-            <ShakingTextField
-              error={
-                !!(
-                  (formik.touched.roomNo && formik.errors.roomNo) ||
-                  (formik.touched.buildingId && formik.errors.buildingId) ||
-                  (formik.touched.floorId && formik.errors.floorId)
-                ) || false
-              }
-            >
+            <ShakingTextField error={!!(formik.touched.roomId && formik.errors.roomId) || false}>
               <Autocomplete
                 size="small"
-                loading={isRoomsLoading || isBuildingsLoading}
+                loading={isRoomsLoading}
                 options={roomOptions}
                 groupBy={(option) => option.group}
                 getOptionLabel={(option) => option.label}
@@ -709,44 +681,27 @@ export const SlotsForm = ({
                 onChange={(_e, newVal) => {
                   setSelectedRoom(newVal);
                   if (newVal) {
-                    formik.setFieldValue('roomNo', newVal.roomName);
-                    formik.setFieldValue('buildingId', newVal.buildingId);
+                    formik.setFieldValue('roomId', newVal.id);
                     formik.setFieldValue('studentLimit', newVal.capacity ?? '');
-                    const buildingFloors =
-                      (buildings ?? []).find((b: any) => b.id === newVal.buildingId)?.floors ?? [];
-                    const floor = buildingFloors.find((f: any) => f.floorName === newVal.floorName);
-                    formik.setFieldValue('floorId', floor?.id ?? '');
                   } else {
-                    formik.setFieldValue('roomNo', '');
-                    formik.setFieldValue('buildingId', '');
-                    formik.setFieldValue('floorId', '');
+                    formik.setFieldValue('roomId', '');
                     formik.setFieldValue('studentLimit', '');
                   }
                 }}
                 onBlur={() => {
-                  formik.setFieldTouched('roomNo', true);
-                  formik.setFieldTouched('buildingId', true);
-                  formik.setFieldTouched('floorId', true);
+                  formik.setFieldTouched('roomId', true);
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Room No. *"
-                    name="roomNo"
+                    name="roomId"
                     size="small"
-                    error={
-                      (formik.touched.roomNo && Boolean(formik.errors.roomNo)) ||
-                      (formik.touched.buildingId && Boolean(formik.errors.buildingId)) ||
-                      (formik.touched.floorId && Boolean(formik.errors.floorId))
-                    }
+                    error={formik.touched.roomId && Boolean(formik.errors.roomId)}
                     helperText={
-                      formik.touched.roomNo && formik.errors.roomNo
-                        ? String(formik.errors.roomNo)
-                        : formik.touched.buildingId && formik.errors.buildingId
-                          ? String(formik.errors.buildingId)
-                          : formik.touched.floorId && formik.errors.floorId
-                            ? String(formik.errors.floorId)
-                            : ''
+                      formik.touched.roomId && formik.errors.roomId
+                        ? String(formik.errors.roomId)
+                        : ''
                     }
                   />
                 )}
