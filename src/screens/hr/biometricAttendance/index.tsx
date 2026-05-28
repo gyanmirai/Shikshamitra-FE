@@ -3,13 +3,13 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { AttendanceImportItem } from 'src/redux/hr/attendanceImportApi';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -60,6 +60,7 @@ import {
   CardContent,
 } from '@mui/material';
 import {
+  type AttendanceImportItem,
   useGetAttendanceImportsQuery,
   AttendanceImportRowStatusCode,
   useGetAttendanceImportByIdQuery,
@@ -282,6 +283,7 @@ const AttendanceImportHistoryScreen = () => {
   const reprocessDialog = useBoolean();
   const isDownLoadingTemplate = useBoolean();
   const isUploadingFile = useBoolean();
+  const isRefreshingAfterUpload = useBoolean();
   const [previewAttendance] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePreviewAttendanceMutation,
@@ -302,7 +304,12 @@ const AttendanceImportHistoryScreen = () => {
     : undefined;
 
   // ── API call 1: fetch list ─────────────────────────────────────────────────
-  const { data: listData, isLoading: listLoading } = useQueryAndMutation({
+  const {
+    data: listData,
+    isLoading: listLoading,
+    isFetching: listFetching,
+    refetch: refetchAttendanceImports,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAttendanceImportsQuery,
     params: {
@@ -413,6 +420,36 @@ const AttendanceImportHistoryScreen = () => {
     fileInputRef.current?.click();
   };
 
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const refreshListAfterUpload = useCallback(
+    async (uploadedFileName: string) => {
+      isRefreshingAfterUpload.onTrue();
+      try {
+        const expected = uploadedFileName.trim().toLowerCase();
+
+        const tryRefetch = async (attempt: number): Promise<void> => {
+          const refetchResult: any = await refetchAttendanceImports();
+          const refreshedItems: AttendanceImportItem[] = refetchResult?.data?.items || [];
+
+          const found = refreshedItems.some((item) => {
+            const fileName = (item.fileName || '').trim().toLowerCase();
+            return fileName.includes(expected) || expected.includes(fileName);
+          });
+
+          if (found || attempt >= 2) return;
+          await wait(800);
+          await tryRefetch(attempt + 1);
+        };
+
+        await tryRefetch(0);
+      } finally {
+        isRefreshingAfterUpload.onFalse();
+      }
+    },
+    [isRefreshingAfterUpload, refetchAttendanceImports]
+  );
+
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -442,6 +479,8 @@ const AttendanceImportHistoryScreen = () => {
         const confirmResponse = await confirmAttendance({
           previewToken: previewResponse.previewToken,
         }).unwrap();
+
+        await refreshListAfterUpload(file.name);
 
         // setImportResults(previewResponse);
 
@@ -765,7 +804,9 @@ const AttendanceImportHistoryScreen = () => {
             showCheckbox={selectedRows.length > 0}
             columns={columns}
             data={listData?.items || []}
-            isLoading={listLoading}
+            isLoading={
+              listLoading || listFetching || isUploadingFile.value || isRefreshingAfterUpload.value
+            }
             noDataText={
               <Stack alignItems="center" spacing={1} py={4}>
                 {' '}
@@ -1432,10 +1473,9 @@ const ImportDetailDialog = ({
             {!isPayrollLocked && (
               <LoadingButton
                 variant="contained"
-                color="primary"
                 size="small"
                 loading={isSaving.value}
-                startIcon={<Iconify icon="eva:checkmark-circle-2-fill" />}
+                startIcon={<Iconify icon={GlobalIcons.submit} />}
                 disabled={
                   rowsData2.length === 0 ||
                   rowsData2.every((r) => r.attendanceStatus === ROW_STATUS.Pending)

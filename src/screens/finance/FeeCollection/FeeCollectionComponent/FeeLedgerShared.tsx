@@ -1,6 +1,7 @@
 'use client';
 
 import type { LabelColor } from 'src/components/label';
+import type { FeeMonth } from 'src/enums/fee-collection-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -35,8 +36,10 @@ export const STATUS_COLOR: Record<string, LabelColor> = {
   Paid: 'success',
 };
 
-export const toPeriod = (month: string, year: number): string =>
-  `${year}-${String(MONTH_TO_NUM[month] ?? 0).padStart(2, '0')}`;
+export const toPeriod = (month: FeeMonth | string, year: number): string => {
+  const monthNumber = typeof month === 'number' ? month + 1 : (MONTH_TO_NUM[month] ?? 0);
+  return `${year}-${String(monthNumber).padStart(2, '0')}`;
+};
 
 // ─── ColHeader ─────────────────────────────────────────────────────────────────
 

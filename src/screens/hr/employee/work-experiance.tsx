@@ -68,7 +68,7 @@ const WorkExperiences = (props: any) => {
         )}
       </Box>
 
-      <Box display="flex" flexDirection="column" gap={2} mt={2}>
+      <Box display="flex" flexDirection="column" gap={2} mt={2} width="100%">
         {values.experiences.length === 0 && <EmptyContent title="No work experience added yet." />}
         {values.experiences.map((experience: any, index: number) => (
           <Paper
@@ -77,8 +77,9 @@ const WorkExperiences = (props: any) => {
             sx={{
               gap: 2,
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'flex-start',
               p: 2,
+              width: '100%',
               mb: values.experiences.length - 1 === index ? 2 : 0,
             }}
           >
@@ -98,8 +99,19 @@ const WorkExperiences = (props: any) => {
               {index + 1}
             </Box>
 
-            <Box sx={{ display: 'flex', flexGrow: 1, flexWrap: 'wrap', gap: 3 }}>
-              <Box sx={{ width: '200px' }}>
+            <Box
+              sx={{
+                display: 'grid',
+                flexGrow: 1,
+                gap: 2,
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, minmax(0, 1fr))',
+                  md: 'repeat(4, minmax(0, 1fr))',
+                },
+              }}
+            >
+              <Box sx={{ width: '100%' }}>
                 <ShakingTextField
                   error={
                     formik?.touched?.experiences?.[index] && formik?.errors?.experiences?.[index]
@@ -144,7 +156,7 @@ const WorkExperiences = (props: any) => {
                   />
                 </ShakingTextField>
               </Box>
-              <Box sx={{ width: '200px' }}>
+              <Box sx={{ width: '100%' }}>
                 <ShakingTextField
                   error={
                     formik?.touched?.experiences?.[index]?.designation &&
@@ -189,7 +201,7 @@ const WorkExperiences = (props: any) => {
                   />
                 </ShakingTextField>
               </Box>
-              <Box sx={{ width: '200px' }}>
+              <Box sx={{ width: '100%' }}>
                 <TextField
                   fullWidth
                   size="small"
@@ -218,7 +230,7 @@ const WorkExperiences = (props: any) => {
                 />
               </Box>
 
-              <Box sx={{ width: '200px' }}>
+              <Box sx={{ width: '100%' }}>
                 <CountryComponent
                   value={experience.country}
                   onChange={(e, value) => {
@@ -237,7 +249,7 @@ const WorkExperiences = (props: any) => {
                   InputLabelProps={{ sx: { lineHeight: '1.2em' } }}
                 />
               </Box>
-              <Box sx={{ width: '200px' }}>
+              <Box sx={{ width: '100%' }}>
                 <StateComponent
                   value={experience.state}
                   onChange={(e, value) => {
@@ -270,7 +282,7 @@ const WorkExperiences = (props: any) => {
                 disabled={!isEditable.value}
               /> */}
               </Box>
-              <Box sx={{ width: '200px' }}>
+              <Box sx={{ width: '100%' }}>
                 <CityComponent
                   value={experience.city}
                   onChange={(e, value) => {
@@ -290,7 +302,7 @@ const WorkExperiences = (props: any) => {
                   InputLabelProps={{ sx: { lineHeight: '1.2em' } }}
                 />
               </Box>
-              <Box sx={{ width: '200px' }}>
+              <Box sx={{ width: '100%' }}>
                 <ShakingTextField
                   error={
                     formik?.touched?.experiences?.[index]?.startDate &&
@@ -334,7 +346,7 @@ const WorkExperiences = (props: any) => {
                   />
                 </ShakingTextField>
               </Box>
-              <Box sx={{ width: '200px' }}>
+              <Box sx={{ width: '100%' }}>
                 <ShakingTextField
                   error={
                     formik?.touched?.experiences?.[index]?.endDate &&

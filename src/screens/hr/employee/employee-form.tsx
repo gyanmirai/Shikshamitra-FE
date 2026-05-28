@@ -123,6 +123,9 @@ export const personalInformationInitialValues = (
   employeeId: editData?.id ?? '',
 
   shift: editData?.shiftId ?? '',
+
+  adharNo: editData?.adharNo ?? '',
+  panNo: editData?.panNo ?? '',
 });
 
 export const familyInformationInitialValues = (editData?: IFamilyInformationResponse) => ({
@@ -424,6 +427,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           city: values?.city?.name,
           pinCode: String(values.pincode),
           shiftId: values.shift,
+          adharNo: values.adharNo || '',
+          panNo: (values.panNo || '').toUpperCase(),
         };
 
         if (values.secondaryMobileNo) {
@@ -632,6 +637,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         city: values?.city?.name,
         pinCode: String(values.pincode),
         shiftId: values.shift,
+        adharNo: values.adharNo || '',
+        panNo: (values.panNo || '').toUpperCase(),
       };
 
       if (values.secondaryMobileNo) {

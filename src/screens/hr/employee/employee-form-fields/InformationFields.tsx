@@ -5,9 +5,9 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
@@ -24,6 +24,7 @@ import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
+import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
 import {
   Box,
   Grid,
@@ -33,6 +34,7 @@ import {
   Divider,
   MenuItem,
   TextField,
+  FormLabel,
   RadioGroup,
   InputLabel,
   Typography,
@@ -49,6 +51,126 @@ import RenderShift from './RenderShift';
 import { RenderRole } from './RenderRole';
 
 import type { FieldsType } from './types';
+
+// ── OTP Slot: single character box ───────────────────────────────────────────
+const OtpSlot: React.FC<{
+  char: string | null;
+  isActive: boolean;
+  hasFakeCaret: boolean;
+  error?: boolean;
+  disabled?: boolean;
+}> = ({ char, isActive, hasFakeCaret, error = false, disabled = false }) => (
+  <Box
+    sx={{
+      width: 25,
+      height: 30,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '0.875rem',
+      fontWeight: 400,
+      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+      border: '1px solid',
+      borderColor: isActive
+        ? error
+          ? 'error.main'
+          : 'primary.main'
+        : error
+          ? 'error.main'
+          : 'grey.400',
+      borderRadius: '8px',
+      bgcolor: disabled ? 'action.disabledBackground' : 'background.paper',
+      color: disabled ? 'text.disabled' : 'text.primary',
+      boxShadow: isActive ? (error ? '0 0 0 2px #d32f2f33' : '0 0 0 2px #1976d233') : 'none',
+      transition: 'border-color 0.15s, box-shadow 0.15s',
+      position: 'relative',
+      userSelect: 'none',
+    }}
+  >
+    {char}
+    {hasFakeCaret && (
+      <Box
+        sx={{
+          position: 'absolute',
+          width: '1px',
+          height: '55%',
+          bgcolor: 'text.primary',
+          animation: 'blink 1s step-end infinite',
+          '@keyframes blink': { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0 } },
+        }}
+      />
+    )}
+  </Box>
+);
+
+const OtpSep = () => (
+  <Box sx={{ width: 8, height: 1, bgcolor: 'text.disabled', flexShrink: 0, alignSelf: 'center' }} />
+);
+
+const OtpInputField: React.FC<{
+  label: string;
+  value: string;
+  maxLength: number;
+  pattern?: string;
+  groupBy?: number;
+  onChange: (val: string) => void;
+  onBlur?: () => void;
+  error?: boolean;
+  helperText?: React.ReactNode;
+  disabled?: boolean;
+  pasteTransformer?: (pasted: string) => string;
+}> = ({
+  label,
+  value,
+  maxLength,
+  pattern,
+  groupBy,
+  onChange,
+  onBlur,
+  error = false,
+  helperText,
+  disabled = false,
+  pasteTransformer,
+}) => (
+  <Box sx={{ position: 'relative' }}>
+    <FormLabel
+      error={error}
+      sx={{
+        fontSize: '0.75rem',
+        display: 'block',
+        mb: 0.5,
+        color: error ? 'error.main' : 'text.secondary',
+      }}
+    >
+      {label}
+    </FormLabel>
+    <OTPInput
+      maxLength={maxLength}
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      pattern={pattern}
+      disabled={disabled}
+      pasteTransformer={pasteTransformer}
+      containerClassName=""
+      render={({ slots }) => (
+        <Box display="flex" gap={0.75} alignItems="center" flexWrap="nowrap">
+          {slots.map((slot, i) => (
+            <React.Fragment key={i}>
+              <OtpSlot {...slot} error={error} disabled={disabled} />
+              {groupBy && i < maxLength - 1 && (i + 1) % groupBy === 0 && <OtpSep />}
+            </React.Fragment>
+          ))}
+        </Box>
+      )}
+    />
+    {helperText && (
+      <FormHelperText error={error} sx={{ mx: '14px', mt: '3px' }}>
+        {helperText}
+      </FormHelperText>
+    )}
+  </Box>
+);
 
 export const SectionCard = ({
   title,
@@ -216,6 +338,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const { currentMedium: medium } = useSelector((state: any) => state.globalState);
   const isBasicDetailsEditable = useBoolean(!!isMainForm);
   const isContactDetailsEditable = useBoolean(!!isMainForm);
+  const isIdentificationEditable = useBoolean(!!isMainForm);
   const isProfessionalDetailsEditable = useBoolean(!!isMainForm);
   const isAddressDetailsEditable = useBoolean(!!isMainForm);
   const handleSave = async (): Promise<void | false | undefined> => {
@@ -654,6 +777,65 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             helperText={formik.touched.secondaryMobileNo && formik.errors.secondaryMobileNo}
             onBlur={formik.handleBlur}
           />
+        </Grid>
+      </SectionCard>
+
+      <SectionCard
+        title="Identification Details"
+        headerContent={
+          !isMainForm && (
+            <CardActions
+              isLoading={formik.isSubmitting}
+              isEdit={isIdentificationEditable}
+              onSave={handleSave}
+              onCancel={handleCancel}
+            />
+          )
+        }
+      >
+        <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+          <ShakingTextField error={formik.touched.adharNo && Boolean(formik.errors.adharNo)}>
+            <OtpInputField
+              label="Aadhaar No."
+              maxLength={12}
+              pattern={REGEXP_ONLY_DIGITS}
+              groupBy={4}
+              value={String(formik.values.adharNo || '')}
+              onChange={(val) => {
+                formik.setFieldValue('adharNo', val);
+              }}
+              onBlur={() => formik.setFieldTouched('adharNo', true, true)}
+              error={formik.touched.adharNo && Boolean(formik.errors.adharNo)}
+              helperText={formik.touched.adharNo && formik.errors.adharNo}
+              disabled={!isIdentificationEditable.value}
+              pasteTransformer={(s) => s.replace(/\D/g, '').slice(0, 12)}
+            />
+          </ShakingTextField>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+          <ShakingTextField error={formik.touched.panNo && Boolean(formik.errors.panNo)}>
+            <OtpInputField
+              label="PAN No."
+              maxLength={10}
+              pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
+              groupBy={5}
+              value={String(formik.values.panNo ?? '').toUpperCase()}
+              onChange={(val) => {
+                formik.setFieldValue('panNo', val.toUpperCase());
+              }}
+              onBlur={() => formik.setFieldTouched('panNo', true, true)}
+              error={formik.touched.panNo && Boolean(formik.errors.panNo)}
+              helperText={formik.touched.panNo && formik.errors.panNo}
+              disabled={!isIdentificationEditable.value}
+              pasteTransformer={(s) =>
+                s
+                  .replace(/[^A-Za-z0-9]/g, '')
+                  .toUpperCase()
+                  .slice(0, 10)
+              }
+            />
+          </ShakingTextField>
         </Grid>
       </SectionCard>
 

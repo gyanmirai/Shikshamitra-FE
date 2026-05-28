@@ -124,11 +124,11 @@ const MonthRow = ({ item }: { item: IRefundMonthItem }) => (
 
     <Box sx={{ width: 100, display: 'flex', justifyContent: 'center' }}>
       <Label color={FeeCollectionStatusTypeColors[item.status]} variant="soft">
-        {item.status === 1
+        {item.status === 2
           ? 'Paid'
-          : item.status === 2
+          : item.status === 1
             ? 'Partial'
-            : item.status === 3
+            : item.status === 0
               ? 'Pending'
               : 'Overdue'}
       </Label>

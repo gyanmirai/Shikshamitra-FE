@@ -205,10 +205,12 @@ const Section = ({
         isShowedDense={false}
         isLoading={isLoading}
         columns={[
-          { id: 'payElement.name', label: 'Type' },
+          { id: 'payElement.name', label: 'Type', align: 'left' },
           {
             id: 'amount',
             label: 'Amount',
+            align: 'left',
+            filterType: 'number',
             render(value) {
               return formatCurrency(value);
             },

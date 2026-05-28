@@ -4,6 +4,7 @@ import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatNumber } from 'src/utils/formate_number';
+import { FeeMonth } from 'src/enums/fee-collection-type';
 import { Box, Chip, Button, Typography } from '@mui/material';
 
 import { toPeriod } from './FeeLedgerShared';
@@ -59,11 +60,9 @@ const SmartRecommendationPanel = ({
 
   // ── Compute recommendations ────────────────────────────────────────────────
   const nowMonth = new Date().getMonth();
-  const currentMonthName = new Date().toLocaleString('en-IN', { month: 'long' });
-
   const overdueGroups = allMonthWise.filter((g) => {
-    const m = new Date(`${g.month} 1, ${currentYear}`).getMonth();
-    return m < nowMonth && g.items.some((i) => i.due > 0);
+    const monthValue = g.month as number;
+    return monthValue < nowMonth && g.items.some((i) => i.due > 0);
   });
 
   const overdueTotal = overdueGroups.reduce(
@@ -76,11 +75,10 @@ const SmartRecommendationPanel = ({
   );
 
   const quarterStart = Math.floor(nowMonth / 3) * 3;
-  const quarterMonthNames = Array.from({ length: 3 }, (_, i) =>
-    new Date(currentYear, quarterStart + i, 1).toLocaleString('en-IN', { month: 'long' })
-  );
+  const quarterMonths = Array.from({ length: 3 }, (_, i) => (quarterStart + i) as FeeMonth);
+  const quarterMonthNames = quarterMonths.map((month) => FeeMonth[month]);
   const quarterGroups = allMonthWise.filter(
-    (g) => quarterMonthNames.includes(g.month) && g.items.some((i) => i.due > 0)
+    (g) => quarterMonths.includes(g.month) && g.items.some((i) => i.due > 0)
   );
   const quarterTotal = quarterGroups.reduce(
     (s, g) => s + g.items.filter((i) => i.due > 0).reduce((ss, i) => ss + i.due, 0),

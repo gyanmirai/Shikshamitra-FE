@@ -1,11 +1,12 @@
 'use client';
 
 import dayjs from 'dayjs';
+import { alpha } from '@mui/material/styles';
 import { Box, Typography } from '@mui/material';
 import { EmptyContent } from 'src/components/empty-content';
 
 import AuditCard from './AuditCard';
-import { FINANCE_AUDIT_SUBMODULE_COLORS } from '../constants/subModuleColors';
+import { getFinanceAuditSubModuleColor } from '../constants/subModuleColors';
 
 import type { FinanceAuditLog } from '../types/financeAudit.types';
 
@@ -83,7 +84,7 @@ const AuditTimeline = ({ logs }: AuditTimelineProps) => {
           {/* ── Timeline entries ─────────────────────────────── */}
           <Box sx={{ pl: { xs: 1, sm: 2 } }}>
             {dateLogs.map((log, idx) => {
-              const dotColor = FINANCE_AUDIT_SUBMODULE_COLORS[log.subModule] ?? '#607D8B';
+              const dotColor = getFinanceAuditSubModuleColor(log.subModule);
               const cardIndex = globalIdx;
               globalIdx += 1;
 
@@ -94,7 +95,7 @@ const AuditTimeline = ({ logs }: AuditTimelineProps) => {
                     display: 'flex',
                     gap: { xs: 1.5, sm: 2 },
                     position: 'relative',
-                    pb: idx < dateLogs.length - 1 ? 2.5 : 0,
+                    pb: idx < dateLogs.length - 1 ? 1 : 0,
                   }}
                 >
                   {/* ── Connector column ─────────────── */}
@@ -113,9 +114,9 @@ const AuditTimeline = ({ logs }: AuditTimelineProps) => {
                         width: 14,
                         height: 14,
                         borderRadius: '50%',
-                        bgcolor: `${dotColor}22`,
+                        bgcolor: alpha(dotColor, 0.13),
                         border: `2.5px solid ${dotColor}`,
-                        boxShadow: `0 0 0 3px ${dotColor}22`,
+                        boxShadow: `0 0 0 3px ${alpha(dotColor, 0.13)}`,
                         flexShrink: 0,
                         mt: 1.4,
                         position: 'relative',
@@ -133,17 +134,17 @@ const AuditTimeline = ({ logs }: AuditTimelineProps) => {
                     />
 
                     {/* Vertical line */}
-                    {idx < dateLogs.length - 1 && (
-                      <Box
-                        sx={{
-                          width: 2,
-                          flexGrow: 1,
-                          mt: 0.75,
-                          background: `linear-gradient(to bottom, ${dotColor}60, transparent)`,
-                          borderRadius: 2,
-                        }}
-                      />
-                    )}
+                    {/* {idx < dateLogs.length - 1 && ( */}
+                    <Box
+                      sx={{
+                        width: 2,
+                        flexGrow: 1,
+                        mt: 0.75,
+                        background: `linear-gradient(to bottom, ${alpha(dotColor, 0.72)} 0%, ${alpha(dotColor, 0.45)} 42%, ${alpha(dotColor, 0.25)} 100%)`,
+                        borderRadius: 2,
+                      }}
+                    />
+                    {/* )} */}
                   </Box>
 
                   {/* ── Audit card ───────────────────── */}

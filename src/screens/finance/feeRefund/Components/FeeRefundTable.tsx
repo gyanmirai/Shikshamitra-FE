@@ -13,7 +13,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Tab, Card, Tabs, Avatar, MenuList, MenuItem } from '@mui/material';
+import { Box, Tab, Card, Tabs, MenuList, MenuItem, Typography } from '@mui/material';
 
 import type { IStudentFeeData, IStudentFeeTableProps } from '../type';
 
@@ -149,10 +149,9 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
             maxWidth: 200,
             sticky: true,
             render: (value, row) => (
-              <Box display="flex" alignItems="center" gap={1}>
-                <Avatar src={row.avatarUrl} sx={{ width: 32, height: 32 }} />
-                {row.name}
-              </Box>
+              <Typography variant="caption" fontSize="13px">
+                {value || '-'} {row.grNumber && `(${row.grNumber})`}
+              </Typography>
             ),
           },
           {
