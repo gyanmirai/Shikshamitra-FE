@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "skipLibCheck": true,
-    
+    "ignoreDeprecations": "6.0",
+
     "baseUrl": ".",
     "target": "es5",
     "downlevelIteration": true,

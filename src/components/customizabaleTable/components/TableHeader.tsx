@@ -71,7 +71,7 @@ export const TableHeader = React.memo(
               columnVisibility[column.id] && (
                 <TableCell
                   key={column.id}
-                  align={column.align || 'center'}
+                  align={column.align}
                   ref={(el: HTMLTableCellElement) => {
                     setHeaderRef((pre: number[]) => {
                       pre[index] = el?.getBoundingClientRect?.()?.width ?? null;

@@ -24,6 +24,7 @@ export function Main({ children, isNavHorizontal, sx, ...other }: MainProps) {
         flex: '1 1 auto',
         flexDirection: 'column',
         height: 'calc(100vh - 75px)',
+        overflowY: 'auto',
         ...(isNavHorizontal && {
           '--layout-dashboard-content-pt': '40px',
         }),
