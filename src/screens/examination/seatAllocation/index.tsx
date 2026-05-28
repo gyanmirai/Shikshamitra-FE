@@ -27,6 +27,7 @@ import {
   useGetExamRoomsQuery,
   useGetExamDivisionsQuery,
   useSaveSeatAllocationMutation,
+  useGetSeatAllocationStudentsQuery,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
 import SeatAllocationTable from './components/SeatAllocationTable';
@@ -75,6 +76,27 @@ const SeatAllocation = () => {
     },
   });
 
+  const { data: seatAllocationStudentsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSeatAllocationStudentsQuery,
+    params: {
+      examId: selectedExam?.examId,
+      divisionId: division,
+    },
+    options: {
+      skip: !selectedExam?.examId || !division,
+    },
+  });
+
+  const totalStudents = seatAllocationStudentsData?.totalCount ?? selectedExam?.totalStudents ?? 0;
+  const allocatedStudents =
+    seatAllocationStudentsData?.items?.filter((student: any) => student.isSeatAllocate).length ??
+    selectedExam?.allocatedStudents ??
+    0;
+  const pendingStudents = Math.max(0, totalStudents - allocatedStudents);
+  const allocationProgress =
+    totalStudents > 0 ? Math.min(100, Math.round((allocatedStudents / totalStudents) * 100)) : 0;
+
   useEffect(() => {
     // Flatten the list of standards from all stages
     const allClasses =
@@ -87,7 +109,7 @@ const SeatAllocation = () => {
   }, [currentMedium]);
 
   const handleSubmit = async () => {
-    if (!selectedExam?.examId || droppedData.students.length === 0) return;
+    if (!selectedExam?.examId) return;
     await saveSeatAllocation({ examId: selectedExam.examId, body: droppedData });
     openSeatAllocation.onFalse();
   };
@@ -271,19 +293,19 @@ const SeatAllocation = () => {
                 {[
                   {
                     label: 'Total',
-                    value: selectedExam.totalStudents ?? 0,
+                    value: totalStudents,
                     color: 'text.primary',
                     icon: 'mdi:account-group-outline',
                   },
                   {
                     label: 'Allocated',
-                    value: selectedExam.allocatedStudents ?? 0,
+                    value: allocatedStudents,
                     color: 'success.main',
                     icon: 'mdi:check-circle-outline',
                   },
                   {
                     label: 'Pending',
-                    value: selectedExam.pendingStudents ?? 0,
+                    value: pendingStudents,
                     color: 'warning.main',
                     icon: 'mdi:clock-outline',
                   },
@@ -300,7 +322,7 @@ const SeatAllocation = () => {
                 ))}
 
                 {/* Progress bar */}
-                {(selectedExam.totalStudents ?? 0) > 0 && (
+                {totalStudents > 0 && (
                   <Box sx={{ flex: 1, minWidth: 120, maxWidth: 280 }}>
                     <Box
                       sx={{
@@ -313,24 +335,12 @@ const SeatAllocation = () => {
                         Allocation progress
                       </Typography>
                       <Typography variant="caption" color="success.main" fontWeight={700}>
-                        {Math.round(
-                          ((selectedExam.allocatedStudents ?? 0) /
-                            (selectedExam.totalStudents ?? 1)) *
-                            100
-                        )}
-                        %
+                        {allocationProgress}%
                       </Typography>
                     </Box>
                     <LinearProgress
                       variant="determinate"
-                      value={Math.min(
-                        100,
-                        Math.round(
-                          ((selectedExam.allocatedStudents ?? 0) /
-                            (selectedExam.totalStudents ?? 1)) *
-                            100
-                        )
-                      )}
+                      value={allocationProgress}
                       color="success"
                       sx={{ height: 6, borderRadius: 3 }}
                     />

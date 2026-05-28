@@ -1,74 +1,141 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
-import { Box, Card, CardHeader } from '@mui/material';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import { fNumber, fPercent } from 'src/utils/format-number';
+import { Box, Card, Chip, CardHeader, Typography } from '@mui/material';
+
+// -----------------------------------------------------------------------
+
+const EXAM_DATA = [
+  { label: 'Unit Test 1', passed: 45, failed: 35 },
+  { label: 'Unit Test 2', passed: 52, failed: 41 },
+  { label: 'Mid Term', passed: 38, failed: 62 },
+  { label: 'Final Exam', passed: 33, failed: 13 },
+];
+
+const totalPassed = EXAM_DATA.reduce((s, e) => s + e.passed, 0);
+const totalFailed = EXAM_DATA.reduce((s, e) => s + e.failed, 0);
+const totalStudents = totalPassed + totalFailed;
+
+const toRate = (passed: number, failed: number) => {
+  const total = passed + failed;
+  return total ? (passed / total) * 100 : 0;
+};
+
+const latestExam = EXAM_DATA[EXAM_DATA.length - 1];
+const previousExam = EXAM_DATA[EXAM_DATA.length - 2];
+const passRate = totalStudents ? (totalPassed / totalStudents) * 100 : 0;
+const failRate = totalStudents ? (totalFailed / totalStudents) * 100 : 0;
+const passRateDelta =
+  toRate(latestExam.passed, latestExam.failed) - toRate(previousExam.passed, previousExam.failed);
+const failRateDelta = -passRateDelta;
+
+// -----------------------------------------------------------------------
 
 const SubjectPassFailChart = () => {
-  // State to store all classes/standards for the selected organization
+  const theme = useTheme();
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
-  // State to store all divisions for the selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
   const [division, setDivision] = useState<string>('');
 
-  // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
-  // Update classes when organization changes
   useEffect(() => {
-    // Flatten the list of standards from all stages
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
     setAllClass(allClasses);
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
-  // Update divisions when class changes
   useEffect(() => {
     setAllDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
-  const series = [
-    { name: 'Passed', data: [45, 52, 38, 33] },
-    { name: 'Failed', data: [35, 41, 62, 13] },
-  ];
 
   const chartOptions = useChart({
+    labels: ['Passed', 'Failed'],
     stroke: {
-      show: true,
-      width: 2,
-      colors: ['transparent'],
+      colors: [theme.vars.palette.background.paper],
     },
-    xaxis: {
-      categories: ['Unit Test 1', 'Unit Test 2', 'Mid Term Exam', 'Final Exam'],
+    legend: {
+      show: true,
+      position: 'bottom',
+      horizontalAlign: 'center',
       labels: {
-        rotate: -45, // <-- slanted (cross) text
-        rotateAlways: true,
+        colors: theme.vars.palette.text.primary,
+      },
+      formatter(val: any, opts: any) {
+        return `${val} - ${opts?.w?.globals?.series?.[opts.seriesIndex] || 0}`;
       },
     },
-    colors: ['#00AB55', '#FF4842'], // Success, Error
+    dataLabels: {
+      enabled: true,
+      formatter(val: any) {
+        return fPercent(Number(val));
+      },
+      dropShadow: {
+        enabled: false,
+      },
+    },
     tooltip: {
+      fillSeriesColor: false,
       y: {
-        formatter: (val: number) => `${val} students`,
+        formatter: (value: number) => fNumber(value),
+        title: {
+          formatter: (seriesName: string) => `${seriesName}`,
+        },
+      },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          labels: {
+            show: true,
+            name: {
+              color: theme.vars.palette.text.secondary,
+            },
+            value: {
+              color: theme.vars.palette.text.primary,
+            },
+            total: {
+              show: true,
+              label: 'Total',
+              color: theme.vars.palette.text.primary,
+              formatter: (w: any) => {
+                const total = w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
+                return fNumber(total);
+              },
+            },
+          },
+        },
       },
     },
   });
 
   return (
-    <Card sx={{ p: 2 }}>
+    <Card
+      sx={{
+        height: '100%',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme.shadows[8],
+          transition: 'all 0.3s ease-in-out',
+        },
+      }}
+    >
       <CardHeader
-        title="Exam's Pass/Fail Rate"
-        subheader="Student Performance by Exam"
-        sx={{ p: 0 }}
+        sx={{ mt: -1, ml: -1, mb: 2, flexShrink: 0 }}
+        title="Exam Pass / Fail Rate"
         action={
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <CustomSelect
               options={allClass}
               label="Class"
@@ -76,7 +143,7 @@ const SubjectPassFailChart = () => {
               onChange={(val) => setClasses(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+              formControlProps={{ sx: { minWidth: '90px' } }}
             />
             <CustomSelect
               options={allDivision}
@@ -85,14 +152,85 @@ const SubjectPassFailChart = () => {
               onChange={(val) => setDivision(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+              formControlProps={{ sx: { minWidth: '90px' } }}
               disabled={!classes}
             />
           </Box>
         }
       />
+      <Box sx={{ px: 3 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+            gap: 1.5,
+          }}
+        >
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              bgcolor: theme.vars.palette.grey[200],
+            }}
+          >
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+              Total Students
+            </Typography>
+            <Typography variant="h4" sx={{ lineHeight: 1 }}>
+              {fNumber(totalStudents)}
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              bgcolor: theme.vars.palette.grey[200],
+            }}
+          >
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+              Pass Rate
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="h4" sx={{ lineHeight: 1 }}>
+                {Math.round(passRate)}%
+              </Typography>
+              <Chip
+                size="small"
+                label={`${passRateDelta >= 0 ? '↑' : '↓'}${Math.abs(Math.round(passRateDelta))}%`}
+                color={passRateDelta >= 0 ? 'success' : 'error'}
+                sx={{ height: 24, borderRadius: 999 }}
+              />
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              bgcolor: theme.vars.palette.grey[200],
+            }}
+          >
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+              Fail Rate
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="h4" sx={{ lineHeight: 1 }}>
+                {Math.round(failRate)}%
+              </Typography>
+              <Chip
+                size="small"
+                label={`${failRateDelta >= 0 ? '↑' : '↓'}${Math.abs(Math.round(failRateDelta))}%`}
+                color={failRateDelta >= 0 ? 'error' : 'warning'}
+                sx={{ height: 24, borderRadius: 999 }}
+              />
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+
       <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-        <Chart type="bar" series={series} options={chartOptions} />
+        <Chart dir="ltr" type="donut" series={[totalPassed, totalFailed]} options={chartOptions} />
       </Box>
     </Card>
   );
