@@ -1,8 +1,8 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-import { Box } from '@mui/material';
 import { Label } from 'src/components/label';
+import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { InvoiceStatusColors, InvoiceStatusOptions } from 'src/enums/finance-invoice-status';
@@ -39,9 +39,11 @@ const InvoiceTable = ({
           minWidth: 180,
           maxWidth: 260,
           sticky: true,
-          render(value, row) {
-            return `${row.student} (${row.grNumber})`;
-          },
+          render: (value, row) => (
+            <Typography variant="caption" fontSize="13px">
+              {value || '-'} {row.grNumber && `(${row.grNumber})`}
+            </Typography>
+          ),
         },
         {
           id: 'rollNumber',

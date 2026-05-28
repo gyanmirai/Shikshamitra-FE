@@ -6,17 +6,25 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import React, { useMemo, useState } from 'react';
+import ClearIcon from '@mui/icons-material/Clear';
+import SearchIcon from '@mui/icons-material/Search';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import {
   useAdjustAttendanceRegisterMutation,
   useGetGroupedAttendanceRegisterQuery,
@@ -26,29 +34,21 @@ import {
   Box,
   Chip,
   Stack,
-  Table,
   Button,
-  Dialog,
   Select,
   Divider,
-  Popover,
-  Collapse,
   Checkbox,
   MenuItem,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
   TextField,
+  Accordion,
   IconButton,
   InputLabel,
   Typography,
-  DialogTitle,
   FormControl,
   Autocomplete,
   DialogActions,
-  DialogContent,
-  useMediaQuery,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 
 type RegisterStatus = 'Present' | 'HalfDayLeave' | 'FullDayLeave';
@@ -127,202 +127,94 @@ const normalizeStatus = (value: RegisterStatus | number | string): RegisterStatu
 const statusMeta = (value: RegisterStatus | number | string) =>
   STATUS_OPTIONS.find((item) => item.value === normalizeStatus(value)) || STATUS_OPTIONS[2];
 
-const toTimeValue = (value?: string | null) => (value ? dayjs(value).format('HH:mm') : '');
+const toTimeValue = (value?: string | null) => {
+  if (!value) return '';
 
-const toWireTime = (date: string, time?: string) => (time ? `${date}T${time}:00Z` : null);
+  // Keep API clock-time as-is (same behavior expected from exam-slot time handling).
+  const isoTimeMatch = value.match(/T(\d{2}:\d{2}:\d{2})/);
+  if (isoTimeMatch?.[1]) {
+    return dayjs(isoTimeMatch[1], 'HH:mm:ss', true).format('HH:mm');
+  }
+
+  const parsed = dayjs(
+    value,
+    ['HH:mm:ss', 'HH:mm', 'YYYY-MM-DDTHH:mm:ss', 'YYYY-MM-DDTHH:mm:ss[Z]'],
+    true
+  );
+  if (parsed.isValid()) return parsed.format('HH:mm');
+
+  const fallback = dayjs(value);
+  return fallback.isValid() ? fallback.format('HH:mm') : '';
+};
+
+const toWireTime = (time?: string) => {
+  if (!time) return null;
+
+  const parsed = dayjs(time, ['HH:mm', 'HH:mm:ss'], true);
+  return parsed.isValid() ? parsed.format('HH:mm:ss') : null;
+};
 
 const getDefaultFilters = () => ({
-  startDate: dayjs().startOf('month'),
-  endDate: dayjs(),
-  educationMediumStageId: '',
+  startDate: dayjs().startOf('month') as Dayjs | null,
+  endDate: dayjs() as Dayjs | null,
+  educationMediumStageId: 'all',
   employeeId: '',
   employeeGroup: '',
   department: '',
   isTeaching: '',
-  status: '',
+  status: 'all',
   payrollState: 'All' as PayrollState,
   exceptionFilter: 'All' as ExceptionFilter,
   search: '',
 });
 
-const getMonthDays = (month: Dayjs) => {
-  const start = month.startOf('month').startOf('week');
-  const end = month.endOf('month').endOf('week');
-  const days: Dayjs[] = [];
-  let cursor = start;
-
-  while (cursor.isBefore(end) || cursor.isSame(end, 'day')) {
-    days.push(cursor);
-    cursor = cursor.add(1, 'day');
-  }
-
-  return days;
+type AttendanceDraft = {
+  status: RegisterStatus;
+  inTime: string;
+  outTime: string;
+  remarks: string;
+  reason: string;
 };
 
-const DateRangeSelector = ({
-  startDate,
-  endDate,
-  onChange,
-}: {
-  startDate: Dayjs;
-  endDate: Dayjs;
-  onChange: (start: Dayjs, end: Dayjs) => void;
-}) => {
-  const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [draftStart, setDraftStart] = useState<Dayjs | null>(startDate);
-  const [draftEnd, setDraftEnd] = useState<Dayjs | null>(endDate);
-  const [calendarMonth, setCalendarMonth] = useState(startDate.startOf('month'));
-  const open = Boolean(anchorEl);
+type AttendanceDraftErrors = {
+  inTime?: string;
+  outTime?: string;
+  remarks?: string;
+  reason?: string;
+};
 
-  const openCalendar = (event: React.MouseEvent<HTMLElement>) => {
-    setDraftStart(startDate);
-    setDraftEnd(endDate);
-    setCalendarMonth(startDate.startOf('month'));
-    setAnchorEl(event.currentTarget);
-  };
+const validateAttendanceDraft = (draft: AttendanceDraft): AttendanceDraftErrors => {
+  const errors: AttendanceDraftErrors = {};
+  const inTime = draft.inTime?.trim();
+  const outTime = draft.outTime?.trim();
+  const requiresTime = draft.status === 'Present' || draft.status === 'HalfDayLeave';
 
-  const closeCalendar = () => setAnchorEl(null);
+  if (requiresTime) {
+    if (!inTime) errors.inTime = 'In time is required.';
+    if (!outTime) errors.outTime = 'Out time is required.';
+  }
 
-  const selectDate = (date: Dayjs) => {
-    const selected = date.startOf('day');
+  if ((inTime && !outTime) || (!inTime && outTime)) {
+    if (!inTime) errors.inTime = 'In time is required when out time is provided.';
+    if (!outTime) errors.outTime = 'Out time is required when in time is provided.';
+  }
 
-    if (!draftStart || draftEnd || selected.isBefore(draftStart, 'day')) {
-      setDraftStart(selected);
-      setDraftEnd(null);
-      return;
+  if (inTime && outTime) {
+    const parsedIn = dayjs(inTime, 'HH:mm', true);
+    const parsedOut = dayjs(outTime, 'HH:mm', true);
+
+    if (!parsedIn.isValid()) errors.inTime = 'Invalid in time.';
+    if (!parsedOut.isValid()) errors.outTime = 'Invalid out time.';
+
+    if (parsedIn.isValid() && parsedOut.isValid() && !parsedOut.isAfter(parsedIn)) {
+      errors.outTime = 'Out time must be after in time.';
     }
-
-    setDraftEnd(selected);
-    onChange(draftStart, selected);
-    closeCalendar();
-  };
-
-  const renderMonth = (month: Dayjs) => {
-    const days = getMonthDays(month);
-    const weekDays = days.slice(0, 7);
-
-    return (
-      <Box sx={{ width: 292 }}>
-        <Typography variant="subtitle2" textAlign="center" sx={{ mb: 1 }}>
-          {month.format('MMMM YYYY')}
-        </Typography>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(7, 1fr)',
-            gap: 0.5,
-          }}
-        >
-          {weekDays.map((day) => (
-            <Typography
-              key={day.format('dd')}
-              variant="caption"
-              color="text.secondary"
-              textAlign="center"
-              sx={{ py: 0.5, fontWeight: 600 }}
-            >
-              {day.format('dd')}
-            </Typography>
-          ))}
-          {days.map((day) => {
-            const isOutsideMonth = !day.isSame(month, 'month');
-            const isStart = Boolean(draftStart?.isSame(day, 'day'));
-            const isEnd = Boolean(draftEnd?.isSame(day, 'day'));
-            const isInRange = Boolean(
-              draftStart &&
-              draftEnd &&
-              day.isAfter(draftStart, 'day') &&
-              day.isBefore(draftEnd, 'day')
-            );
-            const isHighlighted = isStart || isEnd || isInRange;
-
-            return (
-              <Button
-                key={day.format('YYYY-MM-DD')}
-                size="small"
-                onClick={() => selectDate(day)}
-                sx={{
-                  minWidth: 0,
-                  width: 36,
-                  height: 36,
-                  p: 0,
-                  mx: 'auto',
-                  borderRadius: isStart || isEnd ? '50%' : 1,
-                  color: isStart || isEnd ? 'primary.contrastText' : 'text.primary',
-                  bgcolor:
-                    isStart || isEnd
-                      ? 'primary.main'
-                      : isInRange
-                        ? 'primary.lighter'
-                        : 'transparent',
-                  opacity: isOutsideMonth ? 0.36 : 1,
-                  '&:hover': {
-                    bgcolor: isStart || isEnd ? 'primary.dark' : 'primary.lighter',
-                  },
-                }}
-                variant={isHighlighted ? 'contained' : 'text'}
-              >
-                {day.date()}
-              </Button>
-            );
-          })}
-        </Box>
-      </Box>
-    );
-  };
-
-  return (
-    <>
-      <TextField
-        size="small"
-        fullWidth
-        label="Date range"
-        value={`${startDate.format('DD MMM YYYY')} - ${endDate.format('DD MMM YYYY')}`}
-        onClick={openCalendar}
-        InputProps={{
-          readOnly: true,
-          endAdornment: <Iconify icon="solar:calendar-date-bold" width={20} />,
-        }}
-      />
-      <Popover
-        open={open}
-        anchorEl={anchorEl}
-        onClose={closeCalendar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        slotProps={{ paper: { sx: { p: 1.5, mt: 0.5 } } }}
-      >
-        <Stack spacing={1.5}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <IconButton
-              size="small"
-              onClick={() => setCalendarMonth((prev) => prev.subtract(1, 'month'))}
-            >
-              <Iconify icon="solar:alt-arrow-left-linear" width={18} />
-            </IconButton>
-            <Typography variant="caption" color="text.secondary">
-              Select start date, then end date
-            </Typography>
-            <IconButton
-              size="small"
-              onClick={() => setCalendarMonth((prev) => prev.add(1, 'month'))}
-            >
-              <Iconify icon="solar:alt-arrow-right-linear" width={18} />
-            </IconButton>
-          </Stack>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            {renderMonth(calendarMonth)}
-            {isDesktop && renderMonth(calendarMonth.add(1, 'month'))}
-          </Stack>
-        </Stack>
-      </Popover>
-    </>
-  );
+  }
+  return errors;
 };
 
 const AttendanceTrackingScreen = () => {
+  const theme = useTheme();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const stages = currentMedium?.educationMediumStages || [];
   const [filters, setFilters] = useState(getDefaultFilters);
@@ -332,13 +224,14 @@ const AttendanceTrackingScreen = () => {
   const [editRow, setEditRow] = useState<AttendanceRegisterRow | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
-  const [draft, setDraft] = useState({
+  const [draft, setDraft] = useState<AttendanceDraft>({
     status: 'Present' as RegisterStatus,
     inTime: '',
     outTime: '',
     remarks: '',
     reason: '',
   });
+  const [draftErrors, setDraftErrors] = useState<AttendanceDraftErrors>({});
 
   const { data: employeeOptions } = useGetEmployeeQuery({
     page: 1,
@@ -348,14 +241,15 @@ const AttendanceTrackingScreen = () => {
 
   const queryParams = useMemo(
     () => ({
-      startDate: filters.startDate.format('YYYY-MM-DD'),
-      endDate: filters.endDate.format('YYYY-MM-DD'),
-      educationMediumStageId: filters.educationMediumStageId,
+      startDate: filters.startDate ? filters.startDate.format('YYYY-MM-DD') : '',
+      endDate: filters.endDate ? filters.endDate.format('YYYY-MM-DD') : '',
+      educationMediumStageId:
+        filters.educationMediumStageId === 'all' ? undefined : filters.educationMediumStageId,
       employeeId: filters.employeeId,
       employeeGroup: filters.employeeGroup || undefined,
       department: filters.department,
       isTeaching: filters.isTeaching === '' ? undefined : filters.isTeaching === 'true',
-      status: filters.status || undefined,
+      status: filters.status === 'all' ? undefined : filters.status,
       payrollState: filters.payrollState,
       exceptionFilter: filters.exceptionFilter,
       search: filters.search,
@@ -406,6 +300,7 @@ const AttendanceTrackingScreen = () => {
   const openEdit = (row: AttendanceRegisterRow) => {
     if (!row.canEdit) return;
     setEditRow(row);
+    setDraftErrors({});
     setDraft({
       status: normalizeStatus(row.status),
       inTime: toTimeValue(row.inTime),
@@ -418,19 +313,28 @@ const AttendanceTrackingScreen = () => {
   const closeDialogs = () => {
     setEditRow(null);
     setBulkOpen(false);
+    setDraftErrors({});
   };
 
   const buildAdjustmentPayload = (attendanceId?: string) => ({
     ...(attendanceId ? { attendanceId } : { attendanceIds: editableSelectedIds }),
     statusWire: statusMeta(draft.status).wire,
-    inTime: toWireTime(editRow?.attendanceDate || selectedRows[0]?.attendanceDate, draft.inTime),
-    outTime: toWireTime(editRow?.attendanceDate || selectedRows[0]?.attendanceDate, draft.outTime),
+    inTime: toWireTime(draft.inTime),
+    outTime: toWireTime(draft.outTime),
     remarks: draft.remarks,
     reason: draft.reason,
   });
 
   const saveInline = async () => {
     if (!editRow) return;
+
+    const errors = validateAttendanceDraft(draft);
+    if (Object.keys(errors).length) {
+      setDraftErrors(errors);
+      shikshaMitraToast.error({ message: 'Please fix the validation errors before saving.' });
+      return;
+    }
+
     try {
       await adjustAttendance(buildAdjustmentPayload(editRow.attendanceId)).unwrap();
       shikshaMitraToast.success({ message: 'Attendance adjusted.' });
@@ -445,6 +349,14 @@ const AttendanceTrackingScreen = () => {
       shikshaMitraToast.error({ message: 'No editable rows selected.' });
       return;
     }
+
+    const errors = validateAttendanceDraft(draft);
+    if (Object.keys(errors).length) {
+      setDraftErrors(errors);
+      shikshaMitraToast.error({ message: 'Please fix the validation errors before saving.' });
+      return;
+    }
+
     try {
       const result = await bulkAdjustAttendance(buildAdjustmentPayload()).unwrap();
       shikshaMitraToast.success({
@@ -488,114 +400,173 @@ const AttendanceTrackingScreen = () => {
     );
   };
 
-  const stickyDayActionSx = {
-    position: 'sticky',
-    right: 0,
-    width: 140,
-    minWidth: 140,
-    maxWidth: 140,
-    bgcolor: 'background.paper',
-    boxShadow: '-4px 0 8px rgba(0,0,0,0.08)',
-    zIndex: 2,
-  };
+  const dayColumns: IColumn[] = [
+    {
+      id: 'select',
+      label: '',
+      minWidth: 20,
+      maxWidth: 30,
+      align: 'left',
+      isSort: false,
+      isFilter: false,
+      render: (_value, row) => (
+        <Checkbox
+          size="small"
+          disabled={!row.canEdit}
+          checked={selectedIds.includes(row.attendanceId)}
+          onChange={(event) => toggleDaySelection(row.attendanceId, event.target.checked)}
+        />
+      ),
+    },
+    {
+      id: 'attendanceDate',
+      label: 'Date',
+      minWidth: 40,
+      maxWidth: 60,
+      align: 'left',
+      sticky: true,
+      filterType: 'date',
+      render: (value) => dayjs(value).format('DD MMM YYYY'),
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      minWidth: 40,
+      maxWidth: 60,
+      sticky: true,
+      align: 'left',
+      render: (value, row) => {
+        const meta = statusMeta(value);
+        const missingPunch =
+          normalizeStatus(row.status) === 'Present' && (!row.inTime || !row.outTime);
+        return (
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <Label color={meta.color as any}>{meta.label}</Label>
+            {missingPunch && <Label color="warning">Missing punch</Label>}
+          </Stack>
+        );
+      },
+    },
+    {
+      id: 'inTime',
+      label: 'In',
+      minWidth: 30,
+      maxWidth: 45,
+      align: 'left',
+      render: (value) => toTimeValue(value) || '-',
+    },
+    {
+      id: 'outTime',
+      label: 'Out',
+      minWidth: 40,
+      maxWidth: 49,
+      align: 'left',
+      render: (value) => toTimeValue(value) || '-',
+    },
+    {
+      id: 'hoursWorked',
+      label: 'Hours',
+      minWidth: 40,
+      maxWidth: 55,
+      align: 'left',
+      render: (value) => value || '-',
+    },
+    {
+      id: 'remarks',
+      label: 'Remarks',
+      minWidth: 60,
+      maxWidth: 70,
+      align: 'left',
+      render: (value) => value || '-',
+    },
+    {
+      id: 'lockInfo',
+      label: 'Lock',
+      minWidth: 40,
+      maxWidth: 50,
+      align: 'left',
+      isSort: false,
+      isFilter: false,
+      render: (_value, row) => {
+        const dayRow = row as AttendanceRegisterRow;
+        return dayRow.canEdit ? (
+          <Label color="success">Editable</Label>
+        ) : (
+          <CustomTooltip title={dayRow.lockReason || 'Locked'} arrow>
+            <span>
+              <Label color="error">Locked</Label>
+            </span>
+          </CustomTooltip>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      minWidth: 70,
+      maxWidth: 90,
+      width: 80,
+      align: 'left',
+      isSort: false,
+      isFilter: false,
+      render: (_value, row) => {
+        const dayRow = row as AttendanceRegisterRow;
+        return (
+          <CustomTooltip
+            title={dayRow.canEdit ? 'Adjust this day' : dayRow.lockReason || 'Locked'}
+            arrow
+          >
+            <span>
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={!dayRow.canEdit}
+                startIcon={<Iconify icon="solar:pen-bold" width={16} />}
+                onClick={() => openEdit(dayRow)}
+              >
+                Adjust
+              </Button>
+            </span>
+          </CustomTooltip>
+        );
+      },
+    },
+  ];
 
   const renderDailyRows = (group: GroupedAttendanceRegisterRow) => (
-    <Box sx={{ width: '100%', maxWidth: '100%', overflowX: 'auto' }}>
-      <Table
-        size="small"
-        sx={{
-          minWidth: 980,
-          borderCollapse: 'separate',
-          borderSpacing: 0,
-          '& th, & td': {
-            whiteSpace: 'nowrap',
-          },
-        }}
-      >
-        <TableHead>
-          <TableRow>
-            <TableCell width={44} />
-            <TableCell>Date</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>In</TableCell>
-            <TableCell>Out</TableCell>
-            <TableCell>Hours</TableCell>
-            <TableCell>Remarks</TableCell>
-            <TableCell>Lock</TableCell>
-            <TableCell
-              align="center"
-              sx={{ ...stickyDayActionSx, bgcolor: 'background.neutral', zIndex: 4 }}
-            >
-              Actions
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {(group.days || []).map((day) => {
-            const meta = statusMeta(day.status);
-            const missingPunch =
-              normalizeStatus(day.status) === 'Present' && (!day.inTime || !day.outTime);
-            return (
-              <TableRow key={day.attendanceId} hover>
-                <TableCell>
-                  <Checkbox
-                    size="small"
-                    disabled={!day.canEdit}
-                    checked={selectedIds.includes(day.attendanceId)}
-                    onChange={(event) => toggleDaySelection(day.attendanceId, event.target.checked)}
-                  />
-                </TableCell>
-                <TableCell>{dayjs(day.attendanceDate).format('DD MMM YYYY')}</TableCell>
-                <TableCell>
-                  <Stack direction="row" spacing={0.75} alignItems="center">
-                    <Label color={meta.color as any}>{meta.label}</Label>
-                    {missingPunch && <Label color="warning">Missing punch</Label>}
-                  </Stack>
-                </TableCell>
-                <TableCell>{toTimeValue(day.inTime) || '-'}</TableCell>
-                <TableCell>{toTimeValue(day.outTime) || '-'}</TableCell>
-                <TableCell>{day.hoursWorked || '-'}</TableCell>
-                <TableCell>{day.remarks || '-'}</TableCell>
-                <TableCell>
-                  {day.canEdit ? (
-                    <Label color="success">Editable</Label>
-                  ) : (
-                    <CustomTooltip title={day.lockReason || 'Locked'} arrow>
-                      <span>
-                        <Label color="error">Locked</Label>
-                      </span>
-                    </CustomTooltip>
-                  )}
-                </TableCell>
-                <TableCell align="center" sx={stickyDayActionSx}>
-                  <CustomTooltip
-                    title={day.canEdit ? 'Adjust this day' : day.lockReason || 'Locked'}
-                    arrow
-                  >
-                    <span>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        disabled={!day.canEdit}
-                        startIcon={<Iconify icon="solar:pen-bold" width={16} />}
-                        onClick={() => openEdit(day)}
-                      >
-                        Adjust
-                      </Button>
-                    </span>
-                  </CustomTooltip>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+    <Box sx={{ minHeight: 350, ml: 5 }}>
+      <CustomizableTable
+        tableId={`hr-attendance-register-days-${group.employeeId || group.employeeCode}`}
+        columns={dayColumns}
+        data={group.days || []}
+        isLoading={false}
+        isSearch={false}
+        isFilter={false}
+        // tableContainerProps={{
+        //   sx: {
+        //     maxHeight: 350,
+        //     overflowX: 'hidden',
+        //     overflowY: 'auto',
+        //     '& .MuiTableCell-root': {
+        //       whiteSpace: 'nowrap',
+        //       textAlign: 'left',
+        //     },
+        //   },
+        // }}
+        // wrapperProps={{
+        //   sx: {
+        //     pt: 0,
+        //   },
+        // }}
+        noDataText="No daily attendance found for this employee."
+      />
     </Box>
   );
 
   const columns: IColumn[] = [
     {
       id: 'select',
+      sticky: true,
       label: (
         <Checkbox
           size="small"
@@ -620,7 +591,8 @@ const AttendanceTrackingScreen = () => {
           }}
         />
       ),
-      minWidth: 52,
+      minWidth: 32,
+      stickyPosition: 'left',
       isSort: false,
       isFilter: false,
       render: (_value, row: any) => (
@@ -636,8 +608,9 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'employeeName',
       label: 'Employee',
-      minWidth: 250,
+      minWidth: 260,
       sticky: true,
+      align: 'left',
       stickyPosition: 'left',
       render: (value, row: any) => (
         <Box>
@@ -652,6 +625,7 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'present',
       label: 'Attendance',
+      align: 'left',
       minWidth: 150,
       render: (_value, row: any) => (
         <Box>
@@ -667,6 +641,7 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'exceptions',
       label: 'Exceptions',
+      align: 'left',
       minWidth: 260,
       isSort: false,
       render: (_value, row: any) => (
@@ -679,19 +654,20 @@ const AttendanceTrackingScreen = () => {
         </Stack>
       ),
     },
-    { id: 'employeeGroup', label: 'Group', minWidth: 120 },
-    { id: 'department', label: 'Department', minWidth: 140 },
+    { id: 'employeeGroup', label: 'Group', minWidth: 120, align: 'left' },
+    { id: 'department', label: 'Department', minWidth: 140, align: 'left' },
     {
       id: 'editability',
       label: 'Editability',
+      align: 'left',
       minWidth: 150,
       render: (_value, row: any) => `${row.editable} editable, ${row.locked} locked`,
     },
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 90,
-      align: 'center',
+      minWidth: 110,
+      align: 'left',
       isSort: false,
       isFilter: false,
       sticky: true,
@@ -714,6 +690,7 @@ const AttendanceTrackingScreen = () => {
               onClick={() => {
                 toggleGroupSelection(row, true);
                 setDraft({ status: 'Present', inTime: '', outTime: '', remarks: '', reason: '' });
+                setDraftErrors({});
                 setBulkOpen(true);
               }}
             >
@@ -726,88 +703,189 @@ const AttendanceTrackingScreen = () => {
   ];
 
   const renderAdjustmentDialog = (isBulk: boolean) => (
-    <Dialog
+    <CustomDialog
       open={isBulk ? bulkOpen : Boolean(editRow)}
-      onClose={closeDialogs}
-      fullWidth
+      handleClose={closeDialogs}
+      title={
+        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+          <Typography variant="h5">
+            {isBulk ? 'Bulk Adjust Attendance' : 'Adjust Attendance'}
+          </Typography>
+          <CustomTooltip
+            arrow
+            placement="right"
+            sx={{ textAlign: 'justify' }}
+            title={
+              isBulk
+                ? 'Update status, in/out time, remarks, and reason for all selected editable attendance days in one step. Locked rows are skipped automatically.'
+                : 'Update status, in/out time, remarks, and reason for this attendance day. Changes are applied only when the day is editable.'
+            }
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </CustomTooltip>
+        </Box>
+      }
       maxWidth="sm"
     >
-      <DialogTitle>{isBulk ? 'Bulk adjust attendance' : 'Adjust attendance'}</DialogTitle>
-      <DialogContent>
+      <DialogScrollContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            {isBulk
+              ? 'Apply one adjustment across selected editable days. Any locked day remains unchanged.'
+              : 'Use this form to correct attendance details for the selected day.'}
+          </Typography>
           {isBulk && (
             <Typography variant="body2" color="text.secondary">
               {editableSelectedIds.length} editable selected, {blockedSelectedCount} locked
               selected.
             </Typography>
           )}
-          <FormControl size="small" fullWidth>
-            <InputLabel>Status</InputLabel>
-            <Select
-              label="Status"
-              value={draft.status}
-              onChange={(event) =>
-                setDraft((prev) => ({ ...prev, status: event.target.value as RegisterStatus }))
-              }
-            >
-              {STATUS_OPTIONS.map((item) => (
-                <MenuItem key={item.value} value={item.value}>
-                  {item.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <ShakingTextField error={false}>
+            <FormControl size="small" fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                label="Status"
+                value={draft.status}
+                onChange={(event) => {
+                  const nextStatus = event.target.value as RegisterStatus;
+                  setDraft((prev) => ({
+                    ...prev,
+                    status: nextStatus,
+                    ...(nextStatus === 'FullDayLeave' ? { inTime: '', outTime: '' } : {}),
+                  }));
+                  setDraftErrors((prev) => ({ ...prev, inTime: '', outTime: '' }));
+                }}
+              >
+                {STATUS_OPTIONS.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>
+                    {item.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </ShakingTextField>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
-              size="small"
-              label="In time"
-              type="time"
-              fullWidth
-              value={draft.inTime}
-              onChange={(event) => setDraft((prev) => ({ ...prev, inTime: event.target.value }))}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              size="small"
-              label="Out time"
-              type="time"
-              fullWidth
-              value={draft.outTime}
-              onChange={(event) => setDraft((prev) => ({ ...prev, outTime: event.target.value }))}
-              InputLabelProps={{ shrink: true }}
-            />
+            <ShakingTextField error={Boolean(draftErrors.inTime)}>
+              <TimePicker
+                label="In time"
+                value={draft.inTime ? dayjs(`2000-01-01T${draft.inTime}`) : null}
+                onChange={(newValue) => {
+                  setDraft((prev) => ({
+                    ...prev,
+                    inTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                  }));
+                  if (draftErrors.inTime) {
+                    setDraftErrors((prev) => ({ ...prev, inTime: '' }));
+                  }
+                }}
+                format="HH:mm"
+                ampm={false}
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                  seconds: renderTimeViewClock,
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: Boolean(draftErrors.inTime),
+                    helperText: draftErrors.inTime,
+                  },
+                }}
+              />
+            </ShakingTextField>
+            <ShakingTextField error={Boolean(draftErrors.outTime)}>
+              <TimePicker
+                label="Out time"
+                value={draft.outTime ? dayjs(`2000-01-01T${draft.outTime}`) : null}
+                onChange={(newValue) => {
+                  setDraft((prev) => ({
+                    ...prev,
+                    outTime: newValue && newValue.isValid() ? newValue.format('HH:mm') : '',
+                  }));
+                  if (draftErrors.outTime) {
+                    setDraftErrors((prev) => ({ ...prev, outTime: '' }));
+                  }
+                }}
+                format="HH:mm"
+                ampm={false}
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                  seconds: renderTimeViewClock,
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: Boolean(draftErrors.outTime),
+                    helperText: draftErrors.outTime,
+                  },
+                }}
+              />
+            </ShakingTextField>
           </Stack>
-          <TextField
-            size="small"
-            label="Remarks"
-            multiline
-            minRows={2}
-            value={draft.remarks}
-            onChange={(event) => setDraft((prev) => ({ ...prev, remarks: event.target.value }))}
-          />
-          <TextField
-            size="small"
-            label="Reason"
-            value={draft.reason}
-            onChange={(event) => setDraft((prev) => ({ ...prev, reason: event.target.value }))}
-          />
+          <ShakingTextField error={Boolean(draftErrors.remarks)}>
+            <TextField
+              size="small"
+              label="Remarks"
+              multiline
+              minRows={2}
+              value={draft.remarks}
+              onChange={(event) => {
+                setDraft((prev) => ({ ...prev, remarks: event.target.value }));
+                if (draftErrors.remarks) {
+                  setDraftErrors((prev) => ({ ...prev, remarks: '' }));
+                }
+              }}
+              fullWidth
+              error={Boolean(draftErrors.remarks)}
+              helperText={draftErrors.remarks}
+            />
+          </ShakingTextField>
+          <ShakingTextField error={Boolean(draftErrors.reason)}>
+            <TextField
+              size="small"
+              label="Reason"
+              value={draft.reason}
+              fullWidth
+              onChange={(event) => {
+                setDraft((prev) => ({ ...prev, reason: event.target.value }));
+                if (draftErrors.reason) {
+                  setDraftErrors((prev) => ({ ...prev, reason: '' }));
+                }
+              }}
+              error={Boolean(draftErrors.reason)}
+              helperText={draftErrors.reason}
+            />
+          </ShakingTextField>
         </Stack>
-      </DialogContent>
+      </DialogScrollContent>
       <DialogActions>
-        <Button onClick={closeDialogs}>Cancel</Button>
+        <Button
+          onClick={closeDialogs}
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
+          Cancel
+        </Button>
         <Button
           variant="contained"
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
           disabled={isAdjusting || isBulkAdjusting}
           onClick={isBulk ? saveBulk : saveInline}
         >
           Save
         </Button>
       </DialogActions>
-    </Dialog>
+    </CustomDialog>
   );
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading="Attendance Register"
         links={[
@@ -817,11 +895,29 @@ const AttendanceTrackingScreen = () => {
         ]}
       />
 
-      <Box
-        sx={{ p: 1.5, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 'var(--shadows-2)' }}
+      <Accordion
+        expanded={filtersOpen}
+        onChange={(_, expanded) => setFiltersOpen(expanded)}
+        sx={{
+          bgcolor: 'background.paper',
+          borderRadius: 1,
+          boxShadow: 'var(--shadows-2)',
+          '&:before': { display: 'none' },
+          m: 0,
+          '&.Mui-expanded': { m: 0 },
+        }}
       >
-        <Stack spacing={1.5}>
-          <Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center">
+        <AccordionSummary
+          expandIcon={<Iconify icon="solar:alt-arrow-down-linear" />}
+          sx={{ px: 1.5, minHeight: 'auto', m: 0 }}
+        >
+          <Stack
+            direction="row"
+            spacing={1}
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{ width: '100%', pr: 1 }}
+          >
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               <Label color="default">Staff {data?.summary?.staffCount || 0}</Label>
               <Label color="success">Present {data?.summary?.present || 0}</Label>
@@ -831,21 +927,11 @@ const AttendanceTrackingScreen = () => {
               <Label color="info">Editable {data?.summary?.editable || 0}</Label>
               <Label color="error">Locked {data?.summary?.locked || 0}</Label>
             </Stack>
-            <Stack direction="row" spacing={1} flexShrink={0}>
-              <Button
-                variant="text"
-                startIcon={
-                  <Iconify
-                    icon={filtersOpen ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'}
-                  />
-                }
-                onClick={() => setFiltersOpen((prev) => !prev)}
-              >
-                Filters
-              </Button>
+            <Stack direction="row" spacing={1} flexShrink={0} onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="outlined"
                 startIcon={<Iconify icon="solar:restart-bold" />}
+                size="small"
                 onClick={() => {
                   setFilters(getDefaultFilters());
                   resetPaging();
@@ -855,10 +941,12 @@ const AttendanceTrackingScreen = () => {
               </Button>
               <Button
                 variant="contained"
+                size="small"
                 startIcon={<Iconify icon="solar:pen-2-bold" />}
                 disabled={!selectedIds.length}
                 onClick={() => {
                   setDraft({ status: 'Present', inTime: '', outTime: '', remarks: '', reason: '' });
+                  setDraftErrors({});
                   setBulkOpen(true);
                 }}
               >
@@ -866,119 +954,173 @@ const AttendanceTrackingScreen = () => {
               </Button>
             </Stack>
           </Stack>
+        </AccordionSummary>
+        <AccordionDetails sx={{ px: 1.5, pb: 1.5, pt: 0, mt: 0 }}>
+          <Stack spacing={1.5}>
+            {/* Row 1: Search · Date Range · Organization · Employee */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(4, 1fr)',
+                },
+                gap: 1.5,
+              }}
+            >
+              <TextField
+                variant="outlined"
+                size="small"
+                value={filters.search}
+                onChange={(event) => setFilter('search', event.target.value)}
+                placeholder="Search..."
+                InputProps={{
+                  startAdornment: (
+                    <SearchIcon sx={{ color: 'text.disabled', mr: 1, fontSize: 20 }} />
+                  ),
+                  endAdornment: filters.search && (
+                    <IconButton size="small" onClick={() => setFilter('search', '')} edge="end">
+                      <ClearIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  ),
+                  sx: {
+                    borderRadius: 1.5,
+                    bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+                    fontSize: '14px',
+                    '& fieldset': {
+                      border: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
+                    },
+                    '&:hover fieldset': {
+                      borderColor: `${varAlpha(theme.vars.palette.grey['500Channel'], 0.4)} !important`,
+                    },
+                  },
+                }}
+                sx={{
+                  maxWidth: '300px',
+                  width: '100%',
+                  '& .MuiInputBase-root': {
+                    pr: 1,
+                  },
+                }}
+              />
+              <CustomDateRangePicker
+                label="Start Date - End Date"
+                value={[filters.startDate, filters.endDate]}
+                dateFormat="DD/MM/YYYY"
+                onChange={(value) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    startDate: value[0],
+                    endDate: value[1] ? value[1].endOf('day') : null,
+                  }));
+                  resetPaging();
+                }}
+              />
+              <FormControl size="small" fullWidth>
+                <InputLabel>Organization</InputLabel>
+                <Select
+                  label="Organization"
+                  value={filters.educationMediumStageId}
+                  onChange={(event) => setFilter('educationMediumStageId', event.target.value)}
+                >
+                  <MenuItem value="all">All organizations</MenuItem>
+                  {stages.map((stage: any) => (
+                    <MenuItem key={stage.id} value={stage.id}>
+                      {stage.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Autocomplete
+                size="small"
+                fullWidth
+                options={employeeOptions?.items || []}
+                getOptionLabel={(option: any) =>
+                  `${option.employeeName || option.fullName || option.firstName || ''} ${option.employeeCode ? `(${option.employeeCode})` : ''}`
+                }
+                onChange={(_event, value: any) => setFilter('employeeId', value?.id || '')}
+                renderInput={(params) => <TextField {...params} label="Employee" />}
+              />
+            </Box>
 
-          <Collapse in={filtersOpen} timeout="auto" unmountOnExit>
-            <Stack spacing={1.5} sx={{ pt: 0.5 }}>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-                <DateRangeSelector
-                  startDate={filters.startDate}
-                  endDate={filters.endDate}
-                  onChange={(start, end) => {
-                    setFilters((prev) => ({ ...prev, startDate: start, endDate: end }));
-                    resetPaging();
-                  }}
-                />
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Organization</InputLabel>
-                  <Select
-                    label="Organization"
-                    value={filters.educationMediumStageId}
-                    onChange={(event) => setFilter('educationMediumStageId', event.target.value)}
-                  >
-                    <MenuItem value="">All organizations</MenuItem>
-                    {stages.map((stage: any) => (
-                      <MenuItem key={stage.id} value={stage.id}>
-                        {stage.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <Autocomplete
-                  size="small"
-                  fullWidth
-                  options={employeeOptions?.items || []}
-                  getOptionLabel={(option: any) =>
-                    `${option.employeeName || option.fullName || option.firstName || ''} ${option.employeeCode ? `(${option.employeeCode})` : ''}`
-                  }
-                  onChange={(_event, value: any) => setFilter('employeeId', value?.id || '')}
-                  renderInput={(params) => <TextField {...params} label="Employee" />}
-                />
-              </Stack>
+            {/* Row 2: Group · Department · Status · Payroll State */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(4, 1fr)',
+                },
+                gap: 1.5,
+              }}
+            >
+              <FormControl size="small" fullWidth>
+                <InputLabel>Group</InputLabel>
+                <Select
+                  label="Group"
+                  value={filters.employeeGroup}
+                  onChange={(event) => setFilter('employeeGroup', event.target.value)}
+                >
+                  <MenuItem value="">All groups</MenuItem>
+                  <MenuItem value="Teaching">Teaching</MenuItem>
+                  <MenuItem value="NonTeaching">Non teaching</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                size="small"
+                fullWidth
+                label="Department"
+                value={filters.department}
+                onChange={(event) => setFilter('department', event.target.value)}
+              />
+              <FormControl size="small" fullWidth>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  label="Status"
+                  value={filters.status}
+                  onChange={(event) => setFilter('status', event.target.value)}
+                >
+                  <MenuItem value="all">All Status</MenuItem>
+                  {STATUS_OPTIONS.map((item) => (
+                    <MenuItem key={item.value} value={item.value}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl size="small" fullWidth>
+                <InputLabel>Payroll state</InputLabel>
+                <Select
+                  label="Payroll state"
+                  value={filters.payrollState}
+                  onChange={(event) => setFilter('payrollState', event.target.value)}
+                >
+                  {PAYROLL_STATES.map((item) => (
+                    <MenuItem key={item.value} value={item.value}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
 
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Group</InputLabel>
-                  <Select
-                    label="Group"
-                    value={filters.employeeGroup}
-                    onChange={(event) => setFilter('employeeGroup', event.target.value)}
-                  >
-                    <MenuItem value="">All groups</MenuItem>
-                    <MenuItem value="Teaching">Teaching</MenuItem>
-                    <MenuItem value="NonTeaching">Non teaching</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              {EXCEPTION_FILTERS.map((item) => (
+                <Chip
+                  key={item.value}
                   size="small"
-                  fullWidth
-                  label="Department"
-                  value={filters.department}
-                  onChange={(event) => setFilter('department', event.target.value)}
+                  label={item.label}
+                  color={filters.exceptionFilter === item.value ? 'primary' : 'default'}
+                  variant={filters.exceptionFilter === item.value ? 'filled' : 'outlined'}
+                  onClick={() => setFilter('exceptionFilter', item.value)}
                 />
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    label="Status"
-                    value={filters.status}
-                    onChange={(event) => setFilter('status', event.target.value)}
-                  >
-                    <MenuItem value="">All statuses</MenuItem>
-                    {STATUS_OPTIONS.map((item) => (
-                      <MenuItem key={item.value} value={item.value}>
-                        {item.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Payroll state</InputLabel>
-                  <Select
-                    label="Payroll state"
-                    value={filters.payrollState}
-                    onChange={(event) => setFilter('payrollState', event.target.value)}
-                  >
-                    {PAYROLL_STATES.map((item) => (
-                      <MenuItem key={item.value} value={item.value}>
-                        {item.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <TextField
-                  size="small"
-                  fullWidth
-                  label="Search"
-                  value={filters.search}
-                  onChange={(event) => setFilter('search', event.target.value)}
-                />
-              </Stack>
-
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {EXCEPTION_FILTERS.map((item) => (
-                  <Chip
-                    key={item.value}
-                    size="small"
-                    label={item.label}
-                    color={filters.exceptionFilter === item.value ? 'primary' : 'default'}
-                    variant={filters.exceptionFilter === item.value ? 'filled' : 'outlined'}
-                    onClick={() => setFilter('exceptionFilter', item.value)}
-                  />
-                ))}
-              </Stack>
+              ))}
             </Stack>
-          </Collapse>
-        </Stack>
-      </Box>
+          </Stack>
+        </AccordionDetails>
+      </Accordion>
 
       <Divider />
 
@@ -997,7 +1139,10 @@ const AttendanceTrackingScreen = () => {
           setPageSize(nextPageSize);
         }}
         tableContainerProps={{
-          sx: { maxHeight: filtersOpen ? 'calc(100vh - 360px)' : 'calc(100vh - 230px)' },
+          sx: {
+            maxHeight: filtersOpen ? 'calc(100vh - 360px)' : 'calc(100vh - 230px)',
+            transition: 'max-height 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+          },
         }}
         noDataText="No employee attendance found for the selected filters."
       />

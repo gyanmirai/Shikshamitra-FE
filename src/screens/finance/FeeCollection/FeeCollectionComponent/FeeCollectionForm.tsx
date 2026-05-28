@@ -6,7 +6,6 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
-import { toast } from 'sonner';
 import { useFormik } from 'formik';
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
@@ -19,6 +18,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -59,7 +59,6 @@ import {
 } from 'src/redux/feeCollection/feeCollection';
 
 import FeeLedgerList from './FeeLedgerList';
-import { toPeriod } from './FeeLedgerShared';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
 import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
@@ -111,6 +110,7 @@ const validationSchema = Yup.object({
 
 const buildInitialValues = (student: IStudentFee | null): FeeCollectionFormValues => ({
   studentId: String(student?.id ?? ''),
+  studentName: student?.name ?? '',
   selectedItems: [],
   charges: [],
   subtotal: 0,
@@ -529,12 +529,19 @@ const FeeCollectComponentForm = ({
         String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, '')
       );
 
+      const paymentMethod = Number(
+        Object.entries(PaymentMethodLabels).find(
+          ([, label]) => label === formik.values.payment.paymentMethod
+        )?.[0] ?? 0
+      );
+
       await collectFee({
         studentId: String(student?.id ?? ''),
         academicYearId: currentYear?.id ?? '',
         totalAmount: subtotal,
         receivedAmount,
         notes: formik.values.remarks ?? undefined,
+        bankReceiptConfirmed: paymentMethod !== 0,
         selectedFeeHeads: Object.entries(feeHeadGroups).map(
           ([feeHeadId, group]: [
             string,
@@ -553,11 +560,7 @@ const FeeCollectComponentForm = ({
             : undefined,
         payments: [
           {
-            paymentMethod: Number(
-              Object.entries(PaymentMethodLabels).find(
-                ([, label]) => label === formik.values.payment.paymentMethod
-              )?.[0] ?? 0
-            ),
+            paymentMethod,
             amount: receivedAmount,
             details: Object.fromEntries(
               Object.entries(formik.values.payment.details)
@@ -567,12 +570,11 @@ const FeeCollectComponentForm = ({
           },
         ],
       }).unwrap();
-
-      toast.success('Fee collected successfully');
+      shikshaMitraToast.success({ message: `Payment Done Succesfully for ${student?.name ?? ''}` });
       setFinalReviewOpen(false);
       onCancel?.(null, true);
     } catch {
-      toast.error('Failed to collect fee. Please try again.');
+      shikshaMitraToast.error({ message: 'Failed to collect fee. Please try again.' });
       setFinalReviewOpen(false);
     }
   };
@@ -604,12 +606,19 @@ const FeeCollectComponentForm = ({
         String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, '')
       );
 
+      const paymentMethod = Number(
+        Object.entries(PaymentMethodLabels).find(
+          ([, label]) => label === formik.values.payment.paymentMethod
+        )?.[0] ?? 0
+      );
+
       await collectFee({
         studentId: String(student?.id ?? ''),
         academicYearId: currentYear?.id ?? '',
         totalAmount: subtotal,
         receivedAmount,
         notes: `[PENDING_VERIFICATION] ${formik.values.remarks ?? ''}`.trim(),
+        bankReceiptConfirmed: paymentMethod !== 0,
         selectedFeeHeads: Object.entries(feeHeadGroups).map(
           ([feeHeadId, group]: [
             string,
@@ -628,11 +637,7 @@ const FeeCollectComponentForm = ({
             : undefined,
         payments: [
           {
-            paymentMethod: Number(
-              Object.entries(PaymentMethodLabels).find(
-                ([, label]) => label === formik.values.payment.paymentMethod
-              )?.[0] ?? 0
-            ),
+            paymentMethod,
             amount: receivedAmount,
             details: Object.fromEntries(
               Object.entries({ ...formik.values.payment.details, verificationStatus: 'pending' })
@@ -643,38 +648,12 @@ const FeeCollectComponentForm = ({
         ],
       }).unwrap();
 
-      toast.success('Payment saved as pending verification');
+      shikshaMitraToast.success({ message: `Payment saved as partial for ${student?.name ?? ''}` });
       setFinalReviewOpen(false);
       onCancel?.(null, true);
     } catch {
-      toast.error('Failed to save payment. Please try again.');
+      shikshaMitraToast.error({ message: 'Failed to save payment. Please try again.' });
       setFinalReviewOpen(false);
-    }
-  };
-
-  const handleSelectAll = () => {
-    const allItems: SelectedItem[] = [];
-    (formData?.ledger ?? []).forEach((group: FeeLedgerMonth) => {
-      const monthNum = normalizeMonth(group.month as unknown as string | number);
-      const period = toPeriod(FeeMonth[monthNum] as string, group.year);
-      group.items.forEach((item: FeeLedgerLine) => {
-        if (item.due > 0) {
-          allItems.push({
-            dueFeeId: item.dueFeeId,
-            feeHeadId: item.feeHeadId,
-            period,
-            dueAmount: item.due,
-          });
-        }
-      });
-    });
-    formik.setFieldValue('selectedItems', allItems, false);
-
-    if (chargesData && chargesData.length > 0) {
-      const allCharges = chargesData
-        .filter((c) => c.status !== FeeCollectionStatusType.Paid && c.status !== 'Paid')
-        .map((c) => c.chargeId);
-      formik.setFieldValue('charges', allCharges, false);
     }
   };
 

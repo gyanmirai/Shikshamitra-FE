@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
+import { FeeMonth } from 'src/enums/fee-collection-type';
 import { Box, Chip, Button, Divider, Tooltip } from '@mui/material';
 
 import { toPeriod } from './FeeLedgerShared';
@@ -47,8 +48,9 @@ const QuickActionToolbar = ({
   const allMonthWise = ledgerData.monthWise ?? [];
 
   // ── Computed badges ────────────────────────────────────────────────────────
-  const currentMonthName = new Date().toLocaleString('en-IN', { month: 'long' });
-  const currentMonthGroup = allMonthWise.find((g) => g.month === currentMonthName);
+  const currentMonth = new Date().getMonth() as FeeMonth;
+  const currentMonthName = FeeMonth[currentMonth];
+  const currentMonthGroup = allMonthWise.find((g) => g.month === currentMonth);
   const currentMonthCount = currentMonthGroup?.items.filter((i) => i.due > 0).length ?? 0;
 
   const totalDueFeeItems = allMonthWise.reduce(
@@ -92,9 +94,7 @@ const QuickActionToolbar = ({
   const selectCurrentQuarter = () => {
     const nowMonth = new Date().getMonth();
     const quarterStart = Math.floor(nowMonth / 3) * 3;
-    const quarterMonths = Array.from({ length: 3 }, (_, i) =>
-      new Date(currentYear, quarterStart + i, 1).toLocaleString('en-IN', { month: 'long' })
-    );
+    const quarterMonths = Array.from({ length: 3 }, (_, i) => (quarterStart + i) as FeeMonth);
     const items: SelectedItem[] = [];
     allMonthWise.forEach((g) => {
       if (!quarterMonths.includes(g.month)) return;

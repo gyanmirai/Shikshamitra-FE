@@ -59,22 +59,35 @@ const UpiTable = ({
         sticky: true,
         render: (value, row) => (
           <Typography variant="caption" fontSize="13px">
-            {value || '-'} ({row.grNumber})
+            {value || '-'} {row.grNumber && `(${row.grNumber})`}
           </Typography>
         ),
       },
       {
         id: 'board',
         label: 'Board/Medium',
-        width: 140,
-        minWidth: 120,
+        width: 120,
+        minWidth: 100,
         maxWidth: 180,
         align: 'left',
         isFilter: true,
         filterType: 'string',
         render: (value, row) => (
           <Typography variant="caption" fontSize="13px">
-            {value || '-'}-{row.medium}
+            {value || '-'} {row.medium && `- (${row.medium})`}
+          </Typography>
+        ),
+      },
+      {
+        id: 'standardName',
+        label: 'Class/Div',
+        align: 'left',
+        width: 150,
+        minWidth: 130,
+        maxWidth: 180,
+        render: (value, row) => (
+          <Typography variant="caption" fontSize="13px">
+            {value || '-'} {row.divisionName && `- (${row.divisionName})`}
           </Typography>
         ),
       },
@@ -120,31 +133,6 @@ const UpiTable = ({
         align: 'left',
         isFilter: true,
         filterType: 'date',
-      },
-      {
-        id: 'class',
-        label: 'Class',
-        width: 96,
-        minWidth: 80,
-        maxWidth: 120,
-        align: 'left',
-        isFilter: true,
-        filterType: 'string',
-        render: (value, row) => (
-          <Typography variant="caption" fontSize="13px">
-            {value || '-'}-{row.division}
-          </Typography>
-        ),
-      },
-      {
-        id: 'rollNumber',
-        label: 'Roll No.',
-        width: 140,
-        minWidth: 120,
-        maxWidth: 180,
-        align: 'left',
-        isFilter: true,
-        filterType: 'number',
       },
       {
         id: 'remarks',

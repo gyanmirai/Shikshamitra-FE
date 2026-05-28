@@ -3,7 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, Card } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
@@ -12,6 +12,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import ViewFeeDetails from './Components/ViewFeeDetails';
 import FeeCollectionTable from './Components/FeeCollectionTable';
+import AdjustmentForm from '../adjustments/components/AdjustmentForm';
 import FeeCollectComponentForm from './FeeCollectionComponent/FeeCollectionForm';
 
 import type { IStudentFee } from './Components/type';
@@ -22,6 +23,7 @@ const FeeCollection = () => {
 
   const studentDialog = useBoolean();
   const viewDialog = useBoolean();
+  const adjustmentDialog = useBoolean();
   const [selectedStudent, setSelectedStudent] = useState<IStudentFee | null>(null);
   // Get the changes status from the confirm popup redux state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -85,6 +87,29 @@ const FeeCollection = () => {
             setSelectedStudent(null);
           }}
         />
+      ) : adjustmentDialog.value ? (
+        <CustomBreadcrumbs
+          heading="Give Adjustment"
+          description="Fill in the adjustment details for the selected student."
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/fee-collection' },
+            {
+              name: 'Collections',
+              href: '/finance/fee-collection',
+              onClick() {
+                adjustmentDialog.onFalse();
+                setSelectedStudent(null);
+              },
+            },
+            { name: 'Give Adjustment' },
+          ]}
+          isBack={adjustmentDialog.value}
+          onBack={() => {
+            adjustmentDialog.onFalse();
+            setSelectedStudent(null);
+          }}
+        />
       ) : (
         <CustomBreadcrumbs
           heading="Collections"
@@ -96,7 +121,7 @@ const FeeCollection = () => {
           ]}
         />
       )}
-      {!studentDialog.value && !viewDialog.value && (
+      {!studentDialog.value && !viewDialog.value && !adjustmentDialog.value && (
         <FeeCollectionTable
           onAddFee={studentDialog}
           selectedBoard={selectedBoard}
@@ -110,6 +135,10 @@ const FeeCollection = () => {
           }}
           onView={(row) => {
             viewDialog.onTrue();
+            setSelectedStudent(row as any);
+          }}
+          onGiveAdjustment={(row) => {
+            adjustmentDialog.onTrue();
             setSelectedStudent(row as any);
           }}
         />
@@ -133,7 +162,23 @@ const FeeCollection = () => {
           collectFeesDialog={studentDialog}
           viewDialog={viewDialog}
         />
-      )}{' '}
+      )}
+      {adjustmentDialog.value && selectedStudent && (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <AdjustmentForm
+            onCancel={() => {
+              adjustmentDialog.onFalse();
+              setSelectedStudent(null);
+            }}
+            onSubmit={(values) => {
+              adjustmentDialog.onFalse();
+              setSelectedStudent(null);
+            }}
+            hideStudentInfoForm
+            initialData={{ studentId: selectedStudent.id }}
+          />
+        </Card>
+      )}
     </Box>
   );
 };

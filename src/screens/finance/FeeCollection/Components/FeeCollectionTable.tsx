@@ -10,10 +10,10 @@ import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
-import { Box, Card, MenuList, MenuItem } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { Box, Card, MenuList, MenuItem, Typography } from '@mui/material';
 import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
 import {
   FeeCollectionStatusType,
@@ -33,6 +33,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   setSelectedMedium,
   onCollectFee,
   onView,
+  onGiveAdjustment,
 }) => {
   const [boards, setBoards] = useState<Board[]>([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
@@ -153,6 +154,11 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               minWidth: 200,
               maxWidth: 500,
               sticky: true,
+              render: (value, row) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value || '-'} {row.grNumber && `(${row.grNumber})`}
+                </Typography>
+              ),
             },
             {
               id: 'standardDivision',
@@ -260,6 +266,15 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
                     <CustomTooltip title="View Details">
                       <MenuItem onClick={() => onView(row as IFeeData)}>
                         <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
+                      </MenuItem>
+                    </CustomTooltip>
+                    <CustomTooltip title="Give Adjustment">
+                      <MenuItem
+                        onClick={() =>
+                          onGiveAdjustment({ ...row, id: row.studentId ?? row.id } as IFeeData)
+                        }
+                      >
+                        <Iconify icon="mdi:adjust" sx={{ height: '16px', width: '16px' }} />
                       </MenuItem>
                     </CustomTooltip>
                   </MenuList>

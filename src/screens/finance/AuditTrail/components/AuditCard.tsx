@@ -3,6 +3,7 @@
 import type { Variants } from 'framer-motion';
 
 import { useState } from 'react';
+import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +15,7 @@ import {
   formatHrAuditRelativeTime,
 } from 'src/utils/hr-audit-format';
 
-import { FINANCE_AUDIT_SUBMODULE_COLORS } from '../constants/subModuleColors';
+import { getFinanceAuditSubModuleColor } from '../constants/subModuleColors';
 
 import type { FinanceAuditLog } from '../types/financeAudit.types';
 
@@ -84,9 +85,9 @@ const MetaItem = ({ icon, text, muted }: MetaItemProps) => (
 );
 
 const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
-  const subModuleColor = FINANCE_AUDIT_SUBMODULE_COLORS[log.subModule] ?? '#607D8B';
+  const subModuleColor = getFinanceAuditSubModuleColor(log.subModule);
   const actionIcon = ACTION_ICON_MAP[log.action] ?? 'mdi:information-outline';
   const actionColor = ACTION_COLOR_MAP[log.action] ?? 'default';
 
@@ -176,7 +177,7 @@ const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
               height: 24,
               borderRadius: '6px',
               bgcolor: subModuleColor,
-              boxShadow: `0 2px 8px ${subModuleColor}55`,
+              boxShadow: `0 2px 8px ${alpha(subModuleColor, 0.33)}`,
             }}
           >
             <Box
@@ -356,7 +357,7 @@ const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
               <Card variant="outlined" sx={{ borderRadius: 1.5, bgcolor: 'background.default' }}>
                 <Grid container spacing={0}>
                   {detailItems.map((item, i) => (
-                    <Grid key={item.label} size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Grid key={item.label} size={{ xs: 12, sm: 6, md: 2 }}>
                       <Box sx={{ px: 1.5, py: 1.2 }}>
                         <Typography
                           variant="caption"
