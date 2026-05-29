@@ -1,7 +1,7 @@
 'use client';
 
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { alpha, useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatNumber } from 'src/utils/formate_number';
 import { FeeMonth } from 'src/enums/fee-collection-type';
@@ -55,15 +55,14 @@ const SmartRecommendationPanel = ({
   currentYear,
   onSelectionChange,
 }: SmartRecommendationPanelProps) => {
-  const theme = useTheme();
   const allMonthWise = ledgerData.monthWise ?? [];
 
   // ── Compute recommendations ────────────────────────────────────────────────
   const nowMonth = new Date().getMonth();
-  const overdueGroups = allMonthWise.filter((g) => {
-    const monthValue = g.month as number;
-    return monthValue < nowMonth && g.items.some((i) => i.due > 0);
-  });
+
+  const overdueGroups = allMonthWise.filter(
+    (g) => g.month < nowMonth && g.items.some((i) => i.due > 0)
+  );
 
   const overdueTotal = overdueGroups.reduce(
     (s, g) => s + g.items.filter((i) => i.due > 0).reduce((ss, i) => ss + i.due, 0),
@@ -75,10 +74,12 @@ const SmartRecommendationPanel = ({
   );
 
   const quarterStart = Math.floor(nowMonth / 3) * 3;
-  const quarterMonths = Array.from({ length: 3 }, (_, i) => (quarterStart + i) as FeeMonth);
-  const quarterMonthNames = quarterMonths.map((month) => FeeMonth[month]);
+  const quarterMonthNames = Array.from({ length: 3 }, (_, i) =>
+    new Date(currentYear, quarterStart + i, 1).toLocaleString('en-IN', { month: 'long' })
+  );
+  const quarterMonthEnums = quarterMonthNames.map((m) => FeeMonth[m as keyof typeof FeeMonth]);
   const quarterGroups = allMonthWise.filter(
-    (g) => quarterMonths.includes(g.month) && g.items.some((i) => i.due > 0)
+    (g) => quarterMonthEnums.includes(g.month) && g.items.some((i) => i.due > 0)
   );
   const quarterTotal = quarterGroups.reduce(
     (s, g) => s + g.items.filter((i) => i.due > 0).reduce((ss, i) => ss + i.due, 0),
@@ -102,7 +103,7 @@ const SmartRecommendationPanel = ({
       onAction: () => {
         const items: SelectedItem[] = [];
         overdueGroups.forEach((g) => {
-          const period = toPeriod(g.month, currentYear);
+          const period = toPeriod(FeeMonth[g.month] as string, currentYear);
           g.items
             .filter((i) => i.due > 0)
             .forEach((i) => items.push({ feeHeadId: i.feeHeadId, period, dueAmount: i.due }));
@@ -125,7 +126,7 @@ const SmartRecommendationPanel = ({
       onAction: () => {
         const items: SelectedItem[] = [];
         quarterGroups.forEach((g) => {
-          const period = toPeriod(g.month, currentYear);
+          const period = toPeriod(FeeMonth[g.month] as string, currentYear);
           g.items
             .filter((i) => i.due > 0)
             .forEach((i) => items.push({ feeHeadId: i.feeHeadId, period, dueAmount: i.due }));

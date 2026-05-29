@@ -196,8 +196,6 @@ const FinanceReconciliation = () => {
             label="Month-Year"
             format="MMM-YYYY"
             value={date}
-            minDate={dayjs(currentYear?.startDate)}
-            maxDate={dayjs(currentYear?.endDate)}
             views={['year', 'month']}
             slotProps={{
               textField: {

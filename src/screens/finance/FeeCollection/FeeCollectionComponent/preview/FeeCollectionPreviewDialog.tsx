@@ -8,6 +8,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
 
 import PaymentInfoPreview from './PaymentInfoPreview';
@@ -207,13 +208,16 @@ const FeeCollectionPreviewDialog = ({
       maxWidth="md"
       hasForm={false}
       title={
-        <Box>
-          <Typography variant="h6" fontWeight={700} lineHeight={1.2} color="text.primary">
-            Payment Preview
-          </Typography>
-          <Typography variant="caption" color="text.secondary" fontWeight={500}>
-            Review fee details before confirming collection
-          </Typography>
+        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+          <Typography variant="h5">Payment Details</Typography>
+          <CustomTooltip
+            arrow
+            placement="right"
+            sx={{ textAlign: 'justify' }}
+            title="You can update the payment details including amount and method."
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </CustomTooltip>
         </Box>
       }
     >

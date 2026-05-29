@@ -48,9 +48,9 @@ const QuickActionToolbar = ({
   const allMonthWise = ledgerData.monthWise ?? [];
 
   // ── Computed badges ────────────────────────────────────────────────────────
-  const currentMonth = new Date().getMonth() as FeeMonth;
-  const currentMonthName = FeeMonth[currentMonth];
-  const currentMonthGroup = allMonthWise.find((g) => g.month === currentMonth);
+  const currentMonthName = new Date().toLocaleString('en-IN', { month: 'long' });
+  const currentMonthEnum = FeeMonth[currentMonthName as keyof typeof FeeMonth];
+  const currentMonthGroup = allMonthWise.find((g) => g.month === currentMonthEnum);
   const currentMonthCount = currentMonthGroup?.items.filter((i) => i.due > 0).length ?? 0;
 
   const totalDueFeeItems = allMonthWise.reduce(
@@ -69,7 +69,7 @@ const QuickActionToolbar = ({
   const selectAllPending = () => {
     const items: SelectedItem[] = [];
     allMonthWise.forEach((g) => {
-      const period = toPeriod(g.month, currentYear);
+      const period = toPeriod(FeeMonth[g.month] as string, currentYear);
       g.items
         .filter((i) => i.due > 0)
         .forEach((i) => items.push({ feeHeadId: i.feeHeadId, period, dueAmount: i.due }));
@@ -83,7 +83,7 @@ const QuickActionToolbar = ({
 
   const selectCurrentMonth = () => {
     if (!currentMonthGroup) return;
-    const period = toPeriod(currentMonthGroup.month, currentYear);
+    const period = toPeriod(FeeMonth[currentMonthGroup.month] as string, currentYear);
     const items: SelectedItem[] = currentMonthGroup.items
       .filter((i) => i.due > 0)
       .map((i) => ({ feeHeadId: i.feeHeadId, period, dueAmount: i.due }));
@@ -94,11 +94,14 @@ const QuickActionToolbar = ({
   const selectCurrentQuarter = () => {
     const nowMonth = new Date().getMonth();
     const quarterStart = Math.floor(nowMonth / 3) * 3;
-    const quarterMonths = Array.from({ length: 3 }, (_, i) => (quarterStart + i) as FeeMonth);
+    const quarterMonths = Array.from({ length: 3 }, (_, i) =>
+      new Date(currentYear, quarterStart + i, 1).toLocaleString('en-IN', { month: 'long' })
+    );
+    const quarterMonthEnums = quarterMonths.map((m) => FeeMonth[m as keyof typeof FeeMonth]);
     const items: SelectedItem[] = [];
     allMonthWise.forEach((g) => {
-      if (!quarterMonths.includes(g.month)) return;
-      const period = toPeriod(g.month, currentYear);
+      if (!quarterMonthEnums.includes(g.month)) return;
+      const period = toPeriod(FeeMonth[g.month] as string, currentYear);
       g.items
         .filter((i) => i.due > 0)
         .forEach((i) => items.push({ feeHeadId: i.feeHeadId, period, dueAmount: i.due }));

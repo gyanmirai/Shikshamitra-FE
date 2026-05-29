@@ -148,7 +148,7 @@ const FeeLedgerList = ({
       onSelectionChange([...selectedItems, { feeHeadId, period, dueAmount: due }]);
     }
   };
-
+  console.log('data----', data);
   // ── Month group toggle ─────────────────────────────────────────────────────
   const toggleMonthGroup = (group: MonthWiseGroup) => {
     const period = toPeriod(FeeMonth[group.month] as string, group.year ?? year);
