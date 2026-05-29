@@ -4,12 +4,12 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
+import { alpha, useTheme } from '@mui/material/styles';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 import { fNumber, fPercent } from 'src/utils/format-number';
-import { Box, Card, Chip, CardHeader, Typography } from '@mui/material';
+import { Box, Card, CardHeader, Typography } from '@mui/material';
 
 // -----------------------------------------------------------------------
 
@@ -20,31 +20,44 @@ const EXAM_DATA = [
   { label: 'Final Exam', passed: 33, failed: 13 },
 ];
 
-const totalPassed = EXAM_DATA.reduce((s, e) => s + e.passed, 0);
-const totalFailed = EXAM_DATA.reduce((s, e) => s + e.failed, 0);
-const totalStudents = totalPassed + totalFailed;
-
 const toRate = (passed: number, failed: number) => {
   const total = passed + failed;
   return total ? (passed / total) * 100 : 0;
 };
 
-const latestExam = EXAM_DATA[EXAM_DATA.length - 1];
-const previousExam = EXAM_DATA[EXAM_DATA.length - 2];
-const passRate = totalStudents ? (totalPassed / totalStudents) * 100 : 0;
-const failRate = totalStudents ? (totalFailed / totalStudents) * 100 : 0;
-const passRateDelta =
-  toRate(latestExam.passed, latestExam.failed) - toRate(previousExam.passed, previousExam.failed);
-const failRateDelta = -passRateDelta;
-
 // -----------------------------------------------------------------------
 
 const SubjectPassFailChart = () => {
   const theme = useTheme();
+  const metricCardSx = {
+    p: 2,
+    borderRadius: 2,
+    bgcolor:
+      theme.palette.mode === 'dark'
+        ? alpha(theme.palette.common.white, 0.08)
+        : alpha(theme.palette.grey[500], 0.14),
+    border: `1px solid ${
+      theme.palette.mode === 'dark'
+        ? alpha(theme.palette.common.white, 0.1)
+        : alpha(theme.palette.grey[500], 0.2)
+    }`,
+  };
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [classes, setClasses] = useState<string>('');
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
+  const [selectedExam, setSelectedExam] = useState<string>(
+    EXAM_DATA[EXAM_DATA.length - 1]?.label || ''
+  );
+
+  const examOptions = EXAM_DATA.map((exam) => ({ label: exam.label, value: exam.label }));
+  const selectedExamData =
+    EXAM_DATA.find((exam) => exam.label === selectedExam) || EXAM_DATA[EXAM_DATA.length - 1];
+  const selectedPassed = selectedExamData?.passed || 0;
+  const selectedFailed = selectedExamData?.failed || 0;
+  const totalStudents = selectedPassed + selectedFailed;
+  const passRate = toRate(selectedPassed, selectedFailed);
+  const failRate = toRate(selectedFailed, selectedPassed);
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -132,8 +145,13 @@ const SubjectPassFailChart = () => {
       }}
     >
       <CardHeader
-        sx={{ mt: -1, ml: -1, mb: 2, flexShrink: 0 }}
+        sx={{ mt: -1, ml: -1, mb: 1, flexShrink: 0 }}
         title="Exam Pass / Fail Rate"
+        subheader={
+          <Typography variant="body2" color="text.secondary">
+            Selected exam: {selectedExamData?.label || 'N/A'}
+          </Typography>
+        }
         action={
           <Box sx={{ display: 'flex', gap: 1 }}>
             <CustomSelect
@@ -143,7 +161,7 @@ const SubjectPassFailChart = () => {
               onChange={(val) => setClasses(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { minWidth: '90px' } }}
+              formControlProps={{ sx: { minWidth: '150px' } }}
             />
             <CustomSelect
               options={allDivision}
@@ -152,8 +170,17 @@ const SubjectPassFailChart = () => {
               onChange={(val) => setDivision(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { minWidth: '90px' } }}
+              formControlProps={{ sx: { minWidth: '150px' } }}
               disabled={!classes}
+            />
+            <CustomSelect
+              options={examOptions}
+              label="Exam"
+              value={selectedExam}
+              onChange={(val) => setSelectedExam(val as string)}
+              labelKey="label"
+              valueKey="value"
+              formControlProps={{ sx: { minWidth: '150px' } }}
             />
           </Box>
         }
@@ -166,13 +193,7 @@ const SubjectPassFailChart = () => {
             gap: 1.5,
           }}
         >
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: theme.vars.palette.grey[200],
-            }}
-          >
+          <Box sx={metricCardSx}>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
               Total Students
             </Typography>
@@ -181,13 +202,7 @@ const SubjectPassFailChart = () => {
             </Typography>
           </Box>
 
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: theme.vars.palette.grey[200],
-            }}
-          >
+          <Box sx={metricCardSx}>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
               Pass Rate
             </Typography>
@@ -195,22 +210,10 @@ const SubjectPassFailChart = () => {
               <Typography variant="h4" sx={{ lineHeight: 1 }}>
                 {Math.round(passRate)}%
               </Typography>
-              <Chip
-                size="small"
-                label={`${passRateDelta >= 0 ? '↑' : '↓'}${Math.abs(Math.round(passRateDelta))}%`}
-                color={passRateDelta >= 0 ? 'success' : 'error'}
-                sx={{ height: 24, borderRadius: 999 }}
-              />
             </Box>
           </Box>
 
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: theme.vars.palette.grey[200],
-            }}
-          >
+          <Box sx={metricCardSx}>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
               Fail Rate
             </Typography>
@@ -218,19 +221,18 @@ const SubjectPassFailChart = () => {
               <Typography variant="h4" sx={{ lineHeight: 1 }}>
                 {Math.round(failRate)}%
               </Typography>
-              <Chip
-                size="small"
-                label={`${failRateDelta >= 0 ? '↑' : '↓'}${Math.abs(Math.round(failRateDelta))}%`}
-                color={failRateDelta >= 0 ? 'error' : 'warning'}
-                sx={{ height: 24, borderRadius: 999 }}
-              />
             </Box>
           </Box>
         </Box>
       </Box>
 
       <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-        <Chart dir="ltr" type="donut" series={[totalPassed, totalFailed]} options={chartOptions} />
+        <Chart
+          dir="ltr"
+          type="donut"
+          series={[selectedPassed, selectedFailed]}
+          options={chartOptions}
+        />
       </Box>
     </Card>
   );

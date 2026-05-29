@@ -151,31 +151,6 @@ export default function OperationalStatus() {
                 <Typography variant="caption" color="text.secondary">
                   {item.status}
                 </Typography>
-
-                {/* Progress row */}
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.75 }}>
-                  {/* <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <LinearProgress
-                      variant="determinate"
-                      value={item.progress}
-                      color={item.level}
-                      sx={{ height: 4, borderRadius: 2 }}
-                    />
-                  </Box> */}
-
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'text.secondary',
-                      typography: 'caption',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Iconify icon={item.icon} width={14} sx={{ mr: 0.5 }} />
-                    {item.progress}%
-                  </Box>
-                </Stack>
               </Box>
             </Box>
           ))}
