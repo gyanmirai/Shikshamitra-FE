@@ -1,19 +1,15 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useCallback } from 'react';
 import { Label } from 'src/components/label';
-import PrintIcon from '@mui/icons-material/Print';
+import React, { useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
-import DownloadIcon from '@mui/icons-material/Download';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Box, Chip, Divider, Tooltip, Skeleton, Typography, IconButton } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Skeleton, Typography, CircularProgress } from '@mui/material';
+import { useDownloadFeeReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
 import {
-  FeeReceiptKind,
-  FEE_RECEIPT_BASE_URL,
   FEE_RECEIPT_KIND_COLORS,
   FEE_RECEIPT_KIND_LABELS,
   useGetFeeReceiptDetailQuery,
-  FeeReceiptVerificationStatus,
 } from 'src/redux/invoiceAndReceipt/feeReceiptApi';
 
 interface ReceiptPreviewDialogProps {
@@ -23,26 +19,52 @@ interface ReceiptPreviewDialogProps {
 
 const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, onClose }) => {
   const { data: receipt, isLoading } = useGetFeeReceiptDetailQuery(receiptId);
+  const [receiptBlobUrl, setReceiptBlobUrl] = useState<string | null>(null);
 
-  const pdfUrl = `${process.env.NEXT_PUBLIC_API_URL}/api${FEE_RECEIPT_BASE_URL}/${receiptId}/pdf`;
+  const [downloadFeeReceiptPdf, { isLoading: isPdfLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDownloadFeeReceiptPdfMutation,
+    popupConfig: {
+      error: true,
+      errorMessage: 'Unable to load receipt preview',
+      success: false,
+    },
+  });
 
-  const handleDownload = useCallback(() => {
-    const a = document.createElement('a');
-    a.href = pdfUrl;
-    a.download = `receipt-${receipt?.receiptNumber ?? receiptId}.pdf`;
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }, [pdfUrl, receipt, receiptId]);
+  useEffect(() => {
+    let isActive = true;
 
-  const handlePrint = useCallback(() => {
-    window.open(pdfUrl, '_blank');
-  }, [pdfUrl]);
+    const loadPdf = async () => {
+      try {
+        const blob = await downloadFeeReceiptPdf(receiptId).unwrap();
+        if (!isActive) return;
+        const objectUrl = URL.createObjectURL(blob);
+        setReceiptBlobUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return objectUrl;
+        });
+      } catch {
+        if (isActive) setReceiptBlobUrl(null);
+      }
+    };
 
-  const handleOpenInNew = useCallback(() => {
-    window.open(pdfUrl, '_blank');
-  }, [pdfUrl]);
+    setReceiptBlobUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    loadPdf();
+
+    return () => {
+      isActive = false;
+    };
+  }, [downloadFeeReceiptPdf, receiptId]);
+
+  useEffect(
+    () => () => {
+      if (receiptBlobUrl) URL.revokeObjectURL(receiptBlobUrl);
+    },
+    [receiptBlobUrl]
+  );
 
   const kindColor = receipt
     ? (FEE_RECEIPT_KIND_COLORS[receipt.receiptKind] as LabelColor)
@@ -51,27 +73,22 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
 
   const title = (
     <Box display="flex" alignItems="center" gap={1.5}>
-      <Typography variant="h6" fontWeight={700}>
-        Receipt Preview
-      </Typography>
+      <Box>
+        <Typography variant="h6" fontWeight={700}>
+          {receipt?.studentName || 'Receipt Preview'} {receipt?.grNo ? `(${receipt.grNo})` : ''}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {receipt?.className && `Class ${receipt.className},`}
+        </Typography>
+      </Box>
       {receipt && (
-        <Label variant="soft" color={kindColor}>
+        <Label
+          variant="soft"
+          color={kindColor}
+          sx={{ height: 24, fontSize: '0.75rem', fontWeight: 600, mb: 3 }}
+        >
           {kindLabel}
         </Label>
-      )}
-      {receipt?.verificationStatus === FeeReceiptVerificationStatus.PendingVerification && (
-        <Chip
-          label="Pending Verification"
-          size="small"
-          color="warning"
-          sx={{ height: 20, fontSize: 11 }}
-        />
-      )}
-      {receipt?.verificationStatus === FeeReceiptVerificationStatus.Verified && (
-        <Chip label="Verified" size="small" color="success" sx={{ height: 20, fontSize: 11 }} />
-      )}
-      {receipt?.verificationStatus === FeeReceiptVerificationStatus.Rejected && (
-        <Chip label="Rejected" size="small" color="error" sx={{ height: 20, fontSize: 11 }} />
       )}
     </Box>
   );
@@ -89,135 +106,42 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
           <Typography color="text.secondary">Receipt not found.</Typography>
         </Box>
       ) : (
-        <Box display="flex" flexDirection="column" gap={2} p={1}>
-          {/* ── Action buttons ────────────────────────────────────────────── */}
-          <Box display="flex" gap={1} justifyContent="flex-end">
-            <Tooltip title="Download PDF">
-              <IconButton onClick={handleDownload} size="small" color="primary">
-                <DownloadIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Print">
-              <IconButton onClick={handlePrint} size="small">
-                <PrintIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Open in new tab">
-              <IconButton onClick={handleOpenInNew} size="small">
-                <OpenInNewIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
-
-          <Divider />
-
-          {/* ── Receipt details ───────────────────────────────────────────── */}
-          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1.5}>
-            <DetailRow label="Receipt Number" value={receipt.receiptNumber} />
-            <DetailRow
-              label="Receipt Date"
-              value={new Date(receipt.receiptDate).toLocaleDateString('en-IN')}
-            />
-            <DetailRow label="Student" value={receipt.studentName} />
-            <DetailRow label="GR No." value={receipt.grNo?.toString() ?? '—'} />
-            <DetailRow
-              label="Class"
-              value={[receipt.className, receipt.division].filter(Boolean).join(' / ') || '—'}
-            />
-            <DetailRow label="Roll No." value={receipt.rollNo ?? '—'} />
-            <DetailRow
-              label="Amount Paid"
-              value={`₹ ${receipt.totalPaidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
-              bold
-            />
-            <DetailRow label="Academic Year" value={receipt.academicYearName ?? '—'} />
-          </Box>
-
-          {/* ── Provisional fee specific info ─────────────────────────────── */}
-          {receipt.receiptKind === FeeReceiptKind.ProvisionalFee && (
-            <>
-              <Divider />
-              <Box
-                sx={{
-                  bgcolor: 'warning.lighter',
-                  borderRadius: 1,
-                  p: 1.5,
-                  border: '1px solid',
-                  borderColor: 'warning.light',
-                }}
-              >
-                <Typography variant="body2" color="warning.darker" fontWeight={600}>
-                  Provisional Receipt — Subject to Realisation
-                </Typography>
-                <Typography variant="caption" color="warning.dark" display="block" mt={0.5}>
-                  This is a kachi (provisional) receipt. A final receipt will be issued once the
-                  payment instrument has been cleared by the bank.
-                </Typography>
-                {receipt.linkedFinalReceiptId ? (
-                  <Typography
-                    variant="caption"
-                    color="success.dark"
-                    display="block"
-                    mt={0.5}
-                    fontWeight={600}
-                  >
-                    Final Receipt Issued: {receipt.linkedFinalReceiptNumber}
-                  </Typography>
-                ) : (
-                  <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
-                    Final receipt not yet issued.
-                  </Typography>
-                )}
-              </Box>
-            </>
-          )}
-
-          {/* ── ProvisionalCharge specific info ───────────────────────────── */}
-          {receipt.receiptKind === FeeReceiptKind.ProvisionalCharge && (
-            <>
-              <Divider />
-              <Box
-                sx={{
-                  bgcolor: 'info.lighter',
-                  borderRadius: 1,
-                  p: 1.5,
-                  border: '1px solid',
-                  borderColor: 'info.light',
-                }}
-              >
-                <Typography variant="body2" color="info.darker" fontWeight={600}>
-                  Charge Acknowledgement Receipt
-                </Typography>
-                <Typography variant="caption" color="info.dark" display="block" mt={0.5}>
-                  This receipt covers charge payments only and is separate from any fee receipt
-                  issued for the same visit.
-                </Typography>
-              </Box>
-            </>
-          )}
-
-          {/* ── Sibling receipt ───────────────────────────────────────────── */}
-          {receipt.siblingReceiptNumber && (
+        <Box
+          sx={{
+            width: '100%',
+            height: { xs: '60vh', sm: '65vh', md: '70vh' },
+            maxHeight: 'calc(100vh - 220px)',
+            minHeight: 420,
+            p: 1,
+          }}
+        >
+          {isPdfLoading ? (
             <Box
               sx={{
-                bgcolor: 'background.neutral',
-                borderRadius: 1,
-                p: 1,
-                fontSize: 12,
-                color: 'text.secondary',
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                gap: 1,
               }}
             >
-              Related receipt from same visit:{' '}
-              <Typography component="span" variant="caption" fontWeight={700} color="text.primary">
-                {receipt.siblingReceiptNumber}
+              <CircularProgress size={28} />
+              <Typography variant="body2" color="text.secondary">
+                Loading receipt preview...
               </Typography>
             </Box>
-          )}
-
-          {receipt.remarks && (
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Remarks: {receipt.remarks}
+          ) : receiptBlobUrl ? (
+            <iframe
+              title="Fee Receipt PDF"
+              src={receiptBlobUrl}
+              style={{ border: 'none', width: '100%', minHeight: '100%', height: '100%' }}
+            />
+          ) : (
+            <Box p={2}>
+              <Typography variant="body2" color="text.secondary">
+                Receipt preview is not available right now.
               </Typography>
             </Box>
           )}
@@ -226,22 +150,5 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
     </CustomDialog>
   );
 };
-
-// ── Helper component ────────────────────────────────────────────────────────
-
-const DetailRow: React.FC<{ label: string; value: string; bold?: boolean }> = ({
-  label,
-  value,
-  bold,
-}) => (
-  <Box>
-    <Typography variant="caption" color="text.secondary" display="block">
-      {label}
-    </Typography>
-    <Typography variant="body2" fontWeight={bold ? 700 : 400}>
-      {value}
-    </Typography>
-  </Box>
-);
 
 export default ReceiptPreviewDialog;

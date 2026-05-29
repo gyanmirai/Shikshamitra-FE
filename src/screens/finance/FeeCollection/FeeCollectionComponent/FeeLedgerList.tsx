@@ -136,9 +136,9 @@ const FeeLedgerList = ({
   year = new Date().getFullYear(),
 }: FeeLedgerListProps) => {
   // ── Item toggle ────────────────────────────────────────────────────────────
-  const toggleItem = (feeHeadId: string, month: string, due: number) => {
+  const toggleItem = (feeHeadId: string, month: string, due: number, itemYear?: number) => {
     if (due === 0) return;
-    const period = toPeriod(month, year);
+    const period = toPeriod(month, itemYear ?? year);
     const exists = selectedItems.some((s) => s.feeHeadId === feeHeadId && s.period === period);
     if (exists) {
       onSelectionChange(
@@ -148,7 +148,7 @@ const FeeLedgerList = ({
       onSelectionChange([...selectedItems, { feeHeadId, period, dueAmount: due }]);
     }
   };
-  console.log('data----', data);
+
   // ── Month group toggle ─────────────────────────────────────────────────────
   const toggleMonthGroup = (group: MonthWiseGroup) => {
     const period = toPeriod(FeeMonth[group.month] as string, group.year ?? year);

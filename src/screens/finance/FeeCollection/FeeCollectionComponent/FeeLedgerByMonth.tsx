@@ -17,7 +17,7 @@ export interface ByMonthViewProps {
   groups: MonthWiseGroup[];
   selectedItems: SelectedItem[];
   year: number;
-  onToggleItem: (feeHeadId: string, month: string, due: number) => void;
+  onToggleItem: (feeHeadId: string, month: string, due: number, itemYear?: number) => void;
   onToggleGroup: (group: MonthWiseGroup) => void;
 }
 
@@ -27,7 +27,7 @@ interface MonthGroupProps {
   group: MonthWiseGroup;
   selectedItems: SelectedItem[];
   year: number;
-  onToggleItem: (feeHeadId: string, month: string, due: number) => void;
+  onToggleItem: (feeHeadId: string, month: string, due: number, itemYear?: number) => void;
   onToggleGroup: (group: MonthWiseGroup) => void;
 }
 
@@ -49,17 +49,7 @@ const MonthGroup = ({
 
   const isAllSelected = selectableItems.length > 0 && selectedCount === selectableItems.length;
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
-  const urgency =
-    group.totalDue > 6000
-      ? 'High'
-      : group.totalDue > 0
-        ? 'Medium'
-        : selectableItems.length > 0
-          ? 'Low'
-          : 'None';
-  const urgencyColor =
-    urgency === 'High' ? 'error.main' : urgency === 'Medium' ? 'warning.main' : 'success.main';
-  console.log('group====', group);
+
   return (
     <Card
       component={motion.div}
@@ -115,7 +105,7 @@ const MonthGroup = ({
               }}
             />
             <Typography variant="subtitle2" sx={{ fontWeight: 800, letterSpacing: '0.02em' }}>
-              {`${FeeMonth[group.month]} ${year}`}
+              {`${FeeMonth[group.month]} ${group.year ?? year}`}
             </Typography>
             <Chip
               label={`${group.items.length} ${group.items.length === 1 ? 'head' : 'heads'}`}
@@ -155,7 +145,12 @@ const MonthGroup = ({
                 isSelected={isSelected}
                 isDisabled={item.due === 0}
                 onToggle={() =>
-                  onToggleItem(item.feeHeadId, FeeMonth[group.month] as string, item.due)
+                  onToggleItem(
+                    item.feeHeadId,
+                    FeeMonth[group.month] as string,
+                    item.due,
+                    group.year
+                  )
                 }
               />
               {idx < group.items.length - 1 && (
@@ -186,7 +181,7 @@ const ByMonthView = ({
   <Box>
     {groups.map((group) => (
       <MonthGroup
-        key={group.month}
+        key={`${group.month}-${group.year ?? year}`}
         group={group}
         selectedItems={selectedItems}
         year={year}

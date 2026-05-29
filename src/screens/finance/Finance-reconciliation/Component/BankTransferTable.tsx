@@ -2,14 +2,16 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -34,16 +36,47 @@ const BankTransferTable = ({
   const isDialog = useBoolean(false);
 
   const { permissions } = useSelector((state: RootState) => state.auth);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const canApproveReject = permissions.some(
     (perm: any) => perm.name === financePermissions.accounts.reconciliationAdd && perm.isGranted
   );
 
-  const { data: listResponse, isLoading } = useQueryAndMutation({
+  const {
+    data: listResponse,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReconciliationListQuery,
     params: queryParams,
   });
-  const bankTransferData = listResponse?.items ?? [];
+  const bankTransferData = useMemo(
+    () =>
+      (listResponse?.items ?? []).map((item: any) => ({
+        ...item,
+        standardName: item.class,
+        divisionName: item.division,
+        transactionId: item.instrumentDetails?.transactionReferenceNumber,
+        transferDate: item.instrumentDetails?.transferDate || item.receiptDate,
+        accountHolderName: item.instrumentDetails?.accountHolderName,
+      })),
+    [listResponse?.items]
+  );
+
+  useEffect(() => {
+    if (!isLoading && listResponse && (listResponse.items ?? []).length === 0) {
+      const monthYear = queryParams
+        ? dayjs(`${queryParams.year}-${String(queryParams.month).padStart(2, '0')}-01`).format(
+            'MMM-YYYY'
+          )
+        : '';
+      const academicYear = (currentYear as any)?.name ?? '';
+      shikshaMitraToast.warning({
+        message: `No Bank Transfer records found for ${monthYear}${academicYear ? ` (${academicYear})` : ''}. Please change the month or academic year.`,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, listResponse]);
 
   const columns: IColumn[] = useMemo(
     () => [
@@ -123,6 +156,11 @@ const BankTransferTable = ({
         align: 'left',
         isFilter: true,
         filterType: 'date',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+          </Typography>
+        ),
       },
       {
         id: 'accountHolderName',
@@ -222,7 +260,7 @@ const BankTransferTable = ({
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomizableTable
         tableId="bank-transfer-table"
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         noDataText={<>No Bank Transfer Data Found</>}
         columns={columns}
         data={bankTransferData}
