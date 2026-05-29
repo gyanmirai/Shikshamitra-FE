@@ -101,9 +101,6 @@ export const personalInformationInitialValues = (
   employeeGroup: editData ? (editData.isTeaching ? 0 : 1) : '',
   // qualification: editData ? editData. : '',
   role: editData ? editData?.roleId : '',
-  organizationIds: editData?.organizationIds?.length
-    ? editData.organizationIds
-    : editData?.organizations?.map((item: any) => item.id) || [],
   // identificationMark1: editData ? editData.identificationMark1 : '',
   addressLine1: editData ? editData.address1 : '',
   addressLine2: editData ? editData.address2 : '',
@@ -419,7 +416,6 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
           isTeaching: values.employeeGroup === 0,
           roleId: values.role,
-          organizationIds: values.organizationIds || [],
           address1: values.addressLine1,
           address2: values.addressLine2,
           country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
@@ -629,7 +625,6 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
         isTeaching: values.employeeGroup === 0,
         roleId: values.role,
-        organizationIds: values.organizationIds || [],
         address1: values.addressLine1,
         address2: values.addressLine2,
         country: { name: values?.country?.name, isoCode: values?.country?.isoCode },

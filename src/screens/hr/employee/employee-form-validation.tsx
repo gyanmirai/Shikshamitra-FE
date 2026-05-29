@@ -130,7 +130,6 @@ export const getPersonalInformationValidationSchema = (
     employeeGroup: Yup.string().required('Employee Group is required'),
     // qualification: Yup.string(),
     role: Yup.string().required('Role is required'),
-    organizationIds: Yup.array().min(1, 'Select at least one organization').required(),
     //   identificationMark1: Yup.string().required('Identification mark is required'),
     addressLine1: Yup.string().required('Building No./Flat/House No. is required'),
     addressLine2: Yup.string().required('Area/Locality/Road Name is required'),

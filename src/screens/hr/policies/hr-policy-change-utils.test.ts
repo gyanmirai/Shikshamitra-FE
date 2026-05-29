@@ -175,4 +175,28 @@ describe('hr policy change utilities', () => {
       })
     ).toBe(false);
   });
+
+  it('detects unchanged attendance payloads with backend advanced rule values', () => {
+    const advancedAttendance: AttendancePolicy = {
+      ...baseAttendance,
+      penaltyType: 'deduct_half_day',
+      penaltyCountThreshold: 2,
+      earlyExitEnabled: true,
+      earlyExitGraceTime: 5,
+      overtimeEnabled: true,
+      overtimeRate: '1.5x',
+      minOvertimeMinutes: 30,
+      holidayWorkBehavior: 'ot_payout',
+      sandwichRuleEnabled: true,
+    };
+
+    expect(
+      isAttendancePolicyUnchanged(advancedAttendance, {
+        ...advancedAttendance,
+        penaltyType: 'deduct_half_day',
+        overtimeRate: '1.5x',
+        holidayWorkBehavior: 'ot_payout',
+      })
+    ).toBe(true);
+  });
 });

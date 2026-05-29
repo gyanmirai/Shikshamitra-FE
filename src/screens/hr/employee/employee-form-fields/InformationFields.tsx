@@ -4,7 +4,6 @@ import type { GridProps, PaperProps } from '@mui/material';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
-import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
@@ -335,7 +334,6 @@ export const CardActions = ({
 };
 
 const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
-  const { currentMedium: medium } = useSelector((state: any) => state.globalState);
   const isBasicDetailsEditable = useBoolean(!!isMainForm);
   const isContactDetailsEditable = useBoolean(!!isMainForm);
   const isIdentificationEditable = useBoolean(!!isMainForm);
@@ -352,11 +350,6 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const handleCancel = () => {
     // formik.resetForm();
   };
-  const organizationOptions = medium?.educationMediumStages || [];
-  const selectedOrganizations = organizationOptions.filter((option: any) =>
-    formik.values.organizationIds?.includes(option.id)
-  );
-
   return (
     <Box>
       <SectionCard
@@ -950,45 +943,6 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             />
           </ShakingTextField>
         </Grid> */}
-
-        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
-          <ShakingTextField
-            error={formik.touched.organizationIds && Boolean(formik.errors.organizationIds)}
-          >
-            <Autocomplete
-              multiple
-              size="small"
-              options={[{ id: 'all', name: 'All' }, ...organizationOptions]}
-              getOptionLabel={(option: any) => option.name || ''}
-              disabled={!isProfessionalDetailsEditable.value}
-              value={selectedOrganizations}
-              isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
-              onChange={(_, value: any[]) => {
-                if (value.some((item) => item.id === 'all')) {
-                  const allIds = organizationOptions.map((item: any) => item.id);
-                  const currentlyAllSelected =
-                    formik.values.organizationIds?.length === organizationOptions.length;
-                  formik.setFieldValue('organizationIds', currentlyAllSelected ? [] : allIds);
-                } else {
-                  formik.setFieldValue(
-                    'organizationIds',
-                    value.map((item) => item.id)
-                  );
-                }
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Organization *"
-                  error={formik.touched.organizationIds && Boolean(formik.errors.organizationIds)}
-                  helperText={
-                    formik.touched.organizationIds && (formik.errors.organizationIds as string)
-                  }
-                />
-              )}
-            />
-          </ShakingTextField>
-        </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           <RenderRole formik={formik} disabled={!isProfessionalDetailsEditable.value} />

@@ -7,6 +7,5 @@ export * from './fields-config';
 export * from './RenderDocuments';
 export * from './InformationFields';
 export * from './CertificateFields';
-export * from './RenderOrganization';
 export * from './WorkExperienceFields';
 export * from './FatherAddressComponent';
