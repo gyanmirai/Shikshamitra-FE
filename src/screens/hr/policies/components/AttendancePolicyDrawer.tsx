@@ -257,8 +257,8 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               }
             >
               <MenuItem value="none">None</MenuItem>
-              <MenuItem value="half_day">Half Day</MenuItem>
-              <MenuItem value="full_day">Full Day</MenuItem>
+              <MenuItem value="deduct_half_day">Half Day</MenuItem>
+              <MenuItem value="deduct_full_day">Full Day</MenuItem>
             </DrawerSelectField>
             <DrawerField
               label="Late count before deduction"
@@ -294,19 +294,19 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
             >
               <TextField {...getAttendanceNumericFieldProps('minOvertimeMinutes')} />
             </DrawerField>
-            <DrawerField
+            <DrawerSelectField
               label="Overtime Rate"
               help="Optional rate or multiplier used by payroll when overtime is paid."
+              value={attendanceForm.overtimeRate}
+              onChange={(event) =>
+                setAttendanceForm((current) => ({ ...current, overtimeRate: event.target.value }))
+              }
             >
-              <TextField
-                fullWidth
-                size="small"
-                value={attendanceForm.overtimeRate}
-                onChange={(event) =>
-                  setAttendanceForm((current) => ({ ...current, overtimeRate: event.target.value }))
-                }
-              />
-            </DrawerField>
+              <MenuItem value="">None</MenuItem>
+              <MenuItem value="1.5x">1.5x</MenuItem>
+              <MenuItem value="2.0x">2.0x</MenuItem>
+              <MenuItem value="flat">Flat</MenuItem>
+            </DrawerSelectField>
             <DrawerSelectField
               label="Work on holiday"
               help="Defines how attendance on holidays should be handled."
@@ -319,8 +319,8 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               }
             >
               <MenuItem value="comp_off">Comp Off</MenuItem>
-              <MenuItem value="overtime">Overtime</MenuItem>
-              <MenuItem value="ignore">Ignore</MenuItem>
+              <MenuItem value="ot_payout">Overtime</MenuItem>
+              <MenuItem value="paid">Paid</MenuItem>
             </DrawerSelectField>
             <DrawerSwitchField
               label="Sandwich rule"

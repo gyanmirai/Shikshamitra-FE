@@ -124,9 +124,6 @@ export async function createEmployeeFromExistingDefaults(page: Page, fixture: Em
         doj: '2024-06-01',
         isTeaching: defaults.isTeaching ?? true,
         roleId: defaults.roleId,
-        organizationIds: defaults.organizationIds?.length
-          ? defaults.organizationIds
-          : defaults.organizations?.map((organization: { id: string }) => organization.id) || [],
         address1: evaluatedFixture.addressLine1,
         address2: evaluatedFixture.addressLine2,
         address3: evaluatedFixture.addressLine3,
@@ -137,8 +134,8 @@ export async function createEmployeeFromExistingDefaults(page: Page, fixture: Em
         shiftId: defaults.shiftId,
       };
 
-      if (!body.roleId || !body.shiftId || body.organizationIds.length === 0) {
-        throw new Error('Existing employee did not expose roleId, shiftId, and organizationIds.');
+      if (!body.roleId || !body.shiftId) {
+        throw new Error('Existing employee did not expose roleId and shiftId.');
       }
 
       const formData = new FormData();

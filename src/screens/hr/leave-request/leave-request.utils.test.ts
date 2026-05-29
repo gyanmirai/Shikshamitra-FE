@@ -7,14 +7,20 @@ import {
   countLeaveUnits,
   SELF_EMPLOYEE_ID,
   isAdminFromProfile,
+  LEAVE_NOTICE_PERIOD,
   resolveLeaveCenterTab,
   isActiveEmployeeOption,
   getLeaveAttachmentLabel,
+  getMinimumLeaveStartDate,
   isDateWithinAcademicYear,
   getAcademicYearStartMonth,
   getLeaveCenterVisibleTabs,
   buildEmployeeSelectOptions,
+  getLeaveNoticePeriodMessage,
+  resolveLeaveTypeIdFromPolicy,
+  isLeaveNoticePeriodSatisfied,
   APPLY_LEAVE_ROW_ACTION_LABELS,
+  shouldEnforceLeaveNoticePeriod,
   buildCreateLeaveRequestFormData,
   buildLeaveAttachmentDownloadPath,
   isEmployeeSelectionValidForCreate,
@@ -114,6 +120,41 @@ describe('leave unit calculation', () => {
 
   it('rejects multi-date half-day ranges locally as zero units', () => {
     expect(countLeaveUnits(dayjs('2026-06-08'), dayjs('2026-06-09'), true)).toBe(0);
+  });
+});
+
+describe('leave notice period helpers', () => {
+  const today = dayjs('2026-05-28');
+
+  it('requires at least two days advance notice', () => {
+    expect(isLeaveNoticePeriodSatisfied(dayjs('2026-05-28'), today)).toBe(false);
+    expect(isLeaveNoticePeriodSatisfied(dayjs('2026-05-29'), today)).toBe(false);
+    expect(isLeaveNoticePeriodSatisfied(dayjs('2026-05-30'), today)).toBe(true);
+  });
+
+  it('builds the earliest available leave date message', () => {
+    expect(getMinimumLeaveStartDate(today).format('YYYY-MM-DD')).toBe('2026-05-30');
+    expect(getLeaveNoticePeriodMessage(today)).toContain('Earliest available date is 30/05/2026.');
+  });
+
+  it('resolves the leave type linked to a selected policy', () => {
+    expect(resolveLeaveTypeIdFromPolicy({ id: 'policy-1', leaveType: { id: 'type-1' } })).toBe(
+      'type-1'
+    );
+    expect(resolveLeaveTypeIdFromPolicy({ id: 'policy-2', leaveType: 'type-2' })).toBe('type-2');
+    expect(resolveLeaveTypeIdFromPolicy({ id: 'policy-3', leaveTypeId: 'type-3' })).toBe('type-3');
+  });
+
+  it('enforces notice only for self-created leave requests', () => {
+    expect(shouldEnforceLeaveNoticePeriod('self', false, SELF_OPTION)).toBe(true);
+    expect(shouldEnforceLeaveNoticePeriod('self', true, SELF_OPTION)).toBe(true);
+    expect(shouldEnforceLeaveNoticePeriod('hr', true, { id: 'emp-1', label: 'Employee' })).toBe(
+      false
+    );
+    expect(shouldEnforceLeaveNoticePeriod('hr', false, { id: 'emp-1', label: 'Employee' })).toBe(
+      false
+    );
+    expect(shouldEnforceLeaveNoticePeriod('hr', false, SELF_OPTION)).toBe(true);
   });
 });
 
@@ -254,6 +295,18 @@ describe('problem details parsing', () => {
     expect(isAdminFromProfile({ role: 'admin' })).toBe(true);
     expect(isAdminFromProfile({ role: ['teacher', 'admin'] })).toBe(true);
     expect(isAdminFromProfile({ role: 'teacher' })).toBe(false);
+  });
+
+  it('preserves leave notice period error detail and code', () => {
+    const parsed = parseApiProblemDetail({
+      data: {
+        detail: 'Minimum notice period requirement is not met.',
+        errorCode: LEAVE_NOTICE_PERIOD,
+      },
+    });
+
+    expect(parsed.detail).toBe('Minimum notice period requirement is not met.');
+    expect(parsed.errorCode).toBe(LEAVE_NOTICE_PERIOD);
   });
 });
 

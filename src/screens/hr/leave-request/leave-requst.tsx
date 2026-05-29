@@ -48,13 +48,26 @@ import { normalizeLeaveStatus } from './leave-status.utils';
 import {
   SELF_OPTION,
   countLeaveUnits,
+  LEAVE_PAST_DATE,
   isAdminFromProfile,
   type EmployeeOption,
+  LEAVE_NOTICE_PERIOD,
   parseApiProblemDetail,
+  LEAVE_POLICY_INACTIVE,
+  LEAVE_POLICY_NOT_FOUND,
+  LEAVE_MAX_DAYS_EXCEEDED,
+  getMinimumLeaveStartDate,
   isDateWithinAcademicYear,
+  LEAVE_INSUFFICIENT_BALANCE,
   buildEmployeeSelectOptions,
+  getLeaveNoticePeriodMessage,
+  resolveLeaveTypeIdFromPolicy,
+  isLeaveNoticePeriodSatisfied,
+  shouldEnforceLeaveNoticePeriod,
   LEAVE_TARGET_EMPLOYEE_REQUIRED,
+  LEAVE_NO_BUSINESS_DAYS_IN_RANGE,
   buildCreateLeaveRequestFormData,
+  LEAVE_DATES_OUTSIDE_ACADEMIC_YEAR,
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
 } from './leave-request.utils';
@@ -136,6 +149,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<any[]>([]);
   const [leavePolicyOptions, setLeavePolicyOptions] = useState<any[]>([]);
+  const minimumLeaveStartDate = getMinimumLeaveStartDate();
+  const leaveNoticePeriodMessage = getLeaveNoticePeriodMessage();
 
   const [triggerLeaveTypes, { isLoading: isLeaveTypeLoading, isFetching: isLeaveTypeFetching }] =
     useLazyGetLeaveTypesQuery();
@@ -182,7 +197,21 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           'is-valid-dayjs',
           'Start Date must be a valid date',
           (value) => value && dayjs(value as any).isValid()
-        ),
+        )
+        // eslint-disable-next-line func-names
+        .test('minimum-notice-period', leaveNoticePeriodMessage, function (value) {
+          if (
+            !shouldEnforceLeaveNoticePeriod(
+              mode,
+              isAdminUser,
+              this.parent.employee as EmployeeOption | null
+            )
+          ) {
+            return true;
+          }
+
+          return isLeaveNoticePeriodSatisfied(value ? dayjs(value as any) : null);
+        }),
 
       endDate: Yup.mixed()
         .required('End Date is required')
@@ -288,6 +317,32 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             if (parsedError.errorCode === LEAVE_TARGET_EMPLOYEE_REQUIRED) {
               setFieldError('employee', 'Please select an employee to create leave.');
             }
+            if (
+              parsedError.errorCode === LEAVE_PAST_DATE ||
+              parsedError.errorCode === LEAVE_NOTICE_PERIOD ||
+              parsedError.errorCode === LEAVE_DATES_OUTSIDE_ACADEMIC_YEAR
+            ) {
+              setFieldError('startDate', parsedError.detail || leaveNoticePeriodMessage);
+            }
+            if (
+              parsedError.errorCode === LEAVE_POLICY_NOT_FOUND ||
+              parsedError.errorCode === LEAVE_POLICY_INACTIVE ||
+              parsedError.errorCode === LEAVE_INSUFFICIENT_BALANCE
+            ) {
+              setFieldError(
+                'leavePolicyId',
+                parsedError.detail || 'Please select a valid leave policy.'
+              );
+            }
+            if (
+              parsedError.errorCode === LEAVE_MAX_DAYS_EXCEEDED ||
+              parsedError.errorCode === LEAVE_NO_BUSINESS_DAYS_IN_RANGE
+            ) {
+              setFieldError(
+                'endDate',
+                parsedError.detail || 'Please check the selected leave dates.'
+              );
+            }
             return;
           }
         }
@@ -387,13 +442,19 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   useEffect(() => {
     if (editData) return;
     if (!values.leavePolicyId) return;
-    const existsInCatalog = leavePolicyOptions.some(
+    const selectedPolicy = leavePolicyOptions.find(
       (item: any) => item?.id === values.leavePolicyId
     );
-    if (!existsInCatalog) {
+    if (!selectedPolicy) {
       setFieldValue('leavePolicyId', '');
+      return;
     }
-  }, [editData, leavePolicyOptions, setFieldValue, values.leavePolicyId]);
+
+    const linkedLeaveTypeId = resolveLeaveTypeIdFromPolicy(selectedPolicy);
+    if (linkedLeaveTypeId && linkedLeaveTypeId !== values.leaveTypeId) {
+      setFieldValue('leaveTypeId', linkedLeaveTypeId);
+    }
+  }, [editData, leavePolicyOptions, setFieldValue, values.leavePolicyId, values.leaveTypeId]);
 
   useEffect(() => {
     if (!values.halfDay || !values.startDate) {
@@ -407,6 +468,13 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
   const requestedUnits = countLeaveUnits(values.startDate, values.endDate, values.halfDay);
   const isLeaveRequestSubmitting = isSubmitting || isLoading || isApproveLoading || isRejectLoading;
+  const enforceLeaveNoticePeriod = shouldEnforceLeaveNoticePeriod(
+    mode,
+    isAdminUser,
+    values.employee as EmployeeOption | null
+  );
+  const hasLeaveNoticePeriodError =
+    !editData && enforceLeaveNoticePeriod && !isLeaveNoticePeriodSatisfied(values.startDate);
 
   return (
     <>
@@ -529,7 +597,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   value={values.startDate}
                   disabled={!!editData}
                   format="DD/MM/YYYY"
-                  disablePast
+                  minDate={enforceLeaveNoticePeriod ? minimumLeaveStartDate : undefined}
                   onChange={(value) => {
                     setFieldValue('startDate', value);
                     if (values.halfDay) {
@@ -773,6 +841,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           <LoadingButton
             loading={isLeaveRequestSubmitting}
             startIcon={<Iconify icon={GlobalIcons.submit} width={20} height={20} />}
+            disabled={isLeaveRequestSubmitting || hasLeaveNoticePeriodError}
             onClick={(e: any) => {
               handleSubmit(e);
             }}

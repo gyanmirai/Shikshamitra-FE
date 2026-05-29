@@ -6,6 +6,15 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 export const LEAVE_TARGET_EMPLOYEE_REQUIRED = 'HR:Leave:020033';
 export const LEAVE_EMPLOYEE_NOT_FOUND = 'HR:Leave:020006';
+export const LEAVE_POLICY_NOT_FOUND = 'HR:Leave:020015';
+export const LEAVE_MAX_DAYS_EXCEEDED = 'HR:Leave:020016';
+export const LEAVE_INSUFFICIENT_BALANCE = 'HR:Leave:020017';
+export const LEAVE_NOTICE_PERIOD = 'HR:Leave:020018';
+export const LEAVE_PAST_DATE = 'HR:Leave:020013';
+export const LEAVE_POLICY_INACTIVE = 'HR:Leave:020019';
+export const LEAVE_DATES_OUTSIDE_ACADEMIC_YEAR = 'HR:Leave:020028';
+export const LEAVE_NO_BUSINESS_DAYS_IN_RANGE = 'HR:Leave:020032';
+export const MIN_LEAVE_NOTICE_DAYS = 2;
 export const SELF_EMPLOYEE_ID = 'self';
 export const SELF_OPTION = { id: SELF_EMPLOYEE_ID, label: 'Self' } as const;
 export const APPLY_LEAVE_ROW_ACTION_LABELS = ['View', 'Cancel'] as const;
@@ -13,11 +22,18 @@ export const APPLY_LEAVE_ROW_ACTION_LABELS = ['View', 'Cancel'] as const;
 export type LeaveCenterContext = 'hr' | 'self';
 export type LeaveCenterTab = 'my-requests' | 'approvals' | 'balance';
 export type LeaveAttachmentMode = 'hr' | 'self';
+export type LeaveRequestMode = 'hr' | 'self';
 export type EmployeeOption = {
   id: string;
   label: string;
   status?: EmployeeStatusType | number | string | null;
   employeeStatusType?: EmployeeStatusType | number | string | null;
+};
+
+export type LeavePolicyOption = {
+  id?: string;
+  leaveType?: string | { id?: string | null } | null;
+  leaveTypeId?: string | null;
 };
 
 export interface LeaveRequestFormValuesForPayload {
@@ -34,6 +50,49 @@ export interface LeaveRequestFormValuesForPayload {
 function parseApiDateWithoutTimezoneShift(input: string): dayjs.Dayjs {
   const dateOnly = String(input || '').slice(0, 10);
   return dayjs(dateOnly || input);
+}
+
+export function getMinimumLeaveStartDate(today: dayjs.ConfigType = dayjs()): dayjs.Dayjs {
+  return dayjs(today).startOf('day').add(MIN_LEAVE_NOTICE_DAYS, 'day');
+}
+
+export function isLeaveNoticePeriodSatisfied(
+  startDate: dayjs.Dayjs | null,
+  today: dayjs.ConfigType = dayjs()
+): boolean {
+  if (!startDate?.isValid()) {
+    return true;
+  }
+
+  return !startDate.startOf('day').isBefore(getMinimumLeaveStartDate(today), 'day');
+}
+
+export function getLeaveNoticePeriodMessage(today: dayjs.ConfigType = dayjs()): string {
+  return `Leave must be requested at least ${MIN_LEAVE_NOTICE_DAYS} days in advance. Earliest available date is ${getMinimumLeaveStartDate(today).format('DD/MM/YYYY')}.`;
+}
+
+export function shouldEnforceLeaveNoticePeriod(
+  mode: LeaveRequestMode,
+  isAdminUser: boolean,
+  employee: EmployeeOption | null
+): boolean {
+  if (mode === 'self' || isAdminUser) {
+    return mode === 'self';
+  }
+
+  return !employee?.id || employee.id === SELF_EMPLOYEE_ID;
+}
+
+export function resolveLeaveTypeIdFromPolicy(policy: LeavePolicyOption | null | undefined): string {
+  if (!policy) {
+    return '';
+  }
+
+  if (typeof policy.leaveType === 'string') {
+    return policy.leaveType;
+  }
+
+  return policy.leaveType?.id || policy.leaveTypeId || '';
 }
 
 export function buildCreateLeaveRequestFormData(
