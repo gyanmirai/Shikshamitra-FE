@@ -33,6 +33,36 @@ export type ManualAttendanceSaveRow = {
   remarks?: string;
 };
 
+export const toAttendanceTableTimeValue = (value?: string | null) => {
+  if (!value) return '';
+
+  // Preserve API clock time and avoid timezone shifts on ISO values.
+  const isoTimeMatch = value.match(/T(\d{2}:\d{2}:\d{2})/);
+  if (isoTimeMatch?.[1]) {
+    const [hours, minutes] = isoTimeMatch[1].split(':');
+    return `${hours}:${minutes}`;
+  }
+
+  const hhmmssMatch = value.match(/^(\d{2}:\d{2})(?::\d{2})?$/);
+  if (hhmmssMatch?.[1]) return hhmmssMatch[1];
+
+  const fallbackDate = new Date(value);
+  if (!Number.isNaN(fallbackDate.getTime())) {
+    const hours = `${fallbackDate.getHours()}`.padStart(2, '0');
+    const minutes = `${fallbackDate.getMinutes()}`.padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  return '';
+};
+
+export const toAttendanceWireTime = (value?: string | null) => {
+  if (!value) return null;
+  const parsed = value.match(/^(\d{2}:\d{2})(?::\d{2})?$/);
+  if (!parsed?.[1]) return null;
+  return `${parsed[1]}:00`;
+};
+
 export const mapTakeAttendanceStatusToUi = (status?: number): ManualAttendanceUiStatus => {
   if (status === TAKE_ATTENDANCE_STATUS.Present) return MANUAL_ATTENDANCE_UI_STATUS.Present;
   if (status === TAKE_ATTENDANCE_STATUS.HalfDay) return MANUAL_ATTENDANCE_UI_STATUS.HalfDay;
@@ -62,8 +92,8 @@ export const buildManualAttendanceSaveEntries = (rows: ManualAttendanceSaveRow[]
       {
         employeeId,
         statusWire,
-        inTime: row.timeIn || '',
-        outTime: row.timeOut || '',
+        inTime: toAttendanceWireTime(row.timeIn),
+        outTime: toAttendanceWireTime(row.timeOut),
         remarks: row.remarks || '',
       },
     ];
