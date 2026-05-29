@@ -25,16 +25,19 @@ export function ProgressBar() {
   useEffect(() => {
     NProgress.configure({ showSpinner: false });
 
+    // Track registered anchors so cleanup removes the exact same listener reference.
+    const registeredAnchors = new Map<HTMLAnchorElement, EventListener>();
+
     const handleAnchorClick = (event: MouseEvent) => {
       const targetUrl = (event.currentTarget as HTMLAnchorElement).href;
 
       const currentUrl = window.location.href;
 
-      const confirm = !isChanges
+      const confirmed = !isChanges
         ? true
         : window.confirm('You have unsaved changes. Do you want to leave?');
 
-      if (!confirm) {
+      if (!confirmed) {
         event.preventDefault();
         event.stopPropagation();
       } else {
@@ -45,20 +48,24 @@ export function ProgressBar() {
       }
     };
 
-    const handleMutation = () => {
+    const getFilteredAnchors = (): HTMLAnchorElement[] => {
       const anchorElements: NodeListOf<HTMLAnchorElement> = document.querySelectorAll('a[href]');
-
-      const filteredAnchors = Array.from(anchorElements).filter((element) => {
+      return Array.from(anchorElements).filter((element) => {
         const rel = element.getAttribute('rel');
-
         const href = element.getAttribute('href');
-
         const target = element.getAttribute('target');
-
         return href?.startsWith('/') && target !== '_blank' && rel !== 'noopener';
       });
+    };
 
-      filteredAnchors.forEach((anchor: any) => anchor.addEventListener('click', handleAnchorClick));
+    const handleMutation = () => {
+      getFilteredAnchors().forEach((anchor) => {
+        // Only add the listener once per anchor per effect lifecycle.
+        if (!registeredAnchors.has(anchor)) {
+          anchor.addEventListener('click', handleAnchorClick as EventListener);
+          registeredAnchors.set(anchor, handleAnchorClick as EventListener);
+        }
+      });
     };
 
     const handelPopup = (event: any) => {
@@ -75,7 +82,9 @@ export function ProgressBar() {
 
     mutationObserver.observe(document, { childList: true, subtree: true });
 
-    window.history.pushState = new Proxy(window.history.pushState, {
+    // Save the original pushState so we can restore it on cleanup and avoid stacking proxies.
+    const originalPushState = window.history.pushState;
+    window.history.pushState = new Proxy(originalPushState, {
       apply: (target, thisArg, argArray: PushStateInput) => {
         NProgress.done();
         return target.apply(thisArg, argArray);
@@ -85,23 +94,16 @@ export function ProgressBar() {
 
     return () => {
       mutationObserver.disconnect();
-      const anchorElements: NodeListOf<HTMLAnchorElement> = document.querySelectorAll('a[href]');
-
-      const filteredAnchors = Array.from(anchorElements).filter((element) => {
-        const rel = element.getAttribute('rel');
-
-        const href = element.getAttribute('href');
-
-        const target = element.getAttribute('target');
-
-        return href?.startsWith('/') && target !== '_blank' && rel !== 'noopener';
+      // Remove only the listeners registered during this effect lifecycle.
+      registeredAnchors.forEach((listener, anchor) => {
+        anchor.removeEventListener('click', listener);
       });
-      filteredAnchors.forEach((anchor: any) =>
-        anchor.removeEventListener('click', handleAnchorClick)
-      );
+      registeredAnchors.clear();
+      // Restore the original pushState to prevent proxy stacking across re-renders.
+      window.history.pushState = originalPushState;
       window.removeEventListener('beforeunload', handelPopup);
     };
-  });
+  }, [isChanges, dispatch]);
 
   useEffect(() => {
     // @ts-ignore
