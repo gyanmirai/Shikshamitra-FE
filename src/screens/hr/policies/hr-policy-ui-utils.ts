@@ -1,6 +1,6 @@
 import type { HrPolicyVersion } from 'src/redux/hr/hr-policy-api';
 
-import dayjs from 'dayjs';
+import { formatHrAuditValue } from 'src/utils/hr-audit-format';
 
 export type AttendanceNumericField =
   | 'fullDayThresholdPercentage'
@@ -84,26 +84,7 @@ export function versionMatchesHistorySearch(version: HrPolicyVersion, rawSearch:
   ].some((value) => value.toLowerCase().replace(/[_-]/g, ' ').includes(search));
 }
 
-const ISO_DATE_TIME_PATTERN = /^\d{4}-\d{2}-\d{2}(T|\s)|^\d{8}T\d{2}:\d{2}:\d{2}/;
-
 export function cleanVersionDisplayValue(value?: string | null) {
   if (!value || value === 'null' || value === 'undefined') return 'Not set';
-  const trimmed = value.trim();
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed)) {
-    return 'Unknown reference';
-  }
-  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-    return 'Changed';
-  }
-
-  const normalizedIso = trimmed.replace(
-    /^(\d{4})(\d{2})(\d{2})T/,
-    (_match, year, month, day) => `${year}-${month}-${day}T`
-  );
-  const parsedDate = dayjs(normalizedIso);
-  if (parsedDate.isValid() && ISO_DATE_TIME_PATTERN.test(trimmed)) {
-    return parsedDate.format('DD MMM YYYY, hh:mm A');
-  }
-
-  return value;
+  return formatHrAuditValue(value);
 }

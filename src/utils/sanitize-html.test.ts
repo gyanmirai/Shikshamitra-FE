@@ -1,9 +1,20 @@
 import { sanitizeHtml } from 'src/utils/sanitize-html';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 
+type SanitizeConfig = {
+  ALLOWED_TAGS: string[];
+  ALLOWED_ATTR: string[];
+};
+
 // vi.mock is hoisted to the top of the file, so the factory cannot reference
 // a const declared below it. vi.hoisted() runs before hoisting and is safe.
-const mockSanitize = vi.hoisted(() => vi.fn((html: string) => html));
+const mockSanitize = vi.hoisted(() => vi.fn((html: string, _config?: SanitizeConfig) => html));
+
+const getSanitizeConfig = (): SanitizeConfig => {
+  const config = mockSanitize.mock.calls[0]?.[1];
+  expect(config).toBeDefined();
+  return config as SanitizeConfig;
+};
 
 vi.mock('dompurify', () => ({
   default: { sanitize: mockSanitize },
@@ -37,7 +48,7 @@ describe('sanitizeHtml', () => {
 
   it('allows safe formatting tags in ALLOWED_TAGS', () => {
     sanitizeHtml('<p>hello</p>');
-    const [, config] = mockSanitize.mock.calls[0];
+    const config = getSanitizeConfig();
     expect(config.ALLOWED_TAGS).toContain('p');
     expect(config.ALLOWED_TAGS).toContain('strong');
     expect(config.ALLOWED_TAGS).toContain('em');
@@ -52,19 +63,19 @@ describe('sanitizeHtml', () => {
 
   it('does NOT include <script> in ALLOWED_TAGS', () => {
     sanitizeHtml('<p>safe</p>');
-    const [, config] = mockSanitize.mock.calls[0];
+    const config = getSanitizeConfig();
     expect(config.ALLOWED_TAGS).not.toContain('script');
   });
 
   it('does NOT include <iframe> in ALLOWED_TAGS', () => {
     sanitizeHtml('<p>safe</p>');
-    const [, config] = mockSanitize.mock.calls[0];
+    const config = getSanitizeConfig();
     expect(config.ALLOWED_TAGS).not.toContain('iframe');
   });
 
   it('does NOT include <object> or <embed> in ALLOWED_TAGS', () => {
     sanitizeHtml('<p>safe</p>');
-    const [, config] = mockSanitize.mock.calls[0];
+    const config = getSanitizeConfig();
     expect(config.ALLOWED_TAGS).not.toContain('object');
     expect(config.ALLOWED_TAGS).not.toContain('embed');
   });
@@ -73,14 +84,14 @@ describe('sanitizeHtml', () => {
 
   it('allows class and style in ALLOWED_ATTR', () => {
     sanitizeHtml('<p class="x" style="color:red">styled</p>');
-    const [, config] = mockSanitize.mock.calls[0];
+    const config = getSanitizeConfig();
     expect(config.ALLOWED_ATTR).toContain('class');
     expect(config.ALLOWED_ATTR).toContain('style');
   });
 
   it('does NOT include event handler attributes in ALLOWED_ATTR', () => {
     sanitizeHtml('<p>safe</p>');
-    const [, config] = mockSanitize.mock.calls[0];
+    const config = getSanitizeConfig();
     expect(config.ALLOWED_ATTR).not.toContain('onclick');
     expect(config.ALLOWED_ATTR).not.toContain('onerror');
     expect(config.ALLOWED_ATTR).not.toContain('onload');

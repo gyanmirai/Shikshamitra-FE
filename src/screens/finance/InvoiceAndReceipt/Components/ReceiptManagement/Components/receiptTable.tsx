@@ -1,8 +1,8 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-import { Box } from '@mui/material';
 import { Label } from 'src/components/label';
+import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ReceiptStatusColors, ReceiptStatusOptions } from 'src/enums/finance-receipt-status';
@@ -22,7 +22,18 @@ const ReceiptTable = ({
       tableId="fees-status-table"
       noDataText={<>No Fees Data Found</>}
       columns={[
-        { id: 'student', label: 'Student Name', align: 'left', minWidth: '12vw', sticky: true },
+        {
+          id: 'student',
+          label: 'Student Name',
+          align: 'left',
+          minWidth: '12vw',
+          sticky: true,
+          render: (value, row) => (
+            <Typography variant="caption" fontSize="13px">
+              {value || '-'} {row.grNumber && `(${row.grNumber})`}
+            </Typography>
+          ),
+        },
         { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: '6vw' },
         {
           id: 'totalPaidFees',

@@ -39,20 +39,23 @@ import {
   EmployeeStatusTypeOptions,
 } from 'src/enums/employee-status-type';
 import {
+  useGetEmployeeSalaryStructureQuery,
+  useUpdateEmployeeSalaryStructureMutation,
+} from 'src/redux/hr/employee-salary-structure-api';
+import {
   Box,
   Card,
   Grid,
   Button,
   Avatar,
+  Select,
   MenuList,
   MenuItem,
+  InputLabel,
   Typography,
+  FormControl,
   DialogActions,
 } from '@mui/material';
-import {
-  useGetEmployeeSalaryStructureQuery,
-  useUpdateEmployeeSalaryStructureMutation,
-} from 'src/redux/hr/employee-salary-structure-api';
 
 import EmployeeView from './employee-view';
 // eslint-disable-next-line import/no-named-as-default
@@ -100,6 +103,8 @@ const HrEmployee = () => {
     pageSize: 10,
     search: '',
     mediumStageId: '',
+    isTeaching: '',
+    status: '',
   });
 
   const payrollDialog = useBoolean();
@@ -329,8 +334,7 @@ const HrEmployee = () => {
         width: 120,
         minWidth: 110,
         align: 'left',
-        filterType: 'enum',
-        enumOptions: EmployeeGroupTypeFilter,
+        isFilter: false,
         render(value, row) {
           return EmployeeGroupType[value === true ? 0 : 1];
         },
@@ -356,8 +360,7 @@ const HrEmployee = () => {
       {
         id: 'status',
         label: 'Status',
-        filterType: 'enum',
-        enumOptions: EmployeeStatusTypeOptions,
+        isFilter: false,
         width: 92,
         minWidth: 84,
         align: 'left',
@@ -449,7 +452,15 @@ const HrEmployee = () => {
             }
             description="This section displays the employees list. Click 'View' to see their detailed profile information."
           />
-          <Box data-testid="hr-employee-list" sx={{ mb: 2, maxWidth: 280 }}>
+          <Box
+            data-testid="hr-employee-list-filters"
+            sx={{
+              mb: 2,
+              display: 'grid',
+              gap: 1,
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(180px, 280px))' },
+            }}
+          >
             <CustomSelect
               fullWidth
               label="Organization"
@@ -469,6 +480,48 @@ const HrEmployee = () => {
                 }));
               }}
             />
+            <FormControl size="small" fullWidth>
+              <InputLabel>Group</InputLabel>
+              <Select
+                label="Group"
+                value={employeeParams.isTeaching}
+                onChange={(event) => {
+                  setEmployeeParams((pre) => ({
+                    ...pre,
+                    page: 1,
+                    isTeaching: event.target.value as string,
+                  }));
+                }}
+              >
+                <MenuItem value="">All Groups</MenuItem>
+                {EmployeeGroupTypeFilter.map((option) => (
+                  <MenuItem key={option.label} value={String(option.value)}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size="small" fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                label="Status"
+                value={employeeParams.status}
+                onChange={(event) => {
+                  setEmployeeParams((pre) => ({
+                    ...pre,
+                    page: 1,
+                    status: event.target.value as string,
+                  }));
+                }}
+              >
+                <MenuItem value="">All Statuses</MenuItem>
+                {EmployeeStatusTypeOptions.map((option) => (
+                  <MenuItem key={option.label} value={option.label}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
           <CustomizableTable
             noDataText={

@@ -64,7 +64,6 @@ import {
 } from 'src/redux/feeCollection/feeCollection';
 
 import FeeLedgerList from './FeeLedgerList';
-import { toPeriod } from './FeeLedgerShared';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
 import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
@@ -145,6 +144,7 @@ const validationSchema = Yup.object({
 
 const buildInitialValues = (student: IStudentFee | null): FeeCollectionFormValues => ({
   studentId: String(student?.id ?? ''),
+  studentName: student?.name ?? '',
   selectedItems: [],
   charges: [],
   subtotal: 0,
@@ -813,32 +813,6 @@ const FeeCollectComponentForm = ({
       console.error(err);
       shikshaMitraToast.error({ message: 'Failed to save payment. Please try again.' });
       setFinalReviewOpen(false);
-    }
-  };
-
-  const handleSelectAll = () => {
-    const allItems: SelectedItem[] = [];
-    (formData?.ledger ?? []).forEach((group: FeeLedgerMonth) => {
-      const monthNum = normalizeMonth(group.month as unknown as string | number);
-      const period = toPeriod(FeeMonth[monthNum] as string, group.year);
-      group.items.forEach((item: FeeLedgerLine) => {
-        if (item.due > 0) {
-          allItems.push({
-            dueFeeId: item.dueFeeId,
-            feeHeadId: item.feeHeadId,
-            period,
-            dueAmount: item.due,
-          });
-        }
-      });
-    });
-    formik.setFieldValue('selectedItems', allItems, false);
-
-    if (chargesData && chargesData.length > 0) {
-      const allCharges = chargesData
-        .filter((c) => c.status !== FeeCollectionStatusType.Paid && c.status !== 'Paid')
-        .map((c) => c.chargeId);
-      formik.setFieldValue('charges', allCharges, false);
     }
   };
 

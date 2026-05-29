@@ -1,50 +1,69 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
 import { Box, Card, CardHeader } from '@mui/material';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 
+// -----------------------------------------------------------------------
+
+const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Geography', 'Physics'];
+
+const completedData = [85, 70, 60, 90, 45, 75];
+const remainingData = completedData.map((v) => 100 - v);
+
+// -----------------------------------------------------------------------
+
 const PlannedVsActualProgressChart = () => {
-  const series = [{ name: 'Actual', data: [85, 90, 75, 95, 80, 88] }];
-  // State to store all classes/standards for the selected organization
+  const theme = useTheme();
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
-  // State to store all divisions for the selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
   const [division, setDivision] = useState<string>('');
 
-  // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
-  // Update classes when organization changes
   useEffect(() => {
-    // Flatten the list of standards from all stages
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
     setAllClass(allClasses);
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
-  // Update divisions when class changes
   useEffect(() => {
     setAllDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
   const chartOptions = useChart({
-    stroke: {
-      show: true,
-      width: 4,
-      colors: ['transparent'],
+    chart: {
+      stacked: true,
+    },
+    plotOptions: {
+      bar: {
+        columnWidth: '45%',
+        borderRadius: 4,
+        dataLabels: {
+          position: 'top',
+        },
+      },
+    },
+    dataLabels: {
+      enabled: false,
     },
     xaxis: {
-      categories: ['Math', 'Science', 'English', 'History', 'Geography', 'Physics'],
+      categories: SUBJECTS,
+    },
+    yaxis: {
+      max: 100,
+      labels: {
+        formatter: (val: number) => `${val}%`,
+      },
     },
     tooltip: {
       y: {
@@ -53,14 +72,28 @@ const PlannedVsActualProgressChart = () => {
     },
   });
 
+  const series = [
+    { name: 'Completed', data: completedData },
+    { name: 'Remaining', data: remainingData },
+  ];
+
   return (
-    <Card sx={{ p: 2 }}>
+    <Card
+      sx={{
+        height: '100%',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme.shadows[8],
+          transition: 'all 0.3s ease-in-out',
+        },
+      }}
+    >
       <CardHeader
+        sx={{ mt: -1, ml: -1 }}
         title="Chapter Completion"
         subheader="Progress by Subject"
-        sx={{ p: 0 }}
         action={
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <CustomSelect
               options={allClass}
               label="Class"
@@ -68,7 +101,7 @@ const PlannedVsActualProgressChart = () => {
               onChange={(val) => setClasses(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+              formControlProps={{ sx: { minWidth: '150px' } }}
             />
             <CustomSelect
               options={allDivision}
@@ -77,15 +110,14 @@ const PlannedVsActualProgressChart = () => {
               onChange={(val) => setDivision(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+              formControlProps={{ sx: { minWidth: '150px' } }}
               disabled={!classes}
             />
           </Box>
         }
       />
-
       <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-        <Chart type="bar" series={series} options={chartOptions} />
+        <Chart dir="ltr" type="bar" series={series} options={chartOptions} />
       </Box>
     </Card>
   );

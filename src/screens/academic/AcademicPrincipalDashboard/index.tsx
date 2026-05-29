@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { Box, Grid } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 
-import SummaryCards from '../AcademicDashboard/Components/SummaryCards';
+import SummaryCards from './Components/SummaryCards';
 import { PerformersList } from '../AcademicDashboard/Components/Performers';
 import AcademicDashboardExams from '../dashboard/components/AcademicDashboardExams';
 import SubjectPassFailChart from '../AcademicDashboard/Components/SubjectPassFailChart';
@@ -46,19 +46,19 @@ const AcademicPrincipalDashboardScreen = () => {
   const topPerformersData = [
     {
       id: '1',
-      name: 'Rahul Kumar Sharma',
+      name: 'Priya Patel',
       avatarUrl: '/static/images/avatars/avatar_1.png',
       totalMarks: 98,
     },
     {
       id: '2',
-      name: 'Priya Devi Singh',
+      name: 'Raj Kumar',
       avatarUrl: '/static/images/avatars/avatar_2.png',
       totalMarks: 95,
     },
     {
       id: '3',
-      name: 'Amit Raj Patel',
+      name: 'Meera Singh',
       avatarUrl: '/static/images/avatars/avatar_3.png',
       totalMarks: 92,
     },
@@ -67,19 +67,19 @@ const AcademicPrincipalDashboardScreen = () => {
   const bottomPerformersData = [
     {
       id: '1',
-      name: 'Rohan Singh Gupta',
+      name: 'Rohan Singh',
       avatarUrl: '/static/images/avatars/avatar_4.png',
       totalMarks: 45,
     },
     {
       id: '2',
-      name: 'Sneha Kumari Devi',
+      name: 'Sneha Kumari',
       avatarUrl: '/static/images/avatars/avatar_5.png',
       totalMarks: 42,
     },
     {
       id: '3',
-      name: 'Vijay Pratap Kumar',
+      name: 'Vijay Pratap',
       avatarUrl: '/static/images/avatars/avatar_6.png',
       totalMarks: 38,
     },

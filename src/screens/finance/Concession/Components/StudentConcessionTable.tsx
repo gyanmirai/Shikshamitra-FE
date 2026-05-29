@@ -208,7 +208,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   useEffect(() => {
     setBoards(currentYear?.boards);
     const board = boards?.find((item: any) => item.id === selectedBoard);
-    setMediums((board as unknown as Medium)?.educationMediums || []);
+    setMediums((board as unknown as Board)?.educationMediums || []);
   }, [boards, currentYear?.boards, selectedBoard]);
 
   // Fetch concession requests from API
@@ -349,7 +349,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
             maxWidth: 150,
             render: (value, row) => (
               <Typography variant="caption" fontSize="13px">
-                {value || '-'} ({row.grNumber})
+                {value || '-'} {row.grNumber && `(${row.grNumber})`}
               </Typography>
             ),
           },
@@ -371,7 +371,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
             maxWidth: 140,
             render: (value, row) => (
               <Typography variant="caption" fontSize="13px">
-                {value || '-'}-{row.divisionName}
+                {value || '-'} {row.divisionName && `(${row.divisionName})`}
               </Typography>
             ),
           },

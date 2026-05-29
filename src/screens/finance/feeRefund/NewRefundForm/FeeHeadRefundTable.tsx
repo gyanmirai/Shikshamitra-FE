@@ -61,10 +61,17 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     data: eligibility,
     isLoading,
     isFetching,
+    refetch: refetchEligibility,
   } = useGetRefundEligibilityQuery(
     { studentId, academicYearId: currentYear?.id ?? '' },
     { skip: !studentId || !currentYear?.id }
   );
+
+  useEffect(() => {
+    if (studentId && currentYear?.id) {
+      refetchEligibility(); // Ensure the API is called when studentId or academicYearId changes
+    }
+  }, [studentId, currentYear?.id, refetchEligibility]);
 
   const [showValidation, setShowValidation] = useState(false);
 

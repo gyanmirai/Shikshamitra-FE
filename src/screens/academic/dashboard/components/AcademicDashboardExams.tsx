@@ -16,6 +16,44 @@ import {
   ScheduleExamStatusOptions,
 } from 'src/enums/schedule-exam-status';
 
+const staticExams = [
+  {
+    examName: 'Periodic Test - I',
+    subject: 'Mathematics',
+    class: 'Class 8 A',
+    date: '2026-06-03',
+    status: ScheduleExamStatus.Pending,
+  },
+  {
+    examName: 'Unit Test - II',
+    subject: 'Science',
+    class: 'Class 9 B',
+    date: '2026-06-05',
+    status: ScheduleExamStatus.Published,
+  },
+  {
+    examName: 'Weekly Assessment',
+    subject: 'English',
+    class: 'Class 7 A',
+    date: '2026-06-06',
+    status: ScheduleExamStatus.Completed,
+  },
+  {
+    examName: 'Half-Yearly Practice',
+    subject: 'Social Science',
+    class: 'Class 10 A',
+    date: '2026-06-09',
+    status: ScheduleExamStatus.Pending,
+  },
+  {
+    examName: 'Chapter Test',
+    subject: 'Hindi',
+    class: 'Class 6 B',
+    date: '2026-06-11',
+    status: ScheduleExamStatus.Draft,
+  },
+];
+
 const AcademicDashboardExams = () => {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -35,6 +73,8 @@ const AcademicDashboardExams = () => {
     date: e.examDate ?? e.startDate ?? e.date ?? '—',
     status: e.status ?? ScheduleExamStatus.Pending,
   }));
+
+  const tableData = exams.length ? exams : staticExams;
 
   return (
     <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -61,7 +101,7 @@ const AcademicDashboardExams = () => {
             },
           },
         ]}
-        data={exams}
+        data={tableData}
       />
     </Card>
   );

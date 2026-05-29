@@ -16,6 +16,7 @@ export interface ISlot {
   studentLimit?: number | null;
   duration?: number | null; // Duration in minutes
   roomNo?: string | null;
+  roomId?: string | null;
   creationTime?: string | Date | null;
   buildingId?: string | null;
   floorId?: string | null;

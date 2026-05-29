@@ -44,6 +44,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   onServerSort,
   onServerPagination,
   onServerSearch,
+  onServerFilter,
   totalCount,
   maxServerRowsPerPage,
   handleRowClick = () => {},
@@ -64,11 +65,17 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   const { sx, ...other } = tableContainerProps;
   const { sx: boxSx, ...boxOther } = wrapperProps;
   const tableUniqId = `customizable-table-card-${tableId}`; // Unique ID for this table instance, used for localStorage keys
+  const canUseColumnFilters = !serverSidePagination || Boolean(onServerFilter);
+  const shouldUseServerFilter = serverSideFilter || Boolean(onServerFilter);
 
   // Memoize columns to ensure stability (especially if not memoized by parent)
   const memoizedColumns = useMemo(
-    () => columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true })),
-    [columns]
+    () =>
+      columns.map((col) => ({
+        ...col,
+        isFilter: canUseColumnFilters ? (col.isFilter ?? true) : false,
+      })),
+    [canUseColumnFilters, columns]
   );
 
   const { tableConfig, handleChangeParams, handleSort } = useTableConfig({
@@ -81,7 +88,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     data,
     config: tableConfig,
     columns: memoizedColumns,
-    serverSideFilter,
+    serverSideFilter: shouldUseServerFilter,
     serverSideSort,
     serverSidePagination,
   });
@@ -216,22 +223,27 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
   const handleRemoveFilter = useCallback(
     (index: number) => {
-      handleChangeParams({ filters: filters.filter((filterItem, i) => i !== index) });
+      const nextFilters = filters.filter((filterItem, i) => i !== index);
+      handleChangeParams({ filters: nextFilters });
+      onServerFilter?.(nextFilters);
     },
-    [filters, handleChangeParams]
+    [filters, handleChangeParams, onServerFilter]
   );
 
   const handleClearAllFilters = useCallback(() => {
     handleChangeParams({ filters: [] });
-  }, [handleChangeParams]);
+    onServerFilter?.([]);
+  }, [handleChangeParams, onServerFilter]);
 
   const handleApplyColumnFilter = useCallback(
     (columnId: string, filterType: string, value: any, valueType: string, label?: ReactNode) => {
       const newFilter = { column: columnId, type: filterType, value, valueType, label };
-      handleChangeParams({ filters: [...filters, newFilter], page: 0 });
+      const nextFilters = [...filters, newFilter];
+      handleChangeParams({ filters: nextFilters, page: 0 });
+      onServerFilter?.(nextFilters);
       setFilterAnchorEl(null);
     },
-    [filters, handleChangeParams]
+    [filters, handleChangeParams, onServerFilter]
   );
 
   useEffect(() => {

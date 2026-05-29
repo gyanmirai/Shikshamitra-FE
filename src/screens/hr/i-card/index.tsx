@@ -4,14 +4,14 @@ import type { RootState } from 'src/redux/store';
 import type { Organization } from 'src/types/school';
 import type { EmployeeICardTemplate } from 'src/redux/hr/employee-icard-template-api';
 
-import { toast } from 'sonner';
-import { useSelector } from 'react-redux';
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
@@ -19,28 +19,26 @@ import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import {
+  EmployeeICardStatusType,
+  EmployeeICardStatusTypeColor,
+  EmployeeICardStatusTypeLabel,
+  EmployeeICardStatusTypeOptions,
+} from 'src/enums/employee-icard-status';
 import {
   Box,
   Chip,
   Grid,
-  Step,
   Paper,
   Stack,
-  Table,
   Button,
-  Stepper,
   MenuList,
-  TableRow,
   Checkbox,
   MenuItem,
-  StepLabel,
   TextField,
-  TableBody,
-  TableCell,
-  TableHead,
   Typography,
   ToggleButton,
-  TableContainer,
   FormControlLabel,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -124,6 +122,11 @@ const presets = [
   { key: 'minimal-light', label: 'Minimal Light', color: '#334155' },
 ];
 
+const CARD_DIMENSIONS = {
+  Horizontal: { width: 420, height: 260 },
+  Vertical: { width: 280, height: 420 },
+} as const;
+
 const defaultFields: ICardField[] = [
   { name: 'photo', label: 'Photo', enabled: true, important: true },
   { name: 'name', label: 'Employee Name', enabled: true, important: true },
@@ -141,8 +144,8 @@ const initialBuilder = (academicYearName?: string, organization = 'all'): Builde
   name: 'Employee I-Card',
   organization,
   orientation: 'Horizontal',
-  width: 360,
-  height: 230,
+  width: CARD_DIMENSIONS.Horizontal.width,
+  height: CARD_DIMENSIONS.Horizontal.height,
   schoolName: 'School Name',
   schoolAddress: '',
   logoBlobName: null,
@@ -250,12 +253,15 @@ const buildTemplateState = (
 ): BuilderState => {
   if (!template) return initialBuilder(academicYearName, organization);
 
+  const orientation = template.orientation === 'Vertical' ? 'Vertical' : 'Horizontal';
+  const defaultSize = CARD_DIMENSIONS[orientation];
+
   return {
     ...initialBuilder(academicYearName, template.mediumStageId || 'all'),
     name: template.name,
-    orientation: template.orientation === 'Vertical' ? 'Vertical' : 'Horizontal',
-    width: template.width || 360,
-    height: template.height || 230,
+    orientation,
+    width: template.width || defaultSize.width,
+    height: template.height || defaultSize.height,
     schoolName: template.schoolName || template.name,
     schoolAddress: template.schoolAddress || '',
     logoBlobName: template.logoBlobName || null,
@@ -313,7 +319,9 @@ const EmployeeIcardScreen = () => {
           medium?.educationMediumStages?.find(
             (item: Organization) => item.id === template.mediumStageId
           )?.name || 'All organizations',
-        status: template.isActive ? 'Active' : 'Inactive',
+        status: template.isActive
+          ? EmployeeICardStatusType.Active
+          : EmployeeICardStatusType.Inactive,
       })),
     [medium?.educationMediumStages, templates]
   );
@@ -343,49 +351,45 @@ const EmployeeIcardScreen = () => {
 
     try {
       await deleteTemplate(row.id).unwrap();
-      toast.success('Employee I-card template deleted');
+      shikshaMitraToast.success({ message: 'Employee I-card template deleted' });
     } catch {
-      toast.error('Could not delete Employee I-card template');
+      shikshaMitraToast.error({ message: 'Could not delete Employee I-card template' });
     }
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {form.value ? (
-        <>
+        <Box display="flex" flexDirection="column" height="100%">
           <CustomBreadcrumbs
-            heading={selectedTemplate ? 'Edit Employee I-Card' : 'Create Employee I-Card'}
+            heading={selectedTemplate ? 'Update Employee I-Card' : 'Create Employee I-Card'}
             description="Create branded, print-ready employee ID cards."
-            links={[{ name: 'HR' }, { name: 'Employee' }, { name: 'Employee I-Card' }]}
-            action={
-              <Button
-                onClick={form.onFalse}
-                startIcon={<Iconify icon="eva:arrow-back-fill" />}
-                variant="contained"
-              >
-                Back
-              </Button>
-            }
+            links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee I-Card' }]}
+            isBack
+            onBack={form.onFalse}
           />
-          <EmployeeICardBuilder
-            template={selectedTemplate}
-            organizations={medium?.educationMediumStages || []}
-            academicYearId={academicYearId}
-            academicYearName={currentYear?.name}
-            handleClose={form.onFalse}
-          />
-        </>
+          <Box sx={{ flex: 1, minHeight: 0 }}>
+            <EmployeeICardBuilder
+              template={selectedTemplate}
+              organizations={medium?.educationMediumStages || []}
+              academicYearId={academicYearId}
+              academicYearName={currentYear?.name}
+              handleClose={form.onFalse}
+            />
+          </Box>
+        </Box>
       ) : (
         <>
           <CustomBreadcrumbs
             heading="Employee I-Card"
             description="Manage templates, check readiness, and export employee cards."
-            links={[{ name: 'HR' }, { name: 'Employee' }, { name: 'Employee I-Card' }]}
+            links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee I-Card' }]}
             action={
               <Button
                 onClick={handleCreate}
                 startIcon={<Add />}
                 variant="contained"
+                size="small"
                 disabled={!academicYearId || !canAdd}
               >
                 Create Employee I-Card
@@ -396,19 +400,57 @@ const EmployeeIcardScreen = () => {
             tableId="employee-icard-table"
             isLoading={isLoading}
             columns={[
-              { label: 'Template', id: 'name' },
-              { label: 'Organization', id: 'organization' },
-              { label: 'Orientation', id: 'orientation' },
+              {
+                label: 'Template',
+                id: 'name',
+                align: 'left',
+                sticky: true,
+                width: 260,
+                minWidth: 220,
+              },
+              {
+                label: 'Organization',
+                id: 'organization',
+                align: 'left',
+                width: 220,
+                minWidth: 180,
+                maxWidth: 260,
+                cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+              },
+              {
+                label: 'Orientation',
+                id: 'orientation',
+                align: 'left',
+                width: 132,
+                minWidth: 120,
+              },
               {
                 label: 'Status',
                 id: 'status',
+                filterType: 'enum',
+                enumOptions: EmployeeICardStatusTypeOptions,
+                align: 'left',
+                sticky: true,
+                width: 108,
+                minWidth: 100,
                 render(value) {
-                  return <Label color={value === 'Active' ? 'success' : 'default'}>{value}</Label>;
+                  const status = value as EmployeeICardStatusType;
+                  return (
+                    <Label color={EmployeeICardStatusTypeColor[status]}>
+                      {EmployeeICardStatusTypeLabel[status]}
+                    </Label>
+                  );
                 },
               },
               {
                 label: 'Action',
                 id: 'action',
+                sticky: true,
+                isSort: false,
+                isFilter: false,
+                width: 108,
+                minWidth: 96,
+                align: 'left',
                 render(value, row) {
                   return (
                     <ThreeDotsActions
@@ -513,7 +555,7 @@ const EmployeeICardBuilder = ({
         patchState({ logoPreview: currentUrl });
       })
       .catch(() => {
-        toast.error('Could not load school logo');
+        shikshaMitraToast.error({ message: 'Could not load school logo' });
       });
 
     return () => {
@@ -544,7 +586,6 @@ const EmployeeICardBuilder = ({
     () => (employeeData?.items || []) as EmployeeICardRow[],
     [employeeData?.items]
   );
-  const totalEmployeePages = employeeData?.totalPages || 1;
   const designRecommendations = useRecommendations(state, employees);
   const filteredEmployees = employees;
 
@@ -573,6 +614,148 @@ const EmployeeICardBuilder = ({
 
   const patchState = (patch: Partial<BuilderState>) => setState((prev) => ({ ...prev, ...patch }));
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const toggleEmployeeSelection = (employee: EmployeeICardRow) => {
+    const checked = state.selectedEmployeeIds.includes(employee.id);
+    patchState({
+      selectedEmployeeIds: checked
+        ? state.selectedEmployeeIds.filter((id) => id !== employee.id)
+        : [...state.selectedEmployeeIds, employee.id],
+    });
+    setSelectedEmployeesById((prev) => {
+      if (!checked) return { ...prev, [employee.id]: employee };
+      const next = { ...prev };
+      delete next[employee.id];
+      return next;
+    });
+  };
+
+  const allVisibleSelected =
+    filteredEmployees.length > 0 &&
+    filteredEmployees.every((employee) => state.selectedEmployeeIds.includes(employee.id));
+
+  const someVisibleSelected = filteredEmployees.some((employee) =>
+    state.selectedEmployeeIds.includes(employee.id)
+  );
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const toggleVisibleSelection = (checked: boolean) => {
+    const visibleIds = filteredEmployees.map((employee) => employee.id);
+    const visibleById = Object.fromEntries(
+      filteredEmployees.map((employee) => [employee.id, employee])
+    );
+    patchState({
+      selectedEmployeeIds: checked
+        ? Array.from(new Set([...state.selectedEmployeeIds, ...visibleIds]))
+        : state.selectedEmployeeIds.filter((id) => !visibleIds.includes(id)),
+    });
+    setSelectedEmployeesById((prev) =>
+      checked
+        ? { ...prev, ...visibleById }
+        : Object.fromEntries(Object.entries(prev).filter(([id]) => !visibleIds.includes(id)))
+    );
+  };
+
+  const employeeColumns = useMemo<any[]>(
+    () => [
+      {
+        label: (
+          <Checkbox
+            size="small"
+            checked={allVisibleSelected}
+            indeterminate={!allVisibleSelected && someVisibleSelected}
+            onChange={(event) => toggleVisibleSelection(event.target.checked)}
+            onClick={(event) => event.stopPropagation()}
+          />
+        ),
+        id: 'select',
+        width: 72,
+        minWidth: 64,
+        maxWidth: 72,
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        align: 'center' as const,
+        render: (_: unknown, row: any) => (
+          <Checkbox
+            size="small"
+            checked={state.selectedEmployeeIds.includes((row as EmployeeICardRow).id)}
+            onChange={() => toggleEmployeeSelection(row as EmployeeICardRow)}
+            onClick={(event) => event.stopPropagation()}
+          />
+        ),
+      },
+      {
+        label: 'Employee',
+        id: 'fullName',
+        minWidth: 100,
+        sticky: true,
+        align: 'left' as const,
+        isFilter: false,
+        render: (_: unknown, row: any) => (
+          <Box>
+            <Typography variant="body2">
+              {(row as EmployeeICardRow).fullName || 'Unnamed employee'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {(row as EmployeeICardRow).employeeIdentifier || '-'}
+            </Typography>
+          </Box>
+        ),
+      },
+      {
+        label: 'Designation',
+        id: 'designation',
+        minWidth: 100,
+        align: 'left' as const,
+        isFilter: false,
+        render: (value: string) => value || '-',
+      },
+      {
+        label: 'Readiness',
+        id: 'readiness',
+        minWidth: 100,
+        sticky: true,
+        align: 'left' as const,
+        isSort: false,
+        isFilter: false,
+        render: (_: unknown, row: any) => (
+          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+            {!(row as EmployeeICardRow).thumbnailPicture && (
+              <Label color="warning" variant="soft">
+                Photo
+              </Label>
+            )}
+            {!(row as EmployeeICardRow).mobileNo && (
+              <Label color="warning" variant="soft">
+                Phone
+              </Label>
+            )}
+            {!(row as EmployeeICardRow).designation && (
+              <Label color="warning" variant="soft">
+                Role
+              </Label>
+            )}
+            {(row as EmployeeICardRow).thumbnailPicture &&
+              (row as EmployeeICardRow).mobileNo &&
+              (row as EmployeeICardRow).designation && (
+                <Label color="success" variant="soft">
+                  Ready
+                </Label>
+              )}
+          </Stack>
+        ),
+      },
+    ],
+    [
+      allVisibleSelected,
+      someVisibleSelected,
+      state.selectedEmployeeIds,
+      toggleEmployeeSelection,
+      toggleVisibleSelection,
+    ]
+  );
+
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -588,10 +771,10 @@ const EmployeeICardBuilder = ({
         logoPreview: preview,
         ...(dominantColor ? { themeColor: dominantColor } : {}),
       });
-      toast.success('School logo uploaded');
+      shikshaMitraToast.success({ message: 'School logo uploaded' });
     } catch {
       URL.revokeObjectURL(preview);
-      toast.error('Could not upload logo');
+      shikshaMitraToast.error({ message: 'Could not upload logo' });
     } finally {
       event.target.value = '';
     }
@@ -609,11 +792,11 @@ const EmployeeICardBuilder = ({
     try {
       setIsSaving(true);
       if (!academicYearId) {
-        toast.error('Academic year is required');
+        shikshaMitraToast.error({ message: 'Academic year is required' });
         return null;
       }
       if (!state.name.trim()) {
-        toast.error('Template name is required');
+        shikshaMitraToast.error({ message: 'Template name is required' });
         return null;
       }
 
@@ -640,16 +823,16 @@ const EmployeeICardBuilder = ({
 
       if (savedTemplateId) {
         await updateTemplate({ id: savedTemplateId, body }).unwrap();
-        toast.success('Employee I-card template updated');
+        shikshaMitraToast.success({ message: 'Employee I-card template updated' });
         return savedTemplateId;
       }
 
       const created: any = await createTemplate(body).unwrap();
       setSavedTemplateId(created.id);
-      toast.success('Employee I-card template created');
+      shikshaMitraToast.success({ message: 'Employee I-card template created' });
       return created.id;
     } catch {
-      toast.error('Could not save Employee I-card template');
+      shikshaMitraToast.error({ message: 'Could not save Employee I-card template' });
       return null;
     } finally {
       setIsSaving(false);
@@ -658,7 +841,7 @@ const EmployeeICardBuilder = ({
 
   const handleExport = async () => {
     if (state.selectedEmployeeIds.length === 0) {
-      toast.error('Select at least one employee');
+      shikshaMitraToast.error({ message: 'Select at least one employee' });
       return;
     }
 
@@ -675,7 +858,7 @@ const EmployeeICardBuilder = ({
         },
       }).unwrap();
       if (!(await isPdfBlob(blob))) {
-        toast.error('Could not export Employee I-card PDF');
+        shikshaMitraToast.error({ message: 'Could not export Employee I-card PDF' });
         return;
       }
       const url = window.URL.createObjectURL(blob);
@@ -684,424 +867,425 @@ const EmployeeICardBuilder = ({
       link.download = `Employee-I-Cards-${new Date().toISOString().slice(0, 10)}.pdf`;
       link.click();
       window.URL.revokeObjectURL(url);
-      toast.success('Employee I-card PDF downloaded');
+      shikshaMitraToast.success({ message: 'Employee I-card PDF downloaded' });
       handleClose();
     } catch {
-      toast.error('Could not export Employee I-card PDF');
+      shikshaMitraToast.error({ message: 'Could not export Employee I-card PDF' });
     }
   };
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
+    <Paper
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      <CustomStepperWithFormik
+        initialValues={{}}
+        steps={steps}
+        activeStep={activeStep}
+        validateOnChange={false}
+        validationSchema={undefined}
+        handleBack={() => setActiveStep((prev) => Math.max(prev - 1, 0))}
+        handleNext={async (isLastStep, _value, _formik, setLoading) => {
+          if (isLastStep) {
+            setLoading(true);
+            try {
+              const savedId = await handleSave();
+              if (savedId) handleClose();
+            } finally {
+              setLoading(false);
+            }
+          } else {
+            setLoading(false);
+            setActiveStep((prev) => Math.min(prev + 1, steps.length - 1));
+          }
+        }}
+        showSaveButton={false}
+        disableSubmit={isSaving || isExporting}
+        saveAndNextButtonProps={{ disabled: isSaving || isExporting }}
+        renderItem={({ activeStep: currentStep }) => (
+          <Box sx={{ p: 2, height: '100%' }}>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12, md: 7 }}>
+                {currentStep === 0 && (
+                  <Stack spacing={2}>
+                    <TextField
+                      label="Template Name"
+                      value={state.name}
+                      onChange={(event) => patchState({ name: event.target.value })}
+                      size="small"
+                    />
+                    <CustomSelect
+                      options={[{ name: 'All organizations', id: 'all' }, ...organizations]}
+                      label="Organization"
+                      value={state.organization}
+                      onChange={(val) => {
+                        patchState({
+                          organization: String(Array.isArray(val) ? val[0] : val),
+                          selectedEmployeeIds: [],
+                        });
+                        setSelectedEmployeesById({});
+                        setEmployeePage(1);
+                      }}
+                      labelKey="name"
+                      valueKey="id"
+                      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                    />
+                    <ToggleButtonGroup
+                      exclusive
+                      value={state.orientation}
+                      onChange={(_, value) => {
+                        if (!value) return;
+                        patchState({
+                          orientation: value,
+                          width: CARD_DIMENSIONS[value as 'Horizontal' | 'Vertical'].width,
+                          height: CARD_DIMENSIONS[value as 'Horizontal' | 'Vertical'].height,
+                        });
+                      }}
+                    >
+                      <ToggleButton value="Horizontal" size="small">
+                        Horizontal
+                      </ToggleButton>
+                      <ToggleButton value="Vertical" size="small">
+                        Vertical
+                      </ToggleButton>
+                    </ToggleButtonGroup>
+                  </Stack>
+                )}
 
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 7 }}>
-          {activeStep === 0 && (
-            <Stack spacing={2}>
-              <TextField
-                label="Template Name"
-                value={state.name}
-                onChange={(event) => patchState({ name: event.target.value })}
-                size="small"
-              />
-              <CustomSelect
-                options={[{ name: 'All organizations', id: 'all' }, ...organizations]}
-                label="Organization"
-                value={state.organization}
-                onChange={(val) => {
-                  patchState({
-                    organization: String(Array.isArray(val) ? val[0] : val),
-                    selectedEmployeeIds: [],
-                  });
-                  setSelectedEmployeesById({});
-                  setEmployeePage(1);
-                }}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-              <ToggleButtonGroup
-                exclusive
-                value={state.orientation}
-                onChange={(_, value) => {
-                  if (!value) return;
-                  patchState({
-                    orientation: value,
-                    width: value === 'Horizontal' ? 360 : 230,
-                    height: value === 'Horizontal' ? 230 : 360,
-                  });
-                }}
-              >
-                <ToggleButton value="Horizontal">Horizontal</ToggleButton>
-                <ToggleButton value="Vertical">Vertical</ToggleButton>
-              </ToggleButtonGroup>
-            </Stack>
-          )}
+                {currentStep === 1 && (
+                  <Stack spacing={2}>
+                    <Button
+                      component="label"
+                      variant="outlined"
+                      startIcon={<Iconify icon="solar:upload-linear" />}
+                    >
+                      Upload School Logo
+                      <input
+                        hidden
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        onChange={handleLogoUpload}
+                      />
+                    </Button>
+                    <TextField
+                      label="School Name"
+                      value={state.schoolName}
+                      onChange={(event) => patchState({ schoolName: event.target.value })}
+                      size="small"
+                    />
+                    <TextField
+                      label="School Address"
+                      value={state.schoolAddress}
+                      onChange={(event) => patchState({ schoolAddress: event.target.value })}
+                      size="small"
+                      multiline
+                      minRows={2}
+                    />
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        label="Theme Color"
+                        type="color"
+                        value={state.themeColor}
+                        onChange={(event) => patchState({ themeColor: event.target.value })}
+                        size="small"
+                        sx={{ width: 160 }}
+                      />
+                      <TextField
+                        label="Background"
+                        type="color"
+                        value={state.backgroundColor}
+                        onChange={(event) => patchState({ backgroundColor: event.target.value })}
+                        size="small"
+                        sx={{ width: 160 }}
+                      />
+                    </Stack>
+                  </Stack>
+                )}
 
-          {activeStep === 1 && (
-            <Stack spacing={2}>
-              <Button
-                component="label"
-                variant="outlined"
-                startIcon={<Iconify icon="solar:upload-linear" />}
-              >
-                Upload School Logo
-                <input
-                  hidden
-                  type="file"
-                  accept="image/png,image/jpeg"
-                  onChange={handleLogoUpload}
-                />
-              </Button>
-              <TextField
-                label="School Name"
-                value={state.schoolName}
-                onChange={(event) => patchState({ schoolName: event.target.value })}
-                size="small"
-              />
-              <TextField
-                label="School Address"
-                value={state.schoolAddress}
-                onChange={(event) => patchState({ schoolAddress: event.target.value })}
-                size="small"
-                multiline
-                minRows={2}
-              />
-              <Stack direction="row" spacing={2}>
-                <TextField
-                  label="Theme Color"
-                  type="color"
-                  value={state.themeColor}
-                  onChange={(event) => patchState({ themeColor: event.target.value })}
-                  size="small"
-                  sx={{ width: 160 }}
-                />
-                <TextField
-                  label="Background"
-                  type="color"
-                  value={state.backgroundColor}
-                  onChange={(event) => patchState({ backgroundColor: event.target.value })}
-                  size="small"
-                  sx={{ width: 160 }}
-                />
-              </Stack>
-            </Stack>
-          )}
+                {currentStep === 2 && (
+                  <Stack spacing={2}>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {presets.map((preset) => (
+                        <Chip
+                          key={preset.key}
+                          label={preset.label}
+                          size="small"
+                          variant="outlined"
+                          onClick={() =>
+                            patchState({ presetKey: preset.key, themeColor: preset.color })
+                          }
+                          sx={{
+                            mb: 0.5,
+                            height: 30,
+                            fontWeight: 700,
+                            borderColor:
+                              state.presetKey === preset.key ? `${preset.color}66` : 'divider',
+                            color: state.presetKey === preset.key ? preset.color : 'text.secondary',
+                            bgcolor:
+                              state.presetKey === preset.key
+                                ? `${preset.color}14`
+                                : 'background.paper',
+                          }}
+                        />
+                      ))}
+                    </Stack>
+                    <Grid container spacing={1}>
+                      {state.fields.map((field) => (
+                        <Grid key={field.name} size={{ xs: 12, sm: 6 }}>
+                          <Paper
+                            variant="outlined"
+                            sx={{
+                              px: 1,
+                              py: 0.5,
+                              borderRadius: 1.5,
+                              bgcolor: field.important ? 'action.hover' : 'background.paper',
+                            }}
+                          >
+                            <FormControlLabel
+                              sx={{ m: 0, width: '100%' }}
+                              control={
+                                <Checkbox
+                                  size="small"
+                                  checked={field.enabled}
+                                  disabled={field.important}
+                                  onChange={() => handleFieldToggle(field.name)}
+                                />
+                              }
+                              label={field.label}
+                            />
+                          </Paper>
+                        </Grid>
+                      ))}
+                    </Grid>
+                    <Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap>
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1.5,
+                          bgcolor: state.qrCodeEnabled ? 'success.lighter' : 'background.paper',
+                          borderColor: state.qrCodeEnabled ? 'success.light' : 'divider',
+                        }}
+                      >
+                        <FormControlLabel
+                          sx={{ m: 0 }}
+                          control={
+                            <Checkbox
+                              size="small"
+                              checked={state.qrCodeEnabled}
+                              onChange={(event) =>
+                                patchState({ qrCodeEnabled: event.target.checked })
+                              }
+                            />
+                          }
+                          label="QR code text"
+                        />
+                      </Paper>
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1.5,
+                          bgcolor: state.barcodeEnabled ? 'info.lighter' : 'background.paper',
+                          borderColor: state.barcodeEnabled ? 'info.light' : 'divider',
+                        }}
+                      >
+                        <FormControlLabel
+                          sx={{ m: 0 }}
+                          control={
+                            <Checkbox
+                              size="small"
+                              checked={state.barcodeEnabled}
+                              onChange={(event) =>
+                                patchState({ barcodeEnabled: event.target.checked })
+                              }
+                            />
+                          }
+                          label="Barcode text"
+                        />
+                      </Paper>
+                    </Stack>
+                  </Stack>
+                )}
 
-          {activeStep === 2 && (
-            <Stack spacing={2}>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                {presets.map((preset) => (
-                  <Chip
-                    key={preset.key}
-                    label={preset.label}
-                    color={state.presetKey === preset.key ? 'primary' : 'default'}
-                    onClick={() => patchState({ presetKey: preset.key, themeColor: preset.color })}
-                    sx={{ mb: 1 }}
-                  />
-                ))}
-              </Stack>
-              <Grid container spacing={1}>
-                {state.fields.map((field) => (
-                  <Grid key={field.name} size={{ xs: 12, sm: 6 }}>
+                {currentStep === 3 && (
+                  <Stack spacing={1}>
+                    {designRecommendations.map((item) => (
+                      <Paper key={item.id} variant="outlined" sx={{ p: 1.5 }}>
+                        <Stack direction="row" justifyContent="space-between" gap={2}>
+                          <Box>
+                            <Typography variant="subtitle2">{item.title}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {item.body}
+                            </Typography>
+                          </Box>
+                          {item.action && (
+                            <Button size="small" onClick={() => patchState(item.action!.patch)}>
+                              {item.action.label}
+                            </Button>
+                          )}
+                        </Stack>
+                      </Paper>
+                    ))}
+                  </Stack>
+                )}
+
+                {currentStep === 4 && (
+                  <Stack spacing={2}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                      <TextField
+                        label="Search employees"
+                        value={state.employeeSearch}
+                        onChange={(event) => {
+                          patchState({ employeeSearch: event.target.value });
+                          setEmployeePage(1);
+                        }}
+                        size="small"
+                        fullWidth
+                      />
+                      <CustomSelect
+                        options={[{ name: 'All designations', id: 'all' }, ...designationOptions]}
+                        label="Designation"
+                        value={state.designationFilter}
+                        onChange={(val) => {
+                          patchState({
+                            designationFilter: String(Array.isArray(val) ? val[0] : val),
+                          });
+                          setEmployeePage(1);
+                        }}
+                        labelKey="name"
+                        valueKey="id"
+                        formControlProps={{ sx: { minWidth: 220 } }}
+                      />
+                      <CustomSelect
+                        options={[
+                          { name: 'All statuses', id: 'all' },
+                          { name: 'Active', id: 'Active' },
+                          { name: 'Inactive', id: 'Inactive' },
+                        ]}
+                        label="Status"
+                        value={employeeStatusFilter}
+                        onChange={(val) => {
+                          setEmployeeStatusFilter(String(Array.isArray(val) ? val[0] : val));
+                          setEmployeePage(1);
+                        }}
+                        labelKey="name"
+                        valueKey="id"
+                        formControlProps={{ sx: { minWidth: 180 } }}
+                      />
+                    </Stack>
+                    <ReadinessBar readiness={readiness} />
+                    {isFetchingEmployees && (
+                      <Typography variant="caption" color="text.secondary">
+                        Loading employees...
+                      </Typography>
+                    )}
+                    <CustomizableTable
+                      tableId="employee-icard-selection-table"
+                      columns={employeeColumns}
+                      data={filteredEmployees}
+                      isLoading={isFetchingEmployees}
+                      isSearch={false}
+                      isFilter={false}
+                      isPagination={false}
+                      isShowedDense={false}
+                      rowProps={(row) => ({
+                        selected: state.selectedEmployeeIds.includes((row as EmployeeICardRow).id),
+                      })}
+                      tableContainerProps={{ sx: { maxHeight: 360 } }}
+                      wrapperProps={{ sx: { maxHeight: 430 } }}
+                      noDataText="No employees found for this filter."
+                    />
+                  </Stack>
+                )}
+
+                {currentStep === 5 && (
+                  <Stack spacing={2}>
+                    <ReadinessBar readiness={readiness} />
+                    <TextField
+                      label="Cards per A4 page"
+                      type="number"
+                      size="small"
+                      value={state.cardsPerPage}
+                      onChange={(event) =>
+                        patchState({ cardsPerPage: clampCardsPerPage(Number(event.target.value)) })
+                      }
+                      inputProps={{ min: 1, max: 10 }}
+                      sx={{ maxWidth: 220 }}
+                    />
                     <FormControlLabel
                       control={
                         <Checkbox
-                          checked={field.enabled}
-                          disabled={field.important}
-                          onChange={() => handleFieldToggle(field.name)}
+                          checked={state.excludeIncompleteEmployees}
+                          onChange={(event) =>
+                            patchState({ excludeIncompleteEmployees: event.target.checked })
+                          }
                         />
                       }
-                      label={field.label}
+                      label="Exclude employees missing photo, phone, or designation"
                     />
-                  </Grid>
-                ))}
-              </Grid>
-              <Stack direction="row" spacing={2} flexWrap="wrap">
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={state.qrCodeEnabled}
-                      onChange={(event) => patchState({ qrCodeEnabled: event.target.checked })}
-                    />
-                  }
-                  label="QR code text"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={state.barcodeEnabled}
-                      onChange={(event) => patchState({ barcodeEnabled: event.target.checked })}
-                    />
-                  }
-                  label="Barcode text"
-                />
-              </Stack>
-            </Stack>
-          )}
-
-          {activeStep === 3 && (
-            <Stack spacing={1}>
-              {designRecommendations.map((item) => (
-                <Paper key={item.id} variant="outlined" sx={{ p: 1.5 }}>
-                  <Stack direction="row" justifyContent="space-between" gap={2}>
-                    <Box>
-                      <Typography variant="subtitle2">{item.title}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {item.body}
-                      </Typography>
-                    </Box>
-                    {item.action && (
-                      <Button size="small" onClick={() => patchState(item.action!.patch)}>
-                        {item.action.label}
-                      </Button>
-                    )}
+                    <Button
+                      variant="contained"
+                      disabled={isSaving || isExporting || state.selectedEmployeeIds.length === 0}
+                      onClick={handleExport}
+                      startIcon={<Iconify icon="solar:file-download-bold" />}
+                    >
+                      Export Bulk PDF
+                    </Button>
                   </Stack>
-                </Paper>
-              ))}
-            </Stack>
-          )}
+                )}
+              </Grid>
 
-          {activeStep === 4 && (
-            <Stack spacing={2}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <TextField
-                  label="Search employees"
-                  value={state.employeeSearch}
-                  onChange={(event) => {
-                    patchState({ employeeSearch: event.target.value });
-                    setEmployeePage(1);
-                  }}
-                  size="small"
-                  fullWidth
-                />
-                <CustomSelect
-                  options={[{ name: 'All designations', id: 'all' }, ...designationOptions]}
-                  label="Designation"
-                  value={state.designationFilter}
-                  onChange={(val) => {
-                    patchState({ designationFilter: String(Array.isArray(val) ? val[0] : val) });
-                    setEmployeePage(1);
-                  }}
-                  labelKey="name"
-                  valueKey="id"
-                  formControlProps={{ sx: { minWidth: 220 } }}
-                />
-                <CustomSelect
-                  options={[
-                    { name: 'All statuses', id: 'all' },
-                    { name: 'Active', id: 'Active' },
-                    { name: 'Inactive', id: 'Inactive' },
-                  ]}
-                  label="Status"
-                  value={employeeStatusFilter}
-                  onChange={(val) => {
-                    setEmployeeStatusFilter(String(Array.isArray(val) ? val[0] : val));
-                    setEmployeePage(1);
-                  }}
-                  labelKey="name"
-                  valueKey="id"
-                  formControlProps={{ sx: { minWidth: 180 } }}
-                />
-              </Stack>
-              <ReadinessBar readiness={readiness} />
-              {isFetchingEmployees && (
-                <Typography variant="caption" color="text.secondary">
-                  Loading employees...
-                </Typography>
-              )}
-              <TableContainer sx={{ maxHeight: 360 }}>
-                <Table stickyHeader size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          checked={
-                            filteredEmployees.length > 0 &&
-                            filteredEmployees.every((employee) =>
-                              state.selectedEmployeeIds.includes(employee.id)
-                            )
-                          }
-                          onChange={(event) => {
-                            const visibleIds = filteredEmployees.map((employee) => employee.id);
-                            const visibleById = Object.fromEntries(
-                              filteredEmployees.map((employee) => [employee.id, employee])
-                            );
-                            patchState({
-                              selectedEmployeeIds: event.target.checked
-                                ? Array.from(new Set([...state.selectedEmployeeIds, ...visibleIds]))
-                                : state.selectedEmployeeIds.filter(
-                                    (id) => !visibleIds.includes(id)
-                                  ),
-                            });
-                            setSelectedEmployeesById((prev) =>
-                              event.target.checked
-                                ? { ...prev, ...visibleById }
-                                : Object.fromEntries(
-                                    Object.entries(prev).filter(([id]) => !visibleIds.includes(id))
-                                  )
-                            );
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>Employee</TableCell>
-                      <TableCell>Designation</TableCell>
-                      <TableCell>Readiness</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredEmployees.map((employee) => {
-                      const checked = state.selectedEmployeeIds.includes(employee.id);
-                      return (
-                        <TableRow key={employee.id} hover selected={checked}>
-                          <TableCell padding="checkbox">
-                            <Checkbox
-                              checked={checked}
-                              onChange={() => {
-                                patchState({
-                                  selectedEmployeeIds: checked
-                                    ? state.selectedEmployeeIds.filter((id) => id !== employee.id)
-                                    : [...state.selectedEmployeeIds, employee.id],
-                                });
-                                setSelectedEmployeesById((prev) => {
-                                  if (!checked) return { ...prev, [employee.id]: employee };
-                                  const next = { ...prev };
-                                  delete next[employee.id];
-                                  return next;
-                                });
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {employee.fullName || 'Unnamed employee'}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {employee.employeeIdentifier}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>{employee.designation || '-'}</TableCell>
-                          <TableCell>
-                            <Stack direction="row" spacing={0.5}>
-                              {!employee.thumbnailPicture && (
-                                <Chip size="small" label="Photo" color="warning" />
-                              )}
-                              {!employee.mobileNo && (
-                                <Chip size="small" label="Phone" color="warning" />
-                              )}
-                              {!employee.designation && (
-                                <Chip size="small" label="Role" color="warning" />
-                              )}
-                              {employee.thumbnailPicture &&
-                                employee.mobileNo &&
-                                employee.designation && (
-                                  <Chip size="small" label="Ready" color="success" />
-                                )}
-                            </Stack>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Button
-                  size="small"
-                  disabled={employeePage <= 1}
-                  onClick={() => setEmployeePage((page) => Math.max(1, page - 1))}
-                >
-                  Previous
-                </Button>
-                <Typography variant="caption" color="text.secondary">
-                  Page {employeePage} of {totalEmployeePages}
-                </Typography>
-                <Button
-                  size="small"
-                  disabled={employeePage >= totalEmployeePages}
-                  onClick={() => setEmployeePage((page) => page + 1)}
-                >
-                  Next
-                </Button>
-              </Stack>
-            </Stack>
-          )}
-
-          {activeStep === 5 && (
-            <Stack spacing={2}>
-              <ReadinessBar readiness={readiness} />
-              <TextField
-                label="Cards per A4 page"
-                type="number"
-                size="small"
-                value={state.cardsPerPage}
-                onChange={(event) =>
-                  patchState({ cardsPerPage: clampCardsPerPage(Number(event.target.value)) })
-                }
-                inputProps={{ min: 1, max: 10 }}
-                sx={{ maxWidth: 220 }}
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={state.excludeIncompleteEmployees}
-                    onChange={(event) =>
-                      patchState({ excludeIncompleteEmployees: event.target.checked })
-                    }
-                  />
-                }
-                label="Exclude employees missing photo, phone, or designation"
-              />
-              <Button
-                variant="contained"
-                disabled={isSaving || isExporting || state.selectedEmployeeIds.length === 0}
-                onClick={handleExport}
-                startIcon={<Iconify icon="solar:file-download-bold" />}
-              >
-                Export Bulk PDF
-              </Button>
-            </Stack>
-          )}
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 5 }}>
-          <Box sx={{ position: 'sticky', top: 90 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Live Preview
-            </Typography>
-            <CardPreview
-              state={state}
-              employee={sampleEmployee}
-              academicYearName={academicYearName}
-            />
+              <Grid size={{ xs: 12, md: 5 }}>
+                <Box sx={{ position: 'sticky', top: 16 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      background: (theme) =>
+                        theme.palette.mode === 'dark'
+                          ? 'linear-gradient(180deg, rgba(148,163,184,0.08), rgba(148,163,184,0.02))'
+                          : 'linear-gradient(180deg, rgba(15,23,42,0.03), rgba(15,23,42,0.01))',
+                    }}
+                  >
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      sx={{ mb: 1 }}
+                    >
+                      <Box>
+                        <Typography variant="subtitle2">Live Preview</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Real-time card composition
+                        </Typography>
+                      </Box>
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        label={`${state.orientation} ${state.width}x${state.height}`}
+                      />
+                    </Stack>
+                    <CardPreview
+                      state={state}
+                      employee={sampleEmployee}
+                      academicYearName={academicYearName}
+                    />
+                  </Paper>
+                </Box>
+              </Grid>
+            </Grid>
           </Box>
-        </Grid>
-      </Grid>
-
-      <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
-        <Button disabled={activeStep === 0} onClick={() => setActiveStep((prev) => prev - 1)}>
-          Back
-        </Button>
-        <Stack direction="row" spacing={1}>
-          <Button variant="outlined" disabled={isSaving || isExporting} onClick={handleSave}>
-            Save Template
-          </Button>
-          <Button
-            variant="contained"
-            disabled={isSaving || isExporting}
-            onClick={() => setActiveStep((prev) => Math.min(prev + 1, steps.length - 1))}
-          >
-            {activeStep === steps.length - 1 ? 'Ready' : 'Next'}
-          </Button>
-        </Stack>
-      </Stack>
+        )}
+      />
     </Paper>
   );
 };
@@ -1181,9 +1365,20 @@ const CardPreview = ({
   const enabled = new Set(state.fields.filter((field) => field.enabled).map((field) => field.name));
   const employeeName = employee?.fullName || 'Ananya Sharma';
   const code = employee?.employeeIdentifier || 'EMP-1024';
+  const isVertical = state.orientation === 'Vertical';
 
   return (
-    <Box sx={{ overflow: 'auto', bgcolor: 'background.neutral', p: 2 }}>
+    <Box
+      sx={{
+        overflow: 'auto',
+        p: 1.5,
+        borderRadius: 2,
+        border: '1px dashed',
+        borderColor: 'divider',
+        bgcolor: (theme) =>
+          theme.palette.mode === 'dark' ? 'rgba(15,23,42,0.35)' : 'rgba(148,163,184,0.08)',
+      }}
+    >
       <Box
         sx={{
           width: state.width,
@@ -1193,98 +1388,174 @@ const CardPreview = ({
           bgcolor: state.backgroundColor,
           border: '1px solid',
           borderColor: 'divider',
-          borderRadius: 1,
+          borderRadius: 2,
           p: 1.5,
-          color: '#111827',
+          color: 'text.primary',
+          boxShadow: (theme) =>
+            theme.palette.mode === 'dark'
+              ? '0 10px 30px rgba(2,6,23,0.45)'
+              : '0 10px 28px rgba(15,23,42,0.12)',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        <Stack direction="row" spacing={1.2} alignItems="center">
-          <PreviewLogo
-            blobName={state.logoBlobName}
-            preview={state.logoPreview}
-            themeColor={state.themeColor}
-          />
-          <Box minWidth={0}>
-            <Typography variant="subtitle2" noWrap color={state.themeColor}>
-              {state.schoolName || state.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {state.schoolAddress || 'School address'}
-            </Typography>
-          </Box>
-        </Stack>
-        <Box sx={{ height: 2, bgcolor: state.themeColor, my: 1 }} />
-        <Stack direction="row" spacing={1.5}>
-          {enabled.has('photo') && (
-            <Box
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            background: `linear-gradient(165deg, ${state.themeColor}14 0%, transparent 45%)`,
+            pointerEvents: 'none',
+          }}
+        />
+
+        <Stack spacing={1.25} sx={{ position: 'relative', zIndex: 1 }}>
+          <Stack direction="row" spacing={1.2} alignItems="center" justifyContent="space-between">
+            <Stack direction="row" spacing={1.2} alignItems="center" minWidth={0}>
+              <Box
+                sx={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 1.25,
+                  display: 'grid',
+                  placeItems: 'center',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: (theme) =>
+                    theme.palette.mode === 'dark' ? 'rgba(2,6,23,0.45)' : 'rgba(255,255,255,0.8)',
+                }}
+              >
+                <PreviewLogo
+                  blobName={state.logoBlobName}
+                  preview={state.logoPreview}
+                  themeColor={state.themeColor}
+                />
+              </Box>
+              <Box minWidth={0}>
+                <Typography
+                  variant="subtitle2"
+                  noWrap
+                  sx={{ color: state.themeColor, fontWeight: 700 }}
+                >
+                  {state.schoolName || state.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {state.schoolAddress || 'School address'}
+                </Typography>
+              </Box>
+            </Stack>
+            <Chip size="small" label="Employee ID" sx={{ fontWeight: 600, height: 22 }} />
+          </Stack>
+
+          <Box sx={{ height: 3, bgcolor: state.themeColor, borderRadius: 2 }} />
+
+          <Stack
+            direction={isVertical ? 'column' : 'row'}
+            spacing={isVertical ? 1 : 1.5}
+            alignItems={isVertical ? 'stretch' : 'flex-start'}
+          >
+            {enabled.has('photo') && (
+              <Box
+                sx={{
+                  width: isVertical ? '100%' : 82,
+                  maxWidth: isVertical ? 130 : 'unset',
+                  height: isVertical ? 110 : 96,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  bgcolor: (theme) =>
+                    theme.palette.mode === 'dark' ? 'rgba(15,23,42,0.6)' : 'rgba(255,255,255,0.88)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.4 }}>
+                  PHOTO
+                </Typography>
+              </Box>
+            )}
+
+            <Stack spacing={0.45} minWidth={0} flex={1}>
+              {enabled.has('name') && (
+                <Typography
+                  variant="h6"
+                  fontWeight={800}
+                  noWrap
+                  sx={{ fontSize: '1.2rem', lineHeight: 1.2 }}
+                >
+                  {employeeName}
+                </Typography>
+              )}
+              {enabled.has('employeeCode') && <PreviewLine label="Code" value={code} />}
+              {enabled.has('designation') && (
+                <PreviewLine label="Designation" value={employee?.designation || 'Teacher'} />
+              )}
+              {enabled.has('department') && (
+                <PreviewLine label="Department" value={employee?.department || 'Academic'} />
+              )}
+              {enabled.has('organization') && (
+                <PreviewLine
+                  label="Organization"
+                  value={employee?.organizationNames?.[0] || 'Primary Wing'}
+                />
+              )}
+              {enabled.has('contactNo') && (
+                <PreviewLine label="Phone" value={employee?.mobileNo || '9876543210'} />
+              )}
+              {enabled.has('bloodGroup') && (
+                <PreviewLine label="Blood Group" value={employee?.bloodGroup || 'B+'} />
+              )}
+              {enabled.has('validityYear') && (
+                <PreviewLine label="Valid" value={academicYearName || '2026-2027'} />
+              )}
+            </Stack>
+          </Stack>
+
+          {enabled.has('address') && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
               sx={{
-                width: 78,
-                height: 92,
-                border: '1px solid',
+                display: 'block',
+                mt: 0.5,
+                p: 0.75,
+                borderRadius: 1,
+                border: '1px dashed',
                 borderColor: 'divider',
-                bgcolor: '#fff',
-                display: 'grid',
-                placeItems: 'center',
-                flexShrink: 0,
+                bgcolor: (theme) =>
+                  theme.palette.mode === 'dark' ? 'rgba(30,41,59,0.45)' : 'rgba(248,250,252,0.9)',
               }}
             >
-              <Typography variant="caption" color="text.secondary">
-                PHOTO
-              </Typography>
-            </Box>
+              {employee?.address || 'Employee address'}
+            </Typography>
           )}
-          <Stack spacing={0.4} minWidth={0}>
-            {enabled.has('name') && (
-              <Typography variant="subtitle1" fontWeight={700} noWrap>
-                {employeeName}
+          {(state.qrCodeEnabled || state.barcodeEnabled) && (
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ mt: 0.75 }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                Secure identity marker
               </Typography>
-            )}
-            {enabled.has('employeeCode') && <PreviewLine label="Code" value={code} />}
-            {enabled.has('designation') && (
-              <PreviewLine label="Designation" value={employee?.designation || 'Teacher'} />
-            )}
-            {enabled.has('department') && (
-              <PreviewLine label="Department" value={employee?.department || 'Academic'} />
-            )}
-            {enabled.has('organization') && (
-              <PreviewLine
-                label="Organization"
-                value={employee?.organizationNames?.[0] || 'Primary Wing'}
+              <Chip
+                size="small"
+                variant="outlined"
+                label={state.qrCodeEnabled ? `QR: ${code}` : `BAR: ${code}`}
+                sx={{ height: 22, maxWidth: 164, '& .MuiChip-label': { px: 1.1 } }}
               />
-            )}
-            {enabled.has('contactNo') && (
-              <PreviewLine label="Phone" value={employee?.mobileNo || '9876543210'} />
-            )}
-            {enabled.has('bloodGroup') && (
-              <PreviewLine label="Blood Group" value={employee?.bloodGroup || 'B+'} />
-            )}
-            {enabled.has('validityYear') && (
-              <PreviewLine label="Valid" value={academicYearName || '2026-2027'} />
-            )}
-          </Stack>
+            </Stack>
+          )}
         </Stack>
-        {enabled.has('address') && (
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-            {employee?.address || 'Employee address'}
-          </Typography>
-        )}
-        {(state.qrCodeEnabled || state.barcodeEnabled) && (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: 'block', mt: 1, textAlign: 'right' }}
-          >
-            {state.qrCodeEnabled ? `QR: ${code}` : `BAR: ${code}`}
-          </Typography>
-        )}
       </Box>
     </Box>
   );
 };
 
 const PreviewLine = ({ label, value }: { label: string; value: string }) => (
-  <Typography variant="caption" noWrap>
-    <Box component="span" sx={{ color: 'text.secondary' }}>
+  <Typography variant="caption" noWrap sx={{ fontSize: '0.76rem' }}>
+    <Box component="span" sx={{ color: 'text.secondary', minWidth: 72, display: 'inline-block' }}>
       {label}:{' '}
     </Box>
     {value || '-'}
@@ -1301,20 +1572,22 @@ const ReadinessBar = ({
     missingDesignation: number;
   };
 }) => (
-  <Stack direction="row" spacing={1} flexWrap="wrap">
-    <Chip label={`${readiness.selected} selected`} color="primary" />
-    <Chip
-      label={`${readiness.missingPhoto} missing photo`}
-      color={readiness.missingPhoto ? 'warning' : 'success'}
-    />
-    <Chip
-      label={`${readiness.missingPhone} missing phone`}
-      color={readiness.missingPhone ? 'warning' : 'success'}
-    />
-    <Chip
-      label={`${readiness.missingDesignation} missing role`}
-      color={readiness.missingDesignation ? 'warning' : 'success'}
-    />
+  <Stack spacing={1}>
+    <Typography variant="subtitle2">Readiness</Typography>
+    <Stack direction="row" spacing={1} flexWrap="wrap">
+      <Label color="primary" variant="soft">
+        {`${readiness.selected} selected`}
+      </Label>
+      <Label color={readiness.missingPhoto ? 'warning' : 'success'} variant="soft">
+        {`${readiness.missingPhoto} missing photo`}
+      </Label>
+      <Label color={readiness.missingPhone ? 'warning' : 'success'} variant="soft">
+        {`${readiness.missingPhone} missing phone`}
+      </Label>
+      <Label color={readiness.missingDesignation ? 'warning' : 'success'} variant="soft">
+        {`${readiness.missingDesignation} missing role`}
+      </Label>
+    </Stack>
   </Stack>
 );
 
@@ -1357,7 +1630,11 @@ const useRecommendations = (state: BuilderState, employees: any[]) =>
         body: 'Horizontal cards preserve school identity better when the name is long.',
         action: {
           label: 'Use horizontal',
-          patch: { orientation: 'Horizontal', width: 360, height: 230 },
+          patch: {
+            orientation: 'Horizontal',
+            width: CARD_DIMENSIONS.Horizontal.width,
+            height: CARD_DIMENSIONS.Horizontal.height,
+          },
         },
       });
     }

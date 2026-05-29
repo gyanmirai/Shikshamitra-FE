@@ -765,6 +765,7 @@ const RunPayroll = () => {
         id: 'issueFilter',
         label: 'Issues',
         minWidth: 170,
+        align: 'center',
         filterType: 'enum',
         enumOptions: [
           { label: 'Has Issues', value: 'HAS_ISSUES' },
@@ -803,6 +804,7 @@ const RunPayroll = () => {
         id: 'status',
         label: 'Review',
         minWidth: 130,
+        align: 'center',
         filterType: 'enum',
         enumOptions: [
           { label: 'Pending', value: 'PENDING' },
@@ -821,6 +823,7 @@ const RunPayroll = () => {
         id: 'actions',
         label: '',
         minWidth: 72,
+        align: 'center',
         isFilter: false,
         isSort: false,
         sticky: true,
@@ -872,17 +875,15 @@ const RunPayroll = () => {
             : { label: 'Select month', color: 'default' as const };
   const readinessActions = new Set(previewReadiness?.recommendedActions || []);
   const showReadinessPanel = Boolean(previewReadiness || previewError || readinessBusy);
-  const previewButtonIcon = isDataForSelectedMonth ? 'solar:refresh-linear' : 'solar:eye-bold';
+  const previewButtonIcon = isDataForSelectedMonth ? 'solar:refresh-linear' : 'solar:rocket-bold';
   const previewButtonLabel = previewBusy
-    ? isPreviewRefreshing
-      ? 'Refreshing preview...'
-      : 'Loading preview...'
+    ? 'Generating preview...'
     : isDataForSelectedMonth
       ? 'Refresh preview'
-      : 'Load preview';
+      : 'Generate preview';
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
       <CustomBreadcrumbs
         heading="Run Payroll"
         links={[{ name: 'HR/Staff' }, { name: 'Payroll Management' }, { name: 'Run Payroll' }]}
@@ -920,9 +921,9 @@ const RunPayroll = () => {
           variant="contained"
           loading={previewBusy}
           size="small"
-          disabled={!month || previewBusy}
+          disabled={!month}
           startIcon={<Iconify icon={previewButtonIcon} />}
-          onClick={() => loadPreview(isDataForSelectedMonth)}
+          onClick={() => loadPreview(true)}
         >
           {previewButtonLabel}
         </LoadingButton>
@@ -1133,9 +1134,7 @@ const RunPayroll = () => {
           p: 1.25,
           display: 'flex',
           flexDirection: 'column',
-          flex: 1,
-          minHeight: 0,
-          overflow: 'hidden',
+          minHeight: 480,
         }}
       >
         <Stack
@@ -1233,7 +1232,7 @@ const RunPayroll = () => {
               height: { xs: '56vh', md: '64vh' },
               minHeight: 360,
               maxHeight: '72vh',
-              overflow: 'hidden',
+              overflow: 'auto',
             },
           }}
           tableContainerProps={{

@@ -8,6 +8,35 @@ const compactParams = (params: Record<string, unknown>) =>
     )
   );
 
+export const normalizeIsTeachingFilter = (value: unknown): boolean | undefined => {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    if (value.toLowerCase() === 'true') {
+      return true;
+    }
+    if (value.toLowerCase() === 'false') {
+      return false;
+    }
+  }
+
+  return undefined;
+};
+
+export const buildEmployeeListQueryParams = (args?: Record<string, unknown>) => {
+  const { page = 1, pageSize = 10, search, isTeaching, ...filters } = args ?? {};
+
+  return compactParams({
+    page,
+    pageSize,
+    search,
+    ...filters,
+    isTeaching: normalizeIsTeachingFilter(isTeaching),
+  });
+};
+
 export const resolveEmployeeIdParam = (input: any): string | null => {
   const id = typeof input === 'string' ? input : input?.id || input?.employeeId;
   return typeof id === 'string' && id.trim() ? id.trim() : null;
@@ -41,20 +70,11 @@ export const employeeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
     getEmployee: builder.query({
-      query: (args) => {
-        const { page = 1, pageSize = 10, search, ...filters } = args ?? {};
-
-        return {
-          url: `/employees`,
-          method: 'GET',
-          params: compactParams({
-            page,
-            pageSize,
-            search,
-            ...filters,
-          }),
-        };
-      },
+      query: (args) => ({
+        url: `/employees`,
+        method: 'GET',
+        params: buildEmployeeListQueryParams(args),
+      }),
       providesTags: [employeeType.employee],
     }),
     getEmployeeById: builder.query({

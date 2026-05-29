@@ -91,12 +91,14 @@ const FinanceReconciliation = () => {
   );
 
   // Map tab counts to per-tab pending counts for badge display
-  const counts = useMemo(
+  const counts = useMemo<Record<ReconciliationtatusType, number>>(
     () => ({
+      [ReconciliationtatusType.All]: tabCounts?.totalPending ?? 0,
       [ReconciliationtatusType.Cheque]: tabCounts?.chequePending ?? 0,
       [ReconciliationtatusType.DemandDraft]: tabCounts?.demandDraftPending ?? 0,
       [ReconciliationtatusType.BankTransfer]: tabCounts?.bankTransferPending ?? 0,
       [ReconciliationtatusType.CreditCard]: tabCounts?.creditCardPending ?? 0,
+      [ReconciliationtatusType.DebitCard]: 0,
       [ReconciliationtatusType.UPI]: tabCounts?.upiPending ?? 0,
       [ReconciliationtatusType.OnlineGateway]: tabCounts?.onlineGatewayPending ?? 0,
       [ReconciliationtatusType.Wallet]: tabCounts?.walletPending ?? 0,

@@ -1,7 +1,7 @@
 'use client';
 
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { alpha, useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatNumber } from 'src/utils/formate_number';
 import { FeeMonth } from 'src/enums/fee-collection-type';
@@ -55,12 +55,10 @@ const SmartRecommendationPanel = ({
   currentYear,
   onSelectionChange,
 }: SmartRecommendationPanelProps) => {
-  const theme = useTheme();
   const allMonthWise = ledgerData.monthWise ?? [];
 
   // ── Compute recommendations ────────────────────────────────────────────────
   const nowMonth = new Date().getMonth();
-  const currentMonthName = new Date().toLocaleString('en-IN', { month: 'long' });
 
   const overdueGroups = allMonthWise.filter(
     (g) => g.month < nowMonth && g.items.some((i) => i.due > 0)

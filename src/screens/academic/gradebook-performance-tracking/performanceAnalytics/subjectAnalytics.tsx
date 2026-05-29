@@ -53,8 +53,8 @@ const SubjectAnalytics = () => {
               { name: '9-C', data: [51, 67, 47, 97] },
             ],
             colors: [
-              alpha(theme.vars.palette.primary.dark, 0.8),
-              alpha(theme.vars.palette.warning.main, 0.8),
+              alpha(theme.palette.primary.dark, 0.8),
+              alpha(theme.palette.warning.main, 0.8),
               alpha(theme.palette.error.main, 0.8),
             ],
             options: {
