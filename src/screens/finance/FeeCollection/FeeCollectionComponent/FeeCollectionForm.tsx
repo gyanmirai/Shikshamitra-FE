@@ -1804,7 +1804,9 @@ const FeeCollectComponentForm = ({
         student={student}
         chargesData={chargesData ?? []}
         feeHeadMap={feeHeadMap}
-        academicYear={currentYear?.year ? String(currentYear.year) : undefined}
+        academicYear={
+          currentYear?.name || (currentYear?.year ? String(currentYear.year) : undefined)
+        }
       />
 
       {/* ── Final Payment Review Dialog ── */}

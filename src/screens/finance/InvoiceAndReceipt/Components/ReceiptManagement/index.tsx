@@ -8,11 +8,12 @@ import type {
 
 import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
-import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
+import CustomSelect from 'src/components/custom-select';
 import { FeeMonth } from 'src/enums/fee-collection-type';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
 import {
@@ -24,7 +25,7 @@ import {
 import ReceiptPreviewDialog from './Components/ReceiptPreviewDialog';
 
 const RECEIPT_KIND_OPTIONS = [
-  { label: 'All Types', value: 'All Types' },
+  { label: 'All', value: 'All' },
   { label: FEE_RECEIPT_KIND_LABELS[FeeReceiptKind.FinalFee], value: FeeReceiptKind.FinalFee },
   {
     label: FEE_RECEIPT_KIND_LABELS[FeeReceiptKind.ProvisionalFee],
@@ -38,6 +39,14 @@ const RECEIPT_KIND_OPTIONS = [
 
 const DEFAULT_PAGE_SIZE = 20;
 
+const getAcademicYearMonthOptions = (data: { month: number; year: number }[] | undefined) => [
+  { label: 'All', value: 'All' },
+  ...(data?.map((item) => ({
+    label: `${FeeMonth[item.month]}-${item.year}`,
+    value: `${item.month}-${item.year}`,
+  })) ?? []),
+];
+
 const ReceiptManagement = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -47,8 +56,8 @@ const ReceiptManagement = () => {
   const [mediums, setMediums] = useState<Medium[]>([]);
   const [selectedBoard, setSelectedBoard] = useState<string>('');
   const [selectedMedium, setSelectedMedium] = useState<string>('');
-  const [selectedMonth, setSelectedMonth] = useState<string>('All Months');
-  const [selectedKind, setSelectedKind] = useState<string>('All Types');
+  const [selectedMonth, setSelectedMonth] = useState<string>('All');
+  const [selectedKind, setSelectedKind] = useState<string>('All');
 
   // ── Pagination state ──────────────────────────────────────────────────────
 
@@ -57,16 +66,21 @@ const ReceiptManagement = () => {
 
   // ── Academic year months from API ─────────────────────────────────────────
 
-  const { data: academicYearMonthsData, isLoading: isMonthsLoading } =
-    useGetAcademicYearMonthsQuery({ academicYearId: currentYear?.id }, { skip: !currentYear?.id });
+  const {
+    data: academicYearMonthsData,
+    isLoading: isMonthsLoading,
+    isFetching: isMonthsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAcademicYearMonthsQuery,
+    params: { academicYearId: currentYear?.id },
+    options: { skip: !currentYear?.id },
+  });
 
-  const MONTHS = [
-    { label: 'All Months', value: 'All Months' },
-    ...(academicYearMonthsData?.map((item: { month: number; year: number }) => ({
-      label: `${FeeMonth[item.month]}-${item.year}`,
-      value: String(item.month),
-    })) ?? []),
-  ];
+  const monthOptions = useMemo(
+    () => getAcademicYearMonthOptions(academicYearMonthsData),
+    [academicYearMonthsData]
+  );
 
   // ── Preview state ──────────────────────────────────────────────────────────
 
@@ -101,8 +115,12 @@ const ReceiptManagement = () => {
       academicYearId: currentYear.id,
       boardId: selectedBoard,
       educationMediumId: selectedMedium,
-      month: selectedMonth ? Number(selectedMonth) : undefined,
-      receiptKind: selectedKind ? (Number(selectedKind) as FeeReceiptKind) : undefined,
+      month:
+        selectedMonth && selectedMonth !== 'All' ? Number(selectedMonth.split('-')[0]) : undefined,
+      receiptKind:
+        selectedKind && selectedKind !== 'All'
+          ? (Number(selectedKind) as FeeReceiptKind)
+          : undefined,
       skipCount,
       maxResultCount,
     };
@@ -116,8 +134,15 @@ const ReceiptManagement = () => {
     maxResultCount,
   ]);
 
-  const { data, isFetching } = useGetFeeReceiptListQuery(queryParams!, {
-    skip: queryParams === null,
+  const {
+    data,
+    isLoading: isReceiptListLoading,
+    isFetching: isReceiptListFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeReceiptListQuery,
+    params: queryParams,
+    options: { skip: queryParams === null },
   });
 
   const tableData: FeeReceiptListItem[] = data?.items ?? [];
@@ -163,6 +188,7 @@ const ReceiptManagement = () => {
         minWidth: 140,
         maxWidth: 200,
         sticky: true,
+        render: (value) => FEE_RECEIPT_KIND_LABELS[value as FeeReceiptKind] ?? '—',
       },
       {
         id: 'totalPaidAmount',
@@ -170,6 +196,7 @@ const ReceiptManagement = () => {
         align: 'left',
         width: 120,
         minWidth: 100,
+        filterType: 'number',
         maxWidth: 160,
         render: (value) => `₹ ${formatNumber(value ?? 0)}`,
       },
@@ -178,6 +205,7 @@ const ReceiptManagement = () => {
         label: 'Receipt Date',
         align: 'left',
         width: 120,
+        filterType: 'date',
         minWidth: 110,
         maxWidth: 160,
         render: (value) => {
@@ -194,7 +222,13 @@ const ReceiptManagement = () => {
         width: 80,
         minWidth: 64,
         render(_value: any, row: any) {
-          return <ThreeDotsActions showThreeDots={false} showViewIcon handleViewClick={() => {}} />;
+          return (
+            <ThreeDotsActions
+              showThreeDots={false}
+              showViewIcon
+              handleViewClick={() => setPreviewReceiptId(row.id)}
+            />
+          );
         },
       },
     ],
@@ -216,7 +250,7 @@ const ReceiptManagement = () => {
           boxShadow: 'var(--shadows-3)',
           mt: 1,
           mb: 1,
-          p: 1.5,
+          p: 1,
         }}
       >
         <CustomSelect
@@ -245,7 +279,7 @@ const ReceiptManagement = () => {
           formControlProps={{ sx: { maxWidth: 180, width: '100%' } }}
         />
         <CustomSelect
-          options={MONTHS}
+          options={monthOptions}
           label="Month"
           value={selectedMonth}
           onChange={(val) => {
@@ -254,7 +288,7 @@ const ReceiptManagement = () => {
           }}
           labelKey="label"
           valueKey="value"
-          isLoading={isMonthsLoading}
+          isLoading={isMonthsLoading || isMonthsFetching}
           formControlProps={{ sx: { maxWidth: 160, width: '100%' } }}
         />
         <CustomSelect
@@ -276,7 +310,7 @@ const ReceiptManagement = () => {
         tableId="fee-receipts"
         columns={columns}
         data={tableData}
-        isLoading={isFetching}
+        isLoading={isReceiptListLoading || isReceiptListFetching}
         serverSide
         onServerPagination={(page: number, rowsPerPage: number) => {
           setSkipCount(page * rowsPerPage);

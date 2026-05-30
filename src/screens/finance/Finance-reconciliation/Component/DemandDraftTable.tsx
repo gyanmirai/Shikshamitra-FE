@@ -2,6 +2,7 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { Box } from '@mui/system';
 import { useFormik } from 'formik';
@@ -9,11 +10,12 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -41,16 +43,47 @@ const DemandDraftTable = ({
   const isDialog = useBoolean(false);
 
   const { permissions } = useSelector((state: RootState) => state.auth);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const canApproveReject = permissions.some(
     (perm: any) => perm.name === financePermissions.accounts.reconciliationAdd && perm.isGranted
   );
 
-  const { data: listResponse, isLoading } = useQueryAndMutation({
+  const {
+    data: listResponse,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReconciliationListQuery,
     params: queryParams,
   });
-  const data = listResponse?.items ?? [];
+  const data = useMemo(
+    () =>
+      (listResponse?.items ?? []).map((item: any) => ({
+        ...item,
+        standardName: item.class,
+        divisionName: item.division,
+        ddNumber: item.instrumentDetails?.ddNumber,
+        bankName: item.instrumentDetails?.issuingBankName || item.instrumentDetails?.branchName,
+        receivedDDDate: item.instrumentDetails?.ddDate,
+      })),
+    [listResponse?.items]
+  );
+
+  useEffect(() => {
+    if (!isLoading && listResponse && (listResponse.items ?? []).length === 0) {
+      const monthYear = queryParams
+        ? dayjs(`${queryParams.year}-${String(queryParams.month).padStart(2, '0')}-01`).format(
+            'MMM-YYYY'
+          )
+        : '';
+      const academicYear = (currentYear as any)?.name ?? '';
+      shikshaMitraToast.warning({
+        message: `No Demand Draft records found for ${monthYear}${academicYear ? ` (${academicYear})` : ''}. Please change the month or academic year.`,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, listResponse]);
 
   const columns: IColumn[] = useMemo(
     () => [
@@ -141,6 +174,25 @@ const DemandDraftTable = ({
         align: 'left',
         isFilter: true,
         filterType: 'date',
+        render: (value) => {
+          if (!value)
+            return (
+              <Typography variant="caption" fontSize="13px">
+                -
+              </Typography>
+            );
+
+          const date = new Date(value);
+          const formattedDate = Number.isNaN(date.getTime())
+            ? '-'
+            : `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
+
+          return (
+            <Typography variant="caption" fontSize="13px">
+              {formattedDate}
+            </Typography>
+          );
+        },
       },
       {
         id: 'remarks',
@@ -229,7 +281,7 @@ const DemandDraftTable = ({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomizableTable
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         noDataText={<>No Demand Draft Data Available </>}
         tableId="demand-draft-table"
         columns={columns}
@@ -292,11 +344,13 @@ export const ApproveRejectForm = ({
             id: editData.id,
             body: { remarks: formikValues.rejectionReason },
           }).unwrap();
+          shikshaMitraToast.success({ message: 'Reconciliation entry rejected successfully.' });
         } else {
           await approveReconciliation({
             id: editData.id,
             body: { remarks: formikValues.rejectionReason || undefined },
           }).unwrap();
+          shikshaMitraToast.success({ message: 'Reconciliation entry approved successfully.' });
         }
         handleClose(null, true);
       } catch (error) {

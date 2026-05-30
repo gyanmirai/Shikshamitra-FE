@@ -12,6 +12,7 @@ import { Box, Tab, Card, Tabs } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useCallback } from 'react';
 import { useNewSearchParam } from 'src/hooks/use-search-param';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ReconciliationtatusType } from 'src/enums/reconciliation-status-type';
@@ -80,15 +81,16 @@ const FinanceReconciliation = () => {
   // Real tab counts from backend
   const selectedMonth = date ? date.month() + 1 : undefined;
   const selectedYear = date ? date.year() : undefined;
-
-  const { data: tabCounts } = useGetReconciliationTabCountsQuery(
-    {
+  const { data: tabCounts, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetReconciliationTabCountsQuery,
+    params: {
       academicYearId: currentYear?.id ?? '',
       month: selectedMonth,
       year: selectedYear,
     },
-    { skip: !currentYear?.id }
-  );
+    options: { skip: !currentYear?.id },
+  });
 
   // Map tab counts to per-tab pending counts for badge display
   const counts = useMemo<Record<ReconciliationtatusType, number>>(
