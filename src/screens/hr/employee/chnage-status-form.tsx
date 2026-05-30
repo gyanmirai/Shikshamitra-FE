@@ -1,4 +1,7 @@
+import type { Dayjs } from 'dayjs';
+
 import React from 'react';
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
@@ -6,6 +9,7 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
@@ -34,16 +38,19 @@ const ChangeStatusForm = ({
   employeeName: string;
 }) => {
   const options = getEmployeeStatusOptions(status);
+  const defaultEffectiveDate = dayjs().endOf('month');
   const [updateStatus, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEmployeeStatusMutation,
   });
   const formik = useFormik<{
     status: { label: EmployeeStatusType | string; value: number; description: string };
+    effectiveDate: Dayjs | null;
     remarks: string;
   }>({
     initialValues: {
       status: { label: EmployeeStatusType[status || 0], value: status, description: '' },
+      effectiveDate: status === EmployeeStatusType.Active ? null : defaultEffectiveDate,
       remarks: '',
     },
     validationSchema: changeStatusValidationSchema,
@@ -54,6 +61,10 @@ const ChangeStatusForm = ({
           body: {
             employeeStatusType: values.status.value,
             remarks: values.remarks,
+            effectiveDate:
+              values.status.value === EmployeeStatusType.Active
+                ? null
+                : values.effectiveDate?.format('YYYY-MM-DD'),
           },
         }).unwrap();
         shikshaMitraToast.success({
@@ -82,6 +93,11 @@ const ChangeStatusForm = ({
             value={formik.values.status}
             onChange={(_, newValue) => {
               formik.setFieldValue('status', newValue);
+              if (newValue.value === EmployeeStatusType.Active) {
+                formik.setFieldValue('effectiveDate', null);
+              } else if (!formik.values.effectiveDate) {
+                formik.setFieldValue('effectiveDate', defaultEffectiveDate);
+              }
             }}
             size="small"
             disableClearable
@@ -127,6 +143,24 @@ const ChangeStatusForm = ({
               />
             )}
           />
+          {formik.values.status.value !== EmployeeStatusType.Active && (
+            <DatePicker
+              label="Effective Date"
+              value={formik.values.effectiveDate}
+              onChange={(newValue) => formik.setFieldValue('effectiveDate', newValue)}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  error: formik.touched.effectiveDate && Boolean(formik.errors.effectiveDate),
+                  helperText:
+                    formik.touched.effectiveDate && typeof formik.errors.effectiveDate === 'string'
+                      ? formik.errors.effectiveDate
+                      : undefined,
+                },
+              }}
+            />
+          )}
           <TextField
             fullWidth
             label="Remarks"

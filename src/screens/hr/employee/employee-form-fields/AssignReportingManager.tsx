@@ -332,8 +332,12 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
 
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
+    if (Object.keys(validation).length > 0) {
+      formik.setFieldTouched('reportingManager', true, false);
+      return false;
+    }
+
     await formik?.submitForm?.();
-    if (Object.keys(validation).length > 0) return false;
     formik.resetForm({ values: formik.values });
     return undefined;
   };
@@ -349,6 +353,10 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
   // ── Determine what to show in the right panel ──────────────────────────────
   // Prefer full details; fall back to basic dropdown data for name/status while loading
   const previewEmployee = selectedManagerDetails ?? (selectedManager?.id ? selectedManager : null);
+  const reportingManagerError =
+    (formik.touched.reportingManager || formik.submitCount > 0) && formik.errors.reportingManager
+      ? String(formik.errors.reportingManager)
+      : '';
 
   // ── Page heading ──────────────────────────────────────────────────────────
   return (
@@ -427,6 +435,9 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                         size="small"
                         fullWidth
                         disabled={!isEditable.value}
+                        error={Boolean(reportingManagerError)}
+                        helperText={reportingManagerError || undefined}
+                        onBlur={() => formik.setFieldTouched('reportingManager', true, true)}
                         InputProps={{
                           ...params.InputProps,
                           endAdornment: (
@@ -442,6 +453,7 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                     onChange={(_e, value) => {
                       const newManagerId = value?.id || '';
                       setSelectedManager(value || null);
+                      formik.setFieldTouched('reportingManager', true, false);
                       setFieldValue('reportingManager', newManagerId);
                       setFieldValue('reportingManagerName', value?.fullName || '');
                       setFieldValue('reportingManagerStatus', value?.status ?? null);

@@ -51,12 +51,18 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
-type RegisterStatus = 'Present' | 'HalfDayLeave' | 'FullDayLeave';
+type RegisterStatus =
+  | 'NotMarked'
+  | 'Present'
+  | 'HalfDay'
+  | 'Absent'
+  | 'HalfDayLeave'
+  | 'FullDayLeave';
 type PayrollState = 'All' | 'Editable' | 'Locked';
 type ExceptionFilter = 'All' | 'NeedsAttention' | 'Absent' | 'HalfDay' | 'MissingPunch' | 'Locked';
 
 type AttendanceRegisterRow = {
-  attendanceId: string;
+  attendanceId?: string | null;
   employeeId: string;
   employeeName: string;
   employeeCode: string;
@@ -71,6 +77,7 @@ type AttendanceRegisterRow = {
   hoursWorked?: string | null;
   remarks?: string | null;
   status: RegisterStatus | number;
+  isMarked?: boolean;
   isDayLocked: boolean;
   isPayrollLocked: boolean;
   canEdit: boolean;
@@ -103,6 +110,13 @@ const STATUS_OPTIONS = [
   { label: 'Absent', value: 'FullDayLeave', wire: 'ABSENT', color: 'error' },
 ] as const;
 
+const REGISTER_STATUS_OPTIONS = [
+  { label: 'Not marked', value: 'NotMarked', color: 'default' },
+  { label: 'Present', value: 'Present', color: 'success' },
+  { label: 'Half day', value: 'HalfDay', color: 'warning' },
+  { label: 'Absent', value: 'Absent', color: 'error' },
+] as const;
+
 const PAYROLL_STATES: Array<{ label: string; value: PayrollState }> = [
   { label: 'All payroll states', value: 'All' },
   { label: 'Editable only', value: 'Editable' },
@@ -118,14 +132,28 @@ const EXCEPTION_FILTERS: Array<{ label: string; value: ExceptionFilter }> = [
   { label: 'Locked', value: 'Locked' },
 ];
 
-const normalizeStatus = (value: RegisterStatus | number | string): RegisterStatus => {
-  if (value === 0 || value === 'Present') return 'Present';
-  if (value === 1 || value === 'HalfDayLeave') return 'HalfDayLeave';
-  return 'FullDayLeave';
+const normalizeStatus = (
+  value: RegisterStatus | number | string | null | undefined
+): RegisterStatus => {
+  if (value === 1 || value === 'Present') return 'Present';
+  if (value === 2 || value === 'HalfDay' || value === 'HalfDayLeave') return 'HalfDay';
+  if (value === 3 || value === 'Absent' || value === 'FullDayLeave') return 'Absent';
+  return 'NotMarked';
 };
 
 const statusMeta = (value: RegisterStatus | number | string) =>
-  STATUS_OPTIONS.find((item) => item.value === normalizeStatus(value)) || STATUS_OPTIONS[2];
+  REGISTER_STATUS_OPTIONS.find((item) => item.value === normalizeStatus(value)) ||
+  REGISTER_STATUS_OPTIONS[0];
+
+const toEditableStatus = (value: RegisterStatus | number | string): RegisterStatus => {
+  const normalized = normalizeStatus(value);
+  if (normalized === 'HalfDay') return 'HalfDayLeave';
+  if (normalized === 'Absent') return 'FullDayLeave';
+  return normalized === 'Present' ? 'Present' : 'FullDayLeave';
+};
+
+const editableStatusMeta = (value: RegisterStatus) =>
+  STATUS_OPTIONS.find((item) => item.value === value) || STATUS_OPTIONS[2];
 
 const toTimeValue = (value?: string | null) => {
   if (!value) return '';
@@ -279,13 +307,13 @@ const AttendanceTrackingScreen = () => {
   const rows = useMemo(() => (data?.items || []) as GroupedAttendanceRegisterRow[], [data?.items]);
   const allDayRows = useMemo(() => rows.flatMap((row) => row.days || []), [rows]);
   const selectedRows = useMemo(
-    () => allDayRows.filter((row) => selectedIds.includes(row.attendanceId)),
+    () => allDayRows.filter((row) => row.attendanceId && selectedIds.includes(row.attendanceId)),
     [allDayRows, selectedIds]
   );
   const blockedSelectedCount = selectedRows.filter((row) => !row.canEdit).length;
   const editableSelectedIds = selectedRows
-    .filter((row) => row.canEdit)
-    .map((row) => row.attendanceId);
+    .filter((row) => row.canEdit && row.attendanceId)
+    .map((row) => row.attendanceId as string);
 
   const resetPaging = () => {
     setPage(1);
@@ -302,7 +330,7 @@ const AttendanceTrackingScreen = () => {
     setEditRow(row);
     setDraftErrors({});
     setDraft({
-      status: normalizeStatus(row.status),
+      status: toEditableStatus(row.status),
       inTime: toTimeValue(row.inTime),
       outTime: toTimeValue(row.outTime),
       remarks: row.remarks || '',
@@ -318,7 +346,7 @@ const AttendanceTrackingScreen = () => {
 
   const buildAdjustmentPayload = (attendanceId?: string) => ({
     ...(attendanceId ? { attendanceId } : { attendanceIds: editableSelectedIds }),
-    statusWire: statusMeta(draft.status).wire,
+    statusWire: editableStatusMeta(draft.status).wire,
     inTime: toWireTime(draft.inTime),
     outTime: toWireTime(draft.outTime),
     remarks: draft.remarks,
@@ -370,7 +398,9 @@ const AttendanceTrackingScreen = () => {
   };
 
   const getEditableDayIds = (group: GroupedAttendanceRegisterRow) =>
-    (group.days || []).filter((day) => day.canEdit).map((day) => day.attendanceId);
+    (group.days || [])
+      .filter((day) => day.canEdit && day.attendanceId)
+      .map((day) => day.attendanceId as string);
 
   const isGroupSelected = (group: GroupedAttendanceRegisterRow) => {
     const editableIds = getEditableDayIds(group);
@@ -412,9 +442,13 @@ const AttendanceTrackingScreen = () => {
       render: (_value, row) => (
         <Checkbox
           size="small"
-          disabled={!row.canEdit}
-          checked={selectedIds.includes(row.attendanceId)}
-          onChange={(event) => toggleDaySelection(row.attendanceId, event.target.checked)}
+          disabled={!row.canEdit || !row.attendanceId}
+          checked={Boolean(row.attendanceId && selectedIds.includes(row.attendanceId))}
+          onChange={(event) => {
+            if (row.attendanceId) {
+              toggleDaySelection(row.attendanceId, event.target.checked);
+            }
+          }}
         />
       ),
     },
@@ -573,19 +607,21 @@ const AttendanceTrackingScreen = () => {
           checked={
             allDayRows.filter((row) => row.canEdit).length > 0 &&
             allDayRows
-              .filter((row) => row.canEdit)
-              .every((row) => selectedIds.includes(row.attendanceId))
+              .filter((row) => row.canEdit && row.attendanceId)
+              .every((row) => selectedIds.includes(row.attendanceId as string))
           }
           indeterminate={
             selectedIds.length > 0 &&
             !allDayRows
-              .filter((row) => row.canEdit)
-              .every((row) => selectedIds.includes(row.attendanceId))
+              .filter((row) => row.canEdit && row.attendanceId)
+              .every((row) => selectedIds.includes(row.attendanceId as string))
           }
           onChange={(event) => {
             setSelectedIds(
               event.target.checked
-                ? allDayRows.filter((row) => row.canEdit).map((row) => row.attendanceId)
+                ? allDayRows
+                    .filter((row) => row.canEdit && row.attendanceId)
+                    .map((row) => row.attendanceId as string)
                 : []
             );
           }}
@@ -923,6 +959,7 @@ const AttendanceTrackingScreen = () => {
               <Label color="success">Present {data?.summary?.present || 0}</Label>
               <Label color="warning">Half day {data?.summary?.halfDay || 0}</Label>
               <Label color="error">Absent {data?.summary?.absent || 0}</Label>
+              <Label color="default">Not marked {data?.summary?.notMarked || 0}</Label>
               <Label color="warning">Missing punch {data?.summary?.missingPunch || 0}</Label>
               <Label color="info">Editable {data?.summary?.editable || 0}</Label>
               <Label color="error">Locked {data?.summary?.locked || 0}</Label>

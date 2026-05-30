@@ -20,6 +20,12 @@ export const changeStatusValidationSchema = Yup.object({
   status: Yup.object({
     value: Yup.number().required('Status is required'),
   }).required('Status is required'),
+  effectiveDate: Yup.mixed().when('status', {
+    is: (statusValue: { value: EmployeeStatusType } | null) =>
+      statusValue?.value !== EmployeeStatusType.Active,
+    then: (schema) => schema.required('Effective date is required'),
+    otherwise: (schema) => schema.nullable(),
+  }),
   remarks: Yup.string()
     .max(2000, 'Remarks must be at most 2000 characters')
     .when('status', {

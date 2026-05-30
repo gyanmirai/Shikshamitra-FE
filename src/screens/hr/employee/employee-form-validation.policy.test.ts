@@ -4,6 +4,7 @@ import { it, expect, describe } from 'vitest';
 import {
   payrollValidationSchema,
   workExperienceValidationSchema,
+  reportingManagerValidationSchema,
   personalInformationValidationSchema,
   getPersonalInformationValidationSchema,
 } from './employee-form-validation';
@@ -123,6 +124,32 @@ describe('employee form contract validation', () => {
     ).resolves.toBeTruthy();
   });
 
+  it('requires and validates PAN and Aadhaar numbers', async () => {
+    await expect(
+      personalInformationValidationSchema.validateAt('panNo', {
+        panNo: '',
+      })
+    ).rejects.toThrow('PAN number is required');
+
+    await expect(
+      personalInformationValidationSchema.validateAt('panNo', {
+        panNo: 'ABCDE1234F',
+      })
+    ).resolves.toBeTruthy();
+
+    await expect(
+      personalInformationValidationSchema.validateAt('adharNo', {
+        adharNo: '',
+      })
+    ).rejects.toThrow('Aadhaar number is required');
+
+    await expect(
+      personalInformationValidationSchema.validateAt('adharNo', {
+        adharNo: '900123456789',
+      })
+    ).resolves.toBeTruthy();
+  });
+
   it('allows ongoing work experience without an end date', async () => {
     await expect(
       workExperienceValidationSchema.validateAt('experiences[0].endDate', {
@@ -145,5 +172,21 @@ describe('employee form contract validation', () => {
         tdsPercentage: 0,
       })
     ).resolves.toBeTruthy();
+  });
+
+  it('requires reporting manager in employee creation flow', async () => {
+    await expect(
+      reportingManagerValidationSchema.validateAt('reportingManager', {
+        reportingManager: '',
+      })
+    ).rejects.toThrow('Reporting manager is required');
+  });
+
+  it('requires reporting manager in employee edit flow because managers can only be swapped', async () => {
+    await expect(
+      reportingManagerValidationSchema.validateAt('reportingManager', {
+        reportingManager: '',
+      })
+    ).rejects.toThrow('Reporting manager is required');
   });
 });

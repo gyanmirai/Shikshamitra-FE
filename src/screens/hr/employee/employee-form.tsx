@@ -41,7 +41,11 @@ import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
 import { buildWorkExperiencePayload } from './work-experience-payload';
 import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
-import { validations, getPersonalInformationValidationSchema } from './employee-form-validation';
+import {
+  validations,
+  reportingManagerValidationSchema,
+  getPersonalInformationValidationSchema,
+} from './employee-form-validation';
 
 import type {
   IPayrollInformation,
@@ -390,7 +394,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       getPersonalInformationValidationSchema({
         requirePhoto: !(editData?.id || initialValues.employeeId),
       }),
-      ...validations.slice(1),
+      ...validations.slice(1, 6),
+      reportingManagerValidationSchema,
+      validations[7],
     ],
     [editData?.id, initialValues.employeeId]
   );
@@ -655,15 +661,20 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
   const handleReportingManager = useCallback(
     async (values: any, formik: any, id: any) => {
+      const employeeId = getSavedEmployeeId(values, editData);
+      if (!employeeId) {
+        throw new Error('Employee must be saved before reporting manager can be updated.');
+      }
+
       const res = await updateReportingManager({
-        id: values.employeeId,
+        id: employeeId,
         body: {
           reportingManagerId: values?.reportingManager,
         },
       }).unwrap();
       return res;
     },
-    [updateReportingManager]
+    [editData, updateReportingManager]
   );
 
   const handleAcademicPermission = useCallback(

@@ -412,8 +412,13 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   const handleReportingManager = useCallback(
     async (values: any, formik: any, id: any) => {
+      const employeeId = values.employeeId || id;
+      if (!employeeId) {
+        throw new Error('Employee must be saved before reporting manager can be updated.');
+      }
+
       const res = await updateReportingManager({
-        id: values.employeeId,
+        id: employeeId,
         body: {
           reportingManagerId: values?.reportingManager,
         },
@@ -447,6 +452,12 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       }
     } catch (error) {
       console.error(error);
+      shikshaMitraToast.error({
+        message:
+          (error as any)?.data?.message ||
+          (error as any)?.error ||
+          'Failed to save employee details',
+      });
     }
   };
 

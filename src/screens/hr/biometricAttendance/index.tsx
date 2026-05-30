@@ -69,6 +69,11 @@ import {
   useUnlockAttendanceImportBatchMutation,
 } from 'src/redux/hr/attendanceImportApi';
 
+import {
+  isSupportedAttendanceImportFile,
+  hasDuplicateAttendanceImportFileName,
+} from './attendance-import-upload-utils';
+
 // ─── Inner-table (row-level) attendance status ─────────────────────────────────
 type RowStatusType = AttendanceRowStatus | 'Pending';
 const ROW_STATUS = {
@@ -284,6 +289,7 @@ const AttendanceImportHistoryScreen = () => {
   const isDownLoadingTemplate = useBoolean();
   const isUploadingFile = useBoolean();
   const isRefreshingAfterUpload = useBoolean();
+  const isUploadBusy = isUploadingFile.value || isRefreshingAfterUpload.value;
   const [previewAttendance] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePreviewAttendanceMutation,
@@ -395,6 +401,8 @@ const AttendanceImportHistoryScreen = () => {
   );
 
   const handleDownloadTemplate = async () => {
+    if (isUploadBusy) return;
+
     try {
       isDownLoadingTemplate.onTrue();
       const blob: any = await downloadAttendanceTemplate({}).unwrap();
@@ -417,6 +425,8 @@ const AttendanceImportHistoryScreen = () => {
   };
 
   const handleUploadClick = () => {
+    if (isUploadBusy) return;
+
     fileInputRef.current?.click();
   };
 
@@ -434,7 +444,7 @@ const AttendanceImportHistoryScreen = () => {
 
           const found = refreshedItems.some((item) => {
             const fileName = (item.fileName || '').trim().toLowerCase();
-            return fileName.includes(expected) || expected.includes(fileName);
+            return fileName === expected;
           });
 
           if (found || attempt >= 2) return;
@@ -454,15 +464,25 @@ const AttendanceImportHistoryScreen = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    const validTypes = [
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ];
-    if (!validTypes.includes(file.type)) {
+    if (isUploadBusy) return;
+
+    if (!isSupportedAttendanceImportFile(file)) {
       shikshaMitraToast.error({
-        message: 'Please upload a valid Excel file (.xls or .xlsx)',
+        message: 'Please upload a valid attendance file (.csv, .xls, or .xlsx).',
       });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    if (hasDuplicateAttendanceImportFileName(file.name, listData?.items || [])) {
+      shikshaMitraToast.error({
+        message: `A file named "${file.name}" has already been uploaded for this payroll month.`,
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       return;
     }
 
@@ -475,23 +495,31 @@ const AttendanceImportHistoryScreen = () => {
       const previewResponse = await previewAttendance(formData).unwrap();
 
       if (previewResponse?.previewToken) {
-        // Step 2: Confirm
         const confirmResponse = await confirmAttendance({
           previewToken: previewResponse.previewToken,
         }).unwrap();
 
         await refreshListAfterUpload(file.name);
 
-        // setImportResults(previewResponse);
+        const processedRows = confirmResponse?.processedRows ?? confirmResponse?.ProcessedRows ?? 0;
+        const createdRows = confirmResponse?.createdCount ?? confirmResponse?.CreatedCount ?? 0;
+        const replacedRows = confirmResponse?.replacedCount ?? confirmResponse?.ReplacedCount ?? 0;
 
         shikshaMitraToast.success({
-          message: `Attendance data has been imported successfully (${confirmResponse?.summary?.totalRows || 0} rows)`,
+          message: `Attendance imported successfully. Processed ${processedRows} row${processedRows === 1 ? '' : 's'} (${createdRows} created, ${replacedRows} replaced).`,
+        });
+      } else {
+        await refreshListAfterUpload(file.name);
+        shikshaMitraToast.error({
+          message: 'No valid attendance rows were found in this file.',
         });
       }
     } catch (error: any) {
       console.error('Failed to import attendance:', error);
       shikshaMitraToast.error({
-        message: `Failed to import attendance: ${error?.data?.error?.message || 'Unknown error'}`,
+        message: `Failed to import attendance: ${
+          error?.data?.error?.message || error?.data?.message || 'Unknown error'
+        }`,
       });
     } finally {
       isUploadingFile.onFalse();
@@ -768,6 +796,7 @@ const AttendanceImportHistoryScreen = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <LoadingButton
                 loading={isDownLoadingTemplate.value}
+                disabled={isUploadBusy}
                 variant="outlined"
                 size="small"
                 startIcon={<Iconify icon="eva:download-fill" />}
@@ -780,20 +809,21 @@ const AttendanceImportHistoryScreen = () => {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
               />
 
               <LoadingButton
-                loading={isUploadingFile.value}
+                loading={isUploadBusy}
+                disabled={isDownLoadingTemplate.value}
                 variant="contained"
                 size="small"
                 startIcon={<Iconify icon="eva:upload-fill" />}
                 onClick={handleUploadClick}
                 sx={{ px: '32px' }}
               >
-                Upload File
+                {isUploadBusy ? 'Uploading...' : 'Upload File'}
               </LoadingButton>
             </Box>
             {/* </Box> */}
@@ -804,9 +834,7 @@ const AttendanceImportHistoryScreen = () => {
             showCheckbox={selectedRows.length > 0}
             columns={columns}
             data={listData?.items || []}
-            isLoading={
-              listLoading || listFetching || isUploadingFile.value || isRefreshingAfterUpload.value
-            }
+            isLoading={listLoading || listFetching || isUploadBusy}
             noDataText={
               <Stack alignItems="center" spacing={1} py={4}>
                 {' '}

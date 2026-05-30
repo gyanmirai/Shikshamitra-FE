@@ -3,6 +3,7 @@ import { employeeType } from 'src/redux/tagTypes';
 
 import {
   buildWorkExperienceUrl,
+  buildReportingManagerUrl,
   buildEmployeeSubresourceUrl,
   buildEmployeeListQueryParams,
   employeePayrollInvalidationTags,
@@ -29,6 +30,12 @@ describe('employeeApi contracts', () => {
     );
   });
 
+  it('builds reporting manager URLs for assign mutation', () => {
+    expect(buildReportingManagerUrl({ id: 'employee-4' })).toBe(
+      '/employees/employee-4/reporting-manager'
+    );
+  });
+
   it('does not place literal undefined in employee subresource URLs', () => {
     expect(() => buildEmployeeSubresourceUrl({ employeeId: undefined }, 'family-info')).toThrow(
       'Employee id is required to access family-info.'
@@ -41,6 +48,7 @@ describe('employeeApi contracts', () => {
         employeeType.employee,
         employeeType.attendanceRule,
         employeeType.runPayroll,
+        employeeType.salarySlip,
       ])
     );
   });
@@ -52,12 +60,14 @@ describe('employeeApi contracts', () => {
         pageSize: 25,
         search: '',
         mediumStageId: '',
+        reportingManagerStatus: 'nonActive',
         status: 'Active',
         isTeaching: 'true',
       })
     ).toEqual({
       page: 2,
       pageSize: 25,
+      reportingManagerStatus: 'nonActive',
       status: 'Active',
       isTeaching: true,
     });

@@ -18,6 +18,12 @@ import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
 // ─── helpers (module-level to avoid re-creation on render) ────────────────────
 
+export const ATTENDANCE_MISSING_PUNCH_OPTIONS = [
+  { label: 'Requires Review', value: 'requires_review' },
+  { label: 'Mark Absent', value: 'mark_absent' },
+  { label: 'Mark Half Day', value: 'mark_half_day' },
+] as const;
+
 function applyAttendanceAdvancedDefaults(
   form: HRPolicyWorkspaceContext['attendanceForm'],
   defaults: HRPolicyWorkspaceContext['attendanceForm']
@@ -180,9 +186,11 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               }))
             }
           >
-            <MenuItem value="requires_review">Requires Review</MenuItem>
-            <MenuItem value="mark_absent">Mark Absent</MenuItem>
-            <MenuItem value="ignore">Ignore</MenuItem>
+            {ATTENDANCE_MISSING_PUNCH_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
           </DrawerSelectField>
           <DrawerSwitchField
             compact

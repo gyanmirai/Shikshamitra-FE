@@ -14,6 +14,8 @@ export function createEmployeeFixture(prefix = 'E2E HR EMP') {
     email: `e2e.hr.employee.${suffix}@ddvs.test`,
     primaryMobile: `9${suffix.slice(-9).padStart(9, '0')}`,
     secondaryMobile: `8${suffix.slice(-9).padStart(9, '1')}`,
+    panNo: `ABCDE${suffix.slice(-4).padStart(4, '0')}F`,
+    adharNo: `900${suffix.slice(-9).padStart(9, '0')}`,
     dob: '01-01-1990',
     doj: '01-06-2024',
     familyCaste: 'General',

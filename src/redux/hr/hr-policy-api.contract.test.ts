@@ -1,6 +1,8 @@
 import { it, expect, describe } from 'vitest';
+import { employeeType } from 'src/redux/tagTypes';
 
 import {
+  policyInvalidationTags,
   buildPolicyAssignmentPreviewParams,
   buildPolicyHolidayImpactPreviewParams,
 } from './hr-policy-api';
@@ -73,5 +75,15 @@ describe('hrPolicyApi contracts', () => {
       employeeId: undefined,
       groupId: undefined,
     });
+  });
+
+  it('invalidates run payroll and payslip data after policy changes', () => {
+    expect(policyInvalidationTags).toEqual(
+      expect.arrayContaining([
+        employeeType.attendanceRule,
+        employeeType.runPayroll,
+        employeeType.salarySlip,
+      ])
+    );
   });
 });

@@ -83,6 +83,16 @@ export async function fillTextByLabel(scope: Page | Locator, label: string, valu
   await field.fill(value);
 }
 
+export async function fillOtpByLabel(page: Page, label: string, value: string) {
+  const field = page
+    .locator('label')
+    .filter({ hasText: label })
+    .locator('..')
+    .locator('input')
+    .first();
+  await field.fill(value);
+}
+
 export async function pickFirstAutocompleteOption(page: Page, label: string) {
   const field = page.getByLabel(label, { exact: false }).first();
   await field.click();
@@ -134,6 +144,8 @@ export async function fillRequiredPersonalInformation(page: Page, employee: Empl
   await fillTextByLabel(page, 'Primary Contact', employee.primaryMobile);
   await fillTextByLabel(page, 'Secondary Contact', employee.secondaryMobile);
   await fillTextByLabel(page, 'Email', employee.email);
+  await fillOtpByLabel(page, 'Aadhaar No.', employee.adharNo);
+  await fillOtpByLabel(page, 'PAN No.', employee.panNo);
   await fillDate(page, 'Date of Joining', employee.doj);
   await pickOption(page, 'Employee Group');
   await pickFirstAutocompleteOption(page, 'Role');

@@ -78,12 +78,16 @@ export const getPersonalInformationValidationSchema = (
     religion: Yup.string().required('Religion is required'),
     maritalStatus: Yup.string().required('Marital Status is required'),
     bloodGroup: Yup.string().nullable(),
-    adharNo: Yup.string().matches(/^\d{12}$/, 'Aadhaar number must be 12 digits'),
-    panNo: Yup.string().test(
-      'pan-format',
-      'PAN must be in format: AAAAA9999A (5 letters, 4 digits, 1 letter)',
-      (value) => !value || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)
-    ),
+    adharNo: Yup.string()
+      .required('Aadhaar number is required')
+      .matches(/^\d{12}$/, 'Aadhaar number must be 12 digits'),
+    panNo: Yup.string()
+      .required('PAN number is required')
+      .test(
+        'pan-format',
+        'PAN must be in format: AAAAA9999A (5 letters, 4 digits, 1 letter)',
+        (value) => !!value && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)
+      ),
     mobileNo: Yup.string()
       .test('valid-indian-mobile', 'Primary Contact No. is not valid', (value) => {
         if (!value) return false;
@@ -374,7 +378,7 @@ export const payrollValidationSchema = Yup.object({
 });
 
 export const reportingManagerValidationSchema = Yup.object({
-  // reportingManager: Yup.string().required('Reporting manager is required'),
+  reportingManager: Yup.string().required('Reporting manager is required'),
 });
 
 export const validations = [
