@@ -187,7 +187,7 @@ const getDefaultFilters = () => ({
   endDate: dayjs() as Dayjs | null,
   educationMediumStageId: 'all',
   employeeId: '',
-  employeeGroup: '',
+  employeeGroup: 'all',
   department: '',
   isTeaching: '',
   status: 'all',
@@ -274,7 +274,8 @@ const AttendanceTrackingScreen = () => {
       educationMediumStageId:
         filters.educationMediumStageId === 'all' ? undefined : filters.educationMediumStageId,
       employeeId: filters.employeeId,
-      employeeGroup: filters.employeeGroup || undefined,
+      employeeGroup:
+        filters.employeeGroup === 'all' ? undefined : filters.employeeGroup || undefined,
       department: filters.department,
       isTeaching: filters.isTeaching === '' ? undefined : filters.isTeaching === 'true',
       status: filters.status === 'all' ? undefined : filters.status,
@@ -1100,7 +1101,7 @@ const AttendanceTrackingScreen = () => {
                   value={filters.employeeGroup}
                   onChange={(event) => setFilter('employeeGroup', event.target.value)}
                 >
-                  <MenuItem value="">All groups</MenuItem>
+                  <MenuItem value="all">All groups</MenuItem>
                   <MenuItem value="Teaching">Teaching</MenuItem>
                   <MenuItem value="NonTeaching">Non teaching</MenuItem>
                 </Select>

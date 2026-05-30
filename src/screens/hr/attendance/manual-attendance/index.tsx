@@ -30,6 +30,7 @@ import {
   useUnlockDayAttendanceMutation,
 } from 'src/redux/hr/attendanceApi';
 import {
+  toAttendanceTableTimeValue,
   mapTakeAttendanceStatusToUi,
   buildManualAttendanceSaveEntries,
   MANUAL_ATTENDANCE_UI_STATUS as STATUS,
@@ -115,8 +116,8 @@ const ManualAttendanceScreen = () => {
         employeeCode: item.employeeCode,
         department: item.department,
         dateIso: item.dateIso,
-        timeIn: item.inTime ? dayjs(item.inTime).format('HH:mm') : '',
-        timeOut: item.outTime ? dayjs(item.outTime).format('HH:mm') : '',
+        timeIn: toAttendanceTableTimeValue(item.inTime),
+        timeOut: toAttendanceTableTimeValue(item.outTime),
         remarks: item.remarks || '',
         warnings: item.warnings || [],
         errors: item.errors || [],
@@ -312,6 +313,7 @@ const ManualAttendanceScreen = () => {
         isSort: false,
         isFilter: false,
         render: (value: string, row: any) => {
+          const displayTime = toAttendanceTableTimeValue(value);
           const isEditing = editingCell?.rowId === row.id && editingCell?.field === field;
           if (isEditing) {
             return (
@@ -370,7 +372,7 @@ const ManualAttendanceScreen = () => {
                 '&:hover .edit-btn': { opacity: 1 },
               }}
             >
-              <Typography variant="body2">{value || '\u2014'}</Typography>
+              <Typography variant="body2">{displayTime || '\u2014'}</Typography>
               {!isLocked && (
                 <CustomTooltip
                   title={`Edit ${field === 'timeIn' ? 'In-Time' : 'Out-Time'}`}
@@ -384,7 +386,7 @@ const ManualAttendanceScreen = () => {
                       setEditingCell({
                         rowId: row.id,
                         field,
-                        value: value ? dayjs(`1970-01-01T${value}`) : null,
+                        value: displayTime ? dayjs(`1970-01-01T${displayTime}`) : null,
                       })
                     }
                     sx={{ p: 0.3 }}
