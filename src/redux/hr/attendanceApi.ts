@@ -48,6 +48,8 @@ const compactParams = (params: Record<string, unknown>) =>
     )
   );
 
+export const attendancePayrollInvalidationTags = [employeeType.attendance, employeeType.runPayroll];
+
 export const buildGetDayAttendanceQueryParams = ({
   attendanceDate,
   department,
@@ -110,7 +112,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [employeeType.attendance],
+      invalidatesTags: attendancePayrollInvalidationTags,
     }),
     importAttendance: builder.mutation({
       query: (body) => ({
@@ -121,7 +123,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         },
         body,
       }),
-      invalidatesTags: [employeeType.attendance],
+      invalidatesTags: attendancePayrollInvalidationTags,
     }),
     previewAttendance: builder.mutation({
       query: (body) => ({
@@ -136,7 +138,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [employeeType.attendance],
+      invalidatesTags: attendancePayrollInvalidationTags,
     }),
     downloadAttendanceTemplate: builder.mutation({
       query: () => ({
@@ -151,7 +153,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [employeeType.attendance],
+      invalidatesTags: attendancePayrollInvalidationTags,
     }),
 
     // Lock/Unlock Attendance Day

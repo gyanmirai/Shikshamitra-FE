@@ -120,6 +120,8 @@ export async function createEmployeeFromExistingDefaults(page: Page, fixture: Em
         mobileNo: evaluatedFixture.primaryMobile,
         secondaryMobileNo: evaluatedFixture.secondaryMobile,
         email: evaluatedFixture.email,
+        panNo: evaluatedFixture.panNo,
+        adharNo: evaluatedFixture.adharNo,
         department: defaults.department ?? 'Academics',
         doj: '2024-06-01',
         isTeaching: defaults.isTeaching ?? true,
@@ -165,9 +167,16 @@ export async function updateEmployeeStatus(
   employeeStatusType: number,
   remarks?: string
 ) {
+  const monthEnd = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+  const effectiveDate =
+    employeeStatusType === 0
+      ? null
+      : `${monthEnd.getFullYear()}-${String(monthEnd.getMonth() + 1).padStart(2, '0')}-${String(
+          monthEnd.getDate()
+        ).padStart(2, '0')}`;
   const response = await employeeApiRequest(page, `/employees/${employeeId}/status`, {
     method: 'PUT',
-    body: JSON.stringify({ employeeStatusType, remarks }),
+    body: JSON.stringify({ employeeStatusType, remarks, effectiveDate }),
   });
 
   return response;

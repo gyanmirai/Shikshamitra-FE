@@ -105,6 +105,7 @@ const HrEmployee = () => {
     mediumStageId: '',
     isTeaching: '',
     status: '',
+    reportingManagerStatus: searchParams.reportingManagerStatus || '',
   });
 
   const payrollDialog = useBoolean();

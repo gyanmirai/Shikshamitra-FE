@@ -60,10 +60,14 @@ export const buildEmployeeSubresourceUrl = (input: any, resourceName: string): s
   return `/employees/${id}/${resourceName}`;
 };
 
+export const buildReportingManagerUrl = (input: any): string =>
+  buildEmployeeSubresourceUrl(input, 'reporting-manager');
+
 export const employeePayrollInvalidationTags = [
   employeeType.employee,
   employeeType.attendanceRule,
   employeeType.runPayroll,
+  employeeType.salarySlip,
 ];
 
 export const employeeApi = api.injectEndpoints({
@@ -272,7 +276,7 @@ export const employeeApi = api.injectEndpoints({
 
     updateReportingManagerByEmployeeId: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/employees/${id}/reporting-manager`,
+        url: buildReportingManagerUrl({ id }),
         method: 'PUT',
         body,
       }),

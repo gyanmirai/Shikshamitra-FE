@@ -33,6 +33,8 @@ build
 .env.development.local
 .env.test.local
 .env.production.local
+.env.deploy.local
+.env.deploy.*.local
 
 # misc
 .DS_Store

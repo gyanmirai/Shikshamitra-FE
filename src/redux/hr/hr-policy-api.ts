@@ -429,7 +429,12 @@ type PolicyListArgs = {
   targetType?: string;
 };
 
-const policyTags = [employeeType.attendanceRule, employeeType.runPayroll];
+export const policyInvalidationTags = [
+  employeeType.attendanceRule,
+  employeeType.runPayroll,
+  employeeType.salarySlip,
+];
+const policyTags = policyInvalidationTags;
 
 const policyVersionPath = (policyType: HrPolicyType, policyId: string) =>
   `/hr/${policyType}/policies/${policyId}/versions`;
