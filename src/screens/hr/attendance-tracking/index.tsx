@@ -365,7 +365,7 @@ const AttendanceTrackingScreen = () => {
     }
 
     try {
-      await adjustAttendance(buildAdjustmentPayload(editRow.attendanceId)).unwrap();
+      await adjustAttendance(buildAdjustmentPayload(editRow.attendanceId || undefined)).unwrap();
       shikshaMitraToast.success({ message: 'Attendance adjusted.' });
       closeDialogs();
     } catch {
@@ -435,8 +435,8 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'select',
       label: '',
-      minWidth: 20,
-      maxWidth: 30,
+      width: 44,
+      minWidth: 44,
       align: 'left',
       isSort: false,
       isFilter: false,
@@ -456,20 +456,36 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'attendanceDate',
       label: 'Date',
-      minWidth: 40,
-      maxWidth: 60,
+      width: 120,
+      minWidth: 120,
       align: 'left',
       sticky: true,
       filterType: 'date',
+      isSort: true,
+      isFilter: true,
       render: (value) => dayjs(value).format('DD MMM YYYY'),
     },
     {
       id: 'status',
       label: 'Status',
-      minWidth: 40,
-      maxWidth: 60,
+      width: 110,
+      minWidth: 110,
       sticky: true,
       align: 'left',
+      filterType: 'enum',
+      enumOptions: [
+        { label: 'Not marked', value: 'NotMarked' },
+        { label: 'Present', value: 'Present' },
+        { label: 'Present (code)', value: 1 },
+        { label: 'Half day', value: 'HalfDay' },
+        { label: 'Half day leave', value: 'HalfDayLeave' },
+        { label: 'Half day (code)', value: 2 },
+        { label: 'Absent', value: 'Absent' },
+        { label: 'Full day leave', value: 'FullDayLeave' },
+        { label: 'Absent (code)', value: 3 },
+      ],
+      isSort: true,
+      isFilter: true,
       render: (value, row) => {
         const meta = statusMeta(value);
         const missingPunch =
@@ -485,40 +501,52 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'inTime',
       label: 'In',
-      minWidth: 30,
-      maxWidth: 45,
+      width: 85,
+      minWidth: 85,
       align: 'left',
+      filterType: 'string',
+      isSort: true,
+      isFilter: true,
       render: (value) => toTimeValue(value) || '-',
     },
     {
       id: 'outTime',
       label: 'Out',
-      minWidth: 40,
-      maxWidth: 49,
+      width: 90,
+      minWidth: 90,
       align: 'left',
+      filterType: 'string',
+      isSort: true,
+      isFilter: true,
       render: (value) => toTimeValue(value) || '-',
     },
     {
       id: 'hoursWorked',
       label: 'Hours',
-      minWidth: 40,
-      maxWidth: 55,
+      width: 100,
+      minWidth: 100,
       align: 'left',
+      filterType: 'string',
+      isSort: true,
+      isFilter: true,
       render: (value) => value || '-',
     },
     {
       id: 'remarks',
       label: 'Remarks',
-      minWidth: 60,
-      maxWidth: 70,
+      width: 150,
+      minWidth: 150,
       align: 'left',
+      filterType: 'string',
+      isSort: true,
+      isFilter: true,
       render: (value) => value || '-',
     },
     {
       id: 'lockInfo',
       label: 'Lock',
-      minWidth: 40,
-      maxWidth: 50,
+      width: 110,
+      minWidth: 110,
       align: 'left',
       isSort: false,
       isFilter: false,
@@ -538,9 +566,8 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 70,
-      maxWidth: 90,
-      width: 80,
+      width: 120,
+      minWidth: 120,
       align: 'left',
       isSort: false,
       isFilter: false,
@@ -569,7 +596,17 @@ const AttendanceTrackingScreen = () => {
   ];
 
   const renderDailyRows = (group: GroupedAttendanceRegisterRow) => (
-    <Box sx={{ minHeight: 350, ml: 5 }}>
+    <Box
+      sx={{
+        height: { xs: 300, sm: 340, md: 380, lg: 420, xl: 460 },
+        minHeight: { xs: 300, sm: 340, md: 380, lg: 420, xl: 460 },
+        ml: 0,
+        width: '100%',
+        maxWidth: '100%',
+        bgcolor: 'background.paper',
+        overflow: 'hidden',
+      }}
+    >
       <CustomizableTable
         tableId={`hr-attendance-register-days-${group.employeeId || group.employeeCode}`}
         columns={dayColumns}
@@ -577,22 +614,33 @@ const AttendanceTrackingScreen = () => {
         isLoading={false}
         isSearch={false}
         isFilter={false}
-        // tableContainerProps={{
-        //   sx: {
-        //     maxHeight: 350,
-        //     overflowX: 'hidden',
-        //     overflowY: 'auto',
-        //     '& .MuiTableCell-root': {
-        //       whiteSpace: 'nowrap',
-        //       textAlign: 'left',
-        //     },
-        //   },
-        // }}
-        // wrapperProps={{
-        //   sx: {
-        //     pt: 0,
-        //   },
-        // }}
+        tableContainerProps={{
+          sx: {
+            height: { xs: 300, sm: 340, md: 380, lg: 420, xl: 460 },
+            maxHeight: { xs: 300, sm: 340, md: 380, lg: 420, xl: 460 },
+            overflowY: 'visible',
+            overflowX: 'hidden',
+            '& .simplebar-content-wrapper': {
+              overflowX: 'hidden !important',
+              overflowY: 'visible !important',
+            },
+            '& .MuiTable-root': {
+              width: '100%',
+              tableLayout: 'fixed',
+              borderSpacing: 0,
+            },
+            '& .MuiTableCell-root': {
+              whiteSpace: 'nowrap',
+              textAlign: 'left',
+            },
+          },
+        }}
+        wrapperProps={{
+          sx: {
+            pt: 0,
+            height: '100%',
+          },
+        }}
         noDataText="No daily attendance found for this employee."
       />
     </Box>
@@ -628,10 +676,17 @@ const AttendanceTrackingScreen = () => {
           }}
         />
       ),
-      minWidth: 32,
+      width: 36,
+      minWidth: 36,
       stickyPosition: 'left',
       isSort: false,
       isFilter: false,
+      headerSx: {
+        px: 0.5,
+      },
+      cellSx: {
+        px: 0.5,
+      },
       render: (_value, row: any) => (
         <Checkbox
           size="small"
@@ -645,10 +700,14 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'employeeName',
       label: 'Employee',
-      minWidth: 260,
+      width: 180,
+      minWidth: 180,
       sticky: true,
       align: 'left',
       stickyPosition: 'left',
+      filterType: 'string',
+      isSort: true,
+      isFilter: true,
       render: (value, row: any) => (
         <Box>
           <Typography variant="body2">{value}</Typography>
@@ -663,7 +722,11 @@ const AttendanceTrackingScreen = () => {
       id: 'present',
       label: 'Attendance',
       align: 'left',
-      minWidth: 150,
+      width: 120,
+      minWidth: 120,
+      filterType: 'number',
+      isSort: true,
+      isFilter: true,
       render: (_value, row: any) => (
         <Box>
           <Typography variant="body2" fontWeight={600}>
@@ -679,8 +742,10 @@ const AttendanceTrackingScreen = () => {
       id: 'exceptions',
       label: 'Exceptions',
       align: 'left',
-      minWidth: 260,
+      width: 170,
+      minWidth: 170,
       isSort: false,
+      isFilter: false,
       render: (_value, row: any) => (
         <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
           {row.absent > 0 && <Label color="error">Absent {row.absent}</Label>}
@@ -691,19 +756,46 @@ const AttendanceTrackingScreen = () => {
         </Stack>
       ),
     },
-    { id: 'employeeGroup', label: 'Group', minWidth: 120, align: 'left' },
-    { id: 'department', label: 'Department', minWidth: 140, align: 'left' },
+    {
+      id: 'employeeGroup',
+      label: 'Group',
+      width: 100,
+      minWidth: 100,
+      align: 'left',
+      filterType: 'enum',
+      enumOptions: [
+        { label: 'Teaching', value: 'Teaching' },
+        { label: 'Non teaching', value: 'NonTeaching' },
+        { label: 'Non teaching', value: 'Non teaching' },
+      ],
+      isSort: true,
+      isFilter: true,
+    },
+    {
+      id: 'department',
+      label: 'Department',
+      width: 120,
+      minWidth: 120,
+      align: 'left',
+      filterType: 'string',
+      isSort: true,
+      isFilter: true,
+    },
     {
       id: 'editability',
       label: 'Editability',
       align: 'left',
-      minWidth: 150,
+      width: 130,
+      minWidth: 130,
+      isSort: false,
+      isFilter: false,
       render: (_value, row: any) => `${row.editable} editable, ${row.locked} locked`,
     },
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 110,
+      width: 80,
+      minWidth: 80,
       align: 'left',
       isSort: false,
       isFilter: false,
@@ -922,7 +1014,7 @@ const AttendanceTrackingScreen = () => {
   );
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 0 }}>
       <CustomBreadcrumbs
         heading="Attendance Register"
         links={[
@@ -942,6 +1034,9 @@ const AttendanceTrackingScreen = () => {
           '&:before': { display: 'none' },
           m: 0,
           '&.Mui-expanded': { m: 0 },
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
         }}
       >
         <AccordionSummary
@@ -1178,8 +1273,32 @@ const AttendanceTrackingScreen = () => {
         }}
         tableContainerProps={{
           sx: {
-            maxHeight: filtersOpen ? 'calc(100vh - 360px)' : 'calc(100vh - 230px)',
-            transition: 'max-height 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+            maxHeight: 'none',
+            overflowY: 'visible',
+            overflowX: 'hidden',
+            '& .MuiTableHead-root .MuiTableRow-root > .MuiTableCell-root:first-of-type': {
+              width: 44,
+              minWidth: 44,
+              px: 0.5,
+              textAlign: 'center',
+            },
+            '& .MuiTableBody-root .MuiTableRow-root > .MuiTableCell-root:first-of-type': {
+              width: 44,
+              minWidth: 44,
+              px: 0.5,
+              textAlign: 'center',
+            },
+            '& .MuiTableBody-root .MuiTableCell-root[colspan]': {
+              px: 0,
+              py: 0,
+            },
+            '& .MuiTableBody-root .MuiTableCell-root[colspan] .MuiCollapse-root > .MuiBox-root': {
+              m: 0,
+            },
+            '& .MuiTable-root': {
+              width: '100%',
+              tableLayout: 'fixed',
+            },
           },
         }}
         noDataText="No employee attendance found for the selected filters."

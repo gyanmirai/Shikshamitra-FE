@@ -155,7 +155,6 @@ const PaySlipGenerationScreen = () => {
               onChange={(_, value) => setEmployee(value)}
               debounceMs={400}
               placeholder="Search by name or email"
-              helperText="Start typing to search for employees"
               error={false}
               sx={{ maxWidth: 300, minWidth: 250 }}
               size="small"

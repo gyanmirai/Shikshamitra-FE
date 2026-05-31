@@ -331,7 +331,7 @@ const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => 
                   </Grid>
                 )}
 
-              {showField('subjects') && (
+              {showField('subject') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <CustomSelect
                     labelId="subjects-dropdown-label"

@@ -491,7 +491,23 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         isPagination
         tableTitle="HR Policy Assignments"
         noDataText="No assignments match the current filters."
-        tableContainerProps={{ sx: { maxHeight: 620 } }}
+        wrapperProps={{
+          sx: {
+            '& [data-testid="hr-policy-assignments"] > .MuiStack-root': {
+              justifyContent: 'flex-start',
+              alignItems: 'stretch',
+              flexWrap: 'nowrap',
+            },
+          },
+        }}
+        tableContainerProps={{
+          sx: {
+            maxHeight: 620,
+            '& .MuiTable-root': {
+              borderSpacing: 0,
+            },
+          },
+        }}
       />
     </Stack>
   );

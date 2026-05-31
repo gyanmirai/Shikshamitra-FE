@@ -35,6 +35,7 @@ import {
   TextField,
   IconButton,
   Typography,
+  Autocomplete,
   AccordionDetails,
   AccordionSummary,
 } from '@mui/material';
@@ -116,7 +117,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     validateOnBlur: true,
     onSubmit: () => {},
   });
-  console.log('formik values', formik.values);
   const addFeeHeadDialog = useBoolean();
   const deleteDlg = useBoolean();
   const lockDlg = useBoolean();
@@ -150,10 +150,26 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     { label: 'Amount', size: 1.3, align: 'left' },
     { label: 'One Time', size: 1.5, align: 'center' },
     { label: 'Payable Month', size: 2, align: 'left' },
-    { label: 'Optional', size: 1.5, align: 'center' },
+    {
+      label: 'Optional',
+      size: 1.5,
+      align: 'center',
+      desc: 'This is an optional fee head, it may or may not be applicable to all students. Select applicable students accordingly when you assign fee structures.',
+    },
     { label: 'Payment Term', size: 1.5, align: 'left' },
-    { label: 'Refundable', size: 1.5, align: 'center' },
+    {
+      label: 'Refundable',
+      size: 1.5,
+      align: 'center',
+      desc: 'This fees can be refunded under certain conditions.',
+    },
     { label: '', size: 0.5, align: 'left' },
+  ];
+
+  const PAYMENT_TERM_OPTIONS = [
+    { label: 'Monthly', value: 'monthly' },
+    { label: 'Quarterly', value: 'quarterly' },
+    { label: 'Yearly', value: 'yearly' },
   ];
 
   useEffect(() => {
@@ -407,6 +423,27 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
               />
             )}
+            <Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  bgcolor: varAlpha(theme.palette.info.mainChannel, 0.01),
+                  border: `1px solid ${varAlpha(theme.palette.info.mainChannel, 0.18)}`,
+                  borderRadius: 1,
+                  px: 1,
+                  py: 1.2,
+
+                  gap: 1.2,
+                }}
+              >
+                <Iconify icon="solar:info-circle-bold" color={theme.palette.info.main} width={15} />
+                <Typography variant="caption" color="info.main" fontWeight="bold">
+                  Lock this fee structure for assigning it to students. Changes will be restricted
+                  after locking.
+                </Typography>
+              </Box>
+            </Box>
           </Box>
 
           <Box
@@ -552,9 +589,25 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 >
                   {COLUMNS.map((col) => (
                     <Grid key={col.label} size={col.size as any} sx={{ textAlign: col.align }}>
-                      <Typography variant="caption" color="text.disabled" fontWeight={600}>
-                        {col.label}
-                      </Typography>
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent={col.align === 'center' ? 'center' : 'flex-start'}
+                        gap={0.5}
+                      >
+                        <Typography variant="caption" color="text.disabled" fontWeight={600}>
+                          {col.label}
+                        </Typography>
+                        {col.desc && (
+                          <CustomTooltip title={col.desc} placement="top">
+                            <Iconify
+                              icon="lucide:info"
+                              sx={{ cursor: 'pointer', width: 16, height: 16 }}
+                              color="info.main"
+                            />
+                          </CustomTooltip>
+                        )}
+                      </Box>
                     </Grid>
                   ))}
                 </Grid>
@@ -731,19 +784,23 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                       </Grid>
 
                       <Grid size={1.5}>
-                        <CustomSelect
+                        <Autocomplete
                           size="small"
                           fullWidth
+                          options={PAYMENT_TERM_OPTIONS}
+                          getOptionLabel={(option) => option.label}
+                          isOptionEqualToValue={(option, value) => option.value === value.value}
+                          value={
+                            PAYMENT_TERM_OPTIONS.find(
+                              (option) => option.value === item.paymentTermId
+                            ) ?? null
+                          }
+                          onChange={(_, selectedOption) =>
+                            updateFeeHead(idx, 'paymentTermId', selectedOption?.value ?? '')
+                          }
                           disabled={!isEditing || isLocked}
-                          value={item.paymentTermId || ''}
-                          onChange={(value: any) => updateFeeHead(idx, 'paymentTermId', value)}
-                          labelKey="label"
-                          valueKey="value"
-                          options={[
-                            { label: 'Monthly', value: 'monthly' },
-                            { label: 'Quarterly', value: 'quarterly' },
-                            { label: 'Yearly', value: 'yearly' },
-                          ]}
+                          clearIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}
+                          renderInput={(params) => <TextField {...params} />}
                         />
                       </Grid>
 
