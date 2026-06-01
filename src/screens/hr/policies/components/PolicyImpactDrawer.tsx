@@ -2,6 +2,9 @@
 
 import React from 'react';
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Box,
   Chip,
@@ -12,8 +15,11 @@ import {
   Divider,
   TableRow,
   TableCell,
+  Accordion,
   Typography,
   LinearProgress,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 
 import { EmptyRows, DrawerHeader, SectionTable } from './HRPolicySharedUI';
@@ -38,6 +44,11 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     confirmPendingImpactAction,
   } = ctx;
 
+  const warningCount =
+    (impactPreview?.warnings?.length ?? 0) + (impactPreview?.requiresConfirmation ? 1 : 0);
+  const conflictCount = impactPreview?.effectiveAssignmentConflicts?.length ?? 0;
+  const hasBlockingWarnings = Boolean(impactPreview?.blockingWarnings?.length);
+
   return (
     <Drawer
       anchor="right"
@@ -48,6 +59,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     >
       <DrawerHeader
         title="Policy Impact"
+        helpText="Preview how this action affects employees, assignments, versions, and risks before confirming."
         onClose={closeImpactDrawer}
         closeDisabled={isPolicyOperationActive}
       />
@@ -56,142 +68,207 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         {previewPolicyImpactState.isLoading || previewPolicyAssignmentImpactState.isLoading ? (
           <LinearProgress />
         ) : null}
-        <Box sx={{ flex: 1, overflow: 'auto', p: 2.5 }}>
-          <Stack spacing={2.5}>
+
+        {/* ── Sticky top: alerts + chips + accordions ── */}
+        <Box sx={{ px: 2.5, pt: 2.5, pb: 1.5, flexShrink: 0 }}>
+          <Stack spacing={1.5}>
             {impactPreviewError ? <Alert severity="error">{impactPreviewError}</Alert> : null}
             {!impactPreview && !impactPreviewError ? (
               <Alert severity="info">Loading impact preview...</Alert>
             ) : null}
+
             {impactPreview ? (
               <>
-                {/* Summary chips */}
-                <Stack spacing={1}>
-                  <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                    <Chip
-                      size="small"
-                      label={toLabel(impactPreview.policyType)}
-                      color="primary"
-                      variant="outlined"
-                    />
-                    <Chip size="small" label={toLabel(impactPreview.action)} variant="outlined" />
-                    <Chip
-                      size="small"
-                      label={`v${impactPreview.currentVersion ?? '-'} → v${impactPreview.proposedVersion ?? '-'}`}
-                    />
-                  </Stack>
-                  <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                    <Chip
-                      size="small"
-                      label={`${formatNumber(impactPreview.affectedEmployeeCount)} employees`}
-                    />
-                    <Chip
-                      size="small"
-                      label={`${formatNumber(impactPreview.affectedAssignmentCount)} assignments`}
-                    />
-                    <Chip
-                      size="small"
-                      label={`${formatNumber(impactPreview.lockedPayrollMonths?.length)} locked months`}
-                      color={impactPreview.lockedPayrollMonths?.length ? 'error' : 'default'}
-                    />
-                  </Stack>
+                {/* Summary chips — single row */}
+                <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                  <Chip
+                    size="small"
+                    label={toLabel(impactPreview.policyType)}
+                    color="primary"
+                    variant="outlined"
+                  />
+                  <Chip size="small" label={toLabel(impactPreview.action)} variant="outlined" />
+                  <Chip
+                    size="small"
+                    label={`v${impactPreview.currentVersion ?? '-'} → v${impactPreview.proposedVersion ?? '-'}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`${formatNumber(impactPreview.affectedEmployeeCount)} employees`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`${formatNumber(impactPreview.affectedAssignmentCount)} assignments`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`${formatNumber(impactPreview.lockedPayrollMonths?.length)} locked months`}
+                    color={impactPreview.lockedPayrollMonths?.length ? 'error' : 'default'}
+                  />
                 </Stack>
 
-                {/* Warnings */}
-                {(impactPreview.warnings?.length ?? 0) > 0 ||
-                impactPreview.requiresConfirmation ||
-                (impactPreview.effectiveAssignmentConflicts?.length ?? 0) > 0 ? (
-                  <>
-                    <Divider />
-                    <Stack spacing={1}>
-                      {impactPreview.warnings?.map((warning) => (
-                        <Alert
-                          key={`${warning.code}-${warning.message}`}
-                          severity={warning.severity === 'blocking' ? 'error' : warning.severity}
-                          sx={{ py: 0.75 }}
-                        >
-                          {warning.message}
-                        </Alert>
-                      ))}
-                      {impactPreview.requiresConfirmation ? (
-                        <Alert
-                          severity={impactPreview.blockingWarnings?.length ? 'error' : 'warning'}
-                          sx={{ py: 0.75 }}
-                        >
-                          {impactPreview.blockingWarnings?.length
-                            ? 'This action is blocked until the listed risks are resolved.'
-                            : `Confirmation required${impactPreview.expiresAt ? ` before ${formatDate(impactPreview.expiresAt)}` : ''}.`}
-                        </Alert>
-                      ) : null}
-                      {impactPreview.effectiveAssignmentConflicts?.length ? (
-                        <Alert severity="warning" sx={{ py: 0.75 }}>
-                          <Typography variant="subtitle2" gutterBottom>
-                            Effective policy conflicts
-                          </Typography>
-                          <Stack spacing={1}>
-                            {impactPreview.effectiveAssignmentConflicts
-                              .slice(0, 5)
-                              .map((conflict) => (
-                                <Box key={`${conflict.employeeId}-${conflict.date}`}>
-                                  <Typography variant="body2" fontWeight={600}>
-                                    {conflict.employeeName || conflict.employeeId}
-                                  </Typography>
-                                  <Typography variant="caption" display="block">
-                                    Winner:{' '}
-                                    {conflict.winningAssignment?.targetDisplayName ||
-                                      conflict.winningAssignment?.targetKey ||
-                                      '-'}
-                                  </Typography>
-                                  <Typography variant="caption" display="block">
-                                    Candidates:{' '}
-                                    {conflict.candidateAssignments
-                                      .map(
-                                        (candidate) =>
-                                          `${candidate.targetDisplayName || candidate.targetKey} (${candidate.status}: ${candidate.skipReason})`
-                                      )
-                                      .join(', ')}
-                                  </Typography>
-                                </Box>
-                              ))}
-                          </Stack>
-                        </Alert>
-                      ) : null}
-                    </Stack>
-                  </>
+                {/* Warnings & Errors accordion */}
+                {warningCount > 0 ? (
+                  <Accordion
+                    disableGutters
+                    elevation={0}
+                    sx={{
+                      backgroundColor: 'rgb(243,244,246) !important',
+                      border: '1px solid',
+                      borderColor: hasBlockingWarnings ? 'error.light' : 'warning.light',
+                      borderRadius: '8px !important',
+                      overflow: 'hidden',
+                      '&:before': { display: 'none' },
+                      '& .MuiAccordionSummary-root': {
+                        backgroundColor: 'rgb(243,244,246) !important',
+                      },
+                      '& .MuiAccordionDetails-root': {
+                        backgroundColor: 'rgb(243,244,246) !important',
+                      },
+                    }}
+                  >
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ minHeight: 44, py: 0 }}>
+                      <Typography variant="subtitle2" color="text.primary">
+                        {hasBlockingWarnings ? 'Errors' : 'Warnings'}&nbsp;
+                        <Typography component="span" variant="caption" color="text.secondary">
+                          ({warningCount})
+                        </Typography>
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ pt: 0, pb: 1.5, px: 2 }}>
+                      <Stack spacing={1}>
+                        {impactPreview.warnings?.map((warning) => (
+                          <Alert
+                            key={`${warning.code}-${warning.message}`}
+                            severity={warning.severity === 'blocking' ? 'error' : warning.severity}
+                            sx={{ py: 0.75 }}
+                          >
+                            {warning.message}
+                          </Alert>
+                        ))}
+                        {impactPreview.requiresConfirmation ? (
+                          <Alert
+                            severity={hasBlockingWarnings ? 'error' : 'warning'}
+                            sx={{ py: 0.75 }}
+                          >
+                            {hasBlockingWarnings
+                              ? 'This action is blocked until the listed risks are resolved.'
+                              : `Confirmation required${impactPreview.expiresAt ? ` before ${formatDate(impactPreview.expiresAt)}` : ''}.`}
+                          </Alert>
+                        ) : null}
+                      </Stack>
+                    </AccordionDetails>
+                  </Accordion>
                 ) : null}
 
-                {/* Affected employees */}
-                <Divider />
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    Affected Employees
-                  </Typography>
-                  <SectionTable columns={['Employee', 'Department', 'Type']}>
-                    {impactPreview.affectedEmployees?.length ? (
-                      impactPreview.affectedEmployees.map((employee) => (
-                        <TableRow key={employee.employeeId} hover>
-                          <TableCell>
-                            <Stack spacing={0.25}>
-                              <Typography variant="body2">
-                                {employee.employeeName || employee.employeeId}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {employee.employeeCode}
-                              </Typography>
-                            </Stack>
-                          </TableCell>
-                          <TableCell>{employee.department || '-'}</TableCell>
-                          <TableCell>{employee.employeeType || '-'}</TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <EmptyRows colSpan={3} message="No employees found in preview." />
-                    )}
-                  </SectionTable>
-                </Box>
+                {/* Effective assignment conflicts accordion */}
+                {conflictCount > 0 ? (
+                  <Accordion
+                    disableGutters
+                    elevation={0}
+                    sx={{
+                      backgroundColor: 'rgb(243,244,246) !important',
+                      border: '1px solid',
+                      borderColor: 'warning.light',
+                      borderRadius: '8px !important',
+                      overflow: 'hidden',
+                      '&:before': { display: 'none' },
+                      '& .MuiAccordionSummary-root': {
+                        backgroundColor: 'rgb(243,244,246) !important',
+                      },
+                      '& .MuiAccordionDetails-root': {
+                        backgroundColor: 'rgb(243,244,246) !important',
+                      },
+                    }}
+                  >
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ minHeight: 44, py: 0 }}>
+                      <Typography variant="subtitle2" color="text.primary">
+                        Effective Policy Conflicts&nbsp;
+                        <Typography component="span" variant="caption" color="text.secondary">
+                          ({conflictCount})
+                        </Typography>
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ pt: 0, pb: 1.5, px: 2 }}>
+                      <Stack spacing={1}>
+                        {impactPreview.effectiveAssignmentConflicts.slice(0, 5).map((conflict) => (
+                          <Box
+                            key={`${conflict.employeeId}-${conflict.date}`}
+                            sx={{
+                              p: 1.25,
+                              borderRadius: 1,
+                              bgcolor: 'background.paper',
+                              border: '1px solid',
+                              borderColor: 'grey.200',
+                            }}
+                          >
+                            <Typography variant="body2" fontWeight={600} color="text.primary">
+                              {conflict.employeeName || conflict.employeeId}
+                            </Typography>
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Winner:{' '}
+                              {conflict.winningAssignment?.targetDisplayName ||
+                                conflict.winningAssignment?.targetKey ||
+                                '-'}
+                            </Typography>
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Candidates:{' '}
+                              {conflict.candidateAssignments
+                                .map(
+                                  (candidate) =>
+                                    `${candidate.targetDisplayName || candidate.targetKey} (${candidate.status}: ${candidate.skipReason})`
+                                )
+                                .join(', ')}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Stack>
+                    </AccordionDetails>
+                  </Accordion>
+                ) : null}
               </>
             ) : null}
           </Stack>
         </Box>
+
+        {/* ── Scrollable: Affected Employees only ── */}
+        {impactPreview ? (
+          <>
+            <Divider />
+            <Box sx={{ flex: 1, overflow: 'auto', px: 2.5, py: 2 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Affected Employees&nbsp;
+                <Typography component="span" variant="caption" color="text.secondary">
+                  ({formatNumber(impactPreview.affectedEmployees?.length ?? 0)})
+                </Typography>
+              </Typography>
+              <SectionTable columns={['Employee', 'Department', 'Type']}>
+                {impactPreview.affectedEmployees?.length ? (
+                  impactPreview.affectedEmployees.map((employee) => (
+                    <TableRow key={employee.employeeId} hover>
+                      <TableCell>
+                        <Stack spacing={0.25}>
+                          <Typography variant="body2">
+                            {employee.employeeName || employee.employeeId}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {employee.employeeCode}
+                          </Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{employee.department || '-'}</TableCell>
+                      <TableCell>{employee.employeeType || '-'}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <EmptyRows colSpan={3} message="No employees found in preview." />
+                )}
+              </SectionTable>
+            </Box>
+          </>
+        ) : null}
+
+        {/* ── Sticky footer: action buttons ── */}
         {pendingImpactAction ? (
           <>
             <Divider />
@@ -199,9 +276,15 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
               direction="row"
               justifyContent="flex-end"
               spacing={1.5}
-              sx={{ px: 2.5, py: 2, bgcolor: 'background.paper' }}
+              sx={{ px: 2.5, py: 2, bgcolor: 'background.paper', flexShrink: 0 }}
             >
-              <Button onClick={closeImpactDrawer} disabled={isPolicyOperationActive}>
+              <Button
+                onClick={closeImpactDrawer}
+                disabled={isPolicyOperationActive}
+                size="small"
+                variant="outlined"
+                startIcon={<Iconify icon="mdi:close" />}
+              >
                 Cancel
               </Button>
               <LoadingButton
@@ -210,8 +293,10 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                 disabled={
                   Boolean(impactPreview?.blockingWarnings?.length) || isPolicyOperationActive
                 }
+                startIcon={<Iconify icon={GlobalIcons.submit} />}
                 loading={activePolicyOperation?.key === 'confirm-impact'}
                 onClick={confirmPendingImpactAction}
+                size="small"
               >
                 Confirm {pendingImpactAction.label}
               </LoadingButton>

@@ -456,6 +456,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
           variant="outlined"
           startIcon={<Iconify icon="basil:cross-solid" />}
           onClick={closeDrawer}
+          size="small"
           disabled={isPolicyOperationActive}
         >
           Cancel
@@ -467,6 +468,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
             previewPolicyAssignmentImpactState.isLoading ||
             activePolicyOperation?.key === 'preview-impact'
           }
+          size="small"
           onClick={previewCurrentAssignmentImpact}
         >
           Preview impact
@@ -479,6 +481,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
             updateAssignmentState.isLoading ||
             activePolicyOperation?.key === 'save-assignment'
           }
+          size="small"
           startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
           onClick={saveAssignment}
         >

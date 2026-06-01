@@ -40,7 +40,11 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       onClose={() => setAuditTarget(null)}
       PaperProps={{ sx: { width: { xs: '100%', md: 520 } } }}
     >
-      <DrawerHeader title="Audit Trail" onClose={() => setAuditTarget(null)} />
+      <DrawerHeader
+        title="Audit Trail"
+        helpText="Track who changed this policy, what fields were updated, and when each change occurred."
+        onClose={() => setAuditTarget(null)}
+      />
       <Divider />
       <Stack spacing={2} sx={{ p: 2.5 }}>
         {auditLoading ? <LinearProgress /> : null}

@@ -8,6 +8,7 @@ import {
   versionMatchesHistorySearch,
 } from 'src/screens/hr/policies/hr-policy-ui-utils';
 import {
+  Box,
   Chip,
   Alert,
   Paper,
@@ -32,8 +33,8 @@ import {
   LinearProgress,
 } from '@mui/material';
 
-import { EmptyRows, DrawerHeader, SectionTable } from './HRPolicySharedUI';
 import { toLabel, formatDate, formatNumber } from '../hr-policy-workspace-utils';
+import { EmptyRows, DrawerHeader, SectionTable, InfoTooltipIcon } from './HRPolicySharedUI';
 
 import type { VersionDifference } from '../types/hr-policy-workspace.types';
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
@@ -90,19 +91,17 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
       >
         <DrawerHeader
           title="Policy Versions"
+          helpText="Review immutable policy snapshots, compare changes between versions, and restore a selected version as a new draft."
           onClose={() => setVersionTarget(null)}
           closeDisabled={isPolicyOperationActive}
         />
         <Divider />
         <Stack spacing={2} sx={{ p: 2.5 }}>
           {versionHistoryLoading || versionCompareLoading ? <LinearProgress /> : null}
-          <Stack spacing={0.5}>
+          <Box gap={0.5} display="flex" alignItems="center">
             <Typography variant="subtitle1">{versionTarget?.policyName}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              Immutable snapshots created after policy changes. Restore creates a draft and does not
-              modify the active policy.
-            </Typography>
-          </Stack>
+            <InfoTooltipIcon title="Version history includes all published versions. Draft versions are not included." />
+          </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
             <TextField
               size="small"

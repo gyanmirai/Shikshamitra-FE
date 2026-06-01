@@ -258,6 +258,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             variant="contained"
             startIcon={<Iconify icon="mdi:plus" />}
             onClick={() => openAssignmentDrawer()}
+            size="small"
             disabled={
               !academicYearId ||
               activePayroll.length === 0 ||
@@ -368,10 +369,16 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
               </Select>
             </FormControl>
             <FormControl size="small" fullWidth>
-              <InputLabel>Payroll Policy</InputLabel>
+              <InputLabel shrink>Payroll Policy</InputLabel>
               <Select
                 label="Payroll Policy"
+                displayEmpty
                 value={draftAssignmentFilters.payrollPolicyId}
+                renderValue={(selected) => {
+                  const value = selected as string;
+                  if (!value) return 'All';
+                  return payroll.find((item) => item.id === value)?.name || value;
+                }}
                 onChange={(e) =>
                   setDraftAssignmentFilters((cur) => ({ ...cur, payrollPolicyId: e.target.value }))
                 }
@@ -385,10 +392,16 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
               </Select>
             </FormControl>
             <FormControl size="small" fullWidth>
-              <InputLabel>Attendance Policy</InputLabel>
+              <InputLabel shrink>Attendance Policy</InputLabel>
               <Select
                 label="Attendance Policy"
+                displayEmpty
                 value={draftAssignmentFilters.attendancePolicyId}
+                renderValue={(selected) => {
+                  const value = selected as string;
+                  if (!value) return 'All';
+                  return attendance.find((item) => item.id === value)?.name || value;
+                }}
                 onChange={(e) =>
                   setDraftAssignmentFilters((cur) => ({
                     ...cur,
@@ -491,7 +504,23 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         isPagination
         tableTitle="HR Policy Assignments"
         noDataText="No assignments match the current filters."
-        tableContainerProps={{ sx: { maxHeight: 620 } }}
+        wrapperProps={{
+          sx: {
+            '& [data-testid="hr-policy-assignments"] > .MuiStack-root': {
+              justifyContent: 'flex-start',
+              alignItems: 'stretch',
+              flexWrap: 'nowrap',
+            },
+          },
+        }}
+        tableContainerProps={{
+          sx: {
+            maxHeight: 620,
+            '& .MuiTable-root': {
+              borderSpacing: 0,
+            },
+          },
+        }}
       />
     </Stack>
   );

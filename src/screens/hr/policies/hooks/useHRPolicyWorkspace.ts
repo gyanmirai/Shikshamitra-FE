@@ -146,11 +146,6 @@ import type {
 
 export type { AttendanceNumericField };
 
-// ─── Tab resolution helpers (stable module-level, no closure) ─────────────────
-
-const HR_POLICY_TABS_IMPORT = () =>
-  import('../hr-policy-workspace.constants').then((m) => m.HR_POLICY_TABS);
-
 function findTab(
   tabs: Array<{ value: WorkspaceTab; disabled?: boolean }>,
   value?: WorkspaceTab | null

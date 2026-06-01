@@ -19,6 +19,7 @@ import {
   Typography,
   Autocomplete,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
 
 type Props = {
@@ -46,6 +47,9 @@ export default function PayrollComponentDialog({
   });
 
   const options: any[] = components?.items || [];
+
+  const autocompleteOptions =
+    isLoading || options.length === 0 ? [] : [{ __selectAll: true } as any, ...options];
 
   // Helper to get a consistent ID from either an option (uses _id) or a
   // componentValue (uses componentId or id from the salary-structure API).
@@ -117,8 +121,16 @@ export default function PayrollComponentDialog({
           multiple
           fullWidth
           loading={isLoading}
+          loadingText={
+            <Box display="flex" alignItems="center" gap={1.5} justifyContent="center" py={1.5}>
+              <CircularProgress size={20} color="inherit" />
+              <Typography variant="body2" color="text.secondary">
+                Loading components...
+              </Typography>
+            </Box>
+          }
           size="small"
-          options={[{ __selectAll: true } as any, ...options]}
+          options={autocompleteOptions}
           getOptionLabel={(option: any) =>
             (option as any).__selectAll
               ? ''

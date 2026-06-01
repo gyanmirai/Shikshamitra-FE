@@ -5,6 +5,7 @@ import type { SelectChangeEvent } from '@mui/material/Select';
 import React from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Chip,
@@ -27,7 +28,6 @@ import {
   IconButton,
   FormControl,
   DialogTitle,
-  LinearProgress,
   TableContainer,
   CircularProgress,
   FormControlLabel,
@@ -118,28 +118,15 @@ export function PolicyName({
 
 export function InfoTooltipIcon({ title }: { title: string }) {
   return (
-    <Tooltip title={title} arrow>
-      <Box
-        component="span"
-        aria-label={title}
-        tabIndex={0}
-        sx={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'text.secondary',
-          lineHeight: 0,
-          cursor: 'help',
-          '&:focus-visible': {
-            outline: (theme) => `2px solid ${theme.vars.palette.primary.main}`,
-            outlineOffset: 2,
-            borderRadius: '50%',
-          },
-        }}
-      >
-        <Iconify icon="mdi:information-outline" width={16} />
-      </Box>
-    </Tooltip>
+    <CustomTooltip arrow placement="right" sx={{ textAlign: 'justify' }} title={title}>
+      <Iconify
+        icon="lucide:info"
+        sx={{ cursor: 'pointer' }}
+        color="info.main"
+        width={16}
+        height={16}
+      />
+    </CustomTooltip>
   );
 }
 
@@ -159,28 +146,40 @@ export function DrawerHeader({
   closeDisabled?: boolean;
 }) {
   return (
-    <Stack
-      direction="row"
-      alignItems="flex-start"
-      justifyContent="space-between"
-      spacing={2}
-      sx={{ px: 3, py: 1.75 }}
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        gap: 1,
+        py: 1.5,
+        px: 2,
+      }}
     >
-      <Box sx={{ minWidth: 0 }}>
+      <Stack spacing={0.5} sx={{ minWidth: 0 }}>
         <Stack direction="row" spacing={0.75} alignItems="center">
-          <Typography variant="h6">{title}</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            {title}
+          </Typography>
           {helpText ? <InfoTooltipIcon title={helpText} /> : null}
         </Stack>
         {subtitle ? (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, maxWidth: 720 }}>
+          <Typography variant="body2" color="text.secondary">
             {subtitle}
           </Typography>
         ) : null}
-      </Box>
-      <IconButton onClick={onClose} disabled={closeDisabled} sx={{ flexShrink: 0 }}>
+      </Stack>
+      <IconButton
+        aria-label="close"
+        onClick={onClose}
+        disabled={closeDisabled}
+        sx={{
+          mt: 0.25,
+        }}
+      >
         <Iconify icon="mdi:close" />
       </IconButton>
-    </Stack>
+    </Box>
   );
 }
 
@@ -220,7 +219,6 @@ export function PolicyOperationOverlay({ operation }: { operation: PolicyOperati
                 {operation.message}
               </Typography>
             </Stack>
-            <LinearProgress sx={{ width: 1 }} />
           </Stack>
         </Paper>
       </Backdrop>
@@ -271,8 +269,8 @@ export function PolicyDrawerLayout({
         closeDisabled={Boolean(operation)}
       />
       <Divider />
-      <Box sx={{ flex: 1, overflow: 'auto', px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 3 } }}>
-        <Stack spacing={2.5} sx={{ width: 1, maxWidth: 1080, mx: 'auto' }}>
+      <Box sx={{ flex: 1, overflow: 'auto', p: 1 }}>
+        <Stack spacing={2.5} sx={{ width: 1 }}>
           {error ? <Alert severity="error">{error}</Alert> : null}
           {children}
         </Stack>
@@ -296,6 +294,7 @@ export function PolicyDrawerLayout({
           startIcon={<Iconify icon="basil:cross-solid" />}
           onClick={onClose}
           disabled={Boolean(operation)}
+          size="small"
         >
           Cancel
         </Button>
@@ -307,6 +306,7 @@ export function PolicyDrawerLayout({
               loading={loading && !operation}
               startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
               onClick={onSave}
+              size="small"
             >
               {operation ? 'Saving...' : 'Submit'}
             </LoadingButton>
