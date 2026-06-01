@@ -415,6 +415,10 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
                 <FormControl fullWidth size="small">
                   <Select
                     value={holidayReviewFilters.month}
+                    displayEmpty
+                    renderValue={(selected) =>
+                      selected ? dayjs(`${selected}-01`).format('MMM YYYY') : 'All months'
+                    }
                     onChange={(event) =>
                       setHolidayReviewFilters((current) => ({
                         ...current,
@@ -473,6 +477,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
               variant="outlined"
               onClick={() => openManualHolidayDialog()}
               startIcon={<Iconify icon="mdi:plus" />}
+              size="small"
             >
               Add Manual Holiday
             </Button>

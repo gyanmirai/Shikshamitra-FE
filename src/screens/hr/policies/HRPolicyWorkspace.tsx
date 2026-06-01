@@ -12,8 +12,9 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Alert, Paper, Drawer, Typography, LinearProgress } from '@mui/material';
+import { Box, Tab, Alert, Paper, Drawer, LinearProgress } from '@mui/material';
 
 import { PolicyTable } from './components/PolicyTable';
 import { CalendarsTab } from './components/CalendarsTab';
@@ -23,6 +24,7 @@ import { HolidayImpactTab } from './components/HolidayImpactTab';
 import { PolicyAuditDrawer } from './components/PolicyAuditDrawer';
 import { useHRPolicyWorkspace } from './hooks/useHRPolicyWorkspace';
 import { PolicyImpactDrawer } from './components/PolicyImpactDrawer';
+import { PolicyVersionDrawer } from './components/PolicyVersionDrawer';
 import { EffectivePreviewTab } from './components/EffectivePreviewTab';
 import { ManualHolidayDialog } from './components/ManualHolidayDialog';
 import { PayrollPolicyDrawer } from './components/PayrollPolicyDrawer';
@@ -60,75 +62,38 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       ) : null}
       {isLoading ? <LinearProgress /> : null}
 
-      <Box sx={{ display: 'flex', flex: 1, minHeight: 0, gap: 2, mt: 1 }}>
-        {/* Left navigation panel */}
-        <Paper
-          sx={{
-            width: 220,
-            flexShrink: 0,
-            borderRadius: 1.5,
-            bgcolor: 'background.paper',
-            py: 1,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
+      <Paper
+        sx={{
+          mt: 1,
+          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+        }}
+      >
+        <CustomTabs
+          value={tab}
+          onChange={(_, value) => setTab(value)}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
+          role="tablist"
         >
-          {HR_POLICY_TABS.map((item) => {
-            const isActive = tab === item.value;
-            return (
-              <Box
-                key={item.value}
-                component="button"
-                disabled={item.disabled}
-                onClick={() => !item.disabled && setTab(item.value)}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.25,
-                  px: 2,
-                  py: 1.25,
-                  border: 'none',
-                  background: 'none',
-                  cursor: item.disabled ? 'default' : 'pointer',
-                  borderLeft: '3px solid',
-                  borderLeftColor: isActive ? 'primary.main' : 'transparent',
-                  bgcolor: isActive ? 'primary.lighter' : 'transparent',
-                  color: isActive
-                    ? 'primary.main'
-                    : item.disabled
-                      ? 'text.disabled'
-                      : 'text.secondary',
-                  borderRadius: '0 6px 6px 0',
-                  transition: 'all 0.15s',
-                  textAlign: 'left',
-                  width: '100%',
-                  '&:hover:not(:disabled)': {
-                    bgcolor: isActive ? 'primary.lighter' : 'action.hover',
-                    color: isActive ? 'primary.main' : 'text.primary',
-                  },
-                }}
-              >
-                <Iconify icon={item.icon} width={20} sx={{ flexShrink: 0, color: 'inherit' }} />
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: isActive ? 700 : 500, color: 'inherit', lineHeight: 1.3 }}
-                >
-                  {item.label}
-                </Typography>
-              </Box>
-            );
-          })}
-        </Paper>
+          {HR_POLICY_TABS.map((item) => (
+            <Tab
+              key={item.value}
+              value={item.value}
+              label={item.label}
+              icon={<Iconify icon={item.icon} width={20} />}
+              disabled={item.disabled}
+            />
+          ))}
+        </CustomTabs>
+      </Paper>
 
-        {/* Tab content */}
-        <Box sx={{ flex: 1, minWidth: 0, display: 'flex' }}>
-          {tab === 'calendars' ? <CalendarsTab ctx={ctx} /> : null}
-          {tab === 'payroll' ? <PolicyTable type="payroll" ctx={ctx} /> : null}
-          {tab === 'attendance' ? <PolicyTable type="attendance" ctx={ctx} /> : null}
-          {tab === 'assignments' ? <AssignmentsTab ctx={ctx} /> : null}
-          {tab === 'holiday' ? <HolidayImpactTab ctx={ctx} /> : null}
-          {tab === 'effective' ? <EffectivePreviewTab ctx={ctx} /> : null}
-        </Box>
+      {/* Tab content */}
+      <Box sx={{ display: 'flex', flex: 1, minHeight: 0, mt: 1 }}>
+        {tab === 'calendars' ? <CalendarsTab ctx={ctx} /> : null}
+        {tab === 'payroll' ? <PolicyTable type="payroll" ctx={ctx} /> : null}
+        {tab === 'attendance' ? <PolicyTable type="attendance" ctx={ctx} /> : null}
+        {tab === 'assignments' ? <AssignmentsTab ctx={ctx} /> : null}
+        {tab === 'holiday' ? <HolidayImpactTab ctx={ctx} /> : null}
+        {tab === 'effective' ? <EffectivePreviewTab ctx={ctx} /> : null}
       </Box>
 
       {/* Drawers */}
@@ -149,6 +114,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       <ManualHolidayDialog ctx={ctx} />
       <PolicyImpactDrawer ctx={ctx} />
       <PolicyAuditDrawer ctx={ctx} />
+      <PolicyVersionDrawer ctx={ctx} />
 
       {/* Global operation spinner — excludes impact preview (shown in its own drawer) */}
       <PolicyOperationOverlay
