@@ -31,6 +31,9 @@ export type EmployeeICardTemplate = {
   qrCodeEnabled?: boolean;
   barcodeEnabled?: boolean;
   backSideEnabled?: boolean;
+  schemaVersion?: number;
+  layoutJson?: string;
+  printSettingsJson?: string;
   fieldsJson: string;
   isActive: boolean;
   creationTime?: string;

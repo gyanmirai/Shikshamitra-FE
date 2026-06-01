@@ -1,13 +1,19 @@
 'use client';
 
-import type { HrReportFormat, HrReportFilter } from 'src/redux/hr/hrReportsApi';
+import type {
+  HrReportField,
+  HrReportFormat,
+  HrReportSource,
+  HrReportRequest,
+  HrReportTemplate,
+  HrReportFilterCondition,
+} from 'src/redux/hr/hrReportsApi';
 
-import dayjs, { type Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
+import { toast } from 'sonner';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
@@ -21,183 +27,189 @@ import {
   Typography,
   IconButton,
   Autocomplete,
+  ToggleButton,
   CircularProgress,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
-  useGetHrReportOptionsQuery,
   usePreviewHrReportMutation,
   useGetHrReportExportsQuery,
+  useGetHrReportSourcesQuery,
+  useGetHrReportTemplatesQuery,
   useCreateHrReportExportMutation,
   useDownloadHrReportExportMutation,
+  useCreateHrReportTemplateMutation,
+  useDeleteHrReportTemplateMutation,
+  useUpdateHrReportTemplateMutation,
+  useDuplicateHrReportTemplateMutation,
 } from 'src/redux/hr/hrReportsApi';
 
-const EMPLOYEE_REPORTS = [
-  'Employee Profile',
-  'Employee List',
-  'Joining Letter',
-  'Employee Detail',
-  'Employee Contact List',
-  'Employee All Detail',
-  'Relieving Certificate',
-  'Increment Certificate',
-  'Experience Certificate',
-];
-
-const PAYROLL_REPORTS = [
-  'Salary Register',
-  'Employee Payslip',
-  'Monthly Payroll Summary',
-  'Allowance Report',
-  'Deduction Report',
-  'Payroll Reconciliation Report',
-  'Leave Encashment Report',
-  'Final Settlement Report',
-];
-
-const DOCUMENT_REPORTS = new Set([
-  'Joining Letter',
-  'Relieving Certificate',
-  'Increment Certificate',
-  'Experience Certificate',
-]);
-
-const COMPONENT_REPORTS = new Set(['Allowance Report', 'Deduction Report']);
-
-const GENDER_OPTIONS = [
-  { id: 0, label: 'Male' },
-  { id: 1, label: 'Female' },
-  { id: 2, label: 'Other' },
-];
-
 const DEFAULT_PAGE_SIZE = 25;
-
-const getEmployeeLabel = (employee: any) =>
-  employee?.employeeName ||
-  employee?.fullName ||
-  [employee?.firstName, employee?.lastName].filter(Boolean).join(' ') ||
-  employee?.employeeCode ||
-  '';
-
-const getEmployeeId = (employee: any) => employee?.id || employee?.employeeId || '';
 
 const formatDateTime = (value?: string) =>
   value ? dayjs(value).format('DD MMM YYYY, hh:mm A') : '-';
 
-const ReportsScreen = () => {
-  const [reportCategory, setReportCategory] = useState<'Employee' | 'Payroll'>('Employee');
-  const [reportType, setReportType] = useState(EMPLOYEE_REPORTS[1]);
-  const [selectedEmployees, setSelectedEmployees] = useState<any[]>([]);
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-  const [selectedStatuses, setSelectedStatuses] = useState<{ id: string; label: string }[]>([]);
-  const [selectedGender, setSelectedGender] = useState<{ id: number; label: string } | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(dayjs());
-  const [componentNames, setComponentNames] = useState<string[]>([]);
-  const [lastRequest, setLastRequest] = useState<{ page: number; pageSize: number } | null>(null);
+const defaultOperator = (field?: HrReportField) => field?.operators[0] ?? 'equals';
 
-  const { data: reportOptions } = useGetHrReportOptionsQuery();
+const ReportsScreen = () => {
+  const { data: sourcesData, isLoading: isLoadingSources } = useGetHrReportSourcesQuery();
+  const { data: templatesData } = useGetHrReportTemplatesQuery();
   const {
     data: exportJobs = [],
     refetch: refetchExports,
     isFetching: isFetchingExports,
   } = useGetHrReportExportsQuery(undefined, { pollingInterval: 5000 });
 
-  const [searchEmployees, { data: employeeResult, isFetching: isSearchingEmployees }] =
-    useLazyGetEmployeeQuery();
   const [previewReport, { data: preview, isLoading: isPreviewLoading }] =
     usePreviewHrReportMutation();
   const [createExport, { isLoading: isCreatingExport }] = useCreateHrReportExportMutation();
   const [downloadExport, { isLoading: isDownloading }] = useDownloadHrReportExportMutation();
+  const [createTemplate, { isLoading: isSavingTemplate }] = useCreateHrReportTemplateMutation();
+  const [updateTemplate] = useUpdateHrReportTemplateMutation();
+  const [duplicateTemplate] = useDuplicateHrReportTemplateMutation();
+  const [deleteTemplate] = useDeleteHrReportTemplateMutation();
 
-  const availableReportTypes = useMemo(
-    () => (reportCategory === 'Employee' ? EMPLOYEE_REPORTS : PAYROLL_REPORTS),
-    [reportCategory]
+  const sources = useMemo(() => sourcesData?.sources ?? [], [sourcesData?.sources]);
+  const templates = useMemo(() => templatesData?.items ?? [], [templatesData?.items]);
+  const [selectedSourceId, setSelectedSourceId] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<HrReportTemplate | null>(null);
+  const [reportName, setReportName] = useState('Custom HR Report');
+  const [columns, setColumns] = useState<string[]>([]);
+  const [conditions, setConditions] = useState<HrReportFilterCondition[]>([]);
+  const [sortField, setSortField] = useState('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [groups, setGroups] = useState<string[]>([]);
+  const [summaryField, setSummaryField] = useState('');
+  const [visibility, setVisibility] = useState<'private' | 'organization'>('private');
+  const [lastRequest, setLastRequest] = useState<{ page: number; pageSize: number } | null>(null);
+
+  const selectedSource = useMemo(
+    () => sources.find((source) => source.id === selectedSourceId),
+    [selectedSourceId, sources]
   );
 
-  const departmentOptions = useMemo(
-    () => reportOptions?.departments?.map((option) => option.label) ?? [],
-    [reportOptions?.departments]
-  );
-
-  const employeeOptions = useMemo(() => employeeResult?.items ?? [], [employeeResult]);
-
-  const isPayrollReport = reportCategory === 'Payroll';
-  const isDocumentReport = DOCUMENT_REPORTS.has(reportType);
-  const isComponentReport = COMPONENT_REPORTS.has(reportType);
+  const columnFields = selectedSource?.fields ?? [];
+  const filterFields = columnFields.filter((field) => field.filterable);
+  const sortableFields = columnFields.filter((field) => field.sortable);
+  const groupFields = columnFields.filter((field) => field.groupable);
+  const summaryFields = columnFields.filter((field) => field.summarizable);
 
   useEffect(() => {
-    searchEmployees({ page: 1, pageSize: 20, search: '' });
-  }, [searchEmployees]);
+    if (!selectedSourceId && sources.length > 0) {
+      const first = sources[0];
+      setSelectedSourceId(first.id);
+      setReportName(first.label);
+      setColumns(first.defaultColumns);
+      setSortField(first.defaultSorts[0] ?? '');
+    }
+  }, [selectedSourceId, sources]);
 
-  useEffect(() => {
-    setReportType(availableReportTypes[0]);
+  const applySource = useCallback((source: HrReportSource) => {
+    setSelectedTemplate(null);
+    setSelectedSourceId(source.id);
+    setReportName(source.label);
+    setColumns(source.defaultColumns);
+    setConditions([]);
+    setGroups([]);
+    setSummaryField('');
+    setSortField(source.defaultSorts[0] ?? '');
+    setSortDirection('asc');
     setLastRequest(null);
-  }, [availableReportTypes]);
+  }, []);
 
-  const buildFilters = useCallback((): HrReportFilter => {
-    const filters: HrReportFilter = {};
+  const applyTemplate = useCallback((template: HrReportTemplate) => {
+    const { definition } = template;
+    setSelectedTemplate(template);
+    setSelectedSourceId(template.dataSource);
+    setReportName(template.name);
+    setColumns(definition.columns ?? []);
+    setConditions(definition.filters?.conditions ?? []);
+    setGroups(definition.groups ?? []);
+    setSummaryField(definition.summaries?.[0]?.field ?? '');
+    setSortField(definition.sorts?.[0]?.field ?? '');
+    setSortDirection((definition.sorts?.[0]?.direction as 'asc' | 'desc') ?? 'asc');
+    setVisibility(template.visibility === 'organization' ? 'organization' : 'private');
+    setLastRequest(null);
+  }, []);
 
-    if (selectedEmployees.length > 0) {
-      filters.employeeIds = selectedEmployees.map(getEmployeeId).filter(Boolean);
-    }
-
-    if (selectedDepartments.length > 0) {
-      filters.departments = selectedDepartments;
-    }
-
-    if (selectedStatuses.length > 0) {
-      filters.statuses = selectedStatuses.map((status) => Number(status.id));
-    }
-
-    if (selectedGender) {
-      filters.genderType = selectedGender.id;
-    }
-
-    if (isPayrollReport && selectedMonth) {
-      filters.month = selectedMonth.format('YYYY-MM');
-    }
-
-    if (isComponentReport && componentNames.length > 0) {
-      filters.componentNames = componentNames;
-    }
-
-    return filters;
-  }, [
-    componentNames,
-    isComponentReport,
-    isPayrollReport,
-    selectedDepartments,
-    selectedEmployees,
-    selectedGender,
-    selectedMonth,
-    selectedStatuses,
-  ]);
+  const buildRequest = useCallback(
+    (page = 1, pageSize = DEFAULT_PAGE_SIZE): HrReportRequest => ({
+      reportType: reportName || selectedSource?.label || 'HR Report',
+      dataSource: selectedSourceId,
+      format: 'excel',
+      page,
+      pageSize,
+      columns,
+      groups,
+      summaries: summaryField ? [{ field: summaryField, function: 'sum' }] : [],
+      sorts: sortField ? [{ field: sortField, direction: sortDirection }] : [],
+      filters: {
+        conditions: conditions.filter(
+          (condition) => condition.field && (condition.value || condition.values?.length)
+        ),
+      },
+    }),
+    [
+      columns,
+      conditions,
+      groups,
+      reportName,
+      selectedSource?.label,
+      selectedSourceId,
+      sortDirection,
+      sortField,
+      summaryField,
+    ]
+  );
 
   const handlePreview = useCallback(
     async (page = 1, pageSize = DEFAULT_PAGE_SIZE) => {
-      await previewReport({
-        reportType,
-        format: 'excel',
-        page,
-        pageSize,
-        filters: buildFilters(),
-      }).unwrap();
+      await previewReport(buildRequest(page, pageSize)).unwrap();
       setLastRequest({ page, pageSize });
     },
-    [buildFilters, previewReport, reportType]
+    [buildRequest, previewReport]
   );
 
   const handleExport = useCallback(
     async (format: HrReportFormat) => {
-      await createExport({
-        reportType,
-        format,
-        page: 1,
-        pageSize: DEFAULT_PAGE_SIZE,
-        filters: buildFilters(),
-      }).unwrap();
+      await createExport({ ...buildRequest(1, DEFAULT_PAGE_SIZE), format }).unwrap();
       await refetchExports();
+      toast.success(`${format.toUpperCase()} export queued`);
     },
-    [buildFilters, createExport, refetchExports, reportType]
+    [buildRequest, createExport, refetchExports]
+  );
+
+  const handleSaveTemplate = useCallback(
+    async (publish = false) => {
+      if (!selectedSource) return;
+      const body = {
+        name: reportName || selectedSource.label,
+        category: selectedSource.category,
+        dataSource: selectedSource.id,
+        visibility: publish ? 'organization' : visibility,
+        status: publish ? 'Published' : 'Draft',
+        definition: buildRequest(1, DEFAULT_PAGE_SIZE),
+      };
+
+      if (selectedTemplate) {
+        const updated = await updateTemplate({ id: selectedTemplate.id, body }).unwrap();
+        setSelectedTemplate(updated);
+        toast.success('Template updated');
+      } else {
+        const created = await createTemplate(body).unwrap();
+        setSelectedTemplate(created);
+        toast.success('Template saved');
+      }
+    },
+    [
+      buildRequest,
+      createTemplate,
+      reportName,
+      selectedSource,
+      selectedTemplate,
+      updateTemplate,
+      visibility,
+    ]
   );
 
   const handleDownload = useCallback(
@@ -264,15 +276,8 @@ const ReportsScreen = () => {
         render: (value: string) => formatDateTime(value),
       },
       {
-        id: 'completedAt',
-        label: 'Completed',
-        minWidth: '13vw',
-        align: 'left' as const,
-        render: (value: string) => formatDateTime(value),
-      },
-      {
         id: 'action',
-        label: 'Action',
+        label: '',
         minWidth: '7vw',
         align: 'left' as const,
         isFilter: false,
@@ -291,241 +296,395 @@ const ReportsScreen = () => {
     [handleDownload, isDownloading]
   );
 
+  const renderConditionValue = (condition: HrReportFilterCondition, index: number) => {
+    const field = filterFields.find((item) => item.id === condition.field);
+    return (
+      <TextField
+        size="small"
+        label="Value"
+        value={condition.value ?? ''}
+        type={field?.type === 'number' ? 'number' : field?.type === 'date' ? 'date' : 'text'}
+        InputLabelProps={field?.type === 'date' ? { shrink: true } : undefined}
+        onChange={(event) =>
+          setConditions((items) =>
+            items.map((item, itemIndex) =>
+              itemIndex === index ? { ...item, value: event.target.value } : item
+            )
+          )
+        }
+      />
+    );
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <CustomBreadcrumbs
         heading="Reports"
-        description="Generate paged HR report previews and export PDF or Excel files through background jobs."
         links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Reports' }]}
         sx={{ px: 2 }}
       />
 
-      <Stack spacing={2} sx={{ p: 2, flex: 1, minHeight: 0 }}>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '220px 1fr 1fr' },
-            gap: 2,
-            alignItems: 'start',
-          }}
-        >
-          <TextField
-            select
-            size="small"
-            label="Category"
-            value={reportCategory}
-            onChange={(event) => setReportCategory(event.target.value as 'Employee' | 'Payroll')}
-          >
-            <MenuItem value="Employee">Employee</MenuItem>
-            <MenuItem value="Payroll">Payroll</MenuItem>
-          </TextField>
-
-          <TextField
-            select
-            size="small"
-            label="Report"
-            value={reportType}
-            onChange={(event) => {
-              setReportType(event.target.value);
-              setLastRequest(null);
-            }}
-          >
-            {(
-              reportOptions?.reportTypes?.filter((option) =>
-                availableReportTypes.includes(option.label)
-              ) ?? availableReportTypes.map((name) => ({ id: name, label: name }))
-            ).map((option) => (
-              <MenuItem key={option.id} value={option.label}>
-                {option.label}
-              </MenuItem>
+      <Box
+        sx={{
+          p: 2,
+          flex: 1,
+          minHeight: 0,
+          display: 'grid',
+          gap: 2,
+          gridTemplateColumns: { xs: '1fr', lg: '280px minmax(0, 1fr)' },
+        }}
+      >
+        <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle2">Sources</Typography>
+            {isLoadingSources ? <CircularProgress size={20} /> : null}
+            {sources.map((source) => (
+              <Button
+                key={source.id}
+                size="small"
+                variant={source.id === selectedSourceId ? 'contained' : 'text'}
+                onClick={() => applySource(source)}
+                sx={{ justifyContent: 'flex-start' }}
+              >
+                {source.label}
+              </Button>
             ))}
-          </TextField>
 
-          <Autocomplete
-            multiple
-            size="small"
-            options={employeeOptions}
-            loading={isSearchingEmployees}
-            value={selectedEmployees}
-            filterOptions={(options) => options}
-            getOptionLabel={(option) => {
-              const label = getEmployeeLabel(option);
-              return option?.employeeCode ? `${label} (${option.employeeCode})` : label;
-            }}
-            isOptionEqualToValue={(option, value) => getEmployeeId(option) === getEmployeeId(value)}
-            onInputChange={(_event, value) =>
-              searchEmployees({ page: 1, pageSize: 20, search: value })
-            }
-            onChange={(_event, value) => setSelectedEmployees(value)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label={isDocumentReport ? 'Employees' : 'Employees'}
-                InputProps={{
-                  ...params.InputProps,
-                  endAdornment: (
-                    <>
-                      {isSearchingEmployees ? <CircularProgress size={16} /> : null}
-                      {params.InputProps.endAdornment}
-                    </>
-                  ),
-                }}
-              />
-            )}
-          />
-        </Box>
-
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr 1fr' },
-            gap: 2,
-          }}
-        >
-          <Autocomplete
-            multiple
-            freeSolo
-            size="small"
-            options={departmentOptions}
-            value={selectedDepartments}
-            onChange={(_event, value) => setSelectedDepartments(value)}
-            renderInput={(params) => <TextField {...params} label="Departments" />}
-          />
-
-          <Autocomplete
-            multiple
-            size="small"
-            options={reportOptions?.statuses ?? []}
-            value={selectedStatuses}
-            getOptionLabel={(option) => option.label}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-            onChange={(_event, value) => setSelectedStatuses(value)}
-            renderInput={(params) => <TextField {...params} label="Statuses" />}
-          />
-
-          <Autocomplete
-            size="small"
-            options={GENDER_OPTIONS}
-            value={selectedGender}
-            getOptionLabel={(option) => option.label}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-            onChange={(_event, value) => setSelectedGender(value)}
-            renderInput={(params) => <TextField {...params} label="Gender" />}
-          />
-
-          {isPayrollReport ? (
-            <DatePicker
-              label="Payroll Month"
-              value={selectedMonth}
-              views={['year', 'month']}
-              slotProps={{ textField: { size: 'small' } }}
-              onChange={(value) => setSelectedMonth(value)}
-            />
-          ) : (
-            <TextField
-              size="small"
-              label="Page Size"
-              value={lastRequest?.pageSize ?? DEFAULT_PAGE_SIZE}
-              disabled
-            />
-          )}
-        </Box>
-
-        {isComponentReport && (
-          <Autocomplete
-            multiple
-            freeSolo
-            size="small"
-            options={[]}
-            value={componentNames}
-            onChange={(_event, value) => setComponentNames(value)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Component Names"
-                placeholder="Type allowance or deduction name"
-              />
-            )}
-          />
-        )}
-
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.report} />}
-            disabled={isPreviewLoading}
-            onClick={() => handlePreview(1, lastRequest?.pageSize ?? DEFAULT_PAGE_SIZE)}
-          >
-            Preview
-          </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.excel} />}
-            disabled={isCreatingExport}
-            onClick={() => handleExport('excel')}
-          >
-            Excel
-          </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.pdf} />}
-            disabled={isCreatingExport}
-            onClick={() => handleExport('pdf')}
-          >
-            PDF
-          </Button>
-          {(isPreviewLoading || isCreatingExport || isFetchingExports) && (
-            <CircularProgress size={24} />
-          )}
-        </Stack>
-
-        <Divider />
-
-        <Box sx={{ flex: 1, minHeight: 320, display: 'flex', flexDirection: 'column' }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-            <Typography variant="subtitle1">Preview</Typography>
-            {preview && (
-              <Typography variant="body2" color="text.secondary">
-                {preview.totalCount} rows
-              </Typography>
-            )}
+            <Divider />
+            <Typography variant="subtitle2">Templates</Typography>
+            {templates.map((template) => (
+              <Stack
+                key={template.id}
+                direction="row"
+                alignItems="center"
+                spacing={0.5}
+                sx={{ minWidth: 0 }}
+              >
+                <Button
+                  size="small"
+                  variant={selectedTemplate?.id === template.id ? 'outlined' : 'text'}
+                  onClick={() => applyTemplate(template)}
+                  sx={{ justifyContent: 'flex-start', minWidth: 0, flex: 1 }}
+                >
+                  <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {template.name}
+                  </Box>
+                </Button>
+                <IconButton
+                  size="small"
+                  onClick={async () => {
+                    await duplicateTemplate(template.id).unwrap();
+                    toast.success('Template duplicated');
+                  }}
+                >
+                  <Iconify icon="solar:copy-bold" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={async () => {
+                    await deleteTemplate(template.id).unwrap();
+                    if (selectedTemplate?.id === template.id) setSelectedTemplate(null);
+                    toast.success('Template deleted');
+                  }}
+                >
+                  <Iconify icon="solar:trash-bin-trash-bold" />
+                </IconButton>
+              </Stack>
+            ))}
           </Stack>
-          <CustomizableTable
-            tableId="hr-report-preview"
-            tableTitle={`${reportType} Preview`}
-            columns={previewColumns}
-            data={previewRows}
-            isLoading={isPreviewLoading}
-            totalCount={preview?.totalCount ?? 0}
-            serverSidePagination
-            serverSideFilter
-            serverSideSort
-            isSearch={false}
-            isFilter={false}
-            maxServerRowsPerPage={200}
-            noDataText="Generate a preview to view report rows."
-            onServerPagination={(page, pageSize) => handlePreview(page, pageSize)}
-          />
         </Box>
 
-        <Box sx={{ minHeight: 260, display: 'flex', flexDirection: 'column' }}>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Export History
-          </Typography>
-          <CustomizableTable
-            tableId="hr-report-export-history"
-            tableTitle="HR Report Export History"
-            columns={historyColumns}
-            data={exportJobs}
-            isLoading={isFetchingExports}
-            isSearch={false}
-            noDataText="No export jobs found."
-          />
-        </Box>
-      </Stack>
+        <Stack spacing={2} sx={{ minWidth: 0, minHeight: 0 }}>
+          <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2 }}>
+            <Stack spacing={2}>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 2,
+                  gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr' },
+                }}
+              >
+                <TextField
+                  size="small"
+                  label="Report Name"
+                  value={reportName}
+                  onChange={(event) => setReportName(event.target.value)}
+                />
+                <TextField
+                  select
+                  size="small"
+                  label="Visibility"
+                  value={visibility}
+                  onChange={(event) => setVisibility(event.target.value as any)}
+                >
+                  <MenuItem value="private">Private</MenuItem>
+                  <MenuItem value="organization">Organization</MenuItem>
+                </TextField>
+                <ToggleButtonGroup
+                  exclusive
+                  size="small"
+                  value={sortDirection}
+                  onChange={(_event, value) => value && setSortDirection(value)}
+                >
+                  <ToggleButton value="asc">Asc</ToggleButton>
+                  <ToggleButton value="desc">Desc</ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+
+              <Autocomplete
+                multiple
+                size="small"
+                options={columnFields}
+                value={columnFields.filter((field) => columns.includes(field.id))}
+                getOptionLabel={(field) => field.label}
+                onChange={(_event, value) => setColumns(value.map((field) => field.id))}
+                renderInput={(params) => <TextField {...params} label="Columns" />}
+              />
+
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 2,
+                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
+                }}
+              >
+                <TextField
+                  select
+                  size="small"
+                  label="Sort By"
+                  value={sortField}
+                  onChange={(event) => setSortField(event.target.value)}
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {sortableFields.map((field) => (
+                    <MenuItem key={field.id} value={field.id}>
+                      {field.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <Autocomplete
+                  multiple
+                  size="small"
+                  options={groupFields}
+                  value={groupFields.filter((field) => groups.includes(field.id))}
+                  getOptionLabel={(field) => field.label}
+                  onChange={(_event, value) => setGroups(value.map((field) => field.id))}
+                  renderInput={(params) => <TextField {...params} label="Group By" />}
+                />
+
+                <TextField
+                  select
+                  size="small"
+                  label="Summary"
+                  value={summaryField}
+                  onChange={(event) => setSummaryField(event.target.value)}
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {summaryFields.map((field) => (
+                    <MenuItem key={field.id} value={field.id}>
+                      Sum {field.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+
+              <Stack spacing={1}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                  <Typography variant="subtitle2">Filters</Typography>
+                  <Button
+                    size="small"
+                    variant="text"
+                    disabled={filterFields.length === 0}
+                    onClick={() =>
+                      setConditions((items) => [
+                        ...items,
+                        {
+                          field: filterFields[0]?.id ?? '',
+                          operator: defaultOperator(filterFields[0]),
+                          value: '',
+                        },
+                      ])
+                    }
+                  >
+                    Add Filter
+                  </Button>
+                </Stack>
+                {conditions.map((condition, index) => {
+                  const field = filterFields.find((item) => item.id === condition.field);
+                  const operators = field?.operators ?? ['equals', 'contains'];
+                  return (
+                    <Box
+                      key={`${condition.field}-${index}`}
+                      sx={{
+                        display: 'grid',
+                        gap: 1,
+                        gridTemplateColumns: { xs: '1fr', md: '1fr 160px 1fr 48px' },
+                      }}
+                    >
+                      <TextField
+                        select
+                        size="small"
+                        label="Field"
+                        value={condition.field}
+                        onChange={(event) =>
+                          setConditions((items) =>
+                            items.map((item, itemIndex) =>
+                              itemIndex === index
+                                ? {
+                                    ...item,
+                                    field: event.target.value,
+                                    operator: defaultOperator(
+                                      filterFields.find(
+                                        (candidate) => candidate.id === event.target.value
+                                      )
+                                    ),
+                                  }
+                                : item
+                            )
+                          )
+                        }
+                      >
+                        {filterFields.map((item: HrReportField) => (
+                          <MenuItem key={item.id} value={item.id}>
+                            {item.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                      <TextField
+                        select
+                        size="small"
+                        label="Operator"
+                        value={condition.operator}
+                        onChange={(event) =>
+                          setConditions((items) =>
+                            items.map((item, itemIndex) =>
+                              itemIndex === index ? { ...item, operator: event.target.value } : item
+                            )
+                          )
+                        }
+                      >
+                        {operators.map((operator) => (
+                          <MenuItem key={operator} value={operator}>
+                            {operator}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                      {renderConditionValue(condition, index)}
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          setConditions((items) =>
+                            items.filter((_item, itemIndex) => itemIndex !== index)
+                          )
+                        }
+                      >
+                        <Iconify icon="solar:trash-bin-trash-bold" />
+                      </IconButton>
+                    </Box>
+                  );
+                })}
+              </Stack>
+
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<Iconify icon={GlobalIcons.report} />}
+                  disabled={!selectedSourceId || isPreviewLoading}
+                  onClick={() => handlePreview(1, lastRequest?.pageSize ?? DEFAULT_PAGE_SIZE)}
+                >
+                  Preview
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  disabled={!selectedSourceId || isSavingTemplate}
+                  onClick={() => handleSaveTemplate(false)}
+                >
+                  Save Template
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  disabled={!selectedSourceId || isSavingTemplate}
+                  onClick={() => handleSaveTemplate(true)}
+                >
+                  Publish
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Iconify icon={GlobalIcons.excel} />}
+                  disabled={!selectedSourceId || isCreatingExport}
+                  onClick={() => handleExport('excel')}
+                >
+                  Excel
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Iconify icon={GlobalIcons.pdf} />}
+                  disabled={!selectedSourceId || isCreatingExport}
+                  onClick={() => handleExport('pdf')}
+                >
+                  PDF
+                </Button>
+                {(isPreviewLoading || isCreatingExport || isFetchingExports) && (
+                  <CircularProgress size={24} />
+                )}
+              </Stack>
+            </Stack>
+          </Box>
+
+          <Box sx={{ flex: 1, minHeight: 320, display: 'flex', flexDirection: 'column' }}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mb: 1 }}
+            >
+              <Typography variant="subtitle1">Preview</Typography>
+              {preview && (
+                <Typography variant="body2" color="text.secondary">
+                  {preview.totalCount} rows - {selectedSource?.label ?? preview.dataSource}
+                </Typography>
+              )}
+            </Stack>
+            <CustomizableTable
+              tableId="hr-report-preview"
+              tableTitle={`${reportName} Preview`}
+              columns={previewColumns}
+              data={previewRows}
+              isLoading={isPreviewLoading}
+              totalCount={preview?.totalCount ?? 0}
+              serverSidePagination
+              serverSideFilter
+              serverSideSort
+              isSearch={false}
+              isFilter={false}
+              maxServerRowsPerPage={200}
+              noDataText="Build a report and generate a preview."
+              onServerPagination={(page, pageSize) => handlePreview(page, pageSize)}
+            />
+          </Box>
+
+          <Box sx={{ minHeight: 240, display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Export History
+            </Typography>
+            <CustomizableTable
+              tableId="hr-report-export-history"
+              tableTitle="HR Report Export History"
+              columns={historyColumns}
+              data={exportJobs}
+              isLoading={isFetchingExports}
+              isSearch={false}
+              noDataText="No export jobs found."
+            />
+          </Box>
+        </Stack>
+      </Box>
     </Box>
   );
 };

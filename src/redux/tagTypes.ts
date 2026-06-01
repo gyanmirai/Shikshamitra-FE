@@ -183,6 +183,7 @@ export const employeeType = {
   attendanceImport: 'Attendance-Import',
   employeeICardTemplate: 'Employee-Icard-Template',
   professionalReview: 'Professional-Review',
+  hrReports: 'HR-Reports',
 } as const;
 
 // ===== Enrollment Report API (reducerPath: EnrollmentReportApi) =====

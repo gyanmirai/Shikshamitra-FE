@@ -12,6 +12,8 @@ import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { shikshaMitraToast } from 'src/components/toast';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -58,6 +60,9 @@ import {
 } from 'src/redux/runPayroll/runPayrollApi';
 
 import { SalaryDetailsTableCard } from '../salarySlip-generate/salarySlipGenerate';
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 type PayrollRow = {
   id: string;
@@ -168,6 +173,7 @@ const resolveIssueSeverity = (codes: string[]): PayrollRow['issueSeverity'] => {
 const RunPayroll = () => {
   const router = useRouter();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const canLockPayroll = hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollLock);
   const canAdjustPayroll = hasGrantedPermission(
     permissions,
@@ -198,7 +204,13 @@ const RunPayroll = () => {
   const [editingAdjustmentId, setEditingAdjustmentId] = useState<string | null>(null);
 
   const selectedMonthKey = month?.format('YYYY-MM') ?? '';
-  const isDataForSelectedMonth = Boolean(selectedMonthKey) && loadedMonthKey === selectedMonthKey;
+  const academicYearId = currentYear?.id || '';
+  const academicYearStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
+  const academicYearEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
+  const selectedPayrollKey =
+    selectedMonthKey && academicYearId ? `${academicYearId}:${selectedMonthKey}` : '';
+  const isDataForSelectedMonth =
+    Boolean(selectedPayrollKey) && loadedMonthKey === selectedPayrollKey;
   const latestPreviewRequestRef = useRef(0);
   const lastAutoLoadedMonthRef = useRef<string | null>(null);
   const {
@@ -206,7 +218,10 @@ const RunPayroll = () => {
     isLoading: readinessLoading,
     isFetching: readinessFetching,
     refetch: refetchReadiness,
-  } = useGetRunPayrollReadinessQuery({ month: selectedMonthKey }, { skip: !selectedMonthKey });
+  } = useGetRunPayrollReadinessQuery(
+    { month: selectedMonthKey, academicYearId },
+    { skip: !selectedMonthKey || !academicYearId }
+  );
 
   const [fetchRunPayrollPreview, { isLoading: previewLoading, isFetching: previewFetching }] =
     useQueryAndMutation({
@@ -214,7 +229,6 @@ const RunPayroll = () => {
       currentQueryAndMutation: useLazyGetRunPayrollPreviewQuery,
     });
   const previewBusy = previewLoading || previewFetching || previewMode !== null;
-  const isPreviewRefreshing = previewMode === 'refresh';
 
   const [markReviewed, { isLoading: markLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -255,6 +269,27 @@ const RunPayroll = () => {
     },
     { skip: !auditOpen || !selectedMonthKey || !canViewPayrollAudit }
   );
+
+  const isMonthInAcademicYear = useCallback(
+    (value: Dayjs | null) => {
+      if (!value || !academicYearStart?.isValid() || !academicYearEnd?.isValid()) return true;
+      const monthStart = value.startOf('month');
+      const monthEnd = value.endOf('month');
+      return (
+        monthStart.isSameOrBefore(academicYearEnd.endOf('day')) &&
+        monthEnd.isSameOrAfter(academicYearStart.startOf('day'))
+      );
+    },
+    [academicYearEnd, academicYearStart]
+  );
+
+  useEffect(() => {
+    if (!academicYearId || !academicYearStart?.isValid() || !academicYearEnd?.isValid()) return;
+    if (isMonthInAcademicYear(month)) return;
+
+    const today = dayjs();
+    setMonth(isMonthInAcademicYear(today) ? today : academicYearStart.startOf('month'));
+  }, [academicYearEnd, academicYearId, academicYearStart, isMonthInAcademicYear, month]);
 
   const sourceRows = useMemo(
     () => (isDataForSelectedMonth ? previewItems : []),
@@ -386,10 +421,11 @@ const RunPayroll = () => {
 
   const loadPreview = useCallback(
     async (forceRefresh = false) => {
-      if (!selectedMonthKey) return;
+      if (!selectedMonthKey || !academicYearId) return;
       const requestId = latestPreviewRequestRef.current + 1;
       latestPreviewRequestRef.current = requestId;
       const requestedMonthKey = selectedMonthKey;
+      const requestedPayrollKey = selectedPayrollKey;
       setPreviewMode(forceRefresh ? 'refresh' : 'load');
       try {
         let readiness: PayrollReadiness | null = null;
@@ -406,6 +442,7 @@ const RunPayroll = () => {
           const response = await fetchRunPayrollPreview(
             {
               month: requestedMonthKey,
+              academicYearId,
               page,
               pageSize: PAYROLL_REGISTER_PAGE_SIZE,
               forceRefresh: forceRefresh && page === 0,
@@ -424,7 +461,7 @@ const RunPayroll = () => {
         const allItems = await loadPage(0, 1, []);
         if (
           latestPreviewRequestRef.current !== requestId ||
-          requestedMonthKey !== (month?.format('YYYY-MM') ?? '')
+          requestedPayrollKey !== selectedPayrollKey
         ) {
           return;
         }
@@ -433,7 +470,7 @@ const RunPayroll = () => {
         setPreviewReadiness(readiness);
         setPreviewError(null);
         setPreviewIsGenerated(isGenerated);
-        setLoadedMonthKey(requestedMonthKey);
+        setLoadedMonthKey(requestedPayrollKey);
         // Auto-collapse insights once data is loaded to focus on the table after 3 seconds
         if (allItems.length > 0) {
           setTimeout(() => {
@@ -444,7 +481,7 @@ const RunPayroll = () => {
       } catch (error: any) {
         if (
           latestPreviewRequestRef.current !== requestId ||
-          requestedMonthKey !== (month?.format('YYYY-MM') ?? '')
+          requestedPayrollKey !== selectedPayrollKey
         ) {
           return;
         }
@@ -459,12 +496,12 @@ const RunPayroll = () => {
         }
       }
     },
-    [fetchRunPayrollPreview, month, refetchReadiness, selectedMonthKey]
+    [academicYearId, fetchRunPayrollPreview, refetchReadiness, selectedMonthKey, selectedPayrollKey]
   );
 
   useEffect(() => {
     latestPreviewRequestRef.current += 1;
-    if (!selectedMonthKey) {
+    if (!selectedPayrollKey) {
       lastAutoLoadedMonthRef.current = null;
     }
     setLoadedMonthKey(null);
@@ -477,14 +514,14 @@ const RunPayroll = () => {
     setActiveRow(null);
     setAdjustmentDraft({ name: '', amount: '', isEarning: 'true', reason: '' });
     setEditingAdjustmentId(null);
-  }, [selectedMonthKey]);
+  }, [selectedPayrollKey]);
 
   useEffect(() => {
-    if (!selectedMonthKey) return;
-    if (lastAutoLoadedMonthRef.current === selectedMonthKey) return;
-    lastAutoLoadedMonthRef.current = selectedMonthKey;
+    if (!selectedPayrollKey) return;
+    if (lastAutoLoadedMonthRef.current === selectedPayrollKey) return;
+    lastAutoLoadedMonthRef.current = selectedPayrollKey;
     loadPreview(false);
-  }, [loadPreview, selectedMonthKey]);
+  }, [loadPreview, selectedPayrollKey]);
 
   useEffect(() => {
     if (!readinessData || isDataForSelectedMonth) return;
@@ -493,20 +530,24 @@ const RunPayroll = () => {
 
   const runReviewMutation = useCallback(
     async (mutation: any, employeeIds: string[], fallbackMessage: string) => {
-      if (!selectedMonthKey || employeeIds.length === 0) return;
+      if (!selectedMonthKey || !academicYearId || employeeIds.length === 0) return;
       try {
-        const res = await mutation({ month: selectedMonthKey, employeeIds }).unwrap();
+        const res = await mutation({
+          month: selectedMonthKey,
+          academicYearId,
+          employeeIds,
+        }).unwrap();
         shikshaMitraToast.success({ message: res?.message || fallbackMessage });
         await loadPreview();
       } catch (error: any) {
         shikshaMitraToast.error({ message: error?.data?.message || fallbackMessage });
       }
     },
-    [loadPreview, selectedMonthKey]
+    [academicYearId, loadPreview, selectedMonthKey]
   );
 
   const addPayrollAdjustment = useCallback(async () => {
-    if (!activeRow || !selectedMonthKey) return;
+    if (!activeRow || !selectedMonthKey || !academicYearId) return;
     if (!canAdjustPayroll || activeRow.status !== 'REVIEWED') {
       shikshaMitraToast.error({
         message: 'Payroll adjustments are available only for reviewed, unlocked rows.',
@@ -527,6 +568,7 @@ const RunPayroll = () => {
     try {
       const payload = {
         month: selectedMonthKey,
+        academicYearId,
         employeeId: activeRow.id,
         name: adjustmentDraft.name.trim(),
         amount,
@@ -554,6 +596,7 @@ const RunPayroll = () => {
   }, [
     activeRow,
     adjustmentDraft,
+    academicYearId,
     canAdjustPayroll,
     createAdjustment,
     editingAdjustmentId,
@@ -910,37 +953,34 @@ const RunPayroll = () => {
           format="MMMM YYYY"
           value={month}
           onChange={(newValue) => setMonth(newValue)}
+          minDate={academicYearStart ?? undefined}
+          maxDate={academicYearEnd ?? undefined}
+          shouldDisableMonth={(value) => !isMonthInAcademicYear(value)}
+          disabled={!academicYearId}
           slotProps={{
             textField: {
               size: 'small',
+              helperText: currentYear?.name ? `Academic year: ${currentYear.name}` : undefined,
             },
           }}
           sx={{ width: { xs: '100%', sm: 220, md: 260 }, minWidth: { sm: 220 } }}
+        />
+        <Chip
+          size="small"
+          variant="outlined"
+          icon={<Iconify icon="solar:calendar-date-linear" />}
+          label={currentYear?.name || 'Select academic year'}
         />
         <LoadingButton
           variant="contained"
           loading={previewBusy}
           size="small"
-          disabled={!month}
+          disabled={!month || !academicYearId}
           startIcon={<Iconify icon={previewButtonIcon} />}
           onClick={() => loadPreview(true)}
         >
           {previewButtonLabel}
         </LoadingButton>
-        <Tooltip title="Refreshes readiness counts only. Use Refresh preview to recompute payroll rows.">
-          <span>
-            <LoadingButton
-              variant="outlined"
-              loading={readinessBusy}
-              size="small"
-              disabled={!month || previewBusy}
-              startIcon={<Iconify icon="solar:refresh-linear" />}
-              onClick={() => refetchReadiness()}
-            >
-              Refresh status
-            </LoadingButton>
-          </span>
-        </Tooltip>
       </Stack>
 
       <Card variant="outlined" sx={{ mb: 1, p: 0 }}>
@@ -1036,16 +1076,18 @@ const RunPayroll = () => {
                   gaps, and use Refresh preview only when rows need to be recomputed.
                 </Typography>
               </Box>
-              <LoadingButton
-                size="small"
-                variant="outlined"
-                loading={previewBusy}
-                disabled={previewBusy}
-                startIcon={<Iconify icon="solar:refresh-linear" />}
-                onClick={() => (previewError ? loadPreview(false) : refetchReadiness())}
-              >
-                {previewError ? 'Retry preview load' : 'Refresh Status'}
-              </LoadingButton>
+              {previewError ? (
+                <LoadingButton
+                  size="small"
+                  variant="outlined"
+                  loading={previewBusy}
+                  disabled={previewBusy}
+                  startIcon={<Iconify icon="solar:refresh-linear" />}
+                  onClick={() => loadPreview(false)}
+                >
+                  Retry preview load
+                </LoadingButton>
+              ) : null}
             </Stack>
 
             {previewError ? (
@@ -1706,10 +1748,11 @@ const RunPayroll = () => {
             loading={lockLoading}
             disabled={!canLockPayroll}
             onClick={async () => {
-              if (!selectedMonthKey || !lockableIds.length) return;
+              if (!selectedMonthKey || !academicYearId || !lockableIds.length) return;
               try {
                 const res = await generateAndLockPayroll({
                   month: selectedMonthKey,
+                  academicYearId,
                   employeeIds: lockableIds,
                 }).unwrap();
                 shikshaMitraToast.success({

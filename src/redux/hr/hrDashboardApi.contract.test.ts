@@ -1,7 +1,11 @@
 import dayjs from 'dayjs';
 import { it, expect, describe } from 'vitest';
 
-import { buildHRDashboardDefaultParams, buildHRDashboardSummaryParams } from './hrDashboardApi';
+import {
+  parseHRDashboardPayload,
+  buildHRDashboardDefaultParams,
+  buildHRDashboardSummaryParams,
+} from './hrDashboardApi';
 
 describe('hrDashboardApi contracts', () => {
   it('builds summary query params without empty values', () => {
@@ -28,5 +32,33 @@ describe('hrDashboardApi contracts', () => {
       month: '2026-05',
       range: 7,
     });
+  });
+
+  it('treats an empty snapshot payload as unavailable', () => {
+    expect(
+      parseHRDashboardPayload({
+        dashboardKey: 'Main',
+        scopeKey: 'hr-wide',
+        status: 'Empty',
+        payloadJson: '{}',
+        payloadVersion: 1,
+        isStale: true,
+      })
+    ).toBeUndefined();
+  });
+
+  it('parses a ready snapshot payload without requiring live summary params', () => {
+    expect(
+      parseHRDashboardPayload<{ workforce: { totalActiveStaff: number } }>({
+        dashboardKey: 'Main',
+        scopeKey: 'hr-wide',
+        status: 'Ready',
+        payloadJson: '{"workforce":{"totalActiveStaff":42}}',
+        payloadVersion: 1,
+        isStale: false,
+        lastSuccessfulRefreshAt: '2026-05-23T06:00:00Z',
+        nextScheduledRefreshAt: '2026-05-24T06:00:00Z',
+      })
+    ).toEqual({ workforce: { totalActiveStaff: 42 } });
   });
 });

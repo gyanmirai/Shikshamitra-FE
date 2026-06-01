@@ -3,6 +3,7 @@ import { AttendanceImportBatchStatus } from 'src/enums/attendance-import-batch-s
 import {
   AttendanceImportRunSource,
   AttendanceImportRowStatusCode,
+  buildSaveAttendanceImportRowsQuery,
 } from 'src/redux/hr/attendanceImportApi';
 
 describe('attendance import enums', () => {
@@ -23,5 +24,34 @@ describe('attendance import enums', () => {
     expect(AttendanceImportRowStatusCode.Present).toBe(0);
     expect(AttendanceImportRowStatusCode.Absent).toBe(1);
     expect(AttendanceImportRowStatusCode.HalfDay).toBe(2);
+  });
+
+  it('posts import row edits to the batch-scoped save endpoint', () => {
+    const request = buildSaveAttendanceImportRowsQuery({
+      importId: 'import-1',
+      entries: [
+        {
+          rowId: 'row-1',
+          employeeId: 'employee-1',
+          attendanceDate: '11-04-2026',
+          statusWire: 'Absent',
+        },
+      ],
+    });
+
+    expect(request).toEqual({
+      url: '/hr/attendance/automated-runs/import-1/rows/save',
+      method: 'POST',
+      body: {
+        entries: [
+          {
+            rowId: 'row-1',
+            employeeId: 'employee-1',
+            attendanceDate: '11-04-2026',
+            statusWire: 'Absent',
+          },
+        ],
+      },
+    });
   });
 });

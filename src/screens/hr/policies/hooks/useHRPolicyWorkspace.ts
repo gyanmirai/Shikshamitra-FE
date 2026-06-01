@@ -117,6 +117,7 @@ import {
   normalizePayrollDayCalculationType,
 } from '../hr-policy-workspace-utils';
 
+import type { AttendanceNumericField } from '../hr-policy-ui-utils';
 import type {
   DrawerKind,
   DrawerState,
@@ -137,7 +138,6 @@ import type {
   HolidayReviewFilter,
   PolicyOperationState,
   HrPolicyImpactPreview,
-  AttendanceNumericField,
   PolicyAssignmentTargetType,
   HrPolicyAssignmentConflict,
 } from '../types/hr-policy-workspace.types';
