@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { Organization } from 'src/types/school';
 import type { EmployeeICardTemplate } from 'src/redux/hr/employee-icard-template-api';
 
+import Draggable from 'react-draggable';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
@@ -12,12 +13,12 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import {
@@ -52,7 +53,20 @@ import {
   useUpdateEmployeeICardTemplateMutation,
 } from 'src/redux/hr/employee-icard-template-api';
 
-import { isPdfBlob, clampCardsPerPage } from './i-card-builder-utils';
+import {
+  isPdfBlob,
+  snapToGrid,
+  parseLayoutJson,
+  type ICardLayout,
+  clampCardsPerPage,
+  clampElementDimension,
+  migrateFieldsToLayout,
+  DEFAULT_PRINT_SETTINGS,
+  parsePrintSettingsJson,
+  type ICardLayoutElement,
+  type ICardPrintSettings,
+  createICardLayoutPreset,
+} from './i-card-builder-utils';
 
 type ICardFieldKey =
   | 'name'
@@ -88,7 +102,12 @@ type BuilderState = {
   presetKey: string;
   qrCodeEnabled: boolean;
   barcodeEnabled: boolean;
+  backSideEnabled: boolean;
+  isActive: boolean;
   fields: ICardField[];
+  layout: ICardLayout;
+  selectedElementId: string | null;
+  printSettings: ICardPrintSettings;
   selectedEmployeeIds: string[];
   employeeSearch: string;
   designationFilter: string;
@@ -114,12 +133,45 @@ const iCardActionPermissions = {
   delete: 'HR.Employee.ICard.Delete',
 };
 
-const steps = ['Setup', 'Branding', 'Layout', 'Review', 'Employees', 'Export'];
+const steps = ['Template', 'Designer', 'Review', 'Employees', 'Export'];
 
 const presets = [
-  { key: 'executive-clean', label: 'Executive Clean', color: '#1D4ED8' },
-  { key: 'academic-formal', label: 'Academic Formal', color: '#047857' },
-  { key: 'minimal-light', label: 'Minimal Light', color: '#334155' },
+  {
+    key: 'formal-staff',
+    label: 'Formal Staff',
+    color: '#1D4ED8',
+    description: 'Clean school header with balanced staff details.',
+  },
+  {
+    key: 'modern-staff',
+    label: 'Modern Staff',
+    color: '#0F766E',
+    description: 'Sharper badge look with circular photo styling.',
+  },
+  {
+    key: 'vertical-badge',
+    label: 'Vertical Badge',
+    color: '#7C3AED',
+    description: 'Portrait format for lanyards and holders.',
+  },
+  {
+    key: 'visitor-style',
+    label: 'Visitor Style',
+    color: '#B45309',
+    description: 'High-contrast identity card for temporary staff.',
+  },
+  {
+    key: 'minimal',
+    label: 'Minimal',
+    color: '#334155',
+    description: 'Low-ink print layout with quiet styling.',
+  },
+  {
+    key: 'photo-first',
+    label: 'Photo First',
+    color: '#BE123C',
+    description: 'Large visual identity area with compact details.',
+  },
 ];
 
 const CARD_DIMENSIONS = {
@@ -152,10 +204,23 @@ const initialBuilder = (academicYearName?: string, organization = 'all'): Builde
   logoPreview: '',
   themeColor: '#1D4ED8',
   backgroundColor: '#F8FAFC',
-  presetKey: 'executive-clean',
+  presetKey: 'formal-staff',
   qrCodeEnabled: true,
   barcodeEnabled: false,
+  backSideEnabled: false,
+  isActive: true,
   fields: defaultFields,
+  layout: createICardLayoutPreset('formal-staff', {
+    orientation: 'Horizontal',
+    width: CARD_DIMENSIONS.Horizontal.width,
+    height: CARD_DIMENSIONS.Horizontal.height,
+    themeColor: '#1D4ED8',
+    backgroundColor: '#F8FAFC',
+    qrCodeEnabled: true,
+    barcodeEnabled: false,
+  }),
+  selectedElementId: null,
+  printSettings: DEFAULT_PRINT_SETTINGS,
   selectedEmployeeIds: [],
   employeeSearch: '',
   designationFilter: 'all',
@@ -255,6 +320,18 @@ const buildTemplateState = (
 
   const orientation = template.orientation === 'Vertical' ? 'Vertical' : 'Horizontal';
   const defaultSize = CARD_DIMENSIONS[orientation];
+  const fields = parseFields(template);
+  const layout =
+    parseLayoutJson(template.layoutJson) ||
+    migrateFieldsToLayout(fields, {
+      orientation,
+      width: template.width || defaultSize.width,
+      height: template.height || defaultSize.height,
+      themeColor: template.themeColor || '#1D4ED8',
+      backgroundColor: template.backgroundColor || '#F8FAFC',
+      qrCodeEnabled: Boolean(template.qrCodeEnabled),
+      barcodeEnabled: Boolean(template.barcodeEnabled),
+    });
 
   return {
     ...initialBuilder(academicYearName, template.mediumStageId || 'all'),
@@ -271,7 +348,12 @@ const buildTemplateState = (
     presetKey: template.presetKey || 'executive-clean',
     qrCodeEnabled: Boolean(template.qrCodeEnabled),
     barcodeEnabled: Boolean(template.barcodeEnabled),
-    fields: parseFields(template),
+    backSideEnabled: Boolean(template.backSideEnabled),
+    isActive: template.isActive,
+    fields,
+    layout,
+    selectedElementId: null,
+    printSettings: parsePrintSettingsJson(template.printSettingsJson),
   };
 };
 
@@ -596,8 +678,10 @@ const EmployeeICardBuilder = ({
       missingPhoto: selected.filter((employee) => !employee.thumbnailPicture).length,
       missingPhone: selected.filter((employee) => !employee.mobileNo).length,
       missingDesignation: selected.filter((employee) => !employee.designation).length,
+      missingEmployeeCode: selected.filter((employee) => !employee.employeeIdentifier).length,
+      missingLogo: state.logoBlobName ? 0 : 1,
     };
-  }, [selectedEmployeesById, state.selectedEmployeeIds.length]);
+  }, [selectedEmployeesById, state.logoBlobName, state.selectedEmployeeIds.length]);
 
   const designationOptions = useMemo(
     () =>
@@ -613,6 +697,66 @@ const EmployeeICardBuilder = ({
   const sampleEmployee = employees[0];
 
   const patchState = (patch: Partial<BuilderState>) => setState((prev) => ({ ...prev, ...patch }));
+
+  const patchLayout = (patch: Partial<ICardLayout>) =>
+    setState((prev) => ({
+      ...prev,
+      layout: { ...prev.layout, ...patch },
+    }));
+
+  const patchLayoutElement = (id: string, patch: Partial<ICardLayoutElement>) =>
+    setState((prev) => ({
+      ...prev,
+      layout: {
+        ...prev.layout,
+        front: {
+          elements: prev.layout.front.elements.map((element) =>
+            element.id === id ? { ...element, ...patch } : element
+          ),
+        },
+      },
+    }));
+
+  const patchSelectedElementStyle = (patch: NonNullable<ICardLayoutElement['style']>) => {
+    if (!state.selectedElementId) return;
+    setState((prev) => ({
+      ...prev,
+      layout: {
+        ...prev.layout,
+        front: {
+          elements: prev.layout.front.elements.map((element) =>
+            element.id === prev.selectedElementId
+              ? { ...element, style: { ...element.style, ...patch } }
+              : element
+          ),
+        },
+      },
+    }));
+  };
+
+  const applyPreset = (preset: (typeof presets)[number]) => {
+    const nextOrientation = preset.key === 'vertical-badge' ? 'Vertical' : 'Horizontal';
+    const nextSize = CARD_DIMENSIONS[nextOrientation];
+    const layout = createICardLayoutPreset(preset.key, {
+      orientation: nextOrientation,
+      width: nextSize.width,
+      height: nextSize.height,
+      themeColor: preset.color,
+      backgroundColor: state.backgroundColor,
+      qrCodeEnabled: state.qrCodeEnabled,
+      barcodeEnabled: state.barcodeEnabled,
+    });
+    patchState({
+      presetKey: preset.key,
+      themeColor: preset.color,
+      orientation: layout.orientation,
+      width: layout.width,
+      height: layout.height,
+      layout,
+      backSideEnabled: false,
+      selectedElementId: null,
+    });
+  };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const toggleEmployeeSelection = (employee: EmployeeICardRow) => {
@@ -736,9 +880,15 @@ const EmployeeICardBuilder = ({
                 Role
               </Label>
             )}
+            {!(row as EmployeeICardRow).employeeIdentifier && (
+              <Label color="warning" variant="soft">
+                Code
+              </Label>
+            )}
             {(row as EmployeeICardRow).thumbnailPicture &&
               (row as EmployeeICardRow).mobileNo &&
-              (row as EmployeeICardRow).designation && (
+              (row as EmployeeICardRow).designation &&
+              (row as EmployeeICardRow).employeeIdentifier && (
                 <Label color="success" variant="soft">
                   Ready
                 </Label>
@@ -785,6 +935,17 @@ const EmployeeICardBuilder = ({
       fields: state.fields.map((field) =>
         field.name === name && !field.important ? { ...field, enabled: !field.enabled } : field
       ),
+      layout: {
+        ...state.layout,
+        front: {
+          elements: state.layout.front.elements.map((element) =>
+            element.fieldKey === name &&
+            !defaultFields.find((field) => field.name === name)?.important
+              ? { ...element, visible: !element.visible }
+              : element
+          ),
+        },
+      },
     });
   };
 
@@ -816,9 +977,19 @@ const EmployeeICardBuilder = ({
         presetKey: state.presetKey,
         qrCodeEnabled: state.qrCodeEnabled,
         barcodeEnabled: state.barcodeEnabled,
-        backSideEnabled: false,
+        backSideEnabled: state.backSideEnabled,
+        schemaVersion: 1,
+        layoutJson: JSON.stringify({
+          ...state.layout,
+          orientation: state.orientation,
+          width: state.width,
+          height: state.height,
+          backgroundColor: state.backgroundColor,
+          themeColor: state.themeColor,
+        }),
+        printSettingsJson: JSON.stringify(state.printSettings),
         fieldsJson: JSON.stringify(state.fields),
-        isActive: true,
+        isActive: state.isActive,
       };
 
       if (savedTemplateId) {
@@ -853,7 +1024,7 @@ const EmployeeICardBuilder = ({
         templateId,
         body: {
           employeeIds: state.selectedEmployeeIds,
-          cardsPerPage: clampCardsPerPage(state.cardsPerPage),
+          cardsPerPage: clampCardsPerPage(state.printSettings.cardsPerPage || state.cardsPerPage),
           excludeIncompleteEmployees: state.excludeIncompleteEmployees,
         },
       }).unwrap();
@@ -913,6 +1084,44 @@ const EmployeeICardBuilder = ({
               <Grid size={{ xs: 12, md: 7 }}>
                 {currentStep === 0 && (
                   <Stack spacing={2}>
+                    <Grid container spacing={1.25}>
+                      {presets.map((preset) => (
+                        <Grid key={preset.key} size={{ xs: 12, sm: 6 }}>
+                          <Paper
+                            variant="outlined"
+                            onClick={() => applyPreset(preset)}
+                            sx={{
+                              p: 1.5,
+                              cursor: 'pointer',
+                              borderColor:
+                                state.presetKey === preset.key ? `${preset.color}88` : 'divider',
+                              bgcolor:
+                                state.presetKey === preset.key
+                                  ? `${preset.color}10`
+                                  : 'background.paper',
+                            }}
+                          >
+                            <Stack direction="row" spacing={1.25} alignItems="center">
+                              <Box
+                                sx={{
+                                  width: 34,
+                                  height: 24,
+                                  borderRadius: 0.75,
+                                  bgcolor: preset.color,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <Box minWidth={0}>
+                                <Typography variant="subtitle2">{preset.label}</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {preset.description}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          </Paper>
+                        </Grid>
+                      ))}
+                    </Grid>
                     <TextField
                       label="Template Name"
                       value={state.name}
@@ -940,10 +1149,28 @@ const EmployeeICardBuilder = ({
                       value={state.orientation}
                       onChange={(_, value) => {
                         if (!value) return;
+                        const nextSize = CARD_DIMENSIONS[value as 'Horizontal' | 'Vertical'];
                         patchState({
                           orientation: value,
-                          width: CARD_DIMENSIONS[value as 'Horizontal' | 'Vertical'].width,
-                          height: CARD_DIMENSIONS[value as 'Horizontal' | 'Vertical'].height,
+                          width: nextSize.width,
+                          height: nextSize.height,
+                          layout: {
+                            ...state.layout,
+                            orientation: value,
+                            width: nextSize.width,
+                            height: nextSize.height,
+                            front: {
+                              elements: state.layout.front.elements.map((element) => ({
+                                ...element,
+                                visible:
+                                  element.type === 'qr'
+                                    ? state.qrCodeEnabled
+                                    : element.type === 'barcode'
+                                      ? state.barcodeEnabled
+                                      : element.visible,
+                              })),
+                            },
+                          },
                         });
                       }}
                     >
@@ -991,7 +1218,10 @@ const EmployeeICardBuilder = ({
                         label="Theme Color"
                         type="color"
                         value={state.themeColor}
-                        onChange={(event) => patchState({ themeColor: event.target.value })}
+                        onChange={(event) => {
+                          patchState({ themeColor: event.target.value });
+                          patchLayout({ themeColor: event.target.value });
+                        }}
                         size="small"
                         sx={{ width: 160 }}
                       />
@@ -999,41 +1229,23 @@ const EmployeeICardBuilder = ({
                         label="Background"
                         type="color"
                         value={state.backgroundColor}
-                        onChange={(event) => patchState({ backgroundColor: event.target.value })}
+                        onChange={(event) => {
+                          patchState({ backgroundColor: event.target.value });
+                          patchLayout({ backgroundColor: event.target.value });
+                        }}
                         size="small"
                         sx={{ width: 160 }}
                       />
                     </Stack>
-                  </Stack>
-                )}
-
-                {currentStep === 2 && (
-                  <Stack spacing={2}>
-                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                      {presets.map((preset) => (
-                        <Chip
-                          key={preset.key}
-                          label={preset.label}
-                          size="small"
-                          variant="outlined"
-                          onClick={() =>
-                            patchState({ presetKey: preset.key, themeColor: preset.color })
-                          }
-                          sx={{
-                            mb: 0.5,
-                            height: 30,
-                            fontWeight: 700,
-                            borderColor:
-                              state.presetKey === preset.key ? `${preset.color}66` : 'divider',
-                            color: state.presetKey === preset.key ? preset.color : 'text.secondary',
-                            bgcolor:
-                              state.presetKey === preset.key
-                                ? `${preset.color}14`
-                                : 'background.paper',
-                          }}
-                        />
-                      ))}
-                    </Stack>
+                    <DesignerCanvas
+                      state={state}
+                      sampleEmployee={sampleEmployee}
+                      academicYearName={academicYearName}
+                      onSelect={(id) => patchState({ selectedElementId: id })}
+                      onMove={(id, x, y) => patchLayoutElement(id, { x, y })}
+                      onElementChange={patchLayoutElement}
+                      onElementStyleChange={patchSelectedElementStyle}
+                    />
                     <Grid container spacing={1}>
                       {state.fields.map((field) => (
                         <Grid key={field.name} size={{ xs: 12, sm: 6 }}>
@@ -1080,7 +1292,19 @@ const EmployeeICardBuilder = ({
                               size="small"
                               checked={state.qrCodeEnabled}
                               onChange={(event) =>
-                                patchState({ qrCodeEnabled: event.target.checked })
+                                patchState({
+                                  qrCodeEnabled: event.target.checked,
+                                  layout: {
+                                    ...state.layout,
+                                    front: {
+                                      elements: state.layout.front.elements.map((element) =>
+                                        element.type === 'qr'
+                                          ? { ...element, visible: event.target.checked }
+                                          : element
+                                      ),
+                                    },
+                                  },
+                                })
                               }
                             />
                           }
@@ -1104,7 +1328,19 @@ const EmployeeICardBuilder = ({
                               size="small"
                               checked={state.barcodeEnabled}
                               onChange={(event) =>
-                                patchState({ barcodeEnabled: event.target.checked })
+                                patchState({
+                                  barcodeEnabled: event.target.checked,
+                                  layout: {
+                                    ...state.layout,
+                                    front: {
+                                      elements: state.layout.front.elements.map((element) =>
+                                        element.type === 'barcode'
+                                          ? { ...element, visible: event.target.checked }
+                                          : element
+                                      ),
+                                    },
+                                  },
+                                })
                               }
                             />
                           }
@@ -1115,7 +1351,7 @@ const EmployeeICardBuilder = ({
                   </Stack>
                 )}
 
-                {currentStep === 3 && (
+                {currentStep === 2 && (
                   <Stack spacing={1}>
                     {designRecommendations.map((item) => (
                       <Paper key={item.id} variant="outlined" sx={{ p: 1.5 }}>
@@ -1137,7 +1373,7 @@ const EmployeeICardBuilder = ({
                   </Stack>
                 )}
 
-                {currentStep === 4 && (
+                {currentStep === 3 && (
                   <Stack spacing={2}>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                       <TextField
@@ -1206,20 +1442,56 @@ const EmployeeICardBuilder = ({
                   </Stack>
                 )}
 
-                {currentStep === 5 && (
+                {currentStep === 4 && (
                   <Stack spacing={2}>
                     <ReadinessBar readiness={readiness} />
                     <TextField
                       label="Cards per A4 page"
                       type="number"
                       size="small"
-                      value={state.cardsPerPage}
+                      value={state.printSettings.cardsPerPage}
                       onChange={(event) =>
-                        patchState({ cardsPerPage: clampCardsPerPage(Number(event.target.value)) })
+                        patchState({
+                          cardsPerPage: clampCardsPerPage(Number(event.target.value)),
+                          printSettings: {
+                            ...state.printSettings,
+                            cardsPerPage: clampCardsPerPage(Number(event.target.value)),
+                          },
+                        })
                       }
                       inputProps={{ min: 1, max: 10 }}
                       sx={{ maxWidth: 220 }}
                     />
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                      <TextField
+                        label="Page margin"
+                        type="number"
+                        size="small"
+                        value={state.printSettings.margin}
+                        onChange={(event) =>
+                          patchState({
+                            printSettings: {
+                              ...state.printSettings,
+                              margin: Math.max(0, Math.min(60, Number(event.target.value))),
+                            },
+                          })
+                        }
+                      />
+                      <TextField
+                        label="Card gap"
+                        type="number"
+                        size="small"
+                        value={state.printSettings.gap}
+                        onChange={(event) =>
+                          patchState({
+                            printSettings: {
+                              ...state.printSettings,
+                              gap: Math.max(0, Math.min(40, Number(event.target.value))),
+                            },
+                          })
+                        }
+                      />
+                    </Stack>
                     <FormControlLabel
                       control={
                         <Checkbox
@@ -1290,6 +1562,288 @@ const EmployeeICardBuilder = ({
   );
 };
 
+const DesignerCanvas = ({
+  state,
+  sampleEmployee,
+  academicYearName,
+  onSelect,
+  onMove,
+  onElementChange,
+  onElementStyleChange,
+}: {
+  state: BuilderState;
+  sampleEmployee?: EmployeeICardRow;
+  academicYearName?: string;
+  onSelect: (id: string) => void;
+  onMove: (id: string, x: number, y: number) => void;
+  onElementChange: (id: string, patch: Partial<ICardLayoutElement>) => void;
+  onElementStyleChange: (patch: NonNullable<ICardLayoutElement['style']>) => void;
+}) => {
+  const selected = state.layout.front.elements.find(
+    (element) => element.id === state.selectedElementId
+  );
+
+  return (
+    <Grid container spacing={2}>
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Paper variant="outlined" sx={{ p: 1.25 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Field Palette
+          </Typography>
+          <Stack spacing={0.75}>
+            {state.layout.front.elements
+              .filter((element) => element.type !== 'shape' && element.type !== 'line')
+              .map((element) => (
+                <Stack
+                  key={element.id}
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  spacing={1}
+                >
+                  <Button
+                    size="small"
+                    variant={state.selectedElementId === element.id ? 'contained' : 'outlined'}
+                    onClick={() => onSelect(element.id)}
+                    sx={{ justifyContent: 'flex-start', flex: 1 }}
+                  >
+                    {element.label || element.fieldKey || element.type}
+                  </Button>
+                  <Checkbox
+                    size="small"
+                    checked={element.visible}
+                    onChange={(event) =>
+                      onElementChange(element.id, { visible: event.target.checked })
+                    }
+                  />
+                </Stack>
+              ))}
+          </Stack>
+        </Paper>
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 1.5,
+            overflow: 'auto',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark' ? 'rgba(15,23,42,0.35)' : 'rgba(148,163,184,0.08)',
+          }}
+        >
+          <Box
+            sx={{
+              position: 'relative',
+              width: state.layout.width,
+              height: state.layout.height,
+              bgcolor: state.backgroundColor,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 1,
+              boxSizing: 'border-box',
+              overflow: 'hidden',
+            }}
+          >
+            {state.layout.front.elements
+              .filter((element) => element.visible)
+              .sort((a, b) => a.z - b.z)
+              .map((element) => (
+                <DesignerElement
+                  key={element.id}
+                  element={element}
+                  state={state}
+                  selected={state.selectedElementId === element.id}
+                  employee={sampleEmployee}
+                  academicYearName={academicYearName}
+                  onSelect={onSelect}
+                  onMove={onMove}
+                />
+              ))}
+          </Box>
+        </Paper>
+      </Grid>
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Paper variant="outlined" sx={{ p: 1.25 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Inspector
+          </Typography>
+          {selected ? (
+            <Stack spacing={1.25}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={selected.visible}
+                    onChange={(event) =>
+                      onElementChange(selected.id, { visible: event.target.checked })
+                    }
+                  />
+                }
+                label="Visible"
+              />
+              <Stack direction="row" spacing={1}>
+                <TextField
+                  label="W"
+                  type="number"
+                  size="small"
+                  value={selected.w}
+                  onChange={(event) =>
+                    onElementChange(selected.id, {
+                      w: clampElementDimension(Number(event.target.value), selected.w),
+                    })
+                  }
+                />
+                <TextField
+                  label="H"
+                  type="number"
+                  size="small"
+                  value={selected.h}
+                  onChange={(event) =>
+                    onElementChange(selected.id, {
+                      h: clampElementDimension(Number(event.target.value), selected.h),
+                    })
+                  }
+                />
+              </Stack>
+              <Stack direction="row" spacing={1}>
+                <Button size="small" onClick={() => onElementChange(selected.id, { x: 16 })}>
+                  Left
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() =>
+                    onElementChange(selected.id, {
+                      x: Math.round((state.layout.width - selected.w) / 2),
+                    })
+                  }
+                >
+                  Center
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() =>
+                    onElementChange(selected.id, { x: state.layout.width - selected.w - 16 })
+                  }
+                >
+                  Right
+                </Button>
+              </Stack>
+              {selected.type === 'text' && (
+                <>
+                  <TextField
+                    label="Font size"
+                    type="number"
+                    size="small"
+                    value={selected.style?.fontSize || 10}
+                    onChange={(event) =>
+                      onElementStyleChange({ fontSize: Number(event.target.value) })
+                    }
+                  />
+                  <TextField
+                    label="Text color"
+                    type="color"
+                    size="small"
+                    value={selected.style?.color || '#111827'}
+                    onChange={(event) => onElementStyleChange({ color: event.target.value })}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={Boolean(selected.style?.showLabel)}
+                        onChange={(event) =>
+                          onElementStyleChange({ showLabel: event.target.checked })
+                        }
+                      />
+                    }
+                    label="Show label"
+                  />
+                </>
+              )}
+              {selected.type === 'photo' && (
+                <CustomSelect
+                  options={[
+                    { id: 'square', name: 'Square' },
+                    { id: 'rounded', name: 'Rounded' },
+                    { id: 'circle', name: 'Circle' },
+                  ]}
+                  label="Photo shape"
+                  value={selected.style?.photoShape || 'rounded'}
+                  onChange={(val) =>
+                    onElementStyleChange({
+                      photoShape: String(Array.isArray(val) ? val[0] : val) as any,
+                    })
+                  }
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                />
+              )}
+            </Stack>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Select an element on the card.
+            </Typography>
+          )}
+        </Paper>
+      </Grid>
+    </Grid>
+  );
+};
+
+const DesignerElement = ({
+  element,
+  state,
+  selected,
+  employee,
+  academicYearName,
+  onSelect,
+  onMove,
+}: {
+  element: ICardLayoutElement;
+  state: BuilderState;
+  selected: boolean;
+  employee?: EmployeeICardRow;
+  academicYearName?: string;
+  onSelect: (id: string) => void;
+  onMove: (id: string, x: number, y: number) => void;
+}) => {
+  const nodeRef = useRef<HTMLDivElement>(null);
+  return (
+    <Draggable
+      nodeRef={nodeRef}
+      bounds="parent"
+      disabled={element.locked}
+      position={{ x: element.x, y: element.y }}
+      onStop={(_, data) => onMove(element.id, snapToGrid(data.x), snapToGrid(data.y))}
+    >
+      <Box
+        ref={nodeRef}
+        onMouseDown={(event) => {
+          event.stopPropagation();
+          onSelect(element.id);
+        }}
+        sx={{
+          position: 'absolute',
+          width: element.w,
+          height: element.h,
+          zIndex: element.z,
+          cursor: element.locked ? 'default' : 'move',
+          outline: selected ? '2px solid #2563EB' : '1px dashed transparent',
+          outlineOffset: 1,
+        }}
+      >
+        <LayoutElementPreview
+          element={element}
+          state={state}
+          employee={employee}
+          academicYearName={academicYearName}
+        />
+      </Box>
+    </Draggable>
+  );
+};
+
 const PreviewLogo = ({
   blobName,
   preview,
@@ -1343,12 +1897,160 @@ const PreviewLogo = ({
         component="img"
         src={src}
         alt="School logo"
-        sx={{ width: 44, height: 44, objectFit: 'contain' }}
+        sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
       />
     );
   }
 
-  return <Box sx={{ width: 44, height: 44, borderRadius: 1, bgcolor: themeColor }} />;
+  return <Box sx={{ width: '100%', height: '100%', borderRadius: 1, bgcolor: themeColor }} />;
+};
+
+const resolvePreviewValue = (
+  fieldKey: ICardLayoutElement['fieldKey'],
+  state: BuilderState,
+  employee?: any,
+  academicYearName?: string,
+  fallback?: string
+) => {
+  switch (fieldKey) {
+    case 'name':
+      return employee?.fullName || 'Ananya Sharma';
+    case 'employeeCode':
+      return employee?.employeeIdentifier || 'EMP-1024';
+    case 'designation':
+      return employee?.designation || 'Teacher';
+    case 'department':
+      return employee?.department || 'Academic';
+    case 'organization':
+      return employee?.organizationNames?.[0] || 'Primary Wing';
+    case 'contactNo':
+      return employee?.mobileNo || '9876543210';
+    case 'bloodGroup':
+      return employee?.bloodGroup || 'B+';
+    case 'validityYear':
+      return academicYearName || '2026-2027';
+    case 'address':
+      return employee?.address || 'Employee address';
+    case 'schoolName':
+      return state.schoolName || state.name;
+    case 'schoolAddress':
+      return state.schoolAddress || 'School address';
+    default:
+      return fallback || '';
+  }
+};
+
+const LayoutElementPreview = ({
+  element,
+  state,
+  employee,
+  academicYearName,
+}: {
+  element: ICardLayoutElement;
+  state: BuilderState;
+  employee?: any;
+  academicYearName?: string;
+}) => {
+  const style = element.style || {};
+  if (element.type === 'shape') {
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          bgcolor: style.backgroundColor || state.backgroundColor,
+          borderRadius: `${style.borderRadius || 0}px`,
+          border: `${style.borderWidth || 0}px solid ${style.borderColor || 'transparent'}`,
+        }}
+      />
+    );
+  }
+  if (element.type === 'line') {
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          height: Math.max(1, element.h),
+          bgcolor: style.backgroundColor || state.themeColor,
+        }}
+      />
+    );
+  }
+  if (element.type === 'logo') {
+    return (
+      <Box sx={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center' }}>
+        <PreviewLogo
+          blobName={state.logoBlobName}
+          preview={state.logoPreview}
+          themeColor={state.themeColor}
+        />
+      </Box>
+    );
+  }
+  if (element.type === 'photo') {
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          display: 'grid',
+          placeItems: 'center',
+          border: `${style.borderWidth ?? 1}px solid ${style.borderColor || state.themeColor}`,
+          borderRadius:
+            style.photoShape === 'circle' ? '50%' : style.photoShape === 'rounded' ? 1.25 : 0,
+          bgcolor: 'background.paper',
+          overflow: 'hidden',
+        }}
+      >
+        <Typography variant="caption" color="text.secondary">
+          PHOTO
+        </Typography>
+      </Box>
+    );
+  }
+  if (element.type === 'qr' || element.type === 'barcode') {
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          display: 'grid',
+          placeItems: 'center',
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          fontSize: 10,
+          fontWeight: 700,
+        }}
+      >
+        {element.type.toUpperCase()}
+      </Box>
+    );
+  }
+
+  const value = resolvePreviewValue(
+    element.fieldKey,
+    state,
+    employee,
+    academicYearName,
+    element.value
+  );
+  const text =
+    style.showLabel && element.label ? `${element.label}${style.separator || ': '}${value}` : value;
+  return (
+    <Typography
+      noWrap
+      sx={{
+        color: style.color || 'text.primary',
+        fontSize: style.fontSize || 10,
+        fontWeight: style.fontWeight || 400,
+        textAlign: style.textAlign || 'left',
+        lineHeight: `${element.h}px`,
+      }}
+    >
+      {text}
+    </Typography>
+  );
 };
 
 const CardPreview = ({
@@ -1361,205 +2063,63 @@ const CardPreview = ({
   employee?: any;
   academicYearName?: string;
   scale?: number;
-}) => {
-  const enabled = new Set(state.fields.filter((field) => field.enabled).map((field) => field.name));
-  const employeeName = employee?.fullName || 'Ananya Sharma';
-  const code = employee?.employeeIdentifier || 'EMP-1024';
-  const isVertical = state.orientation === 'Vertical';
-
-  return (
+}) => (
+  <Box
+    sx={{
+      overflow: 'auto',
+      p: 1.5,
+      borderRadius: 2,
+      border: '1px dashed',
+      borderColor: 'divider',
+      bgcolor: (theme) =>
+        theme.palette.mode === 'dark' ? 'rgba(15,23,42,0.35)' : 'rgba(148,163,184,0.08)',
+    }}
+  >
     <Box
       sx={{
-        overflow: 'auto',
-        p: 1.5,
-        borderRadius: 2,
-        border: '1px dashed',
+        width: state.layout.width,
+        height: state.layout.height,
+        transform: `scale(${scale})`,
+        transformOrigin: 'top left',
+        bgcolor: state.backgroundColor,
+        border: '1px solid',
         borderColor: 'divider',
-        bgcolor: (theme) =>
-          theme.palette.mode === 'dark' ? 'rgba(15,23,42,0.35)' : 'rgba(148,163,184,0.08)',
+        borderRadius: 2,
+        boxSizing: 'border-box',
+        color: 'text.primary',
+        boxShadow: (theme) =>
+          theme.palette.mode === 'dark'
+            ? '0 10px 30px rgba(2,6,23,0.45)'
+            : '0 10px 28px rgba(15,23,42,0.12)',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <Box
-        sx={{
-          width: state.width,
-          minHeight: state.height,
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
-          bgcolor: state.backgroundColor,
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2,
-          p: 1.5,
-          color: 'text.primary',
-          boxShadow: (theme) =>
-            theme.palette.mode === 'dark'
-              ? '0 10px 30px rgba(2,6,23,0.45)'
-              : '0 10px 28px rgba(15,23,42,0.12)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            background: `linear-gradient(165deg, ${state.themeColor}14 0%, transparent 45%)`,
-            pointerEvents: 'none',
-          }}
-        />
-
-        <Stack spacing={1.25} sx={{ position: 'relative', zIndex: 1 }}>
-          <Stack direction="row" spacing={1.2} alignItems="center" justifyContent="space-between">
-            <Stack direction="row" spacing={1.2} alignItems="center" minWidth={0}>
-              <Box
-                sx={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: 1.25,
-                  display: 'grid',
-                  placeItems: 'center',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  bgcolor: (theme) =>
-                    theme.palette.mode === 'dark' ? 'rgba(2,6,23,0.45)' : 'rgba(255,255,255,0.8)',
-                }}
-              >
-                <PreviewLogo
-                  blobName={state.logoBlobName}
-                  preview={state.logoPreview}
-                  themeColor={state.themeColor}
-                />
-              </Box>
-              <Box minWidth={0}>
-                <Typography
-                  variant="subtitle2"
-                  noWrap
-                  sx={{ color: state.themeColor, fontWeight: 700 }}
-                >
-                  {state.schoolName || state.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {state.schoolAddress || 'School address'}
-                </Typography>
-              </Box>
-            </Stack>
-            <Chip size="small" label="Employee ID" sx={{ fontWeight: 600, height: 22 }} />
-          </Stack>
-
-          <Box sx={{ height: 3, bgcolor: state.themeColor, borderRadius: 2 }} />
-
-          <Stack
-            direction={isVertical ? 'column' : 'row'}
-            spacing={isVertical ? 1 : 1.5}
-            alignItems={isVertical ? 'stretch' : 'flex-start'}
+      {state.layout.front.elements
+        .filter((element) => element.visible)
+        .sort((a, b) => a.z - b.z)
+        .map((element) => (
+          <Box
+            key={element.id}
+            sx={{
+              position: 'absolute',
+              left: element.x,
+              top: element.y,
+              width: element.w,
+              height: element.h,
+              zIndex: element.z,
+            }}
           >
-            {enabled.has('photo') && (
-              <Box
-                sx={{
-                  width: isVertical ? '100%' : 82,
-                  maxWidth: isVertical ? 130 : 'unset',
-                  height: isVertical ? 110 : 96,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  bgcolor: (theme) =>
-                    theme.palette.mode === 'dark' ? 'rgba(15,23,42,0.6)' : 'rgba(255,255,255,0.88)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.4 }}>
-                  PHOTO
-                </Typography>
-              </Box>
-            )}
-
-            <Stack spacing={0.45} minWidth={0} flex={1}>
-              {enabled.has('name') && (
-                <Typography
-                  variant="h6"
-                  fontWeight={800}
-                  noWrap
-                  sx={{ fontSize: '1.2rem', lineHeight: 1.2 }}
-                >
-                  {employeeName}
-                </Typography>
-              )}
-              {enabled.has('employeeCode') && <PreviewLine label="Code" value={code} />}
-              {enabled.has('designation') && (
-                <PreviewLine label="Designation" value={employee?.designation || 'Teacher'} />
-              )}
-              {enabled.has('department') && (
-                <PreviewLine label="Department" value={employee?.department || 'Academic'} />
-              )}
-              {enabled.has('organization') && (
-                <PreviewLine
-                  label="Organization"
-                  value={employee?.organizationNames?.[0] || 'Primary Wing'}
-                />
-              )}
-              {enabled.has('contactNo') && (
-                <PreviewLine label="Phone" value={employee?.mobileNo || '9876543210'} />
-              )}
-              {enabled.has('bloodGroup') && (
-                <PreviewLine label="Blood Group" value={employee?.bloodGroup || 'B+'} />
-              )}
-              {enabled.has('validityYear') && (
-                <PreviewLine label="Valid" value={academicYearName || '2026-2027'} />
-              )}
-            </Stack>
-          </Stack>
-
-          {enabled.has('address') && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{
-                display: 'block',
-                mt: 0.5,
-                p: 0.75,
-                borderRadius: 1,
-                border: '1px dashed',
-                borderColor: 'divider',
-                bgcolor: (theme) =>
-                  theme.palette.mode === 'dark' ? 'rgba(30,41,59,0.45)' : 'rgba(248,250,252,0.9)',
-              }}
-            >
-              {employee?.address || 'Employee address'}
-            </Typography>
-          )}
-          {(state.qrCodeEnabled || state.barcodeEnabled) && (
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              sx={{ mt: 0.75 }}
-            >
-              <Typography variant="caption" color="text.secondary">
-                Secure identity marker
-              </Typography>
-              <Chip
-                size="small"
-                variant="outlined"
-                label={state.qrCodeEnabled ? `QR: ${code}` : `BAR: ${code}`}
-                sx={{ height: 22, maxWidth: 164, '& .MuiChip-label': { px: 1.1 } }}
-              />
-            </Stack>
-          )}
-        </Stack>
-      </Box>
+            <LayoutElementPreview
+              element={element}
+              state={state}
+              employee={employee}
+              academicYearName={academicYearName}
+            />
+          </Box>
+        ))}
     </Box>
-  );
-};
-
-const PreviewLine = ({ label, value }: { label: string; value: string }) => (
-  <Typography variant="caption" noWrap sx={{ fontSize: '0.76rem' }}>
-    <Box component="span" sx={{ color: 'text.secondary', minWidth: 72, display: 'inline-block' }}>
-      {label}:{' '}
-    </Box>
-    {value || '-'}
-  </Typography>
+  </Box>
 );
 
 const ReadinessBar = ({
@@ -1570,6 +2130,8 @@ const ReadinessBar = ({
     missingPhoto: number;
     missingPhone: number;
     missingDesignation: number;
+    missingEmployeeCode: number;
+    missingLogo: number;
   };
 }) => (
   <Stack spacing={1}>
@@ -1586,6 +2148,12 @@ const ReadinessBar = ({
       </Label>
       <Label color={readiness.missingDesignation ? 'warning' : 'success'} variant="soft">
         {`${readiness.missingDesignation} missing role`}
+      </Label>
+      <Label color={readiness.missingEmployeeCode ? 'warning' : 'success'} variant="soft">
+        {`${readiness.missingEmployeeCode} missing code`}
+      </Label>
+      <Label color={readiness.missingLogo ? 'warning' : 'success'} variant="soft">
+        {readiness.missingLogo ? 'Logo missing' : 'Logo ready'}
       </Label>
     </Stack>
   </Stack>

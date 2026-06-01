@@ -5,11 +5,12 @@ import { employeeApi } from '../hr/employeeApi';
 export const runPayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     getRunPayrollPreview: builder.query({
-      query: ({ month, page, pageSize, forceRefresh }) => ({
+      query: ({ month, academicYearId, page, pageSize, forceRefresh }) => ({
         url: '/payroll/run',
         method: 'GET',
         params: {
           month,
+          ...(academicYearId ? { academicYearId } : {}),
           ...(page !== undefined ? { page } : {}),
           ...(pageSize !== undefined ? { pageSize } : {}),
           ...(forceRefresh !== undefined ? { forceRefresh } : {}),
@@ -19,47 +20,48 @@ export const runPayrollApi = employeeApi.injectEndpoints({
     }),
 
     getRunPayrollReadiness: builder.query({
-      query: ({ month }) => ({
+      query: ({ month, academicYearId }) => ({
         url: '/payroll/run/readiness',
         method: 'GET',
-        params: { month },
+        params: { month, ...(academicYearId ? { academicYearId } : {}) },
       }),
       providesTags: [employeeType.runPayroll],
     }),
 
     generateAndLockPayroll: builder.mutation({
-      query: ({ month, employeeIds }) => ({
+      query: ({ month, academicYearId, employeeIds }) => ({
         url: `/payroll/run`,
         method: 'POST',
-        body: { month, employeeIds },
+        body: { month, academicYearId, employeeIds },
       }),
       invalidatesTags: [employeeType.runPayroll],
     }),
 
     markPayrollReviewed: builder.mutation({
-      query: ({ month, employeeIds }) => ({
+      query: ({ month, academicYearId, employeeIds }) => ({
         url: `/payroll/run/reviews`,
         method: 'POST',
-        body: { month, employeeIds },
+        body: { month, academicYearId, employeeIds },
       }),
       invalidatesTags: [employeeType.runPayroll],
     }),
 
     unmarkPayrollReviewed: builder.mutation({
-      query: ({ month, employeeIds }) => ({
+      query: ({ month, academicYearId, employeeIds }) => ({
         url: `/payroll/run/reviews`,
         method: 'DELETE',
-        body: { month, employeeIds },
+        body: { month, academicYearId, employeeIds },
       }),
       invalidatesTags: [employeeType.runPayroll],
     }),
 
     getPayrollAdjustments: builder.query({
-      query: ({ month, employeeId }) => ({
+      query: ({ month, academicYearId, employeeId }) => ({
         url: '/payroll/run/adjustments',
         method: 'GET',
         params: {
           month,
+          ...(academicYearId ? { academicYearId } : {}),
           ...(employeeId ? { employeeId } : {}),
         },
       }),

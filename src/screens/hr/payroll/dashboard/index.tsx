@@ -2,9 +2,12 @@
 
 import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import React, { useMemo, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { HrDashboardPreviewShell } from 'src/screens/hr/hr-dashboard/components/HrDashboardPreviewShell';
+import { shouldShowDashboardSnapshotSkeleton } from 'src/screens/hr/hr-dashboard/hr-dashboard-preview-state';
+import { HrDashboardSnapshotEmptyState } from 'src/screens/hr/hr-dashboard/components/HrDashboardSnapshotEmptyState';
 import {
   Box,
   Card,
@@ -70,10 +73,6 @@ const PayrollDashboard = () => {
   );
 
   useEffect(() => {
-    if (preview?.status === 'Empty') refreshPreview('Payroll');
-  }, [preview?.status, refreshPreview]);
-
-  useEffect(() => {
     if (preview?.status !== 'Refreshing') return undefined;
     const id = window.setInterval(() => refetch(), 5000);
     return () => window.clearInterval(id);
@@ -106,7 +105,7 @@ const PayrollDashboard = () => {
         onRefresh={() => refreshPreview('Payroll')}
         actions={
           <Button
-            href="/hr/payroll/run-payroll"
+            href={hrPaths.payroll.runPayroll}
             variant="contained"
             size="small"
             startIcon={<Iconify icon="solar:calculator-linear" />}
@@ -120,7 +119,35 @@ const PayrollDashboard = () => {
           <Alert severity="error">Payroll dashboard preview could not be loaded.</Alert>
         ) : null}
         {!data ? (
-          <Skeleton variant="rounded" height={360} />
+          shouldShowDashboardSnapshotSkeleton({
+            status: preview?.status,
+            isFetching,
+            hasPreview: Boolean(preview),
+          }) ? (
+            <Skeleton variant="rounded" height={360} />
+          ) : (
+            <HrDashboardSnapshotEmptyState
+              status={preview?.status}
+              isRefreshing={isRefreshStarting}
+              quickLinks={[
+                {
+                  label: 'Run payroll',
+                  href: hrPaths.payroll.runPayroll,
+                  icon: 'solar:calculator-linear',
+                },
+                {
+                  label: 'Salary setup',
+                  href: hrPaths.payroll.structure,
+                  icon: 'solar:wallet-money-linear',
+                },
+                {
+                  label: 'Attendance',
+                  href: hrPaths.attendance.dashboard,
+                  icon: 'solar:calendar-mark-linear',
+                },
+              ]}
+            />
+          )
         ) : (
           <>
             <Grid container spacing={1.5}>

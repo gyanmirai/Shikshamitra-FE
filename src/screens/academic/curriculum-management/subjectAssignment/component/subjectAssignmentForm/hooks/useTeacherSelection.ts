@@ -73,7 +73,11 @@ export function useTeacherSelection({
   const fetchPrimaryTeacherOptions = useCallback(
     async (query: string, page: number = 1) => {
       if (page === 1) seenPrimaryIdsRef.current = new Set();
-      const res = await getPrimaryTeacherOptions({ search: query, page }).unwrap();
+      const res = await getPrimaryTeacherOptions({
+        search: query,
+        page,
+        isTeaching: true,
+      }).unwrap();
       const hasMore = res.currentPage < res.totalPages;
       const data = (res?.items ?? [])
         .map((item: { id: string; fullName: string }) => ({ id: item.id, label: item.fullName }))
@@ -98,7 +102,11 @@ export function useTeacherSelection({
   const fetchSecondaryTeacherOptions = useCallback(
     async (query: string, page: number = 1) => {
       if (page === 1) seenSecondaryIdsRef.current = new Set();
-      const res = await getSecondaryTeacherOptions({ search: query, page }).unwrap();
+      const res = await getSecondaryTeacherOptions({
+        search: query,
+        page,
+        isTeaching: true,
+      }).unwrap();
       const hasMore = res.currentPage < res.totalPages;
       const data = (res?.items ?? [])
         .map((item: { id: string; fullName: string }) => ({ id: item.id, label: item.fullName }))

@@ -3,94 +3,100 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-export const getAssignmentValidationSchema = (showField: string[], currentYear: any) => {
+export const getAssignmentValidationSchema = (
+  visibleFields: string[],
+  requiredFields: string[],
+  currentYear: any
+) => {
   const shape: Record<string, any> = {};
 
-  // Report
-  if (showField.includes('report')) {
-    shape.report = Yup.string().required('Report is required');
-  }
-
-  // Organization
-  if (showField.includes('organization')) {
+  if (visibleFields.includes('organization')) {
     shape.organization = Yup.string().required('Organization is required');
   }
 
-  // Class
-  if (showField.includes('class')) {
-    shape.class = Yup.string().required('Class is required');
+  if (visibleFields.includes('class')) {
+    shape.class = requiredFields.includes('class')
+      ? Yup.string().required('Class is required')
+      : Yup.string();
   }
 
-  // Divisions
-  if (showField.includes('divisions')) {
-    shape.divisions = Yup.array()
-      .min(1, 'At least one division is required')
-      .required('Division is required');
+  if (visibleFields.includes('divisions')) {
+    shape.divisions = requiredFields.includes('divisions')
+      ? Yup.array().min(1, 'At least one division is required')
+      : Yup.array();
   }
 
-  // Subjects
-  if (showField.includes('subjects')) {
-    shape.subjects = Yup.array()
-      .min(1, 'At least one subject is required')
-      .required('Subject is required');
+  if (visibleFields.includes('subjects')) {
+    shape.subjects = requiredFields.includes('subjects')
+      ? Yup.array().min(1, 'At least one subject is required')
+      : Yup.array();
   }
 
-  // Teachers
-  if (showField.includes('teachers')) {
-    shape.teachers = Yup.array()
-      .min(1, 'At least one teacher is required')
-      .required('Teacher is required');
+  if (visibleFields.includes('teachers')) {
+    shape.teachers = requiredFields.includes('teachers')
+      ? Yup.array().min(1, 'At least one teacher is required')
+      : Yup.array();
   }
 
-  // Students
-  if (showField.includes('students')) {
-    shape.students = Yup.array()
-      .min(1, 'At least one student is required')
-      .required('Student is required');
+  if (visibleFields.includes('students')) {
+    shape.students = requiredFields.includes('students')
+      ? Yup.array().min(1, 'At least one student is required')
+      : Yup.array();
   }
 
-  // From Date
-  if (showField.includes('fromDate')) {
+  if (visibleFields.includes('assignments')) {
+    shape.assignments = requiredFields.includes('assignments')
+      ? Yup.array().min(1, 'At least one assignment is required')
+      : Yup.array();
+  }
+
+  if (visibleFields.includes('fromDate')) {
     shape.fromDate = Yup.mixed()
-      .test('min-date', 'From Date must be on or after the start date', (value) => {
-        if (value === null || value === undefined) return true; // allow empty
-        return dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate as Dayjs), 'day');
+      .test('is-valid', 'From Date is required', (value) => {
+        if (!requiredFields.includes('fromDate')) return true;
+        return value != null && dayjs(value as Dayjs).isValid();
       })
-      .test('max-date', 'From Date must be on or before the end date', (value) => {
-        if (value === null || value === undefined) return true; // allow empty
-        return dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate as Dayjs), 'day');
-      })
-      .nullable()
-      .optional();
+      .test(
+        'min-date',
+        () => `From Date must be on or after ${dayjs(currentYear?.startDate).format('DD/MM/YYYY')}`,
+        (value) =>
+          !value || dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear?.startDate), 'day')
+      )
+      .test(
+        'max-date',
+        () => `From Date must be on or before ${dayjs(currentYear?.endDate).format('DD/MM/YYYY')}`,
+        (value) =>
+          !value || dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear?.endDate), 'day')
+      )
+      .nullable();
   }
 
-  // To Date
-  if (showField.includes('toDate')) {
+  if (visibleFields.includes('toDate')) {
     shape.toDate = Yup.mixed()
-      // ToDate >= FromDate
+      .test('is-valid', 'To Date is required', (value) => {
+        if (!requiredFields.includes('toDate')) return true;
+        return value != null && dayjs(value as Dayjs).isValid();
+      })
       // eslint-disable-next-line func-names
       .test('is-after-start', 'To Date cannot be before From Date', function (value) {
         const { fromDate } = this.parent;
-
-        if (value === null || value === undefined) return true; // allow empty
-        if (!fromDate) return true; // don't validate if fromDate not selected
-
-        return dayjs(value as Dayjs).isSameOrAfter(dayjs(fromDate as Dayjs), 'day');
+        if (!value || !fromDate) return true;
+        return dayjs(value as Dayjs).isSameOrAfter(dayjs(fromDate), 'day');
       })
-
-      // Academic year min date
-      .test('min-date', 'To Date must be on or after the start date', (value) => {
-        if (value === null || value === undefined) return true; // allow empty
-        return dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate as Dayjs), 'day');
-      })
-
-      // Academic year max date
-      .test('max-date', 'To Date must be on or before the end date', (value) => {
-        if (value === null || value === undefined) return true; // allow empty
-        return dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate as Dayjs), 'day');
-      })
-      .nullable()
-      .optional();
+      .test(
+        'min-date',
+        () => `To Date must be on or after ${dayjs(currentYear?.startDate).format('DD/MM/YYYY')}`,
+        (value) =>
+          !value || dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear?.startDate), 'day')
+      )
+      .test(
+        'max-date',
+        () => `To Date must be on or before ${dayjs(currentYear?.endDate).format('DD/MM/YYYY')}`,
+        (value) =>
+          !value || dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear?.endDate), 'day')
+      )
+      .nullable();
   }
+
   return Yup.object().shape(shape);
 };

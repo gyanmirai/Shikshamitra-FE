@@ -18,11 +18,11 @@ import type { LookupOption } from './types/hr-policy-workspace.types';
 // ─── Date Formatting ──────────────────────────────────────────────────────────
 
 export function toDateInput(value?: string | null): string {
-  return value ? dayjs(value).format('YYYY-MM-DD') : '';
+  return parseDateOnly(value)?.format('YYYY-MM-DD') ?? '';
 }
 
 export function formatDate(value?: string | null): string {
-  return value ? dayjs(value).format('DD MMM YYYY') : '-';
+  return parseDateOnly(value)?.format('DD MMM YYYY') ?? '-';
 }
 
 export function formatRange(from?: string | null, to?: string | null): string {
@@ -169,6 +169,13 @@ function getDateKey(value: dayjs.Dayjs): string {
   return value.format('YYYY-MM-DD');
 }
 
+function parseDateOnly(value?: string | null): dayjs.Dayjs | null {
+  if (!value) return null;
+  const datePart = value.match(/^(\d{4}-\d{2}-\d{2})/)?.[1];
+  const parsed = dayjs(datePart || value);
+  return parsed.isValid() ? parsed : null;
+}
+
 function getSaturdayUnit(policy: string): number {
   if (policy === 'half-day') return 0.5;
   if (policy === 'off') return 0;
@@ -219,9 +226,9 @@ export function getAcademicYearMonthRanges(
   start?: string | null,
   end?: string | null
 ): Array<{ monthStart: dayjs.Dayjs; fromDate: dayjs.Dayjs; toDate: dayjs.Dayjs }> {
-  const startDate = dayjs(start);
-  const endDate = dayjs(end);
-  if (!startDate.isValid() || !endDate.isValid() || endDate.isBefore(startDate, 'day')) return [];
+  const startDate = parseDateOnly(start);
+  const endDate = parseDateOnly(end);
+  if (!startDate || !endDate || endDate.isBefore(startDate, 'day')) return [];
   const ranges: Array<{ monthStart: dayjs.Dayjs; fromDate: dayjs.Dayjs; toDate: dayjs.Dayjs }> = [];
   let cursor = startDate.startOf('month');
   while (!cursor.isAfter(endDate, 'month')) {
@@ -421,6 +428,14 @@ export function getWeeklyOffsForRule(pattern: string, customWeeklyOffs: number[]
 export function getWorkingDaysForRule(pattern: string, customWeeklyOffs: number[]): number[] {
   const weeklyOffs = new Set(getWeeklyOffsForRule(pattern, customWeeklyOffs));
   return WEEKDAY_OPTIONS.map((item) => item.value).filter((day) => !weeklyOffs.has(day));
+}
+
+export function isSaturdayWorkingForCalendar(
+  calendar?: import('src/redux/hr/hr-policy-api').WorkCalendarPolicy | null
+): boolean {
+  if (!calendar) return false;
+  const pattern = normalizeWeeklyRule(calendar.weeklyOffPattern, calendar.customWeeklyOffs || []);
+  return !getWeeklyOffsForRule(pattern, calendar.customWeeklyOffs || []).includes(6);
 }
 
 export function toApiWeeklyPattern(pattern: string): string {

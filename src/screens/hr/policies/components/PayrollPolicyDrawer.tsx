@@ -4,6 +4,7 @@ import type { PolicyStatus } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
+import { useGetWorkCalendarPolicyHolidaysQuery } from 'src/redux/hr/hr-policy-api';
 import {
   Box,
   Chip,
@@ -45,6 +46,7 @@ import {
   isValidManualDayCount,
   buildManualMonthDaysMap,
   buildPayrollBasisPreviewRows,
+  isSaturdayWorkingForCalendar,
   normalizePayrollDayCalculationType,
 } from '../hr-policy-workspace-utils';
 
@@ -71,8 +73,6 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
     savePayroll,
   } = ctx;
 
-  if (!drawer || drawer.kind !== 'payroll') return null;
-
   const isCurrentSaveOperation =
     activePolicyOperation?.key === 'save-payroll' ||
     activePolicyOperation?.key === 'save-calendar' ||
@@ -82,13 +82,29 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
   const selectedPayrollCalendar = calendars.find(
     (item) => item.id === payrollForm.workCalendarPolicyId
   );
+  const { data: selectedPayrollCalendarHolidays = [], isFetching: payrollCalendarHolidaysLoading } =
+    useGetWorkCalendarPolicyHolidaysQuery(
+      { id: payrollForm.workCalendarPolicyId },
+      { skip: drawer?.kind !== 'payroll' || !payrollForm.workCalendarPolicyId }
+    );
+  const selectedPayrollCalendarForPreview = selectedPayrollCalendar
+    ? {
+        ...selectedPayrollCalendar,
+        holidays:
+          selectedPayrollCalendarHolidays.length > 0
+            ? selectedPayrollCalendarHolidays
+            : selectedPayrollCalendar.holidays || [],
+      }
+    : undefined;
+
+  if (!drawer || drawer.kind !== 'payroll') return null;
 
   const payrollPreviewMode = normalizePayrollDayCalculationType(payrollForm.dayCalculationType);
 
   const payrollBasisPreviewRows = buildPayrollBasisPreviewRows({
     academicYearStart: currentYear?.startDate,
     academicYearEnd: currentYear?.endDate,
-    calendar: selectedPayrollCalendar,
+    calendar: selectedPayrollCalendarForPreview,
     dayCalculationType: payrollForm.dayCalculationType,
     saturdayWorkPolicy: payrollForm.saturdayWorkPolicy,
     manualMonthDays: payrollForm.manualMonthDays,
@@ -107,6 +123,13 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
     PAYROLL_SATURDAY_POLICY_OPTIONS.find(
       (option) => option.value === payrollForm.saturdayWorkPolicy
     )?.label || 'Full Day';
+
+  const isSaturdayWorking = isSaturdayWorkingForCalendar(selectedPayrollCalendarForPreview);
+  const saturdayPreviewLabel = isSaturdayWorking
+    ? saturdayPolicyLabel
+    : selectedPayrollCalendar
+      ? 'Off in calendar'
+      : 'Select calendar';
 
   const calendarDaysManualMap = buildCalendarDaysMap(currentYear?.startDate, currentYear?.endDate);
 
@@ -281,36 +304,42 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
               <Stack spacing={0.25}>
                 <Stack direction="row" spacing={0.75} alignItems="center">
                   <Typography variant="subtitle2">Saturday</Typography>
-                  <Chip size="small" variant="outlined" label={saturdayPolicyLabel} />
+                  <Chip size="small" variant="outlined" label={saturdayPreviewLabel} />
                 </Stack>
                 <Typography variant="caption" color="text.secondary">
-                  Applies only when Saturdays are working days.
+                  {isSaturdayWorking
+                    ? 'Applies because Saturday is a working day in the selected calendar.'
+                    : selectedPayrollCalendar
+                      ? 'Saturday is a weekly off in the selected Work Calendar.'
+                      : 'Select a work calendar to configure Saturday payroll units.'}
                 </Typography>
               </Stack>
-              <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
-                {PAYROLL_SATURDAY_POLICY_OPTIONS.map((option) => {
-                  const selected = payrollForm.saturdayWorkPolicy === option.value;
-                  return (
-                    <Tooltip key={option.value} title={option.description} arrow>
-                      <Button
-                        size="small"
-                        variant={selected ? 'contained' : 'outlined'}
-                        color={selected ? 'primary' : 'inherit'}
-                        onClick={() =>
-                          setPayrollForm((current) => ({
-                            ...current,
-                            saturdayWorkPolicy: option.value,
-                          }))
-                        }
-                        sx={{ minWidth: 70, whiteSpace: 'nowrap' }}
-                      >
-                        {selected ? <Iconify icon="mdi:check" width={16} /> : null}
-                        {option.label}
-                      </Button>
-                    </Tooltip>
-                  );
-                })}
-              </Stack>
+              {isSaturdayWorking ? (
+                <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
+                  {PAYROLL_SATURDAY_POLICY_OPTIONS.map((option) => {
+                    const selected = payrollForm.saturdayWorkPolicy === option.value;
+                    return (
+                      <Tooltip key={option.value} title={option.description} arrow>
+                        <Button
+                          size="small"
+                          variant={selected ? 'contained' : 'outlined'}
+                          color={selected ? 'primary' : 'inherit'}
+                          onClick={() =>
+                            setPayrollForm((current) => ({
+                              ...current,
+                              saturdayWorkPolicy: option.value,
+                            }))
+                          }
+                          sx={{ minWidth: 70, whiteSpace: 'nowrap' }}
+                        >
+                          {selected ? <Iconify icon="mdi:check" width={16} /> : null}
+                          {option.label}
+                        </Button>
+                      </Tooltip>
+                    );
+                  })}
+                </Stack>
+              ) : null}
             </Stack>
           </Paper>
         </Stack>
@@ -327,7 +356,7 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
               label={`Academic year: ${formatRange(currentYear?.startDate, currentYear?.endDate)}`}
             />
             <Chip size="small" variant="outlined" label={`Mode: ${toLabel(payrollPreviewMode)}`} />
-            <Chip size="small" variant="outlined" label={`Saturday: ${saturdayPolicyLabel}`} />
+            <Chip size="small" variant="outlined" label={`Saturday: ${saturdayPreviewLabel}`} />
             <Chip
               size="small"
               color="primary"
@@ -355,6 +384,9 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             <Alert severity="warning">
               Select a work calendar to preview working-day basis correctly.
             </Alert>
+          ) : null}
+          {selectedPayrollCalendar && payrollCalendarHolidaysLoading ? (
+            <Alert severity="info">Loading work-calendar holidays for payroll basis preview.</Alert>
           ) : null}
           {payrollPreviewMissingManualDays ? (
             <Alert severity="warning">

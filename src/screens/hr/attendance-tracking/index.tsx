@@ -80,6 +80,9 @@ type AttendanceRegisterRow = {
   isMarked?: boolean;
   isDayLocked: boolean;
   isPayrollLocked: boolean;
+  isHoliday?: boolean;
+  holidayName?: string | null;
+  holidayReason?: string | null;
   canEdit: boolean;
   lockReason?: string | null;
 };
@@ -100,6 +103,7 @@ type GroupedAttendanceRegisterRow = {
   editable: number;
   locked: number;
   missingPunch: number;
+  holiday?: number;
   hasExceptions: boolean;
   days: AttendanceRegisterRow[];
 };
@@ -355,7 +359,7 @@ const AttendanceTrackingScreen = () => {
   });
 
   const saveInline = async () => {
-    if (!editRow) return;
+    if (!editRow?.attendanceId) return;
 
     const errors = validateAttendanceDraft(draft);
     if (Object.keys(errors).length) {
@@ -493,6 +497,7 @@ const AttendanceTrackingScreen = () => {
         return (
           <Stack direction="row" spacing={0.75} alignItems="center">
             <Label color={meta.color as any}>{meta.label}</Label>
+            {row.isHoliday && <Label color="default">Holiday</Label>}
             {missingPunch && <Label color="warning">Missing punch</Label>}
           </Stack>
         );
@@ -554,6 +559,12 @@ const AttendanceTrackingScreen = () => {
         const dayRow = row as AttendanceRegisterRow;
         return dayRow.canEdit ? (
           <Label color="success">Editable</Label>
+        ) : dayRow.isHoliday ? (
+          <CustomTooltip title={dayRow.holidayReason || dayRow.lockReason || 'Holiday'} arrow>
+            <span>
+              <Label color="default">Holiday</Label>
+            </span>
+          </CustomTooltip>
         ) : (
           <CustomTooltip title={dayRow.lockReason || 'Locked'} arrow>
             <span>
@@ -611,6 +622,15 @@ const AttendanceTrackingScreen = () => {
         tableId={`hr-attendance-register-days-${group.employeeId || group.employeeCode}`}
         columns={dayColumns}
         data={group.days || []}
+        rowProps={(row: AttendanceRegisterRow) => ({
+          sx: row.isHoliday
+            ? {
+                bgcolor: 'action.hover',
+                color: 'text.secondary',
+                '& td': { bgcolor: 'action.hover' },
+              }
+            : undefined,
+        })}
         isLoading={false}
         isSearch={false}
         isFilter={false}
@@ -751,6 +771,7 @@ const AttendanceTrackingScreen = () => {
           {row.absent > 0 && <Label color="error">Absent {row.absent}</Label>}
           {row.halfDay > 0 && <Label color="warning">Half day {row.halfDay}</Label>}
           {row.missingPunch > 0 && <Label color="warning">Missing punch {row.missingPunch}</Label>}
+          {row.holiday > 0 && <Label color="default">Holiday {row.holiday}</Label>}
           {row.locked > 0 && <Label color="error">Locked {row.locked}</Label>}
           {!row.hasExceptions && <Label color="success">Clear</Label>}
         </Stack>

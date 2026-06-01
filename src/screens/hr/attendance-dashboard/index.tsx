@@ -2,8 +2,11 @@
 
 import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import React, { useMemo, useEffect } from 'react';
 import { HrDashboardPreviewShell } from 'src/screens/hr/hr-dashboard/components/HrDashboardPreviewShell';
+import { shouldShowDashboardSnapshotSkeleton } from 'src/screens/hr/hr-dashboard/hr-dashboard-preview-state';
+import { HrDashboardSnapshotEmptyState } from 'src/screens/hr/hr-dashboard/components/HrDashboardSnapshotEmptyState';
 import {
   Box,
   Card,
@@ -75,10 +78,6 @@ const AttendanceDashboardScreen = () => {
   );
 
   useEffect(() => {
-    if (preview?.status === 'Empty') refreshPreview('Attendance');
-  }, [preview?.status, refreshPreview]);
-
-  useEffect(() => {
     if (preview?.status !== 'Refreshing') return undefined;
     const id = window.setInterval(() => refetch(), 5000);
     return () => window.clearInterval(id);
@@ -103,7 +102,35 @@ const AttendanceDashboardScreen = () => {
         <Alert severity="error">Attendance dashboard preview could not be loaded.</Alert>
       ) : null}
       {!data ? (
-        <Skeleton variant="rounded" height={360} />
+        shouldShowDashboardSnapshotSkeleton({
+          status: preview?.status,
+          isFetching,
+          hasPreview: Boolean(preview),
+        }) ? (
+          <Skeleton variant="rounded" height={360} />
+        ) : (
+          <HrDashboardSnapshotEmptyState
+            status={preview?.status}
+            isRefreshing={isRefreshStarting}
+            quickLinks={[
+              {
+                label: 'Mark attendance',
+                href: hrPaths.attendance.markAttendance,
+                icon: 'solar:calendar-mark-linear',
+              },
+              {
+                label: 'Tracking',
+                href: hrPaths.attendance.attendanceTracking,
+                icon: 'solar:clock-circle-linear',
+              },
+              {
+                label: 'Leave center',
+                href: hrPaths.leaveManagement.leaveCenter,
+                icon: 'solar:clipboard-list-linear',
+              },
+            ]}
+          />
+        )
       ) : (
         <>
           <Grid container spacing={1.5}>

@@ -1,3 +1,5 @@
+import { hrPaths } from 'src/constants/hr-menus';
+
 import type { PayrollCycleStep } from './payroll-cycle.types';
 
 export const PAYROLL_CYCLE_STEPS: PayrollCycleStep[] = [
@@ -6,7 +8,7 @@ export const PAYROLL_CYCLE_STEPS: PayrollCycleStep[] = [
     order: 1,
     label: 'Run payroll',
     shortLabel: 'Run',
-    path: '/hr/payroll/run-payroll',
+    path: hrPaths.payroll.runPayroll,
     description: 'Generate, review, and lock monthly payroll.',
   },
   {
@@ -14,7 +16,7 @@ export const PAYROLL_CYCLE_STEPS: PayrollCycleStep[] = [
     order: 2,
     label: 'Payslips',
     shortLabel: 'Payslips',
-    path: '/hr/payroll/payslip-generation',
+    path: hrPaths.payroll.payslipGeneration,
     description: 'Generate and distribute payslips after locking payroll.',
   },
 ];

@@ -74,6 +74,9 @@ const ManualAttendanceScreen = () => {
   const discardConfirmDialog = useBoolean();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const isHoliday = Boolean(data?.isHoliday);
+  const holidayReason =
+    data?.holidayReason || (data?.holidayName ? `Holiday: ${data.holidayName}` : null);
 
   const [saveDayAttendance, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
@@ -121,6 +124,9 @@ const ManualAttendanceScreen = () => {
         remarks: item.remarks || '',
         warnings: item.warnings || [],
         errors: item.errors || [],
+        isHoliday: item.isHoliday || data?.isHoliday || false,
+        holidayName: item.holidayName || data?.holidayName,
+        holidayReason: item.holidayReason || data?.holidayReason,
         status: mapTakeAttendanceStatusToUi(item.status) as AttendanceStatusType,
       }));
       setEmployeeData(mapped);
@@ -181,12 +187,12 @@ const ManualAttendanceScreen = () => {
   }, []);
 
   const setRowStatus = (id: string, status: AttendanceStatusType) => {
-    if (isLocked) return;
+    if (isLocked || isHoliday) return;
     setEmployeeData((prev) => prev.map((emp) => (emp.id === id ? { ...emp, status } : emp)));
   };
 
   const setAllStatus = (status: AttendanceStatusType) => {
-    if (isLocked) return;
+    if (isLocked || isHoliday) return;
     setEmployeeData((prev) => prev.map((emp) => ({ ...emp, status })));
   };
 
@@ -194,6 +200,13 @@ const ManualAttendanceScreen = () => {
   // Save handler
   // -------------------------------------------------------------------------
   const handleSave = async () => {
+    if (isHoliday) {
+      shikshaMitraToast.error({
+        message: holidayReason || 'Attendance cannot be marked on a holiday.',
+      });
+      return;
+    }
+
     try {
       const entries = buildManualAttendanceSaveEntries(employeeData);
 
@@ -214,6 +227,13 @@ const ManualAttendanceScreen = () => {
   };
 
   const handleLockToggle = async () => {
+    if (isHoliday) {
+      shikshaMitraToast.error({
+        message: holidayReason || 'Holiday dates cannot be locked for attendance.',
+      });
+      return;
+    }
+
     try {
       const payload = { attendanceDate: dateConvertor(dayjs(date).format(dateFormat)) };
       if (isLocked) {
@@ -373,7 +393,7 @@ const ManualAttendanceScreen = () => {
               }}
             >
               <Typography variant="body2">{displayTime || '\u2014'}</Typography>
-              {!isLocked && (
+              {!isLocked && !isHoliday && (
                 <CustomTooltip
                   title={`Edit ${field === 'timeIn' ? 'In-Time' : 'Out-Time'}`}
                   arrow
@@ -416,7 +436,7 @@ const ManualAttendanceScreen = () => {
             <TextField
               size="small"
               fullWidth
-              disabled={isLocked}
+              disabled={isLocked || isHoliday}
               value={val || ''}
               onChange={(e) =>
                 setEmployeeData((prev) =>
@@ -481,7 +501,7 @@ const ManualAttendanceScreen = () => {
           );
         },
       },
-      ...(isLocked
+      ...(isLocked || isHoliday
         ? [
             {
               id: 'status' as const,
@@ -492,7 +512,16 @@ const ManualAttendanceScreen = () => {
               isSort: false,
               filterType: 'enum' as const,
               enumOptions: MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS,
-              render: (value: string) => {
+              render: (value: string, row: any) => {
+                if (row.isHoliday) {
+                  return (
+                    <CustomTooltip title={row.holidayReason || holidayReason || 'Holiday'} arrow>
+                      <span>
+                        <Label color="default">Holiday</Label>
+                      </span>
+                    </CustomTooltip>
+                  );
+                }
                 const colorMap: Record<
                   string,
                   'primary' | 'error' | 'warning' | 'info' | 'default'
@@ -777,6 +806,7 @@ const ManualAttendanceScreen = () => {
                           e.stopPropagation();
                           if (
                             isLocked ||
+                            isHoliday ||
                             employeeData.length === 0 ||
                             employeeData.every((emp) => emp.status === STATUS.Present)
                           )
@@ -787,12 +817,14 @@ const ManualAttendanceScreen = () => {
                           ...segmentBtnBase,
                           cursor:
                             isLocked ||
+                            isHoliday ||
                             employeeData.length === 0 ||
                             employeeData.every((e) => e.status === STATUS.Present)
                               ? 'not-allowed'
                               : 'pointer',
                           opacity:
                             isLocked ||
+                            isHoliday ||
                             employeeData.length === 0 ||
                             employeeData.every((e) => e.status === STATUS.Present)
                               ? 0.5
@@ -819,6 +851,7 @@ const ManualAttendanceScreen = () => {
                           e.stopPropagation();
                           if (
                             isLocked ||
+                            isHoliday ||
                             employeeData.length === 0 ||
                             employeeData.every((emp) => emp.status === STATUS.HalfDay)
                           )
@@ -829,12 +862,14 @@ const ManualAttendanceScreen = () => {
                           ...segmentBtnBase,
                           cursor:
                             isLocked ||
+                            isHoliday ||
                             employeeData.length === 0 ||
                             employeeData.every((e) => e.status === STATUS.HalfDay)
                               ? 'not-allowed'
                               : 'pointer',
                           opacity:
                             isLocked ||
+                            isHoliday ||
                             employeeData.length === 0 ||
                             employeeData.every((e) => e.status === STATUS.HalfDay)
                               ? 0.5
@@ -877,6 +912,7 @@ const ManualAttendanceScreen = () => {
                           e.stopPropagation();
                           if (
                             isLocked ||
+                            isHoliday ||
                             employeeData.length === 0 ||
                             employeeData.every((emp) => emp.status === STATUS.Absent)
                           )
@@ -887,6 +923,7 @@ const ManualAttendanceScreen = () => {
                           ...segmentBtnBase,
                           cursor:
                             isLocked ||
+                            isHoliday ||
                             employeeData.length === 0 ||
                             employeeData.every((e) => e.status === STATUS.Absent)
                               ? 'not-allowed'
@@ -937,8 +974,8 @@ const ManualAttendanceScreen = () => {
                         onClick={() => setRowStatus(row.id, STATUS.Present)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked ? 'not-allowed' : 'pointer',
-                          opacity: isLocked ? 0.5 : 1,
+                          cursor: isLocked || isHoliday ? 'not-allowed' : 'pointer',
+                          opacity: isLocked || isHoliday ? 0.5 : 1,
                           bgcolor:
                             value === STATUS.Present
                               ? (t) => t.vars.palette.success.main
@@ -965,8 +1002,8 @@ const ManualAttendanceScreen = () => {
                         onClick={() => setRowStatus(row.id, STATUS.HalfDay)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked ? 'not-allowed' : 'pointer',
-                          opacity: isLocked ? 0.5 : 1,
+                          cursor: isLocked || isHoliday ? 'not-allowed' : 'pointer',
+                          opacity: isLocked || isHoliday ? 0.5 : 1,
                           bgcolor:
                             value === STATUS.HalfDay
                               ? (t) => t.vars.palette.info.main
@@ -993,8 +1030,8 @@ const ManualAttendanceScreen = () => {
                         onClick={() => setRowStatus(row.id, STATUS.Pending)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked ? 'not-allowed' : 'pointer',
-                          opacity: isLocked ? 0.5 : 1,
+                          cursor: isLocked || isHoliday ? 'not-allowed' : 'pointer',
+                          opacity: isLocked || isHoliday ? 0.5 : 1,
                           bgcolor:
                             value === STATUS.Pending
                               ? (t) => t.vars.palette.warning.main
@@ -1021,8 +1058,8 @@ const ManualAttendanceScreen = () => {
                         onClick={() => setRowStatus(row.id, STATUS.Absent)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked ? 'not-allowed' : 'pointer',
-                          opacity: isLocked ? 0.5 : 1,
+                          cursor: isLocked || isHoliday ? 'not-allowed' : 'pointer',
+                          opacity: isLocked || isHoliday ? 0.5 : 1,
                           bgcolor:
                             value === STATUS.Absent
                               ? (t) => t.vars.palette.error.main
@@ -1055,6 +1092,8 @@ const ManualAttendanceScreen = () => {
       query.maxResultCount,
       date,
       isLocked,
+      isHoliday,
+      holidayReason,
       presentCount,
       halfDayCount,
       pendingCount,
@@ -1070,13 +1109,15 @@ const ManualAttendanceScreen = () => {
   const rowProps = (row: any) => ({
     sx: {
       background: (theme: any) =>
-        row.status === STATUS.Present
-          ? varAlpha(theme.vars.palette.success.mainChannel, 0.1)
-          : row.status === STATUS.HalfDay
-            ? varAlpha(theme.vars.palette.info.mainChannel, 0.1)
-            : row.status === STATUS.Absent
-              ? varAlpha(theme.vars.palette.error.mainChannel, 0.1)
-              : varAlpha(theme.vars.palette.warning.mainChannel, 0.06),
+        row.isHoliday
+          ? theme.vars.palette.action.hover
+          : row.status === STATUS.Present
+            ? varAlpha(theme.vars.palette.success.mainChannel, 0.1)
+            : row.status === STATUS.HalfDay
+              ? varAlpha(theme.vars.palette.info.mainChannel, 0.1)
+              : row.status === STATUS.Absent
+                ? varAlpha(theme.vars.palette.error.mainChannel, 0.1)
+                : varAlpha(theme.vars.palette.warning.mainChannel, 0.06),
       transition: 'background-color 0.2s',
       height: '40px',
       '& td': { py: 0.5 },
@@ -1126,7 +1167,9 @@ const ManualAttendanceScreen = () => {
         <Box sx={{ flexGrow: 1 }} />
 
         {/* Reset */}
-        {!isLocked && (
+        {isHoliday && <Label color="default">{holidayReason || 'Holiday'}</Label>}
+
+        {!isLocked && !isHoliday && (
           <Button
             size="small"
             variant="outlined"
@@ -1144,7 +1187,13 @@ const ManualAttendanceScreen = () => {
 
         {/* Lock / Unlock */}
         <CustomTooltip
-          title={isLocked ? 'Attendance is locked — click to unlock' : 'Click to lock attendance'}
+          title={
+            isHoliday
+              ? holidayReason || 'Holiday dates cannot be locked'
+              : isLocked
+                ? 'Attendance is locked — click to unlock'
+                : 'Click to lock attendance'
+          }
           arrow
           placement="top"
         >
@@ -1160,6 +1209,7 @@ const ManualAttendanceScreen = () => {
                 />
               }
               onClick={() => lockConfirmDialog.onTrue()}
+              disabled={isHoliday}
               sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
             >
               {isLocked ? 'Locked' : 'Lock'}
@@ -1175,7 +1225,7 @@ const ManualAttendanceScreen = () => {
             loading={isUpdating}
             startIcon={<Iconify icon={GlobalIcons.submit} sx={{ fontSize: '16px' }} />}
             onClick={handleSave}
-            disabled={employeeData.length === 0 || !isDirty}
+            disabled={isHoliday || employeeData.length === 0 || !isDirty}
             sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
           >
             Save

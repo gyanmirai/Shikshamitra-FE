@@ -1,35 +1,41 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
-import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import React, { useMemo, useState, useEffect } from 'react';
+import { Box, Grid, Card, Button } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { TimetableReportTitle } from 'src/enums/timetable-reports';
-import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
+import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import { getTimetableValidationSchema } from './timetableReportValidation';
 
+// ─── Types ─────────────────────────────────────────────────────────────────
+
 interface TimetableReportFormValues {
-  report: TimetableReportTitle; // Single-select (report type dropdown)
-  organization: string; // Single-select (branch / school)
-  classes: string[]; // Multi-select (array of class IDs or names)
-  divisions: string[]; // Multi-select (array of division IDs or names)
-  teacher: string; // Single-select (for teacher-based reports)
-  roomNo: string; // Single-select (for room utilization)
-  subject: string; // Single-select (for subject-wise report)
-  changedBy: string; // Single-select (Admin / Teacher for change logs)
-  fromDate: dayjs.Dayjs | null; // Date picker (start of range)
-  toDate: dayjs.Dayjs | null; // Date picker (end of range)
+  report: TimetableReportTitle;
+  organization: string;
+  classes: string[];
+  divisions: string[];
+  teacher: string;
+  roomNo: string;
+  subject: string;
 }
+
+type EmployeeOption = { id: string; label: string };
+
+// ─── Initial values ─────────────────────────────────────────────────────────
 
 const initialValues: TimetableReportFormValues = {
   report: '' as unknown as TimetableReportTitle,
@@ -39,54 +45,78 @@ const initialValues: TimetableReportFormValues = {
   teacher: '',
   roomNo: '',
   subject: '',
-  changedBy: '',
-  fromDate: null,
-  toDate: null,
 };
 
-const commonFields = ['organization', 'classes', 'divisions'];
-
-const TimetableReportFieldsMap = {
-  [TimetableReportTitle.ClassWiseTimetableReport]: [...commonFields, 'fromDate', 'toDate'],
-
-  [TimetableReportTitle.TeacherWiseTimetableReport]: ['teacher', 'fromDate', 'toDate'],
-
-  [TimetableReportTitle.RoomUtilizationReport]: ['roomNo', 'fromDate', 'toDate'],
-
-  [TimetableReportTitle.SubjectWiseTimetableDistribution]: [...commonFields, 'subject', 'teacher'],
-
+// ─── Field visibility map ────────────────────────────────────────────────────
+/**
+ * Lists every field rendered for each report type.
+ * Only fields listed here are visible/validated.
+ */
+const TimetableReportFieldsMap: Record<number, string[]> = {
+  [TimetableReportTitle.ClassWiseTimetableReport]: ['organization', 'classes', 'divisions'],
+  [TimetableReportTitle.TeacherWiseTimetableReport]: ['organization', 'teacher'],
+  [TimetableReportTitle.RoomUtilizationReport]: ['organization', 'roomNo'],
+  [TimetableReportTitle.SubjectWiseTimetableDistribution]: [
+    'organization',
+    'classes',
+    'divisions',
+    'subject',
+  ],
   [TimetableReportTitle.FreePeriodsReport]: [
-    'roomNo', // can be Class or Teacher
-    'fromDate',
-    'toDate',
+    'organization',
+    'classes',
+    'divisions',
+    'teacher',
+    'roomNo',
   ],
-
   [TimetableReportTitle.TimetableChangeLogReport]: [
-    'fromDate',
-    'toDate',
-    'changedBy', // Admin / Teacher
+    'organization',
+    'classes',
+    'divisions',
+    'teacher',
   ],
 };
+
+// ─── Required-fields map ─────────────────────────────────────────────────────
+/**
+ * Subset of visible fields that must have a value before submission.
+ * All other visible fields are optional.
+ */
+const TimetableReportRequiredFieldsMap: Record<number, string[]> = {
+  // Organization required; class required; division optional
+  [TimetableReportTitle.ClassWiseTimetableReport]: ['organization', 'classes'],
+
+  // Organization and teacher both required
+  [TimetableReportTitle.TeacherWiseTimetableReport]: ['organization', 'teacher'],
+
+  // Organization and room both required
+  [TimetableReportTitle.RoomUtilizationReport]: ['organization', 'roomNo'],
+
+  // Only organization required; class, division, subject optional
+  [TimetableReportTitle.SubjectWiseTimetableDistribution]: ['organization'],
+
+  // Organization and room required; class, division, teacher optional
+  [TimetableReportTitle.FreePeriodsReport]: ['organization', 'roomNo'],
+
+  // Only organization required; class, division, teacher optional
+  [TimetableReportTitle.TimetableChangeLogReport]: ['organization'],
+};
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  // Redux state for current board, medium and medium setter
+  // ── Redux state ──
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
-  // State to store list of all organizations/branches
+  // ── Org / Class / Division derived from medium ──
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
-
-  // State to store list of all classes/standards
   const [allClass, setAllClass] = useState<Standards[]>([]);
-
-  // State to store list of all divisions
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
-  // State to store dynamic validation schema based on selected report type
-  const [dynamicSchema, setDynamicSchema] = useState(getTimetableValidationSchema([], currentYear));
+  // ── Dynamic validation ──
+  const [dynamicSchema, setDynamicSchema] = useState(getTimetableValidationSchema([], []));
 
-  // Initialize formik form with validation and submit handler
+  // ── Formik ──────────────────────────────────────────────────────────────────
   const formik = useFormik({
     initialValues: {
       ...initialValues,
@@ -100,29 +130,101 @@ const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
     },
   });
 
-  // Memoized computation of required fields based on selected report type
-  const currentFields = useMemo(
-    () => TimetableReportFieldsMap[report as keyof typeof TimetableReportFieldsMap] || [],
+  // ── Derived field lists ──────────────────────────────────────────────────────
+  const currentFields = useMemo(() => TimetableReportFieldsMap[report as number] || [], [report]);
+
+  const currentRequiredFields = useMemo(
+    () => TimetableReportRequiredFieldsMap[report as number] || [],
     [report]
   );
 
-  // Update validation schema whenever required fields change
-  useEffect(() => {
-    const newSchema = getTimetableValidationSchema(currentFields, currentYear);
-    setDynamicSchema(newSchema);
-  }, [currentFields, currentYear]);
+  // Helpers
+  const showField = (fieldName: string) => currentFields.includes(fieldName);
+  const isRequired = (fieldName: string) => currentRequiredFields.includes(fieldName);
 
-  // Update organizations list when medium changes
+  // ── Room API ─────────────────────────────────────────────────────────────────
+  const { data: roomsData, isLoading: isRoomsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomsQuery,
+    options: {
+      // Only fetch when a room filter is visible for the selected report
+      skip: !currentFields.includes('roomNo'),
+    },
+  });
+
+  const roomOptions: any[] = useMemo(
+    () =>
+      roomsData?.items ??
+      roomsData?.data?.items ??
+      roomsData?.records ??
+      (Array.isArray(roomsData) ? roomsData : []),
+    [roomsData]
+  );
+
+  // ── Subject API ──────────────────────────────────────────────────────────────
+  const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+    options: {
+      skip: !currentFields.includes('subject') || !(medium as Medium)?.id,
+    },
+  });
+
+  const subjectOptions: any[] = useMemo(
+    () =>
+      subjectData?.data?.items ??
+      subjectData?.items ??
+      subjectData?.records ??
+      (Array.isArray(subjectData) ? subjectData : []),
+    [subjectData]
+  );
+
+  // ── Teacher API (paginated search) ───────────────────────────────────────────
+  const [getTeacherOptions] = useLazyGetEmployeeQuery();
+  const seenTeacherIdsRef = useRef<Set<string>>(new Set());
+
+  /**
+   * Stable fetch callback passed to PaginatedSearchSelect.
+   * Uses deduplication via seenTeacherIdsRef to prevent duplicates across pages.
+   */
+  const fetchTeacherOptions = useCallback(
+    async (query: string, page: number = 1) => {
+      if (page === 1) seenTeacherIdsRef.current = new Set();
+      const res = await getTeacherOptions({ search: query, page }).unwrap();
+      const hasMore = res.currentPage < res.totalPages;
+      const data = (res?.items ?? [])
+        .map((item: { id: string; fullName: string }) => ({ id: item.id, label: item.fullName }))
+        .filter(({ id }: { id: string }) => {
+          if (seenTeacherIdsRef.current.has(id)) return false;
+          seenTeacherIdsRef.current.add(id);
+          return true;
+        });
+      return { data, hasMore };
+    },
+    [getTeacherOptions]
+  );
+
+  // Local object state for PaginatedSearchSelect (stores { id, label })
+  const [teacherObj, setTeacherObj] = useState<EmployeeOption | null>(null);
+
+  // ── Effects ──────────────────────────────────────────────────────────────────
+
+  // Rebuild validation schema when field sets change
+  useEffect(() => {
+    setDynamicSchema(getTimetableValidationSchema(currentFields, currentRequiredFields));
+  }, [currentFields, currentRequiredFields]);
+
+  // Sync organisation list from medium
   useEffect(() => {
     setAllOrganization(cloneDeep(medium?.educationMediumStages || []));
   }, [medium?.educationMediumStages]);
 
-  // Update classes list when organization selection changes
+  // Sync class list from selected organisation
   useEffect(() => {
     const standards =
       allOrganization.find((org: any) => org?.id === formik.values.organization)?.standards || [];
 
-    // Add "All" option if not present
     if (!standards.some((std) => std.id === 'all')) {
       standards.unshift({
         id: 'all',
@@ -138,29 +240,23 @@ const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
     setAllClass(standards);
   }, [allOrganization, formik.values.organization]);
 
-  // Helper function to check if a field should be displayed
-  const showField = (fieldName: string) => currentFields.includes(fieldName);
-
-  // Update divisions list when class selection changes
+  // Sync division list from selected class(es); auto-select when applicable
   useEffect(() => {
     if (formik.values.classes.length === 0) {
-      // Reset divisions when no classes selected
       setAllDivision([]);
       formik.setFieldValue('divisions', []);
       return;
     }
 
     if (formik.values.classes.length === 1 && formik.values.classes[0] !== 'all') {
-      // Handle single class selection
       const selectedClass = allClass.find((cls: any) => cls?.id === formik.values.classes[0]);
       const divisions = selectedClass?.divisions || [];
       setAllDivision(divisions);
-
-      // Auto-select all divisions for the selected class
-      const divisionIds = divisions.map((div: any) => div.id);
-      formik.setFieldValue('divisions', [...divisionIds]);
+      formik.setFieldValue(
+        'divisions',
+        divisions.map((div: any) => div.id)
+      );
     } else {
-      // Handle multiple classes or "all" selection
       setAllDivision([
         {
           id: 'all',
@@ -173,18 +269,26 @@ const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
           standardId: '',
         },
       ]);
-
       formik.setFieldValue('divisions', ['all']);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allClass, formik.values.classes]);
 
+  // Reset teacher selection when report changes
+  useEffect(() => {
+    setTeacherObj(null);
+    formik.setFieldValue('teacher', '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [report]);
+
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <Box sx={{ mt: 2 }}>
       <Card>
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
             <Grid container spacing={3}>
+              {/* Organisation */}
               {showField('organization') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
@@ -200,11 +304,10 @@ const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
                         const standards =
                           allOrganization.find((org: any) => org?.id === val)?.standards || [];
                         const standardIds = standards.map((standard: any) => standard.id);
-
-                        // Avoid duplicating 'all'
-                        const uniqueClassIds = ['all', ...standardIds.filter((id) => id !== 'all')];
-
-                        formik.setFieldValue('classes', uniqueClassIds);
+                        formik.setFieldValue('classes', [
+                          'all',
+                          ...standardIds.filter((id: string) => id !== 'all'),
+                        ]);
                       }}
                       onBlur={() => formik.setFieldTouched('organization', true)}
                       error={formik.touched.organization && Boolean(formik.errors.organization)}
@@ -220,17 +323,17 @@ const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
                 </Grid>
               )}
 
+              {/* Class */}
               {showField('classes') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.classes && formik.errors.classes)}>
                     <CustomSelect
                       options={allClass}
-                      label="Class *"
+                      label={`Class${isRequired('classes') ? ' *' : ''}`}
                       multiple
                       value={formik.values.classes}
                       onChange={(val) => {
                         const value = val as string[];
-
                         const allClassIds =
                           allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
                         const isAllClicked = value.includes('all');
@@ -239,31 +342,21 @@ const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
                         ).includes('all');
 
                         if (isAllClicked && !wasAllPreviouslySelected) {
-                          // "All" was just clicked - select all classes
                           formik.setFieldValue('classes', ['all', ...allClassIds]);
                         } else if (!isAllClicked && wasAllPreviouslySelected) {
-                          // "All" was just unchecked - deselect all classes
                           formik.setFieldValue('classes', []);
                         } else if (isAllClicked && wasAllPreviouslySelected) {
-                          // Individual item was selected/deselected while "All" was already selected
                           const selectedWithoutAll = value.filter((id) => id !== 'all');
-
                           if (selectedWithoutAll.length === allClassIds.length) {
-                            // All individual items are selected, keep "All" selected
                             formik.setFieldValue('classes', ['all', ...allClassIds]);
                           } else {
-                            // Not all individual items are selected, remove "All"
                             formik.setFieldValue('classes', selectedWithoutAll);
                           }
                         } else {
-                          // "All" is not selected, handle individual selections
                           const selectedWithoutAll = value.filter((id) => id !== 'all');
-
                           if (selectedWithoutAll.length === allClassIds.length) {
-                            // All individual items are selected, add "All"
                             formik.setFieldValue('classes', ['all', ...allClassIds]);
                           } else {
-                            // Not all items selected, just keep individual selections
                             formik.setFieldValue('classes', selectedWithoutAll);
                           }
                         }
@@ -280,6 +373,7 @@ const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
                 </Grid>
               )}
 
+              {/* Division — hidden when "All" classes or no classes selected */}
               {showField('divisions') &&
                 !(formik.values.classes as string[]).includes('all') &&
                 formik.values.classes.length > 0 && (
@@ -289,7 +383,7 @@ const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
                     >
                       <CustomSelect
                         options={allDivision}
-                        label="Division *"
+                        label={`Division${isRequired('divisions') ? ' *' : ''}`}
                         value={formik.values.divisions}
                         onChange={(val) => formik.setFieldValue('divisions', val)}
                         onBlur={() => formik.setFieldTouched('divisions', true)}
@@ -308,162 +402,84 @@ const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
                   </Grid>
                 )}
 
-              {showField('subject') && (
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject)}>
-                    <CustomSelect
-                      labelId="subject-dropdown-label"
-                      id="subject-dropdown"
-                      value={formik.values.subject}
-                      onBlur={() => formik.setFieldTouched('subject', true)}
-                      onChange={(val) => formik.setFieldValue('subject', val)}
-                      size="small"
-                      label="Subject *"
-                      name="subject"
-                      error={formik.touched.subject && Boolean(formik.errors.subject)}
-                      helperText={(formik.touched.subject && formik.errors.subject) as string}
-                      options={[
-                        { id: 'mathematics', name: 'Mathematics' },
-                        { id: 'science', name: 'Science' },
-                        { id: 'english', name: 'English' },
-                        { id: 'socialStudies', name: 'Social Studies' },
-                        { id: 'hindi', name: 'Hindi' },
-                        { id: 'marathi', name: 'Marathi' },
-                        { id: 'history', name: 'History' },
-                        { id: 'geography', name: 'Geography' },
-                        { id: 'physics', name: 'Physics' },
-                        { id: 'chemistry', name: 'Chemistry' },
-                        { id: 'biology', name: 'Biology' },
-                        { id: 'computerScience', name: 'Computer Science' },
-                      ]}
-                      labelKey="name"
-                      valueKey="id"
-                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-              )}
-
+              {/* Teacher — paginated search; only for relevant reports */}
               {showField('teacher') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.teacher && formik.errors.teacher)}>
-                    <Autocomplete
-                      id="teacher-dropdown"
-                      options={[
-                        { id: 't001', name: 'Ramesh Kumar' },
-                        { id: 't002', name: 'Priya Sharma' },
-                        { id: 't003', name: 'Anil Joshi' },
-                        { id: 't004', name: 'Sunita Verma' },
-                        { id: 't005', name: 'Rajesh Singh' },
-                        { id: 't006', name: 'Anita Desai' },
-                      ]}
-                      getOptionLabel={(option) => option.name}
-                      isOptionEqualToValue={(option, value) => option.id === value?.id}
-                      value={
-                        [
-                          { id: 't001', name: 'Ramesh Kumar' },
-                          { id: 't002', name: 'Priya Sharma' },
-                          { id: 't003', name: 'Anil Joshi' },
-                          { id: 't004', name: 'Sunita Verma' },
-                          { id: 't005', name: 'Rajesh Singh' },
-                          { id: 't006', name: 'Anita Desai' },
-                        ].find((opt) => opt.id === formik.values.teacher) || null
-                      }
-                      onChange={(event, newValue) => {
+                    <PaginatedSearchSelect
+                      label={`Teacher${isRequired('teacher') ? ' *' : ''}`}
+                      fetchOptions={fetchTeacherOptions}
+                      value={teacherObj}
+                      onChange={(_: unknown, newValue: EmployeeOption | null) => {
+                        setTeacherObj(newValue);
                         formik.setFieldValue('teacher', newValue ? newValue.id : '');
                       }}
                       onBlur={() => formik.setFieldTouched('teacher', true)}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Teacher *"
-                          size="small"
-                          fullWidth
-                          error={formik.touched.teacher && Boolean(formik.errors.teacher)}
-                          helperText={(formik.touched.teacher && formik.errors.teacher) as string}
-                        />
-                      )}
+                      getOptionLabel={(option: EmployeeOption) => option?.label || ''}
+                      isOptionEqualToValue={(option: EmployeeOption, value: EmployeeOption) =>
+                        option.id === value.id
+                      }
+                      debounceMs={400}
+                      minChars={0}
+                      size="small"
+                      fullWidth
+                      error={formik.touched.teacher && Boolean(formik.errors.teacher)}
+                      helperText={(formik.touched.teacher && formik.errors.teacher) as string}
                     />
                   </ShakingTextField>
                 </Grid>
               )}
 
+              {/* Room — dynamic from API; only for relevant reports */}
               {showField('roomNo') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.roomNo && formik.errors.roomNo)}>
                     <CustomSelect
-                      labelId="room-dropdown-label"
                       id="room-dropdown"
                       value={formik.values.roomNo}
                       onBlur={() => formik.setFieldTouched('roomNo', true)}
                       onChange={(val) => formik.setFieldValue('roomNo', val)}
                       size="small"
-                      label="Room No *"
+                      label={`Room${isRequired('roomNo') ? ' *' : ''}`}
                       name="roomNo"
                       error={formik.touched.roomNo && Boolean(formik.errors.roomNo)}
                       helperText={(formik.touched.roomNo && formik.errors.roomNo) as string}
-                      options={[
-                        { id: 'r001', name: 'Room 101' },
-                        { id: 'r002', name: 'Room 102' },
-                        { id: 'r003', name: 'Room 103' },
-                        { id: 'r004', name: 'Room 104' },
-                        { id: 'r005', name: 'Room 105' },
-                        { id: 'r006', name: 'Room 106' },
-                      ]}
+                      options={roomOptions}
+                      labelKey="roomName"
+                      valueKey="id"
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                      isLoading={isRoomsLoading}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
+
+              {/* Subject — dynamic from API; only for Subject-wise Distribution */}
+              {showField('subject') && (
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject)}>
+                    <CustomSelect
+                      id="subject-dropdown"
+                      value={formik.values.subject}
+                      onBlur={() => formik.setFieldTouched('subject', true)}
+                      onChange={(val) => formik.setFieldValue('subject', val)}
+                      size="small"
+                      label={`Subject${isRequired('subject') ? ' *' : ''}`}
+                      name="subject"
+                      error={formik.touched.subject && Boolean(formik.errors.subject)}
+                      helperText={(formik.touched.subject && formik.errors.subject) as string}
+                      options={subjectOptions}
                       labelKey="name"
                       valueKey="id"
                       formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                      disabled={!formik.values.organization}
+                      isLoading={isSubjectLoading}
                     />
                   </ShakingTextField>
                 </Grid>
               )}
 
-              {showField('fromDate') && (
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField error={!!(formik.touched.fromDate && formik.errors.fromDate)}>
-                    <DatePicker
-                      label="From Date *"
-                      disableFuture
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      value={formik.values.fromDate}
-                      onChange={(date) => formik.setFieldValue('fromDate', date)}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          error: formik.touched.fromDate && Boolean(formik.errors.fromDate),
-                          helperText: (formik.touched.fromDate && formik.errors.fromDate) as string,
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-              )}
-
-              {showField('toDate') && (
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField error={!!(formik.touched.toDate && formik.errors.toDate)}>
-                    <DatePicker
-                      label="To Date *"
-                      disableFuture
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      value={formik.values.toDate}
-                      onChange={(date) => formik.setFieldValue('toDate', date)}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          error: formik.touched.toDate && Boolean(formik.errors.toDate),
-                          helperText: (formik.touched.toDate && formik.errors.toDate) as string,
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-              )}
-
+              {/* Submit */}
               <Grid size={12} justifyContent="flex-end" display="flex">
                 <Button
                   startIcon={<Iconify icon={GlobalIcons.generateReport} />}

@@ -1,118 +1,135 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
-import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Card, Button } from '@mui/material';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CurriculumReportTitle } from 'src/enums/curriuculum-reports';
+import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import { getCurriculumValidationSchema } from './getCurriculumReportsValidationSchema';
 
 interface CurriculumReportInitialValues {
   report: CurriculumReportTitle;
-  department: string;
   organization: string;
   classes: string[];
   divisions: string[];
   subjects: string[];
-  revisionStatus: string;
-  fromDate: dayjs.Dayjs | null;
-  toDate: dayjs.Dayjs | null;
+  chapters: string[];
 }
 
 const initialValues: CurriculumReportInitialValues = {
   report: '' as unknown as CurriculumReportTitle,
-  department: '',
   organization: '',
   classes: [],
   divisions: [],
   subjects: [],
-  revisionStatus: '',
-  fromDate: null,
-  toDate: null,
+  chapters: [],
 };
 
-const commonFields = ['organization', 'classes', 'divisions'];
-
-const CurriculumReportFieldsMap = {
+/**
+ * Fields to render for each report type.
+ * Only fields listed here will be visible.
+ */
+const CurriculumReportFieldsMap: Record<number, string[]> = {
   [CurriculumReportTitle.ChapterProgressReport]: [
-    ...commonFields,
-    'subject',
-    'chapterStatus', // (Upcoming, In Progress, Completed)
-    'fromDate',
-    'toDate',
+    'organization',
+    'classes',
+    'divisions',
+    'subjects',
   ],
-
   [CurriculumReportTitle.SubjectWiseChapterCoverage]: [
-    ...commonFields,
-    'subject',
-    'fromDate',
-    'toDate',
+    'organization',
+    'classes',
+    'divisions',
+    'subjects',
   ],
-
   [CurriculumReportTitle.ChapterDescriptionSummary]: [
-    ...commonFields,
-    'subject',
-    'fromDate',
-    'toDate',
+    'organization',
+    'classes',
+    'divisions',
+    'subjects',
+    'chapters',
   ],
-
-  [CurriculumReportTitle.TimelineReport]: [...commonFields, 'subject', 'fromDate', 'toDate'],
-
+  [CurriculumReportTitle.TimelineReport]: ['organization', 'classes', 'divisions', 'subjects'],
   [CurriculumReportTitle.ClassWiseChapterAssignmentReport]: [
-    ...commonFields,
-    'subject',
-    'fromDate',
-    'toDate',
+    'organization',
+    'classes',
+    'divisions',
+    'subjects',
   ],
-
   [CurriculumReportTitle.CurriculumCompletionReport]: [
-    ...commonFields,
-    'subject',
-    'fromDate',
-    'toDate',
+    'organization',
+    'classes',
+    'divisions',
+    'subjects',
   ],
-
   [CurriculumReportTitle.ChapterRevisionAndRevisitTracker]: [
-    ...commonFields,
-    'subject',
-    'revisionStatus', // (Yes/No or Completed/Pending)
-    'fromDate',
-    'toDate',
+    'organization',
+    'classes',
+    'divisions',
+    'subjects',
+    'chapters',
   ],
+};
+
+/**
+ * Fields that must have a value before the form can be submitted.
+ * All other visible fields are optional.
+ */
+const CurriculumReportRequiredFieldsMap: Record<number, string[]> = {
+  // All four filters required
+  [CurriculumReportTitle.ChapterProgressReport]: [
+    'organization',
+    'classes',
+    'divisions',
+    'subjects',
+  ],
+  [CurriculumReportTitle.SubjectWiseChapterCoverage]: [
+    'organization',
+    'classes',
+    'divisions',
+    'subjects',
+  ],
+  [CurriculumReportTitle.ChapterDescriptionSummary]: [
+    'organization',
+    'classes',
+    'divisions',
+    'subjects',
+  ],
+  // Only org + classes required; division & subject are optional
+  [CurriculumReportTitle.TimelineReport]: ['organization', 'classes'],
+  // Org + classes + subject required; division optional
+  [CurriculumReportTitle.ClassWiseChapterAssignmentReport]: ['organization', 'classes', 'subjects'],
+  // Only org required; everything else optional
+  [CurriculumReportTitle.CurriculumCompletionReport]: ['organization'],
+  // Org + classes required; division, subject, chapter optional
+  [CurriculumReportTitle.ChapterRevisionAndRevisitTracker]: ['organization', 'classes'],
 };
 
 const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  // Redux state for current board, medium and medium setter
+  // Redux state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
-  // State to store list of all organizations/branches
+  // State for organisation / class / division dropdowns (derived from medium)
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
-
-  // State to store list of all classes/standards
   const [allClass, setAllClass] = useState<Standards[]>([]);
-
-  // State to store list of all divisions
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
-  // State to store dynamic validation schema based on selected report type
-  const [dynamicSchema, setDynamicSchema] = useState(
-    getCurriculumValidationSchema([], currentYear)
-  );
+  // Dynamic validation schema that re-builds whenever the selected report changes
+  const [dynamicSchema, setDynamicSchema] = useState(getCurriculumValidationSchema([], []));
 
-  // Initialize formik form with validation and submit handler
+  // ─── Formik ────────────────────────────────────────────────────────────────
   const formik = useFormik({
     initialValues: {
       ...initialValues,
@@ -126,29 +143,92 @@ const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => 
     },
   });
 
-  // Memoized computation of required fields based on selected report type
-  const currentFields = useMemo(
-    () => CurriculumReportFieldsMap[report as keyof typeof CurriculumReportFieldsMap] || [],
+  // ─── Derived field lists ───────────────────────────────────────────────────
+  const currentFields = useMemo(() => CurriculumReportFieldsMap[report as number] || [], [report]);
+
+  const currentRequiredFields = useMemo(
+    () => CurriculumReportRequiredFieldsMap[report as number] || [],
     [report]
   );
 
-  // Update validation schema whenever required fields change
-  useEffect(() => {
-    const newSchema = getCurriculumValidationSchema(currentFields, currentYear);
-    setDynamicSchema(newSchema);
-  }, [currentFields, currentYear]);
+  // Helper: is a field visible for the active report?
+  const showField = (fieldName: string) => currentFields.includes(fieldName);
 
-  // Update organizations list when medium changes
+  // Helper: should the field label show a required asterisk?
+  const isRequired = (fieldName: string) => currentRequiredFields.includes(fieldName);
+
+  // ─── Dynamic subject API ───────────────────────────────────────────────────
+  const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+    options: {
+      skip: !(medium as Medium)?.id,
+    },
+  });
+
+  const subjectOptions: any[] = useMemo(
+    () =>
+      subjectData?.data?.items ??
+      subjectData?.items ??
+      subjectData?.records ??
+      (Array.isArray(subjectData) ? subjectData : []),
+    [subjectData]
+  );
+
+  // ─── Dynamic chapter API ───────────────────────────────────────────────────
+  // Chapters depend on the first real (non-"all") selected class and the first selected subject.
+  const classId = useMemo(() => {
+    const nonAllClasses = (formik.values.classes as string[]).filter((id) => id !== 'all');
+    return nonAllClasses[0] ?? '';
+  }, [formik.values.classes]);
+
+  const subjectId = useMemo(
+    () => (formik.values.subjects as string[])[0] ?? '',
+    [formik.values.subjects]
+  );
+
+  const {
+    data: chapterResponse,
+    isLoading: isChapterLoading,
+    isFetching: isChapterFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    params: { standardId: classId, subjectId },
+    options: {
+      // Only fetch chapters for reports that actually show the chapter filter,
+      // AND only when both a specific class and a subject are selected.
+      skip: !currentFields.includes('chapters') || !classId || !subjectId,
+    },
+  });
+
+  const chapterOptions: any[] = useMemo(
+    () =>
+      chapterResponse?.data?.items ??
+      chapterResponse?.items ??
+      chapterResponse?.records ??
+      (Array.isArray(chapterResponse) ? chapterResponse : []),
+    [chapterResponse]
+  );
+
+  // ─── Effects ───────────────────────────────────────────────────────────────
+
+  // Rebuild validation schema when the visible/required field sets change
+  useEffect(() => {
+    setDynamicSchema(getCurriculumValidationSchema(currentFields, currentRequiredFields));
+  }, [currentFields, currentRequiredFields]);
+
+  // Sync organisation list from medium
   useEffect(() => {
     setAllOrganization(cloneDeep(medium?.educationMediumStages || []));
   }, [medium?.educationMediumStages]);
 
-  // Update classes list when organization selection changes
+  // Sync class list from selected organisation
   useEffect(() => {
     const standards =
       allOrganization.find((org: any) => org?.id === formik.values.organization)?.standards || [];
 
-    // Add "All" option if not present
     if (!standards.some((std) => std.id === 'all')) {
       standards.unshift({
         id: 'all',
@@ -164,29 +244,24 @@ const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => 
     setAllClass(standards);
   }, [allOrganization, formik.values.organization]);
 
-  // Helper function to check if a field should be displayed
-  const showField = (fieldName: string) => currentFields.includes(fieldName);
-
-  // Update divisions list when class selection changes
+  // Sync division list from selected class(es); auto-select when applicable
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (formik.values.classes.length === 0) {
-      // Reset divisions when no classes selected
       setAllDivision([]);
       formik.setFieldValue('divisions', []);
       return;
     }
 
     if (formik.values.classes.length === 1 && formik.values.classes[0] !== 'all') {
-      // Handle single class selection
       const selectedClass = allClass.find((cls: any) => cls?.id === formik.values.classes[0]);
       const divisions = selectedClass?.divisions || [];
       setAllDivision(divisions);
-
-      // Auto-select all divisions for the selected class
-      const divisionIds = divisions.map((div: any) => div.id);
-      formik.setFieldValue('divisions', [...divisionIds]);
+      formik.setFieldValue(
+        'divisions',
+        divisions.map((div: any) => div.id)
+      );
     } else {
-      // Handle multiple classes or "all" selection
       setAllDivision([
         {
           id: 'all',
@@ -199,20 +274,25 @@ const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => 
           standardId: '',
         },
       ]);
-
       formik.setFieldValue('divisions', ['all']);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allClass, formik.values.classes]);
 
+  // Clear chapter selection when class or subject changes
+  useEffect(() => {
+    formik.setFieldValue('chapters', []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classId, subjectId]);
+
+  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <Box sx={{ mt: 2 }}>
       <Card>
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
             <Grid container spacing={3}>
-              {/* Report Type is now hidden/handled by parent, so we don't show the dropdown */}
-
+              {/* Organisation */}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.organization && formik.errors.organization)}
@@ -227,11 +307,10 @@ const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => 
                       const standards =
                         allOrganization.find((org: any) => org?.id === val)?.standards || [];
                       const standardIds = standards.map((standard: any) => standard.id);
-
-                      // Avoid duplicating 'all'
-                      const uniqueClassIds = ['all', ...standardIds.filter((id) => id !== 'all')];
-
-                      formik.setFieldValue('classes', uniqueClassIds);
+                      formik.setFieldValue('classes', [
+                        'all',
+                        ...standardIds.filter((id: string) => id !== 'all'),
+                      ]);
                     }}
                     onBlur={() => formik.setFieldTouched('organization', true)}
                     error={formik.touched.organization && Boolean(formik.errors.organization)}
@@ -246,16 +325,16 @@ const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => 
                 </ShakingTextField>
               </Grid>
 
+              {/* Class */}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField error={!!(formik.touched.classes && formik.errors.classes)}>
                   <CustomSelect
                     options={allClass}
-                    label="Class *"
+                    label={`Class${isRequired('classes') ? ' *' : ''}`}
                     multiple
                     value={formik.values.classes}
                     onChange={(val) => {
                       const value = val as string[];
-
                       const allClassIds =
                         allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
                       const isAllClicked = value.includes('all');
@@ -264,31 +343,21 @@ const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => 
                       );
 
                       if (isAllClicked && !wasAllPreviouslySelected) {
-                        // "All" was just clicked - select all classes
                         formik.setFieldValue('classes', ['all', ...allClassIds]);
                       } else if (!isAllClicked && wasAllPreviouslySelected) {
-                        // "All" was just unchecked - deselect all classes
                         formik.setFieldValue('classes', []);
                       } else if (isAllClicked && wasAllPreviouslySelected) {
-                        // Individual item was selected/deselected while "All" was already selected
                         const selectedWithoutAll = value.filter((id) => id !== 'all');
-
                         if (selectedWithoutAll.length === allClassIds.length) {
-                          // All individual items are selected, keep "All" selected
                           formik.setFieldValue('classes', ['all', ...allClassIds]);
                         } else {
-                          // Not all individual items are selected, remove "All"
                           formik.setFieldValue('classes', selectedWithoutAll);
                         }
                       } else {
-                        // "All" is not selected, handle individual selections
                         const selectedWithoutAll = value.filter((id) => id !== 'all');
-
                         if (selectedWithoutAll.length === allClassIds.length) {
-                          // All individual items are selected, add "All"
                           formik.setFieldValue('classes', ['all', ...allClassIds]);
                         } else {
-                          // Not all items selected, just keep individual selections
                           formik.setFieldValue('classes', selectedWithoutAll);
                         }
                       }
@@ -304,6 +373,7 @@ const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => 
                 </ShakingTextField>
               </Grid>
 
+              {/* Division — hidden when "All" classes selected */}
               {!(formik.values.classes as string[]).includes('all') &&
                 formik.values.classes.length > 0 && (
                   <Grid size={{ xs: 12, sm: 6 }}>
@@ -312,7 +382,7 @@ const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => 
                     >
                       <CustomSelect
                         options={allDivision}
-                        label="Division *"
+                        label={`Division${isRequired('divisions') ? ' *' : ''}`}
                         value={formik.values.divisions}
                         onChange={(val) => formik.setFieldValue('divisions', val)}
                         onBlur={() => formik.setFieldTouched('divisions', true)}
@@ -331,8 +401,9 @@ const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => 
                   </Grid>
                 )}
 
-              {showField('subject') && (
-                <Grid size={{ xs: 12, sm: 6 }}>
+              {/* Subject — loaded dynamically from API */}
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ShakingTextField error={!!(formik.touched.subjects && formik.errors.subjects)}>
                   <CustomSelect
                     labelId="subjects-dropdown-label"
                     id="subjects-dropdown"
@@ -340,80 +411,49 @@ const CurriculumReportForm = ({ report }: { report: CurriculumReportTitle }) => 
                     onBlur={() => formik.setFieldTouched('subjects', true)}
                     onChange={(val) => formik.setFieldValue('subjects', val)}
                     size="small"
-                    label="Subjects *"
+                    label={`Subject${isRequired('subjects') ? ' *' : ''}`}
                     name="subjects"
                     error={formik.touched.subjects && Boolean(formik.errors.subjects)}
                     helperText={(formik.touched.subjects && formik.errors.subjects) as string}
-                    options={[
-                      { id: 'mathematics', name: 'Mathematics' },
-                      { id: 'science', name: 'Science' },
-                      { id: 'english', name: 'English' },
-                      { id: 'socialStudies', name: 'Social Studies' },
-                      { id: 'hindi', name: 'Hindi' },
-                      { id: 'marathi', name: 'Marathi' },
-                      { id: 'history', name: 'History' },
-                      { id: 'geography', name: 'Geography' },
-                      { id: 'physics', name: 'Physics' },
-                      { id: 'chemistry', name: 'Chemistry' },
-                      { id: 'biology', name: 'Biology' },
-                      { id: 'computerScience', name: 'Computer Science' },
-                    ]}
+                    options={subjectOptions}
                     multiple
                     labelKey="name"
                     valueKey="id"
                     formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                    disabled={!formik.values.organization}
+                    isLoading={isSubjectLoading}
                   />
-                </Grid>
-              )}
+                </ShakingTextField>
+              </Grid>
 
-              {showField('fromDate') && (
+              {/* Chapter — optional; only shown for reports that require it */}
+              {showField('chapters') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField error={!!(formik.touched.fromDate && formik.errors.fromDate)}>
-                    <DatePicker
-                      label="From Date *"
-                      disableFuture
-                      format="DD/MM/YYYY"
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      value={formik.values.fromDate}
-                      onChange={(date) => formik.setFieldValue('fromDate', date)}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          error: formik.touched.fromDate && Boolean(formik.errors.fromDate),
-                          helperText: (formik.touched.fromDate && formik.errors.fromDate) as string,
-                        },
-                      }}
+                  <ShakingTextField error={!!(formik.touched.chapters && formik.errors.chapters)}>
+                    <CustomSelect
+                      labelId="chapters-dropdown-label"
+                      id="chapters-dropdown"
+                      value={formik.values.chapters}
+                      onBlur={() => formik.setFieldTouched('chapters', true)}
+                      onChange={(val) => formik.setFieldValue('chapters', val)}
+                      size="small"
+                      label="Chapter"
+                      name="chapters"
+                      error={formik.touched.chapters && Boolean(formik.errors.chapters)}
+                      helperText={(formik.touched.chapters && formik.errors.chapters) as string}
+                      options={chapterOptions}
+                      multiple
+                      labelKey="name"
+                      valueKey="id"
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                      disabled={!classId || !subjectId}
+                      isLoading={isChapterLoading || isChapterFetching}
                     />
                   </ShakingTextField>
                 </Grid>
               )}
 
-              {showField('toDate') && (
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField error={!!(formik.touched.toDate && formik.errors.toDate)}>
-                    <DatePicker
-                      label="To Date *"
-                      disableFuture
-                      format="DD/MM/YYYY"
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      value={formik.values.toDate}
-                      onChange={(date) => formik.setFieldValue('toDate', date)}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          error: formik.touched.toDate && Boolean(formik.errors.toDate),
-                          helperText: (formik.touched.toDate && formik.errors.toDate) as string,
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-              )}
-
+              {/* Submit */}
               <Grid size={12} justifyContent="flex-end" display="flex">
                 <Button
                   startIcon={<Iconify icon={GlobalIcons.generateReport} />}

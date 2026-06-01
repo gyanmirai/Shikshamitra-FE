@@ -16,6 +16,8 @@ import {
   Button,
   Divider,
   MenuItem,
+  TableRow,
+  TableCell,
   TextField,
   Typography,
   Autocomplete,
@@ -126,27 +128,26 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
               'No matching scope selected yet'}
           </Typography>
         </Box>
-        {assignmentPreview?.resolutionChain?.length ? (
+        {assignmentPreview?.resolutionSteps?.length ? (
           <Box>
-            <SectionTable
-              columns={['Scope', 'Target', 'Status', 'Reason', 'Priority']}
-              rows={assignmentPreview.resolutionChain.map((step) => ({
-                id: `${step.scope}-${step.targetKey}`,
-                cells: [
-                  toLabel(step.scope),
-                  step.targetDisplayName || step.targetKey,
-                  <Chip
-                    key="status"
-                    size="small"
-                    label={toLabel(step.status)}
-                    color={step.status === 'matched' ? 'success' : 'default'}
-                    variant="outlined"
-                  />,
-                  toLabel(step.skipReason),
-                  step.priority ?? '-',
-                ],
-              }))}
-            />
+            <SectionTable columns={['Scope', 'Target', 'Status', 'Reason', 'Priority']}>
+              {assignmentPreview.resolutionSteps.map((step, index) => (
+                <TableRow key={`${step.source}-${step.targetKey || index}`} hover>
+                  <TableCell>{toLabel(step.targetType || step.source)}</TableCell>
+                  <TableCell>{step.targetDisplayName || step.targetKey || '-'}</TableCell>
+                  <TableCell>
+                    <Chip
+                      size="small"
+                      label={toLabel(step.status)}
+                      color={step.status === 'matched' ? 'success' : 'default'}
+                      variant="outlined"
+                    />
+                  </TableCell>
+                  <TableCell>{toLabel(step.skipReason)}</TableCell>
+                  <TableCell>{step.priority ?? '-'}</TableCell>
+                </TableRow>
+              ))}
+            </SectionTable>
           </Box>
         ) : null}
         <Divider />

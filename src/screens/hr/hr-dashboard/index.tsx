@@ -51,6 +51,8 @@ import {
 } from 'src/redux/hr/hrDashboardApi';
 
 import { HrDashboardPreviewShell } from './components/HrDashboardPreviewShell';
+import { shouldShowDashboardSnapshotSkeleton } from './hr-dashboard-preview-state';
+import { HrDashboardSnapshotEmptyState } from './components/HrDashboardSnapshotEmptyState';
 
 const EmployeeProfileDashboard = dynamic(() => import('../employee/employee-dashboard'));
 
@@ -712,12 +714,6 @@ const AdminDashboard = () => {
   const data = useMemo(() => parseHRDashboardPayload<HRDashboardSummary>(preview), [preview]);
 
   useEffect(() => {
-    if (preview?.status === 'Empty') {
-      refreshPreview('Main');
-    }
-  }, [preview?.status, refreshPreview]);
-
-  useEffect(() => {
     if (preview?.status !== 'Refreshing') return undefined;
     const id = window.setInterval(() => refetch(), 5000);
     return () => window.clearInterval(id);
@@ -812,6 +808,12 @@ const AdminDashboard = () => {
   }
 
   if (!data) {
+    const shouldShowSkeleton = shouldShowDashboardSnapshotSkeleton({
+      status: preview?.status,
+      isFetching,
+      hasPreview: Boolean(preview),
+    });
+
     return (
       <HrDashboardPreviewShell
         title="HR Dashboard"
@@ -820,7 +822,14 @@ const AdminDashboard = () => {
         isRefreshing={isRefreshStarting}
         onRefresh={() => refreshPreview('Main')}
       >
-        <DashboardSkeleton />
+        {shouldShowSkeleton ? (
+          <DashboardSkeleton />
+        ) : (
+          <HrDashboardSnapshotEmptyState
+            status={preview?.status}
+            isRefreshing={isRefreshStarting}
+          />
+        )}
       </HrDashboardPreviewShell>
     );
   }
@@ -898,9 +907,11 @@ const AdminDashboard = () => {
 
 const HRDashboardScreen = () => {
   const { data: session } = useSession() as any;
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
   const isAdminUser = hasRole(session?.profile?.role, 'admin');
+  const canViewHRDashboard = hasGrantedPermission(permissions, hrPermissions.dashboard);
 
-  if (!isAdminUser) {
+  if (!isAdminUser && !canViewHRDashboard) {
     return <EmployeeProfileDashboard editData={{}} />;
   }
 

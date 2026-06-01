@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { it, expect, describe } from 'vitest';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 
@@ -15,6 +16,7 @@ describe('employee change status form', () => {
     await expect(
       changeStatusValidationSchema.validate({
         status: { label: 'Retired', value: EmployeeStatusType.Retired },
+        effectiveDate: dayjs('2026-05-30'),
         remarks: 'Completed service',
       })
     ).resolves.toBeTruthy();
