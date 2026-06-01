@@ -37,8 +37,10 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   useEffect(() => {
     if (currentYear?.boards) {
       setBoards(currentYear.boards);
-      setSelectedBoard(currentYear.boards[0]?.id);
-      setSelectedMedium(currentYear.boards[0]?.educationMediums[0].id);
+      if (!selectedBoard) {
+        setSelectedBoard(currentYear.boards[0].id);
+        setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentYear.boards]);

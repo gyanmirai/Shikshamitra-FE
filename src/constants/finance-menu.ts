@@ -101,8 +101,8 @@ export const financePermissions = {
   },
   reports: `${defaultModulePermissionName}${defaultFinancePermissionName}Reports`,
   notification: `${defaultModulePermissionName}${defaultFinancePermissionName}Notification`,
-  auditTrail: `${defaultModulePermissionName}${defaultFinancePermissionName}AuditTrail`,
-  adjustments: `${defaultModulePermissionName}${defaultFinancePermissionName}Adjustments`,
+  auditTrail: `${defaultModulePermissionName}${defaultFinancePermissionName}Auditing`,
+  adjustments: `${defaultModulePermissionName}${defaultFinancePermissionName}Adjustment`,
   // Legacy permissions (kept for backward compatibility)
   invoiceReceipt: `${defaultModulePermissionName}${defaultFinancePermissionName}InvoiceReceipt`,
   settings: {

@@ -82,8 +82,10 @@ const ChargesTable = ({
     if (currentYear?.boards) {
       setBoards(currentYear.boards);
       // Only set initial values if not already selected
-      setSelectedBoard(currentYear.boards[0].id);
-      setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
+      if (!selectedBoard) {
+        setSelectedBoard(currentYear.boards[0].id);
+        setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentYear.boards]);
