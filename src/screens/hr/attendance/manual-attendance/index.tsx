@@ -74,9 +74,6 @@ const ManualAttendanceScreen = () => {
   const discardConfirmDialog = useBoolean();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const isHoliday = Boolean(data?.isHoliday);
-  const holidayReason =
-    data?.holidayReason || (data?.holidayName ? `Holiday: ${data.holidayName}` : null);
 
   const [saveDayAttendance, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
@@ -109,6 +106,10 @@ const ManualAttendanceScreen = () => {
     },
     options: { skip: !date },
   });
+
+  const isHoliday = Boolean(data?.isHoliday);
+  const holidayReason =
+    data?.holidayReason || (data?.holidayName ? `Holiday: ${data.holidayName}` : null);
 
   useEffect(() => {
     if (data?.items && data.items.length > 0) {
