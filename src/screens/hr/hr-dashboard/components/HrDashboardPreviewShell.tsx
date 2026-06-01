@@ -23,6 +23,9 @@ const isRefreshRunning = (status?: HRDashboardPreviewStatus) => status === 'Refr
 const formatRefreshTime = (value?: string | null) =>
   value ? dayjs(value).format('DD MMM YYYY, hh:mm A') : 'Not refreshed yet';
 
+const formatScheduleTime = (value?: string | null) =>
+  value ? dayjs(value).format('DD MMM, hh:mm A') : 'tomorrow morning';
+
 export const HrDashboardPreviewShell = ({
   title,
   subtitle,
@@ -47,7 +50,14 @@ export const HrDashboardPreviewShell = ({
         <Box>
           <Typography variant="h4">{title}</Typography>
           <Typography variant="body2" color="text.secondary">
-            {subtitle || `Last refreshed: ${formatRefreshTime(preview?.lastRefreshedAt)}`}
+            {subtitle || 'Stored HR operations snapshot'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Last refreshed:{' '}
+            {formatRefreshTime(preview?.lastSuccessfulRefreshAt || preview?.lastRefreshedAt)}
+            {preview?.nextScheduledRefreshAt
+              ? ` • Next scheduled: ${formatScheduleTime(preview.nextScheduledRefreshAt)}`
+              : ''}
           </Typography>
         </Box>
         <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" justifyContent="flex-end">
@@ -75,8 +85,24 @@ export const HrDashboardPreviewShell = ({
 
       {refreshing ? <LinearProgress /> : null}
       {hasError ? <Alert severity="warning">{preview?.lastError}</Alert> : null}
+      {preview?.isStale && preview?.status === 'Ready' ? (
+        <Alert severity="info">
+          This snapshot is older than 24 hours. You can keep working with the saved view or refresh
+          it now.
+        </Alert>
+      ) : null}
       {preview?.status === 'Empty' ? (
-        <Alert severity="info">Preparing dashboard preview. This can take a moment.</Alert>
+        <Alert severity="info">
+          No saved HR dashboard snapshot is available yet. Use Refresh to prepare one; the next
+          automatic refresh is scheduled around {formatScheduleTime(preview.nextScheduledRefreshAt)}
+          .
+        </Alert>
+      ) : null}
+      {preview?.status === 'Failed' ? (
+        <Alert severity="error">
+          The last dashboard refresh failed. Try Refresh again; page loading will continue to use
+          only saved snapshot data.
+        </Alert>
       ) : null}
 
       {children}

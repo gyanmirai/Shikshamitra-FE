@@ -75,6 +75,34 @@ export interface AttendanceImportRowsResponse {
   totalCount: number;
 }
 
+export interface AttendanceImportRowsSaveEntry {
+  rowId: string;
+  employeeId: string;
+  attendanceDate: string;
+  statusWire: string;
+  inTime?: string;
+  outTime?: string;
+  remarks?: string;
+}
+
+export interface AttendanceImportRowsSaveRequest {
+  importId: string;
+  entries: AttendanceImportRowsSaveEntry[];
+}
+
+export interface AttendanceImportRowsSaveResponse {
+  upsertedCount: number;
+}
+
+export const buildSaveAttendanceImportRowsQuery = ({
+  importId,
+  entries,
+}: AttendanceImportRowsSaveRequest) => ({
+  url: `/hr/attendance/automated-runs/${importId}/rows/save`,
+  method: 'POST',
+  body: { entries },
+});
+
 // ─── API ────────────────────────────────────────────────────────────────────────
 
 export const attendanceImportApi = api.injectEndpoints({
@@ -138,6 +166,18 @@ export const attendanceImportApi = api.injectEndpoints({
       }),
       invalidatesTags: [employeeType.attendanceImport],
     }),
+
+    saveAttendanceImportRows: builder.mutation<
+      AttendanceImportRowsSaveResponse,
+      AttendanceImportRowsSaveRequest
+    >({
+      query: buildSaveAttendanceImportRowsQuery,
+      invalidatesTags: [
+        employeeType.attendanceImport,
+        employeeType.attendance,
+        employeeType.runPayroll,
+      ],
+    }),
   }),
 });
 
@@ -147,4 +187,5 @@ export const {
   useGetAttendanceImportRowsQuery,
   useLockAttendanceImportBatchMutation,
   useUnlockAttendanceImportBatchMutation,
+  useSaveAttendanceImportRowsMutation,
 } = attendanceImportApi;

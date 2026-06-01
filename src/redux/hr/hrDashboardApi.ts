@@ -65,10 +65,14 @@ export type HRDashboardPreviewStatus = 'Empty' | 'Ready' | 'Refreshing' | 'Faile
 
 export type HRDashboardPreview = {
   dashboardKey: HRDashboardKey | string;
+  scopeKey?: string;
   status: HRDashboardPreviewStatus;
   payloadJson: string;
   payloadVersion: number;
+  isStale?: boolean;
   lastRefreshedAt?: string | null;
+  lastSuccessfulRefreshAt?: string | null;
+  nextScheduledRefreshAt?: string | null;
   refreshStartedAt?: string | null;
   refreshRequestedByUserId?: string | null;
   lastError?: string | null;

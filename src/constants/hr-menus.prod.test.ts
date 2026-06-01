@@ -9,23 +9,27 @@ const flattenItems = (items: any[]): any[] =>
 describe('HR production menu', () => {
   it('exposes HR MVP routes with production permissions', async () => {
     process.env.BUILD_STATIC_EXPORT = process.env.BUILD_STATIC_EXPORT ?? 'false';
-    const { default: hrModule } = await import('./hr-menus');
+    const { default: hrModule, hrPaths } = await import('./hr-menus');
     const navItems = Object.values(hrModule(true)).flatMap((sections) =>
       sections.flatMap((section) => section.items)
     );
     const titles = flattenTitles(navItems);
 
     expect(titles).toContain('I-card');
-    expect(titles).toContain('Professional Management');
+    expect(titles).toContain('Performance Management');
 
     const items = flattenItems(navItems);
     expect(items.find((item) => item.title === 'I-card')).toMatchObject({
       path: '/hr/i-card',
       permissionName: 'HR.Employee.ICard.View',
     });
-    expect(items.find((item) => item.title === 'Professional Management')).toMatchObject({
+    expect(items.find((item) => item.title === 'Performance Management')).toMatchObject({
       path: '/hr/professional-management',
       permissionName: 'HR.ProfessionalManagement.View',
+    });
+    expect(items.find((item) => item.title === 'Run Payroll')).toMatchObject({
+      path: hrPaths.payroll.runPayroll,
+      permissionName: 'HR.PayrollManagement.RunPayroll',
     });
   });
 });

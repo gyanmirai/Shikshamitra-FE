@@ -42,8 +42,8 @@ describe('manual attendance status mapper', () => {
       {
         employeeId: 'employee-1',
         statusWire: 'PRESENT',
-        inTime: '',
-        outTime: '',
+        inTime: null,
+        outTime: null,
         remarks: '',
       },
     ]);

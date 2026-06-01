@@ -21,7 +21,6 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { AttendanceRowStatus } from 'src/enums/attendance-row-status';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 import {
@@ -33,16 +32,15 @@ import {
   CheckCircleOutline,
 } from '@mui/icons-material';
 import {
+  useConfirmAttendanceMutation,
+  usePreviewAttendanceMutation,
+  useDownloadAttendanceTemplateMutation,
+} from 'src/redux/hr/attendanceApi';
+import {
   AttendanceImportBatchStatus,
   AttendanceImportBatchStatusColors,
   AttendanceImportBatchStatusOptions,
 } from 'src/enums/attendance-import-batch-statusType';
-import {
-  useConfirmAttendanceMutation,
-  usePreviewAttendanceMutation,
-  useSaveDayAttendanceMutation,
-  useDownloadAttendanceTemplateMutation,
-} from 'src/redux/hr/attendanceApi';
 import {
   Box,
   Card,
@@ -62,9 +60,9 @@ import {
 import {
   type AttendanceImportItem,
   useGetAttendanceImportsQuery,
-  AttendanceImportRowStatusCode,
   useGetAttendanceImportByIdQuery,
   useGetAttendanceImportRowsQuery,
+  useSaveAttendanceImportRowsMutation,
   useLockAttendanceImportBatchMutation,
   useUnlockAttendanceImportBatchMutation,
 } from 'src/redux/hr/attendanceImportApi';
@@ -73,36 +71,14 @@ import {
   isSupportedAttendanceImportFile,
   hasDuplicateAttendanceImportFileName,
 } from './attendance-import-upload-utils';
+import {
+  IMPORT_ROW_STATUS,
+  mapImportRowStatusToUi,
+  type ImportRowStatusType,
+  buildAttendanceImportRowsSaveEntries,
+} from './attendance-import-row-save-utils';
 
 // ─── Inner-table (row-level) attendance status ─────────────────────────────────
-type RowStatusType = AttendanceRowStatus | 'Pending';
-const ROW_STATUS = {
-  Present: AttendanceRowStatus.Present,
-  Absent: AttendanceRowStatus.Absent,
-  HalfDay: AttendanceRowStatus.HalfDay,
-  Pending: 'Pending' as const,
-};
-
-const mapImportRowStatusToUi = (
-  statusCode?: number | null,
-  statusText?: string | null
-): RowStatusType => {
-  if (statusCode === AttendanceImportRowStatusCode.Present) return ROW_STATUS.Present;
-  if (statusCode === AttendanceImportRowStatusCode.Absent) return ROW_STATUS.Absent;
-  if (statusCode === AttendanceImportRowStatusCode.HalfDay) return ROW_STATUS.HalfDay;
-
-  const normalizedStatus = (statusText || '')
-    .trim()
-    .toUpperCase()
-    .replace(/[\s_-]/g, '');
-  if (normalizedStatus === 'PRESENT') return ROW_STATUS.Present;
-  if (normalizedStatus === 'ABSENT' || normalizedStatus === 'FULLDAYLEAVE')
-    return ROW_STATUS.Absent;
-  if (normalizedStatus === 'HALFDAY' || normalizedStatus === 'HALFDAYLEAVE')
-    return ROW_STATUS.HalfDay;
-  return ROW_STATUS.Pending;
-};
-
 const segmentBtnBase = {
   flex: 1,
   display: 'flex',
@@ -999,9 +975,9 @@ const ImportDetailDialog = ({
   const summaryOpen = useBoolean(false);
   const isSaving = useBoolean();
 
-  const [saveDayAttendance] = useQueryAndMutation({
+  const [saveAttendanceImportRows] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useSaveDayAttendanceMutation,
+    currentQueryAndMutation: useSaveAttendanceImportRowsMutation,
   });
 
   // API call 2: fetch detail by id
@@ -1013,7 +989,11 @@ const ImportDetailDialog = ({
   });
 
   // API call 3: fetch employee rows for this import
-  const { data: rowsData, isLoading: rowsLoading } = useQueryAndMutation({
+  const {
+    data: rowsData,
+    isLoading: rowsLoading,
+    refetch: refetchImportRows,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAttendanceImportRowsQuery,
     params: {
@@ -1040,17 +1020,19 @@ const ImportDetailDialog = ({
     setRowsData2((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }, []);
 
-  // Map numeric enum to string for API statusWire
-  const getStatusWire = (status: RowStatusType): string => {
-    if (status === ROW_STATUS.Present) return 'Present';
-    if (status === ROW_STATUS.Absent) return 'Absent';
-    if (status === ROW_STATUS.HalfDay) return 'HalfDay';
-    return 'Pending';
-  };
-
   const handleSubmitAttendance = async () => {
-    const nonPendingRows = rowsData2.filter((r) => r.attendanceStatus !== ROW_STATUS.Pending);
+    const nonPendingRows = rowsData2.filter(
+      (r) => r.attendanceStatus !== IMPORT_ROW_STATUS.Pending
+    );
     const submitReadyRows = nonPendingRows.filter((r) => !!r.employeeId);
+    const entries = buildAttendanceImportRowsSaveEntries(submitReadyRows);
+    if (!importData?.id) {
+      shikshaMitraToast.error({
+        message: 'Attendance import is not loaded yet. Please try again.',
+      });
+      return;
+    }
+
     if (submitReadyRows.length === 0) {
       shikshaMitraToast.error({
         message: 'No valid rows available to submit. Resolve employee mapping issues first.',
@@ -1058,33 +1040,13 @@ const ImportDetailDialog = ({
       return;
     }
 
-    // Group entries by attendanceDate
-    const dateGroups = submitReadyRows.reduce(
-      (acc: Record<string, any[]>, row) => {
-        const date = row.attendanceDate || '';
-        if (!acc[date]) acc[date] = [];
-        acc[date].push(row);
-        return acc;
-      },
-      {} as Record<string, any[]>
-    );
-
     isSaving.onTrue();
     try {
-      const requests = Object.entries(dateGroups).map(([date, rows]) => {
-        const body = {
-          attendanceDate: date,
-          entries: rows.map((r: any) => ({
-            employeeId: r.employeeId,
-            statusWire: getStatusWire(r.attendanceStatus),
-            inTime: r.timeIn || '',
-            outTime: r.timeOut || '',
-            remarks: r.remarks || '',
-          })),
-        };
-        return saveDayAttendance(body).unwrap();
-      });
-      await Promise.all(requests);
+      await saveAttendanceImportRows({
+        importId: importData.id,
+        entries,
+      }).unwrap();
+      await refetchImportRows?.();
       const unresolvedCount = nonPendingRows.length - submitReadyRows.length;
       shikshaMitraToast.success({
         message:
@@ -1112,7 +1074,7 @@ const ImportDetailDialog = ({
       align: 'left' as const,
       isSort: false,
       isFilter: false,
-      render: (value: RowStatusType, row: any) => {
+      render: (value: ImportRowStatusType, row: any) => {
         const isRowEditable = !isPayrollLocked && !!row.employeeId;
         return (
           <Box
@@ -1130,23 +1092,23 @@ const ImportDetailDialog = ({
               <Box
                 onClick={() => {
                   if (!isRowEditable) return;
-                  updateRow(row.id, { attendanceStatus: ROW_STATUS.Present });
+                  updateRow(row.id, { attendanceStatus: IMPORT_ROW_STATUS.Present });
                 }}
                 sx={{
                   ...segmentBtnBase,
                   cursor: isRowEditable ? 'pointer' : 'not-allowed',
                   opacity: isRowEditable ? 1 : 0.45,
                   bgcolor:
-                    value === ROW_STATUS.Present
+                    value === IMPORT_ROW_STATUS.Present
                       ? (t: any) => t.vars.palette.success.main
                       : 'transparent',
                   color:
-                    value === ROW_STATUS.Present
+                    value === IMPORT_ROW_STATUS.Present
                       ? (t: any) => t.vars.palette.success.contrastText
                       : (t: any) => t.vars.palette.text.secondary,
                   '&:hover': {
                     bgcolor: (t: any) =>
-                      value === ROW_STATUS.Present
+                      value === IMPORT_ROW_STATUS.Present
                         ? t.vars.palette.success.dark
                         : varAlpha(t.vars.palette.success.mainChannel, 0.08),
                   },
@@ -1160,23 +1122,23 @@ const ImportDetailDialog = ({
               <Box
                 onClick={() => {
                   if (!isRowEditable) return;
-                  updateRow(row.id, { attendanceStatus: ROW_STATUS.HalfDay });
+                  updateRow(row.id, { attendanceStatus: IMPORT_ROW_STATUS.HalfDay });
                 }}
                 sx={{
                   ...segmentBtnBase,
                   cursor: isRowEditable ? 'pointer' : 'not-allowed',
                   opacity: isRowEditable ? 1 : 0.45,
                   bgcolor:
-                    value === ROW_STATUS.HalfDay
+                    value === IMPORT_ROW_STATUS.HalfDay
                       ? (t: any) => t.vars.palette.info.main
                       : 'transparent',
                   color:
-                    value === ROW_STATUS.HalfDay
+                    value === IMPORT_ROW_STATUS.HalfDay
                       ? (t: any) => t.vars.palette.info.contrastText
                       : (t: any) => t.vars.palette.text.secondary,
                   '&:hover': {
                     bgcolor: (t: any) =>
-                      value === ROW_STATUS.HalfDay
+                      value === IMPORT_ROW_STATUS.HalfDay
                         ? t.vars.palette.info.dark
                         : varAlpha(t.vars.palette.info.mainChannel, 0.08),
                   },
@@ -1190,23 +1152,23 @@ const ImportDetailDialog = ({
               <Box
                 onClick={() => {
                   if (!isRowEditable) return;
-                  updateRow(row.id, { attendanceStatus: ROW_STATUS.Pending });
+                  updateRow(row.id, { attendanceStatus: IMPORT_ROW_STATUS.Pending });
                 }}
                 sx={{
                   ...segmentBtnBase,
                   cursor: isRowEditable ? 'pointer' : 'not-allowed',
                   opacity: isRowEditable ? 1 : 0.45,
                   bgcolor:
-                    value === ROW_STATUS.Pending
+                    value === IMPORT_ROW_STATUS.Pending
                       ? (t: any) => t.vars.palette.warning.main
                       : 'transparent',
                   color:
-                    value === ROW_STATUS.Pending
+                    value === IMPORT_ROW_STATUS.Pending
                       ? (t: any) => t.vars.palette.warning.contrastText
                       : (t: any) => t.vars.palette.text.secondary,
                   '&:hover': {
                     bgcolor: (t: any) =>
-                      value === ROW_STATUS.Pending
+                      value === IMPORT_ROW_STATUS.Pending
                         ? t.vars.palette.warning.dark
                         : varAlpha(t.vars.palette.warning.mainChannel, 0.08),
                   },
@@ -1220,23 +1182,23 @@ const ImportDetailDialog = ({
               <Box
                 onClick={() => {
                   if (!isRowEditable) return;
-                  updateRow(row.id, { attendanceStatus: ROW_STATUS.Absent });
+                  updateRow(row.id, { attendanceStatus: IMPORT_ROW_STATUS.Absent });
                 }}
                 sx={{
                   ...segmentBtnBase,
                   cursor: isRowEditable ? 'pointer' : 'not-allowed',
                   opacity: isRowEditable ? 1 : 0.45,
                   bgcolor:
-                    value === ROW_STATUS.Absent
+                    value === IMPORT_ROW_STATUS.Absent
                       ? (t: any) => t.vars.palette.error.main
                       : 'transparent',
                   color:
-                    value === ROW_STATUS.Absent
+                    value === IMPORT_ROW_STATUS.Absent
                       ? (t: any) => t.vars.palette.error.contrastText
                       : (t: any) => t.vars.palette.text.secondary,
                   '&:hover': {
                     bgcolor: (t: any) =>
-                      value === ROW_STATUS.Absent
+                      value === IMPORT_ROW_STATUS.Absent
                         ? t.vars.palette.error.dark
                         : varAlpha(t.vars.palette.error.mainChannel, 0.08),
                   },
@@ -1506,7 +1468,7 @@ const ImportDetailDialog = ({
                 startIcon={<Iconify icon={GlobalIcons.submit} />}
                 disabled={
                   rowsData2.length === 0 ||
-                  rowsData2.every((r) => r.attendanceStatus === ROW_STATUS.Pending)
+                  rowsData2.every((r) => r.attendanceStatus === IMPORT_ROW_STATUS.Pending)
                 }
                 onClick={handleSubmitAttendance}
               >

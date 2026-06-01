@@ -17,6 +17,23 @@ export interface GetDayAttendanceParams {
   maxResultCount?: number;
 }
 
+export interface TakeAttendanceDayResponse {
+  totalCount: number;
+  date: string;
+  isDayLocked: boolean;
+  isHoliday?: boolean;
+  holidayName?: string | null;
+  holidayReason?: string | null;
+  items: Array<{
+    employeeId: string;
+    isHoliday?: boolean;
+    holidayName?: string | null;
+    holidayReason?: string | null;
+    [key: string]: unknown;
+  }>;
+  [key: string]: unknown;
+}
+
 export interface LockAttendanceDayParams {
   attendanceDate: string;
 }

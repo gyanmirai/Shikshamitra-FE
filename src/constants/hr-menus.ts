@@ -132,6 +132,14 @@ export const hrPermissions = {
     },
   },
   professionalManagement: `${defaultHrPermissionName}ProfessionalManagement.View`,
+  performanceManagement: {
+    view: `${defaultHrPermissionName}PerformanceManagement.View`,
+    manageTemplates: `${defaultHrPermissionName}PerformanceManagement.ManageTemplates`,
+    manageCycles: `${defaultHrPermissionName}PerformanceManagement.ManageCycles`,
+    reviewEmployees: `${defaultHrPermissionName}PerformanceManagement.ReviewEmployees`,
+    finalize: `${defaultHrPermissionName}PerformanceManagement.Finalize`,
+    exportReports: `${defaultHrPermissionName}PerformanceManagement.ExportReports`,
+  },
   reports: `${defaultModulePermissionName}${defaultHrPermissionName}Reports`,
   notification: `${defaultModulePermissionName}${defaultHrPermissionName}Notification`,
 };
@@ -429,7 +437,7 @@ const hrModule = (isDdvs: boolean) => ({
           ],
         },
         {
-          title: 'Professional Management',
+          title: 'Performance Management',
           path: hrPaths.professionalManagement,
           _action: 'professional-management',
           shortcutKey: 'Alt+H+M',
