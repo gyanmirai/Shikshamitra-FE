@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
@@ -9,43 +9,118 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import React, { useMemo, useState, useEffect } from 'react';
+import { Box, Grid, Card, Button } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { ExamReportTitle, StudentRankingBrightWeakReportMap } from 'src/enums/examination-reports';
-import {
-  Box,
-  Grid,
-  Card,
-  Chip,
-  Button,
-  Checkbox,
-  TextField,
-  Autocomplete,
-  ListItemText,
-} from '@mui/material';
+import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
+import { useGetExamMarksQuery } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
+import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import { getExamValidationSchema } from '../getExamReportValidationSchema';
 
-const examCommonFields = ['organizations', 'standards', 'divisions'];
+const resolveMultiSelectValues = (
+  selectedValues: string[],
+  previousValues: string[],
+  allRealIds: string[]
+): string[] => {
+  const hasAllInSelection = selectedValues.includes('all');
+  const wasAllPreviouslySelected = previousValues.includes('all');
 
-const StudentRankingReportFieldsMap = {
-  [ExamReportTitle.BrightStudentAnalysis]: [...examCommonFields, 'exam', 'grade'],
-  [ExamReportTitle.BrightStudentListSubjectWise]: [
-    ...examCommonFields,
+  if (hasAllInSelection && !wasAllPreviouslySelected) {
+    return ['all', ...allRealIds];
+  }
+
+  if (!hasAllInSelection && wasAllPreviouslySelected) {
+    return [];
+  }
+
+  if (hasAllInSelection && wasAllPreviouslySelected) {
+    return selectedValues.filter((id) => id !== 'all');
+  }
+
+  const selectedRealIds = selectedValues.filter((id) => id !== 'all');
+
+  if (
+    selectedRealIds.length === allRealIds.length &&
+    allRealIds.every((id) => selectedRealIds.includes(id))
+  ) {
+    return ['all', ...allRealIds];
+  }
+
+  return selectedRealIds;
+};
+
+const getApiItems = (response: any): any[] => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data?.items)) return response.data.items;
+  if (Array.isArray(response?.items)) return response.items;
+  if (Array.isArray(response?.records)) return response.records;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+};
+
+const StudentRankingReportFieldsMap: Partial<Record<ExamReportTitle, string[]>> = {
+  [ExamReportTitle.BrightStudentAnalysis]: [
+    'organizations',
+    'standards',
+    'divisions',
     'exam',
-    'subjects',
     'grade',
   ],
-  [ExamReportTitle.WeakStudentAnalysis]: [...examCommonFields, 'exams'],
-  [ExamReportTitle.WeakStudentAnalysisSubjectWise]: [
-    ...examCommonFields,
+  [ExamReportTitle.BrightStudentListSubjectWise]: [
+    'organizations',
+    'standards',
+    'divisions',
+    'subject',
     'exam',
-    'subject', // single subject
+    'grade',
   ],
-  [ExamReportTitle.StudentGradeAnalysis]: [...examCommonFields, 'exam'],
-  [ExamReportTitle.ResultListPassFailOverAllAnalysis]: [...examCommonFields, 'exam'],
-  [ExamReportTitle.ResultListOverallGradeAnalysis]: [...examCommonFields, 'exam'],
+  [ExamReportTitle.WeakStudentAnalysis]: ['organizations', 'standards', 'divisions', 'exam'],
+  [ExamReportTitle.WeakStudentAnalysisSubjectWise]: [
+    'organizations',
+    'standards',
+    'divisions',
+    'subject',
+    'exam',
+  ],
+  [ExamReportTitle.StudentGradeAnalysis]: ['organizations', 'standards', 'divisions', 'exam'],
+  [ExamReportTitle.ResultListPassFailOverAllAnalysis]: [
+    'organizations',
+    'standard_single',
+    'divisions',
+    'exam',
+  ],
+  [ExamReportTitle.ResultListOverallGradeAnalysis]: [
+    'organizations',
+    'standard_single',
+    'divisions',
+    'exam',
+  ],
+};
+
+const StudentRankingReportRequiredFieldsMap: Partial<Record<ExamReportTitle, string[]>> = {
+  [ExamReportTitle.BrightStudentAnalysis]: ['organizations', 'standards', 'exam', 'grade'],
+  [ExamReportTitle.BrightStudentListSubjectWise]: [
+    'organizations',
+    'standards',
+    'subject',
+    'exam',
+    'grade',
+  ],
+  [ExamReportTitle.WeakStudentAnalysis]: ['organizations', 'standards', 'exam'],
+  [ExamReportTitle.WeakStudentAnalysisSubjectWise]: [
+    'organizations',
+    'standards',
+    'subject',
+    'exam',
+  ],
+  [ExamReportTitle.StudentGradeAnalysis]: ['organizations', 'standards', 'exam'],
+  [ExamReportTitle.ResultListPassFailOverAllAnalysis]: ['organizations', 'standard_single', 'exam'],
+  [ExamReportTitle.ResultListOverallGradeAnalysis]: ['organizations', 'standard_single', 'exam'],
 };
 
 const examReportInitialValues = {
@@ -53,21 +128,15 @@ const examReportInitialValues = {
   organizations: [] as string[],
   standards: [] as string[],
   standard: '',
-  division: '',
-  organization: '',
   divisions: [] as string[],
-  exam: null,
-  exams: [],
-  subjects: [],
+  exam: '',
   subject: '',
-  grade: [],
-  minMark: null,
-  maxMark: null,
-  students: [],
+  grade: [] as string[],
 };
 
 const StudentRankingReports = ({ report }: { report: string }) => {
-  const mappedReport = StudentRankingBrightWeakReportMap.find((opt) => opt.label === report)?.name;
+  const mappedReport = StudentRankingBrightWeakReportMap.find((opt) => opt.label === report)
+    ?.name as ExamReportTitle;
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -75,40 +144,206 @@ const StudentRankingReports = ({ report }: { report: string }) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
-  const [dynamicSchema, setDynamicSchema] = useState(getExamValidationSchema([]));
+  const currentFields = useMemo(
+    () => StudentRankingReportFieldsMap[mappedReport] || [],
+    [mappedReport]
+  );
+  const currentRequiredFields = useMemo(
+    () => StudentRankingReportRequiredFieldsMap[mappedReport] || [],
+    [mappedReport]
+  );
+
+  const showField = useCallback((field: string) => currentFields.includes(field), [currentFields]);
+  const isRequired = useCallback(
+    (field: string) => currentRequiredFields.includes(field),
+    [currentRequiredFields]
+  );
+
+  const [dynamicSchema, setDynamicSchema] = useState(
+    getExamValidationSchema(currentFields, currentRequiredFields)
+  );
 
   const formik = useFormik({
     initialValues: {
       ...examReportInitialValues,
-      report: mappedReport as ExamReportTitle,
+      report: mappedReport,
     },
     enableReinitialize: true,
     validationSchema: dynamicSchema,
-    onSubmit: (values, { setSubmitting }) => {
+    onSubmit: (_values, { setSubmitting }) => {
       window.alert('Report Generated Successfully!');
       setSubmitting(false);
     },
   });
 
-  const currentFields = useMemo(
-    () =>
-      StudentRankingReportFieldsMap[mappedReport as keyof typeof StudentRankingReportFieldsMap] ||
-      [],
-    [mappedReport]
+  const selectedClassIds = useMemo(() => {
+    if (showField('standard_single')) {
+      return formik.values.standard ? [formik.values.standard] : [];
+    }
+
+    return formik.values.standards.filter((id) => id !== 'all');
+  }, [formik.values.standards, formik.values.standard, showField]);
+
+  const selectedDivisionIds = useMemo(
+    () => formik.values.divisions.filter((id) => id !== 'all'),
+    [formik.values.divisions]
   );
 
+  const shouldLoadExams = showField('exam') && Boolean((medium as Medium)?.id);
+  const shouldLoadSubjects =
+    showField('subject') && Boolean((medium as Medium)?.id) && selectedClassIds.length > 0;
+
+  const shouldLoadGrades =
+    showField('grade') &&
+    Boolean(formik.values.exam) &&
+    selectedClassIds.length > 0 &&
+    (!showField('subject') || Boolean(formik.values.subject));
+
+  const {
+    data: examData,
+    isLoading: isExamLoading,
+    isFetching: isExamFetching,
+    isError: isExamError,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExamsQuery,
+    params: {
+      AcademicMediumId: (medium as Medium)?.id,
+      Status: examScheduledStatus.Completed,
+    },
+    options: {
+      skip: !shouldLoadExams,
+    },
+  });
+
+  const {
+    data: subjectData,
+    isLoading: isSubjectLoading,
+    isFetching: isSubjectFetching,
+    isError: isSubjectError,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+    options: {
+      skip: !shouldLoadSubjects,
+    },
+  });
+
+  const gradeQuery = useMemo(
+    () => ({
+      page: 1,
+      pageSize: 500,
+    }),
+    []
+  );
+
+  const allParamsReadyForGrade = shouldLoadGrades;
+
+  const {
+    data: gradingData,
+    isLoading: isGradeLoading,
+    isFetching: isGradeFetching,
+    isError: isGradeError,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExamMarksQuery,
+    params: {
+      ExamId: formik.values.exam,
+      SubjectId: formik.values.subject || undefined,
+      DivisionId: selectedDivisionIds[0] || undefined,
+      StandardId: selectedClassIds[0] || undefined,
+      ...gradeQuery,
+    },
+    options: {
+      skip: !allParamsReadyForGrade,
+    },
+  });
+
+  const examOptions = useMemo(
+    () =>
+      getApiItems(examData)
+        .map((exam: any) => ({
+          id: exam.examId ?? exam.id ?? '',
+          name: exam.examName ?? exam.name ?? '',
+        }))
+        .filter((option: { id: string; name: string }) => option.id && option.name),
+    [examData]
+  );
+
+  const subjectOptions = useMemo(
+    () =>
+      getApiItems(subjectData)
+        .map((subject: any) => ({
+          id: subject.subjectId ?? subject.id ?? '',
+          name: subject.subjectName ?? subject.name ?? '',
+        }))
+        .filter((option: { id: string; name: string }) => option.id && option.name),
+    [subjectData]
+  );
+
+  const gradeOptions = useMemo(() => {
+    const gradeSet = new Set<string>();
+    getApiItems(gradingData).forEach((item: any) => {
+      const rawGrade = item?.grade;
+      if (rawGrade === null || rawGrade === undefined) return;
+      const normalizedGrade = String(rawGrade).trim();
+      if (!normalizedGrade) return;
+      gradeSet.add(normalizedGrade);
+    });
+
+    return Array.from(gradeSet)
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+      .map((grade) => ({ id: grade, name: grade }));
+  }, [gradingData]);
+
+  const examNoOptionsMessage = useMemo(() => {
+    if (isExamError) return 'Unable to load exams';
+    if (shouldLoadExams && !isExamLoading && !isExamFetching && examOptions.length === 0) {
+      return 'No exams found';
+    }
+    return 'No data available';
+  }, [examOptions.length, isExamError, isExamFetching, isExamLoading, shouldLoadExams]);
+
+  const subjectNoOptionsMessage = useMemo(() => {
+    if (isSubjectError) return 'Unable to load subjects';
+    if (
+      shouldLoadSubjects &&
+      !isSubjectLoading &&
+      !isSubjectFetching &&
+      subjectOptions.length === 0
+    ) {
+      return 'No subjects found';
+    }
+    return 'No data available';
+  }, [
+    isSubjectError,
+    shouldLoadSubjects,
+    isSubjectLoading,
+    isSubjectFetching,
+    subjectOptions.length,
+  ]);
+
+  const gradeNoOptionsMessage = useMemo(() => {
+    if (isGradeError) return 'Unable to load grades';
+    if (shouldLoadGrades && !isGradeLoading && !isGradeFetching && gradeOptions.length === 0) {
+      return 'No grades found';
+    }
+    return 'No data available';
+  }, [isGradeError, shouldLoadGrades, isGradeLoading, isGradeFetching, gradeOptions.length]);
+
   useEffect(() => {
-    const schema = getExamValidationSchema(currentFields);
-    setDynamicSchema(schema);
-  }, [currentFields]);
+    setDynamicSchema(getExamValidationSchema(currentFields, currentRequiredFields));
+  }, [currentFields, currentRequiredFields]);
 
   useEffect(() => {
     if (!medium?.educationMediumStages) {
       setAllOrganization([]);
       return;
     }
-    const orgList = cloneDeep(medium.educationMediumStages);
-    const updatedOrganizations = [
+
+    const organizations = cloneDeep(medium.educationMediumStages);
+    setAllOrganization([
       {
         id: 'all',
         name: 'All',
@@ -119,66 +354,93 @@ const StudentRankingReports = ({ report }: { report: string }) => {
         educationMediumStageId: '',
         divisions: [],
       },
-      ...orgList,
-    ];
-    setAllOrganization(updatedOrganizations);
+      ...organizations,
+    ]);
   }, [medium?.educationMediumStages]);
 
   useEffect(() => {
-    const selectedOrgs = formik.values.organizations.filter((id) => id !== 'all');
+    const selectedOrgIds = formik.values.organizations.filter((id) => id !== 'all');
 
-    if (selectedOrgs.length === 0) {
+    if (selectedOrgIds.length === 0) {
       setAllClass([]);
       formik.setFieldValue('standards', []);
+      formik.setFieldValue('standard', '');
+      formik.setFieldValue('divisions', []);
+      formik.setFieldValue('subject', '');
+      formik.setFieldValue('exam', '');
+      formik.setFieldValue('grade', []);
       return;
     }
 
-    const filteredOrganizations = allOrganization?.filter((org: any) =>
-      selectedOrgs.includes(org.id)
-    );
+    const standards = allOrganization
+      .filter((org: any) => selectedOrgIds.includes(org.id))
+      .flatMap((org: any) => (Array.isArray(org.standards) ? org.standards : []));
 
-    const allStandards: any[] = [];
-    filteredOrganizations?.forEach((org: any) => {
-      if (org.standards && Array.isArray(org.standards)) {
-        allStandards.push(...org.standards);
-      }
-    });
+    setAllClass(standards);
 
-    setAllClass(allStandards);
-
-    if (allStandards.length > 0) {
-      const allClassIds = allStandards.map((cls: any) => cls.id);
-      formik.setFieldValue('standards', ['all', ...allClassIds]);
-    } else {
+    const allClassIds = standards.map((item: any) => item.id);
+    if (showField('standard_single')) {
+      formik.setFieldValue('standard', '');
       formik.setFieldValue('standards', []);
+    } else {
+      formik.setFieldValue('standards', allClassIds.length > 0 ? ['all', ...allClassIds] : []);
+      formik.setFieldValue('standard', '');
     }
+    formik.setFieldValue('subject', '');
+    formik.setFieldValue('grade', []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.organizations]);
+  }, [allOrganization, formik.values.organizations, currentFields]);
 
   useEffect(() => {
-    const selected = formik.values.standards.filter((id) => id !== 'all');
-
-    if (!selected || selected.length === 0) {
+    if (selectedClassIds.length === 0) {
       setAllDivision([]);
       formik.setFieldValue('divisions', []);
+      formik.setFieldValue('subject', '');
+      formik.setFieldValue('grade', []);
       return;
     }
 
-    if (selected.length === 1) {
-      const cl = allClass.find((c: any) => c?.id === selected[0]);
-      const divs = cl?.divisions || [];
-      setAllDivision(divs);
-
-      const ids = divs.map((d: any) => d.id);
-      formik.setFieldValue('divisions', ids.length > 0 ? ['all', ...ids] : []);
+    if (selectedClassIds.length === 1) {
+      const selectedClass = allClass.find((item: any) => item.id === selectedClassIds[0]);
+      const divisions = selectedClass?.divisions || [];
+      setAllDivision(divisions);
+      const divisionIds = divisions.map((item: any) => item.id);
+      formik.setFieldValue('divisions', divisionIds.length > 0 ? ['all', ...divisionIds] : []);
     } else {
       setAllDivision([]);
       formik.setFieldValue('divisions', ['all']);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allClass, formik.values.standards]);
 
-  const showField = (field: string) => currentFields.includes(field);
+    formik.setFieldValue('subject', '');
+    formik.setFieldValue('grade', []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allClass, selectedClassIds.join(',')]);
+
+  useEffect(() => {
+    formik.setFieldValue('grade', []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.exam]);
+
+  useEffect(() => {
+    if (!showField('subject')) return;
+    if (
+      formik.values.subject &&
+      !subjectOptions.some((subject) => subject.id === formik.values.subject)
+    ) {
+      formik.setFieldValue('subject', '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjectOptions, currentFields]);
+
+  useEffect(() => {
+    if (!showField('grade')) return;
+    const validIds = new Set(gradeOptions.map((grade) => grade.id));
+    const nextGrades = formik.values.grade.filter((id) => validIds.has(id));
+    if (nextGrades.length !== formik.values.grade.length) {
+      formik.setFieldValue('grade', nextGrades);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gradeOptions, currentFields]);
 
   return (
     <Box sx={{ mt: 2 }}>
@@ -186,54 +448,32 @@ const StudentRankingReports = ({ report }: { report: string }) => {
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
             <Grid container spacing={3}>
-              {/* ORGANIZATION */}
               {showField('organizations') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={!!formik.errors.organizations && !!formik.touched.organizations}
                   >
                     <ResponsiveMultiSelect
-                      label="Organizations"
+                      label={`Organization${isRequired('organizations') ? ' *' : ''}`}
                       options={[
                         { id: 'all', name: 'All' },
-                        ...allOrganization.filter((o) => o.id !== 'all'),
+                        ...allOrganization.filter((organization) => organization.id !== 'all'),
                       ]}
                       value={formik.values.organizations}
-                      getOptionLabel={(opt) => opt?.name}
-                      getOptionValue={(opt) => opt?.id}
+                      getOptionLabel={(option: any) => option?.name}
+                      getOptionValue={(option: any) => option?.id}
                       onChange={(selectedValues) => {
                         const allRealIds = allOrganization
-                          .filter((o) => o.id !== 'all')
-                          .map((o) => o.id);
+                          .filter((organization) => organization.id !== 'all')
+                          .map((organization) => organization.id);
 
-                        const hasAllInSelection = selectedValues.includes('all');
-                        const wasAllPreviouslySelected =
-                          formik.values.organizations.includes('all');
+                        const nextValues = resolveMultiSelectValues(
+                          selectedValues,
+                          formik.values.organizations,
+                          allRealIds
+                        );
 
-                        let finalValues: string[] = [];
-
-                        if (hasAllInSelection && !wasAllPreviouslySelected) {
-                          finalValues = ['all', ...allRealIds];
-                        } else if (!hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = [];
-                        } else if (hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = selectedValues.filter((id) => id !== 'all');
-                        } else {
-                          const allIndividuallySelected = allRealIds.every((id) =>
-                            selectedValues.includes(id)
-                          );
-
-                          if (
-                            allIndividuallySelected &&
-                            selectedValues.length === allRealIds.length
-                          ) {
-                            finalValues = ['all', ...allRealIds];
-                          } else {
-                            finalValues = selectedValues;
-                          }
-                        }
-
-                        formik.setFieldValue('organizations', finalValues);
+                        formik.setFieldValue('organizations', nextValues);
                       }}
                       error={!!(formik.touched.organizations && formik.errors.organizations)}
                       helperText={
@@ -247,44 +487,26 @@ const StudentRankingReports = ({ report }: { report: string }) => {
                 </Grid>
               )}
 
-              {/* CLASS / STANDARD */}
               {showField('standards') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!formik.errors.standards && !!formik.touched.standards}>
                     <ResponsiveMultiSelect
-                      label="Class *"
+                      label={`Class${isRequired('standards') ? ' *' : ''}`}
                       options={[{ id: 'all', name: 'All' }, ...allClass]}
                       value={formik.values.standards}
-                      getOptionLabel={(opt) => opt?.name}
-                      getOptionValue={(opt) => opt?.id}
+                      getOptionLabel={(option: any) => option?.name}
+                      getOptionValue={(option: any) => option?.id}
                       disabled={formik.values.organizations.length === 0}
                       onChange={(selectedValues) => {
-                        const allRealIds = allClass.map((c) => c.id);
-                        const hasAllInSelection = selectedValues.includes('all');
-                        const wasAllPreviouslySelected = formik.values.standards.includes('all');
+                        const allRealIds = allClass.map((item) => item.id);
 
-                        let finalValues: string[] = [];
+                        const nextValues = resolveMultiSelectValues(
+                          selectedValues,
+                          formik.values.standards,
+                          allRealIds
+                        );
 
-                        if (hasAllInSelection && !wasAllPreviouslySelected) {
-                          finalValues = ['all', ...allRealIds];
-                        } else if (!hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = [];
-                        } else if (hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = selectedValues.filter((id) => id !== 'all');
-                        } else {
-                          const selectedRealIds = selectedValues.filter((id) => id !== 'all');
-
-                          if (
-                            selectedRealIds.length === allRealIds.length &&
-                            allRealIds.every((id) => selectedRealIds.includes(id))
-                          ) {
-                            finalValues = ['all', ...allRealIds];
-                          } else {
-                            finalValues = selectedRealIds;
-                          }
-                        }
-
-                        formik.setFieldValue('standards', finalValues);
+                        formik.setFieldValue('standards', nextValues);
                       }}
                       error={formik.touched.standards && Boolean(formik.errors.standards)}
                       helperText={(formik.touched.standards && formik.errors.standards) as string}
@@ -293,51 +515,58 @@ const StudentRankingReports = ({ report }: { report: string }) => {
                 </Grid>
               )}
 
-              {/* DIVISIONS */}
+              {showField('standard_single') && (
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ShakingTextField error={!!formik.errors.standard && !!formik.touched.standard}>
+                    <CustomSelect
+                      label={`Class${isRequired('standard_single') ? ' *' : ''}`}
+                      options={allClass}
+                      labelKey="name"
+                      valueKey="id"
+                      value={formik.values.standard}
+                      onChange={(value) => {
+                        formik.setFieldValue('standard', value);
+                        formik.setFieldValue('divisions', []);
+                        formik.setFieldValue('subject', '');
+                        formik.setFieldValue('grade', []);
+                      }}
+                      error={formik.touched.standard && Boolean(formik.errors.standard)}
+                      helperText={(formik.touched.standard && formik.errors.standard) as string}
+                      disabled={formik.values.organizations.length === 0}
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
+
               {showField('divisions') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!formik.errors.divisions && !!formik.touched.divisions}>
                     <ResponsiveMultiSelect
-                      label="Division *"
+                      label={`Division${isRequired('divisions') ? ' *' : ''}`}
                       options={[{ id: 'all', name: 'All' }, ...allDivision]}
                       value={formik.values.divisions}
-                      getOptionLabel={(opt) => opt?.name}
-                      getOptionValue={(opt) => opt?.id}
+                      getOptionLabel={(option: any) => option?.name}
+                      getOptionValue={(option: any) => option?.id}
                       disabled={formik.values.standards.length === 0}
                       onChange={(selectedValues) => {
-                        const selected = formik.values.standards.filter((id) => id !== 'all');
-
-                        if (selected.length > 1 || formik.values.standards.includes('all')) {
+                        if (
+                          selectedClassIds.length > 1 ||
+                          formik.values.standards.includes('all')
+                        ) {
                           formik.setFieldValue('divisions', ['all']);
                           return;
                         }
 
-                        const allRealIds = allDivision.map((d) => d.id);
-                        const hasAllInSelection = selectedValues.includes('all');
-                        const wasAllPreviouslySelected = formik.values.divisions.includes('all');
+                        const allRealIds = allDivision.map((item) => item.id);
 
-                        let finalValues: string[] = [];
+                        const nextValues = resolveMultiSelectValues(
+                          selectedValues,
+                          formik.values.divisions,
+                          allRealIds
+                        );
 
-                        if (hasAllInSelection && !wasAllPreviouslySelected) {
-                          finalValues = ['all', ...allRealIds];
-                        } else if (!hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = [];
-                        } else if (hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = selectedValues.filter((id) => id !== 'all');
-                        } else {
-                          const selectedRealIds = selectedValues.filter((id) => id !== 'all');
-
-                          if (
-                            selectedRealIds.length === allRealIds.length &&
-                            allRealIds.every((id) => selectedRealIds.includes(id))
-                          ) {
-                            finalValues = ['all', ...allRealIds];
-                          } else {
-                            finalValues = selectedRealIds;
-                          }
-                        }
-
-                        formik.setFieldValue('divisions', finalValues);
+                        formik.setFieldValue('divisions', nextValues);
                       }}
                       error={formik.touched.divisions && Boolean(formik.errors.divisions)}
                       helperText={(formik.touched.divisions && formik.errors.divisions) as string}
@@ -346,222 +575,78 @@ const StudentRankingReports = ({ report }: { report: string }) => {
                 </Grid>
               )}
 
-              {/* Single Exam */}
               {showField('exam') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!formik.errors.exam && !!formik.touched.exam}>
-                    <Autocomplete
-                      options={[
-                        { id: 'unit1', name: 'Unit Test 1' },
-                        { id: 'unit2', name: 'Unit Test 2' },
-                        { id: 'half', name: 'Half Yearly' },
-                        { id: 'annual', name: 'Annual Exam' },
-                      ]}
-                      getOptionLabel={(option) => option.name}
-                      isOptionEqualToValue={(option, value) => option.id === value?.id}
-                      value={
-                        [
-                          { id: 'unit1', name: 'Unit Test 1' },
-                          { id: 'unit2', name: 'Unit Test 2' },
-                          { id: 'half', name: 'Half Yearly' },
-                          { id: 'annual', name: 'Annual Exam' },
-                        ].find((opt) => opt.id === formik.values.exam) || null
-                      }
-                      onChange={(event, newValue) => {
-                        formik.setFieldValue('exam', newValue ? newValue.id : null);
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Exam *"
-                          fullWidth
-                          size="small"
-                          error={formik.touched.exam && Boolean(formik.errors.exam)}
-                          helperText={(formik.touched.exam && formik.errors.exam) as string}
-                        />
-                      )}
+                    <CustomSelect
+                      label={`Exam${isRequired('exam') ? ' *' : ''}`}
+                      options={examOptions}
+                      labelKey="name"
+                      valueKey="id"
+                      value={formik.values.exam}
+                      onChange={(value) => formik.setFieldValue('exam', value)}
+                      error={formik.touched.exam && Boolean(formik.errors.exam)}
+                      helperText={(formik.touched.exam && formik.errors.exam) as string}
+                      disabled={!shouldLoadExams}
+                      isLoading={isExamLoading || isExamFetching}
+                      noOptionsMessage={examNoOptionsMessage}
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                     />
                   </ShakingTextField>
                 </Grid>
               )}
 
-              {/* Multi Exam */}
-              {showField('exams') && (
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField error={!!formik.errors.exams && !!formik.touched.exams}>
-                    <Autocomplete
-                      multiple
-                      options={[
-                        { id: 'unit1', name: 'Unit Test 1' },
-                        { id: 'unit2', name: 'Unit Test 2' },
-                        { id: 'half', name: 'Half Yearly' },
-                        { id: 'annual', name: 'Annual Exam' },
-                      ]}
-                      renderOption={(props, option, { selected }) => (
-                        <li {...props}>
-                          <Checkbox checked={selected} size="small" style={{ marginRight: 8 }} />
-                          <ListItemText primary={option.name} />
-                        </li>
-                      )}
-                      renderTags={(value, getTagProps) =>
-                        value.map((option, index) => (
-                          <Chip
-                            {...getTagProps({ index })}
-                            label={option.name}
-                            size="small"
-                            variant="soft"
-                          />
-                        ))
-                      }
-                      getOptionLabel={(option) => option.name}
-                      isOptionEqualToValue={(option, value) => option.id === value.id}
-                      value={formik.values.exams.map((id) => ({ id, name: id }))}
-                      onChange={(_e, newVal) =>
-                        formik.setFieldValue(
-                          'exams',
-                          newVal.map((v) => v.id)
-                        )
-                      }
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Exams *"
-                          size="small"
-                          fullWidth
-                          error={formik.touched.exams && Boolean(formik.errors.exams)}
-                          helperText={(formik.touched.exams && formik.errors.exams) as string}
-                        />
-                      )}
-                    />
-                  </ShakingTextField>
-                </Grid>
-              )}
-
-              {/* Subjects (Multi) */}
-              {showField('subjects') && (
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField error={!!formik.errors.subjects && !!formik.touched.subjects}>
-                    <Autocomplete
-                      multiple
-                      options={[
-                        { id: 'math', name: 'Math' },
-                        { id: 'eng', name: 'English' },
-                        { id: 'science', name: 'Science' },
-                      ]}
-                      renderOption={(props, option, { selected }) => (
-                        <li {...props}>
-                          <Checkbox checked={selected} size="small" style={{ marginRight: 8 }} />
-                          <ListItemText primary={option.name} />
-                        </li>
-                      )}
-                      renderTags={(value, getTagProps) =>
-                        value.map((option, index) => (
-                          <Chip
-                            {...getTagProps({ index })}
-                            label={option.name}
-                            size="small"
-                            variant="soft"
-                          />
-                        ))
-                      }
-                      getOptionLabel={(option) => option.name}
-                      isOptionEqualToValue={(option, value) => option.id === value.id}
-                      value={formik.values.subjects.map((id) => ({ id, name: id }))}
-                      onChange={(_e, newVal) =>
-                        formik.setFieldValue(
-                          'subjects',
-                          newVal.map((v) => v.id)
-                        )
-                      }
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Subjects *"
-                          size="small"
-                          fullWidth
-                          error={formik.touched.subjects && Boolean(formik.errors.subjects)}
-                          helperText={(formik.touched.subjects && formik.errors.subjects) as string}
-                        />
-                      )}
-                    />
-                  </ShakingTextField>
-                </Grid>
-              )}
-
-              {/* Single Subject */}
               {showField('subject') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!formik.errors.subject && !!formik.touched.subject}>
                     <CustomSelect
-                      label="Subject *"
-                      options={[
-                        { id: 'math', name: 'Math' },
-                        { id: 'eng', name: 'English' },
-                      ]}
+                      label={`Subject${isRequired('subject') ? ' *' : ''}`}
+                      options={subjectOptions}
                       labelKey="name"
                       valueKey="id"
                       value={formik.values.subject}
-                      onChange={(val) => formik.setFieldValue('subject', val)}
+                      onChange={(value) => {
+                        formik.setFieldValue('subject', value);
+                        formik.setFieldValue('grade', []);
+                      }}
                       error={formik.touched.subject && Boolean(formik.errors.subject)}
                       helperText={(formik.touched.subject && formik.errors.subject) as string}
+                      disabled={!shouldLoadSubjects}
+                      isLoading={isSubjectLoading || isSubjectFetching}
+                      noOptionsMessage={subjectNoOptionsMessage}
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                     />
                   </ShakingTextField>
                 </Grid>
               )}
 
-              {/* Grade */}
               {showField('grade') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!formik.errors.grade && !!formik.touched.grade}>
-                    <Autocomplete
-                      multiple
-                      options={[
-                        { id: 'A+', name: 'A+' },
-                        { id: 'A', name: 'A' },
-                        { id: 'B', name: 'B' },
-                        { id: 'C', name: 'C' },
-                      ]}
-                      renderOption={(props, option, { selected }) => (
-                        <li {...props}>
-                          <Checkbox checked={selected} size="small" style={{ marginRight: 8 }} />
-                          <ListItemText primary={option.name} />
-                        </li>
-                      )}
-                      renderTags={(value, getTagProps) =>
-                        value.map((option, index) => (
-                          <Chip
-                            {...getTagProps({ index })}
-                            label={option.name}
-                            size="small"
-                            variant="soft"
-                          />
-                        ))
+                    <ResponsiveMultiSelect
+                      label={`Grade${isRequired('grade') ? ' *' : ''}`}
+                      options={gradeOptions}
+                      value={formik.values.grade}
+                      getOptionLabel={(option: any) => option?.name ?? ''}
+                      getOptionValue={(option: any) => option?.id ?? ''}
+                      disabled={!shouldLoadGrades}
+                      isLoading={isGradeLoading || isGradeFetching}
+                      onChange={(selectedValues) => {
+                        formik.setFieldValue('grade', selectedValues);
+                      }}
+                      error={formik.touched.grade && Boolean(formik.errors.grade)}
+                      helperText={
+                        ((formik.touched.grade && formik.errors.grade) as string)
+                          ? ((formik.touched.grade && formik.errors.grade) as string)
+                          : gradeNoOptionsMessage === 'No grades found' && shouldLoadGrades
+                            ? 'No grades found for selected filters'
+                            : undefined
                       }
-                      getOptionLabel={(option) => option.name}
-                      isOptionEqualToValue={(option, value) => option.id === value.id}
-                      value={formik.values.grade.map((id) => ({ id, name: id }))}
-                      onChange={(_e, newVal) =>
-                        formik.setFieldValue(
-                          'grade',
-                          newVal.map((v) => v.id)
-                        )
-                      }
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Grade *"
-                          size="small"
-                          fullWidth
-                          error={formik.touched.grade && Boolean(formik.errors.grade)}
-                          helperText={(formik.touched.grade && formik.errors.grade) as string}
-                        />
-                      )}
                     />
                   </ShakingTextField>
                 </Grid>
               )}
 
-              {/* Submit Button */}
               <Grid size={12} display="flex" justifyContent="flex-end">
                 <Button
                   variant="contained"

@@ -19,8 +19,8 @@ import StudentRankingReports from './StudentRanking/StudentRankingReports';
 import StudentWiseResultReports from './StudentWiseResults/StudentWiseResultReports';
 import SubjectPerformanceReports from './SubjectPerformance/SubjectPerformanceReports';
 import StandardResultListReports from './StandardResultLists/StandardResultListReports';
-import ConsolidatedMultiExamReports from './ConsolidatedReports/ConsolidatedMultiExamReports';
 import GeneralGradePerformanceReports from './GeneralAnalysis/GeneralGradePerformanceReports';
+import ConsolidatedMultiExamReports from './ConsolidatedReports/ConsolidatedMultiExamReports';
 
 const ExaminationReports = ({ addReportDialog }: { addReportDialog: UseBooleanReturn }) => {
   const categories = [

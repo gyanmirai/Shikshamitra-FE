@@ -1,7 +1,8 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -12,138 +13,176 @@ import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Card, Button } from '@mui/material';
-import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import {
   AssignmentReportTitle,
   AssignmentReportTitleOptions,
 } from 'src/enums/assignment-wise-report';
+import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
+import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { useTeacherSelection } from 'src/screens/academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/hooks/useTeacherSelection';
 
 import { getAssignmentValidationSchema } from './AssignmentTypeReportValidation';
 
-// --------------------------------------------------------------
+type EmployeeOption = { id: string; label: string };
+type AssignmentSelectMode = 'single' | 'multiple';
 
-const commonFields = ['organization', 'class', 'divisions'];
+interface AssignmentReportFormValues {
+  report: AssignmentReportTitle;
+  organization: string;
+  class: string;
+  divisions: string[];
+  subjects: string[];
+  teachers: string[];
+  students: string[];
+  assignments: string[];
+  fromDate: Dayjs | null;
+  toDate: Dayjs | null;
+}
 
-const AssignmentReportFieldsMap: Record<AssignmentReportTitle, string[]> = {
-  [AssignmentReportTitle.AssignmentIssuanceReport]: [
-    ...commonFields,
-    'subjects',
-    'teachers',
-    'fromDate',
-    'toDate',
-  ],
-
-  [AssignmentReportTitle.AssignmentSubmissionReport]: [
-    ...commonFields,
-    'subjects',
-    'assignments',
-    'teachers',
-    'students',
-    'fromDate',
-    'toDate',
-  ],
-
-  [AssignmentReportTitle.AssignmentEvaluationReport]: [
-    ...commonFields,
-    'subjects',
-    'assignments',
-    'teachers',
-    'students',
-    'fromDate',
-    'toDate',
-  ],
-
-  [AssignmentReportTitle.AssignmentMarksReport]: [
-    ...commonFields,
-    'subjects',
-    'assignments',
-    'students',
-    'fromDate',
-    'toDate',
-  ],
-
-  [AssignmentReportTitle.LateSubmissionReport]: [
-    ...commonFields,
-    'subjects',
-    'assignments',
-    'students',
-    'fromDate',
-    'toDate',
-  ],
-
-  [AssignmentReportTitle.MissingAssignmentReport]: [
-    ...commonFields,
-    'subjects',
-    'assignments',
-    'students',
-    'fromDate',
-    'toDate',
-  ],
-
-  [AssignmentReportTitle.AssignmentFeedbackReport]: [
-    ...commonFields,
-    'subjects',
-    'assignments',
-    'teachers',
-    'students',
-    'fromDate',
-    'toDate',
-  ],
-
-  [AssignmentReportTitle.AssignmentGradeDistributionReport]: [
-    ...commonFields,
-    'subjects',
-    'assignments',
-  ],
-
-  [AssignmentReportTitle.AssignmentPerformanceReport]: [
-    ...commonFields,
-    'subjects',
-    'assignments',
-    'students',
-    'fromDate',
-    'toDate',
-  ],
-};
-
-// --------------------------------------------------------------
-
-const assignmentInitialValues = {
+const assignmentInitialValues: AssignmentReportFormValues = {
   report: '' as unknown as AssignmentReportTitle,
   organization: '',
   class: '',
   divisions: [],
-  assignments: [],
   subjects: [],
   teachers: [],
   students: [],
+  assignments: [],
   fromDate: null,
   toDate: null,
 };
 
-// --------------------------------------------------------------
+const AssignmentReportFieldsMap: Record<AssignmentReportTitle, string[]> = {
+  [AssignmentReportTitle.AssignmentIssuanceReport]: [
+    'organization',
+    'class',
+    'divisions',
+    'subjects',
+    'teachers',
+    'fromDate',
+    'toDate',
+  ],
+  [AssignmentReportTitle.AssignmentSubmissionReport]: [
+    'organization',
+    'class',
+    'divisions',
+    'subjects',
+    'students',
+    'fromDate',
+    'toDate',
+  ],
+  [AssignmentReportTitle.AssignmentEvaluationReport]: [
+    'organization',
+    'teachers',
+    'subjects',
+    'class',
+    'divisions',
+    'fromDate',
+    'toDate',
+  ],
+  [AssignmentReportTitle.AssignmentMarksReport]: [
+    'organization',
+    'class',
+    'divisions',
+    'subjects',
+    'assignments',
+    'students',
+    'fromDate',
+    'toDate',
+  ],
+  [AssignmentReportTitle.LateSubmissionReport]: [
+    'organization',
+    'class',
+    'divisions',
+    'subjects',
+    'students',
+    'fromDate',
+    'toDate',
+  ],
+  [AssignmentReportTitle.MissingAssignmentReport]: [
+    'organization',
+    'class',
+    'divisions',
+    'subjects',
+    'students',
+    'fromDate',
+    'toDate',
+  ],
+  [AssignmentReportTitle.AssignmentFeedbackReport]: [
+    'organization',
+    'class',
+    'divisions',
+    'teachers',
+    'subjects',
+    'students',
+  ],
+  [AssignmentReportTitle.AssignmentGradeDistributionReport]: [
+    'organization',
+    'class',
+    'divisions',
+    'subjects',
+    'assignments',
+    'fromDate',
+    'toDate',
+  ],
+  [AssignmentReportTitle.AssignmentPerformanceReport]: [
+    'organization',
+    'class',
+    'divisions',
+    'subjects',
+    'teachers',
+    'students',
+    'fromDate',
+    'toDate',
+  ],
+};
 
-const AssignmentManagementReports = ({ report }: { report: any }) => {
+const AssignmentReportRequiredFieldsMap: Record<AssignmentReportTitle, string[]> = {
+  [AssignmentReportTitle.AssignmentIssuanceReport]: ['organization', 'class', 'fromDate', 'toDate'],
+  [AssignmentReportTitle.AssignmentSubmissionReport]: ['organization', 'fromDate', 'toDate'],
+  [AssignmentReportTitle.AssignmentEvaluationReport]: ['organization', 'fromDate', 'toDate'],
+  [AssignmentReportTitle.AssignmentMarksReport]: ['organization', 'fromDate', 'toDate'],
+  [AssignmentReportTitle.LateSubmissionReport]: ['organization', 'fromDate', 'toDate'],
+  [AssignmentReportTitle.MissingAssignmentReport]: ['organization', 'fromDate', 'toDate'],
+  [AssignmentReportTitle.AssignmentFeedbackReport]: ['organization', 'class'],
+  [AssignmentReportTitle.AssignmentGradeDistributionReport]: [
+    'organization',
+    'class',
+    'assignments',
+    'fromDate',
+    'toDate',
+  ],
+  [AssignmentReportTitle.AssignmentPerformanceReport]: ['organization', 'fromDate', 'toDate'],
+};
+
+const AssignmentSelectModeMap: Partial<Record<AssignmentReportTitle, AssignmentSelectMode>> = {
+  [AssignmentReportTitle.AssignmentMarksReport]: 'multiple',
+  [AssignmentReportTitle.AssignmentGradeDistributionReport]: 'multiple',
+};
+
+const normalizeArray = (input: any): any[] =>
+  input?.data?.items ?? input?.items ?? input?.records ?? (Array.isArray(input) ? input : []);
+
+const removeAllToken = (values: string[]) => values.filter((id) => id !== 'all');
+
+const AssignmentManagementReports = ({ report }: { report: string }) => {
   const mappedReport = AssignmentReportTitleOptions.find((opt) => opt.label === report)?.name;
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
-  const [getStudents, { data: StudentsData }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
-  });
 
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
   const [dynamicSchema, setDynamicSchema] = useState(
-    getAssignmentValidationSchema([], currentYear)
+    getAssignmentValidationSchema([], [], currentYear)
   );
 
   const formik = useFormik({
@@ -153,61 +192,160 @@ const AssignmentManagementReports = ({ report }: { report: any }) => {
     },
     enableReinitialize: true,
     validationSchema: dynamicSchema,
-    onSubmit: (val, { setSubmitting }) => {
+    onSubmit: (values, { setSubmitting }) => {
+      const payload = {
+        report: values.report,
+        ...(currentFields.includes('organization') && { organizationId: values.organization }),
+        ...(currentFields.includes('class') && { classId: values.class || null }),
+        ...(currentFields.includes('divisions') && {
+          divisionIds: removeAllToken(values.divisions),
+        }),
+        ...(currentFields.includes('subjects') && { subjectIds: removeAllToken(values.subjects) }),
+        ...(currentFields.includes('teachers') && { teacherIds: removeAllToken(values.teachers) }),
+        ...(currentFields.includes('students') && { studentIds: removeAllToken(values.students) }),
+        ...(currentFields.includes('assignments') && {
+          assignmentIds: removeAllToken(values.assignments),
+        }),
+        ...(currentFields.includes('fromDate') && {
+          fromDate: values.fromDate ? dayjs(values.fromDate).format('YYYY-MM-DD') : null,
+        }),
+        ...(currentFields.includes('toDate') && {
+          toDate: values.toDate ? dayjs(values.toDate).format('YYYY-MM-DD') : null,
+        }),
+      };
+
+      // Keep existing report workflow behavior while providing config-aligned payload generation.
+      // eslint-disable-next-line no-console
+      console.log('Assignment report payload:', payload);
       window.alert('Assignment report generated...');
       setSubmitting(false);
     },
   });
 
-  // Pick dynamic fields based on selected report
   const currentFields = useMemo(
     () => AssignmentReportFieldsMap[mappedReport as AssignmentReportTitle] || [],
     [mappedReport]
   );
 
-  useEffect(() => {
-    const newSchema = getAssignmentValidationSchema(
-      AssignmentReportFieldsMap[mappedReport as AssignmentReportTitle],
-      currentYear
-    );
-    setDynamicSchema(newSchema);
-  }, [mappedReport, currentYear]);
+  const currentRequiredFields = useMemo(
+    () => AssignmentReportRequiredFieldsMap[mappedReport as AssignmentReportTitle] || [],
+    [mappedReport]
+  );
 
-  // Load Organization
+  const assignmentSelectMode =
+    AssignmentSelectModeMap[mappedReport as AssignmentReportTitle] || 'multiple';
+
+  const isAssignmentMultiple = assignmentSelectMode === 'multiple';
+
+  const showField = useCallback(
+    (fieldName: string) => currentFields.includes(fieldName),
+    [currentFields]
+  );
+  const isRequired = useCallback(
+    (fieldName: string) => currentRequiredFields.includes(fieldName),
+    [currentRequiredFields]
+  );
+
+  const withRequired = (label: string, fieldName: string) =>
+    `${label}${isRequired(fieldName) ? ' *' : ''}`;
+
+  const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+    options: {
+      skip: !showField('subjects') || !(medium as Medium)?.id,
+    },
+  });
+
+  const subjectOptions = useMemo(() => normalizeArray(subjectData), [subjectData]);
+
+  const { fetchPrimaryTeacherOptions: fetchTeacherOptions } = useTeacherSelection({
+    primaryTeacherId: '',
+    secondaryTeacherIds: [],
+  });
+
+  const [teacherObjs, setTeacherObjs] = useState<EmployeeOption[]>([]);
+
+  const selectedSubjectId = useMemo(
+    () => removeAllToken(formik.values.subjects)[0],
+    [formik.values.subjects]
+  );
+
+  const canLoadAssignments =
+    showField('assignments') &&
+    !!(medium as Medium)?.id &&
+    !!formik.values.class &&
+    !!selectedSubjectId;
+
+  const {
+    data: assignmentData,
+    isLoading: isAssignmentLoading,
+    isError: isAssignmentError,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignmentsQuery,
+    params: {
+      academicMediumId: (medium as Medium)?.id,
+      StandardId: formik.values.class,
+      DivisionId: formik.values.divisions[0],
+      SubjectId: selectedSubjectId,
+    },
+    options: {
+      skip: !canLoadAssignments,
+    },
+  });
+
+  const assignmentOptions = useMemo(
+    () =>
+      normalizeArray(assignmentData).map((item: any) => ({
+        id: item.id,
+        name:
+          item.title ||
+          item.assignmentTitle ||
+          item.name ||
+          item.assignmentName ||
+          item.topic ||
+          'Untitled Assignment',
+      })),
+    [assignmentData]
+  );
+
+  const assignmentHelperText =
+    (formik.touched.assignments && (formik.errors.assignments as string)) ||
+    (isAssignmentError ? 'Unable to load assignments. Please retry.' : '') ||
+    (canLoadAssignments && !isAssignmentLoading && assignmentOptions.length === 0
+      ? 'No assignments found for selected filters.'
+      : '');
+
+  const [getStudents, { data: studentsData, isLoading: isStudentsLoading }] =
+    useLazyGetFilterStudentsQuery();
+
+  const studentOptions = useMemo(
+    () =>
+      studentsData?.items?.map((item: any) => ({
+        id: item.id,
+        name: [item.firstName, item.middleName, item.lastName].filter(Boolean).join(' '),
+      })) || [],
+    [studentsData?.items]
+  );
+
+  useEffect(() => {
+    setDynamicSchema(
+      getAssignmentValidationSchema(currentFields, currentRequiredFields, currentYear)
+    );
+  }, [currentFields, currentRequiredFields, currentYear]);
+
   useEffect(() => {
     setAllOrganization(cloneDeep(medium?.educationMediumStages || []));
   }, [medium?.educationMediumStages]);
 
-  // Load Classes
   useEffect(() => {
     const standards =
       allOrganization.find((org: any) => org?.id === formik.values.organization)?.standards || [];
     setAllClass(standards);
   }, [allOrganization, formik.values.organization]);
 
-  const showField = (fieldName: string) => currentFields.includes(fieldName);
-
-  // Load Students when Class + Division Changes
-  useEffect(() => {
-    if (formik.values.class && formik.values.divisions) {
-      const filterCriteria = {
-        classIds: formik.values.class,
-        divisionIds: [formik.values.divisions],
-      };
-      getStudents(filterCriteria);
-    }
-  }, [formik.values.class, formik.values.divisions, getStudents]);
-
-  const tableData = useMemo(
-    () =>
-      StudentsData?.items?.map((item: any) => ({
-        ...item,
-        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
-      })) || [],
-    [StudentsData?.items]
-  );
-
-  // Load division when class changes
   useEffect(() => {
     if (!formik.values.class) {
       setAllDivision([]);
@@ -216,33 +354,45 @@ const AssignmentManagementReports = ({ report }: { report: any }) => {
     }
 
     const selectedClass = allClass.find((cls) => cls.id === formik.values.class);
-
-    const divisions = selectedClass?.divisions || [];
-
-    setAllDivision(divisions);
-
-    formik.setFieldValue(
-      'divisions',
-      divisions.map((d) => d.id)
-    );
+    setAllDivision(selectedClass?.divisions || []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.class, allClass]);
+  }, [allClass, formik.values.class]);
 
-  // Auto-select students when list loads
   useEffect(() => {
-    // Only auto-select students when standards & divisions are selected
-    if (!currentFields.includes('students')) return;
-    if (!formik.values.class || !formik.values.divisions.length) return;
+    if (!showField('students') || !formik.values.class) return;
 
-    if (tableData.length > 0) {
-      formik.setFieldValue('students', ['all', ...tableData.map((s: any) => s.id)]);
-    } else {
-      formik.setFieldValue('students', []);
+    getStudents({
+      academicYearId: currentYear?.id,
+      academicMediumId: (medium as Medium)?.id,
+      standardId: formik.values.class,
+      divisionId: formik.values.divisions[0],
+    });
+  }, [
+    currentYear?.id,
+    formik.values.class,
+    formik.values.divisions,
+    getStudents,
+    medium,
+    showField,
+  ]);
+
+  useEffect(() => {
+    if (!showField('assignments')) return;
+
+    const validAssignmentIds = new Set(assignmentOptions.map((item: any) => item.id));
+    const nextAssignments = formik.values.assignments.filter((id) => validAssignmentIds.has(id));
+
+    if (nextAssignments.length !== formik.values.assignments.length) {
+      formik.setFieldValue('assignments', nextAssignments);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableData, currentFields, formik.values.class, formik.values.divisions]);
+  }, [assignmentOptions, showField]);
 
-  // --------------------------------------------------------------
+  useEffect(() => {
+    setTeacherObjs([]);
+    formik.setFieldValue('teachers', []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mappedReport]);
 
   return (
     <Box sx={{ mt: 2 }}>
@@ -250,7 +400,6 @@ const AssignmentManagementReports = ({ report }: { report: any }) => {
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
             <Grid container spacing={3}>
-              {/* Organization */}
               {showField('organization') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
@@ -261,15 +410,19 @@ const AssignmentManagementReports = ({ report }: { report: any }) => {
                       label="Organization *"
                       value={formik.values.organization}
                       onChange={(val) => {
-                        formik.setFieldValue('organization', val);
-                        formik.setFieldValue('class', '');
-                        formik.setFieldValue('divisions', []);
-                        formik.setFieldValue('subjects', []);
-                        formik.setFieldValue('teachers', []);
-                        formik.setFieldValue('students', []);
-                        formik.setFieldValue('assignments', []);
-                        formik.setFieldValue('fromDate', null);
-                        formik.setFieldValue('toDate', null);
+                        formik.setValues({
+                          ...formik.values,
+                          organization: val as string,
+                          class: '',
+                          divisions: [],
+                          subjects: [],
+                          assignments: [],
+                          teachers: [],
+                          students: [],
+                          fromDate: null,
+                          toDate: null,
+                        });
+                        setTeacherObjs([]);
                       }}
                       onBlur={() => formik.setFieldTouched('organization', true)}
                       error={formik.touched.organization && Boolean(formik.errors.organization)}
@@ -285,64 +438,61 @@ const AssignmentManagementReports = ({ report }: { report: any }) => {
                 </Grid>
               )}
 
-              {/* Class */}
               {showField('class') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
                     <CustomSelect
                       options={allClass}
-                      label="Class *"
+                      label={withRequired('Class', 'class')}
                       value={formik.values.class}
                       multiple={false}
                       onChange={(val) => {
-                        formik.setFieldValue('class', val);
-
                         const selectedClass = allClass.find((cls) => cls.id === val);
                         const divisions = selectedClass?.divisions || [];
 
                         setAllDivision(divisions);
-
-                        formik.setFieldValue(
-                          'divisions',
-                          divisions.map((d) => d.id)
-                        );
-                        formik.setFieldValue('subjects', []);
-                        formik.setFieldValue('teachers', []);
-                        formik.setFieldValue('students', []);
-                        formik.setFieldValue('assignments', []);
-                        formik.setFieldValue('fromDate', null);
-                        formik.setFieldValue('toDate', null);
+                        formik.setValues({
+                          ...formik.values,
+                          class: val as string,
+                          divisions: [],
+                          subjects: [],
+                          assignments: [],
+                          teachers: [],
+                          students: [],
+                        });
+                        setTeacherObjs([]);
                       }}
                       onBlur={() => formik.setFieldTouched('class', true)}
                       error={formik.touched.class && Boolean(formik.errors.class)}
                       helperText={(formik.touched.class && formik.errors.class) as string}
                       labelKey="name"
                       valueKey="id"
-                      disabled={!formik.values.organization}
                       formControlProps={{ sx: { width: '100%' } }}
+                      disabled={!formik.values.organization}
                     />
                   </ShakingTextField>
                 </Grid>
               )}
 
-              {/* Division */}
               {showField('divisions') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.divisions && formik.errors.divisions)}>
                     <CustomSelect
                       options={allDivision}
-                      label="Division *"
+                      label={withRequired('Division', 'divisions')}
                       multiple
-                      disabled={!formik.values.class}
+                      disabled={showField('class') && !formik.values.class}
                       value={formik.values.divisions}
                       onChange={(val) => {
-                        formik.setFieldValue('divisions', val);
-                        formik.setFieldValue('teachers', []);
-                        formik.setFieldValue('subjects', []);
-                        formik.setFieldValue('students', []);
-                        formik.setFieldValue('assignments', []);
-                        formik.setFieldValue('fromDate', null);
-                        formik.setFieldValue('toDate', null);
+                        formik.setValues({
+                          ...formik.values,
+                          divisions: val as string[],
+                          subjects: [],
+                          assignments: [],
+                          teachers: [],
+                          students: [],
+                        });
+                        setTeacherObjs([]);
                       }}
                       onBlur={() => formik.setFieldTouched('divisions', true)}
                       error={formik.touched.divisions && Boolean(formik.errors.divisions)}
@@ -355,62 +505,26 @@ const AssignmentManagementReports = ({ report }: { report: any }) => {
                 </Grid>
               )}
 
-              {/* Subjects */}
               {showField('subjects') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.subjects && formik.errors.subjects)}>
                     <ResponsiveMultiSelect
-                      label="Subjects *"
-                      options={[
-                        { id: 'all', name: 'All' },
-                        ...[
-                          { id: 'english', name: 'English' },
-                          { id: 'math', name: 'Mathematics' },
-                          { id: 'science', name: 'Science' },
-                          { id: 'computer', name: 'Computer' },
-                          { id: 'social', name: 'Social Studies' },
-                        ],
-                      ]}
+                      label={withRequired('Subject', 'subjects')}
+                      options={subjectOptions}
                       value={formik.values.subjects}
-                      getOptionLabel={(opt) => opt?.name}
-                      getOptionValue={(opt) => opt?.id}
-                      disabled={formik.values.divisions.length === 0}
+                      getOptionLabel={(opt: any) => opt?.name ?? ''}
+                      getOptionValue={(opt: any) => opt?.id ?? ''}
+                      disabled={
+                        !formik.values.organization || (showField('class') && !formik.values.class)
+                      }
+                      isLoading={isSubjectLoading}
                       onChange={(selectedValues) => {
-                        const allActualSubjects = [
-                          { id: 'english', name: 'English' },
-                          { id: 'math', name: 'Mathematics' },
-                          { id: 'science', name: 'Science' },
-                          { id: 'computer', name: 'Computer' },
-                          { id: 'social', name: 'Social Studies' },
-                        ];
-                        const allRealIds = allActualSubjects.map((s) => s.id);
-                        const hasAllInSelection = selectedValues.includes('all');
-                        const wasAllPreviouslySelected = (
-                          formik.values.subjects as string[]
-                        ).includes('all');
-                        let finalValues: string[] = [];
-
-                        if (hasAllInSelection && !wasAllPreviouslySelected) {
-                          finalValues = ['all', ...allRealIds];
-                        } else if (!hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = [];
-                        } else if (hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = selectedValues.filter((id) => id !== 'all');
-                        } else {
-                          const selectedRealIds = selectedValues.filter((id) => id !== 'all');
-                          if (
-                            selectedRealIds.length === allRealIds.length &&
-                            allRealIds.every((id) => selectedRealIds.includes(id))
-                          ) {
-                            finalValues = ['all', ...allRealIds];
-                          } else {
-                            finalValues = selectedRealIds;
-                          }
-                        }
-                        formik.setFieldValue('subjects', finalValues);
-                        formik.setFieldValue('assignments', []);
+                        formik.setValues({
+                          ...formik.values,
+                          subjects: selectedValues,
+                          assignments: [],
+                        });
                       }}
-                      // onBlur={() => formik.setFieldTouched('subjects', true)}
                       error={formik.touched.subjects && Boolean(formik.errors.subjects)}
                       helperText={(formik.touched.subjects && formik.errors.subjects) as string}
                     />
@@ -418,61 +532,73 @@ const AssignmentManagementReports = ({ report }: { report: any }) => {
                 </Grid>
               )}
 
-              {/* Teachers */}
+              {showField('assignments') && (
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.assignments && formik.errors.assignments)}
+                  >
+                    {isAssignmentMultiple ? (
+                      <ResponsiveMultiSelect
+                        label={withRequired('Assignment', 'assignments')}
+                        options={assignmentOptions}
+                        value={formik.values.assignments}
+                        getOptionLabel={(opt: any) => opt?.name ?? ''}
+                        getOptionValue={(opt: any) => opt?.id ?? ''}
+                        disabled={!canLoadAssignments}
+                        isLoading={isAssignmentLoading}
+                        onChange={(selectedValues) => {
+                          formik.setFieldValue('assignments', selectedValues);
+                        }}
+                        error={formik.touched.assignments && Boolean(formik.errors.assignments)}
+                        helperText={assignmentHelperText}
+                      />
+                    ) : (
+                      <CustomSelect
+                        options={assignmentOptions}
+                        label={withRequired('Assignment', 'assignments')}
+                        value={formik.values.assignments[0] || ''}
+                        onChange={(val) => {
+                          formik.setFieldValue('assignments', val ? [val as string] : []);
+                        }}
+                        onBlur={() => formik.setFieldTouched('assignments', true)}
+                        error={formik.touched.assignments && Boolean(formik.errors.assignments)}
+                        helperText={assignmentHelperText}
+                        labelKey="name"
+                        valueKey="id"
+                        disabled={!canLoadAssignments || isAssignmentLoading}
+                        formControlProps={{ sx: { width: '100%' } }}
+                      />
+                    )}
+                  </ShakingTextField>
+                </Grid>
+              )}
+
               {showField('teachers') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.teachers && formik.errors.teachers)}>
-                    <ResponsiveMultiSelect
-                      label="Teachers *"
-                      options={[
-                        { id: 'all', name: 'All' },
-                        ...[
-                          { id: 't1', name: 'Priya Sharma' },
-                          { id: 't2', name: 'Rajesh Kumar' },
-                          { id: 't3', name: 'Anjali Singh' },
-                          { id: 't4', name: 'Sanjay Gupta' },
-                          { id: 't5', name: 'Meena Devi' },
-                        ],
-                      ]}
-                      value={formik.values.teachers}
-                      getOptionLabel={(opt) => opt?.name}
-                      getOptionValue={(opt) => opt?.id}
-                      disabled={formik.values.divisions.length === 0}
-                      onChange={(selectedValues) => {
-                        const allActualTeachers = [
-                          { id: 't1', name: 'Priya Sharma' },
-                          { id: 't2', name: 'Rajesh Kumar' },
-                          { id: 't3', name: 'Anjali Singh' },
-                          { id: 't4', name: 'Sanjay Gupta' },
-                          { id: 't5', name: 'Meena Devi' },
-                        ];
-                        const allRealIds = allActualTeachers.map((t) => t.id);
-                        const hasAllInSelection = selectedValues.includes('all');
-                        const wasAllPreviouslySelected = (
-                          formik.values.teachers as string[]
-                        ).includes('all');
-                        let finalValues: string[] = [];
-
-                        if (hasAllInSelection && !wasAllPreviouslySelected) {
-                          finalValues = ['all', ...allRealIds];
-                        } else if (!hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = [];
-                        } else if (hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = selectedValues.filter((id) => id !== 'all');
-                        } else {
-                          const selectedRealIds = selectedValues.filter((id) => id !== 'all');
-                          if (
-                            selectedRealIds.length === allRealIds.length &&
-                            allRealIds.every((id) => selectedRealIds.includes(id))
-                          ) {
-                            finalValues = ['all', ...allRealIds];
-                          } else {
-                            finalValues = selectedRealIds;
-                          }
-                        }
-                        formik.setFieldValue('teachers', finalValues);
+                    <PaginatedSearchSelect
+                      multiple
+                      disableCloseOnSelect
+                      label={withRequired('Teacher', 'teachers')}
+                      fetchOptions={fetchTeacherOptions}
+                      value={teacherObjs}
+                      onChange={(_: unknown, newValues: EmployeeOption[]) => {
+                        const values = newValues || [];
+                        setTeacherObjs(values);
+                        formik.setFieldValue(
+                          'teachers',
+                          values.map((item) => item.id)
+                        );
                       }}
-                      // onBlur={() => formik.setFieldTouched('teachers', true)}
+                      onBlur={() => formik.setFieldTouched('teachers', true)}
+                      getOptionLabel={(option: EmployeeOption) => option?.label || ''}
+                      isOptionEqualToValue={(option: EmployeeOption, val: EmployeeOption) =>
+                        option.id === val.id
+                      }
+                      debounceMs={400}
+                      minChars={0}
+                      size="small"
+                      fullWidth
                       error={formik.touched.teachers && Boolean(formik.errors.teachers)}
                       helperText={(formik.touched.teachers && formik.errors.teachers) as string}
                     />
@@ -480,112 +606,20 @@ const AssignmentManagementReports = ({ report }: { report: any }) => {
                 </Grid>
               )}
 
-              {/* Assignments */}
-              {(formik.values.teachers.length > 1 || formik.values.subjects.length > 1) && (
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.assignments && formik.errors.assignments)}
-                  >
-                    <ResponsiveMultiSelect
-                      label="Assignments *"
-                      options={[
-                        { id: 'all', name: 'All' },
-                        ...[
-                          { id: 'h1', name: 'Algebra Assignment' },
-                          { id: 'h2', name: 'Geometry Problems' },
-                          { id: 'h3', name: 'Calculus Review' },
-                          { id: 'h4', name: 'Statistics Project' },
-                          { id: 'h5', name: 'Trigonometry Practice' },
-                        ],
-                      ]}
-                      value={formik.values.assignments}
-                      getOptionLabel={(opt) => opt?.name}
-                      getOptionValue={(opt) => opt?.id}
-                      disabled={!formik.values.teachers.length}
-                      onChange={(selectedValues) => {
-                        const allActualAssignments = [
-                          { id: 'h1', name: 'Algebra Assignment' },
-                          { id: 'h2', name: 'Geometry Problems' },
-                          { id: 'h3', name: 'Calculus Review' },
-                          { id: 'h4', name: 'Statistics Project' },
-                          { id: 'h5', name: 'Trigonometry Practice' },
-                        ];
-                        const allRealIds = allActualAssignments.map((h) => h.id);
-                        const hasAllInSelection = selectedValues.includes('all');
-                        const wasAllPreviouslySelected = (
-                          formik.values.assignments as string[]
-                        ).includes('all');
-                        let finalValues: string[] = [];
-
-                        if (hasAllInSelection && !wasAllPreviouslySelected) {
-                          finalValues = ['all', ...allRealIds];
-                        } else if (!hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = [];
-                        } else if (hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = selectedValues.filter((id) => id !== 'all');
-                        } else {
-                          const selectedRealIds = selectedValues.filter((id) => id !== 'all');
-                          if (
-                            selectedRealIds.length === allRealIds.length &&
-                            allRealIds.every((id) => selectedRealIds.includes(id))
-                          ) {
-                            finalValues = ['all', ...allRealIds];
-                          } else {
-                            finalValues = selectedRealIds;
-                          }
-                        }
-                        formik.setFieldValue('assignments', finalValues);
-                      }}
-                      // onBlur={() => formik.setFieldTouched('assignments', true)}
-                      error={formik.touched.assignments && Boolean(formik.errors.assignments)}
-                      helperText={
-                        (formik.touched.assignments && formik.errors.assignments) as string
-                      }
-                    />
-                  </ShakingTextField>
-                </Grid>
-              )}
-
-              {/* Students */}
               {showField('students') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.students && formik.errors.students)}>
                     <ResponsiveMultiSelect
-                      label="Students *"
-                      options={[{ id: 'all', name: 'All' }, ...(tableData || [])]}
+                      label={withRequired('Student', 'students')}
+                      options={studentOptions}
                       value={formik.values.students}
-                      getOptionLabel={(opt) => opt?.name}
-                      getOptionValue={(opt) => opt?.id}
-                      disabled={formik.values.divisions.length === 0}
+                      getOptionLabel={(opt: any) => opt?.name ?? ''}
+                      getOptionValue={(opt: any) => opt?.id ?? ''}
+                      disabled={showField('class') && !formik.values.class}
+                      isLoading={isStudentsLoading}
                       onChange={(selectedValues) => {
-                        const allActualStudents = tableData || [];
-                        const allRealIds = allActualStudents.map((s: any) => s.id);
-                        const hasAllInSelection = selectedValues.includes('all');
-                        const wasAllPreviouslySelected = (
-                          formik.values.students as string[]
-                        ).includes('all');
-                        let finalValues: string[] = [];
-
-                        if (hasAllInSelection && !wasAllPreviouslySelected) {
-                          finalValues = ['all', ...allRealIds];
-                        } else if (!hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = [];
-                        } else if (hasAllInSelection && wasAllPreviouslySelected) {
-                          finalValues = selectedValues.filter((id) => id !== 'all');
-                        } else {
-                          const selectedRealIds = selectedValues.filter((id) => id !== 'all');
-                          if (
-                            selectedRealIds.length === allRealIds.length &&
-                            allRealIds.every((id: any) => selectedRealIds.includes(id))
-                          ) {
-                            finalValues = ['all', ...allRealIds];
-                          } else {
-                            finalValues = selectedRealIds;
-                          }
-                        }
-                        formik.setFieldValue('students', finalValues);
+                        formik.setFieldValue('students', selectedValues);
                       }}
-                      // onBlur={() => formik.setFieldTouched('students', true)}
                       error={formik.touched.students && Boolean(formik.errors.students)}
                       helperText={(formik.touched.students && formik.errors.students) as string}
                     />
@@ -593,12 +627,11 @@ const AssignmentManagementReports = ({ report }: { report: any }) => {
                 </Grid>
               )}
 
-              {/* From Date */}
               {showField('fromDate') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.fromDate && formik.errors.fromDate)}>
                     <DatePicker
-                      label="From Date *"
+                      label={withRequired('From Date', 'fromDate')}
                       format="DD/MM/YYYY"
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
@@ -617,12 +650,11 @@ const AssignmentManagementReports = ({ report }: { report: any }) => {
                 </Grid>
               )}
 
-              {/* To Date */}
               {showField('toDate') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.toDate && formik.errors.toDate)}>
                     <DatePicker
-                      label="To Date *"
+                      label={withRequired('To Date', 'toDate')}
                       format="DD/MM/YYYY"
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
@@ -641,7 +673,6 @@ const AssignmentManagementReports = ({ report }: { report: any }) => {
                 </Grid>
               )}
 
-              {/* Submit */}
               <Grid size={12} display="flex" justifyContent="flex-end">
                 <Button
                   startIcon={<Iconify icon={GlobalIcons.generateReport} />}

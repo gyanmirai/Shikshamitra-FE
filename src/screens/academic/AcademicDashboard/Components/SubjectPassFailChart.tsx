@@ -161,7 +161,7 @@ const SubjectPassFailChart = () => {
               onChange={(val) => setClasses(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { minWidth: '150px' } }}
+              formControlProps={{ sx: { minWidth: '120px' } }}
             />
             <CustomSelect
               options={allDivision}
@@ -170,7 +170,7 @@ const SubjectPassFailChart = () => {
               onChange={(val) => setDivision(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { minWidth: '150px' } }}
+              formControlProps={{ sx: { minWidth: '120px' } }}
               disabled={!classes}
             />
             <CustomSelect
@@ -180,7 +180,7 @@ const SubjectPassFailChart = () => {
               onChange={(val) => setSelectedExam(val as string)}
               labelKey="label"
               valueKey="value"
-              formControlProps={{ sx: { minWidth: '150px' } }}
+              formControlProps={{ sx: { minWidth: '120px' } }}
             />
           </Box>
         }
@@ -229,7 +229,7 @@ const SubjectPassFailChart = () => {
       <Box sx={{ p: 3, pb: 1 }} dir="ltr">
         <Chart
           dir="ltr"
-          type="donut"
+          type="pie"
           series={[selectedPassed, selectedFailed]}
           options={chartOptions}
         />
