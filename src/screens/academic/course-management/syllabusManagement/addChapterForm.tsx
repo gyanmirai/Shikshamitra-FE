@@ -102,38 +102,26 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
         );
         const formattedEndDate = dateConvertor(values?.endDate?.format(dateFormat) || '', false);
 
-        if (initialValues) {
-          // --- PUT PAYLOAD (Different Keys) ---
-          const updatePayload = {
-            id: initialValues.id,
-            body: {
-              assignedSubjectId: subjectId,
-              chapterNumber: values.chapterNo, // Changed from chapterNo
-              chapterName: values.chapterName.trim(),
-              chapterStartTime: formattedStartDate, // Changed from startDate
-              chapterEndTime: formattedEndDate, // Changed from endDate
-              description: values.description,
-              documents,
-            },
-          };
+        const postPayload = {
+          assignedSubjectId: subjectId,
+          chapterNo: values.chapterNo,
+          chapterName: values.chapterName.trim(),
+          startDate: formattedStartDate,
+          endDate: formattedEndDate,
+          description: values.description,
+          documents,
+        };
 
-          await updateChapter(updatePayload).unwrap();
+        if (initialValues) {
+          await updateChapter({
+            id: initialValues.id,
+            body: postPayload,
+          }).unwrap();
 
           shikshaMitraToast.success({
             message: `Chapter ${values.chapterNo} updated successfully`,
           });
         } else {
-          // --- POST PAYLOAD ---
-          const postPayload = {
-            assignedSubjectId: subjectId,
-            chapterNo: values.chapterNo,
-            chapterName: values.chapterName.trim(),
-            startDate: formattedStartDate,
-            endDate: formattedEndDate,
-            description: values.description,
-            documents,
-          };
-
           await addChapter({ standardId: classId, subjectId, body: postPayload }).unwrap();
 
           shikshaMitraToast.success({

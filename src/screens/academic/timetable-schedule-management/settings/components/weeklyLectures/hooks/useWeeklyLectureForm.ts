@@ -92,7 +92,7 @@ export function useWeeklyLectureForm({
         });
         if (res.data) {
           shikshaMitraToast.success({
-            message: `Weekly No. of lectures updated for class ${values.className}`,
+            message: `Weekly No. of lectures updated for ${values.className}`,
           });
           onClose?.(null, true);
         }
@@ -106,7 +106,7 @@ export function useWeeklyLectureForm({
       });
       if (res.data) {
         shikshaMitraToast.success({
-          message: `Weekly No. of lectures added for class ${values.className}`,
+          message: `Weekly No. of lectures added for {values.className}`,
         });
         onClose?.(null, true);
       }
