@@ -53,6 +53,7 @@ export interface IPaymentDetails {
 
 // Overall student fee data
 export interface IStudentFee {
+  studentId: string | number; // alias for id, used in some components
   id: string | number;
   name: string;
   profileImage?: string; // image URL

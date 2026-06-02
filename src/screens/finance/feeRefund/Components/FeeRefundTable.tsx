@@ -32,10 +32,13 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
   selectedMedium,
   setSelectedMedium,
 }) => {
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
+  const [boards, setBoards] = useState<Board[]>(() => currentYear?.boards ?? []);
+  const [mediums, setMediums] = useState<Medium[]>(() => {
+    if (!selectedBoard || !currentYear?.boards) return [];
+    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
+    return (board as unknown as Board)?.educationMediums ?? [];
+  });
   const tabs = useTabs(FeeRefundStatusType.Pending);
 
   useEffect(() => {
@@ -152,7 +155,7 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
             sticky: true,
             render: (value, row) => (
               <Typography variant="caption" fontSize="13px">
-                {value || '-'} {row.grNumber && `(${row.grNumber})`}
+                {value || '-'} {row.grNo && `(${row.grNo})`}
               </Typography>
             ),
           },

@@ -67,6 +67,8 @@ const ManualAttendanceScreen = () => {
 
   // Track original data to detect unsaved changes
   const originalDataRef = useRef<any[]>([]);
+  const hasMountedRef = useRef(false);
+  const previousAcademicYearRangeRef = useRef<string | null>(null);
   const [pendingDate, setPendingDate] = useState<Dayjs | null>(null);
 
   const resetConfirmDialog = useBoolean();
@@ -95,7 +97,7 @@ const ManualAttendanceScreen = () => {
     search: '',
   });
 
-  const { data, isLoading, isFetching } = useQueryAndMutation({
+  const { data, isLoading, isFetching, isError } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDayAttendanceQuery,
     params: {
@@ -110,8 +112,52 @@ const ManualAttendanceScreen = () => {
   const isHoliday = Boolean(data?.isHoliday);
   const holidayReason =
     data?.holidayReason || (data?.holidayName ? `Holiday: ${data.holidayName}` : null);
+  const isFutureDate = Boolean(date && dayjs(date).isAfter(dayjs(), 'day'));
+  const academicYearStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
+  const academicYearEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
+  const isDateOutsideAcademicYear = useCallback(
+    (selectedDate: Dayjs | null) =>
+      Boolean(
+        selectedDate &&
+        academicYearStart &&
+        academicYearEnd &&
+        (dayjs(selectedDate).isBefore(academicYearStart, 'day') ||
+          dayjs(selectedDate).isAfter(academicYearEnd, 'day'))
+      ),
+    [academicYearStart, academicYearEnd]
+  );
+  const isOutsideAcademicYear = Boolean(date && isDateOutsideAcademicYear(date));
 
   useEffect(() => {
+    const currentAcademicYearRange =
+      academicYearStart && academicYearEnd
+        ? `${academicYearStart.format('YYYY-MM-DD')}_${academicYearEnd.format('YYYY-MM-DD')}`
+        : null;
+
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      previousAcademicYearRangeRef.current = currentAcademicYearRange;
+      return;
+    }
+
+    const hasAcademicYearChanged =
+      previousAcademicYearRangeRef.current !== currentAcademicYearRange;
+    previousAcademicYearRangeRef.current = currentAcademicYearRange;
+
+    if (hasAcademicYearChanged && isOutsideAcademicYear && academicYearStart && academicYearEnd) {
+      shikshaMitraToast.warning({
+        message: `Selected date must be within current academic year (${academicYearStart.format('DD-MM-YYYY')} to ${academicYearEnd.format('DD-MM-YYYY')}).`,
+      });
+    }
+  }, [academicYearStart, academicYearEnd, isOutsideAcademicYear]);
+
+  useEffect(() => {
+    if (isError) {
+      setEmployeeData([]);
+      originalDataRef.current = [];
+      return;
+    }
+
     if (data?.items && data.items.length > 0) {
       const mapped = data.items.map((item: any) => ({
         id: item.employeeId,
@@ -140,7 +186,7 @@ const ManualAttendanceScreen = () => {
     if (data?.isDayLocked !== undefined) {
       setIsLocked(data.isDayLocked);
     }
-  }, [data]);
+  }, [data, isError]);
 
   // Detect unsaved changes by comparing current data with original
   const isDirty = useMemo(
@@ -174,10 +220,18 @@ const ManualAttendanceScreen = () => {
         setPendingDate(val);
         discardConfirmDialog.onTrue();
       } else {
+        setEmployeeData([]);
+        originalDataRef.current = [];
+        setEditingCell(null);
         setDate(val);
+        if (isDateOutsideAcademicYear(val) && academicYearStart && academicYearEnd) {
+          shikshaMitraToast.warning({
+            message: `Selected date must be within current academic year (${academicYearStart.format('DD-MM-YYYY')} to ${academicYearEnd.format('DD-MM-YYYY')}).`,
+          });
+        }
       }
     },
-    [isDirty, discardConfirmDialog]
+    [isDirty, discardConfirmDialog, isDateOutsideAcademicYear, academicYearStart, academicYearEnd]
   );
 
   // -------------------------------------------------------------------------
@@ -188,12 +242,12 @@ const ManualAttendanceScreen = () => {
   }, []);
 
   const setRowStatus = (id: string, status: AttendanceStatusType) => {
-    if (isLocked || isHoliday) return;
+    if (isLocked || isHoliday || isFutureDate || isOutsideAcademicYear) return;
     setEmployeeData((prev) => prev.map((emp) => (emp.id === id ? { ...emp, status } : emp)));
   };
 
   const setAllStatus = (status: AttendanceStatusType) => {
-    if (isLocked || isHoliday) return;
+    if (isLocked || isHoliday || isFutureDate || isOutsideAcademicYear) return;
     setEmployeeData((prev) => prev.map((emp) => ({ ...emp, status })));
   };
 
@@ -201,6 +255,20 @@ const ManualAttendanceScreen = () => {
   // Save handler
   // -------------------------------------------------------------------------
   const handleSave = async () => {
+    if (isOutsideAcademicYear && academicYearStart && academicYearEnd) {
+      shikshaMitraToast.error({
+        message: `Attendance can only be marked between ${academicYearStart.format('DD-MM-YYYY')} and ${academicYearEnd.format('DD-MM-YYYY')}.`,
+      });
+      return;
+    }
+
+    if (isFutureDate) {
+      shikshaMitraToast.error({
+        message: 'Future date attendance cannot be saved.',
+      });
+      return;
+    }
+
     if (isHoliday) {
       shikshaMitraToast.error({
         message: holidayReason || 'Attendance cannot be marked on a holiday.',
@@ -394,7 +462,7 @@ const ManualAttendanceScreen = () => {
               }}
             >
               <Typography variant="body2">{displayTime || '\u2014'}</Typography>
-              {!isLocked && !isHoliday && (
+              {!isLocked && !isHoliday && !isFutureDate && !isOutsideAcademicYear && (
                 <CustomTooltip
                   title={`Edit ${field === 'timeIn' ? 'In-Time' : 'Out-Time'}`}
                   arrow
@@ -437,7 +505,7 @@ const ManualAttendanceScreen = () => {
             <TextField
               size="small"
               fullWidth
-              disabled={isLocked || isHoliday}
+              disabled={isLocked || isHoliday || isFutureDate || isOutsideAcademicYear}
               value={val || ''}
               onChange={(e) =>
                 setEmployeeData((prev) =>
@@ -502,7 +570,7 @@ const ManualAttendanceScreen = () => {
           );
         },
       },
-      ...(isLocked || isHoliday
+      ...(isLocked || isHoliday || isFutureDate || isOutsideAcademicYear
         ? [
             {
               id: 'status' as const,
@@ -808,6 +876,7 @@ const ManualAttendanceScreen = () => {
                           if (
                             isLocked ||
                             isHoliday ||
+                            isFutureDate ||
                             employeeData.length === 0 ||
                             employeeData.every((emp) => emp.status === STATUS.Present)
                           )
@@ -819,6 +888,7 @@ const ManualAttendanceScreen = () => {
                           cursor:
                             isLocked ||
                             isHoliday ||
+                            isFutureDate ||
                             employeeData.length === 0 ||
                             employeeData.every((e) => e.status === STATUS.Present)
                               ? 'not-allowed'
@@ -826,6 +896,7 @@ const ManualAttendanceScreen = () => {
                           opacity:
                             isLocked ||
                             isHoliday ||
+                            isFutureDate ||
                             employeeData.length === 0 ||
                             employeeData.every((e) => e.status === STATUS.Present)
                               ? 0.5
@@ -853,6 +924,7 @@ const ManualAttendanceScreen = () => {
                           if (
                             isLocked ||
                             isHoliday ||
+                            isFutureDate ||
                             employeeData.length === 0 ||
                             employeeData.every((emp) => emp.status === STATUS.HalfDay)
                           )
@@ -864,6 +936,7 @@ const ManualAttendanceScreen = () => {
                           cursor:
                             isLocked ||
                             isHoliday ||
+                            isFutureDate ||
                             employeeData.length === 0 ||
                             employeeData.every((e) => e.status === STATUS.HalfDay)
                               ? 'not-allowed'
@@ -871,6 +944,7 @@ const ManualAttendanceScreen = () => {
                           opacity:
                             isLocked ||
                             isHoliday ||
+                            isFutureDate ||
                             employeeData.length === 0 ||
                             employeeData.every((e) => e.status === STATUS.HalfDay)
                               ? 0.5
@@ -914,6 +988,7 @@ const ManualAttendanceScreen = () => {
                           if (
                             isLocked ||
                             isHoliday ||
+                            isFutureDate ||
                             employeeData.length === 0 ||
                             employeeData.every((emp) => emp.status === STATUS.Absent)
                           )
@@ -925,12 +1000,15 @@ const ManualAttendanceScreen = () => {
                           cursor:
                             isLocked ||
                             isHoliday ||
+                            isFutureDate ||
                             employeeData.length === 0 ||
                             employeeData.every((e) => e.status === STATUS.Absent)
                               ? 'not-allowed'
                               : 'pointer',
                           opacity:
                             isLocked ||
+                            isHoliday ||
+                            isFutureDate ||
                             employeeData.length === 0 ||
                             employeeData.every((e) => e.status === STATUS.Absent)
                               ? 0.5
@@ -975,8 +1053,8 @@ const ManualAttendanceScreen = () => {
                         onClick={() => setRowStatus(row.id, STATUS.Present)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked || isHoliday ? 'not-allowed' : 'pointer',
-                          opacity: isLocked || isHoliday ? 0.5 : 1,
+                          cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
+                          opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
                           bgcolor:
                             value === STATUS.Present
                               ? (t) => t.vars.palette.success.main
@@ -1003,8 +1081,8 @@ const ManualAttendanceScreen = () => {
                         onClick={() => setRowStatus(row.id, STATUS.HalfDay)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked || isHoliday ? 'not-allowed' : 'pointer',
-                          opacity: isLocked || isHoliday ? 0.5 : 1,
+                          cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
+                          opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
                           bgcolor:
                             value === STATUS.HalfDay
                               ? (t) => t.vars.palette.info.main
@@ -1031,8 +1109,8 @@ const ManualAttendanceScreen = () => {
                         onClick={() => setRowStatus(row.id, STATUS.Pending)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked || isHoliday ? 'not-allowed' : 'pointer',
-                          opacity: isLocked || isHoliday ? 0.5 : 1,
+                          cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
+                          opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
                           bgcolor:
                             value === STATUS.Pending
                               ? (t) => t.vars.palette.warning.main
@@ -1059,8 +1137,8 @@ const ManualAttendanceScreen = () => {
                         onClick={() => setRowStatus(row.id, STATUS.Absent)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked || isHoliday ? 'not-allowed' : 'pointer',
-                          opacity: isLocked || isHoliday ? 0.5 : 1,
+                          cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
+                          opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
                           bgcolor:
                             value === STATUS.Absent
                               ? (t) => t.vars.palette.error.main
@@ -1099,6 +1177,8 @@ const ManualAttendanceScreen = () => {
       halfDayCount,
       pendingCount,
       absentCount,
+      isFutureDate,
+      isOutsideAcademicYear,
       editingCell,
       updateRow,
     ]
@@ -1148,6 +1228,7 @@ const ManualAttendanceScreen = () => {
         sx={{
           p: 1,
           gap: 2,
+          pb: isOutsideAcademicYear ? 1.5 : 1,
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
@@ -1162,7 +1243,12 @@ const ManualAttendanceScreen = () => {
           format="DD-MM-YYYY"
           minDate={dayjs(currentYear?.startDate)}
           maxDate={dayjs(currentYear?.endDate)}
-          slotProps={{ textField: { size: 'small' } }}
+          slotProps={{
+            textField: {
+              size: 'small',
+              helperText: isOutsideAcademicYear ? 'Date must be within current academic year' : ' ',
+            },
+          }}
         />
 
         <Box sx={{ flexGrow: 1 }} />
@@ -1170,7 +1256,7 @@ const ManualAttendanceScreen = () => {
         {/* Reset */}
         {isHoliday && <Label color="default">{holidayReason || 'Holiday'}</Label>}
 
-        {!isLocked && !isHoliday && (
+        {!isLocked && !isHoliday && !isFutureDate && !isOutsideAcademicYear && (
           <Button
             size="small"
             variant="outlined"
@@ -1226,7 +1312,13 @@ const ManualAttendanceScreen = () => {
             loading={isUpdating}
             startIcon={<Iconify icon={GlobalIcons.submit} sx={{ fontSize: '16px' }} />}
             onClick={handleSave}
-            disabled={isHoliday || employeeData.length === 0 || !isDirty}
+            disabled={
+              isHoliday ||
+              isFutureDate ||
+              isOutsideAcademicYear ||
+              employeeData.length === 0 ||
+              !isDirty
+            }
             sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
           >
             Save
@@ -1240,10 +1332,13 @@ const ManualAttendanceScreen = () => {
         tableId="hr-manual-attendance"
         isLoading={isLoading || isFetching}
         columns={columns}
-        data={employeeData}
+        noDataText={
+          isError ? 'Failed to load employee data' : 'No employees found for the selected date'
+        }
+        data={isError ? [] : employeeData}
         rowProps={rowProps}
         serverSide
-        totalCount={data?.totalCount || 0}
+        totalCount={isError ? 0 : data?.totalCount || 0}
         onServerPagination={(page, rowsPerPage) => {
           setQuery((prev) => ({
             ...prev,
@@ -1334,7 +1429,15 @@ const ManualAttendanceScreen = () => {
             color="error"
             size="small"
             onClick={() => {
+              setEmployeeData([]);
+              originalDataRef.current = [];
+              setEditingCell(null);
               setDate(pendingDate);
+              if (isDateOutsideAcademicYear(pendingDate) && academicYearStart && academicYearEnd) {
+                shikshaMitraToast.warning({
+                  message: `Selected date must be within current academic year (${academicYearStart.format('DD-MM-YYYY')} to ${academicYearEnd.format('DD-MM-YYYY')}).`,
+                });
+              }
               setPendingDate(null);
               discardConfirmDialog.onFalse();
             }}

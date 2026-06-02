@@ -147,14 +147,13 @@ const FeeCollection = () => {
         open={studentDialog.value}
         title={`Fee Collection - ${selectedStudent?.name ?? selectedStudent?.name ?? 'Student'}`}
         fullScreen
+        transitionDuration={{ enter: 0, exit: 0 }}
         handleClose={() => {
           studentDialog.onFalse();
           setSelectedStudent(null);
         }}
       >
-        {selectedStudent && (
-          <FeeCollectComponentForm student={selectedStudent} onCancel={handleClose} />
-        )}
+        <FeeCollectComponentForm student={selectedStudent} onCancel={handleClose} />
       </CustomDialog>
       {viewDialog.value && selectedStudent && (
         <ViewFeeDetails

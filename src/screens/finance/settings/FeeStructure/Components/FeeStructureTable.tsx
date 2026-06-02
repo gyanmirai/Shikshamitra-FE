@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import { Stack } from '@mui/material';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
@@ -10,6 +11,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeStructuresQuery } from 'src/redux/finance/financeFeeStructure';
+import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 
 import type { IFeeStructure, IFeeStructureTableProps } from '../type';
 
@@ -40,8 +42,8 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
       (feeStructureData?.items ?? []).map((item: IFeeStructure) => ({
         ...item,
         boardMediumValue: `${item.boardName ?? ''}/${item.mediumName ?? ''}`,
-        totalClassValue: item.totalClass ?? null,
-        totalFeeHeadValue: item.totalFeeHead ?? null,
+        totalClassValue: item.totalClasses ?? null,
+        totalFeeHeadValue: item.totalFeeHeads ?? null,
       })),
     [feeStructureData?.items]
   );
@@ -57,14 +59,12 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
       },
       {
         id: 'totalClassValue',
-        label: 'Total Classes',
-        align: 'left',
-        filterType: 'number',
-        render: (value) => (value == null ? '-' : value),
-      },
-      {
-        id: 'totalFeeHeadValue',
-        label: 'Total Fee Heads',
+        label: (
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <span>Configured Classes</span>
+            <InfoTooltipIcon title="Total classes configured in this fee structure." />
+          </Stack>
+        ),
         align: 'left',
         filterType: 'number',
         render: (value) => (value == null ? '-' : value),

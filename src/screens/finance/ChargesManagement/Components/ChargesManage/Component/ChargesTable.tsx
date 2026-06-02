@@ -49,11 +49,16 @@ const ChargesTable = ({
   setSelectedTab: (value: string | number) => void;
 }) => {
   // Local state to store filtered boards based on academic year
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [mediums, setMediums] = useState<Medium[]>([]);
+  // const [boards, setBoards] = useState<Board[]>([]);
+  // const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const tabs = useTabs(selectedTab);
-
+  const [boards, setBoards] = useState<Board[]>(() => currentYear?.boards ?? []);
+  const [mediums, setMediums] = useState<Medium[]>(() => {
+    if (!selectedBoard || !currentYear?.boards) return [];
+    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
+    return (board as unknown as Board)?.educationMediums ?? [];
+  });
   useEffect(() => {
     setSelectedTab(tabs.value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
