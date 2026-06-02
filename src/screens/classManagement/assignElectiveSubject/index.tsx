@@ -363,8 +363,6 @@ const AssignElectiveSubject = () => {
                           cursor: 'pointer',
                           userSelect: 'none',
                           transition: 'all 0.18s ease',
-                          borderColor: isSelected ? s.subjectColor : 'divider',
-                          backgroundColor: isSelected ? `${s.subjectColor}12` : 'background.paper',
                           ...(isSelected
                             ? {
                                 boxShadow: `0 1px 4px ${s.subjectColor}30`,
@@ -428,8 +426,6 @@ const AssignElectiveSubject = () => {
                         cursor: 'pointer',
                         userSelect: 'none',
                         transition: 'all 0.18s ease',
-                        borderColor: isSelected ? s.subjectColor : 'divider',
-                        backgroundColor: isSelected ? `${s.subjectColor}12` : 'background.paper',
                         ...(isSelected
                           ? {
                               boxShadow: `0 1px 4px ${s.subjectColor}30`,

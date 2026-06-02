@@ -130,16 +130,6 @@ export default function CourseCardsGrid({
                 isSelected
                   ? `1.5px solid ${alpha(courseColor, 0.6)}`
                   : `1px solid ${theme.palette.divider}`,
-              backgroundColor: (theme) =>
-                isSelected ? alpha(courseColor, 0.04) : theme.vars.palette.background.paper,
-              boxShadow: (theme) =>
-                isSelected
-                  ? `0 8px 20px -4px ${alpha(courseColor, 0.18)}`
-                  : theme.customShadows.card,
-              '&:hover': {
-                transform: 'translateY(-2px)',
-                borderColor: alpha(courseColor, 0.4),
-              },
             }}
           >
             <AppWidget
