@@ -395,7 +395,7 @@ const GrandTotalsFooter = ({ rows }: { rows: AllocatedRow[] }) => {
         mt: 1,
         p: 2,
         borderRadius: 2,
-        bgcolor: 'background.neutral',
+        // bgcolor: 'background.neutral',
         border: '1px solid',
         borderColor: 'divider',
         display: 'grid',

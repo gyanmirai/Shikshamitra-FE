@@ -175,6 +175,9 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                       helperText={
                         formik.touched.totalInstallments && formik.errors.totalInstallments
                       }
+                      inputProps={{
+                        min: 0,
+                      }}
                       variant="outlined"
                       size="small"
                       sx={{ '& .MuiFormHelperText-root': { mx: 0, mt: 0.5 } }}

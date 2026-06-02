@@ -298,13 +298,25 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                   error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
                 >
                   <TextField
-                    fullWidth
                     size="small"
-                    type="number"
+                    fullWidth
                     label="Account Number *"
                     name="accountNumber"
+                    type="number"
                     value={formik.values.accountNumber}
-                    onChange={formik.handleChange}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      if (value.length <= 18) {
+                        formik.setFieldValue('accountNumber', value);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      formik.setFieldValue('accountNumber', e.target.value.trim());
+                      formik.handleBlur(e);
+                    }}
+                    inputProps={{
+                      min: 0,
+                    }}
                     error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
                     helperText={formik.touched.accountNumber && formik.errors.accountNumber}
                   />

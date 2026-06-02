@@ -189,7 +189,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
                         sx={{
                           position: 'relative',
                           borderColor: isSelected ? 'primary.main' : 'divider',
-                          bgcolor: isSelected ? 'grey.100' : 'background.paper',
+                          bgcolor: isSelected ? 'background.neutral' : 'background.paper',
                           transition: 'all 0.3s',
                         }}
                       >

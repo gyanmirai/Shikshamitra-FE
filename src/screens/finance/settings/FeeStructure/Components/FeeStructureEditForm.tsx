@@ -95,7 +95,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
                     Classes Overview
                   </Typography>
                 </Box>
-                <Typography variant="caption" color="text.disabled">
+                <Typography variant="caption">
                   {classList.length} class{classList.length !== 1 ? 'es' : ''}
                 </Typography>
               </Box>

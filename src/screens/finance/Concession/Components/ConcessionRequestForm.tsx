@@ -7,9 +7,9 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -269,7 +269,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentYear?.id]); // Log formik values on every change for debugging
 
-  const { values, touched, errors, setFieldValue } = formik;
+  const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
 
   // -- Fee structure ---------------------------------------------------------
 
@@ -445,6 +445,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                             onChange={(val) => {
                               const board = boards.find((b) => b.id === val);
                               setFieldValue('boardId', val);
+                              setFieldTouched('boardId', false);
                               setFieldValue('boardName', board?.name || '');
                               setFieldValue('mediumId', '');
                               setFieldValue('mediumName', '');
@@ -473,6 +474,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                             onChange={(val) => {
                               const medium = mediums.find((m) => m.id === val);
                               setFieldValue('mediumId', val);
+                              setFieldTouched('mediumId', false);
                               setFieldValue('mediumName', medium?.name || '');
                               setFieldValue('standardId', '');
                               setFieldValue('standardName', '');
@@ -500,6 +502,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                             onChange={(val) => {
                               const standard = classes?.find((c: any) => c.id === val);
                               setFieldValue('standardId', val);
+                              setFieldTouched('standardId', false);
                               setFieldValue('standardName', standard?.name || '');
                               setFieldValue('divisionId', '');
                               setFieldValue('divisionName', '');
@@ -524,6 +527,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                             onChange={(val) => {
                               const division = allDivisions.find((d) => d.id === val);
                               setFieldValue('divisionId', val);
+                              setFieldTouched('divisionId', false);
                               setFieldValue('divisionName', division?.name || '');
                               setFieldValue('studentId', '');
                               setFieldValue('studentName', '');
@@ -548,6 +552,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                             }
                             onChange={(_e, value: any) => {
                               setFieldValue('studentId', value?.studentId || '');
+                              setFieldTouched('studentId', false);
                               setFieldValue('studentName', value?.name || '');
                               setFieldValue('selectedStudent', value || null);
                             }}
@@ -1047,7 +1052,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
               flexShrink: 0,
               borderTop: `1px solid`,
               borderColor: 'divider',
-              bgcolor: (t) => alpha(t.palette.background.paper, 0.92),
               backdropFilter: 'blur(12px)',
               px: { xs: 2, md: 3 },
               py: 1.5,
@@ -1065,7 +1069,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                   startIcon={<Iconify icon={GlobalIcons.cancel} />}
                   onClick={() => onClose(null, false)}
                   variant="outlined"
-                  color="inherit"
                   size="small"
                 >
                   Cancel

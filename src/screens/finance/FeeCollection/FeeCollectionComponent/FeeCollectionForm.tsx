@@ -613,6 +613,11 @@ const FeeCollectComponentForm = ({
   const balancePaise = toPaise(finalAmount) - toPaise(totalAllocated);
   const balance = balancePaise / 100;
 
+  useEffect(() => {
+    formik.setFieldValue('payment.amount', subtotal > 0 ? String(subtotal) : '', false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal]);
+
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSelectionChange = (items: SelectedItem[]) =>
     formik.setFieldValue('selectedItems', items, false);

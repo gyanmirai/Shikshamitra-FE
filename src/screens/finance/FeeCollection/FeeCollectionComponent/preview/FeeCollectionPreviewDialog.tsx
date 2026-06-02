@@ -256,7 +256,7 @@ const FeeCollectionPreviewDialog = ({
           alignItems: 'center',
           justifyContent: 'flex-end',
           gap: 2,
-          bgcolor: alpha(theme.palette.background.paper, 0.95),
+          // bgcolor: alpha(theme.palette.background.paper, 0.95),
           backdropFilter: 'blur(8px)',
         }}
       >

@@ -7,9 +7,9 @@ import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
@@ -215,7 +215,7 @@ const AdjustmentForm: React.FC<
         sx={{
           flexShrink: 0,
           borderTop: `1px solid ${theme.palette.divider}`,
-          bgcolor: alpha(theme.palette.background.paper, 0.92),
+          // bgcolor: alpha(theme.palette.background.paper, 0.92),
           backdropFilter: 'blur(12px)',
           px: { xs: 2, md: 3 },
           py: 1.5,
