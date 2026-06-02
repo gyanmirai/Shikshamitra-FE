@@ -493,7 +493,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
             <Table size="small" stickyHeader>
               <TableHead>
                 <TableRow>
-                  {['Date / Range', 'Days', 'Holiday', 'Source', 'Status', 'Notes', 'Actions'].map(
+                  {['Date / Range', 'Days', 'Holiday', 'Source', 'Notes', 'Status', 'Actions'].map(
                     (column) => (
                       <TableCell key={column} align={column === 'Actions' ? 'right' : 'left'}>
                         {column}
@@ -526,6 +526,16 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
                             variant="outlined"
                           />
                         </TableCell>
+                        <TableCell sx={{ minWidth: 220, maxWidth: 300 }}>
+                          <Tooltip
+                            title={holiday.notes || ''}
+                            disableHoverListener={!holiday.notes}
+                          >
+                            <Typography variant="body2" noWrap>
+                              {holiday.notes || '-'}
+                            </Typography>
+                          </Tooltip>
+                        </TableCell>
                         <TableCell>
                           <Chip
                             size="small"
@@ -545,16 +555,6 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
                             }
                             variant={holiday.isIncluded ? 'filled' : 'outlined'}
                           />
-                        </TableCell>
-                        <TableCell sx={{ minWidth: 220, maxWidth: 300 }}>
-                          <Tooltip
-                            title={holiday.notes || ''}
-                            disableHoverListener={!holiday.notes}
-                          >
-                            <Typography variant="body2" noWrap>
-                              {holiday.notes || '-'}
-                            </Typography>
-                          </Tooltip>
                         </TableCell>
                         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                           {!hasFinalizedHolidays ? (

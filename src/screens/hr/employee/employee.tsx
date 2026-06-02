@@ -453,10 +453,11 @@ const HrEmployee = () => {
             }
             description="This section displays the employees list. Click 'View' to see their detailed profile information."
           />
-          <Box
+          <Card
             data-testid="hr-employee-list-filters"
             sx={{
-              mb: 2,
+              mb: 1,
+              p: 1,
               display: 'grid',
               gap: 1,
               gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(180px, 280px))' },
@@ -523,7 +524,7 @@ const HrEmployee = () => {
                 ))}
               </Select>
             </FormControl>
-          </Box>
+          </Card>
           <CustomizableTable
             noDataText={
               <>

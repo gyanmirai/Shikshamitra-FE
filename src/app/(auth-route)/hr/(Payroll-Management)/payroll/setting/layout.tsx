@@ -7,10 +7,10 @@ import StudentPermissionGuard from 'src/components/student-permission-guard';
 
 const PayrollSettingLayout = ({ children }: { children: React.ReactNode }) => (
   <StudentPermissionGuard permissionKey={hrPermissions.payroll.settings.root}>
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Alert
         severity="info"
-        sx={{ mb: 2 }}
+        sx={{ mb: 2, flexShrink: 0 }}
         action={
           <Button
             size="small"
@@ -24,7 +24,9 @@ const PayrollSettingLayout = ({ children }: { children: React.ReactNode }) => (
       >
         Policy rules are managed in Policies & Rules.
       </Alert>
-      {children}
+      <Box sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        {children}
+      </Box>
     </Box>
   </StudentPermissionGuard>
 );

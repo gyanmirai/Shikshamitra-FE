@@ -1,15 +1,17 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
 import type { WorkCalendarPolicy } from 'src/redux/hr/hr-policy-api';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Card, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
 
-import { StatusChip, InfoTooltipIcon } from './HRPolicySharedUI';
+import { InfoTooltipIcon } from './HRPolicySharedUI';
 import {
   formatDate,
   formatRange,
@@ -125,7 +127,13 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         { label: 'Draft', value: 'draft' },
         { label: 'Archived', value: 'archived' },
       ],
-      render: (_, row) => <StatusChip status={String(row.status)} />,
+      render: (_, row) => {
+        const statusValue = String(row.status);
+        const color = (
+          statusValue === 'active' ? 'success' : statusValue === 'archived' ? 'default' : 'warning'
+        ) as LabelColor;
+        return <Label color={color}>{statusValue}</Label>;
+      },
     },
     {
       id: 'actions',

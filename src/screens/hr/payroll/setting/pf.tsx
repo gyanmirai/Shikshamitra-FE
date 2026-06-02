@@ -100,7 +100,13 @@ const PF = () => {
 
   const { confirmWithUndo } = useConfirmWithUndo();
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+      }}
+    >
       <CustomBreadcrumbs
         heading="PF Rule"
         description="Configure PF rule for employees"
