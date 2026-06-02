@@ -115,7 +115,7 @@ const ConcessionType = () => {
             addConcessionTypeDialog.onFalse();
             setSelectedConcessionType(null);
           }}
-          maxWidth="md"
+          maxWidth="sm"
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">

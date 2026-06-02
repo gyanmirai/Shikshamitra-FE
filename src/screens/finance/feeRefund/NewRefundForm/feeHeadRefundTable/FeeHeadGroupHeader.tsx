@@ -57,9 +57,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
       sx={{
         cursor: 'pointer',
         userSelect: 'none',
-        bgcolor: isAllSelected
-          ? alpha(theme.palette.primary.main, 0.06)
-          : (theme.palette.background.neutral ?? theme.palette.action.hover),
+        bgcolor: isAllSelected ? alpha(theme.palette.primary.main, 0.06) : 'transparent',
         transition: 'background-color 0.2s ease',
         '&:hover': {
           bgcolor: isAllSelected

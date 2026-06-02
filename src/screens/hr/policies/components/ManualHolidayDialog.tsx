@@ -4,13 +4,16 @@ import type { DateValidationError } from '@mui/x-date-pickers';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
 import {
   Alert,
   Stack,
   Paper,
   Button,
   Dialog,
+  Divider,
   TextField,
   Typography,
   DialogTitle,
@@ -52,7 +55,7 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
       fullWidth
       maxWidth="sm"
     >
-      <DialogTitle sx={{ pr: 6 }}>
+      <DialogTitle sx={{ p: 2 }}>
         <Stack direction="row" spacing={0.75} alignItems="center">
           <Typography variant="h6">
             {isEdit ? 'Edit Manual Holiday' : 'Add Manual Holiday'}
@@ -60,18 +63,14 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
           <InfoTooltipIcon title="Add dates that should be treated as holidays in this work calendar." />
         </Stack>
       </DialogTitle>
-      <DialogContent>
+      <Divider />
+      <DialogContent sx={{ pb: 2 }}>
         <Stack spacing={2} sx={{ pt: 1 }}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
           <TextField
             fullWidth
             size="small"
-            label={
-              <FieldLabel
-                label="Holiday name *"
-                help="Enter the holiday name shown in this work calendar and related reviews."
-              />
-            }
+            label={<FieldLabel label="Holiday name *" />}
             value={manualHolidayForm.holidayName}
             onChange={(event) =>
               setManualHolidayForm((current) => ({
@@ -81,12 +80,7 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             }
           />
           <DatePicker
-            label={
-              <FieldLabel
-                label="From date *"
-                help="First date included in the manual holiday range."
-              />
-            }
+            label={<FieldLabel label="From date *" />}
             value={manualHolidayForm.fromDate ? dayjs(manualHolidayForm.fromDate) : null}
             onChange={(val) => {
               if (!val?.isValid()) return;
@@ -117,12 +111,7 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             }}
           />
           <DatePicker
-            label={
-              <FieldLabel
-                label="To date *"
-                help="Last date included in the manual holiday range."
-              />
-            }
+            label={<FieldLabel label="To date *" />}
             value={manualHolidayForm.toDate ? dayjs(manualHolidayForm.toDate) : null}
             onChange={(val) => {
               if (!val?.isValid()) return;
@@ -165,12 +154,7 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
           <TextField
             fullWidth
             size="small"
-            label={
-              <FieldLabel
-                label="Notes"
-                help="Optional context for HR reviewers, such as the reason or source for this manual holiday."
-              />
-            }
+            label={<FieldLabel label="Notes" />}
             value={manualHolidayForm.notes}
             onChange={(event) =>
               setManualHolidayForm((current) => ({ ...current, notes: event.target.value }))
@@ -181,11 +165,20 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={closeManualHolidayDialog}>Cancel</Button>
+        <Button
+          onClick={closeManualHolidayDialog}
+          size="small"
+          startIcon={<Iconify icon="eva:close-outline" />}
+          variant="outlined"
+        >
+          Cancel
+        </Button>
         <Button
           variant="contained"
           disabled={Boolean(manualHolidayConflict) || hasDateError}
           onClick={saveManualHoliday}
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
         >
           Save
         </Button>

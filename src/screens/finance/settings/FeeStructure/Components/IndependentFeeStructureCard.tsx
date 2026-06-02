@@ -449,7 +449,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
           <Box
             display="flex"
             alignItems="center"
-            gap={0.5}
+            gap={0.7}
             flexShrink={0}
             onClick={(e) => e.stopPropagation()}
           >
@@ -526,7 +526,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
             {!isNew && (
               <Tooltip title={isLocked ? 'Cannot Unlock Fee Structure' : 'Lock Fee Structure'}>
-                <span>
+                <span style={{ marginRight: 1 }}>
                   <LoadingButton
                     loading={isLocking}
                     onClick={handleLockToggle}

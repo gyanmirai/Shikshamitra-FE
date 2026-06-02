@@ -12,7 +12,6 @@ import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
-import { Scrollbar } from 'src/components/scrollbar';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -195,7 +194,6 @@ const RunPayroll = () => {
   const [activeRow, setActiveRow] = useState<PayrollRow | null>(null);
   const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
   const [insightsOpen, setInsightsOpen] = useState(true);
-  const [readinessOpen, setReadinessOpen] = useState(true);
   const [auditOpen, setAuditOpen] = useState(false);
   const [adjustmentDraft, setAdjustmentDraft] = useState({
     name: '',
@@ -928,7 +926,7 @@ const RunPayroll = () => {
       : 'Generate preview';
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
       <CustomBreadcrumbs
         heading="Run Payroll"
         links={[{ name: 'HR/Staff' }, { name: 'Payroll Management' }, { name: 'Run Payroll' }]}
@@ -1169,119 +1167,7 @@ const RunPayroll = () => {
                 </LoadingButton>
               )}
             </Stack>
-            <IconButton size="small">
-              <Iconify
-                icon={readinessOpen ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'}
-                width={18}
-              />
-            </IconButton>
           </Stack>
-
-          <Collapse in={readinessOpen} timeout={800} unmountOnExit>
-            <Box sx={{ p: 1.25, pt: 0.5 }}>
-              <Stack spacing={1.25}>
-                <Stack
-                  direction={{ xs: 'column', md: 'row' }}
-                  alignItems={{ xs: 'flex-start', md: 'center' }}
-                  justifyContent="space-between"
-                  spacing={1}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    Load the saved payroll preview when setup is ready. Review the rows, fix any
-                    setup gaps, and use Refresh preview only when rows need to be recomputed.
-                  </Typography>
-                  <LoadingButton
-                    size="small"
-                    variant="outlined"
-                    loading={previewBusy}
-                    disabled={previewBusy}
-                    startIcon={<Iconify icon="solar:refresh-linear" />}
-                    onClick={() => (previewError ? loadPreview(false) : refetchReadiness())}
-                  >
-                    {previewError ? 'Retry preview load' : 'Refresh Status'}
-                  </LoadingButton>
-                </Stack>
-
-                {previewError ? (
-                  <Alert severity="error">
-                    Payroll preview could not be prepared for{' '}
-                    {dayjs(`${previewError.month || selectedMonthKey}-01`).isValid()
-                      ? dayjs(`${previewError.month || selectedMonthKey}-01`).format('MMMM YYYY')
-                      : selectedMonthKey}
-                    . {previewError.errorCode ? `Error code: ${previewError.errorCode}. ` : ''}
-                    Use Retry preview load after checking attendance and payroll policy setup.
-                  </Alert>
-                ) : null}
-
-                {previewReadiness ? (
-                  <Grid container spacing={1}>
-                    {[
-                      ['Employees', previewReadiness.employeeCount],
-                      ['Existing preview rows', previewReadiness.snapshotCount],
-                      ['Attendance found', previewReadiness.attendanceFoundCount],
-                      ['Missing attendance', previewReadiness.missingAttendanceCount],
-                      ['Missing salary setup', previewReadiness.missingSalaryStructureCount],
-                      ['Policy setup issues', previewReadiness.policyConfigurationIssueCount],
-                    ].map(([label, value]) => (
-                      <Grid key={label} size={{ xs: 6, md: 2 }}>
-                        <Card variant="outlined" sx={{ p: 1, height: '100%' }}>
-                          <Typography variant="caption" color="text.secondary">
-                            {label}
-                          </Typography>
-                          <Typography variant="h6">{value}</Typography>
-                        </Card>
-                      </Grid>
-                    ))}
-                  </Grid>
-                ) : null}
-
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {(readinessActions.has('import-attendance') || previewError) && (
-                    <LoadingButton
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Iconify icon="solar:upload-linear" />}
-                      onClick={() => router.push('/hr/attendance-tracking')}
-                    >
-                      Go to Attendance Import
-                    </LoadingButton>
-                  )}
-                  {(readinessActions.has('review-attendance') || previewError) && (
-                    <LoadingButton
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Iconify icon="solar:calendar-mark-linear" />}
-                      onClick={() => router.push(hrPaths.attendance.markAttendance)}
-                    >
-                      Open Manual Attendance
-                    </LoadingButton>
-                  )}
-                  {(readinessActions.has('fix-payroll-policy') || previewError) && (
-                    <LoadingButton
-                      size="small"
-                      variant="outlined"
-                      color="warning"
-                      startIcon={<Iconify icon="solar:settings-linear" />}
-                      onClick={() => router.push('/hr/policies?tab=payroll')}
-                    >
-                      Open Payroll Policies
-                    </LoadingButton>
-                  )}
-                  {(readinessActions.has('assign-salary-structure') || previewError) && (
-                    <LoadingButton
-                      size="small"
-                      variant="outlined"
-                      color="warning"
-                      startIcon={<Iconify icon="solar:wallet-money-linear" />}
-                      onClick={() => router.push(hrPaths.payroll.structure)}
-                    >
-                      Open Salary Structures
-                    </LoadingButton>
-                  )}
-                </Stack>
-              </Stack>
-            </Box>
-          </Collapse>
         </Card>
       ) : null}
 
@@ -1290,9 +1176,7 @@ const RunPayroll = () => {
           p: 1.25,
           display: 'flex',
           flexDirection: 'column',
-          minHeight: 0,
-          flex: 1,
-          overflow: 'hidden',
+          minHeight: 480,
         }}
       >
         <Stack
@@ -1387,17 +1271,14 @@ const RunPayroll = () => {
           data={tableData}
           wrapperProps={{
             sx: {
-              height: '100%',
-              minHeight: 0,
-              overflow: 'hidden',
+              height: { xs: '56vh', md: '64vh' },
+              minHeight: 360,
+              maxHeight: '72vh',
+              overflow: 'auto',
             },
           }}
           tableContainerProps={{
             sx: {
-              height: '100%',
-              maxHeight: '100%',
-              overflowY: 'auto',
-              overflowX: 'auto',
               '& .MuiTableHead-root .MuiTableCell-root': {
                 py: 1,
                 px: 1.5,
@@ -1459,16 +1340,15 @@ const RunPayroll = () => {
               </IconButton>
             </Stack>
             <Divider />
-            {/* <Box
+            <Box
               sx={{
                 flex: 1,
                 minHeight: 0,
-                // overflowY: 'auto',
+                overflowY: 'auto',
                 px: { xs: 1.5, sm: 2 },
                 py: { xs: 1.25, sm: 2 },
               }}
-            > */}
-            <Scrollbar sx={{ height: '100%', minHeight: 0, p: 1.5 }}>
+            >
               <Stack spacing={{ xs: 1.25, sm: 2 }}>
                 <Grid container spacing={1}>
                   <Grid size={{ xs: 6, sm: 3 }}>
@@ -1768,8 +1648,7 @@ const RunPayroll = () => {
                   noDataText="No deductions found"
                 />
               </Stack>
-            </Scrollbar>
-            {/* </Box> */}
+            </Box>
           </Stack>
         ) : null}
       </Drawer>

@@ -8,10 +8,10 @@ import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -548,7 +548,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                       {/* Student */}
                       <Grid size={{ xs: 12 }}>
                         <ShakingTextField
-                          error={!!(touched.selectedStudent && errors.selectedStudent) || false}
+                          error={!!(touched.studentId && errors.studentId) || false}
                         >
                           <Autocomplete
                             loading={studentLoading || studentFetching}
@@ -569,7 +569,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                             }
                             onChange={(_e, value: any) => {
                               setFieldValue(
-                                'selectedStudent',
+                                'studentId',
                                 value ? { label: value.name, id: value.studentId } : null
                               );
                               setFieldValue('studentId', value?.studentId || null);
@@ -586,10 +586,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                                 size="small"
                                 label="Student *"
                                 fullWidth
-                                error={!!(touched.selectedStudent && errors.selectedStudent)}
-                                helperText={
-                                  (touched.selectedStudent && errors.selectedStudent) as string
-                                }
+                                error={!!(touched.studentId && errors.studentId)}
+                                helperText={(touched.studentId && errors.studentId) as string}
                               />
                             )}
                           />
@@ -647,7 +645,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
             sx={{
               flexShrink: 0,
               borderTop: `1px solid ${theme.palette.divider}`,
-              bgcolor: alpha(theme.palette.background.paper, 0.92),
               backdropFilter: 'blur(12px)',
               px: { xs: 2, md: 3 },
               py: 1.5,

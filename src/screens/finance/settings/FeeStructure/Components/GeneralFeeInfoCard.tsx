@@ -72,7 +72,7 @@ export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any
 
       <Collapse in={isExpanded.value}>
         <Divider sx={{ borderStyle: 'dashed' }} />
-        <Box sx={{ p: 3, bgcolor: 'white' }}>
+        <Box sx={{ p: 3 }}>
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <InfoItem

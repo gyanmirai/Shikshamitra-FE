@@ -94,19 +94,11 @@ export const ConsolidatedFeeDetails = ({
             flexGrow: 1,
             maxHeight: 350,
             p: 2,
-            bgcolor: alpha(theme.palette.background.neutral, 0.4),
           }}
         >
           <Stack spacing={3}>
             {/* FEE HEADS TABLE */}
             <Box>
-              <Typography
-                variant="subtitle2"
-                sx={{ mb: 1.5, fontWeight: 700, color: 'text.secondary' }}
-              >
-                Fee Head Maintenance
-              </Typography>
-
               <TableContainer
                 component={Paper}
                 elevation={0}

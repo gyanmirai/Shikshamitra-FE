@@ -91,7 +91,7 @@ const FinalPaymentReviewDialog = ({
               borderRadius: 2,
               border: '1px solid',
               borderColor: 'divider',
-              bgcolor: alpha(theme.palette.background.default, 0.5),
+              // bgcolor: alpha(theme.palette.background.default, 0.5),
             }}
           >
             {/* Student */}
@@ -224,7 +224,7 @@ const FinalPaymentReviewDialog = ({
           py: 1.75,
           borderTop: '1px solid',
           borderColor: 'divider',
-          bgcolor: alpha(theme.palette.background.paper, 0.95),
+          // bgcolor: alpha(theme.palette.background.paper, 0.95),
           backdropFilter: 'blur(8px)',
         }}
       >
