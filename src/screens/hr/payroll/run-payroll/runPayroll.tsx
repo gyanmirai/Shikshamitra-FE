@@ -61,6 +61,7 @@ import {
   useDeletePayrollAdjustmentMutation,
 } from 'src/redux/runPayroll/runPayrollApi';
 
+import { DrawerHeader } from '../../policies/components/HRPolicySharedUI';
 import { SalaryDetailsTableCard } from '../salarySlip-generate/salarySlipGenerate';
 
 dayjs.extend(isSameOrAfter);
@@ -930,6 +931,10 @@ const RunPayroll = () => {
       ? 'Refresh preview'
       : 'Generate preview';
 
+  function setAuditTarget(arg0: null): void {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <CustomBreadcrumbs
@@ -1361,25 +1366,13 @@ const RunPayroll = () => {
           >
             {activeRow ? (
               <Stack sx={{ height: '100%', minHeight: 0 }}>
-                <Stack
-                  direction="row"
-                  alignItems="flex-start"
-                  justifyContent="space-between"
-                  spacing={1}
-                  sx={{ flexShrink: 0, p: { xs: 1.5, sm: 2 }, pb: { xs: 1, sm: 1.25 } }}
-                >
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="h6" noWrap>
-                      {activeRow.employeeName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {activeRow.employeeIdentifier} • {activeRow.employeeGroup}
-                    </Typography>
-                  </Box>
-                  <IconButton onClick={() => setActiveRow(null)} sx={{ flexShrink: 0 }}>
-                    <Iconify icon="mingcute:close-line" />
-                  </IconButton>
-                </Stack>
+                <DrawerHeader
+                  title={activeRow.employeeName || 'Employee payroll details'}
+                  subtitle={`${activeRow.employeeIdentifier} • ${activeRow.employeeGroup}`}
+                  helpText="Track who changed this policy, what fields were updated, and when each change occurred."
+                  onClose={() => setActiveRow(null)}
+                />
+
                 <Divider />
                 <Box
                   sx={{
@@ -1881,15 +1874,17 @@ const RunPayroll = () => {
             anchor="right"
             open={auditOpen}
             onClose={() => setAuditOpen(false)}
-            PaperProps={{ sx: { width: { xs: 360, sm: 520 }, p: 2 } }}
+            PaperProps={{ sx: { width: { xs: 360, sm: 520 } } }}
           >
-            <Stack spacing={1.5}>
-              <Box>
-                <Typography variant="h6">Payroll lock audit</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {selectedMonthKey || 'Select a payroll month'}
-                </Typography>
-              </Box>
+            <Stack sx={{ height: '100%', minHeight: 0 }}>
+              <DrawerHeader
+                title="Payroll lock audit"
+                subtitle={selectedMonthKey || 'Select a payroll month'}
+                helpText="Track who changed this policy, what fields were updated, and when each change occurred."
+                onClose={() => setAuditOpen(false)}
+              />
+
+              <Divider sx={{ mb: 1 }} />
               {!canViewPayrollAudit ? (
                 <Alert severity="warning">
                   You do not have permission to view payroll audit events.

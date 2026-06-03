@@ -101,7 +101,7 @@ const ViewFeeStructure = ({
                 </Box>
               </Stack>
               <Divider sx={{ mb: 1.5 }} />
-              <Scrollbar sx={{ height: '480px' }}>
+              <Scrollbar sx={{ height: '480px', p: 1, pb: 3 }}>
                 {isFetching ? (
                   <FeeStructureSkeleton />
                 ) : mappedFeeStructures.length ? (

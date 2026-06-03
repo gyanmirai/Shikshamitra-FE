@@ -17,6 +17,9 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   onEdit,
   onDelete,
   onView,
+  totalCount,
+  onServerPagination,
+  onServerSearch,
 }) => {
   const tableData = useMemo(
     () =>
@@ -112,6 +115,11 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
       }
       columns={columns}
       data={tableData || []}
+      serverSidePagination
+      serverSideSearch
+      totalCount={totalCount}
+      onServerPagination={onServerPagination}
+      onServerSearch={onServerSearch}
     />
   );
 };

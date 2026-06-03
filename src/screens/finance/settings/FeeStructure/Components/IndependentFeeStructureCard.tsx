@@ -11,7 +11,6 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
@@ -55,18 +54,20 @@ import type { IClassWiseFeeItem, IClassWiseFeeStructureCard } from '../type';
 // ---------------------------------------------------------------------------
 const feeStructureSchema = Yup.object({
   name: Yup.string().trim().required('Fee Structure name is required'),
-  feeHeads: Yup.array().of(
-    Yup.object({
-      paybleMonth: Yup.string().when('isOneTime', {
-        is: true,
-        then: (schema) => schema.required('Payable month is required'),
-        otherwise: (schema) => schema.optional().nullable(),
-      }),
-      amount: Yup.number()
-        .transform((value) => (value === 0 || Number.isNaN(value) ? undefined : value))
-        .required('Required'),
-    })
-  ),
+  feeHeads: Yup.array()
+    .of(
+      Yup.object({
+        paybleMonth: Yup.string().when('isOneTime', {
+          is: true,
+          then: (schema) => schema.required('Payable month is required'),
+          otherwise: (schema) => schema.optional().nullable(),
+        }),
+        amount: Yup.number()
+          .transform((value) => (value === 0 || Number.isNaN(value) ? undefined : value))
+          .required('Required'),
+      })
+    )
+    .min(1, 'At least one fee head is required'),
 });
 
 // ---------------------------------------------------------------------------
@@ -218,6 +219,8 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       name: true,
       feeHeads: formik.values.feeHeads.map(() => ({ paybleMonth: true, amount: true })) as any,
     });
+    // Ensure feeHeads array is touched to trigger min validation error when empty
+    formik.setFieldTouched('feeHeads', true, false);
     const errors = await formik.validateForm();
     if (Object.keys(errors).length > 0) return;
 
@@ -281,7 +284,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       setIsSaving(false);
     }
   };
-
+  console.log('formik---erroes----', formik.errors);
   const handleDelete = async () => {
     if (isNew) {
       onDeleted?.();
@@ -350,6 +353,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               alignItems: 'center',
               gap: 1.5,
               my: 0.75,
+              m: 0,
               overflow: 'visible',
             },
           }}
@@ -382,10 +386,20 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
                   label="Fee Structure Name *"
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
-                  sx={{ maxWidth: 240 }}
+                  sx={{
+                    maxWidth: 260,
+                    mb: 2,
+                    '& .MuiFormHelperText-root': {
+                      // horizontal padding
+                      mr: 0, // top spacing
+                      ml: 0, // remove default margin if needed
+                      overflow: 'visible',
+                    },
+                  }}
                   autoFocus={isNew}
                 />
               </Box>
@@ -400,7 +414,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               color="success"
               size="small"
               variant="soft"
-              sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
+              sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11 }}
             />
 
             {formik.values.feeHeads.length > 0 && (
@@ -411,6 +425,15 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 color="default"
                 sx={{ fontWeight: 500, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
               />
+            )}
+            {formik.touched.feeHeads && typeof formik.errors.feeHeads === 'string' && (
+              <Tooltip title={formik.errors.feeHeads}>
+                <Iconify
+                  icon="mdi:alert-circle-outline"
+                  color={theme.palette.error.main}
+                  width={16}
+                />
+              </Tooltip>
             )}
 
             {isLocked && (
@@ -423,7 +446,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
               />
             )}
-            <Box>
+            {!isLocked && (
               <Box
                 sx={{
                   display: 'flex',
@@ -433,7 +456,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                   borderRadius: 1,
                   px: 1,
                   py: 1.2,
-
                   gap: 1.2,
                 }}
               >
@@ -443,7 +465,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                   after locking.
                 </Typography>
               </Box>
-            </Box>
+            )}
           </Box>
 
           <Box
@@ -452,6 +474,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             gap={0.7}
             flexShrink={0}
             onClick={(e) => e.stopPropagation()}
+            mr={2}
           >
             {isEditing && !isLocked && (
               <Button
@@ -556,27 +579,17 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         </AccordionSummary>
 
         <AccordionDetails sx={{ p: 0 }}>
-          {formik.values.feeHeads.length === 0 ? (
-            <EmptyContent
-              title="No Fee Heads Added"
-              description="Click 'Fee Head' in the header to add fee heads to this structure."
-              filled
-              sx={{ py: 5 }}
-              action={
-                isEditing && !isLocked ? (
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<Iconify icon="lucide:plus" />}
-                    onClick={addFeeHeadDialog.onTrue}
-                  >
-                    Fee Head
-                  </Button>
-                ) : null
-              }
-            />
-          ) : (
-            <Scrollbar sx={{ maxHeight: 320, px: 2, pt: 1, pb: 1 }}>
+          {formik.values.feeHeads && formik.values.feeHeads.length > 0 ? (
+            <Box
+              sx={{
+                maxHeight: 320,
+                overflowY: 'auto',
+                overscrollBehavior: 'contain',
+                px: 2,
+                pt: 1,
+                pb: 1,
+              }}
+            >
               <Stack spacing={0.5}>
                 <Grid
                   container
@@ -869,7 +882,23 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                   );
                 })}
               </Stack>
-            </Scrollbar>
+            </Box>
+          ) : (
+            <Box>
+              {formik.touched.feeHeads && typeof formik.errors.feeHeads === 'string' && (
+                <Typography
+                  variant="caption"
+                  color="error"
+                  sx={{ display: 'flex', justifyContent: 'center', fontWeight: 600 }}
+                >
+                  {formik.errors.feeHeads}
+                </Typography>
+              )}
+              <EmptyContent
+                title="No Fee Heads Found"
+                description="There are no fee heads assigned to this fee structure."
+              />
+            </Box>
           )}
         </AccordionDetails>
       </Accordion>

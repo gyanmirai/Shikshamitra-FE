@@ -17,6 +17,9 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   onDelete,
   onEdit,
   isLoading,
+  totalCount,
+  onServerPagination,
+  onServerSearch,
 }) => {
   const columns: IColumn[] = useMemo(
     () => [
@@ -119,6 +122,11 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       columns={columns}
       data={data || []}
       isLoading={isLoading}
+      serverSidePagination
+      serverSideSearch
+      totalCount={totalCount}
+      onServerPagination={onServerPagination}
+      onServerSearch={onServerSearch}
     />
   );
 };

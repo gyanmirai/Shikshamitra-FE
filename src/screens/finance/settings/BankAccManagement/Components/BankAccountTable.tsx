@@ -17,6 +17,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
   onDelete,
   onEdit,
   isLoading,
+  totalCount,
+  onServerPagination,
+  onServerSearch,
 }) => {
   const columns: IColumn[] = useMemo(
     () => [
@@ -187,6 +190,11 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       columns={columns}
       data={data || []}
       isLoading={isLoading}
+      serverSidePagination
+      serverSideSearch
+      totalCount={totalCount}
+      onServerPagination={onServerPagination}
+      onServerSearch={onServerSearch}
     />
   );
 };

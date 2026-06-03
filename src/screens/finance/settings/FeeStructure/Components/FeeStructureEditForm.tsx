@@ -3,7 +3,6 @@ import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import React, { useRef, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -50,7 +49,16 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
       style={{ height: '100%' }}
     >
       <Box display="flex" flexDirection="column" height="100%">
-        <Scrollbar sx={{ p: 2, height: '100%', flex: 1 }}>
+        <Box
+          sx={{
+            p: 2,
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            overscrollBehavior: 'contain',
+            minHeight: 0,
+          }}
+        >
           {/* General info summary */}
           <Box mb={2}>
             <FeeGeneralInfoCard feeStructure={editData} />
@@ -195,7 +203,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
               />
             )
           )}
-        </Scrollbar>
+        </Box>
 
         <DialogActions
           sx={{

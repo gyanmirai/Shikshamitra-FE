@@ -2,11 +2,11 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
@@ -40,17 +40,33 @@ const ConcessionType = () => {
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
+  const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
+
+  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
+    setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
+  }, []);
+
+  const handleServerSearch = useCallback((search: string) => {
+    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
+  }, []);
+
+  const apiParams = {
+    academicYearId: currentYear?.id,
+    skipCount: (queryParams.page - 1) * queryParams.pageSize,
+    maxResultCount: queryParams.pageSize,
+    searchTerm: queryParams.search || undefined,
+  };
+
   // Fetch concession type data
   const {
     data: concessionTypes,
     isLoading,
+    isFetching,
     refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypesQuery,
-    params: {
-      academicYearId: currentYear?.id,
-    },
+    params: apiParams,
   });
 
   // Redux state and dispatch
@@ -115,7 +131,7 @@ const ConcessionType = () => {
             addConcessionTypeDialog.onFalse();
             setSelectedConcessionType(null);
           }}
-          maxWidth="sm"
+          maxWidth="md"
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">
@@ -145,7 +161,7 @@ const ConcessionType = () => {
 
         <ConcessionTypeTable
           data={concessionTypes?.data?.items ?? []}
-          isLoading={Boolean(currentYear?.id) && isLoading}
+          isLoading={Boolean(currentYear?.id) && (isLoading || isFetching)}
           addConcessionType={addConcessionTypeDialog}
           setEditData={setSelectedConcessionType}
           onEdit={(data) => {
@@ -160,6 +176,9 @@ const ConcessionType = () => {
             viewConcessionTypeDialog.onTrue();
             setSelectedConcessionType(data);
           }}
+          totalCount={concessionTypes?.data?.totalCount}
+          onServerPagination={handleServerPagination}
+          onServerSearch={handleServerSearch}
         />
 
         <ConfirmDialog
@@ -194,14 +213,14 @@ const ConcessionType = () => {
                     dispatchFn(
                       concessionTypeApi.util.updateQueryData(
                         'getConcessionTypes',
-                        { academicYearId: currentYear?.id },
+                        apiParams,
                         (draft: any) => {
-                          const index = draft.items?.findIndex(
+                          const index = draft.data?.items?.findIndex(
                             (b: any) => b.id === (selectedConcessionType as any)?.id
                           );
                           setDeleteIndex(index);
                           if (index !== -1) {
-                            draft.items.splice(index, 1);
+                            draft.data.items.splice(index, 1);
                           }
                         }
                       )

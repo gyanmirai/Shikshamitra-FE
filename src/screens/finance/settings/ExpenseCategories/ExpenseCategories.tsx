@@ -2,11 +2,11 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
@@ -29,6 +29,17 @@ import type { IExpenseCategory } from './Components/type';
 
 const FinanceExpenseCategoriesScreen = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
+
+  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
+    setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
+  }, []);
+
+  const handleServerSearch = useCallback((search: string) => {
+    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
+  }, []);
+
   // Use custom hook to fetch expense categories
   const {
     data: expenseCategoryData,
@@ -38,7 +49,7 @@ const FinanceExpenseCategoriesScreen = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseCategoryQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, ...queryParams },
   });
 
   // DELETE mutation
@@ -82,7 +93,7 @@ const FinanceExpenseCategoriesScreen = () => {
     }
   };
 
-  if (expenseCategoryLoading) {
+  if (expenseCategoryLoading && !expenseCategoryFetching) {
     return <Box>Loading...</Box>;
   }
 
@@ -126,6 +137,9 @@ const FinanceExpenseCategoriesScreen = () => {
         setEditData={setSelectedExpenseCategory}
         data={expenseCategoryData?.items || []}
         isLoading={expenseCategoryLoading || expenseCategoryFetching}
+        totalCount={expenseCategoryData?.totalCount}
+        onServerPagination={handleServerPagination}
+        onServerSearch={handleServerSearch}
       />
 
       <CustomDialog
@@ -192,7 +206,7 @@ const FinanceExpenseCategoriesScreen = () => {
                   dispatchFn(
                     expenseCategoryApi.util.updateQueryData(
                       'getExpenseCategory',
-                      { academicYearId: currentYear?.id },
+                      { academicYearId: currentYear?.id, ...queryParams },
                       (draft: any) => {
                         const list = Array.isArray(draft) ? draft : draft?.items || [];
                         const index = list.findIndex(

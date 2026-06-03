@@ -8,6 +8,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Stack, Tooltip, Divider, Typography } from '@mui/material';
 
 import type { IStudentFee, FeeCollectionFormValues } from '../../Components/type';
@@ -70,15 +71,20 @@ const FinalPaymentReviewDialog = ({
       maxWidth="sm"
       hasForm={false}
       title={
-        <Box>
-          <Typography variant="h6" fontWeight={700} lineHeight={1.2} color="text.primary">
-            {isCash ? 'Confirm Cash Payment' : 'Payment Verification'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" fontWeight={500}>
-            {isCash
-              ? 'Finalize collection and generate receipt'
-              : 'Choose how to process this payment'}
-          </Typography>
+        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+          <Box display="flex" flexDirection="column" gap={1}>
+            <Typography variant="h6" fontWeight={700} lineHeight={1.2} color="text.primary">
+              {isCash ? 'Confirm Cash Payment' : 'Payment Verification'}
+            </Typography>
+          </Box>
+          <CustomTooltip
+            arrow
+            placement="right"
+            sx={{ textAlign: 'justify' }}
+            title="Finalize collection and generate receipt"
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </CustomTooltip>
         </Box>
       }
     >

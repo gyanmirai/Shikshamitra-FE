@@ -322,7 +322,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                             label="Amount *"
                             name="amount"
                             value={values.amount || ''}
-                            onChange={(e) => {
+                            onChange={(e: { target: { value: any } }) => {
                               let val = e.target.value;
                               val = val.replace(/\D/g, '');
                               if (/^\d*$/.test(val)) {

@@ -5,11 +5,24 @@ import { financeModuleApi } from '../financeModuleApi';
 export const bankAccountApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getBankAccount: builder.query({
-      query: ({ academicYearId }: { academicYearId: string }) => ({
+      query: ({
+        academicYearId,
+        page,
+        pageSize,
+        search,
+      }: {
+        academicYearId: string;
+        page?: number;
+        pageSize?: number;
+        search?: string;
+      }) => ({
         url: '/bank-accounts',
         method: 'GET',
         params: {
           academicYearId,
+          page,
+          pageSize,
+          search: search || undefined,
         },
       }),
       providesTags: [financeModuleType.bankAccount],

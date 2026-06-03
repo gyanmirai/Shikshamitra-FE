@@ -23,8 +23,14 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   onAddFeeCategory,
   setOpenDialog,
   setEditData,
+  totalCount,
+  isLoading,
+  onServerPagination,
+  onServerSearch,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const [queryParams, setQueryParams] = React.useState({ page: 1, pageSize: 10, search: '' });
 
   // Custom hook to fetch fee category data
   const {
@@ -35,7 +41,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeCategoriesQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, ...queryParams },
   });
 
   const [deleteFeeCategory, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -139,6 +145,17 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         }
         columns={columns}
         data={feeCategoryData?.items || []}
+        serverSidePagination
+        serverSideSearch
+        totalCount={feeCategoryData?.totalCount}
+        onServerPagination={(page, rowsPerPage) => {
+          setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
+          onServerPagination?.(page, rowsPerPage);
+        }}
+        onServerSearch={(search) => {
+          setQueryParams((prev) => ({ ...prev, search, page: 1 }));
+          onServerSearch?.(search);
+        }}
       />
       <ConfirmDialog
         open={deleteFeeCategoryDialog.value}
@@ -166,7 +183,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                   dispatchFn(
                     feeCategoryApi.util.updateQueryData(
                       'getFeeCategories',
-                      { academicYearId: currentYear?.id },
+                      { academicYearId: currentYear?.id, ...queryParams },
                       (draft: any) => {
                         const index = draft.items?.findIndex(
                           (b: any) => b.id === (selectedFeeCategory as any)?.id
