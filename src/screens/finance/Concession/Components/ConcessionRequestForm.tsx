@@ -220,17 +220,28 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
           return;
         }
 
+        const typeId = values.concessionTypeId;
+        const selectedFeeHeadIds = values.selectedFeeHeads[typeId] || [];
+        const feeHeadConcessions = selectedFeeHeadIds.map((fhId: string) => {
+          const entry = values.valueEntries[typeId]?.[fhId] || {
+            basedOn: 0,
+            amount: 0,
+            netAmount: 0,
+          };
+          return {
+            feeHeadId: fhId,
+            basedOn: entry.basedOn,
+            amount: entry.amount,
+            netAmount: entry.netAmount,
+          };
+        });
+
         const res: any = await createConcessionRequest({
-          boardId: values.boardId,
-          educationMediumId: values.mediumId,
-          standardId: values.standardId,
-          divisionId: values.divisionId,
+          academicYearId: currentYear?.id,
           studentId: values.studentId,
-          concessionTypeIds: [values.concessionTypeId],
-          concessionAmount,
-          selectedFeeHeads: values.selectedFeeHeads,
-          valueEntries: values.valueEntries,
+          concessionTypeId: typeId,
           remarks: values.remarks,
+          feeHeadConcessions,
         }).unwrap();
 
         const reqId =
@@ -238,21 +249,18 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
 
         if (!reqId) throw new Error('Failed to get concession request ID from response');
 
-        if (values.concessionTypeDocuments?.length > 0) {
-          const selectedConcessionTypes =
-            res?.data?.selectedConcessionTypes || res?.selectedConcessionTypes || [];
-          const concessionTypeIdMap: Record<string, string> = {};
-          selectedConcessionTypes.forEach((ct: any) => {
-            concessionTypeIdMap[ct.concessionTypeId] = ct.concessionRequestConcessionTypeId;
-          });
-          const concessionTypeDocuments = values.concessionTypeDocuments.map((docGroup: any) => ({
-            ...docGroup,
-            concessionRequestConcessionTypeId:
-              concessionTypeIdMap[docGroup.concessionTypeId] ||
-              docGroup.concessionRequestConcessionTypeId ||
-              '',
-          }));
-          await uploadDocuments({ concessionRequestId: reqId, concessionTypeDocuments }).unwrap();
+        const docBlock = values.concessionTypeDocuments?.find(
+          (d: any) => d.concessionTypeId === typeId
+        );
+        const flatDocs =
+          docBlock?.documents?.map((d: any) => ({
+            documentId: d.documentId,
+            url: d.url,
+            status: d.status ?? 1,
+          })) || [];
+
+        if (flatDocs.length > 0) {
+          await uploadDocuments({ concessionRequestId: reqId, documents: flatDocs }).unwrap();
         }
 
         shikshaMitraToast.success({ message: 'Concession request created successfully' });

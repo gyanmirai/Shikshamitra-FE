@@ -4,11 +4,11 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Cancel, ArrowBack, CheckCircle } from '@mui/icons-material';
@@ -30,7 +30,7 @@ import {
 import {
   useCancelConcessionRequestMutation,
   useApproveConcessionRequestMutation,
-  useGetConcessionRequestFeeHeadsQuery,
+  useGetConcessionApprovalContextQuery,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import type {
@@ -43,7 +43,7 @@ import type {
 
 interface ConcessionFeeHeadFormEntry {
   feeHeadId: string;
-  months: string[];
+  selectedDueFeeIds: string[];
 }
 
 interface ConcessionApprovalFormValues {
@@ -67,70 +67,28 @@ const distributeMonthConcession = (totalConcession: number, selectedMonthCount: 
   return totalConcession / selectedMonthCount;
 };
 
-// ─── Dummy / fallback data ─────────────────────────────────────────────────────
-
-const DUMMY_FEE_HEAD_WISE: IConcessionFeeHeadWiseGroup[] = [
-  {
-    feeHeadId: 'fh-1',
-    feeHeadName: 'Tuition Fee',
-    months: 3,
-    totalDue: 9000,
-    concessionAmount: 1500,
-    isConcessionApply: true,
-    items: [
-      {
-        month: 'April',
-        total: 3000,
-        paid: 0,
-        due: 3000,
-        concessionAmount: 0,
-        status: FeeCollectionStatusType.Pending,
-      },
-      {
-        month: 'May',
-        total: 3000,
-        paid: 0,
-        due: 3000,
-        concessionAmount: 0,
-        status: FeeCollectionStatusType.Pending,
-      },
-      {
-        month: 'June',
-        total: 3000,
-        paid: 1000,
-        due: 2000,
-        concessionAmount: 0,
-        status: FeeCollectionStatusType.Partial,
-      },
-    ],
-  },
-  {
-    feeHeadId: 'fh-2',
-    feeHeadName: 'Hostel Fee',
-    months: 2,
-    totalDue: 6000,
-    concessionAmount: 1500,
-    isConcessionApply: true,
-    items: [
-      {
-        month: 'April',
-        total: 3000,
-        paid: 0,
-        due: 3000,
-        concessionAmount: 0,
-        status: FeeCollectionStatusType.Pending,
-      },
-      {
-        month: 'May',
-        total: 3000,
-        paid: 0,
-        due: 3000,
-        concessionAmount: 0,
-        status: FeeCollectionStatusType.Pending,
-      },
-    ],
-  },
-];
+const mapApprovalContextToGroups = (ctx: any): IConcessionFeeHeadWiseGroup[] => {
+  if (!ctx?.feeHeadGroups?.length) return [];
+  return ctx.feeHeadGroups.map((g: any) => ({
+    feeHeadId: g.feeHeadId,
+    feeHeadName: g.feeHeadName,
+    months: g.dueFeeLines?.length ?? 0,
+    totalDue:
+      g.dueFeeLines?.reduce((sum: number, l: any) => sum + Number(l.outstandingAmount), 0) ?? 0,
+    concessionAmount: Number(g.requestedConcessionAmount),
+    isConcessionApply: g.dueFeeLines?.some((l: any) => l.isSelectable) ?? false,
+    items: (g.dueFeeLines ?? []).map((l: any) => ({
+      dueFeeId: l.dueFeeId,
+      month: l.monthLabel || String(l.month),
+      total: Number(l.originalAmount),
+      paid: Number(l.paidAmount),
+      due: Number(l.outstandingAmount),
+      concessionAmount: 0,
+      status: FeeCollectionStatusType.Pending,
+      isSelectable: l.isSelectable,
+    })),
+  }));
+};
 
 // ─── Column Header ─────────────────────────────────────────────────────────────
 
@@ -253,7 +211,7 @@ const ConcessionFeeRow: React.FC<ConcessionFeeRowProps> = ({
 
 interface GroupHeaderProps {
   group: IConcessionFeeHeadWiseGroup;
-  selectedMonths: string[];
+  selectedDueFeeIds: string[];
   isOpen: boolean;
   onCheckboxToggle: () => void;
   onExpandToggle: () => void;
@@ -261,14 +219,16 @@ interface GroupHeaderProps {
 
 const FeeHeadGroupHeader: React.FC<GroupHeaderProps> = ({
   group,
-  selectedMonths,
+  selectedDueFeeIds,
   isOpen,
   onCheckboxToggle,
   onExpandToggle,
 }) => {
   const theme = useTheme();
-  const selectableItems = group.isConcessionApply ? group.items : [];
-  const selectedCount = selectableItems.filter((i) => selectedMonths.includes(i.month)).length;
+  const selectableItems = group.items.filter((i) => i.isSelectable !== false);
+  const selectedCount = selectableItems.filter((i) =>
+    selectedDueFeeIds.includes(i.dueFeeId)
+  ).length;
   const isAllSelected = selectableItems.length > 0 && selectedCount === selectableItems.length;
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
   const perMonthConcession = distributeMonthConcession(group.concessionAmount, selectedCount);
@@ -356,15 +316,15 @@ const FeeHeadGroupHeader: React.FC<GroupHeaderProps> = ({
 
 interface FeeHeadGroupProps {
   group: IConcessionFeeHeadWiseGroup;
-  selectedMonths: string[];
-  onToggleMonth: (month: string) => void;
+  selectedDueFeeIds: string[];
+  onToggleDueFee: (dueFeeId: string) => void;
   onToggleAll: () => void;
 }
 
 const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   group,
-  selectedMonths,
-  onToggleMonth,
+  selectedDueFeeIds,
+  onToggleDueFee,
   onToggleAll,
 }) => {
   const [open, setOpen] = useState(true);
@@ -372,7 +332,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
 
   const distributedConcession = distributeMonthConcession(
     group.concessionAmount,
-    selectedMonths.length
+    selectedDueFeeIds.length
   );
 
   return (
@@ -387,7 +347,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
     >
       <FeeHeadGroupHeader
         group={group}
-        selectedMonths={selectedMonths}
+        selectedDueFeeIds={selectedDueFeeIds}
         isOpen={open}
         onCheckboxToggle={onToggleAll}
         onExpandToggle={() => setOpen((o) => !o)}
@@ -397,16 +357,16 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
         <Divider />
         <ConcessionColHeader />
         {group.items.map((item, idx) => {
-          const isSelected = selectedMonths.includes(item.month);
-          const isDisabled = !group.isConcessionApply;
+          const isSelected = selectedDueFeeIds.includes(item.dueFeeId);
+          const isDisabled = item.isSelectable === false;
           return (
-            <React.Fragment key={item.month}>
+            <React.Fragment key={item.dueFeeId}>
               <ConcessionFeeRow
                 item={item}
                 isSelected={isSelected}
                 isDisabled={isDisabled}
                 distributedConcession={distributedConcession}
-                onToggle={() => onToggleMonth(item.month)}
+                onToggle={() => onToggleDueFee(item.dueFeeId)}
               />
               {idx < group.items.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.4 }} />}
             </React.Fragment>
@@ -427,11 +387,11 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
               sx={{ bgcolor: (t) => alpha(t.palette.success.main, 0.04) }}
             >
               <Typography variant="caption" color="text.secondary">
-                Selected months: <strong>{selectedMonths.length}</strong>
+                Selected lines: <strong>{selectedDueFeeIds.length}</strong>
               </Typography>
               <Typography variant="caption" color="success.dark" fontWeight={700}>
                 Total Concession: ₹
-                {formatNumber(selectedMonths.length > 0 ? group.concessionAmount : 0)}
+                {formatNumber(selectedDueFeeIds.length > 0 ? group.concessionAmount : 0)}
               </Typography>
             </Box>
           </>
@@ -478,11 +438,11 @@ const validationSchema = Yup.object({
     .of(
       Yup.object({
         feeHeadId: Yup.string().required(),
-        months: Yup.array().of(Yup.string().required()).required(),
+        selectedDueFeeIds: Yup.array().of(Yup.string().required()).required(),
       })
     )
-    .test('at-least-one-month', 'Please select at least one month to proceed.', (feeHeads) =>
-      (feeHeads ?? []).some((fh) => (fh.months ?? []).length > 0)
+    .test('at-least-one-line', 'Please select at least one due fee line to proceed.', (feeHeads) =>
+      (feeHeads ?? []).some((fh) => (fh.selectedDueFeeIds ?? []).length > 0)
     ),
 });
 
@@ -505,20 +465,23 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
     currentQueryAndMutation: useCancelConcessionRequestMutation,
   });
 
+  const requestId = selectedItem.studentConcessionTypeRequestId || selectedItem.id || '';
+
   const {
-    data: feeHeadData,
+    data: approvalContext,
     isLoading: isFetchingFeeHeads,
     isFetching,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetConcessionRequestFeeHeadsQuery,
-    params: selectedItem.studentConcessionTypeRequestId,
-    options: { skip: !selectedItem.studentConcessionTypeRequestId },
+    currentQueryAndMutation: useGetConcessionApprovalContextQuery,
+    params: requestId,
+    options: { skip: !requestId },
   }) as { data: any; isLoading: boolean; isFetching: boolean };
 
-  const groups: IConcessionFeeHeadWiseGroup[] = feeHeadData?.feeHeadWise?.length
-    ? feeHeadData.feeHeadWise
-    : DUMMY_FEE_HEAD_WISE;
+  const groups = useMemo(
+    () => mapApprovalContextToGroups(approvalContext?.data ?? approvalContext),
+    [approvalContext]
+  );
 
   const isLoading = isFetchingFeeHeads || isFetching;
 
@@ -531,38 +494,36 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
     },
     validationSchema,
     onSubmit: async (values) => {
-      const selectedFeeHeads = values.feeHeads.filter((fh) => fh.months.length > 0);
+      const selectedFeeHeads = values.feeHeads.filter((fh) => fh.selectedDueFeeIds.length > 0);
 
       try {
-        await Promise.all(
-          selectedFeeHeads.map((fh) => {
+        if (isApprove) {
+          const feeHeadApprovals = selectedFeeHeads.map((fh) => {
             const group = groups.find((g) => g.feeHeadId === fh.feeHeadId)!;
-            const concessionAmountPerMonth = distributeMonthConcession(
+            const perLine = distributeMonthConcession(
               group.concessionAmount,
-              fh.months.length
+              fh.selectedDueFeeIds.length
             );
-            const body = {
-              message: values.description,
-              months: fh.months,
+            return {
               feeHeadId: fh.feeHeadId,
-              concessionAmountPerMonth,
-              totalConcessionAmount: group.concessionAmount,
+              approvedConcessionAmount: group.concessionAmount,
+              dueFeeAllocations: fh.selectedDueFeeIds.map((dueFeeId) => ({
+                dueFeeId,
+                concessionAmount: perLine,
+              })),
             };
+          });
 
-            return isApprove
-              ? approveConcession({
-                  studentConcessionTypeRequestId: selectedItem.studentConcessionTypeRequestId,
-                  body,
-                }).unwrap()
-              : cancelConcession({
-                  studentConcessionTypeRequestId: selectedItem.studentConcessionTypeRequestId,
-                  body,
-                }).unwrap();
-          })
-        );
+          await approveConcession({
+            studentConcessionTypeRequestId: requestId,
+            body: { message: values.description, feeHeadApprovals },
+          }).unwrap();
+        } else {
+          await cancelConcession(requestId).unwrap();
+        }
 
         shikshaMitraToast.success({
-          message: `Concession ${isApprove ? 'approved' : 'cancelled'} successfully for ${selectedFeeHeads.length} fee head(s).`,
+          message: `Concession ${isApprove ? 'approved' : 'cancelled'} successfully.`,
         });
         onBack();
       } catch {
@@ -578,41 +539,50 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
       'feeHeads',
       groups.map((group) => ({
         feeHeadId: group.feeHeadId,
-        months: group.isConcessionApply ? group.items.map((i) => i.month) : [],
+        selectedDueFeeIds: group.items
+          .filter((i) => i.isSelectable !== false)
+          .map((i) => i.dueFeeId),
       }))
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [feeHeadData]);
+  }, [approvalContext]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
 
-  const getSelectedMonths = (feeHeadId: string): string[] =>
-    formik.values.feeHeads.find((fh) => fh.feeHeadId === feeHeadId)?.months ?? [];
+  const getSelectedDueFeeIds = (feeHeadId: string): string[] =>
+    formik.values.feeHeads.find((fh) => fh.feeHeadId === feeHeadId)?.selectedDueFeeIds ?? [];
 
-  const toggleMonth = (feeHeadId: string, month: string) => {
+  const toggleDueFee = (feeHeadId: string, dueFeeId: string) => {
     const idx = formik.values.feeHeads.findIndex((fh) => fh.feeHeadId === feeHeadId);
     if (idx === -1) return;
-    const curr = formik.values.feeHeads[idx].months;
-    const next = curr.includes(month) ? curr.filter((m) => m !== month) : [...curr, month];
-    formik.setFieldValue(`feeHeads[${idx}].months`, next);
+    const curr = formik.values.feeHeads[idx].selectedDueFeeIds;
+    const next = curr.includes(dueFeeId)
+      ? curr.filter((id) => id !== dueFeeId)
+      : [...curr, dueFeeId];
+    formik.setFieldValue(`feeHeads[${idx}].selectedDueFeeIds`, next);
   };
 
-  const toggleAllMonths = (group: IConcessionFeeHeadWiseGroup) => {
+  const toggleAllDueFees = (group: IConcessionFeeHeadWiseGroup) => {
     const idx = formik.values.feeHeads.findIndex((fh) => fh.feeHeadId === group.feeHeadId);
     if (idx === -1) return;
-    const curr = formik.values.feeHeads[idx].months;
-    const allMonths = group.items.map((i) => i.month);
-    const isAllSelected = allMonths.every((m) => curr.includes(m));
-    formik.setFieldValue(`feeHeads[${idx}].months`, isAllSelected ? [] : allMonths);
+    const curr = formik.values.feeHeads[idx].selectedDueFeeIds;
+    const selectableIds = group.items
+      .filter((i) => i.isSelectable !== false)
+      .map((i) => i.dueFeeId);
+    const isAllSelected = selectableIds.every((id) => curr.includes(id));
+    formik.setFieldValue(`feeHeads[${idx}].selectedDueFeeIds`, isAllSelected ? [] : selectableIds);
   };
 
   // ── Derived totals ────────────────────────────────────────────────────────────
 
-  const totalSelectedMonths = formik.values.feeHeads.reduce((sum, fh) => sum + fh.months.length, 0);
+  const totalSelectedLines = formik.values.feeHeads.reduce(
+    (sum, fh) => sum + fh.selectedDueFeeIds.length,
+    0
+  );
 
   const totalSelectedConcession = groups.reduce((sum, group) => {
     const fh = formik.values.feeHeads.find((f) => f.feeHeadId === group.feeHeadId);
-    return sum + ((fh?.months.length ?? 0) > 0 ? group.concessionAmount : 0);
+    return sum + ((fh?.selectedDueFeeIds.length ?? 0) > 0 ? group.concessionAmount : 0);
   }, 0);
 
   const isSubmitting = isApproving || isCancelling;
@@ -640,7 +610,7 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
             {selectedItem.concessionTypeName}
           </Typography>
         </Box>
-        {totalSelectedMonths > 0 && (
+        {totalSelectedLines > 0 && (
           <Box
             sx={{
               px: 1.5,
@@ -651,7 +621,7 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
             }}
           >
             <Typography variant="caption" color="success.dark" fontWeight={700}>
-              {totalSelectedMonths} month{totalSelectedMonths !== 1 ? 's' : ''} · ₹
+              {totalSelectedLines} line{totalSelectedLines !== 1 ? 's' : ''} · ₹
               {formatNumber(totalSelectedConcession)} concession
             </Typography>
           </Box>
@@ -699,8 +669,8 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
             sx={{ color: isApprove ? 'info.main' : 'warning.main', flexShrink: 0 }}
           />
           <Typography variant="caption" color="text.secondary">
-            Select months per fee head to {isApprove ? 'approve' : 'cancel'} the concession. Fee
-            heads marked <strong>Not Applicable</strong> cannot be selected.
+            Select due fee lines per fee head to {isApprove ? 'approve' : 'cancel'} the concession.
+            Lines with no outstanding balance cannot be selected.
           </Typography>
         </Box>
 
@@ -730,9 +700,9 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
             <FeeHeadGroup
               key={group.feeHeadId}
               group={group}
-              selectedMonths={getSelectedMonths(group.feeHeadId)}
-              onToggleMonth={(month) => toggleMonth(group.feeHeadId, month)}
-              onToggleAll={() => toggleAllMonths(group)}
+              selectedDueFeeIds={getSelectedDueFeeIds(group.feeHeadId)}
+              onToggleDueFee={(dueFeeId) => toggleDueFee(group.feeHeadId, dueFeeId)}
+              onToggleAll={() => toggleAllDueFees(group)}
             />
           ))
         )}

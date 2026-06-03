@@ -1,10 +1,9 @@
+import React, { useMemo, useCallback } from 'react';
 import PercentIcon from '@mui/icons-material/Percent';
-import React, { useMemo, useEffect, useCallback } from 'react';
 import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
-import { useGetConcessionRequestValueEntriesQuery } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 import {
   Box,
   Card,
@@ -26,63 +25,6 @@ interface Props {
 
 const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes }) => {
   const { values, setFieldValue } = formik;
-  const { concessionRequestId } = values;
-
-  // New API call to fetch saved value entries
-  const { data: valueEntriesData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetConcessionRequestValueEntriesQuery,
-    params: concessionRequestId,
-    options: {
-      skip: !concessionRequestId,
-      refetchOnMountOrArgChange: true,
-    },
-  });
-
-  // Hydrate Formik with fetched data
-  useEffect(() => {
-    if (valueEntriesData?.data?.concessionTypeValues) {
-      const hydratedValueEntries: Record<
-        string,
-        Record<
-          string,
-          {
-            basedOn: 0 | 1;
-            amount: number;
-            netAmount: number;
-          }
-        >
-      > = {};
-
-      valueEntriesData.data.concessionTypeValues.forEach((ct: any) => {
-        hydratedValueEntries[ct.concessionTypeId] = {};
-        if (ct.feeHeadValues) {
-          ct.feeHeadValues.forEach((fh: any) => {
-            hydratedValueEntries[ct.concessionTypeId][fh.feeHeadId] = {
-              basedOn: fh.basedOn,
-              amount: fh.amount,
-              netAmount: fh.netAmount,
-            };
-          });
-        }
-      });
-
-      // Merge with existing logic or just set it
-      // Since this is hydration on load/edit, we should probably check if keys exist in formik first?
-      // Or if formik is empty for these keys?
-      // The requirement says "run once on mount in edit mode".
-      // We can check if `values.valueEntries` is empty or if we want to overwrite.
-      // Usually, if we are fetching data, we want to set it.
-      // However, to avoid overwriting user changes if they started editing before fetch completes (unlikely but possible),
-      // we might want to be careful. But typically hydration overwrites initial empty state.
-
-      // Only set if we have keys to set.
-      if (Object.keys(hydratedValueEntries).length > 0) {
-        setFieldValue('valueEntries', hydratedValueEntries);
-      }
-    }
-  }, [valueEntriesData, setFieldValue]);
-
   const selectedTypes = useMemo(
     () => (concessionTypes as any[]).filter((ct: any) => values.concessionTypeIds.includes(ct.id)),
     [concessionTypes, values.concessionTypeIds]
