@@ -2,12 +2,13 @@
 
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Box, Tab, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
+import FinanceFeeAuditDrawer from 'src/screens/finance/AuditTrail/components/FinanceFeeAuditDrawer';
 
 import FeeConcession from './ViewDetailsComponent/FeeConcession';
 import PaymentHistory from './ViewDetailsComponent/PaymentHistory';
@@ -66,9 +67,12 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
 }) => {
   // Initialize tab state, defaulting to 'overview'
   const tabs = useTabs('overview');
+  const [auditDrawerOpen, setAuditDrawerOpen] = useState(false);
 
   // Find the currently selected tab's component to render
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const studentDisplayName =
+    student?.name ?? (student as { studentName?: string })?.studentName ?? undefined;
 
   return (
     <Card sx={{ boxShadow: 'var(--shadows-4)' }}>
@@ -100,19 +104,36 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
           ))}
         </CustomTabs>
 
-        <Button
-          variant="contained"
-          startIcon={<CreditCardIcon />}
-          color="primary"
-          size="small"
-          onClick={() => {
-            collectFeesDialog.onTrue();
-            viewDialog.onFalse();
-          }}
-        >
-          Collect Fees
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Iconify icon="mdi:history" />}
+            onClick={() => setAuditDrawerOpen(true)}
+          >
+            Audit Trail
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<CreditCardIcon />}
+            color="primary"
+            size="small"
+            onClick={() => {
+              collectFeesDialog.onTrue();
+              viewDialog.onFalse();
+            }}
+          >
+            Collect Fees
+          </Button>
+        </Box>
       </Box>
+
+      <FinanceFeeAuditDrawer
+        open={auditDrawerOpen}
+        studentId={studentId}
+        studentName={studentDisplayName}
+        onClose={() => setAuditDrawerOpen(false)}
+      />
 
       <Box px={1} pt={2}>
         {CurrentComponent?.({ student })}

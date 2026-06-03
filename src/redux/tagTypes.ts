@@ -252,6 +252,7 @@ export const financeModuleType = {
   bankAccount: 'bank-account',
   feeStructure: 'FeeStructure',
   classWiseFeeStructure: 'ClassWiseFeeStructure',
+  financeAudit: 'FinanceAudit',
 } as const;
 
 // ===== Finance Budgets Category API (reducerPath: BudgetsCategoryApi) =====

@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   useApplyAdjustmentMutation,
-  useCreateAdjustmentAuditLogMutation,
   useLazyGetAdjustmentPendingFeesQuery,
 } from 'src/redux/finance/adjustments/adjustmentApi';
 
@@ -9,7 +8,6 @@ import type { AdjustmentRequest } from '../types/adjustment.types';
 import type {
   AdjustmentApplyItem,
   AdjustmentApplySummary,
-  AdjustmentAuditLogInput,
   AdjustmentPendingFeeDto,
   ApplyAdjustmentRequestInput,
   ApplyAdjustmentDialogSubmitResult,
@@ -89,7 +87,6 @@ export const useApplyAdjustment = ({ open, adjustment, approvedBy }: UseApplyAdj
 
   const [getPendingFees, pendingFeesResp] = useLazyGetAdjustmentPendingFeesQuery();
   const [applyAdjustment, applyResp] = useApplyAdjustmentMutation();
-  const [createAuditLog] = useCreateAdjustmentAuditLogMutation();
 
   useEffect(() => {
     let active = true;
@@ -295,31 +292,6 @@ export const useApplyAdjustment = ({ open, adjustment, approvedBy }: UseApplyAdj
       // API fallback: local flow still proceeds to keep finance workflow operational.
     }
 
-    const auditLogs: AdjustmentAuditLogInput[] = [
-      {
-        adjustmentId: adjustment.id,
-        action: 'AdjustmentApproved',
-        actor: approvedBy,
-        message: `Adjustment ${adjustment.id} approved by ${approvedBy}.`,
-        meta: { approvedAmount, totalAppliedAmount },
-      },
-      {
-        adjustmentId: adjustment.id,
-        action: 'AdjustmentApplied',
-        actor: approvedBy,
-        message: `Applied ${totalAppliedAmount} across ${selectedLines.length} installment(s).`,
-        meta: { remainingAdjustmentBalance },
-      },
-      {
-        adjustmentId: adjustment.id,
-        action: 'PendingFeesUpdated',
-        actor: approvedBy,
-        message: 'Pending fee balances updated after adjustment application.',
-      },
-    ];
-
-    await Promise.allSettled(auditLogs.map((log) => createAuditLog(log).unwrap()));
-
     const result: ApplyAdjustmentDialogSubmitResult = {
       totalAppliedAmount,
       remainingAdjustmentBalance,
@@ -336,8 +308,6 @@ export const useApplyAdjustment = ({ open, adjustment, approvedBy }: UseApplyAdj
     remainingAdjustmentBalance,
     selectedLines,
     applyAdjustment,
-    createAuditLog,
-    approvedAmount,
   ]);
 
   return {

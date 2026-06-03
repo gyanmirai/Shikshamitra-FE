@@ -25,6 +25,7 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import AdjustmentAuditSection from './AdjustmentAuditSection';
 import { AdjustmentStatusEnum } from '../enums/adjustment.enum';
 import { ADJUSTMENT_STATUS_COLORS } from '../constants/adjustmentOptions';
 
@@ -365,6 +366,13 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
             </Card>
           </>
         )}
+
+        <Paper variant="outlined" sx={{ p: 1.5, mt: 2, borderRadius: 2 }}>
+          <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+            Audit Trail
+          </Typography>
+          <AdjustmentAuditSection adjustmentId={student.id} localAuditTrail={student.auditTrail} />
+        </Paper>
       </Scrollbar>
 
       {/* ── Actions ───────────────────────────────────────────────── */}

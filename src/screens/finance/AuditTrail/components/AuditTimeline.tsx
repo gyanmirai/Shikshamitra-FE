@@ -12,6 +12,8 @@ import type { FinanceAuditLog } from '../types/financeAudit.types';
 
 interface AuditTimelineProps {
   logs: FinanceAuditLog[];
+  cardVariant?: 'default' | 'compact';
+  onFilterByStudent?: (studentId: string, label: string) => void;
 }
 
 function groupByDate(logs: FinanceAuditLog[]): Record<string, FinanceAuditLog[]> {
@@ -23,7 +25,11 @@ function groupByDate(logs: FinanceAuditLog[]): Record<string, FinanceAuditLog[]>
   }, {});
 }
 
-const AuditTimeline = ({ logs }: AuditTimelineProps) => {
+const AuditTimeline = ({
+  logs,
+  cardVariant = 'default',
+  onFilterByStudent,
+}: AuditTimelineProps) => {
   if (logs.length === 0) {
     return (
       <EmptyContent
@@ -149,7 +155,12 @@ const AuditTimeline = ({ logs }: AuditTimelineProps) => {
 
                   {/* ── Audit card ───────────────────── */}
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <AuditCard log={log} index={cardIndex} />
+                    <AuditCard
+                      log={log}
+                      index={cardIndex}
+                      variant={cardVariant}
+                      onFilterByStudent={onFilterByStudent}
+                    />
                   </Box>
                 </Box>
               );

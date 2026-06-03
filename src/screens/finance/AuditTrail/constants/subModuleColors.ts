@@ -40,3 +40,33 @@ export const resolveFinanceAuditColor = (color?: string) => normalizeAuditColor(
 
 export const getFinanceAuditSubModuleColor = (subModule?: string) =>
   normalizeAuditColor(FINANCE_AUDIT_SUBMODULE_COLORS[subModule || ''] || '#607D8B');
+
+export const FINANCE_AUDIT_LEGEND = [
+  {
+    label: 'Collections',
+    color: FINANCE_AUDIT_SUBMODULE_COLORS[FinanceAuditSubModule.COLLECTIONS],
+  },
+  { label: 'Charges', color: FINANCE_AUDIT_SUBMODULE_COLORS[FinanceAuditSubModule.CHARGES] },
+  { label: 'Refunds', color: FINANCE_AUDIT_SUBMODULE_COLORS[FinanceAuditSubModule.REFUNDS] },
+  {
+    label: 'Receipts',
+    color: FINANCE_AUDIT_SUBMODULE_COLORS[FinanceAuditSubModule.INVOICE_RECEIPTS],
+  },
+  {
+    label: 'Concessions',
+    color: FINANCE_AUDIT_SUBMODULE_COLORS[FinanceAuditSubModule.CONCESSIONS],
+  },
+  {
+    label: 'Adjustments',
+    color: FINANCE_AUDIT_SUBMODULE_COLORS[FinanceAuditSubModule.ADJUSTMENTS],
+  },
+  {
+    label: 'Reconciliation',
+    color: FINANCE_AUDIT_SUBMODULE_COLORS[FinanceAuditSubModule.RECONCILIATION],
+  },
+  { label: 'Income', color: FINANCE_AUDIT_SUBMODULE_COLORS[FinanceAuditSubModule.INCOME_TRACKING] },
+  {
+    label: 'Expense',
+    color: FINANCE_AUDIT_SUBMODULE_COLORS[FinanceAuditSubModule.EXPENSE_TRACKING],
+  },
+];

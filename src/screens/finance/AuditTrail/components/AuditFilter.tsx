@@ -9,14 +9,20 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Button, TextField, InputAdornment } from '@mui/material';
 
-import { FINANCE_AUDIT_SUBMODULE_OPTIONS } from '../constants/subModuleOptions';
+import AuditActiveFilters from './AuditActiveFilters';
+import AuditStudentAutocomplete from './AuditStudentAutocomplete';
+import {
+  FINANCE_AUDIT_ACTION_OPTIONS,
+  FINANCE_AUDIT_SUBMODULE_OPTIONS,
+} from '../constants/subModuleOptions';
 
-import type { AuditFilterValues } from '../types/financeAudit.types';
+import type { AuditFilterValues, FinanceAuditStudentLookup } from '../types/financeAudit.types';
 
 interface AuditFilterProps {
   filters: AuditFilterValues;
   isFiltered: boolean;
   onFilterChange: <K extends keyof AuditFilterValues>(key: K, value: AuditFilterValues[K]) => void;
+  onSelectStudent: (student: FinanceAuditStudentLookup | null) => void;
   onReset: () => void;
   totalCount: number;
   filteredCount: number;
@@ -26,6 +32,7 @@ const AuditFilter = ({
   filters,
   isFiltered,
   onFilterChange,
+  onSelectStudent,
   onReset,
   totalCount,
   filteredCount,
@@ -38,7 +45,6 @@ const AuditFilter = ({
   const startDateVal = filters.startDate ? dayjs(filters.startDate) : null;
   const endDateVal = filters.endDate ? dayjs(filters.endDate) : null;
 
-  // Validation errors
   const startDateError = (() => {
     if (!startDateVal) return '';
     if (yearStart && startDateVal.isBefore(yearStart, 'day'))
@@ -71,12 +77,20 @@ const AuditFilter = ({
       }}
     >
       <Grid container spacing={1.5} alignItems="flex-start">
-        {/* Search */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.5 }}>
+          <AuditStudentAutocomplete
+            studentId={filters.studentId}
+            selectedLabel={filters.selectedStudentLabel}
+            onSelect={onSelectStudent}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 2.5 }}>
           <TextField
             fullWidth
             size="small"
-            placeholder="Search Student..."
+            label="Search activity"
+            placeholder="Receipt, actor, or activity summary…"
             value={filters.search}
             onChange={(e) => onFilterChange('search', e.target.value)}
             InputProps={{
@@ -99,7 +113,6 @@ const AuditFilter = ({
           />
         </Grid>
 
-        {/* Start Date */}
         <Grid size={{ xs: 12, sm: 6, md: 2 }}>
           <DatePicker
             label="Start Date"
@@ -119,7 +132,6 @@ const AuditFilter = ({
           />
         </Grid>
 
-        {/* End Date */}
         <Grid size={{ xs: 12, sm: 6, md: 2 }}>
           <DatePicker
             label="End Date"
@@ -139,8 +151,7 @@ const AuditFilter = ({
           />
         </Grid>
 
-        {/* Sub Module */}
-        <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 1.5 }}>
           <CustomSelect
             label="Sub Module"
             value={filters.subModule}
@@ -149,7 +160,15 @@ const AuditFilter = ({
           />
         </Grid>
 
-        {/* Reset */}
+        <Grid size={{ xs: 12, sm: 6, md: 1.5 }}>
+          <CustomSelect
+            label="Action"
+            value={filters.action}
+            options={FINANCE_AUDIT_ACTION_OPTIONS}
+            onChange={(v) => onFilterChange('action', v as string)}
+          />
+        </Grid>
+
         <Grid size={{ xs: 12, sm: 6, md: 1 }}>
           <Button
             fullWidth
@@ -166,7 +185,12 @@ const AuditFilter = ({
         </Grid>
       </Grid>
 
-      {/* Result count */}
+      <AuditActiveFilters
+        filters={filters}
+        onFilterChange={onFilterChange}
+        onClearStudent={() => onSelectStudent(null)}
+      />
+
       {isFiltered && (
         <Box sx={{ mt: 1 }}>
           <Box
