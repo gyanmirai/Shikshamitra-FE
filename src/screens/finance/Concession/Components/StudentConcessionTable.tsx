@@ -19,143 +19,13 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import { Box, Tab, Card, Tabs, Button, Typography } from '@mui/material';
-import { useDeleteConcessionRequestMutation } from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 import {
   concessionManagementApi,
   useGetConcessionApplicationsQuery,
+  useDeleteConcessionApplicationMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import type { IStudentInfo } from '../type';
-
-// ── Dummy concession data ────────────────────────────────────────────────────
-const DUMMY_CONCESSION_DATA: any[] = [
-  {
-    id: 'cr-001',
-    studentId: 'stu-001',
-    studentName: 'Riya Patel',
-    grNumber: 'GR1023',
-    rollNo: '12',
-    standardName: '10',
-    divisionName: 'A',
-    email: 'riya.patel@example.com',
-    contactNo: '9876543210',
-    concessionTypeName: 'Merit Scholarship',
-    concessionAmount: 5000,
-    totalFees: 45000,
-    pendingFees: 30000,
-    status: ConcessionStatusType.Pending,
-    createdAt: '2026-04-10T09:00:00.000Z',
-    studentConcessionTypeRequestId: 'sctr-001',
-  },
-  {
-    id: 'cr-002',
-    studentId: 'stu-002',
-    studentName: 'Aarav Shah',
-    grNumber: 'GR2045',
-    rollNo: '8',
-    standardName: '9',
-    divisionName: 'B',
-    email: 'aarav.shah@example.com',
-    contactNo: '9988776655',
-    concessionTypeName: 'Financial Aid',
-    concessionAmount: 8000,
-    totalFees: 42000,
-    pendingFees: 28000,
-    status: ConcessionStatusType.Approved,
-    createdAt: '2026-03-25T09:00:00.000Z',
-    studentConcessionTypeRequestId: 'sctr-002',
-  },
-  {
-    id: 'cr-003',
-    studentId: 'stu-003',
-    studentName: 'Simran Desai',
-    grNumber: 'GR3056',
-    rollNo: '5',
-    standardName: '8',
-    divisionName: 'C',
-    email: 'simran.desai@example.com',
-    contactNo: '9123456780',
-    concessionTypeName: 'Sports Quota',
-    concessionAmount: 3500,
-    totalFees: 38000,
-    pendingFees: 25000,
-    status: ConcessionStatusType.Rejected,
-    createdAt: '2026-03-18T09:00:00.000Z',
-    studentConcessionTypeRequestId: 'sctr-003',
-  },
-  {
-    id: 'cr-004',
-    studentId: 'stu-004',
-    studentName: 'Krish Mehta',
-    grNumber: 'GR4012',
-    rollNo: '15',
-    standardName: '10',
-    divisionName: 'A',
-    email: 'krish.mehta@example.com',
-    contactNo: '9876541234',
-    concessionTypeName: 'Sibling Discount',
-    concessionAmount: 4000,
-    totalFees: 45000,
-    pendingFees: 32000,
-    status: ConcessionStatusType.Pending,
-    createdAt: '2026-04-15T09:00:00.000Z',
-    studentConcessionTypeRequestId: 'sctr-004',
-  },
-  {
-    id: 'cr-005',
-    studentId: 'stu-005',
-    studentName: 'Ananya Gupta',
-    grNumber: 'GR5078',
-    rollNo: '3',
-    standardName: '9',
-    divisionName: 'A',
-    email: 'ananya.gupta@example.com',
-    contactNo: '9012345678',
-    concessionTypeName: 'Staff Ward',
-    concessionAmount: 12000,
-    totalFees: 42000,
-    pendingFees: 42000,
-    status: ConcessionStatusType.Approved,
-    createdAt: '2026-02-20T09:00:00.000Z',
-    studentConcessionTypeRequestId: 'sctr-005',
-  },
-  {
-    id: 'cr-006',
-    studentId: 'stu-006',
-    studentName: 'Rohan Joshi',
-    grNumber: 'GR6034',
-    rollNo: '22',
-    standardName: '8',
-    divisionName: 'B',
-    email: 'rohan.joshi@example.com',
-    contactNo: '9876509876',
-    concessionTypeName: 'EWS Concession',
-    concessionAmount: 15000,
-    totalFees: 38000,
-    pendingFees: 38000,
-    status: ConcessionStatusType.Pending,
-    createdAt: '2026-04-18T09:00:00.000Z',
-    studentConcessionTypeRequestId: 'sctr-006',
-  },
-  {
-    id: 'cr-007',
-    studentId: 'stu-007',
-    studentName: 'Priya Sharma',
-    grNumber: 'GR7091',
-    rollNo: '11',
-    standardName: '10',
-    divisionName: 'B',
-    email: 'priya.sharma@example.com',
-    contactNo: '9123498765',
-    concessionTypeName: 'Merit Scholarship',
-    concessionAmount: 6000,
-    totalFees: 45000,
-    pendingFees: 35000,
-    status: ConcessionStatusType.Rejected,
-    createdAt: '2026-03-12T09:00:00.000Z',
-    studentConcessionTypeRequestId: 'sctr-007',
-  },
-];
 
 interface ICombinedProps {
   onRequestConcession?: (student: IStudentInfo) => void;
@@ -190,7 +60,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   const { confirmWithUndo } = useConfirmWithUndo();
   const [deleteConcessionRequest] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDeleteConcessionRequestMutation,
+    currentQueryAndMutation: useDeleteConcessionApplicationMutation,
   });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -234,11 +104,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     },
   });
 
-  // Use API data if available, otherwise fall back to dummy data
-  const allItems = useMemo(
-    () => allConcessionData?.items || DUMMY_CONCESSION_DATA,
-    [allConcessionData]
-  );
+  const allItems = useMemo(() => allConcessionData?.items || [], [allConcessionData]);
 
   // Filter items by tab
   const filteredItems = useMemo(

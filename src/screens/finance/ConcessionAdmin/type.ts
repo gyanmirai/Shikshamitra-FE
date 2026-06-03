@@ -21,6 +21,7 @@ export interface IConcessionSubmittedDocument {
 }
 
 export interface IConcessionRequestItem {
+  id?: string;
   studentConcessionTypeRequestId: string;
   concessionTypeId: string;
   concessionTypeName: string;
@@ -71,12 +72,14 @@ export interface IViewConcessionRequestProps {
 // ---- Fee-Head Wise Approval Types ----
 
 export interface IConcessionMonthItem {
+  dueFeeId: string;
   month: string;
   total: number;
   paid: number;
   due: number;
   concessionAmount: number;
   status: FeeCollectionStatusType;
+  isSelectable?: boolean;
 }
 
 export interface IConcessionFeeHeadWiseGroup {

@@ -70,8 +70,10 @@ const RejectReasonDialog: React.FC<IRejectDialogProps> = ({ open, onClose, selec
       return;
     }
     setReasonError('');
+    const requestId = selectedItem?.studentConcessionTypeRequestId || selectedItem?.id;
+    if (!requestId) return;
     await rejectConcession({
-      studentConcessionTypeRequestId: selectedItem?.studentConcessionTypeRequestId,
+      studentConcessionTypeRequestId: requestId,
       body: { message: reason },
     }).unwrap();
     shikshaMitraToast.success({ message: 'Concession rejected successfully' });
@@ -467,62 +469,12 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
     options: { skip: !student?.studentId },
   }) as { data: any; isLoading: boolean; isFetching: boolean };
 
-  // Dummy data for development
-  const dummyItems: IConcessionRequestItem[] = [
-    {
-      studentConcessionTypeRequestId: 'dummy-1',
-      concessionTypeId: 'ct-1',
-      concessionTypeName: 'Merit Scholarship',
-      status: ConcessionStatusType.Pending,
-      totalAmount: 15000,
-      feeHeads: [],
-      submittedDocuments: [
-        { documentId: 'd1', documentName: 'Marksheet.pdf', url: '', uploadedAt: '2026-04-10' },
-      ],
-      createdAt: '2026-04-01T00:00:00Z',
-      updatedAt: '2026-04-01T00:00:00Z',
-      message: '',
-      approvedAt: '',
-      isDocumentUploaded: true,
-    },
-    {
-      studentConcessionTypeRequestId: 'dummy-2',
-      concessionTypeId: 'ct-2',
-      concessionTypeName: 'Sibling Discount',
-      status: ConcessionStatusType.Approved,
-      totalAmount: 8500,
-      feeHeads: [],
-      submittedDocuments: [
-        {
-          documentId: 'd2',
-          documentName: 'Sibling ID Proof.pdf',
-          url: '',
-          uploadedAt: '2026-03-20',
-        },
-      ],
-      createdAt: '2026-03-15T00:00:00Z',
-      updatedAt: '2026-03-18T00:00:00Z',
-      message: 'Approved based on sibling verification',
-      approvedAt: '2026-03-18T00:00:00Z',
-      isDocumentUploaded: true,
-    },
-    {
-      studentConcessionTypeRequestId: 'dummy-3',
-      concessionTypeId: 'ct-3',
-      concessionTypeName: 'Financial Aid',
-      status: ConcessionStatusType.Rejected,
-      totalAmount: 20000,
-      feeHeads: [],
-      submittedDocuments: [],
-      createdAt: '2026-02-10T00:00:00Z',
-      updatedAt: '2026-02-15T00:00:00Z',
-      message: 'Incomplete documentation provided',
-      approvedAt: '',
-      isDocumentUploaded: false,
-    },
-  ];
-
-  const allItems: IConcessionRequestItem[] = data?.items?.length ? data.items : dummyItems;
+  const allItems: IConcessionRequestItem[] = (data?.items || []).map((item: any) => ({
+    ...item,
+    id: item.id || item.concessionRequestId,
+    studentConcessionTypeRequestId:
+      item.studentConcessionTypeRequestId || item.concessionRequestId || item.id,
+  }));
 
   const filteredItems =
     activeTab === 'all' ? allItems : allItems.filter((i) => Number(i.status) === Number(activeTab));

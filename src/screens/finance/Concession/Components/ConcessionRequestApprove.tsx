@@ -35,16 +35,22 @@ const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprov
       reason: mode === 'Reject' ? Yup.string().required('Reason is required') : Yup.string(), // optional in approve
     }),
     onSubmit: async (values) => {
+      const requestId =
+        selectedConcession?.studentConcessionTypeRequestId ||
+        selectedConcession?.concessionRequestId ||
+        selectedConcession?.id;
+      if (!requestId) return;
+
       try {
         if (mode === 'Reject') {
           await rejectConcessionRequest({
-            studentConcessionTypeRequestId: selectedConcession?.studentConcessionTypeRequestId,
+            studentConcessionTypeRequestId: requestId,
             body: { message: values.reason },
           }).unwrap();
           shikshaMitraToast.success({ message: 'Concession request rejected successfully' });
         } else {
           await approveConcessionRequest({
-            studentConcessionTypeRequestId: selectedConcession?.studentConcessionTypeRequestId,
+            studentConcessionTypeRequestId: requestId,
             body: { message: values.reason },
           }).unwrap();
           shikshaMitraToast.success({ message: 'Concession request approved successfully' });
