@@ -423,27 +423,52 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
               />
             )}
-            <Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  bgcolor: varAlpha(theme.palette.info.mainChannel, 0.01),
-                  border: `1px solid ${varAlpha(theme.palette.info.mainChannel, 0.18)}`,
-                  borderRadius: 1,
-                  px: 1,
-                  py: 1.2,
-
-                  gap: 1.2,
-                }}
-              >
-                <Iconify icon="solar:info-circle-bold" color={theme.palette.info.main} width={15} />
-                <Typography variant="caption" color="info.main" fontWeight="bold">
-                  Lock this fee structure for assigning it to students. Changes will be restricted
-                  after locking.
-                </Typography>
+            {isLocked ? (
+              <Box>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    bgcolor: varAlpha(theme.palette.warning.mainChannel, 0.05),
+                    border: `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.25)}`,
+                    borderRadius: 1,
+                    px: 1,
+                    py: 1.2,
+                    gap: 1.2,
+                  }}
+                >
+                  <Iconify icon="mdi:lock" color={theme.palette.warning.main} width={15} />
+                  <Typography variant="caption" color="warning.main" fontWeight="bold">
+                    This fee structure is locked. Changes are restricted.
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
+            ) : (
+              <Box>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    bgcolor: varAlpha(theme.palette.info.mainChannel, 0.01),
+                    border: `1px solid ${varAlpha(theme.palette.info.mainChannel, 0.18)}`,
+                    borderRadius: 1,
+                    px: 1,
+                    py: 1.2,
+                    gap: 1.2,
+                  }}
+                >
+                  <Iconify
+                    icon="solar:info-circle-bold"
+                    color={theme.palette.info.main}
+                    width={15}
+                  />
+                  <Typography variant="caption" color="info.main" fontWeight="bold">
+                    Lock this fee structure for assigning it to students. Changes will be restricted
+                    after locking.
+                  </Typography>
+                </Box>
+              </Box>
+            )}
           </Box>
 
           <Box

@@ -35,7 +35,7 @@ export const ConsolidatedFeeDetails = ({
 }: ConsolidatedFeeDetailsProps) => {
   const theme = useTheme();
 
-  const feeHeadList = feeHeads.map((h) => ({
+  const feeHeadList = (feeHeads ?? []).map((h) => ({
     name: h.feeHeadName,
     total: h.amount,
     paid: h.paidAmount,
@@ -43,7 +43,7 @@ export const ConsolidatedFeeDetails = ({
     status: h.status,
   }));
 
-  const chargeList = charges.map((c) => ({
+  const chargeList = (charges ?? []).map((c) => ({
     name: c.name,
     total: c.amount,
     paid: c.paidAmount,

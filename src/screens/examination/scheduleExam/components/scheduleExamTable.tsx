@@ -135,7 +135,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               }}
             >
               <Iconify icon={GlobalIcons.publish} />
-              Publish Timetable
+              Publish Exam
             </MenuItem>
           )}
         </MenuList>
