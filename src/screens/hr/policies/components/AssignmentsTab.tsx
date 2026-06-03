@@ -1,9 +1,11 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React from 'react';
 import dayjs from 'dayjs';
+import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -179,21 +181,21 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       label: 'Status',
       filterType: 'enum',
       sticky: true,
-      minWidth: '100px',
       enumOptions: [
         { label: 'Active', value: 'Active' },
         { label: 'Inactive', value: 'Inactive' },
       ],
-      render: (value) => (
-        <Chip size="small" label={value} color={value === 'Active' ? 'success' : 'default'} />
-      ),
+      render: (value) => {
+        const statusValue = String(value);
+        const color = (statusValue === 'Active' ? 'success' : 'default') as LabelColor;
+        return <Label color={color}>{statusValue}</Label>;
+      },
     },
     {
       id: 'actions',
       label: 'Actions',
       sticky: true,
       align: 'right',
-      width: 100,
       isFilter: false,
       render: (_, row) => {
         const item = (row as AssignmentTableRow).assignment;
@@ -230,7 +232,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
 
   return (
     <Stack spacing={2} sx={{ width: '100%' }}>
-      <Card sx={{ px: 2.5, py: 2 }}>
+      <Card sx={{ px: 1.5, py: 1 }}>
         <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={1.5}>
           <Badge
             badgeContent={activeFilterCount || undefined}

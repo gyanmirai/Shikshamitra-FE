@@ -113,17 +113,20 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                     disableGutters
                     elevation={0}
                     sx={{
-                      backgroundColor: 'rgb(243,244,246) !important',
+                      backgroundColor: (theme) =>
+                        `${theme.vars.palette.background.neutral} !important`,
                       border: '1px solid',
                       borderColor: hasBlockingWarnings ? 'error.light' : 'warning.light',
                       borderRadius: '8px !important',
                       overflow: 'hidden',
                       '&:before': { display: 'none' },
                       '& .MuiAccordionSummary-root': {
-                        backgroundColor: 'rgb(243,244,246) !important',
+                        backgroundColor: (theme) =>
+                          `${theme.vars.palette.background.neutral} !important`,
                       },
                       '& .MuiAccordionDetails-root': {
-                        backgroundColor: 'rgb(243,244,246) !important',
+                        backgroundColor: (theme) =>
+                          `${theme.vars.palette.background.neutral} !important`,
                       },
                     }}
                   >
@@ -167,17 +170,20 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                     disableGutters
                     elevation={0}
                     sx={{
-                      backgroundColor: 'rgb(243,244,246) !important',
+                      backgroundColor: (theme) =>
+                        `${theme.vars.palette.background.neutral} !important`,
                       border: '1px solid',
                       borderColor: 'warning.light',
                       borderRadius: '8px !important',
                       overflow: 'hidden',
                       '&:before': { display: 'none' },
                       '& .MuiAccordionSummary-root': {
-                        backgroundColor: 'rgb(243,244,246) !important',
+                        backgroundColor: (theme) =>
+                          `${theme.vars.palette.background.neutral} !important`,
                       },
                       '& .MuiAccordionDetails-root': {
-                        backgroundColor: 'rgb(243,244,246) !important',
+                        backgroundColor: (theme) =>
+                          `${theme.vars.palette.background.neutral} !important`,
                       },
                     }}
                   >
@@ -191,37 +197,38 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                     </AccordionSummary>
                     <AccordionDetails sx={{ pt: 0, pb: 1.5, px: 2 }}>
                       <Stack spacing={1}>
-                        {impactPreview.effectiveAssignmentConflicts.slice(0, 5).map((conflict) => (
-                          <Box
-                            key={`${conflict.employeeId}-${conflict.date}`}
-                            sx={{
-                              p: 1.25,
-                              borderRadius: 1,
-                              bgcolor: 'background.paper',
-                              border: '1px solid',
-                              borderColor: 'grey.200',
-                            }}
-                          >
-                            <Typography variant="body2" fontWeight={600} color="text.primary">
-                              {conflict.employeeName || conflict.employeeId}
-                            </Typography>
-                            <Typography variant="caption" display="block" color="text.secondary">
-                              Winner:{' '}
-                              {conflict.winningAssignment?.targetDisplayName ||
-                                conflict.winningAssignment?.targetKey ||
-                                '-'}
-                            </Typography>
-                            <Typography variant="caption" display="block" color="text.secondary">
-                              Candidates:{' '}
-                              {conflict.candidateAssignments
-                                .map(
-                                  (candidate) =>
-                                    `${candidate.targetDisplayName || candidate.targetKey} (${candidate.status}: ${candidate.skipReason})`
-                                )
-                                .join(', ')}
-                            </Typography>
-                          </Box>
-                        ))}
+                        {(impactPreview.effectiveAssignmentConflicts ?? [])
+                          .slice(0, 5)
+                          .map((conflict) => (
+                            <Box
+                              key={`${conflict.employeeId}-${conflict.date}`}
+                              sx={{
+                                p: 1.25,
+                                borderRadius: 1,
+                                bgcolor: 'background.paper',
+                                border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                              }}
+                            >
+                              <Typography variant="body2" fontWeight={600} color="text.primary">
+                                {conflict.employeeName || conflict.employeeId}
+                              </Typography>
+                              <Typography variant="caption" display="block" color="text.secondary">
+                                Winner:{' '}
+                                {conflict.winningAssignment?.targetDisplayName ||
+                                  conflict.winningAssignment?.targetKey ||
+                                  '-'}
+                              </Typography>
+                              <Typography variant="caption" display="block" color="text.secondary">
+                                Candidates:{' '}
+                                {conflict.candidateAssignments
+                                  .map(
+                                    (candidate) =>
+                                      `${candidate.targetDisplayName || candidate.targetKey} (${candidate.status}: ${candidate.skipReason})`
+                                  )
+                                  .join(', ')}
+                              </Typography>
+                            </Box>
+                          ))}
                       </Stack>
                     </AccordionDetails>
                   </Accordion>

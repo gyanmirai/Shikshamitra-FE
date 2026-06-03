@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
+import { Scrollbar } from 'src/components/scrollbar';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -25,12 +26,16 @@ import {
   Box,
   Card,
   Grid,
+  Stack,
   Button,
   Avatar,
   Divider,
   Skeleton,
+  Accordion,
   CardHeader,
   Typography,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 
 import PaySlipPrintView from './payslip-print-view';
@@ -115,7 +120,9 @@ const PaySlipGenerationScreen = () => {
   const hasData = !!employee?.id && !employeeSalarySlipLoading && !!employeeSalarySlip;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box
+      sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', gap: 1 }}
+    >
       <CustomBreadcrumbs
         heading="Payslips"
         links={[
@@ -126,96 +133,108 @@ const PaySlipGenerationScreen = () => {
         description="View, download, print, or email finalized salary slips after payroll lock."
       />
 
-      <Card variant="outlined" sx={{ p: 1.3, width: '100%' }}>
-        <Box sx={{ width: '100%' }} display="flex" alignItems="center" flexWrap="wrap">
-          {/* Filters */}
-          <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-            <PaginatedSearchSelect
-              label="Select Employee"
-              fetchOptions={async (query, page) => {
-                const res = await getEmployees({ page, pageSize: 10 }).unwrap();
-                const hasMore = res.currentPage !== res.totalPages;
-                return {
-                  data: res?.items?.map((item: any) => ({
-                    label: item.fullName,
-                    id: item.id,
-                  })),
-                  hasMore,
-                };
-              }}
-              value={employee}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              getOptionLabel={(option: any) => option?.label || ''}
-              minChars={2}
-              onChange={(_, value) => setEmployee(value)}
-              debounceMs={400}
-              placeholder="Search by name or email"
-              error={false}
-              sx={{ maxWidth: 300, minWidth: 250 }}
-              size="small"
-              clearOnBlur={false}
-            />
+      {/* Sticky Header Section */}
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          bgcolor: 'background.neutral',
+          pb: 1.5,
+          pt: 0.5,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1,
+        }}
+      >
+        <Card variant="outlined" sx={{ p: 1.3, width: '100%' }}>
+          <Box sx={{ width: '100%' }} display="flex" alignItems="center" flexWrap="wrap">
+            {/* Filters */}
+            <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+              <PaginatedSearchSelect
+                label="Select Employee"
+                fetchOptions={async (query, page) => {
+                  const res = await getEmployees({ page, pageSize: 10 }).unwrap();
+                  const hasMore = res.currentPage !== res.totalPages;
+                  return {
+                    data: res?.items?.map((item: any) => ({
+                      label: item.fullName,
+                      id: item.id,
+                    })),
+                    hasMore,
+                  };
+                }}
+                value={employee}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderOption={(prop, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.label}
+                  </li>
+                )}
+                getOptionLabel={(option: any) => option?.label || ''}
+                minChars={2}
+                onChange={(_, value) => setEmployee(value)}
+                debounceMs={400}
+                placeholder="Search by name or email"
+                error={false}
+                sx={{ maxWidth: 300, minWidth: 250 }}
+                size="small"
+                clearOnBlur={false}
+              />
 
-            <DatePicker
-              minDate={dayjs(currentYear?.startDate)}
-              maxDate={dayjs(currentYear?.endDate)}
-              value={monthYear}
-              onChange={(val) => setMonthYear(val)}
-              views={['month', 'year']}
-              label="Select Pay Period"
-              format="MMMM-YYYY"
-              sx={{ maxWidth: 200, width: '100%' }}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                },
-              }}
-            />
+              <DatePicker
+                minDate={dayjs(currentYear?.startDate)}
+                maxDate={dayjs(currentYear?.endDate)}
+                value={monthYear}
+                onChange={(val) => setMonthYear(val)}
+                views={['month', 'year']}
+                label="Select Pay Period"
+                format="MMMM-YYYY"
+                sx={{ maxWidth: 200, width: '100%' }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Actions */}
+            <Box display="flex" gap={1} alignItems="center" ml="auto">
+              <Button
+                size="small"
+                startIcon={<Iconify icon="ion:download-outline" />}
+                variant="outlined"
+                color="inherit"
+                disabled={!hasData || isDownloading}
+                onClick={handleDownload}
+              >
+                {isDownloading ? 'Downloading...' : 'Download'}
+              </Button>
+              <Button
+                size="small"
+                startIcon={<Iconify icon="ion:print-outline" />}
+                variant="outlined"
+                color="inherit"
+                disabled={!hasData}
+                onClick={() => handlePrint()}
+              >
+                Print
+              </Button>
+              <Button
+                size="small"
+                startIcon={<Iconify icon="iconamoon:email-thin" />}
+                variant="outlined"
+                color="inherit"
+                disabled
+              >
+                Email
+              </Button>
+            </Box>
           </Box>
+        </Card>
 
-          {/* Actions */}
-          <Box display="flex" gap={1} alignItems="center" ml="auto">
-            <Button
-              size="small"
-              startIcon={<Iconify icon="ion:download-outline" />}
-              variant="outlined"
-              color="inherit"
-              disabled={!hasData || isDownloading}
-              onClick={handleDownload}
-            >
-              {isDownloading ? 'Downloading...' : 'Download'}
-            </Button>
-            <Button
-              size="small"
-              startIcon={<Iconify icon="ion:print-outline" />}
-              variant="outlined"
-              color="inherit"
-              disabled={!hasData}
-              onClick={() => handlePrint()}
-            >
-              Print
-            </Button>
-            <Button
-              size="small"
-              startIcon={<Iconify icon="iconamoon:email-thin" />}
-              variant="outlined"
-              color="inherit"
-              disabled
-            >
-              Email
-            </Button>
-          </Box>
-        </Box>
-      </Card>
-
-      {hasData ? (
-        <>
-          {/* Summary Stats */}
+        {hasData && (
           <Grid container spacing={1}>
             <Grid size={{ xs: 12, md: 4 }}>
               <SummaryWidget
@@ -244,38 +263,9 @@ const PaySlipGenerationScreen = () => {
               />
             </Grid>
           </Grid>
-          <PayBasisCard slip={normalizedSalarySlip} />
-          <Divider />
-          {/* Tables Section */}
-          <Grid container spacing={1} alignItems="stretch">
-            <Grid size={{ xs: 12, md: 6 }}>
-              <SalaryDetailsTableCard
-                title="Earnings"
-                subheader="Breakdown of earnings"
-                icon="solar:hand-money-linear"
-                iconColor={{ bg: 'success.lighter', color: 'success.main' }}
-                data={normalizedSalarySlip?.earnings || []}
-                tableId="earning-table"
-                nameColumnLabel="Earning Type"
-                noDataText="No Earning Found"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <SalaryDetailsTableCard
-                title="Deductions"
-                subheader="Breakdown of deductions"
-                icon="solar:minus-circle-linear"
-                iconColor={{ bg: 'error.lighter', color: 'error.main' }}
-                data={normalizedSalarySlip?.deductions || []}
-                tableId="deduction-table"
-                nameColumnLabel="Deduction Type"
-                noDataText="No Deduction Found"
-              />
-            </Grid>
-          </Grid>
-        </>
-      ) : employeeSalarySlipLoading ? (
-        <>
+        )}
+
+        {employeeSalarySlipLoading && (
           <Grid container spacing={1}>
             {[1, 2, 3].map((item) => (
               <Grid size={{ xs: 12, md: 4 }} key={item}>
@@ -289,33 +279,76 @@ const PaySlipGenerationScreen = () => {
               </Grid>
             ))}
           </Grid>
-          <Divider sx={{ my: 1 }} />
-          <Grid container spacing={1}>
-            {[1, 2].map((item) => (
-              <Grid size={{ xs: 12, md: 6 }} key={item}>
-                <Card>
-                  <CardHeader
-                    avatar={<Skeleton variant="circular" width={32} height={32} />}
-                    title={<Skeleton variant="text" width="30%" height={24} />}
-                    subheader={<Skeleton variant="text" width="40%" height={20} />}
-                    sx={{ p: 2 }}
+        )}
+      </Box>
+
+      {/* Scrollable Body Content */}
+      <Scrollbar sx={{ flexGrow: 1 }}>
+        <Stack spacing={1} sx={{ pb: 2 }}>
+          {hasData ? (
+            <>
+              <PayBasisCard slip={normalizedSalarySlip} />
+              <Divider />
+              {/* Tables Section */}
+              <Grid container spacing={1} alignItems="stretch">
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <SalaryDetailsTableCard
+                    title="Earnings"
+                    subheader="Breakdown of earnings"
+                    icon="solar:hand-money-linear"
+                    iconColor={{ bg: 'success.lighter', color: 'success.main' }}
+                    data={normalizedSalarySlip?.earnings || []}
+                    tableId="earning-table"
+                    nameColumnLabel="Earning Type"
+                    noDataText="No Earning Found"
                   />
-                  <Box sx={{ px: 2, py: 2, pt: 0 }}>
-                    <Skeleton
-                      variant="rectangular"
-                      width="100%"
-                      height={200}
-                      sx={{ borderRadius: 1 }}
-                    />
-                  </Box>
-                </Card>
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <SalaryDetailsTableCard
+                    title="Deductions"
+                    subheader="Breakdown of deductions"
+                    icon="solar:minus-circle-linear"
+                    iconColor={{ bg: 'error.lighter', color: 'error.main' }}
+                    data={normalizedSalarySlip?.deductions || []}
+                    tableId="deduction-table"
+                    nameColumnLabel="Deduction Type"
+                    noDataText="No Deduction Found"
+                  />
+                </Grid>
               </Grid>
-            ))}
-          </Grid>
-        </>
-      ) : (
-        <EmptyContent title="No Data Found Search the Employee" />
-      )}
+            </>
+          ) : employeeSalarySlipLoading ? (
+            <>
+              <Divider sx={{ my: 1 }} />
+              <Grid container spacing={1}>
+                {[1, 2].map((item) => (
+                  <Grid size={{ xs: 12, md: 6 }} key={item}>
+                    <Card>
+                      <CardHeader
+                        avatar={<Skeleton variant="circular" width={32} height={32} />}
+                        title={<Skeleton variant="text" width="30%" height={24} />}
+                        subheader={<Skeleton variant="text" width="40%" height={20} />}
+                        sx={{ p: 2 }}
+                      />
+                      <Box sx={{ px: 2, py: 2, pt: 0 }}>
+                        <Skeleton
+                          variant="rectangular"
+                          width="100%"
+                          height={200}
+                          sx={{ borderRadius: 1 }}
+                        />
+                      </Box>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </>
+          ) : (
+            <EmptyContent title="No Data Found Search the Employee" />
+          )}
+        </Stack>
+      </Scrollbar>
+
       {/* Hidden print component */}
       <Box sx={{ display: 'none', displayPrint: 'block' }}>
         <PaySlipPrintView
@@ -374,47 +407,147 @@ const formatMode = (value: string | null | undefined) => {
 
 const PayBasisCard = ({ slip }: PayBasisCardProps) => {
   const items = [
-    { label: 'Payable Days', value: formatDays(slip?.payableDays) },
-    { label: 'Payroll Basis Days', value: formatDays(slip?.payrollBasisDays) },
-    { label: 'LOP / Absent Days', value: formatDays(slip?.lopDays) },
+    {
+      label: 'Payable Days',
+      value: formatDays(slip?.payableDays),
+      icon: 'solar:calendar-date-linear',
+      color: 'info.main',
+    },
+    {
+      label: 'Payroll Basis Days',
+      value: formatDays(slip?.payrollBasisDays),
+      icon: 'solar:calendar-mark-linear',
+      color: 'success.main',
+    },
+    {
+      label: 'LOP / Absent Days',
+      value: formatDays(slip?.lopDays),
+      icon: 'solar:user-block-linear',
+      color: Number(slip?.lopDays || 0) > 0 ? 'error.main' : 'text.secondary',
+    },
     {
       label: 'Proration Factor',
       value:
         slip?.prorationFactor === null || slip?.prorationFactor === undefined
           ? '-'
           : Number(slip.prorationFactor).toFixed(4),
+      icon: 'solar:calculator-linear',
+      color: 'warning.main',
     },
-    { label: 'Present Days', value: formatDays(slip?.presentDays) },
-    { label: 'Half Days', value: formatDays(slip?.halfWorkingDays) },
-    { label: 'Day Calculation', value: formatMode(slip?.payrollDayCalculationMode) },
+    {
+      label: 'Present Days',
+      value: formatDays(slip?.presentDays),
+      icon: 'solar:user-check-linear',
+      color: 'success.main',
+    },
+    {
+      label: 'Half Days',
+      value: formatDays(slip?.halfWorkingDays),
+      icon: 'solar:clock-circle-linear',
+      color: 'warning.main',
+    },
+    {
+      label: 'Day Calculation',
+      value: formatMode(slip?.payrollDayCalculationMode),
+      icon: 'solar:document-text-linear',
+      color: 'info.main',
+    },
   ];
 
   return (
-    <Card variant="outlined" sx={{ p: 2 }}>
-      <Typography variant="subtitle1" sx={{ mb: 1 }}>
-        Pay Basis
-      </Typography>
-      <Grid container spacing={1}>
-        {items.map((item) => (
-          <Grid key={item.label} size={{ xs: 6, md: 3 }}>
-            <Box
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-                p: 1,
-                minHeight: 64,
-              }}
-            >
-              <Typography variant="caption" color="text.secondary">
-                {item.label}
-              </Typography>
-              <Typography variant="subtitle2">{item.value}</Typography>
-            </Box>
-          </Grid>
-        ))}
-      </Grid>
-    </Card>
+    <Accordion
+      variant="outlined"
+      defaultExpanded
+      sx={{
+        borderRadius: '8px !important',
+        '&:before': { display: 'none' },
+        bgcolor: 'background.paper',
+        border: (theme) => `1px solid ${theme.vars?.palette?.divider || theme.palette.divider}`,
+      }}
+    >
+      <AccordionSummary
+        expandIcon={<Iconify icon="solar:alt-arrow-down-linear" sx={{ width: 20, height: 20 }} />}
+        sx={{
+          px: 2,
+          minHeight: '48px !important',
+          '& .MuiAccordionSummary-content': { my: '12px !important' },
+        }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Iconify
+            icon="solar:bill-list-linear"
+            sx={{ color: 'primary.main', width: 22, height: 22 }}
+          />
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+            Pay Basis
+          </Typography>
+        </Stack>
+      </AccordionSummary>
+
+      <AccordionDetails sx={{ p: 2, pt: 0 }}>
+        <Grid container spacing={1}>
+          {items.map((item) => (
+            <Grid key={item.label} size={{ xs: 6, sm: 4, md: 3 }}>
+              <Box
+                sx={{
+                  p: 1,
+                  borderRadius: 1.5,
+                  border: (theme) =>
+                    `1px solid ${theme.vars?.palette?.divider || theme.palette.divider}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  height: '100%',
+                  minHeight: 76,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'background.paper',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Iconify icon={item.icon} sx={{ color: item.color, width: 20, height: 20 }} />
+                </Box>
+                <Stack sx={{ minWidth: 0, flexGrow: 1 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      fontSize: '0.62rem',
+                      letterSpacing: 0.5,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {item.label}
+                  </Typography>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 800,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      fontSize: '0.88rem',
+                    }}
+                  >
+                    {item.value}
+                  </Typography>
+                </Stack>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </AccordionDetails>
+    </Accordion>
   );
 };
 

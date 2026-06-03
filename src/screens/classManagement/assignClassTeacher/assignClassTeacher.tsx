@@ -187,9 +187,10 @@ const ClassTeacherAssignment = () => {
       organizationId: organization,
       ...query,
     },
+    options: {
+      skip: !organization,
+    },
   });
-
-  console.log('Assignments Data:', assignmentsData);
 
   const [updateAssignments, { isLoading: isSaving }] = useQueryAndMutation({
     type: 'mutation',

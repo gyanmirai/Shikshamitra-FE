@@ -1,15 +1,17 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { PayrollPolicy, AttendancePolicy } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Card, Chip, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
 
-import { StatusChip, InfoTooltipIcon } from './HRPolicySharedUI';
+import { InfoTooltipIcon } from './HRPolicySharedUI';
 import { formatDate, getErrorMessage } from '../hr-policy-workspace-utils';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
@@ -143,9 +145,21 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         { label: 'Draft', value: 'draft' },
         { label: 'Archived', value: 'archived' },
       ],
-      render: (_, row) => (
-        <StatusChip status={String(row.status)} isDefault={Boolean(row.isDefault)} />
-      ),
+      render: (_, row) => {
+        const statusValue = String(row.status);
+        const color = (
+          statusValue === 'active' ? 'success' : statusValue === 'archived' ? 'default' : 'warning'
+        ) as LabelColor;
+
+        return (
+          <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+            <Label color={color}>{statusValue}</Label>
+            {row.isDefault ? (
+              <Chip size="small" label="Default" color="primary" variant="outlined" />
+            ) : null}
+          </Stack>
+        );
+      },
     },
     {
       id: 'actions',
