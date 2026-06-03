@@ -102,7 +102,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
       }
     },
   });
-
+  console.log('Formik Errors:', formik.errors);
   const handleSubmit = useCallback(() => {
     const fieldToPanelMap: Record<string, string> = {
       bankName: 'bankDetails',
@@ -387,20 +387,24 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
 
               {/* UPI ID */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="UPI ID"
-                  name="upiId"
-                  value={formik.values.upiId}
-                  onChange={(e) => {
-                    const value = e.target.value
-                      .toLowerCase()
-                      .replace(/[^a-z0-9@._-]/g, '')
-                      .slice(0, 50);
-                    formik.setFieldValue('upiId', value);
-                  }}
-                />
+                <ShakingTextField error={formik.touched.upiId && Boolean(formik.errors.upiId)}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="UPI ID"
+                    name="upiId"
+                    value={formik.values.upiId}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9@._-]/g, '')
+                        .slice(0, 50);
+                      formik.setFieldValue('upiId', value);
+                    }}
+                    error={formik.touched.upiId && Boolean(formik.errors.upiId)}
+                    helperText={formik.touched.upiId && formik.errors.upiId}
+                  />
+                </ShakingTextField>
               </Grid>
             </Grid>
           </AccordionDetails>

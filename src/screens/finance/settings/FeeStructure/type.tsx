@@ -50,8 +50,8 @@ export interface IFeeStructure {
   receiptBookId?: string;
   receiptBookName?: string;
   // paymentTerm: string;
-  totalFeeHead?: number;
-  totalClass?: number;
+  totalFeeHeads?: number;
+  totalClasses?: number;
   // paymentMethod: string[];
   feeStructureClasses: {
     [className: string]: IClassWiseFeeData[];

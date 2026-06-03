@@ -303,4 +303,5 @@ export interface IInquiryData {
   formNo: string;
   lastClassPassed: string;
   studentId?: string;
+  isFeeStructureAssigned?: boolean;
 }

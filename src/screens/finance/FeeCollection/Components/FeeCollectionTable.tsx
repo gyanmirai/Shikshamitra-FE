@@ -10,10 +10,10 @@ import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
+import { Box, Card, MenuList, MenuItem } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Card, MenuList, MenuItem, Typography } from '@mui/material';
 import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
 import {
   FeeCollectionStatusType,
@@ -35,9 +35,13 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onView,
   onGiveAdjustment,
 }) => {
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [boards, setBoards] = useState<Board[]>(() => currentYear?.boards ?? []);
+  const [mediums, setMediums] = useState<Medium[]>(() => {
+    if (!selectedBoard || !currentYear?.boards) return [];
+    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
+    return (board as unknown as Board)?.educationMediums ?? [];
+  });
 
   const [feeCollectionParams, setFeeCollectionParams] = useState({
     page: 1,
@@ -105,6 +109,8 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
         paidFees: item.paidFees ?? 0,
         pendingFees: item.pendingFees ?? 0,
         overdueFees: item.overdueFees ?? 0,
+        totalCharges: item.totalCharges ?? 0,
+        pendingCharges: item.pendingCharges ?? 0,
       })),
     [feeCollectionData?.items]
   );
@@ -156,11 +162,11 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               minWidth: 200,
               maxWidth: 500,
               sticky: true,
-              render: (value, row) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value || '-'} {row.grNumber && `(${row.grNumber})`}
-                </Typography>
-              ),
+              // render: (value, row) => (
+              //   <Typography variant="caption" fontSize="13px">
+              //     {value || '-'} {row.grNumber && `(${row.grNumber})`}
+              //   </Typography>
+              // ),
             },
             {
               id: 'standardDivision',
@@ -222,6 +228,28 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 140,
               minWidth: 120,
               maxWidth: 170,
+              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
+            },
+            {
+              id: 'totalCharges',
+              label: 'Total Charges',
+              align: 'left',
+              isFilter: true,
+              filterType: 'number',
+              width: 150,
+              minWidth: 130,
+              maxWidth: 180,
+              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
+            },
+            {
+              id: 'pendingCharges',
+              label: 'Pending Charges',
+              align: 'left',
+              isFilter: true,
+              filterType: 'number',
+              width: 150,
+              minWidth: 130,
+              maxWidth: 180,
               render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
             },
             {

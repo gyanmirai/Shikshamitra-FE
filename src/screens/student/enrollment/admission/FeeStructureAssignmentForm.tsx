@@ -58,7 +58,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeStructureQuery,
     params: { studentId: student?.studentId },
-    options: { skip: !student?.studentId },
+    options: { skip: !student?.studentId || !student?.isFeeStructureAssigned },
   });
   // Get available fee structures for the standard
   const {

@@ -192,10 +192,14 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useDeleteConcessionRequestMutation,
   });
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [mediums, setMediums] = useState<Medium[]>([]);
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [boards, setBoards] = useState<Board[]>(() => currentYear?.boards ?? []);
+  const [mediums, setMediums] = useState<Medium[]>(() => {
+    if (!selectedBoard || !currentYear?.boards) return [];
+    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
+    return (board as unknown as Board)?.educationMediums ?? [];
+  });
   useEffect(() => {
     if (currentYear?.boards) {
       setBoards(currentYear.boards);

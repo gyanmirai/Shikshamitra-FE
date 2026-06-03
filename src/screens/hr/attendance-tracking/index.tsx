@@ -476,18 +476,6 @@ const AttendanceTrackingScreen = () => {
       minWidth: 110,
       sticky: true,
       align: 'left',
-      filterType: 'enum',
-      enumOptions: [
-        { label: 'Not marked', value: 'NotMarked' },
-        { label: 'Present', value: 'Present' },
-        { label: 'Present (code)', value: 1 },
-        { label: 'Half day', value: 'HalfDay' },
-        { label: 'Half day leave', value: 'HalfDayLeave' },
-        { label: 'Half day (code)', value: 2 },
-        { label: 'Absent', value: 'Absent' },
-        { label: 'Full day leave', value: 'FullDayLeave' },
-        { label: 'Absent (code)', value: 3 },
-      ],
       isSort: true,
       isFilter: true,
       render: (value, row) => {
@@ -495,7 +483,7 @@ const AttendanceTrackingScreen = () => {
         const missingPunch =
           normalizeStatus(row.status) === 'Present' && (!row.inTime || !row.outTime);
         return (
-          <Stack direction="row" spacing={0.75} alignItems="center">
+          <Stack direction="column" spacing={0.75} alignItems="center">
             <Label color={meta.color as any}>{meta.label}</Label>
             {row.isHoliday && <Label color="default">Holiday</Label>}
             {missingPunch && <Label color="warning">Missing punch</Label>}
@@ -622,7 +610,7 @@ const AttendanceTrackingScreen = () => {
         tableId={`hr-attendance-register-days-${group.employeeId || group.employeeCode}`}
         columns={dayColumns}
         data={group.days || []}
-        rowProps={(row: AttendanceRegisterRow) => ({
+        rowProps={(row) => ({
           sx: row.isHoliday
             ? {
                 bgcolor: 'action.hover',
@@ -1151,7 +1139,6 @@ const AttendanceTrackingScreen = () => {
                   },
                 }}
                 sx={{
-                  maxWidth: '300px',
                   width: '100%',
                   '& .MuiInputBase-root': {
                     pr: 1,
