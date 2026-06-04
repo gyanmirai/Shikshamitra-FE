@@ -1,13 +1,8 @@
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { InfoItem } from 'src/components/info-item';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Box, Grid, Card, Divider, Collapse, Typography, IconButton } from '@mui/material';
+import { Box, Card, Typography } from '@mui/material';
 
 export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any }) {
-  const isExpanded = useBoolean(false);
-
   return (
     <Card
       sx={{
@@ -25,10 +20,7 @@ export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          cursor: 'pointer',
-          bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.04),
         }}
-        onClick={isExpanded.onToggle}
       >
         <Box display="flex" alignItems="center" gap={2}>
           <Box
@@ -55,49 +47,7 @@ export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any
             </Typography>
           </Box>
         </Box>
-
-        <Box display="flex" alignItems="flex-end" gap={1}>
-          <IconButton
-            size="small"
-            onClick={isExpanded.onToggle}
-            sx={{
-              transform: isExpanded.value ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.3s',
-            }}
-          >
-            <ExpandMoreIcon />
-          </IconButton>
-        </Box>
       </Box>
-
-      <Collapse in={isExpanded.value}>
-        <Divider sx={{ borderStyle: 'dashed' }} />
-        <Box sx={{ p: 3 }}>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              <InfoItem
-                icon={<Iconify icon="solar:black-board-bold-duotone" />}
-                label="Board"
-                value={feeStructure?.boardName}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              <InfoItem
-                icon={<Iconify icon="mdi:translate" />}
-                label="Medium"
-                value={feeStructure?.mediumName}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              <InfoItem
-                icon={<Iconify icon="solar:bill-list-bold-duotone" />}
-                label="Receipt Book"
-                value={feeStructure?.receiptBookName}
-              />
-            </Grid>
-          </Grid>
-        </Box>
-      </Collapse>
     </Card>
   );
 }

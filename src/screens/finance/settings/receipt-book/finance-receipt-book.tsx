@@ -7,13 +7,13 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
@@ -60,12 +60,22 @@ const FinanceReceiptBookSetting = () => {
   const { confirmWithUndo } = useConfirmWithUndo();
 
   // DELETE mutation
-  const [deleteReceiptBook] = useQueryAndMutation({
+  const [deleteReceiptBook, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteReceiptBookMutation,
   });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
+
+  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
+    setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
+  }, []);
+
+  const handleServerSearch = useCallback((search: string) => {
+    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
+  }, []);
 
   // GET receipt book
   const {
@@ -75,7 +85,7 @@ const FinanceReceiptBookSetting = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReceiptBooksQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, ...queryParams },
   });
 
   // PATCH mutation for status change
@@ -107,7 +117,7 @@ const FinanceReceiptBookSetting = () => {
   const { refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReceiptBooksQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, ...queryParams },
   });
 
   const columns: IColumn[] = useMemo(
@@ -283,6 +293,11 @@ const FinanceReceiptBookSetting = () => {
         tableId="finance-receipt-book-setting-table"
         columns={columns}
         data={receiptBookData?.items || []}
+        serverSidePagination
+        serverSideSearch
+        totalCount={receiptBookData?.totalCount}
+        onServerPagination={handleServerPagination}
+        onServerSearch={handleServerSearch}
       />
 
       {receiptBookDialog.value && (
@@ -412,6 +427,8 @@ const FinanceReceiptBookSetting = () => {
             variant="contained"
             color="error"
             size="small"
+            loading={isDeleting}
+            disabled={isDeleting}
             onClick={async () => {
               confirmWithUndo({
                 item: selectedEntry,
@@ -419,7 +436,7 @@ const FinanceReceiptBookSetting = () => {
                   dispatchFn(
                     receiptBookApi.util.updateQueryData(
                       'getReceiptBooks',
-                      { academicYearId: currentYear?.id },
+                      { academicYearId: currentYear?.id, ...queryParams },
                       (draft: any) => {
                         const index = draft.items?.findIndex(
                           (b: any) => b.id === (selectedEntry as any)?.id

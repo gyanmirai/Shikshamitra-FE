@@ -26,6 +26,9 @@ export interface IBankAccountTableProps {
   onDelete: (data: IBankAccount) => void;
   onEdit: (data: IBankAccount) => void;
   isLoading?: boolean;
+  totalCount?: number;
+  onServerPagination?: (page: number, rowsPerPage: number) => void;
+  onServerSearch?: (searchTerm: string) => void;
 }
 
 export interface IBankAccountFormProps {

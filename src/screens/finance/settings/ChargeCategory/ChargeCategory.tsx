@@ -8,12 +8,12 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useCallback } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -52,17 +52,30 @@ const FinanceChargeCategory = () => {
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
+  const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
+
+  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
+    setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
+  }, []);
+
+  const handleServerSearch = useCallback((search: string) => {
+    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
+  }, []);
+
   // Get charge categories data
-  const { data, isLoading, refetch } = useQueryAndMutation({
+  const { data, isLoading, isFetching, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargeCategoriesQuery,
     params: {
       academicYearId: currentYear?.id,
+      page: queryParams.page,
+      pageSize: queryParams.pageSize,
+      search: queryParams.search || undefined,
     },
   });
 
   // Delete mutation
-  const [deleteChargeCategory] = useQueryAndMutation({
+  const [deleteChargeCategory, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteChargeCategoryMutation,
   });
@@ -79,7 +92,12 @@ const FinanceChargeCategory = () => {
         dispatchFn(
           chargeCategoryApi.util.updateQueryData(
             'getChargeCategories',
-            { academicYearId: currentYear?.id },
+            {
+              academicYearId: currentYear?.id,
+              page: queryParams.page,
+              pageSize: queryParams.pageSize,
+              search: queryParams.search || undefined,
+            },
             (draft: any) => {
               const index = draft.items?.findIndex((b: any) => b.id === (selectedEntry as any)?.id);
               setDeleteIndex(index);
@@ -222,9 +240,14 @@ const FinanceChargeCategory = () => {
       <CustomizableTable
         tableId="charge-category-table"
         noDataText={<>No Charge Category Data Found</>}
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         columns={columns}
         data={data?.items || []}
+        serverSidePagination
+        serverSideSearch
+        totalCount={data?.totalCount}
+        onServerPagination={handleServerPagination}
+        onServerSearch={handleServerSearch}
       />
 
       {/* Add/Edit Dialog */}
@@ -274,7 +297,13 @@ const FinanceChargeCategory = () => {
           </>
         }
         action={
-          <LoadingButton variant="contained" color="error" size="small" onClick={handleDelete}>
+          <LoadingButton
+            variant="contained"
+            color="error"
+            size="small"
+            loading={isDeleting}
+            onClick={handleDelete}
+          >
             Yes
           </LoadingButton>
         }

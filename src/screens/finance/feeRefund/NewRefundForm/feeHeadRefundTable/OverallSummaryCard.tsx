@@ -197,8 +197,6 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
                     height: 16,
                     fontSize: 9,
                     fontWeight: 700,
-                    bgcolor: alpha(card.accent, 0.14),
-                    color: card.accent,
                     border: `1px solid ${alpha(card.accent, 0.25)}`,
                   }}
                 />

@@ -2,10 +2,10 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
@@ -22,6 +22,18 @@ const FeeCategoryCreation = () => {
   // Dialog control states
   const addFeeCategoryDialog = useBoolean(); // Controls add/edit fee category dialog
   const [open, setOpen] = useState(false); // Controls table dialog state
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
+
+  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
+    setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
+  }, []);
+
+  const handleServerSearch = useCallback((search: string) => {
+    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
+  }, []);
 
   // Global state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -89,6 +101,8 @@ const FeeCategoryCreation = () => {
         setOpenDialog={setOpen}
         editData={selectedFeeCategory}
         setEditData={setSelectedFeeCategory}
+        onServerPagination={handleServerPagination}
+        onServerSearch={handleServerSearch}
       />
 
       <CustomDialog

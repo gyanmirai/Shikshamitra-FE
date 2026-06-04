@@ -172,15 +172,6 @@ const ReceiptManagement = () => {
         render: (value, row) => (row.grNo ? `${value} (${row.grNo})` : value),
       },
       {
-        id: 'rollNo',
-        label: 'Roll No.',
-        align: 'left',
-        width: 96,
-        minWidth: 100,
-        maxWidth: 120,
-        render: (value) => value ?? '—',
-      },
-      {
         id: 'receiptKind',
         label: 'Receipt Type',
         align: 'left',
@@ -189,6 +180,15 @@ const ReceiptManagement = () => {
         maxWidth: 200,
         sticky: true,
         render: (value) => FEE_RECEIPT_KIND_LABELS[value as FeeReceiptKind] ?? '—',
+      },
+      {
+        id: 'rollNo',
+        label: 'Roll No.',
+        align: 'left',
+        width: 96,
+        minWidth: 100,
+        maxWidth: 120,
+        render: (value) => value ?? '—',
       },
       {
         id: 'totalPaidAmount',

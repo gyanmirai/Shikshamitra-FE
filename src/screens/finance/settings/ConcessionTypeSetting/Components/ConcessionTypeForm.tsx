@@ -71,7 +71,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
 
   const formik = useFormik({
     enableReinitialize: true,
-    initialValues: getInitialConcessionTypeData(concessionTypeDetails),
+    initialValues: getInitialConcessionTypeData(concessionTypeDetails?.data),
     validationSchema: concessionTypeValidationSchema,
     onSubmit: async (values) => {
       try {
@@ -90,9 +90,9 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
           description: values.description || '',
         };
 
-        if (concessionTypeDetails?.id) {
+        if (concessionTypeDetails?.data?.id) {
           await updateConcessionType({
-            concessionTypeId: concessionTypeDetails.id,
+            concessionTypeId: concessionTypeDetails.data.id,
             body: payload,
           }).unwrap();
         } else {
@@ -108,6 +108,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
       }
     },
   });
+
   // Document add/remove handlers
   const handleAddDocument = () => {
     formik.setFieldValue('documents', [
@@ -169,7 +170,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                 </Box>
                 <Box display="flex" flexDirection="column">
                   {(formik?.values?.documents ?? [])?.length > 0 && (
-                    <Scrollbar sx={{ height: '150px' }}>
+                    <Scrollbar sx={{ height: '150px', pt: 1 }}>
                       {formik?.values?.documents?.map((doc, idx) => (
                         <Box key={idx} display="flex" alignItems="center" gap={1} mb={2}>
                           <ShakingTextField
@@ -198,7 +199,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                 docs[idx].documentName = capitalized;
                                 formik.setFieldValue('documents', docs);
                               }}
-                              sx={{ minWidth: 130 }}
+                              sx={{ minWidth: 250 }}
                               error={
                                 !!(
                                   Array.isArray(formik?.touched?.documents) &&
@@ -295,7 +296,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                               inputProps={{
                                 min: 0,
                               }}
-                              sx={{ minWidth: 120 }}
+                              sx={{ minWidth: 150 }}
                             />
                           </ShakingTextField>
 
@@ -353,7 +354,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                   label="Accepted Format *"
                                   value={`${doc.acceptedFormat?.length || 0} Document Selected`}
                                   size="small"
-                                  sx={{ minWidth: 200 }} // Added minWidth to increase dropdown width
+                                  sx={{ minWidth: 350 }} // Added minWidth to increase dropdown width
                                   error={
                                     !!(
                                       Array.isArray(formik?.touched?.documents) &&

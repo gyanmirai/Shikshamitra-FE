@@ -5,9 +5,20 @@ import { financeModuleApi } from './financeModuleApi';
 export const concessionTypeApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getConcessionTypes: builder.query({
-      query: ({ academicYearId }: { academicYearId: string }) => ({
+      query: ({
+        academicYearId,
+        skipCount,
+        maxResultCount,
+        searchTerm,
+      }: {
+        academicYearId: string;
+        skipCount?: number;
+        maxResultCount?: number;
+        searchTerm?: string;
+      }) => ({
         url: `/${academicYearId}/concession-types`,
         method: 'GET',
+        params: { skipCount, maxResultCount, searchTerm: searchTerm || undefined },
       }),
       providesTags: [financeModuleType.concessionType],
     }),

@@ -178,30 +178,6 @@ const ExpenseFormFields = ({
                 />
               </ShakingTextField>
             </Grid>
-
-            {/* Payment Date */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!(formik.touched.paymentDate && formik.errors.paymentDate)}>
-                <DatePicker
-                  label="Payment Date *"
-                  value={formik.values.paymentDate}
-                  onChange={(newValue) => formik.setFieldValue('paymentDate', newValue)}
-                  format="DD/MM/YYYY"
-                  minDate={dayjs(currentYear?.startDate)}
-                  maxDate={dayjs(currentYear?.endDate)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      error: !!(formik.touched.paymentDate && formik.errors.paymentDate),
-                      helperText: (formik.touched.paymentDate &&
-                        formik.errors.paymentDate) as string,
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-
             {/* Payment Method */}
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField
@@ -222,6 +198,28 @@ const ExpenseFormFields = ({
                     (formik.touched.paymentMethod && formik.errors.paymentMethod) as string
                   }
                   formControlProps={{ fullWidth: true }}
+                />
+              </ShakingTextField>
+            </Grid>
+            {/* Payment Date */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.paymentDate && formik.errors.paymentDate)}>
+                <DatePicker
+                  label="Payment Date *"
+                  value={formik.values.paymentDate}
+                  onChange={(newValue) => formik.setFieldValue('paymentDate', newValue)}
+                  format="DD/MM/YYYY"
+                  minDate={dayjs(currentYear?.startDate)}
+                  maxDate={dayjs(currentYear?.endDate)}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      error: !!(formik.touched.paymentDate && formik.errors.paymentDate),
+                      helperText: (formik.touched.paymentDate &&
+                        formik.errors.paymentDate) as string,
+                    },
+                  }}
                 />
               </ShakingTextField>
             </Grid>

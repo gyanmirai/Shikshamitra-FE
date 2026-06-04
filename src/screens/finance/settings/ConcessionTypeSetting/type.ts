@@ -45,6 +45,9 @@ export interface IConcessionTableProps {
   onEdit?: (row: IConcessionTypeForm) => void;
   onView?: (row: IConcessionTypeForm) => void;
   onDelete?: (row: IConcessionTypeForm) => void;
+  totalCount?: number;
+  onServerPagination?: (page: number, rowsPerPage: number) => void;
+  onServerSearch?: (searchTerm: string) => void;
 }
 
 export interface IConcessionTypeFormProps {

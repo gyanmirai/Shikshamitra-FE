@@ -61,7 +61,7 @@ const ConcessionDocumentTable: React.FC<ConcessionTableProps> = ({ data }) => {
           render: (value: number[]) => (value || []).map(getFormatLabel).join(', '),
         },
       ]}
-      data={concessionTypeDetails?.documents || []}
+      data={concessionTypeDetails?.data?.documents || []}
     />
   );
 };

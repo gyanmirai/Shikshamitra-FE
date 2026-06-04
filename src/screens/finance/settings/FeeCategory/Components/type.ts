@@ -9,6 +9,10 @@ export interface IFeeCategoryTableProps {
   open: boolean;
   setOpenDialog: (value: boolean) => void;
   setEditData: (value: IFeeCategory | null) => void;
+  totalCount?: number;
+  isLoading?: boolean;
+  onServerPagination?: (page: number, rowsPerPage: number) => void;
+  onServerSearch?: (searchTerm: string) => void;
 }
 
 export interface IFeeCategoryFormProps {
