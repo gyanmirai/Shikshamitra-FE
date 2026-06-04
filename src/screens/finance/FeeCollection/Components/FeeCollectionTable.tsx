@@ -77,26 +77,24 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     },
   });
 
+  // Reset board + medium whenever the academic year changes
   useEffect(() => {
-    if (currentYear?.boards) {
-      setBoards(currentYear.boards);
-      // Only set initial values if not already selected
-      if (!selectedBoard) {
-        setSelectedBoard(currentYear.boards[0].id);
-        setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
-      }
-    }
+    if (!currentYear?.boards?.length) return;
+    const newBoards = currentYear.boards;
+    setBoards(newBoards);
+    const firstBoard = newBoards[0];
+    setSelectedBoard(firstBoard?.id ?? '');
+    setSelectedMedium(firstBoard?.educationMediums?.[0]?.id ?? '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentYear.boards]);
-  // State to store the selected student concession data
-  // null when no student is selected
-  useEffect(() => {
-    // Filter boards based on academic year ID from edit data
-    setBoards(currentYear?.boards);
+  }, [currentYear?.id]);
 
-    const board = boards?.find((item: any) => item.id === selectedBoard);
-    setMediums((board as unknown as Board)?.educationMediums || []);
-  }, [boards, currentYear?.boards, selectedBoard]);
+  // Sync mediums list when the selected board changes
+  useEffect(() => {
+    if (!currentYear?.boards) return;
+    setBoards(currentYear.boards);
+    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums ?? []);
+  }, [currentYear?.boards, selectedBoard]);
 
   const tableData = useMemo(
     () =>

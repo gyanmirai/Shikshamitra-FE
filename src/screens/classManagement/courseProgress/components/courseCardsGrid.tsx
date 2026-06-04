@@ -125,11 +125,27 @@ export default function CourseCardsGrid({
               cursor: 'pointer',
               flexShrink: 0,
               borderRadius: 1,
+              position: 'relative',
+              overflow: 'hidden',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              border: (theme) =>
-                isSelected
-                  ? `1.5px solid ${alpha(courseColor, 0.6)}`
-                  : `1px solid ${theme.palette.divider}`,
+              backgroundColor: (theme) =>
+                isSelected ? theme.palette.action.hover : theme.palette.background.paper,
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover,
+              },
+              ...(isSelected && {
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: '5px',
+                  backgroundColor: courseColor,
+                  borderRadius: '0 4px 4px 0',
+                },
+              }),
             }}
           >
             <AppWidget
@@ -138,6 +154,7 @@ export default function CourseCardsGrid({
               chart={{ series: course.progress }}
               completedChapter={course.completedChapter}
               totalChapter={course.totalChapter}
+              isSelected={isSelected}
             />
           </Card>
         );
@@ -207,6 +224,7 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
   chart,
   completedChapter,
   totalChapter,
+  isSelected,
 }: IAppWidgetProps) => {
   const progress = chart.series;
   const safeColor = color || '#1976d2';
@@ -214,7 +232,8 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
   return (
     <Box
       sx={{
-        p: 1.5,
+        p: 1,
+        pl: isSelected ? 2 : 1,
         display: 'flex',
         flexDirection: 'column',
         gap: 0.75,
@@ -223,7 +242,7 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
       {/* Title row & Circular Progress */}
       <Box display="flex" justifyContent="space-between" alignItems="center" gap={1}>
         <Box display="flex" alignItems="center" gap={1} sx={{ minWidth: 0, flex: 1 }}>
-          <SubjectColorIndicator color={safeColor} />
+          {!isSelected && <SubjectColorIndicator color={safeColor} />}
           <Typography
             variant="subtitle2"
             fontWeight={700}
@@ -239,7 +258,7 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
           <CircularProgress
             variant="determinate"
             value={100}
-            size={48}
+            size={40}
             thickness={4}
             sx={{ color: alpha(safeColor, 0.16) }}
           />
@@ -247,7 +266,7 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
           <CircularProgress
             variant="determinate"
             value={progress}
-            size={48}
+            size={40}
             thickness={4}
             sx={{
               position: 'absolute',

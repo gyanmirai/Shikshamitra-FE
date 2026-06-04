@@ -66,6 +66,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           label: 'Subject',
           align: 'left',
           isFilter: true,
+          sticky: true,
           isSort: true,
           render(value, row) {
             return (
