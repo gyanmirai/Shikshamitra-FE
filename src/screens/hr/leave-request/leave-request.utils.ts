@@ -33,13 +33,12 @@ export type EmployeeOption = {
 export type LeavePolicyOption = {
   id?: string;
   leaveType?: string | { id?: string | null } | null;
-  leaveTypeId?: string | null;
+  leaveTypeMasterId?: string | null;
 };
 
 export interface LeaveRequestFormValuesForPayload {
   employee: EmployeeOption | null;
   leavePolicyId: string;
-  leaveTypeId: string;
   startDate: dayjs.Dayjs | null;
   endDate: dayjs.Dayjs | null;
   halfDay: boolean;
@@ -83,7 +82,9 @@ export function shouldEnforceLeaveNoticePeriod(
   return !employee?.id || employee.id === SELF_EMPLOYEE_ID;
 }
 
-export function resolveLeaveTypeIdFromPolicy(policy: LeavePolicyOption | null | undefined): string {
+export function resolveLeaveTypeMasterIdFromPolicy(
+  policy: LeavePolicyOption | null | undefined
+): string {
   if (!policy) {
     return '';
   }
@@ -92,7 +93,7 @@ export function resolveLeaveTypeIdFromPolicy(policy: LeavePolicyOption | null | 
     return policy.leaveType;
   }
 
-  return policy.leaveType?.id || policy.leaveTypeId || '';
+  return policy.leaveType?.id || policy.leaveTypeMasterId || '';
 }
 
 export function buildCreateLeaveRequestFormData(
@@ -105,7 +106,6 @@ export function buildCreateLeaveRequestFormData(
   }
 
   formData.append('leavePolicyId', values.leavePolicyId);
-  formData.append('leaveTypeId', values.leaveTypeId);
   formData.append('startDate', dayjs(values.startDate).toISOString());
   formData.append('endDate', dayjs(values.endDate).toISOString());
   formData.append('halfDay', String(values.halfDay));

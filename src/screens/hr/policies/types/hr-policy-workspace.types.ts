@@ -140,6 +140,7 @@ export type AttendanceForm = {
   status: PolicyStatus;
   workCalendarPolicyId: string;
   isDefault: boolean;
+  captureMode: 'manual_status' | 'manual_with_time' | 'integrated';
   fullDayThresholdPercentage: string;
   halfDayThresholdPercentage: string;
   absentThresholdPercentage: string;

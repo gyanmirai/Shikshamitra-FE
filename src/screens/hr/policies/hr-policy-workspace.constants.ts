@@ -125,6 +125,7 @@ export const defaultAttendanceForm = (calendarId = ''): AttendanceForm => ({
   status: 'active',
   workCalendarPolicyId: calendarId,
   isDefault: false,
+  captureMode: 'integrated',
   fullDayThresholdPercentage: '75',
   halfDayThresholdPercentage: '50',
   absentThresholdPercentage: '0',

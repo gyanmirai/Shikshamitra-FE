@@ -61,6 +61,7 @@ const baseAttendance: AttendancePolicy = {
   name: 'Standard Attendance',
   status: 'active',
   isDefault: true,
+  captureMode: 'integrated',
   fullDayThresholdPercentage: 75,
   halfDayThresholdPercentage: 50,
   absentThresholdPercentage: 0,
@@ -148,6 +149,7 @@ describe('hr policy change utilities', () => {
         name: 'Standard Attendance',
         status: 'active',
         isDefault: true,
+        captureMode: 'integrated',
         fullDayThresholdPercentage: 75,
         halfDayThresholdPercentage: 50,
         absentThresholdPercentage: 0,
@@ -172,6 +174,13 @@ describe('hr policy change utilities', () => {
       isAttendancePolicyUnchanged(baseAttendance, {
         ...baseAttendance,
         graceTime: 5,
+      })
+    ).toBe(false);
+
+    expect(
+      isAttendancePolicyUnchanged(baseAttendance, {
+        ...baseAttendance,
+        captureMode: 'manual_status',
       })
     ).toBe(false);
   });
