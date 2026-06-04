@@ -59,7 +59,7 @@ export const StudentFeesSummaryView = ({ student }: any) => (
             <InfoItem
               icon={<Class />}
               label="Class / Division"
-              value={`${student?.className ?? ''}-${student?.division ?? ''}`}
+              value={`${student?.standardDivision ?? ''}`}
               iconColor="warning.main"
               iconBgColor={(theme) => varAlpha(theme.palette.warning.mainChannel, 0.08)}
             />
@@ -83,7 +83,7 @@ export const StudentFeesSummaryView = ({ student }: any) => (
             <InfoItem
               icon={<Phone />}
               label="Contact"
-              value={student?.contactNumber}
+              value={student?.mobileNo}
               iconColor="success.main"
               iconBgColor={(theme) => varAlpha(theme.palette.success.mainChannel, 0.08)}
             />

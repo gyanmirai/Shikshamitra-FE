@@ -271,7 +271,9 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
               <Grid size={{ xs: 12, md: 8 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                  <ShakingTextField error={!!(formik.touched.subjects && formik.errors.subjects)}>
+                  <ShakingTextField
+                    error={formik.touched.subjects && typeof formik.errors.subjects === 'string'}
+                  >
                     <Autocomplete
                       multiple
                       options={subjectOptions}
@@ -367,12 +369,12 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           {...params}
                           label="Subjects *"
                           size="small"
-                          error={formik.touched.subjects && Boolean(formik.errors.subjects)}
+                          error={
+                            formik.touched.subjects && typeof formik.errors.subjects === 'string'
+                          }
                           helperText={
-                            formik.touched.subjects && formik.errors.subjects
-                              ? formik.errors.subjects instanceof Array
-                                ? formik.errors.subjects.join(', ')
-                                : formik.errors.subjects
+                            formik.touched.subjects && typeof formik.errors.subjects === 'string'
+                              ? formik.errors.subjects
                               : undefined
                           }
                         />

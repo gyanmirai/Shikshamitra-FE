@@ -14,6 +14,7 @@ import {
   Paper,
   Stack,
   Button,
+  Switch,
   Divider,
   MenuItem,
   TableRow,
@@ -21,6 +22,7 @@ import {
   TextField,
   Typography,
   Autocomplete,
+  FormControlLabel,
 } from '@mui/material';
 
 import {
@@ -36,7 +38,6 @@ import {
   SectionTable,
   DrawerFormGrid,
   DrawerSelectField,
-  DrawerSwitchField,
 } from './HRPolicySharedUI';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
@@ -425,15 +426,30 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                 }
               />
             </DrawerField>
-            <DrawerSwitchField
-              label="Active"
-              checked={assignmentForm.isActive}
-              onChange={(checked) =>
-                setAssignmentForm((current) => ({ ...current, isActive: checked }))
-              }
-            />
+            <DrawerField
+              label="Status"
+              help="When active, this assignment is evaluated and applied during policy resolution. If inactive, the assignment is ignored and will not apply the policies to the target."
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 40 }}>
+                <FormControlLabel
+                  sx={{ m: 0 }}
+                  control={
+                    <Switch
+                      checked={assignmentForm.isActive}
+                      onChange={(event) =>
+                        setAssignmentForm((current) => ({
+                          ...current,
+                          isActive: event.target.checked,
+                        }))
+                      }
+                    />
+                  }
+                  label={assignmentForm.isActive ? 'Active' : 'Inactive'}
+                />
+              </Box>
+            </DrawerField>
           </Stack>
-          <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0 }}>
+          <Box sx={{ flex: 1, width: '100%', minWidth: 0 }}>
             <AssignmentPreviewPanel ctx={ctx} />
           </Box>
         </Stack>

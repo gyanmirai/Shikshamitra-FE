@@ -16,12 +16,11 @@ import {
   Divider,
   TextField,
   Typography,
-  DialogTitle,
   DialogActions,
   DialogContent,
 } from '@mui/material';
 
-import { FieldLabel, InfoTooltipIcon } from './HRPolicySharedUI';
+import { FieldLabel, InfoTooltipIcon, DrawerDialogTitle } from './HRPolicySharedUI';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
@@ -55,14 +54,14 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
       fullWidth
       maxWidth="sm"
     >
-      <DialogTitle sx={{ p: 2 }}>
+      <DrawerDialogTitle onClose={closeManualHolidayDialog}>
         <Stack direction="row" spacing={0.75} alignItems="center">
           <Typography variant="h6">
             {isEdit ? 'Edit Manual Holiday' : 'Add Manual Holiday'}
           </Typography>
           <InfoTooltipIcon title="Add dates that should be treated as holidays in this work calendar." />
         </Stack>
-      </DialogTitle>
+      </DrawerDialogTitle>
       <Divider />
       <DialogContent sx={{ pb: 2 }}>
         <Stack spacing={2} sx={{ pt: 1 }}>

@@ -70,23 +70,24 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
     return (board as unknown as Board)?.educationMediums ?? [];
   });
+  // Reset board + medium whenever the academic year changes
   useEffect(() => {
-    if (currentYear?.boards) {
-      setBoards(currentYear.boards);
-      if (!selectedBoard) {
-        onBoardChange(currentYear.boards[0].id);
-        onMediumChange(currentYear.boards[0].educationMediums[0].id);
-      }
-    }
+    if (!currentYear?.boards?.length) return;
+    const newBoards = currentYear.boards;
+    setBoards(newBoards);
+    const firstBoard = newBoards[0];
+    onBoardChange(firstBoard?.id ?? '');
+    onMediumChange(firstBoard?.educationMediums?.[0]?.id ?? '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentYear.boards]);
+  }, [currentYear?.id]);
 
+  // Sync mediums list when the selected board changes
   useEffect(() => {
-    setBoards(currentYear?.boards);
-    const board = boards?.find((item: any) => item.id === selectedBoard);
-    setMediums((board as unknown as Board)?.educationMediums || []);
-  }, [boards, currentYear?.boards, selectedBoard]);
-
+    if (!currentYear?.boards) return;
+    setBoards(currentYear.boards);
+    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums ?? []);
+  }, [currentYear?.boards, selectedBoard]);
   // Fetch concession requests from API
   const {
     data: allConcessionData,
