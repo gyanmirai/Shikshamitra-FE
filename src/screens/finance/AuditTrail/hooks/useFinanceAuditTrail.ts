@@ -2,7 +2,7 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { useDebounceEffect } from 'src/hooks/use-debounce';
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   useGetFinanceAuditEventsQuery,
   useLazyGetFinanceAuditStudentLookupQuery,
@@ -94,9 +94,17 @@ export function useFinanceAuditTrail(initialFilters?: Partial<AuditFilterValues>
   >({});
 
   const [lookupStudents] = useLazyGetFinanceAuditStudentLookupQuery();
+  const previousSearchRef = useRef<string>('');
 
+  // Debounce only search input - other filters trigger API immediately
   useDebounceEffect(
     () => {
+      const trimmed = filters.search.trim();
+
+      // Skip if search value hasn't changed
+      if (trimmed === previousSearchRef.current) return;
+      previousSearchRef.current = trimmed;
+
       setDebouncedSearch(filters.search);
     },
 
@@ -118,6 +126,7 @@ export function useFinanceAuditTrail(initialFilters?: Partial<AuditFilterValues>
     }
   );
 
+  // Reset pagination when any filter changes
   useEffect(() => {
     setSkipCount(0);
 
@@ -295,23 +304,14 @@ export function useFinanceAuditTrail(initialFilters?: Partial<AuditFilterValues>
 
   return {
     filters,
-
     visibleLogs,
-
     totalCount,
-
     filteredCount: totalCount,
-
     hasMore,
-
     isFiltered,
-
     isLoading: isLoading && skipCount === 0,
-
     isFetching,
-
     isError,
-
     refetch,
 
     handleFilterChange,

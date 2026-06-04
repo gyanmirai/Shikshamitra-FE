@@ -3,7 +3,6 @@
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
 import { Box, Typography } from '@mui/material';
-import { EmptyContent } from 'src/components/empty-content';
 
 import AuditCard from './AuditCard';
 import { getFinanceAuditSubModuleColor } from '../constants/subModuleColors';
@@ -30,17 +29,6 @@ const AuditTimeline = ({
   cardVariant = 'default',
   onFilterByStudent,
 }: AuditTimelineProps) => {
-  if (logs.length === 0) {
-    return (
-      <EmptyContent
-        title="No audit history found"
-        description="There are no audit logs matching the selected filters."
-        imgUrl="/assets/illustrations/illustration-empty-content.svg"
-        sx={{ py: 10 }}
-      />
-    );
-  }
-
   const grouped = groupByDate(logs);
 
   // running index for stagger animations

@@ -3,7 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
-import { useMemo, useState, useCallback } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import { useDebounceEffect } from 'src/hooks/use-debounce';
 import { TextField, Autocomplete, CircularProgress } from '@mui/material';
 import { useLazyGetFinanceAuditStudentLookupQuery } from 'src/redux/finance/audit/financeAuditApi';
@@ -26,8 +26,8 @@ const AuditStudentAutocomplete = ({
 }: AuditStudentAutocompleteProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [inputValue, setInputValue] = useState('');
-  const [debouncedInput, setDebouncedInput] = useState('');
   const [lookup, { data: options = [], isFetching }] = useLazyGetFinanceAuditStudentLookupQuery();
+  const previousSearchRef = useRef<string>('');
 
   const selectedOption = useMemo<FinanceAuditStudentLookup | null>(() => {
     if (!studentId) return null;
@@ -43,34 +43,29 @@ const AuditStudentAutocomplete = ({
     return null;
   }, [studentId, selectedLabel, options]);
 
+  // Single debounced effect for search - only call API when input actually changes
   useDebounceEffect(
     () => {
-      setDebouncedInput(inputValue);
-    },
-    DEBOUNCE_MS,
-    [inputValue]
-  );
-
-  const runLookup = useCallback(
-    (search: string) => {
       if (!currentYear?.id) return;
-      const trimmed = search.trim();
+
+      const trimmed = inputValue.trim();
+
+      // Skip if search value hasn't changed
+      if (trimmed === previousSearchRef.current) return;
+
+      // Skip if input is too short and not a UUID
       if (trimmed.length < MIN_SEARCH_LENGTH && !/^[0-9a-f-]{36}$/i.test(trimmed)) return;
+
+      previousSearchRef.current = trimmed;
+
       lookup({
         academicYearId: currentYear.id,
         search: trimmed,
         maxResultCount: 15,
       });
     },
-    [currentYear?.id, lookup]
-  );
-
-  useDebounceEffect(
-    () => {
-      runLookup(debouncedInput);
-    },
     DEBOUNCE_MS,
-    [debouncedInput, runLookup]
+    [inputValue, currentYear?.id, lookup]
   );
 
   return (
@@ -95,7 +90,7 @@ const AuditStudentAutocomplete = ({
       isOptionEqualToValue={(option, value) => option.studentId === value.studentId}
       loading={isFetching}
       noOptionsText={
-        debouncedInput.trim().length < MIN_SEARCH_LENGTH
+        inputValue.trim().length < MIN_SEARCH_LENGTH
           ? 'Type at least 2 characters (name, GR, or roll)'
           : 'No students found — check spelling or try GR number'
       }
@@ -104,7 +99,6 @@ const AuditStudentAutocomplete = ({
           {...params}
           label="Student"
           placeholder="Search by name, GR, or roll"
-          helperText="Student name? Use this field — not keyword search below."
           InputProps={{
             ...params.InputProps,
             endAdornment: (

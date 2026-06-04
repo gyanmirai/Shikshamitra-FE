@@ -4,9 +4,11 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
+import { useState, useCallback } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { useDebounceEffect } from 'src/hooks/use-debounce';
 import { Box, Grid, Button, TextField, InputAdornment } from '@mui/material';
 
 import AuditActiveFilters from './AuditActiveFilters';
@@ -28,6 +30,8 @@ interface AuditFilterProps {
   filteredCount: number;
 }
 
+const SEARCH_DEBOUNCE_MS = 400;
+
 const AuditFilter = ({
   filters,
   isFiltered,
@@ -38,12 +42,30 @@ const AuditFilter = ({
   filteredCount,
 }: AuditFilterProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [localSearchValue, setLocalSearchValue] = useState(filters.search);
 
   const yearStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
   const yearEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
 
   const startDateVal = filters.startDate ? dayjs(filters.startDate) : null;
   const endDateVal = filters.endDate ? dayjs(filters.endDate) : null;
+
+  // Debounce search before calling parent
+  useDebounceEffect(
+    () => {
+      onFilterChange('search', localSearchValue);
+    },
+    SEARCH_DEBOUNCE_MS,
+    [localSearchValue, onFilterChange]
+  );
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalSearchValue(e.target.value);
+  }, []);
+
+  const handleSearchClear = useCallback(() => {
+    setLocalSearchValue('');
+  }, []);
 
   const startDateError = (() => {
     if (!startDateVal) return '';
@@ -91,21 +113,21 @@ const AuditFilter = ({
             size="small"
             label="Search activity"
             placeholder="Receipt, actor, or activity summary…"
-            value={filters.search}
-            onChange={(e) => onFilterChange('search', e.target.value)}
+            value={localSearchValue}
+            onChange={handleSearchChange}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <Iconify icon="mdi:magnify" width={18} sx={{ color: 'text.disabled' }} />
                 </InputAdornment>
               ),
-              endAdornment: filters.search ? (
+              endAdornment: localSearchValue ? (
                 <InputAdornment position="end">
                   <Iconify
                     icon="mdi:close"
                     width={16}
                     sx={{ color: 'text.disabled', cursor: 'pointer' }}
-                    onClick={() => onFilterChange('search', '')}
+                    onClick={handleSearchClear}
                   />
                 </InputAdornment>
               ) : null,

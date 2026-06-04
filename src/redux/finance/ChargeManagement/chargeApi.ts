@@ -53,7 +53,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.charges],
     }),
     getChargeById: builder.query({
-      query: (id) => ({
+      query: ({ id }: { id: string }) => ({
         url: `/charges/${id}`,
         method: 'GET',
       }),
