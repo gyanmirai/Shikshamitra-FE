@@ -28,9 +28,43 @@ export type ManualAttendanceSaveRow = {
   id?: string;
   employeeId?: string;
   status?: ManualAttendanceUiStatus | string;
+  captureMode?: 'manual_status' | 'manual_with_time' | 'integrated';
   timeIn?: string;
   timeOut?: string;
   remarks?: string;
+};
+
+export type ManualAttendanceShiftTimeRow = ManualAttendanceSaveRow & {
+  shiftStartTime?: string | null;
+  shiftEndTime?: string | null;
+};
+
+export const applyManualAttendanceShiftTimes = <TRow extends ManualAttendanceShiftTimeRow>(
+  rows: TRow[]
+) => {
+  let updated = 0;
+  let skipped = 0;
+
+  const nextRows = rows.map((row) => {
+    if (
+      row.captureMode !== 'manual_with_time' ||
+      row.status !== MANUAL_ATTENDANCE_UI_STATUS.Present
+    ) {
+      return row;
+    }
+
+    const shiftStart = toAttendanceTableTimeValue(row.shiftStartTime);
+    const shiftEnd = toAttendanceTableTimeValue(row.shiftEndTime);
+    if (!shiftStart || !shiftEnd) {
+      skipped += 1;
+      return row;
+    }
+
+    updated += 1;
+    return { ...row, timeIn: shiftStart, timeOut: shiftEnd };
+  });
+
+  return { rows: nextRows, updated, skipped };
 };
 
 export const toAttendanceTableTimeValue = (value?: string | null) => {
@@ -92,8 +126,8 @@ export const buildManualAttendanceSaveEntries = (rows: ManualAttendanceSaveRow[]
       {
         employeeId,
         statusWire,
-        inTime: toAttendanceWireTime(row.timeIn),
-        outTime: toAttendanceWireTime(row.timeOut),
+        inTime: row.captureMode === 'manual_status' ? null : toAttendanceWireTime(row.timeIn),
+        outTime: row.captureMode === 'manual_status' ? null : toAttendanceWireTime(row.timeOut),
         remarks: row.remarks || '',
       },
     ];

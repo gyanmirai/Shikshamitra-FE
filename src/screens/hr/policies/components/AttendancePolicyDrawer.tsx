@@ -24,6 +24,12 @@ export const ATTENDANCE_MISSING_PUNCH_OPTIONS = [
   { label: 'Mark Half Day', value: 'mark_half_day' },
 ] as const;
 
+export const ATTENDANCE_CAPTURE_MODE_OPTIONS = [
+  { label: 'Manual status', value: 'manual_status' },
+  { label: 'Manual with time', value: 'manual_with_time' },
+  { label: 'Integrated', value: 'integrated' },
+] as const;
+
 function applyAttendanceAdvancedDefaults(
   form: HRPolicyWorkspaceContext['attendanceForm'],
   defaults: HRPolicyWorkspaceContext['attendanceForm']
@@ -74,6 +80,7 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
     activePolicyOperation?.key === 'save-calendar' ||
     activePolicyOperation?.key === 'save-payroll' ||
     activePolicyOperation?.key === 'save-assignment';
+  const isManualStatusMode = attendanceForm.captureMode === 'manual_status';
 
   return (
     <PolicyDrawerLayout
@@ -148,50 +155,73 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               setAttendanceForm((current) => ({ ...current, isDefault: checked }))
             }
           />
-        </DrawerFormGrid>
-      </PolicySection>
-      <PolicySection
-        title="Attendance Thresholds"
-        description="Set the worked-time percentages used to classify full-day and half-day attendance."
-      >
-        <DrawerFormGrid>
-          <DrawerField
-            label="Full day threshold"
-            help="Minimum worked time percentage required to count the day as a full day."
-          >
-            <TextField {...getAttendanceNumericFieldProps('fullDayThresholdPercentage')} />
-          </DrawerField>
-          <DrawerField
-            label="Half day threshold"
-            help="Minimum worked time percentage required to count the day as a half day."
-          >
-            <TextField {...getAttendanceNumericFieldProps('halfDayThresholdPercentage')} />
-          </DrawerField>
-        </DrawerFormGrid>
-      </PolicySection>
-      <Alert severity="info" sx={{ mb: 2 }}>
-        Standard setup uses 75% for full day, 50% for half day, missing punches require review,
-        manual correction is allowed, and payroll impact remains visible.
-      </Alert>
-      <PolicySection title="Exceptions">
-        <DrawerFormGrid columns={3} rowGap={1} alignItems="center">
           <DrawerSelectField
-            label="Missing Punch"
-            help="Controls what happens when an employee has incomplete punch data for the day."
-            value={attendanceForm.missingPunchBehavior}
+            label="Attendance capture mode"
+            help="Controls whether attendance is marked by status only, status with time, or integrated punch data."
+            value={attendanceForm.captureMode}
             onChange={(event) =>
               setAttendanceForm((current) => ({
                 ...current,
-                missingPunchBehavior: event.target.value,
+                captureMode: event.target.value as typeof current.captureMode,
               }))
             }
           >
-            {ATTENDANCE_MISSING_PUNCH_OPTIONS.map((option) => (
+            {ATTENDANCE_CAPTURE_MODE_OPTIONS.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
               </MenuItem>
             ))}
           </DrawerSelectField>
+        </DrawerFormGrid>
+      </PolicySection>
+      {!isManualStatusMode && (
+        <PolicySection
+          title="Attendance Thresholds"
+          description="Set the worked-time percentages used to classify full-day and half-day attendance."
+        >
+          <DrawerFormGrid>
+            <DrawerField
+              label="Full day threshold"
+              help="Minimum worked time percentage required to count the day as a full day."
+            >
+              <TextField {...getAttendanceNumericFieldProps('fullDayThresholdPercentage')} />
+            </DrawerField>
+            <DrawerField
+              label="Half day threshold"
+              help="Minimum worked time percentage required to count the day as a half day."
+            >
+              <TextField {...getAttendanceNumericFieldProps('halfDayThresholdPercentage')} />
+            </DrawerField>
+          </DrawerFormGrid>
+        </PolicySection>
+      )}
+      {!isManualStatusMode && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Standard setup uses 75% for full day, 50% for half day, missing punches require review,
+          manual correction is allowed, and payroll impact remains visible.
+        </Alert>
+      )}
+      <PolicySection title="Exceptions">
+        <DrawerFormGrid columns={3} rowGap={1} alignItems="center">
+          {!isManualStatusMode && (
+            <DrawerSelectField
+              label="Missing Punch"
+              help="Controls what happens when an employee has incomplete punch data for the day."
+              value={attendanceForm.missingPunchBehavior}
+              onChange={(event) =>
+                setAttendanceForm((current) => ({
+                  ...current,
+                  missingPunchBehavior: event.target.value,
+                }))
+              }
+            >
+              {ATTENDANCE_MISSING_PUNCH_OPTIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </DrawerSelectField>
+          )}
           <DrawerSwitchField
             compact
             label="Manual correction"
@@ -201,38 +231,40 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               setAttendanceForm((current) => ({ ...current, manualCorrectionAllowed: checked }))
             }
           />
-          <DrawerSwitchField
-            compact
-            label="Advanced settings"
-            help="Show detailed attendance, penalty, overtime, holiday, and payroll integration rules. Turning this off uses the default rules."
-            checked={attendanceAdvancedMode}
-            onChange={(checked) => {
-              setAttendanceAdvancedMode(checked);
-              if (!checked) {
-                // Revert advanced fields to defaults when toggling off
-                setAttendanceForm((current) =>
-                  applyAttendanceAdvancedDefaults(current, {
-                    ...current,
-                    graceTime: '0',
-                    maxLateAllowedPerMonth: '0',
-                    penaltyType: 'none',
-                    penaltyCountThreshold: '0',
-                    earlyExitEnabled: false,
-                    earlyExitGraceTime: '0',
-                    overtimeEnabled: false,
-                    overtimeRate: '',
-                    minOvertimeMinutes: '',
-                    holidayWorkBehavior: 'comp_off',
-                    sandwichRuleEnabled: false,
-                    payrollPreviewEnabled: true,
-                  })
-                );
-              }
-            }}
-          />
+          {!isManualStatusMode && (
+            <DrawerSwitchField
+              compact
+              label="Advanced settings"
+              help="Show detailed attendance, penalty, overtime, holiday, and payroll integration rules. Turning this off uses the default rules."
+              checked={attendanceAdvancedMode}
+              onChange={(checked) => {
+                setAttendanceAdvancedMode(checked);
+                if (!checked) {
+                  // Revert advanced fields to defaults when toggling off
+                  setAttendanceForm((current) =>
+                    applyAttendanceAdvancedDefaults(current, {
+                      ...current,
+                      graceTime: '0',
+                      maxLateAllowedPerMonth: '0',
+                      penaltyType: 'none',
+                      penaltyCountThreshold: '0',
+                      earlyExitEnabled: false,
+                      earlyExitGraceTime: '0',
+                      overtimeEnabled: false,
+                      overtimeRate: '',
+                      minOvertimeMinutes: '',
+                      holidayWorkBehavior: 'comp_off',
+                      sandwichRuleEnabled: false,
+                      payrollPreviewEnabled: true,
+                    })
+                  );
+                }
+              }}
+            />
+          )}
         </DrawerFormGrid>
       </PolicySection>
-      {attendanceAdvancedMode ? (
+      {!isManualStatusMode && attendanceAdvancedMode ? (
         <PolicySection
           title="Advanced Rules"
           description="Detailed attendance, penalty, overtime, holiday, and payroll integration rules."

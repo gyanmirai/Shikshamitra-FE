@@ -20,6 +20,11 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { expandAccessibleHierarchy } from 'src/utils/academicHierarchyUtils';
 import { Box, Grid, Slide, Button, TextField, Typography } from '@mui/material';
 import {
+  hrPolicyApi,
+  policyInvalidationTags,
+  usePreviewPolicyAssignmentImpactMutation,
+} from 'src/redux/hr/hr-policy-api';
+import {
   useGetBankDetailsQuery,
   useGetAccessControlQuery,
   useUpdateEmployeeMutation,
@@ -41,6 +46,10 @@ import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
 import { buildWorkExperiencePayload } from './work-experience-payload';
 import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
+import {
+  buildEmployeePolicyOverride,
+  buildEmployeePolicyOverridePreviewRequest,
+} from './employee-policy-override-utils';
 import {
   validations,
   reportingManagerValidationSchema,
@@ -321,9 +330,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const [activeStep, setActiveStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [pendingStep, setPendingStep] = useState<number | null>(null);
+  const [policyImpactPreview, setPolicyImpactPreview] = useState<any | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const formikRef = React.useRef<any>(null);
   const resetCurrentStepRef = React.useRef<(() => void) | null>(null);
+  const policyImpactConfirmationRef = React.useRef<((confirmed: boolean) => void) | null>(null);
 
   const [addEmployee] = useQueryAndMutation({
     type: 'mutation',
@@ -355,6 +366,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     currentQueryAndMutation: useUpdateBankDetailsMutation,
     isThrowError: true,
   });
+  const [previewPolicyAssignmentImpact] = usePreviewPolicyAssignmentImpactMutation();
 
   const [updateEmployee] = useQueryAndMutation({
     type: 'mutation',
@@ -550,14 +562,52 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     },
     [editData, updateExperienceInfo]
   );
+  const requestPolicyImpactConfirmation = useCallback((preview: any) => {
+    if (!preview?.requiresConfirmation) {
+      return Promise.resolve<string | null>(null);
+    }
+
+    if (preview?.blockingWarnings?.length) {
+      return Promise.reject(
+        new Error(preview.blockingWarnings[0]?.message || 'Policy impact is blocking.')
+      );
+    }
+
+    return new Promise<string | null>((resolve, reject) => {
+      policyImpactConfirmationRef.current = (confirmed: boolean) => {
+        const token = preview?.confirmationToken;
+        setPolicyImpactPreview(null);
+        policyImpactConfirmationRef.current = null;
+
+        if (!confirmed) {
+          reject(new Error('Policy override was not confirmed.'));
+          return;
+        }
+
+        if (!token) {
+          reject(new Error('Policy confirmation token is missing.'));
+          return;
+        }
+
+        resolve(token);
+      };
+      setPolicyImpactPreview(preview);
+    });
+  }, []);
+
   const handleBankDetailsInformation = useCallback(
-    async (values: any, formik: any) => {
+    async (values: any, formik: any, confirmationToken?: string | null) => {
       const employeeId = getSavedEmployeeId(values, editData);
       if (!employeeId) {
         throw new Error('Employee must be saved before payroll details can be updated.');
       }
 
-      const res = updateBankDetails({
+      const policyOverride = buildEmployeePolicyOverride(
+        values,
+        currentYear?.id,
+        confirmationToken
+      );
+      const res = await updateBankDetails({
         employeeId,
         body: {
           bankDetails: {
@@ -588,22 +638,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             amount: getSalaryComponentPayloadAmount(item),
             isFixed: isSalaryComponentFixed(item),
           })),
-          ...(values.policyOverrideEnabled &&
-          currentYear?.id &&
-          values.policyOverridePayrollPolicyId &&
-          values.policyOverrideAttendancePolicyId &&
-          values.policyOverrideEffectiveFrom
-            ? {
-                policyOverride: {
-                  academicYearId: currentYear.id,
-                  payrollPolicyId: values.policyOverridePayrollPolicyId,
-                  attendancePolicyId: values.policyOverrideAttendancePolicyId,
-                  effectiveFrom: values.policyOverrideEffectiveFrom,
-                  assignmentReason:
-                    values.policyOverrideAssignmentReason || 'Employee payroll step override',
-                },
-              }
-            : {}),
+          ...(policyOverride ? { policyOverride } : {}),
         },
       }).unwrap();
       return res;
@@ -756,7 +791,19 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           }
           saveSucceeded = true;
         } else if (activeStep === 5) {
-          await handleBankDetailsInformation(values, formik);
+          const employeeId = getSavedEmployeeId(values, editData);
+          const previewRequest = buildEmployeePolicyOverridePreviewRequest(
+            values,
+            currentYear?.id,
+            employeeId
+          );
+          const confirmationToken = previewRequest
+            ? await requestPolicyImpactConfirmation(
+                await previewPolicyAssignmentImpact(previewRequest).unwrap()
+              )
+            : null;
+          await handleBankDetailsInformation(values, formik, confirmationToken);
+          dispatch(hrPolicyApi.util.invalidateTags(policyInvalidationTags));
           if (isSaveButton) {
             shikshaMitraToast.success({ message: 'Bank details updated successfully' });
           }
@@ -817,7 +864,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     },
     [
       activeStep,
+      dispatch,
       editData,
+      currentYear?.id,
       handleBasicInformation,
       handleClose,
       handelUpdateEmployee,
@@ -825,6 +874,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       handleAdditionalDetails,
       handleWorkExperience,
       handleBankDetailsInformation,
+      previewPolicyAssignmentImpact,
+      requestPolicyImpactConfirmation,
       handleReportingManager,
       handleAcademicPermission,
       resetCurrentStepRef,
@@ -898,6 +949,46 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             </>
           );
         }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(policyImpactPreview)}
+        onClose={() => policyImpactConfirmationRef.current?.(false)}
+        icon="warning"
+        title="Confirm policy override"
+        content={
+          <Box>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              This employee-level policy override affects existing policy resolution. Confirm to
+              save it for this employee.
+            </Typography>
+            {(policyImpactPreview?.warnings || []).slice(0, 4).map((warning: any) => (
+              <Typography
+                key={`${warning.code}-${warning.message}`}
+                variant="caption"
+                display="block"
+              >
+                {warning.message || warning.code}
+              </Typography>
+            ))}
+          </Box>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.tick} />}
+            sx={{
+              bgcolor: 'grey.900',
+              color: 'common.white',
+              '&:hover': { bgcolor: 'grey.800' },
+            }}
+            size="small"
+            onClick={() => policyImpactConfirmationRef.current?.(true)}
+          >
+            Confirm
+          </Button>
+        }
       />
 
       <ConfirmDialog

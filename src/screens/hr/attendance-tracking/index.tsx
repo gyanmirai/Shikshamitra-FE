@@ -25,6 +25,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
+import { isRegisterMissingPunch } from 'src/screens/hr/attendance-tracking/status-mapper';
 import {
   useAdjustAttendanceRegisterMutation,
   useGetGroupedAttendanceRegisterQuery,
@@ -76,6 +77,8 @@ type AttendanceRegisterRow = {
   outTime?: string | null;
   hoursWorked?: string | null;
   remarks?: string | null;
+  captureMode?: 'manual_status' | 'manual_with_time' | 'integrated';
+  source?: string | null;
   status: RegisterStatus | number;
   isMarked?: boolean;
   isDayLocked: boolean;
@@ -144,6 +147,9 @@ const normalizeStatus = (
   if (value === 3 || value === 'Absent' || value === 'FullDayLeave') return 'Absent';
   return 'NotMarked';
 };
+
+const labelize = (value?: string | null) =>
+  value ? value.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()) : '-';
 
 const statusMeta = (value: RegisterStatus | number | string) =>
   REGISTER_STATUS_OPTIONS.find((item) => item.value === normalizeStatus(value)) ||
@@ -311,6 +317,10 @@ const AttendanceTrackingScreen = () => {
 
   const rows = useMemo(() => (data?.items || []) as GroupedAttendanceRegisterRow[], [data?.items]);
   const allDayRows = useMemo(() => rows.flatMap((row) => row.days || []), [rows]);
+  const selectableDayRows = useMemo(
+    () => allDayRows.filter((row) => row.canEdit && row.attendanceId),
+    [allDayRows]
+  );
   const selectedRows = useMemo(
     () => allDayRows.filter((row) => row.attendanceId && selectedIds.includes(row.attendanceId)),
     [allDayRows, selectedIds]
@@ -349,8 +359,12 @@ const AttendanceTrackingScreen = () => {
     setDraftErrors({});
   };
 
-  const buildAdjustmentPayload = (attendanceId?: string) => ({
-    ...(attendanceId ? { attendanceId } : { attendanceIds: editableSelectedIds }),
+  const buildAdjustmentPayload = (row?: AttendanceRegisterRow) => ({
+    ...(row
+      ? row.attendanceId
+        ? { attendanceId: row.attendanceId }
+        : { employeeId: row.employeeId, attendanceDate: row.attendanceDate }
+      : { attendanceIds: editableSelectedIds }),
     statusWire: editableStatusMeta(draft.status).wire,
     inTime: toWireTime(draft.inTime),
     outTime: toWireTime(draft.outTime),
@@ -359,7 +373,7 @@ const AttendanceTrackingScreen = () => {
   });
 
   const saveInline = async () => {
-    if (!editRow?.attendanceId) return;
+    if (!editRow) return;
 
     const errors = validateAttendanceDraft(draft);
     if (Object.keys(errors).length) {
@@ -369,7 +383,7 @@ const AttendanceTrackingScreen = () => {
     }
 
     try {
-      await adjustAttendance(buildAdjustmentPayload(editRow.attendanceId || undefined)).unwrap();
+      await adjustAttendance(buildAdjustmentPayload(editRow)).unwrap();
       shikshaMitraToast.success({ message: 'Attendance adjusted.' });
       closeDialogs();
     } catch {
@@ -480,8 +494,7 @@ const AttendanceTrackingScreen = () => {
       isFilter: true,
       render: (value, row) => {
         const meta = statusMeta(value);
-        const missingPunch =
-          normalizeStatus(row.status) === 'Present' && (!row.inTime || !row.outTime);
+        const missingPunch = isRegisterMissingPunch(row as AttendanceRegisterRow);
         return (
           <Stack direction="column" spacing={0.75} alignItems="center">
             <Label color={meta.color as any}>{meta.label}</Label>
@@ -525,6 +538,28 @@ const AttendanceTrackingScreen = () => {
       render: (value) => value || '-',
     },
     {
+      id: 'source',
+      label: 'Source',
+      width: 130,
+      minWidth: 130,
+      align: 'left',
+      filterType: 'string',
+      isSort: true,
+      isFilter: true,
+      render: (value, row) => {
+        const dayRow = row as AttendanceRegisterRow;
+        return (
+          <CustomTooltip title={`Mode: ${labelize(dayRow.captureMode)}`} arrow>
+            <span>
+              <Label color={dayRow.source === 'integration' ? 'info' : 'default'}>
+                {labelize(value as string)}
+              </Label>
+            </span>
+          </CustomTooltip>
+        );
+      },
+    },
+    {
       id: 'remarks',
       label: 'Remarks',
       width: 150,
@@ -545,14 +580,27 @@ const AttendanceTrackingScreen = () => {
       isFilter: false,
       render: (_value, row) => {
         const dayRow = row as AttendanceRegisterRow;
-        return dayRow.canEdit ? (
-          <Label color="success">Editable</Label>
-        ) : dayRow.isHoliday ? (
+        return dayRow.isHoliday ? (
           <CustomTooltip title={dayRow.holidayReason || dayRow.lockReason || 'Holiday'} arrow>
             <span>
               <Label color="default">Holiday</Label>
             </span>
           </CustomTooltip>
+        ) : normalizeStatus(dayRow.status) === 'NotMarked' || !dayRow.isMarked ? (
+          <CustomTooltip
+            title={
+              dayRow.canEdit
+                ? 'Attendance has not been marked. Use Adjust to fill it.'
+                : 'Attendance has not been marked for this day.'
+            }
+            arrow
+          >
+            <span>
+              <Label color="default">Not marked</Label>
+            </span>
+          </CustomTooltip>
+        ) : dayRow.canEdit ? (
+          <Label color="success">Editable</Label>
         ) : (
           <CustomTooltip title={dayRow.lockReason || 'Locked'} arrow>
             <span>
@@ -574,7 +622,13 @@ const AttendanceTrackingScreen = () => {
         const dayRow = row as AttendanceRegisterRow;
         return (
           <CustomTooltip
-            title={dayRow.canEdit ? 'Adjust this day' : dayRow.lockReason || 'Locked'}
+            title={
+              dayRow.canEdit
+                ? 'Adjust this day'
+                : normalizeStatus(dayRow.status) === 'NotMarked' || !dayRow.isMarked
+                  ? 'Attendance has not been marked for this day.'
+                  : dayRow.lockReason || 'Locked'
+            }
             arrow
           >
             <span>
@@ -662,24 +716,16 @@ const AttendanceTrackingScreen = () => {
         <Checkbox
           size="small"
           checked={
-            allDayRows.filter((row) => row.canEdit).length > 0 &&
-            allDayRows
-              .filter((row) => row.canEdit && row.attendanceId)
-              .every((row) => selectedIds.includes(row.attendanceId as string))
+            selectableDayRows.length > 0 &&
+            selectableDayRows.every((row) => selectedIds.includes(row.attendanceId as string))
           }
           indeterminate={
             selectedIds.length > 0 &&
-            !allDayRows
-              .filter((row) => row.canEdit && row.attendanceId)
-              .every((row) => selectedIds.includes(row.attendanceId as string))
+            !selectableDayRows.every((row) => selectedIds.includes(row.attendanceId as string))
           }
           onChange={(event) => {
             setSelectedIds(
-              event.target.checked
-                ? allDayRows
-                    .filter((row) => row.canEdit && row.attendanceId)
-                    .map((row) => row.attendanceId as string)
-                : []
+              event.target.checked ? selectableDayRows.map((row) => row.attendanceId as string) : []
             );
           }}
         />
@@ -698,7 +744,7 @@ const AttendanceTrackingScreen = () => {
       render: (_value, row: any) => (
         <Checkbox
           size="small"
-          disabled={!row.editable}
+          disabled={getEditableDayIds(row).length === 0}
           checked={isGroupSelected(row)}
           indeterminate={isGroupIndeterminate(row)}
           onChange={(event) => toggleGroupSelection(row, event.target.checked)}
@@ -824,7 +870,7 @@ const AttendanceTrackingScreen = () => {
           <span>
             <IconButton
               size="small"
-              disabled={!row.editable}
+              disabled={getEditableDayIds(row).length === 0}
               onClick={() => {
                 toggleGroupSelection(row, true);
                 setDraft({ status: 'Present', inTime: '', outTime: '', remarks: '', reason: '' });

@@ -22,6 +22,7 @@ export interface TakeAttendanceDayResponse {
   date: string;
   isDayLocked: boolean;
   isHoliday?: boolean;
+  captureMode?: 'manual_status' | 'manual_with_time' | 'integrated';
   holidayName?: string | null;
   holidayReason?: string | null;
   items: Array<{
@@ -29,6 +30,8 @@ export interface TakeAttendanceDayResponse {
     isHoliday?: boolean;
     holidayName?: string | null;
     holidayReason?: string | null;
+    captureMode?: 'manual_status' | 'manual_with_time' | 'integrated';
+    source?: string;
     [key: string]: unknown;
   }>;
   [key: string]: unknown;

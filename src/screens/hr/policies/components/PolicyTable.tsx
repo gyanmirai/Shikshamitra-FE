@@ -282,7 +282,9 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
     modeOrThresholds:
       'dayCalculationType' in item
         ? `${item.dayCalculationType} / ${item.saturdayWorkPolicy}`
-        : `${item.fullDayThresholdPercentage}% / ${item.halfDayThresholdPercentage}%`,
+        : item.captureMode === 'manual_status'
+          ? 'Manual status'
+          : `${item.captureMode === 'manual_with_time' ? 'Manual with time' : 'Integrated'} / ${item.fullDayThresholdPercentage}%`,
     integration: 'Per employee attendance',
     version: `v${item.version}`,
     updatedAt: formatDate(item.lastModificationTime || item.lastUpdatedAt || item.creationTime),

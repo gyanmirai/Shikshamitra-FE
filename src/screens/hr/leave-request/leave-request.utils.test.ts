@@ -17,7 +17,6 @@ import {
   getLeaveCenterVisibleTabs,
   buildEmployeeSelectOptions,
   getLeaveNoticePeriodMessage,
-  resolveLeaveTypeIdFromPolicy,
   isLeaveNoticePeriodSatisfied,
   APPLY_LEAVE_ROW_ACTION_LABELS,
   shouldEnforceLeaveNoticePeriod,
@@ -25,6 +24,7 @@ import {
   buildLeaveAttachmentDownloadPath,
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
+  resolveLeaveTypeMasterIdFromPolicy,
   shouldDisableMonthBeforeAcademicYearStart,
 } from 'src/screens/hr/leave-request/leave-request.utils';
 
@@ -33,7 +33,6 @@ describe('leave request payload mapping', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: 'emp-123', label: 'John Doe' },
       leavePolicyId: 'policy-1',
-      leaveTypeId: 'type-1',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
       halfDay: false,
@@ -43,13 +42,14 @@ describe('leave request payload mapping', () => {
 
     expect(formData.get('forEmployeeId')).toBe('emp-123');
     expect(formData.get('employeeId')).toBeNull();
+    expect(formData.get('leavePolicyId')).toBe('policy-1');
+    expect(formData.get('leaveTypeId')).toBeNull();
   });
 
   it('omits forEmployeeId for self selection', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: SELF_EMPLOYEE_ID, label: 'Self' },
       leavePolicyId: 'policy-1',
-      leaveTypeId: 'type-1',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
       halfDay: false,
@@ -65,7 +65,6 @@ describe('leave request payload mapping', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: 'emp-123', label: 'John Doe' },
       leavePolicyId: 'policy-1',
-      leaveTypeId: 'type-1',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
       halfDay: false,
@@ -80,7 +79,6 @@ describe('leave request payload mapping', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: 'emp-123', label: 'John Doe' },
       leavePolicyId: 'policy-1',
-      leaveTypeId: 'type-1',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-01'),
       halfDay: true,
@@ -138,11 +136,15 @@ describe('leave notice period helpers', () => {
   });
 
   it('resolves the leave type linked to a selected policy', () => {
-    expect(resolveLeaveTypeIdFromPolicy({ id: 'policy-1', leaveType: { id: 'type-1' } })).toBe(
-      'type-1'
+    expect(
+      resolveLeaveTypeMasterIdFromPolicy({ id: 'policy-1', leaveType: { id: 'type-1' } })
+    ).toBe('type-1');
+    expect(resolveLeaveTypeMasterIdFromPolicy({ id: 'policy-2', leaveType: 'type-2' })).toBe(
+      'type-2'
     );
-    expect(resolveLeaveTypeIdFromPolicy({ id: 'policy-2', leaveType: 'type-2' })).toBe('type-2');
-    expect(resolveLeaveTypeIdFromPolicy({ id: 'policy-3', leaveTypeId: 'type-3' })).toBe('type-3');
+    expect(
+      resolveLeaveTypeMasterIdFromPolicy({ id: 'policy-3', leaveTypeMasterId: 'type-3' })
+    ).toBe('type-3');
   });
 
   it('enforces notice only for self-created leave requests', () => {

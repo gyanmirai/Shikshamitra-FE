@@ -154,6 +154,7 @@ export function isAttendancePolicyUnchanged(
     normalizeText(policy.name) === normalizeText(payload.name) &&
     policy.status === payload.status &&
     policy.isDefault === payload.isDefault &&
+    (policy.captureMode || 'integrated') === (payload.captureMode || 'integrated') &&
     policy.fullDayThresholdPercentage ===
       normalizeNumberOrNull(payload.fullDayThresholdPercentage) &&
     policy.halfDayThresholdPercentage ===
