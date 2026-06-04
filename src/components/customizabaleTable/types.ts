@@ -12,6 +12,7 @@ export interface IColumnFilterAnchor {
 export interface IColumn {
   id: string;
   label: React.ReactNode; // allow rich header content
+  tooltip?: React.ReactNode; // custom tooltip content on hover
   filterType?: 'string' | 'number' | 'date' | 'enum' | 'formattedNumber';
   isFilter?: boolean;
   width?: number | string;

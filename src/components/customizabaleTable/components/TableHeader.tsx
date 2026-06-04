@@ -8,7 +8,6 @@ import {
 } from '@mui/icons-material';
 
 import { Iconify } from '../../iconify';
-import { getColumnSizeSx } from '../utils/columnSizing';
 
 import type { IColumn, IParams } from '../types';
 
@@ -30,8 +29,6 @@ interface TableHeaderProps {
   onSort: (column: string, originalId?: string) => void;
   filters: IParams['filters'];
   onColumnFilterClick: (event: React.MouseEvent, column: IColumn) => void;
-  headerRefs: (number | null)[];
-  setHeaderRef: React.Dispatch<React.SetStateAction<number[]>>;
   stickyMap: { left: Record<string, number>; right: Record<string, number> };
   getStickyStyle: (col: IColumn, isHeader: boolean) => React.CSSProperties;
   columnWidths: Record<string, number>;
@@ -52,8 +49,6 @@ export const TableHeader = React.memo(
     onSort,
     filters,
     onColumnFilterClick,
-    headerRefs,
-    setHeaderRef,
     stickyMap,
     getStickyStyle,
     columnWidths,
@@ -72,23 +67,17 @@ export const TableHeader = React.memo(
                 <TableCell
                   key={column.id}
                   align={column.align}
-                  ref={(el: HTMLTableCellElement) => {
-                    setHeaderRef((pre: number[]) => {
-                      pre[index] = el?.getBoundingClientRect?.()?.width ?? null;
-                      return pre;
-                    });
-                  }}
+                  data-column-id={column.id}
                   sx={{
                     // fontSize: '13px',
                     fontWeight: 600,
                     color: 'text.secondary',
-                    ...getColumnSizeSx(column, columnWidths[column.id]),
-                    whiteSpace: 'nowrap',
+                    // ...getColumnSizeSx(column, columnWidths[column.id]),
+                    width: column.width,
+                    whiteSpace: 'normal',
                     py: 1.5,
                     px: 2,
                     animation: `${fadeSlideIn} 0.4s ease both`,
-                    // @ts-ignore
-                    left: column.sticky ? stickyMap[column.id] : 'auto',
 
                     backgroundColor: 'background.neutral',
                     // boxShadow: column.sticky
@@ -121,7 +110,7 @@ export const TableHeader = React.memo(
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      width: '100%',
+                      width: 'inherit',
                       cursor: column.isSort !== false ? 'pointer' : 'default',
                       userSelect: 'none',
                       fontWeight: 'bold',
@@ -215,16 +204,16 @@ export const TableHeader = React.memo(
                   </Box>
                   <Box
                     className="resize-handle"
-                    onMouseDown={(e) => {
-                      const th = (e.currentTarget as HTMLElement).closest('th') as HTMLElement;
-                      const currentWidth = th?.getBoundingClientRect().width ?? 100;
-                      const min = typeof column.minWidth === 'number' ? column.minWidth : 50;
-                      onResizeStart(column.id, e, currentWidth, min);
-                    }}
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      onResetWidth(column.id);
-                    }}
+                    // onMouseDown={(e) => {
+                    //   const th = (e.currentTarget as HTMLElement).closest('th') as HTMLElement;
+                    //   const currentWidth = th?.getBoundingClientRect().width ?? 100;
+                    //   const min = typeof column.minWidth === 'number' ? column.minWidth : 50;
+                    //   onResizeStart(column.id, e, currentWidth, min);
+                    // }}
+                    // onDoubleClick={(e) => {
+                    //   e.stopPropagation();
+                    //   onResetWidth(column.id);
+                    // }}
                     sx={{
                       position: 'absolute',
                       top: 0,
