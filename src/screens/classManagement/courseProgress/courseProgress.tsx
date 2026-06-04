@@ -380,14 +380,17 @@ const CourseProgressComponent = ({
                         align: 'left',
                         filterType: 'date',
                         minWidth: 170,
-                        render: (value) => (
-                          <Typography variant="caption" gutterBottom>
-                            {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
-                          </Typography>
-                        ),
+                        render: (value) => {
+                          const isValidDate = value && value !== '-' && dayjs(value).isValid();
+                          return (
+                            <Typography variant="inherit" gutterBottom>
+                              {isValidDate ? dayjs(value).format('DD-MM-YYYY') : '-'}
+                            </Typography>
+                          );
+                        },
                       },
                       {
-                        id: 'timeLine',
+                        id: 'endDate',
                         label: 'End Date',
                         minWidth: 170,
                         align: 'left',
@@ -408,7 +411,7 @@ const CourseProgressComponent = ({
                           if (row.progress === 100) {
                             return (
                               <Typography variant="caption" fontSize="13px">
-                                {value}
+                                {dayjs(value).format('DD-MM-YYYY')}
                               </Typography>
                             );
                           }

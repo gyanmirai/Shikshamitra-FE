@@ -17,6 +17,9 @@ export interface IExpenseCategoryTableProps {
   onDelete: (row: IExpenseCategory) => void;
   onEdit: (row: IExpenseCategory) => void;
   isLoading?: boolean;
+  totalCount?: number;
+  onServerPagination?: (page: number, rowsPerPage: number) => void;
+  onServerSearch?: (searchTerm: string) => void;
 }
 
 export interface IExpenseCategoryFormProps {

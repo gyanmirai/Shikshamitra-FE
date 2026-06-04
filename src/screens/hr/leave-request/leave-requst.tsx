@@ -61,7 +61,6 @@ import {
   LEAVE_INSUFFICIENT_BALANCE,
   buildEmployeeSelectOptions,
   getLeaveNoticePeriodMessage,
-  resolveLeaveTypeIdFromPolicy,
   isLeaveNoticePeriodSatisfied,
   shouldEnforceLeaveNoticePeriod,
   LEAVE_TARGET_EMPLOYEE_REQUIRED,
@@ -70,6 +69,7 @@ import {
   LEAVE_DATES_OUTSIDE_ACADEMIC_YEAR,
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
+  resolveLeaveTypeMasterIdFromPolicy,
 } from './leave-request.utils';
 
 // ----------------------------------------------------------------------
@@ -93,7 +93,7 @@ type AddLeaveRequestProps = {
 interface FormValues {
   employee: { id: string; label: string } | null;
   leavePolicyId: string;
-  leaveTypeId: string;
+  leaveTypeMasterId: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
   halfDay: boolean;
@@ -178,7 +178,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           ? null
           : SELF_OPTION,
       leavePolicyId: editData?.leavePolicyId || '',
-      leaveTypeId: editData?.leaveTypeId || '',
+      leaveTypeMasterId: editData?.leaveTypeMasterId || '',
       reason: editData?.reason || editData?.description || '',
       startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
       endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
@@ -190,7 +190,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     validationSchema: Yup.object().shape({
       employee: Yup.object().nullable().required('Employee is required'),
       leavePolicyId: Yup.string().required('Leave Policy is required'),
-      leaveTypeId: Yup.string().required('Leave Type is required'),
       startDate: Yup.mixed()
         .required('Start Date is required')
         .test(
@@ -299,7 +298,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           const formData = buildCreateLeaveRequestFormData({
             employee: formValues.employee as EmployeeOption | null,
             leavePolicyId: formValues.leavePolicyId,
-            leaveTypeId: formValues.leaveTypeId,
             startDate: formValues.startDate,
             endDate: formValues.endDate,
             halfDay: formValues.halfDay,
@@ -432,12 +430,14 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
   useEffect(() => {
     if (editData) return;
-    if (!values.leaveTypeId) return;
-    const existsInCatalog = leaveTypeOptions.some((item: any) => item?.id === values.leaveTypeId);
+    if (!values.leaveTypeMasterId) return;
+    const existsInCatalog = leaveTypeOptions.some(
+      (item: any) => item?.id === values.leaveTypeMasterId
+    );
     if (!existsInCatalog) {
-      setFieldValue('leaveTypeId', '');
+      setFieldValue('leaveTypeMasterId', '');
     }
-  }, [editData, leaveTypeOptions, setFieldValue, values.leaveTypeId]);
+  }, [editData, leaveTypeOptions, setFieldValue, values.leaveTypeMasterId]);
 
   useEffect(() => {
     if (editData) return;
@@ -450,11 +450,11 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       return;
     }
 
-    const linkedLeaveTypeId = resolveLeaveTypeIdFromPolicy(selectedPolicy);
-    if (linkedLeaveTypeId && linkedLeaveTypeId !== values.leaveTypeId) {
-      setFieldValue('leaveTypeId', linkedLeaveTypeId);
+    const linkedLeaveTypeMasterId = resolveLeaveTypeMasterIdFromPolicy(selectedPolicy);
+    if (linkedLeaveTypeMasterId && linkedLeaveTypeMasterId !== values.leaveTypeMasterId) {
+      setFieldValue('leaveTypeMasterId', linkedLeaveTypeMasterId);
     }
-  }, [editData, leavePolicyOptions, setFieldValue, values.leavePolicyId, values.leaveTypeId]);
+  }, [editData, leavePolicyOptions, setFieldValue, values.leavePolicyId, values.leaveTypeMasterId]);
 
   useEffect(() => {
     if (!values.halfDay || !values.startDate) {
@@ -567,7 +567,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <ShakingTextField error={!!touched.leaveTypeId && !!errors.leaveTypeId}>
+              <ShakingTextField error={false}>
                 <CustomSelect
                   isLoading={
                     isLeaveTypeLoading ||
@@ -575,16 +575,16 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     (!catalogAcademicYearId && (isYearsLoading || isYearsFetching))
                   }
                   options={leaveTypeOptions}
-                  label="Leave Type *"
-                  value={values.leaveTypeId}
-                  name="leaveTypeId"
+                  label="Leave Type"
+                  value={values.leaveTypeMasterId}
+                  name="leaveTypeMasterId"
                   valueKey="id"
-                  disabled={!!editData}
+                  disabled
                   labelKey="name"
-                  error={!!touched.leaveTypeId && !!errors.leaveTypeId}
-                  helperText={(touched.leaveTypeId && errors.leaveTypeId) || ''}
+                  error={false}
+                  helperText="Linked to selected leave policy"
                   onChange={(value) => {
-                    setFieldValue('leaveTypeId', value);
+                    setFieldValue('leaveTypeMasterId', value);
                   }}
                 />
               </ShakingTextField>

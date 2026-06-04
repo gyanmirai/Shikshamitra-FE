@@ -583,6 +583,18 @@ const RenderPayrollFields = (props: any) => {
                     }
                   />
                 </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label="Assignment Reason"
+                    disabled={!isEditable.value}
+                    value={values.policyOverrideAssignmentReason || ''}
+                    onChange={(event) =>
+                      formik.setFieldValue('policyOverrideAssignmentReason', event.target.value)
+                    }
+                  />
+                </Grid>
               </Grid>
             ) : null}
           </Paper>

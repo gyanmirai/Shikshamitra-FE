@@ -54,6 +54,7 @@ export interface IAppWidgetProps {
   completedChapter: number;
   totalChapter: number;
   chart: { series: number }; // % progress
+  isSelected?: boolean;
 }
 
 export interface IUpdateProgressProps {

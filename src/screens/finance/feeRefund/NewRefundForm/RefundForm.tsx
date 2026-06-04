@@ -5,10 +5,10 @@ import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import { alpha, useTheme } from '@mui/material/styles';
 import { shikshaMitraToast } from 'src/components/toast';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -142,7 +142,6 @@ const FeeRefundFormComponent = ({
         sx={{
           flexShrink: 0,
           borderTop: `1px solid ${theme.palette.divider}`,
-          bgcolor: alpha(theme.palette.background.paper, 0.92),
           backdropFilter: 'blur(12px)',
           px: { xs: 2, md: 3 },
           py: 1.5,

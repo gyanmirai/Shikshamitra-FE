@@ -17,6 +17,9 @@ export interface IIncomeCategoryTableProps {
   onDelete: (row: IIncomeCategory) => void;
   onEdit: (row: IIncomeCategory) => void;
   isLoading?: boolean;
+  totalCount?: number;
+  onServerPagination?: (page: number, rowsPerPage: number) => void;
+  onServerSearch?: (searchTerm: string) => void;
 }
 
 export interface IIncomeCategoryFormProps {

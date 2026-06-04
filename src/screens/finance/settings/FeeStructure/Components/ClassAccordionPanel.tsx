@@ -85,7 +85,6 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
   const serverCards: IClassWiseFeeStructureCard[] = rawServerStructures
     .map((raw: any) => mapToCardModel(raw, classId, feeStructureMetaDataId))
     .filter((card) => !card._id || !deletedServerIds.has(card._id));
-  console.log('serverCards====', serverCards);
   const allCards = [
     ...serverCards.map((card) => ({
       card,

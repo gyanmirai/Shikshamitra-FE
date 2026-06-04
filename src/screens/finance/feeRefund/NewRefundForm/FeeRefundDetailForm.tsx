@@ -47,7 +47,6 @@ export default function FeeRefundDetailsForm({
             p: 1.5,
             borderRadius: '16px',
             border: `1px solid ${theme.palette.divider}`,
-            bgcolor: theme.palette.background.paper,
             boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
           }}
         >
@@ -204,7 +203,6 @@ export default function FeeRefundDetailsForm({
                 name="notes"
                 value={formik.values.notes}
                 onChange={formik.handleChange}
-                placeholder="Add any additional notes or context about this refund request..."
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '10px',

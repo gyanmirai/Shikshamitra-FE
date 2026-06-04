@@ -19,6 +19,9 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
   onEdit,
   onDelete,
   onToggle,
+  totalCount,
+  onServerPagination,
+  onServerSearch,
 }) => {
   const theme = useTheme();
   const columns: IColumn[] = useMemo(
@@ -167,6 +170,11 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
       }
       columns={columns}
       data={data || []}
+      serverSidePagination
+      serverSideSearch
+      totalCount={totalCount}
+      onServerPagination={onServerPagination}
+      onServerSearch={onServerSearch}
     />
   );
 };

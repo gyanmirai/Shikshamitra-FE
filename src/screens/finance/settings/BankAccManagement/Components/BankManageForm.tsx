@@ -102,7 +102,6 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
       }
     },
   });
-  console.log('Formik Errors:', formik.errors);
   const handleSubmit = useCallback(() => {
     const fieldToPanelMap: Record<string, string> = {
       bankName: 'bankDetails',
@@ -334,6 +333,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                   name="purpose"
                   value={formik.values.purpose}
                   onChange={formik.handleChange}
+                  inputProps={{ maxLength: 500 }}
+                  helperText={`${formik.values.purpose?.length ?? 0}/500`}
+                  FormHelperTextProps={{ sx: { textAlign: 'right', mr: 0 } }}
                 />
               </Grid>
             </Grid>

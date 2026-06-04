@@ -179,8 +179,8 @@ export const TableToolbar = React.memo(
                   >
                     {columns
                       .filter((column) => {
-                        if (typeof column?.label !== 'string') return false;
-                        const lbl = column.label as string;
+                        const lbl =
+                          typeof column.label === 'string' ? column.label : column.id || '';
                         return (
                           lbl.trim() && lbl.toLowerCase().includes(columnSearchTerm.toLowerCase())
                         );

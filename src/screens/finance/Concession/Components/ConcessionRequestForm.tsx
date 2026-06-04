@@ -957,7 +957,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                           borderColor: 'divider',
                         }}
                       >
-                        <Box sx={{ px: 2.5, py: 1.5, bgcolor: 'grey.50' }}>
+                        <Box sx={{ px: 2.5, py: 1.5 }}>
                           <Typography
                             variant="h6"
                             fontWeight={600}

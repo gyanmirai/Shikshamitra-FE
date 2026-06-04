@@ -26,3 +26,36 @@ export const getAttendanceTrackingStatusLabel = (status?: number) => {
       return 'Unknown';
   }
 };
+
+export type AttendanceRegisterStatusValue =
+  | 'NotMarked'
+  | 'Present'
+  | 'HalfDay'
+  | 'Absent'
+  | 'HalfDayLeave'
+  | 'FullDayLeave'
+  | number
+  | string
+  | null
+  | undefined;
+
+export type AttendanceRegisterMissingPunchRow = {
+  status: AttendanceRegisterStatusValue;
+  captureMode?: 'manual_status' | 'manual_with_time' | 'integrated' | string | null;
+  inTime?: string | null;
+  outTime?: string | null;
+};
+
+export const normalizeAttendanceRegisterStatus = (
+  value: AttendanceRegisterStatusValue
+): 'NotMarked' | 'Present' | 'HalfDay' | 'Absent' => {
+  if (value === 1 || value === 'Present') return 'Present';
+  if (value === 2 || value === 'HalfDay' || value === 'HalfDayLeave') return 'HalfDay';
+  if (value === 3 || value === 'Absent' || value === 'FullDayLeave') return 'Absent';
+  return 'NotMarked';
+};
+
+export const isRegisterMissingPunch = (row: AttendanceRegisterMissingPunchRow) =>
+  normalizeAttendanceRegisterStatus(row.status) === 'Present' &&
+  row.captureMode !== 'manual_status' &&
+  (!row.inTime || !row.outTime);

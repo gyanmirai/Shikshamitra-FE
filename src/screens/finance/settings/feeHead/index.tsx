@@ -2,12 +2,12 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
@@ -37,6 +37,16 @@ const FeeHeadCreation = () => {
     currentQueryAndMutation: usePatchFeeHeadMutation,
   });
 
+  const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
+
+  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
+    setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
+  }, []);
+
+  const handleServerSearch = useCallback((search: string) => {
+    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
+  }, []);
+
   // Custom hook to fetch fee head data
   const {
     data: feeHeadData,
@@ -46,7 +56,7 @@ const FeeHeadCreation = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeHeadsQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, ...queryParams },
   });
 
   // DELETE mutation
@@ -135,6 +145,9 @@ const FeeHeadCreation = () => {
         editData={selectedFeeHead}
         setEditData={setSelectedFeeHead}
         data={feeHeadData?.items}
+        totalCount={feeHeadData?.totalCount}
+        onServerPagination={handleServerPagination}
+        onServerSearch={handleServerSearch}
       />
 
       {/* Add/Edit Fee Head Dialog */}

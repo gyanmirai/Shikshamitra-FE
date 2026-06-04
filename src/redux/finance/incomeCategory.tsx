@@ -5,11 +5,24 @@ import { financeModuleApi } from './financeModuleApi';
 export const incomeCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getIncomeCategories: builder.query({
-      query: ({ academicYearId }: { academicYearId: string }) => ({
+      query: ({
+        academicYearId,
+        page,
+        pageSize,
+        search,
+      }: {
+        academicYearId: string;
+        page?: number;
+        pageSize?: number;
+        search?: string;
+      }) => ({
         url: '/income-categories',
         method: 'GET',
         params: {
           academicYearId,
+          page,
+          pageSize,
+          search: search || undefined,
         },
       }),
       providesTags: [financeModuleType.incomeCategoryData],

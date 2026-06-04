@@ -32,6 +32,7 @@ import {
 import {
   toAttendanceTableTimeValue,
   mapTakeAttendanceStatusToUi,
+  applyManualAttendanceShiftTimes,
   buildManualAttendanceSaveEntries,
   MANUAL_ATTENDANCE_UI_STATUS as STATUS,
   MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS,
@@ -41,6 +42,7 @@ import {
 // Status constants (mirroring AttendanceStatus enum from student module)
 // ---------------------------------------------------------------------------
 type AttendanceStatusType = (typeof STATUS)[keyof typeof STATUS];
+type AttendanceCaptureMode = 'manual_status' | 'manual_with_time' | 'integrated';
 
 // ---------------------------------------------------------------------------
 // Editing cell type for inline time editing
@@ -168,12 +170,18 @@ const ManualAttendanceScreen = () => {
         dateIso: item.dateIso,
         timeIn: toAttendanceTableTimeValue(item.inTime),
         timeOut: toAttendanceTableTimeValue(item.outTime),
+        shiftStartTime: item.shiftStartTime,
+        shiftEndTime: item.shiftEndTime,
         remarks: item.remarks || '',
         warnings: item.warnings || [],
         errors: item.errors || [],
         isHoliday: item.isHoliday || data?.isHoliday || false,
         holidayName: item.holidayName || data?.holidayName,
         holidayReason: item.holidayReason || data?.holidayReason,
+        captureMode: (item.captureMode ||
+          data?.captureMode ||
+          'integrated') as AttendanceCaptureMode,
+        source: item.source || 'manual',
         status: mapTakeAttendanceStatusToUi(item.status) as AttendanceStatusType,
       }));
       setEmployeeData(mapped);
@@ -250,6 +258,34 @@ const ManualAttendanceScreen = () => {
     if (isLocked || isHoliday || isFutureDate || isOutsideAcademicYear) return;
     setEmployeeData((prev) => prev.map((emp) => ({ ...emp, status })));
   };
+
+  const showTimeColumns = useMemo(
+    () => employeeData.some((emp) => emp.captureMode !== 'manual_status'),
+    [employeeData]
+  );
+
+  const canApplyShiftTime = useMemo(
+    () => employeeData.some((emp) => emp.captureMode === 'manual_with_time'),
+    [employeeData]
+  );
+
+  const applyShiftTime = useCallback(() => {
+    if (isLocked || isHoliday || isFutureDate || isOutsideAcademicYear) return;
+
+    const result = applyManualAttendanceShiftTimes(employeeData);
+    setEmployeeData(result.rows);
+
+    if (result.updated > 0) {
+      shikshaMitraToast.success({
+        message: `Applied shift time to ${result.updated} present ${result.updated === 1 ? 'employee' : 'employees'}.`,
+      });
+    }
+    if (result.skipped > 0) {
+      shikshaMitraToast.warning({
+        message: `${result.skipped} present ${result.skipped === 1 ? 'employee was' : 'employees were'} skipped because shift time is missing.`,
+      });
+    }
+  }, [employeeData, isFutureDate, isHoliday, isLocked, isOutsideAcademicYear]);
 
   // -------------------------------------------------------------------------
   // Save handler
@@ -394,100 +430,106 @@ const ManualAttendanceScreen = () => {
         minWidth: '8vw',
         render: () => date?.format('DD/MM/YYYY'),
       },
-      ...(['timeIn', 'timeOut'] as const).map((field) => ({
-        id: field,
-        label: field === 'timeIn' ? 'In-Time' : 'Out-Time',
-        align: 'left' as const,
-        minWidth: '140px',
-        isSort: false,
-        isFilter: false,
-        render: (value: string, row: any) => {
-          const displayTime = toAttendanceTableTimeValue(value);
-          const isEditing = editingCell?.rowId === row.id && editingCell?.field === field;
-          if (isEditing) {
-            return (
-              <Stack direction="row" spacing={0.5} alignItems="center">
-                <TimePicker
-                  value={editingCell.value}
-                  onChange={(newVal) =>
-                    setEditingCell((prev) => prev && { ...prev, value: newVal })
-                  }
-                  format="HH:mm"
-                  ampm={false}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      autoFocus: true,
-                      sx: { width: '120px', '& input': { fontSize: '0.8rem', p: '4px 6px' } },
-                    },
+      ...(showTimeColumns
+        ? (['timeIn', 'timeOut'] as const).map((field) => ({
+            id: field,
+            label: field === 'timeIn' ? 'In-Time' : 'Out-Time',
+            align: 'left' as const,
+            minWidth: '140px',
+            isSort: false,
+            isFilter: false,
+            render: (value: string, row: any) => {
+              if (row.captureMode === 'manual_status') {
+                return <Typography variant="body2">-</Typography>;
+              }
+
+              const displayTime = toAttendanceTableTimeValue(value);
+              const isEditing = editingCell?.rowId === row.id && editingCell?.field === field;
+              if (isEditing) {
+                return (
+                  <Stack direction="row" spacing={0.5} alignItems="center">
+                    <TimePicker
+                      value={editingCell.value}
+                      onChange={(newVal) =>
+                        setEditingCell((prev) => prev && { ...prev, value: newVal })
+                      }
+                      format="HH:mm"
+                      ampm={false}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          autoFocus: true,
+                          sx: { width: '120px', '& input': { fontSize: '0.8rem', p: '4px 6px' } },
+                        },
+                      }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                        seconds: renderTimeViewClock,
+                      }}
+                    />
+                    <CustomTooltip title="Save" arrow placement="top">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => {
+                          const formatted = editingCell.value?.isValid()
+                            ? editingCell.value.format('HH:mm')
+                            : null;
+                          updateRow(row.id, { [field]: formatted });
+                          setEditingCell(null);
+                        }}
+                        sx={{ p: 0.4 }}
+                      >
+                        <Iconify icon="eva:checkmark-fill" width={16} />
+                      </IconButton>
+                    </CustomTooltip>
+                    <CustomTooltip title="Cancel" arrow placement="top">
+                      <IconButton size="small" onClick={() => setEditingCell(null)} sx={{ p: 0.4 }}>
+                        <Iconify icon="eva:close-fill" width={16} />
+                      </IconButton>
+                    </CustomTooltip>
+                  </Stack>
+                );
+              }
+              return (
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  alignItems="center"
+                  sx={{
+                    '& .edit-btn': { opacity: 0, transition: 'opacity 0.15s' },
+                    '&:hover .edit-btn': { opacity: 1 },
                   }}
-                  viewRenderers={{
-                    hours: renderTimeViewClock,
-                    minutes: renderTimeViewClock,
-                    seconds: renderTimeViewClock,
-                  }}
-                />
-                <CustomTooltip title="Save" arrow placement="top">
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => {
-                      const formatted = editingCell.value?.isValid()
-                        ? editingCell.value.format('HH:mm')
-                        : null;
-                      updateRow(row.id, { [field]: formatted });
-                      setEditingCell(null);
-                    }}
-                    sx={{ p: 0.4 }}
-                  >
-                    <Iconify icon="eva:checkmark-fill" width={16} />
-                  </IconButton>
-                </CustomTooltip>
-                <CustomTooltip title="Cancel" arrow placement="top">
-                  <IconButton size="small" onClick={() => setEditingCell(null)} sx={{ p: 0.4 }}>
-                    <Iconify icon="eva:close-fill" width={16} />
-                  </IconButton>
-                </CustomTooltip>
-              </Stack>
-            );
-          }
-          return (
-            <Stack
-              direction="row"
-              spacing={0.5}
-              alignItems="center"
-              sx={{
-                '& .edit-btn': { opacity: 0, transition: 'opacity 0.15s' },
-                '&:hover .edit-btn': { opacity: 1 },
-              }}
-            >
-              <Typography variant="body2">{displayTime || '\u2014'}</Typography>
-              {!isLocked && !isHoliday && !isFutureDate && !isOutsideAcademicYear && (
-                <CustomTooltip
-                  title={`Edit ${field === 'timeIn' ? 'In-Time' : 'Out-Time'}`}
-                  arrow
-                  placement="top"
                 >
-                  <IconButton
-                    className="edit-btn"
-                    size="small"
-                    onClick={() =>
-                      setEditingCell({
-                        rowId: row.id,
-                        field,
-                        value: displayTime ? dayjs(`1970-01-01T${displayTime}`) : null,
-                      })
-                    }
-                    sx={{ p: 0.3 }}
-                  >
-                    <Iconify icon="eva:edit-2-outline" width={14} />
-                  </IconButton>
-                </CustomTooltip>
-              )}
-            </Stack>
-          );
-        },
-      })),
+                  <Typography variant="body2">{displayTime || '\u2014'}</Typography>
+                  {!isLocked && !isHoliday && !isFutureDate && !isOutsideAcademicYear && (
+                    <CustomTooltip
+                      title={`Edit ${field === 'timeIn' ? 'In-Time' : 'Out-Time'}`}
+                      arrow
+                      placement="top"
+                    >
+                      <IconButton
+                        className="edit-btn"
+                        size="small"
+                        onClick={() =>
+                          setEditingCell({
+                            rowId: row.id,
+                            field,
+                            value: displayTime ? dayjs(`1970-01-01T${displayTime}`) : null,
+                          })
+                        }
+                        sx={{ p: 0.3 }}
+                      >
+                        <Iconify icon="eva:edit-2-outline" width={14} />
+                      </IconButton>
+                    </CustomTooltip>
+                  )}
+                </Stack>
+              );
+            },
+          }))
+        : []),
       // -------------------------------------------------------------------
       // Status column — 3-button segmented control (Present / Pending / Absent)
       // -------------------------------------------------------------------
@@ -1179,6 +1221,7 @@ const ManualAttendanceScreen = () => {
       absentCount,
       isFutureDate,
       isOutsideAcademicYear,
+      showTimeColumns,
       editingCell,
       updateRow,
     ]
@@ -1255,6 +1298,29 @@ const ManualAttendanceScreen = () => {
 
         {/* Reset */}
         {isHoliday && <Label color="default">{holidayReason || 'Holiday'}</Label>}
+
+        {canApplyShiftTime &&
+          !isLocked &&
+          !isHoliday &&
+          !isFutureDate &&
+          !isOutsideAcademicYear && (
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="mdi:clock-check-outline" sx={{ fontSize: '16px' }} />}
+              disabled={
+                employeeData.length === 0 ||
+                !employeeData.some(
+                  (e) => e.captureMode === 'manual_with_time' && e.status === STATUS.Present
+                )
+              }
+              onClick={applyShiftTime}
+              sx={{ minWidth: '140px', fontWeight: 500, fontSize: '0.875rem' }}
+            >
+              Apply Shift Time
+            </Button>
+          )}
 
         {!isLocked && !isHoliday && !isFutureDate && !isOutsideAcademicYear && (
           <Button

@@ -4,10 +4,10 @@ export const getInitialConcessionTypeData = (editData?: any | null): IConcession
   id: editData?.id,
   name: editData?.name || editData?.name || '',
   documents: (editData?.documents || []).map((doc: any) => ({
-    ...doc,
-    documentSize: doc.documentSize
-      ? Math.round(doc.documentSize / (1024 * 1024))
-      : doc.documentSize,
+    id: doc?.id,
+    documentName: doc?.documentName || '',
+    documentSize: doc?.documentSize ? Math.round(doc.documentSize / (1024 * 1024)) : '',
+    acceptedFormat: Array.isArray(doc?.acceptedFormat) ? doc.acceptedFormat : [],
   })),
   description: editData?.description || '',
 });

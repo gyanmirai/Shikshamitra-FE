@@ -85,6 +85,7 @@ export type AttendancePolicy = {
   name: string;
   status: PolicyStatus;
   isDefault: boolean;
+  captureMode: 'manual_status' | 'manual_with_time' | 'integrated';
   fullDayThresholdPercentage: number;
   halfDayThresholdPercentage: number;
   absentThresholdPercentage: number;

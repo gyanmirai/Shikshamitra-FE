@@ -46,7 +46,9 @@ import {
   Grid,
   Button,
   Divider,
+  Tooltip,
   MenuItem,
+  Checkbox,
   TextField,
   IconButton,
   Typography,
@@ -64,6 +66,7 @@ import {
 } from 'src/redux/feeCollection/feeCollection';
 
 import FeeLedgerList from './FeeLedgerList';
+import { toPeriod } from './FeeLedgerShared';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import FeeCollectionOutcomePanel from './FeeCollectionOutcomePanel';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
@@ -844,6 +847,83 @@ const FeeCollectComponentForm = ({
     [filteredLedgerData]
   );
 
+  // ── Select-All helpers (based on filtered ledger + charges) ────────────────
+  const allSelectableItems = useMemo((): SelectedItem[] => {
+    const items: SelectedItem[] = [];
+    (filteredLedgerData.monthWise ?? []).forEach((g) => {
+      const period = toPeriod(
+        FeeMonth[g.month] as string,
+        g.year ?? currentYear?.year ?? new Date().getFullYear()
+      );
+      g.items
+        .filter((i) => i.due > 0)
+        .forEach((i) =>
+          items.push({
+            dueFeeId: i.dueFeeId,
+            feeHeadId: i.feeHeadId,
+            period,
+            dueAmount: i.due,
+          })
+        );
+    });
+    return items;
+  }, [filteredLedgerData, currentYear]);
+
+  const allSelectableChargeIds = useMemo(
+    () =>
+      (chargesData ?? [])
+        .filter((c) => c.status !== 0 && c.status !== 'Paid' && c.amount > 0)
+        .map((c) => c.chargeId),
+    [chargesData]
+  );
+
+  const totalSelectableCount = allSelectableItems.length + allSelectableChargeIds.length;
+  const selectedCount = formik.values.selectedItems.length + formik.values.charges.length;
+
+  const isAllSelected =
+    totalSelectableCount > 0 &&
+    allSelectableItems.every((si) =>
+      formik.values.selectedItems.some(
+        (s) => s.feeHeadId === si.feeHeadId && s.period === si.period
+      )
+    ) &&
+    allSelectableChargeIds.every((id) => formik.values.charges.includes(id));
+
+  const isIndeterminate =
+    !isAllSelected && (formik.values.selectedItems.length > 0 || formik.values.charges.length > 0);
+
+  const totalSelectableDue = allSelectableItems.reduce((s, i) => s + i.dueAmount, 0);
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      // deselect all selectable in current filter
+      const removeKeys = new Set(allSelectableItems.map((i) => `${i.feeHeadId}|${i.period}`));
+      formik.setFieldValue(
+        'selectedItems',
+        formik.values.selectedItems.filter((s) => !removeKeys.has(`${s.feeHeadId}|${s.period}`)),
+        false
+      );
+      const removeChargeIds = new Set(allSelectableChargeIds);
+      formik.setFieldValue(
+        'charges',
+        formik.values.charges.filter((id) => !removeChargeIds.has(id)),
+        false
+      );
+    } else {
+      // merge new selectable items with existing (avoid duplicates)
+      const existingKeys = new Set(
+        formik.values.selectedItems.map((s) => `${s.feeHeadId}|${s.period}`)
+      );
+      const newItems = allSelectableItems.filter(
+        (i) => !existingKeys.has(`${i.feeHeadId}|${i.period}`)
+      );
+      formik.setFieldValue('selectedItems', [...formik.values.selectedItems, ...newItems], false);
+      const existingChargeIds = new Set(formik.values.charges);
+      const newChargeIds = allSelectableChargeIds.filter((id) => !existingChargeIds.has(id));
+      formik.setFieldValue('charges', [...formik.values.charges, ...newChargeIds], false);
+    }
+  };
+
   const feeHeadMap = useMemo(() => {
     const map: Record<string, string> = {};
     (ledgerData.feeHeadWise ?? []).forEach((fh) => {
@@ -1063,6 +1143,101 @@ const FeeCollectComponentForm = ({
                 Select at least one fee item or charge to collect
               </Typography>
             )}
+
+          {/* ── Sticky Select-All Card ── */}
+          <Box
+            mt={0.85}
+            sx={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 10,
+              flexShrink: 0,
+            }}
+          >
+            <Card
+              sx={{
+                borderRadius: 1.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                px: 1.5,
+                py: 0.75,
+                bgcolor: 'background.paper',
+                border: (t) => `1px solid ${alpha(t.palette.divider, 0.7)}`,
+                boxShadow: (t) => `var(--shadows-4)`,
+                gap: 1,
+                flexWrap: 'wrap',
+              }}
+            >
+              {/* Left: checkbox + label */}
+              <Box display="flex" alignItems="center" gap={0.5}>
+                <Tooltip
+                  title={
+                    isAllSelected
+                      ? 'Deselect all visible items'
+                      : 'Select all visible pending items'
+                  }
+                  arrow
+                  placement="top"
+                >
+                  <Checkbox
+                    size="small"
+                    checked={isAllSelected}
+                    indeterminate={isIndeterminate}
+                    onChange={handleSelectAll}
+                    disabled={totalSelectableCount === 0}
+                    sx={{ p: 0.5 }}
+                  />
+                </Tooltip>
+                <Box>
+                  <Typography variant="body2" fontWeight={700} lineHeight={1.2}>
+                    Select All
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" lineHeight={1.1}>
+                    {totalSelectableCount} pending item{totalSelectableCount !== 1 ? 's' : ''}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Right: selected count + total due */}
+              <Box display="flex" alignItems="center" gap={1.5}>
+                {selectedCount > 0 && (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      px: 1,
+                      py: 0.35,
+                      borderRadius: 1,
+                      bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+                    }}
+                  >
+                    <Iconify
+                      icon="solar:check-circle-bold"
+                      width={14}
+                      sx={{ color: 'primary.main' }}
+                    />
+                    <Typography variant="caption" fontWeight={700} color="primary.main">
+                      {selectedCount} selected
+                    </Typography>
+                  </Box>
+                )}
+                <Box textAlign="right">
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Total Due
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    fontWeight={700}
+                    sx={{ fontVariantNumeric: 'tabular-nums' }}
+                  >
+                    ₹{formatNumber(totalSelectableDue)}
+                  </Typography>
+                </Box>
+              </Box>
+            </Card>
+          </Box>
 
           <Box mt={0.85} sx={{ flex: 1, minHeight: 0 }}>
             <Scrollbar sx={{ height: '100%', pr: 0.3 }}>

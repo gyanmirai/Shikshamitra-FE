@@ -2,11 +2,11 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
@@ -29,6 +29,17 @@ import type { IBankAccount } from './Components/type';
 
 const BankAccountManagement: React.FC = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
+
+  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
+    setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
+  }, []);
+
+  const handleServerSearch = useCallback((search: string) => {
+    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
+  }, []);
+
   // Get bank accounts data
   const {
     data: bankAccountData,
@@ -38,7 +49,7 @@ const BankAccountManagement: React.FC = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBankAccountQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, ...queryParams },
   });
 
   // DELETE mutation
@@ -125,6 +136,9 @@ const BankAccountManagement: React.FC = () => {
         setEditData={setSelectedBankAccount}
         data={bankAccountData?.items || []}
         isLoading={bankAccountsLoading || bankAccountFetching}
+        totalCount={bankAccountData?.totalCount}
+        onServerPagination={handleServerPagination}
+        onServerSearch={handleServerSearch}
       />
 
       <CustomDialog
@@ -192,7 +206,7 @@ const BankAccountManagement: React.FC = () => {
                   dispatchFn(
                     bankAccountApi.util.updateQueryData(
                       'getBankAccount',
-                      { academicYearId: currentYear?.id },
+                      { academicYearId: currentYear?.id, ...queryParams },
                       (draft: any) => {
                         const list = Array.isArray(draft) ? draft : draft?.data || [];
                         const index = list.findIndex(
