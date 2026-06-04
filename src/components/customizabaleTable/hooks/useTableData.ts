@@ -18,6 +18,8 @@ interface UseTableDataProps {
   serverSideFilter?: boolean;
   serverSideSort?: boolean;
   serverSidePagination?: boolean;
+  serverSideSearch?: boolean;
+  isPagination?: boolean;
 }
 
 export const useTableData = ({
@@ -27,6 +29,8 @@ export const useTableData = ({
   serverSideFilter = false,
   serverSideSort = false,
   serverSidePagination = false,
+  serverSideSearch = false,
+  isPagination = true,
 }: UseTableDataProps) => {
   const { filters, searchTerm, columnVisibility, sorts, page, rowsPerPage } = config;
 
@@ -41,24 +45,32 @@ export const useTableData = ({
       return Object.values(filtersByColumn).every((columnFilters) =>
         columnFilters.some((filter) => {
           const value = _.get(row, filter.column, '');
-          const valueAsNumber = !Number.isNaN(Number(value)) ? Number(value) : value; // fixed isNumber check
-          const filterValueAsNumber = !Number.isNaN(Number(filter.value))
-            ? Number(filter.value)
-            : filter.value;
+          const isNumericValue =
+            value !== null && value !== undefined && value !== '' && !Number.isNaN(Number(value));
+          const valueAsNumber = isNumericValue ? Number(value) : NaN;
+
+          const isFilterNumeric =
+            filter.value !== null &&
+            filter.value !== undefined &&
+            filter.value !== '' &&
+            !Number.isNaN(Number(filter.value));
+          const filterValueAsNumber = isFilterNumeric ? Number(filter.value) : NaN;
+
           const isDateType = filter.valueType === 'date';
           const isFormattedNumber = filter.valueType === 'formattedNumber';
 
           if (isDateType) {
+            if (!value) return false;
+            const parsedVal = dayjs(value).isValid() ? dayjs(value) : dayjs(value, 'DD-MM-YYYY');
+            const parsedFilterVal = dayjs(filter.value, 'DD-MM-YYYY');
             switch (filter.type) {
               case 'equals':
-                return dayjs(value, 'DD-MM-YYYY').isSame(dayjs(filter.value, 'DD-MM-YYYY'));
+                return parsedVal.isSame(parsedFilterVal, 'day');
 
               case 'after':
-                return dayjs(value, 'DD-MM-YYYY').isSameOrAfter(
-                  dayjs(filter.value as string, 'DD-MM-YYYY')
-                );
+                return parsedVal.isSameOrAfter(parsedFilterVal, 'day');
               case 'before':
-                return dayjs(value, 'DD-MM-YYYY').isSameOrBefore(dayjs(filter.value, 'DD-MM-YYYY'));
+                return parsedVal.isSameOrBefore(parsedFilterVal, 'day');
               default:
                 return false;
             }
@@ -113,19 +125,30 @@ export const useTableData = ({
       return data;
     }
     return data.filter((row) => {
-      const searchMatch = Object.entries(row).some(
-        ([key]) =>
-          columnVisibility[key] &&
-          _.get(row, columns.find((col) => col.id === key)?.id || '') &&
-          _.get(row, columns.find((col) => col.id === key)?.id || '')
-            .toString()
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())
-      );
+      const searchMatch =
+        serverSideSearch ||
+        searchTerm === '' ||
+        columns.some((col) => {
+          if (!columnVisibility[col.id]) return false;
+          const val = _.get(row, col.id);
+          return (
+            val !== null &&
+            val !== undefined &&
+            val.toString().toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        });
 
       return searchMatch && applyFilter(row);
     });
-  }, [serverSideFilter, data, applyFilter, columnVisibility, columns, searchTerm]);
+  }, [
+    serverSideFilter,
+    serverSideSearch,
+    data,
+    applyFilter,
+    columnVisibility,
+    columns,
+    searchTerm,
+  ]);
 
   const sortedData = useMemo(() => {
     if (serverSideSort) return filteredData;
@@ -139,8 +162,11 @@ export const useTableData = ({
         switch (column?.filterType) {
           case 'number':
             return Number(value);
-          case 'date':
-            return dayjs(value, 'DD-MM-YYYY').valueOf();
+          case 'date': {
+            if (!value) return 0;
+            const parsedVal = dayjs(value).isValid() ? dayjs(value) : dayjs(value, 'DD-MM-YYYY');
+            return parsedVal.isValid() ? parsedVal.valueOf() : 0;
+          }
           case 'formattedNumber':
             return parseFormattedNumber(value);
           default:
@@ -153,10 +179,10 @@ export const useTableData = ({
 
   const paginatedData = useMemo(
     () =>
-      serverSidePagination
+      serverSidePagination || !isPagination
         ? sortedData
         : sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [serverSidePagination, sortedData, page, rowsPerPage]
+    [serverSidePagination, isPagination, sortedData, page, rowsPerPage]
   );
 
   return { filteredData, sortedData, paginatedData };

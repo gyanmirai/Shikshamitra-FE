@@ -83,10 +83,18 @@ export const TableBody = ({
                 columnVisibility[column.id] && (
                   <TableCell
                     key={column.id}
+                    align={column.align}
                     sx={{
                       py: dense ? 1.5 : 2,
                       px: 2,
                       borderBottom: `1px dashed ${theme.vars.palette.divider}`,
+                      position: column.sticky ? 'sticky' : 'static',
+                      zIndex: column.sticky ? 10 : 2,
+                      backgroundColor: column.sticky
+                        ? theme.palette.background.paper
+                        : 'transparent',
+                      ...getColumnSizeSx(column, columnWidths[column.id]),
+                      ...getStickyStyle(column),
                     }}
                   >
                     <Skeleton variant="text" width="100%" />
@@ -100,10 +108,14 @@ export const TableBody = ({
   }
 
   if (data.length === 0) {
+    const hasExpandColumn = columns.some((column) => column.children);
+    const totalVisibleColumns = columns.filter((col) => columnVisibility[col.id]);
+    const colSpan = totalVisibleColumns.length + (hasExpandColumn ? 1 : 0);
+
     return (
       <MuiTableBody>
         <TableRow>
-          <TableCell colSpan={columns.length} sx={{ p: 0 }}>
+          <TableCell colSpan={colSpan} sx={{ p: 0 }}>
             <EmptyContent
               title={noDataText}
               sx={{
@@ -121,82 +133,79 @@ export const TableBody = ({
 
   return (
     <MuiTableBody key={animationKey}>
-      {data.map((row, index) => (
-        <React.Fragment key={index}>
-          <TableRow
-            hover
-            tabIndex={-1}
-            data-row-id={typeof row?.id === 'string' ? row.id : undefined}
-            onClick={() => onRowClick(row, index)}
-            {...rowProps(row, index)}
-            sx={{
-              animation: `${fadeSlideIn} 0.45s ease both`,
-              animationDelay: `${Math.min(index * 60, 500)}ms`,
-              ...rowProps(row, index)?.sx,
-            }}
-          >
-            {columns.some((column) => column.children) && (
-              <TableCell>
-                <IconButton size="small" onClick={() => onExpandRow(index)}>
-                  {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                </IconButton>
-              </TableCell>
-            )}
-            {columns.map(
-              (column, ind) =>
-                columnVisibility[column.id] && (
-                  <TableCell
-                    key={column.id}
-                    align={column.align}
-                    sx={{
-                      alignItems: 'center',
-                      // fontSize: '14px',
-                      py: dense ? 1.5 : 2,
-                      px: 2,
-                      color: 'text.primary',
-                      borderBottom: `1px dashed ${theme.vars.palette.divider}`,
-                      position: column.sticky ? 'sticky' : 'static',
-                      // @ts-ignore
-                      left: column.sticky ? getStickyStyle(column).left : 'auto',
-                      right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
-                      zIndex: column.sticky ? 10 : 2,
-                      backgroundColor: column.sticky ? 'background.paper' : 'transparent',
-                      boxShadow: column.sticky ? '0px 0 4px rgba(0,0,0,0.08)' : 'none',
-                      animation: `${fadeSlideIn} 0.4s ease both`,
-                      ...getColumnSizeSx(column, columnWidths[column.id]),
-                      // ...(columnWidths[column.id]
-                      //   ? {
-                      //       width: columnWidths[column.id],
-                      //       maxWidth: columnWidths[column.id],
-                      //       overflow: 'hidden',
-                      //       textOverflow: 'ellipsis',
-                      //       whiteSpace: 'nowrap',
-                      //     }
-                      //   : {}),
-                      ...getStickyStyle(column),
-                      ...column.cellSx,
-                    }}
-                  >
-                    {column.render
-                      ? column.render(_.get(row, column.id, '-') ?? '-', row)
-                      : (_.get(row, column.id, '-') ?? '-')}
-                  </TableCell>
-                )
-            )}
-          </TableRow>
-          {columns.some((column) => column.children) && (
-            <TableRow>
-              <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={columns.length + 1}>
-                <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
-                  <Box sx={{ margin: 1 }}>
-                    {columns.map((column) => column.children && column.children(row))}
-                  </Box>
-                </Collapse>
-              </TableCell>
+      {data.map((row, index) => {
+        const rowKey = row.id !== undefined ? String(row.id) : index;
+        const totalVisibleColumns = columns.filter((col) => columnVisibility[col.id]);
+        return (
+          <React.Fragment key={rowKey}>
+            <TableRow
+              hover
+              tabIndex={-1}
+              data-row-id={typeof row?.id === 'string' ? row.id : undefined}
+              onClick={() => onRowClick(row, index)}
+              {...rowProps(row, index)}
+              sx={{
+                animation: `${fadeSlideIn} 0.45s ease both`,
+                animationDelay: `${Math.min(index * 60, 500)}ms`,
+                ...rowProps(row, index)?.sx,
+              }}
+            >
+              {columns.some((column) => column.children) && (
+                <TableCell>
+                  <IconButton size="small" onClick={() => onExpandRow(index)}>
+                    {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  </IconButton>
+                </TableCell>
+              )}
+              {columns.map(
+                (column) =>
+                  columnVisibility[column.id] && (
+                    <TableCell
+                      key={column.id}
+                      align={column.align}
+                      sx={{
+                        alignItems: 'center',
+                        py: dense ? 1.5 : 2,
+                        px: 2,
+                        color: 'text.primary',
+                        borderBottom: `1px dashed ${theme.vars.palette.divider}`,
+                        position: column.sticky ? 'sticky' : 'static',
+                        zIndex: column.sticky ? 10 : 2,
+                        backgroundColor: column.sticky
+                          ? theme.palette.background.paper
+                          : 'transparent',
+                        boxShadow: column.sticky ? '0px 0 4px rgba(0,0,0,0.08)' : 'none',
+                        animation: `${fadeSlideIn} 0.4s ease both`,
+
+                        ...getColumnSizeSx(column, columnWidths[column.id]),
+                        ...getStickyStyle(column),
+                        ...column.cellSx,
+                      }}
+                    >
+                      {column.render
+                        ? column.render(_.get(row, column.id, '-') ?? '-', row)
+                        : (_.get(row, column.id, '-') ?? '-')}
+                    </TableCell>
+                  )
+              )}
             </TableRow>
-          )}
-        </React.Fragment>
-      ))}
+            {columns.some((column) => column.children) && (
+              <TableRow>
+                <TableCell
+                  style={{ paddingBottom: 0, paddingTop: 0 }}
+                  colSpan={totalVisibleColumns.length + 1}
+                >
+                  <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
+                    <Box sx={{ margin: 1 }}>
+                      {columns.map((column) => column.children && column.children(row))}
+                    </Box>
+                  </Collapse>
+                </TableCell>
+              </TableRow>
+            )}
+          </React.Fragment>
+        );
+      })}
     </MuiTableBody>
   );
 };
