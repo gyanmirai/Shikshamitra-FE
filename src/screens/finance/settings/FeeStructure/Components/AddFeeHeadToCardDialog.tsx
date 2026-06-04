@@ -36,7 +36,9 @@ const AddFeeHeadToCardDialog: React.FC<Props> = ({ existingFeeHeadIds, onAdd, on
   });
 
   const availableOptions =
-    feeHeadData?.items?.filter((item: any) => !existingFeeHeadIds.has(item.id)) ?? [];
+    feeHeadData?.items?.filter(
+      (item: any) => item.isActive === true && !existingFeeHeadIds.has(item.id)
+    ) ?? [];
 
   const handleSubmit = () => {
     if (!selectedFeeHeadIds.length) {

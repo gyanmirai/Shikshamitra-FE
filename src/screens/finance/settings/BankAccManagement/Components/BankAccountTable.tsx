@@ -2,6 +2,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -104,10 +105,23 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         label: 'Purpose',
         align: 'left',
         minWidth: 100,
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value || '-'}
-          </Typography>
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="inherit"
+              noWrap
+              sx={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+                maxWidth: 0,
+                minWidth: '100%',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
         ),
       },
       {

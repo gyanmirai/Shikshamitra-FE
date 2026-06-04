@@ -4,11 +4,13 @@ import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { Box, Card } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Card, Typography } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { motion, AnimatePresence } from 'framer-motion';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -218,7 +220,21 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
       />
 
       <CustomDialog
-        title={`${selectedExam?.examName} Timetable`}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedExam?.examName ? `${selectedExam?.examName} Timetable` : ''}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={selectedExam?.examName ? `View  ${selectedExam?.examName} Timetable` : ''}
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={viewTimeDialog.value}
         handleClose={() => {
           viewTimeDialog.onFalse();
