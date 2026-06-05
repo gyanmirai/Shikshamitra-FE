@@ -569,8 +569,12 @@ const FeeCollectComponentForm = ({
           const dateValue = dayjs(rawValue);
           if (!dateValue.isValid()) {
             detailErrors[field.name] = `Invalid ${field.label}`;
+            return;
           }
-          return;
+          if (dateValue.isBefore(dayjs(), 'day')) {
+            detailErrors[field.name] = `${field.label} cannot be in the past`;
+            return;
+          }
         }
 
         const stringValue = normalizeDetailValue(rawValue);
@@ -1670,6 +1674,7 @@ const FeeCollectComponentForm = ({
                                               : '',
                                         },
                                       }}
+                                      disablePast
                                     />
                                   ) : field.type === 'select' ? (
                                     <TextField
@@ -1927,71 +1932,73 @@ const FeeCollectComponentForm = ({
         maxWidth="md"
         hasForm={false}
       >
-        <Box sx={{ p: 0, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
-          <Box sx={{ p: 0, flex: 1, minHeight: 0, overflow: 'hidden' }}>
-            {receiptPdfLoading ? (
-              <Box
-                sx={{
-                  width: '100%',
-                  height: { xs: '65vh', md: '70vh' },
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                  gap: 1,
-                }}
-              >
-                <CircularProgress size={28} />
-                <Typography variant="body2" color="text.secondary">
-                  Loading receipt preview...
-                </Typography>
-              </Box>
-            ) : receiptBlobUrl ? (
-              <Box sx={{ width: '100%', height: { xs: '65vh', md: '70vh' } }}>
-                <iframe
-                  title="Fee Receipt PDF"
-                  src={receiptBlobUrl}
-                  style={{ border: 'none', width: '100%', height: '100%' }}
-                />
-              </Box>
-            ) : (
-              <Box p={2}>
-                <Typography variant="body2" color="text.secondary">
-                  Receipt preview is not available right now. Please retry loading.
-                </Typography>
-                {generatedReceipt?.id && (
-                  <Button sx={{ mt: 1.5 }} onClick={() => loadReceiptPdf(generatedReceipt.id)}>
-                    Retry loading
-                  </Button>
-                )}
+        <Scrollbar sx={{ maxHeight: 'calc(100dvh - 260px)', p: 2 }}>
+          <Box sx={{ p: 0, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
+            <Box sx={{ p: 0, flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              {receiptPdfLoading ? (
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: { xs: '65vh', md: '70vh' },
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    gap: 1,
+                  }}
+                >
+                  <CircularProgress size={28} />
+                  <Typography variant="body2" color="text.secondary">
+                    Loading receipt preview...
+                  </Typography>
+                </Box>
+              ) : receiptBlobUrl ? (
+                <Box sx={{ width: '100%', height: { xs: '65vh', md: '70vh' } }}>
+                  <iframe
+                    title="Fee Receipt PDF"
+                    src={receiptBlobUrl}
+                    style={{ border: 'none', width: '100%', height: '100%' }}
+                  />
+                </Box>
+              ) : (
+                <Box p={2}>
+                  <Typography variant="body2" color="text.secondary">
+                    Receipt preview is not available right now. Please retry loading.
+                  </Typography>
+                  {generatedReceipt?.id && (
+                    <Button sx={{ mt: 1.5 }} onClick={() => loadReceiptPdf(generatedReceipt.id)}>
+                      Retry loading
+                    </Button>
+                  )}
+                </Box>
+              )}
+            </Box>
+            {lastCollectResponse?.auditSummary && (
+              <Box sx={{ pb: 1 }}>
+                <FeeCollectionOutcomePanel collectResponse={lastCollectResponse} />
               </Box>
             )}
           </Box>
-          {lastCollectResponse?.auditSummary && (
-            <Box sx={{ px: 2, pb: 1 }}>
-              <FeeCollectionOutcomePanel collectResponse={lastCollectResponse} />
-            </Box>
-          )}
-          <DialogActions sx={{ borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.45)}` }}>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.download} />}
-              onClick={handleDownloadReceipt}
-              disabled={!receiptBlobUrl}
-            >
-              Download
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleReceiptDialogClose}
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-            >
-              Done
-            </Button>
-          </DialogActions>
-        </Box>
+        </Scrollbar>
+        <DialogActions sx={{ borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.45)}` }}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.download} />}
+            onClick={handleDownloadReceipt}
+            disabled={!receiptBlobUrl}
+          >
+            Download
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={handleReceiptDialogClose}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+          >
+            Done
+          </Button>
+        </DialogActions>
       </CustomDialog>
 
       <CustomDialog

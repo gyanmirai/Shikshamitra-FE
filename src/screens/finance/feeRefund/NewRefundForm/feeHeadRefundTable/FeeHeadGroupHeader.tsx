@@ -4,7 +4,17 @@ import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-import { Box, Chip, Tooltip, Checkbox, IconButton, Typography } from '@mui/material';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
+import {
+  Box,
+  Chip,
+  Switch,
+  Tooltip,
+  Checkbox,
+  IconButton,
+  Typography,
+  FormControlLabel,
+} from '@mui/material';
 
 import type { IFeeHeadPayment } from '../types';
 
@@ -15,21 +25,11 @@ export interface FeeHeadGroupHeaderProps {
   totalRefundInput: number;
   onCheckboxToggle: () => void;
   onExpandToggle: () => void;
+  applyInAllState?: { isApplying: boolean; amount: number };
+  onApplyInAllAmountChange?: (amount: number) => void;
+  onApplyInAllToggle?: () => void;
+  mode?: 'refund' | 'adjustment';
 }
-
-// ── Contextual icon mapping per fee head name ────────────────────────────────
-const getFeeHeadIcon = (name: string): string => {
-  const lower = name.toLowerCase();
-  if (lower.includes('tuition') || lower.includes('education')) return 'solar:graduation-bold';
-  if (lower.includes('hostel') || lower.includes('boarding') || lower.includes('dorm'))
-    return 'solar:home-bold';
-  if (lower.includes('transport') || lower.includes('bus') || lower.includes('vehicle'))
-    return 'solar:bus-bold';
-  if (lower.includes('exam') || lower.includes('test')) return 'solar:document-bold';
-  if (lower.includes('library') || lower.includes('book')) return 'solar:book-bold';
-  if (lower.includes('lab') || lower.includes('science')) return 'solar:test-tube-bold';
-  return 'solar:bill-list-bold';
-};
 
 const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   feeHead,
@@ -38,6 +38,10 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   totalRefundInput,
   onCheckboxToggle,
   onExpandToggle,
+  applyInAllState = { isApplying: false, amount: 0 },
+  onApplyInAllAmountChange,
+  onApplyInAllToggle,
+  mode = 'refund',
 }): React.ReactElement => {
   const theme = useTheme();
   const selectableItems = feeHead.items.filter((i) => Math.max(0, i.paid - i.refunded) > 0);
@@ -45,7 +49,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   const isAllSelected = selectableItems.length > 0 && selectedCount === selectableItems.length;
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
   const hasSelectable = selectableItems.length > 0;
-  const icon = getFeeHeadIcon(feeHead.feeHeadName);
+  const hasSelectedMonths = selectedMonths.length > 0;
 
   return (
     <Box
@@ -111,6 +115,77 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
           {selectableItems.length} refundable
         </Typography>
       </Box>
+
+      {/* Apply in all controls - visible only when months are selected */}
+      {hasSelectedMonths && (
+        <Box display="flex" alignItems="center" gap={1}>
+          <NumericFormatCustom
+            size="small"
+            value={applyInAllState.amount}
+            onValueChange={(vals) => onApplyInAllAmountChange?.(vals.floatValue ?? 0)}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            placeholder="0"
+            inputProps={{
+              min: 0,
+              style: {
+                textAlign: 'right',
+                fontSize: 13,
+                fontVariantNumeric: 'tabular-nums',
+              },
+            }}
+            sx={{
+              width: 110,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '8px',
+                fontSize: 12,
+                height: 32,
+                '&.Mui-focused': {
+                  boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.15)}`,
+                },
+              },
+            }}
+          />
+          <Tooltip
+            title={
+              applyInAllState.amount > 0
+                ? `Apply to ${selectedMonths.length} selected month${selectedMonths.length !== 1 ? 's' : ''}`
+                : 'Enter an amount first'
+            }
+            placement="top"
+          >
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={applyInAllState.isApplying && applyInAllState.amount > 0}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onApplyInAllToggle?.();
+                  }}
+                  disabled={applyInAllState.amount <= 0}
+                  sx={{
+                    p: 0,
+                    mr: 0.5,
+                  }}
+                />
+              }
+              label={
+                <Typography variant="caption" fontWeight={500} sx={{ fontSize: 11 }}>
+                  Apply to all
+                </Typography>
+              }
+              onClick={(e) => e.stopPropagation()}
+              sx={{
+                m: 0,
+
+                '& .MuiTypography-root': {
+                  userSelect: 'none',
+                },
+              }}
+            />
+          </Tooltip>
+        </Box>
+      )}
 
       {/* Fully refunded badge */}
       {!hasSelectable && (
