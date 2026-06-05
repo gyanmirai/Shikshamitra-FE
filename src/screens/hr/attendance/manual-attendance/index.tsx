@@ -639,13 +639,8 @@ const ManualAttendanceScreen = () => {
                   Absent: 'error',
                   Pending: 'warning',
                   HalfDay: 'info',
-                  OnLeave: 'info',
                 };
-                return (
-                  <Label color={colorMap[value] ?? 'default'}>
-                    {value === STATUS.OnLeave ? row.approvedLeaveLabel || 'On Leave' : value || '-'}
-                  </Label>
-                );
+                return <Label color={colorMap[value] ?? 'default'}>{value || '—'}</Label>;
               },
             } as any,
           ]
@@ -659,7 +654,7 @@ const ManualAttendanceScreen = () => {
                   <Box
                     sx={{
                       display: 'flex',
-                      width: '280px',
+                      width: '230px',
                       gap: 0.25,
                       px: 0.25,
                     }}
@@ -779,50 +774,6 @@ const ManualAttendanceScreen = () => {
                         }}
                       >
                         {halfDayCount}
-                      </Box>
-                    </CustomTooltip>
-
-                    {/* On Leave */}
-                    <CustomTooltip
-                      title={renderStatusSummaryTooltip(
-                        STATUS.OnLeave,
-                        'On Leave',
-                        onLeaveCount,
-                        'Approved leave auto-filled from leave management'
-                      )}
-                      arrow
-                      placement="top"
-                      slotProps={{
-                        tooltip: {
-                          sx: {
-                            bgcolor: 'background.paper',
-                            color: 'text.primary',
-                            boxShadow: (t) => t.shadows[8],
-                            border: (t) => `1px solid ${t.vars.palette.divider}`,
-                            '& .MuiTooltip-arrow': {
-                              color: 'background.paper',
-                              '&::before': { border: (t) => `1px solid ${t.vars.palette.divider}` },
-                            },
-                          },
-                        },
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          flex: 1,
-                          height: '20px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderRadius: '10px',
-                          bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.22),
-                          color: 'info.dark',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          cursor: 'default',
-                        }}
-                      >
-                        {onLeaveCount}
                       </Box>
                     </CustomTooltip>
 
@@ -1120,7 +1071,7 @@ const ManualAttendanceScreen = () => {
                 </Stack>
               ),
               align: 'left',
-              minWidth: '270px',
+              minWidth: '230px',
               isSort: false,
               isFilter: false,
               render(value: any, row: any) {
@@ -1128,7 +1079,7 @@ const ManualAttendanceScreen = () => {
                   <Box
                     sx={{
                       display: 'flex',
-                      width: '260px',
+                      width: '220px',
                       height: '32px',
                       bgcolor: (t) => t.vars.palette.background.neutral,
                       borderRadius: '6px',
@@ -1189,30 +1140,6 @@ const ManualAttendanceScreen = () => {
                         }}
                       >
                         <Iconify icon="mdi:fraction-one-half" width={18} />
-                      </Box>
-                    </CustomTooltip>
-
-                    {/* On Leave */}
-                    <CustomTooltip
-                      title={row.approvedLeaveLabel || 'On Leave'}
-                      arrow
-                      placement="top"
-                    >
-                      <Box
-                        sx={{
-                          ...segmentBtnBase,
-                          cursor: 'default',
-                          bgcolor:
-                            value === STATUS.OnLeave
-                              ? (t) => t.vars.palette.info.main
-                              : 'transparent',
-                          color:
-                            value === STATUS.OnLeave
-                              ? (t) => t.vars.palette.info.contrastText
-                              : (t) => t.vars.palette.text.secondary,
-                        }}
-                      >
-                        <Iconify icon="mdi:calendar-check-outline" width={18} />
                       </Box>
                     </CustomTooltip>
 

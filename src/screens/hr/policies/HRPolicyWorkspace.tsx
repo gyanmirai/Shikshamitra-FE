@@ -50,12 +50,19 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     drawerTransitionDuration,
   } = ctx;
 
+  // Get the current tab label for breadcrumbs
+  const currentTabLabel = HR_POLICY_TABS.find((t) => t.value === tab)?.label || 'Policies';
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Policies & Rules"
         description={currentYear?.name || 'No academic year selected'}
-        links={[{ name: 'HR/Staff', href: hrPaths.dashboard }, { name: 'Policy Management' }]}
+        links={[
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Policies & Rules', href: hrPaths.policies.root },
+          { name: currentTabLabel },
+        ]}
       />
       {!academicYearId ? (
         <Alert severity="warning">Select an academic year to manage HR policies.</Alert>
