@@ -105,9 +105,9 @@ const HrEmployee = () => {
     page: 1,
     pageSize: 10,
     search: '',
-    mediumStageId: '',
-    isTeaching: '',
-    status: '',
+    mediumStageId: 'All',
+    isTeaching: 'All',
+    status: 'All',
     reportingManagerStatus: searchParams.reportingManagerStatus || '',
   });
 
@@ -156,6 +156,20 @@ const HrEmployee = () => {
     setEmployeeParams((pre) => ({ ...pre, page: 1, search }));
   }, []);
 
+  // Process params for API - convert 'All' to empty string
+  const processedEmployeeParams = useMemo(
+    () => ({
+      page: employeeParams.page,
+      pageSize: employeeParams.pageSize,
+      search: employeeParams.search,
+      mediumStageId: employeeParams.mediumStageId === 'All' ? '' : employeeParams.mediumStageId,
+      isTeaching: employeeParams.isTeaching === 'All' ? '' : employeeParams.isTeaching,
+      status: employeeParams.status === 'All' ? '' : employeeParams.status,
+      reportingManagerStatus: employeeParams.reportingManagerStatus,
+    }),
+    [employeeParams]
+  );
+
   const {
     data: employee,
     isLoading,
@@ -164,7 +178,7 @@ const HrEmployee = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
-    params: employeeParams,
+    params: processedEmployeeParams,
   });
   const handleClose = useCallback(
     (_e?: any, isSubmit?: boolean) => {
@@ -469,7 +483,7 @@ const HrEmployee = () => {
             <CustomSelect
               fullWidth
               label="Organization"
-              options={[{ id: '', name: 'All Organizations' }, ...organizationOptions]}
+              options={[{ id: 'All', name: 'All Organizations' }, ...organizationOptions]}
               value={employeeParams.mediumStageId}
               valueKey="id"
               labelKey="name"
@@ -479,7 +493,7 @@ const HrEmployee = () => {
                 setEmployeeParams((pre) => ({
                   ...pre,
                   page: 1,
-                  mediumStageId: nextValue == null ? '' : String(nextValue),
+                  mediumStageId: nextValue == null ? 'All' : String(nextValue),
                 }));
               }}
             />
@@ -492,11 +506,12 @@ const HrEmployee = () => {
                   setEmployeeParams((pre) => ({
                     ...pre,
                     page: 1,
-                    isTeaching: event.target.value as string,
+                    isTeaching:
+                      event.target.value === 'All' ? 'All' : (event.target.value as string),
                   }));
                 }}
               >
-                <MenuItem value="">All Groups</MenuItem>
+                <MenuItem value="All">All Groups</MenuItem>
                 {EmployeeGroupTypeFilter.map((option) => (
                   <MenuItem key={option.label} value={String(option.value)}>
                     {option.label}
@@ -513,11 +528,11 @@ const HrEmployee = () => {
                   setEmployeeParams((pre) => ({
                     ...pre,
                     page: 1,
-                    status: event.target.value as string,
+                    status: event.target.value === 'All' ? 'All' : (event.target.value as string),
                   }));
                 }}
               >
-                <MenuItem value="">All Statuses</MenuItem>
+                <MenuItem value="All">All Statuses</MenuItem>
                 {EmployeeStatusTypeOptions.map((option) => (
                   <MenuItem key={option.label} value={option.label}>
                     {option.label}

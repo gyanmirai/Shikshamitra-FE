@@ -75,6 +75,11 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   const [showValidation, setShowValidation] = useState(false);
 
+  // State for "apply in all" per fee head: { feeHeadId: { isApplying: boolean, amount: number } }
+  const [applyInAllState, setApplyInAllState] = useState<
+    Record<string, { isApplying: boolean; amount: number }>
+  >({});
+
   /**
    * Memoization Justification:
    * - Derives a feeHeadId → selectedMonths map from formik.values.feeHeadRefunds
@@ -217,6 +222,77 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     [selectedMonths]
   );
 
+  /**
+   * Handle "apply in all" amount input change for a fee head
+   * Reset toggle state when amount becomes 0 to avoid confusion
+   */
+  const handleApplyInAllAmountChange = useCallback((feeHeadId: string, amount: number): void => {
+    setApplyInAllState((prev) => ({
+      ...prev,
+      [feeHeadId]: {
+        isApplying: amount === 0 ? false : (prev[feeHeadId]?.isApplying ?? false),
+        amount,
+      },
+    }));
+  }, []);
+
+  /**
+   * Handle "apply in all" toggle - applies/removes amount for all selected months
+   */
+  const handleApplyInAllToggle = useCallback(
+    (feeHeadId: string): void => {
+      setApplyInAllState((prev) => {
+        const current = prev[feeHeadId] ?? { isApplying: false, amount: 0 };
+        const newIsApplying = !current.isApplying;
+        const refunds = formik.values.feeHeadRefunds;
+        const existing = refunds.find((fh) => fh.feeHeadId === feeHeadId);
+
+        if (existing) {
+          if (newIsApplying && current.amount > 0) {
+            // Apply amount to all selected months
+            const updated = refunds.map((fh) =>
+              fh.feeHeadId === feeHeadId
+                ? {
+                    ...fh,
+                    months: fh.months.map((m) => ({
+                      ...m,
+                      amount: current.amount,
+                    })),
+                  }
+                : fh
+            );
+            formik.setFieldValue('feeHeadRefunds', updated);
+            formik.setFieldTouched('feeHeadRefunds', true, false);
+          } else if (!newIsApplying) {
+            // Remove amounts from all selected months when toggle is OFF
+            const updated = refunds.map((fh) =>
+              fh.feeHeadId === feeHeadId
+                ? {
+                    ...fh,
+                    months: fh.months.map((m) => ({
+                      ...m,
+                      amount: 0,
+                    })),
+                  }
+                : fh
+            );
+            formik.setFieldValue('feeHeadRefunds', updated);
+            formik.setFieldTouched('feeHeadRefunds', true, false);
+          }
+        }
+
+        return {
+          ...prev,
+          [feeHeadId]: {
+            isApplying: newIsApplying,
+            amount: current.amount,
+          },
+        };
+      });
+    },
+    [formik]
+  );
+
   if (!studentId) return null;
   if (isLoading || isFetching) return <RefundTableSkeleton />;
 
@@ -323,6 +399,11 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
           mode={mode}
           onToggleMonth={(month, dueFeeId) => toggleMonth(feeHead.feeHeadId, month, dueFeeId)}
           onToggleAll={() => toggleAll(feeHead)}
+          applyInAllState={applyInAllState[feeHead.feeHeadId] ?? { isApplying: false, amount: 0 }}
+          onApplyInAllAmountChange={(amount: number) =>
+            handleApplyInAllAmountChange(feeHead.feeHeadId, amount)
+          }
+          onApplyInAllToggle={() => handleApplyInAllToggle(feeHead.feeHeadId)}
         />
       ))}
     </Box>

@@ -20,6 +20,9 @@ export interface FeeHeadGroupProps {
   mode?: 'refund' | 'adjustment';
   onToggleMonth: (month: string, dueFeeId: string) => void;
   onToggleAll: () => void;
+  applyInAllState?: { isApplying: boolean; amount: number };
+  onApplyInAllAmountChange?: (amount: number) => void;
+  onApplyInAllToggle?: () => void;
 }
 
 const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
@@ -30,6 +33,9 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   mode = 'refund',
   onToggleMonth,
   onToggleAll,
+  applyInAllState = { isApplying: false, amount: 0 },
+  onApplyInAllAmountChange,
+  onApplyInAllToggle,
 }): React.ReactElement => {
   const theme = useTheme();
   const isAdj = mode === 'adjustment';
@@ -116,6 +122,10 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
         totalRefundInput={totalRefundInput}
         onCheckboxToggle={onToggleAll}
         onExpandToggle={() => setOpen((o) => !o)}
+        applyInAllState={applyInAllState}
+        onApplyInAllAmountChange={onApplyInAllAmountChange}
+        onApplyInAllToggle={onApplyInAllToggle}
+        mode={mode}
       />
 
       <Collapse in={open} timeout={250}>
