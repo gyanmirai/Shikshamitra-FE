@@ -123,7 +123,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     headerRefs,
     paginatedData,
     columnWidths,
+    isLoading,
+    tableUniqId,
   });
+  console.log(stickyMap, '[][][][');
 
   const effectiveColumnWidths = useMemo(() => {
     if (Object.keys(columnWidths).length === 0) return {} as Record<string, number>;
@@ -478,6 +481,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   columnWidths={effectiveColumnWidths}
                   onResizeStart={handleResizeStart}
                   onResetWidth={handleResetWidth}
+                  tableUniqId={tableUniqId}
                 />
                 <TableBody
                   isLoading={isLoading}

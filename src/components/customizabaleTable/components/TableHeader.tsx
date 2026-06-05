@@ -42,6 +42,7 @@ interface TableHeaderProps {
     minWidth: number
   ) => void;
   onResetWidth: (colId: string) => void;
+  tableUniqId: string;
 }
 
 export const TableHeader = React.memo(
@@ -59,6 +60,7 @@ export const TableHeader = React.memo(
     columnWidths,
     onResizeStart,
     onResetWidth,
+    tableUniqId,
   }: TableHeaderProps) => {
     const theme = useTheme();
 
@@ -72,6 +74,7 @@ export const TableHeader = React.memo(
                 <TableCell
                   key={column.id}
                   align={column.align}
+                  id={`${tableUniqId}-column-${column.id}`}
                   ref={(el: HTMLTableCellElement) => {
                     setHeaderRef((pre: number[]) => {
                       pre[index] = el?.getBoundingClientRect?.()?.width ?? null;
