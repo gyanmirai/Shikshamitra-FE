@@ -25,10 +25,12 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetHrAuditEventsQuery } from 'src/redux/hr/hr-policy-api';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { HrAuditValueView } from 'src/screens/hr/components/HrAuditValueView';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   toHrAuditLabel,
-  formatHrAuditValue,
+  formatHrAuditText,
+  formatHrAuditActor,
   parseHrAuditContext,
   formatHrAuditDateTime,
 } from 'src/utils/hr-audit-format';
@@ -930,10 +932,6 @@ const RunPayroll = () => {
     : isDataForSelectedMonth
       ? 'Refresh preview'
       : 'Generate preview';
-
-  function setAuditTarget(arg0: null): void {
-    throw new Error('Function not implemented.');
-  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
@@ -1914,27 +1912,35 @@ const RunPayroll = () => {
                           </Typography>
                         </Stack>
                         <Typography variant="body2" fontWeight={600}>
-                          {event.summary}
+                          {formatHrAuditText(event.summary)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           Actor:{' '}
-                          {event.actorDisplayName ||
-                            event.actorNameSnapshot ||
-                            event.actorUserId ||
-                            'System'}
+                          {formatHrAuditActor(
+                            event.actorDisplayName || event.actorNameSnapshot || event.actorUserId,
+                            'System'
+                          )}
                         </Typography>
                         {context ? (
-                          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                          <Stack spacing={0.75}>
                             {Object.entries(context)
                               .slice(0, 8)
                               .map(([key, value]) => (
-                                <Chip
+                                <Box
                                   key={key}
-                                  size="small"
-                                  variant="outlined"
-                                  label={`${toHrAuditLabel(key)}: ${formatHrAuditValue(value)}`}
-                                  sx={{ maxWidth: '100%' }}
-                                />
+                                  sx={{
+                                    p: 0.75,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    borderRadius: 1,
+                                  }}
+                                >
+                                  <HrAuditValueView
+                                    value={value}
+                                    label={toHrAuditLabel(key)}
+                                    dense
+                                  />
+                                </Box>
                               ))}
                           </Stack>
                         ) : null}

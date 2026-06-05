@@ -90,7 +90,7 @@ export const TableHeader = React.memo(
                     // @ts-ignore
                     left: column.sticky ? stickyMap[column.id] : 'auto',
 
-                    backgroundColor: 'background.neutral',
+                    backgroundColor: theme.vars.palette.background.neutral,
                     // boxShadow: column.sticky
                     //   ? '0px 0 8px rgba(0,0,0,0.08)'
                     //   : '1px 0 8px rgba(0,0,0,0.08)',

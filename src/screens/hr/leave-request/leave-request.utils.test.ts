@@ -22,6 +22,8 @@ import {
   shouldEnforceLeaveNoticePeriod,
   buildCreateLeaveRequestFormData,
   buildLeaveAttachmentDownloadPath,
+  formatLeaveCalendarDateForPayload,
+  formatLeaveCalendarDateForDisplay,
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
   resolveLeaveTypeMasterIdFromPolicy,
@@ -87,6 +89,27 @@ describe('leave request payload mapping', () => {
     });
 
     expect(formData.get('halfDay')).toBe('true');
+  });
+
+  it('sends selected leave days as date-only values to avoid timezone date shifts', () => {
+    const formData = buildCreateLeaveRequestFormData({
+      employee: { id: 'emp-123', label: 'John Doe' },
+      leavePolicyId: 'policy-1',
+      startDate: dayjs('2026-07-06'),
+      endDate: dayjs('2026-07-10'),
+      halfDay: false,
+      reason: 'Family function',
+      docs: null,
+    });
+
+    expect(formData.get('startDate')).toBe('2026-07-06');
+    expect(formData.get('endDate')).toBe('2026-07-10');
+    expect(String(formData.get('startDate'))).not.toContain('T');
+  });
+
+  it('formats API leave dates without applying browser timezone offsets', () => {
+    expect(formatLeaveCalendarDateForPayload(dayjs('2026-07-06'))).toBe('2026-07-06');
+    expect(formatLeaveCalendarDateForDisplay('2026-07-06T00:00:00.000Z')).toBe('06-07-2026');
   });
 });
 

@@ -819,7 +819,7 @@ export function useHRPolicyWorkspace({
       earlyExitEnabled: formToSave.earlyExitEnabled,
       earlyExitGraceTime: Number(formToSave.earlyExitGraceTime || 0),
       overtimeEnabled: formToSave.overtimeEnabled,
-      overtimeRate: formToSave.overtimeRate || null,
+      overtimeRate: formToSave.overtimeEnabled ? formToSave.overtimeRate || 'flat' : null,
       minOvertimeMinutes: numberOrNull(formToSave.minOvertimeMinutes),
       holidayWorkBehavior: formToSave.holidayWorkBehavior,
       sandwichRuleEnabled: formToSave.sandwichRuleEnabled,

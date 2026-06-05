@@ -30,6 +30,10 @@ export interface TakeAttendanceDayResponse {
     isHoliday?: boolean;
     holidayName?: string | null;
     holidayReason?: string | null;
+    isApprovedLeave?: boolean;
+    approvedLeaveId?: string | null;
+    approvedLeaveKind?: 'FullDay' | 'HalfDay' | null;
+    approvedLeaveLabel?: string | null;
     captureMode?: 'manual_status' | 'manual_with_time' | 'integrated';
     source?: string;
     [key: string]: unknown;
@@ -44,6 +48,7 @@ export interface LockAttendanceDayParams {
 export interface GetAttendanceRegisterParams {
   startDate: string;
   endDate: string;
+  academicYearId?: string;
   educationMediumStageId?: string;
   employeeId?: string;
   employeeGroup?: 'Teaching' | 'NonTeaching';

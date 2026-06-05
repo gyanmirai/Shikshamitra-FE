@@ -33,7 +33,7 @@ describe('HR policy UI utilities', () => {
     expect(sanitizeNumericPolicyInput('3034344', graceRule)).toBe('303');
     expect(clampNumericPolicyInput('3034344', graceRule)).toBe('240');
     expect(getNumericPolicyInputError('303', graceRule)).toBe(
-      'Late grace minutes must be between 0 and 240.'
+      'Grace Period must be between 0 and 240.'
     );
   });
 
@@ -64,7 +64,20 @@ describe('HR policy UI utilities', () => {
       'Unknown reference'
     );
     expect(cleanVersionDisplayValue('{"id":"297f91e4-1d0c-4c6e-b823-7df6f0c8f9a7"}')).toBe(
-      'ID: Unknown reference'
+      'ID: Linked record'
     );
+    expect(
+      cleanVersionDisplayValue(
+        '{"totalCount":8,"includedCount":3,"removedCount":5,"manualCount":0}'
+      )
+    ).toBe('Total: 8; Included: 3; Removed: 5; Manual: 0');
+    expect(
+      cleanVersionDisplayValue('{"sourcePolicyId":"3a216aea-8273-8586-a1a3-3bffdc298e2e"}')
+    ).toBe('Source Policy ID: Linked record');
+    expect(
+      cleanVersionDisplayValue(
+        '[{"id":"3a2170d2-084c-e067-2a5c-0539716dd973","name":"Annual day"}]'
+      )
+    ).toBe('ID: Linked record; Name: Annual day');
   });
 });

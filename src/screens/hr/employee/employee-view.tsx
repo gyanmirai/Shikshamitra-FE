@@ -24,6 +24,7 @@ import EmployeeAcademic from './employeeAcademic/academic';
 import EmployeeProfileDashboard from './employee-dashboard';
 import EmployeeCommunication from './employee-communication';
 import { convertBase64Format } from '../../../utils/base64Formate';
+import EmployeeAttendanceHistory from './employee-attendance-history';
 import { EmployeeStatusType } from '../../../enums/employee-status-type';
 import QualificationAndCertification from './qualification-certification';
 
@@ -121,6 +122,14 @@ export const TABS = [
     icon: <Icon icon="solar:calendar-mark-linear" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <LeaveBalance employeeId={props.employee?.id} showBreadcrumbs={false} />
+    ),
+  },
+  {
+    value: 'attendance',
+    label: 'Attendance',
+    icon: <Icon icon="solar:calendar-check-outline" width={18} height={18} />,
+    component: (props: { tabs: UseTabsReturn; employee: any }) => (
+      <EmployeeAttendanceHistory employeeId={props.employee?.id} />
     ),
   },
 ];

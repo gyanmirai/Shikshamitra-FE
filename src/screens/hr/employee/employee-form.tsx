@@ -47,14 +47,15 @@ import { StepSkeleton } from './employee-form-skeleton';
 import { buildWorkExperiencePayload } from './work-experience-payload';
 import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
 import {
-  buildEmployeePolicyOverride,
-  buildEmployeePolicyOverridePreviewRequest,
-} from './employee-policy-override-utils';
-import {
   validations,
   reportingManagerValidationSchema,
   getPersonalInformationValidationSchema,
 } from './employee-form-validation';
+import {
+  buildEmployeePolicyOverride,
+  buildEmployeePolicyOverrideAction,
+  buildEmployeePolicyOverridePreviewRequest,
+} from './employee-policy-override-utils';
 
 import type {
   IPayrollInformation,
@@ -275,6 +276,7 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
   earningComponents: editData?.earningComponents ?? [],
   deductionComponents: editData?.deductionComponents ?? [],
   policyOverrideEnabled: false,
+  policyOverrideWasEnabled: false,
   policyOverridePayrollPolicyId: '',
   policyOverrideAttendancePolicyId: '',
   policyOverrideEffectiveFrom: dayjs().format('YYYY-MM-DD'),
@@ -607,6 +609,16 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         currentYear?.id,
         confirmationToken
       );
+      const policyOverrideAction = buildEmployeePolicyOverrideAction(values, currentYear?.id);
+      const disablePolicyOverride =
+        policyOverrideAction === 'disable'
+          ? {
+              academicYearId: currentYear?.id,
+              effectiveFrom: values.policyOverrideEffectiveFrom,
+              assignmentReason:
+                values.policyOverrideAssignmentReason || 'Employee payroll step override disabled',
+            }
+          : undefined;
       const res = await updateBankDetails({
         employeeId,
         body: {
@@ -638,7 +650,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             amount: getSalaryComponentPayloadAmount(item),
             isFixed: isSalaryComponentFixed(item),
           })),
+          ...(policyOverrideAction ? { policyOverrideAction } : {}),
           ...(policyOverride ? { policyOverride } : {}),
+          ...(disablePolicyOverride ? { policyOverride: disablePolicyOverride } : {}),
         },
       }).unwrap();
       return res;

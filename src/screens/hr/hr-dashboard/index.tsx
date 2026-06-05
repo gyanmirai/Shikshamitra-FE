@@ -44,6 +44,7 @@ import {
   type HRDashboardSummary,
   type HRDashboardInsight,
   parseHRDashboardPayload,
+  sanitizeHRDashboardSummary,
   type HRDashboardCelebration,
   type HRDashboardLeaveRequest,
   useGetHRDashboardPreviewQuery,
@@ -711,7 +712,10 @@ const AdminDashboard = () => {
     refetch,
   } = useGetHRDashboardPreviewQuery('Main', { pollingInterval: 0 });
   const [refreshPreview, { isLoading: isRefreshStarting }] = useRefreshHRDashboardPreviewMutation();
-  const data = useMemo(() => parseHRDashboardPayload<HRDashboardSummary>(preview), [preview]);
+  const data = useMemo(
+    () => sanitizeHRDashboardSummary(parseHRDashboardPayload<HRDashboardSummary>(preview)),
+    [preview]
+  );
 
   useEffect(() => {
     if (preview?.status !== 'Refreshing') return undefined;
@@ -857,7 +861,7 @@ const AdminDashboard = () => {
           <Button
             component={Link}
             href={hrPaths.reports}
-            variant="contained"
+            variant="outlined"
             size="small"
             startIcon={<Iconify icon="solar:chart-2-linear" />}
             sx={{ minHeight: 34 }}

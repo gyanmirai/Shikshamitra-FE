@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 import type { DatesSetArg, EventClickArg } from '@fullcalendar/core';
 
-import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { getSession } from 'next-auth/react';
 import { Label } from 'src/components/label';
@@ -15,14 +14,11 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
+import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   getLeaveStatusColor,
   getLeaveStatusLabel,
 } from 'src/screens/hr/leave-request/leave-status.utils';
-import {
-  getLeaveAttachmentLabel,
-  buildLeaveAttachmentDownloadUrl,
-} from 'src/screens/hr/leave-request/leave-request.utils';
 import {
   Box,
   Chip,
@@ -40,6 +36,15 @@ import {
   useGetMyLeaveRequestByIdQuery,
 } from 'src/redux/hr/leaveApi';
 import {
+  shouldClearSelectedOrganization,
+  resolveLeaveRequestDetailLabels,
+} from 'src/screens/hr/leave-request/leave-calender.utils';
+import {
+  getLeaveAttachmentLabel,
+  buildLeaveAttachmentDownloadUrl,
+  formatLeaveCalendarDateForDisplay,
+} from 'src/screens/hr/leave-request/leave-request.utils';
+import {
   CALENDAR_MAX_PAGES,
   CALENDAR_PAGE_SIZE,
   dedupeCalendarItemsById,
@@ -51,9 +56,9 @@ const LeaveCalender = () => {
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
   const popover = usePopover();
   const { employee } = useSelector((state: any) => state.auth);
-  const { currentMedium: mediumStageId, currentYear } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { options: organizationOptions, isLoading: organizationOptionsLoading } =
+    useAcademicOrganizationOptions(currentYear?.id);
   const [selectedMediumStageId, setSelectedMediumStageId] = useState<string>('');
   const [calendarVisibleRange, setCalendarVisibleRange] = useState<{
     rangeStart: string;
@@ -163,16 +168,16 @@ const LeaveCalender = () => {
   }, [calendarVisibleRange, currentYear?.id, triggerCalendarQuery]);
 
   useEffect(() => {
-    if (!selectedMediumStageId) {
-      return;
-    }
-    const stageExists = mediumStageId?.educationMediumStages?.some(
-      (org: any) => String(org?.id ?? '') === selectedMediumStageId
-    );
-    if (!stageExists) {
+    if (
+      shouldClearSelectedOrganization(
+        selectedMediumStageId,
+        organizationOptions,
+        organizationOptionsLoading
+      )
+    ) {
       setSelectedMediumStageId('');
     }
-  }, [mediumStageId?.educationMediumStages, selectedMediumStageId]);
+  }, [organizationOptions, organizationOptionsLoading, selectedMediumStageId]);
 
   const calendarData = useMemo(
     () =>
@@ -289,7 +294,7 @@ const LeaveCalender = () => {
           >
             All Medium Stages
           </MenuItem>
-          {mediumStageId?.educationMediumStages?.map((org: any) => (
+          {organizationOptions.map((org) => (
             <MenuItem
               key={org.id}
               selected={selectedMediumStageId === String(org.id)}
@@ -327,7 +332,8 @@ export const LeaveRequestForm = ({
 }: LeaveRequestFormProps) => {
   const isSelfMode = mode === 'self';
   const theme = useTheme();
-  const { currentMedium, currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { byId: organizationById } = useAcademicOrganizationOptions(currentYear?.id);
   const { data: leaveDetailForHr, isLoading: isHrLeaveDetailLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: hrDetailHook,
@@ -347,23 +353,15 @@ export const LeaveRequestForm = ({
   const submittedByLabel = detail?.submittedByEmployeeCode
     ? `${detail?.submittedByName || '-'} (${detail.submittedByEmployeeCode})`
     : (detail?.submittedByName ?? '-');
-  const organizationFromStore = currentMedium?.educationMediumStages?.find(
-    (org: any) =>
-      String(org?.id ?? '') === String(detail?.mediumStageId ?? editData?.mediumStageId ?? '')
+  const organizationFromStore = organizationById.get(
+    String(detail?.mediumStageId ?? editData?.mediumStageId ?? '')
   )?.name;
-  const academicYearLabel =
-    detail?.academicYearName ||
-    detail?.academicYear?.name ||
-    detail?.academicYear ||
-    editData?.academicYearName ||
-    editData?.academicYear?.name ||
-    detail?.mediumStageName ||
-    detail?.organizationName ||
-    organizationFromStore ||
-    editData?.organization ||
-    editData?.employee?.educationMediumStage?.name ||
-    currentYear?.name ||
-    '-';
+  const { academicYearLabel, organizationLabel } = resolveLeaveRequestDetailLabels({
+    detail,
+    editData,
+    organizationName: organizationFromStore,
+    currentYearName: currentYear?.name,
+  });
   const attachmentLabel = getLeaveAttachmentLabel(detail);
 
   const handleOpenAttachment = useCallback(async () => {
@@ -491,6 +489,7 @@ export const LeaveRequestForm = ({
         <SectionHeader icon="mdi:account-outline" label="Employee Information" />
         <Stack spacing={1.5}>
           <InfoRow label="Academic year" value={academicYearLabel} />
+          <InfoRow label="Organization" value={organizationLabel} />
           <InfoRow label="Employee code" value={detail?.employeeCode || '-'} />
           <InfoRow label="Submitted by" value={submittedByLabel} />
         </Stack>
@@ -512,13 +511,19 @@ export const LeaveRequestForm = ({
             </Typography>
             <Stack direction="row" alignItems="center" spacing={0.75}>
               <Typography variant="body2" fontWeight={600}>
-                {dayjs(detail?.startDate || editData?.viewStartDate).format('DD MMM YYYY')}
+                {formatLeaveCalendarDateForDisplay(
+                  detail?.startDate || editData?.viewStartDate,
+                  'DD MMM YYYY'
+                )}
               </Typography>
               {!detail?.halfDay && (
                 <>
                   <Iconify icon="mdi:arrow-right" width={14} color="text.disabled" />
                   <Typography variant="body2" fontWeight={600}>
-                    {dayjs(detail?.endDate || editData?.viewEndDate).format('DD MMM YYYY')}
+                    {formatLeaveCalendarDateForDisplay(
+                      detail?.endDate || editData?.viewEndDate,
+                      'DD MMM YYYY'
+                    )}
                   </Typography>
                 </>
               )}

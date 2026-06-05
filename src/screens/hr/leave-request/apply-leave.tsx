@@ -3,7 +3,6 @@
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Label } from 'src/components/label';
@@ -25,6 +24,7 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
 import { Box, Card, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   useGetLeaveRequestByIdQuery,
   useLazyGetLeaveRequestsQuery,
@@ -45,6 +45,7 @@ import {
   parseApiProblemDetail,
   LEAVE_EMPLOYEE_NOT_FOUND,
   APPLY_LEAVE_ROW_ACTION_LABELS,
+  formatLeaveCalendarDateForDisplay,
 } from './leave-request.utils';
 
 const LEAVE_REQUESTS_PAGE_SIZE = 100;
@@ -75,7 +76,8 @@ type ApplyLeaveProps = {
 
 const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) => {
   const isSelfMode = mode === 'self';
-  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { byId: organizationById } = useAcademicOrganizationOptions(currentYear?.id);
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
   const [isLeaveRequestsLoading, setIsLeaveRequestsLoading] = useState(false);
   const [selfLeaveAccessError, setSelfLeaveAccessError] = useState<string | null>(null);
@@ -216,36 +218,29 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
 
   const tableData = useMemo(() => {
     const apiData =
-      leaveRequests?.map((item: any) => {
-        const start = dayjs(item.startDate);
-        const end = dayjs(item.endDate);
-
-        return {
-          id: item.id,
-          name: item.name || item.employeeName,
-          employeeId: item.employeeId,
-          employeeIdentifier: item.employeeIdentifier || item.employeeCode,
-          submittedBy: item.submittedByEmployeeCode
-            ? `${item.submittedByName || '-'} (${item.submittedByEmployeeCode})`
-            : (item.submittedByName ?? '-'),
-          leaveType: item.leaveType,
-          startDate: start.format('DD-MM-YYYY'),
-          endDate: end.format('DD-MM-YYYY'),
-          totalDays: item.totalDays,
-          organization:
-            item.mediumStageName ||
-            currentMedium?.educationMediumStages?.find(
-              (org: any) => String(org?.id ?? '') === String(item?.mediumStageId ?? '')
-            )?.name ||
-            '-',
-          description: item.description,
-          remarks: item.remarks,
-          status: getLeaveStatusFilterValue(item.status),
-        };
-      }) || [];
+      leaveRequests?.map((item: any) => ({
+        id: item.id,
+        name: item.name || item.employeeName,
+        employeeId: item.employeeId,
+        employeeIdentifier: item.employeeIdentifier || item.employeeCode,
+        submittedBy: item.submittedByEmployeeCode
+          ? `${item.submittedByName || '-'} (${item.submittedByEmployeeCode})`
+          : (item.submittedByName ?? '-'),
+        leaveType: item.leaveType,
+        startDate: formatLeaveCalendarDateForDisplay(item.startDate),
+        endDate: formatLeaveCalendarDateForDisplay(item.endDate),
+        totalDays: item.totalDays,
+        organization:
+          item.mediumStageName ||
+          organizationById.get(String(item?.mediumStageId ?? ''))?.name ||
+          '-',
+        description: item.description,
+        remarks: item.remarks,
+        status: getLeaveStatusFilterValue(item.status),
+      })) || [];
 
     return apiData;
-  }, [currentMedium?.educationMediumStages, leaveRequests]);
+  }, [leaveRequests, organizationById]);
 
   const handleClose = (_e?: any, isSubmit?: boolean) => {
     const resetState = () => {

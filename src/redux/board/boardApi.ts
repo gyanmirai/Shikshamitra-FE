@@ -1,4 +1,4 @@
-import { boardType } from 'src/redux/tagTypes';
+import { boardType, organizationType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
@@ -18,7 +18,7 @@ export const boardApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [boardType.board],
+      invalidatesTags: [boardType.board, organizationType.academicOrganizationOptions],
     }),
     updateBoard: builder.mutation({
       query: ({ id, body }) => ({
@@ -26,14 +26,14 @@ export const boardApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [boardType.board],
+      invalidatesTags: [boardType.board, organizationType.academicOrganizationOptions],
     }),
     deleteBoard: builder.mutation({
       query: (id) => ({
         url: `/app/education-board/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [boardType.board],
+      invalidatesTags: [boardType.board, organizationType.academicOrganizationOptions],
     }),
   }),
 });

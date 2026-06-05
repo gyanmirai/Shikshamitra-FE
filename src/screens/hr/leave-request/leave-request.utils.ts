@@ -46,9 +46,25 @@ export interface LeaveRequestFormValuesForPayload {
   docs: unknown;
 }
 
-function parseApiDateWithoutTimezoneShift(input: string): dayjs.Dayjs {
+export function parseApiDateWithoutTimezoneShift(input: string): dayjs.Dayjs {
   const dateOnly = String(input || '').slice(0, 10);
   return dayjs(dateOnly || input);
+}
+
+export function formatLeaveCalendarDateForPayload(date: dayjs.Dayjs | null): string {
+  return date?.isValid() ? date.format('YYYY-MM-DD') : '';
+}
+
+export function formatLeaveCalendarDateForDisplay(
+  input: string | null | undefined,
+  outputFormat = 'DD-MM-YYYY'
+): string {
+  if (!input) {
+    return '-';
+  }
+
+  const parsed = parseApiDateWithoutTimezoneShift(String(input));
+  return parsed.isValid() ? parsed.format(outputFormat) : '-';
 }
 
 export function getMinimumLeaveStartDate(today: dayjs.ConfigType = dayjs()): dayjs.Dayjs {
@@ -106,8 +122,8 @@ export function buildCreateLeaveRequestFormData(
   }
 
   formData.append('leavePolicyId', values.leavePolicyId);
-  formData.append('startDate', dayjs(values.startDate).toISOString());
-  formData.append('endDate', dayjs(values.endDate).toISOString());
+  formData.append('startDate', formatLeaveCalendarDateForPayload(values.startDate));
+  formData.append('endDate', formatLeaveCalendarDateForPayload(values.endDate));
   formData.append('halfDay', String(values.halfDay));
   formData.append('reason', values.reason);
 

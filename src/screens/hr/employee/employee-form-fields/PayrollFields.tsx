@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import { useEffect } from 'react';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
@@ -39,6 +40,10 @@ import PayrollComponentDialog from './PayrollComponentDialog';
 import { CardActions, SectionCard } from './InformationFields';
 import PayrollTempComponentDialog from './PayrollTempComponentDialog';
 import { isSalaryComponentFixed, isPercentageSalaryComponent } from '../salary-utils';
+import {
+  resolveEmployeePolicyPreviewDate,
+  hydrateEmployeePolicyOverrideFromPreview,
+} from '../employee-policy-override-utils';
 
 import type { FieldsType } from './types';
 
@@ -363,9 +368,10 @@ const RenderPayrollFields = (props: any) => {
   const { values, handleChange } = formik;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const isEditable = useBoolean(isMainForm);
-  const policyEffectiveDate = values.dateOfJoining?.format
-    ? values.dateOfJoining.format('YYYY-MM-DD')
-    : dayjs().format('YYYY-MM-DD');
+  const policyEffectiveDate = resolveEmployeePolicyPreviewDate(
+    values,
+    dayjs().format('YYYY-MM-DD')
+  );
   const { data: policyPreview, isFetching: isPreviewLoading } = useGetPolicyAssignmentPreviewQuery(
     {
       academicYearId: currentYear?.id,
@@ -390,6 +396,18 @@ const RenderPayrollFields = (props: any) => {
   const activeAttendancePolicies = (attendancePolicies?.items || []).filter(
     (item) => item.status === 'active'
   );
+  useEffect(() => {
+    if (!policyPreview || formik.touched.policyOverrideEnabled) {
+      return;
+    }
+
+    const hydrated = hydrateEmployeePolicyOverrideFromPreview(policyPreview, policyEffectiveDate);
+    Object.entries(hydrated).forEach(([key, value]) => {
+      if (formik.values[key] !== value) {
+        formik.setFieldValue(key, value, false);
+      }
+    });
+  }, [formik, policyEffectiveDate, policyPreview]);
 
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();

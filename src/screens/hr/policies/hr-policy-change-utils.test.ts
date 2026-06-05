@@ -208,4 +208,19 @@ describe('hr policy change utilities', () => {
       })
     ).toBe(true);
   });
+
+  it('treats enabled overtime without a stored rate as fixed rate for comparison', () => {
+    const enabledWithoutRate: AttendancePolicy = {
+      ...baseAttendance,
+      overtimeEnabled: true,
+      overtimeRate: null,
+    };
+
+    expect(
+      isAttendancePolicyUnchanged(enabledWithoutRate, {
+        ...enabledWithoutRate,
+        overtimeRate: 'flat',
+      })
+    ).toBe(true);
+  });
 });

@@ -16,6 +16,14 @@ test.describe('HR Employee profile', () => {
     await expect(page.getByText(/Role/i)).toBeVisible();
     await expect(page.getByText(/Organization/i)).toBeVisible();
 
+    const profileUrl = new URL(page.url());
+    profileUrl.searchParams.set('tab', 'attendance');
+    await page.goto(profileUrl.toString());
+    await expect(page.getByRole('tab', { name: 'Attendance' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+
     await profileTabs.reduce(async (previous, tab) => {
       await previous;
       await page.getByRole('tab', { name: tab }).click();

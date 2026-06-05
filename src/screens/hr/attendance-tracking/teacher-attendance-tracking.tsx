@@ -23,6 +23,7 @@ const TeacherAttendanceTracking = ({
   searchParams: Record<string, string>;
   setSearchParams: (key: string, value: string) => void;
 }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const startDate = useMemo(
     () =>
       searchParams.startDate
@@ -35,17 +36,14 @@ const TeacherAttendanceTracking = ({
       searchParams.endDate ? dayjs(searchParams.endDate, 'DD-MM-YYYY') : dayjs().endOf('month'),
     [searchParams.endDate]
   );
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  const educationMediumStageId = medium?.educationMediumStages?.[0]?.id || '';
-
   const { data, isLoading: attendanceLoading } = useGetEmployeeWiseAttendanceQuery(
     {
       employeeId: `${searchParams.employeeId}`,
       startDate: startDate.format('DD/MM/YYYY'),
       endDate: endDate.format('DD/MM/YYYY'),
-      educationMediumStageId,
+      academicYearId: currentYear?.id,
     },
-    { skip: !searchParams?.employeeId || !educationMediumStageId }
+    { skip: !searchParams?.employeeId }
   );
 
   const attendanceItems = data?.items || [];

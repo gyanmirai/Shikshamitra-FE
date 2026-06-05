@@ -3,7 +3,7 @@
 import type { PolicyStatus } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
-import { Box, Alert, MenuItem, TextField } from '@mui/material';
+import { Box, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
 
 import {
   DrawerField,
@@ -29,6 +29,65 @@ export const ATTENDANCE_CAPTURE_MODE_OPTIONS = [
   { label: 'Manual with time', value: 'manual_with_time' },
   { label: 'Integrated', value: 'integrated' },
 ] as const;
+
+export const ATTENDANCE_PENALTY_ACTION_OPTIONS = [
+  { label: 'None', value: 'none' },
+  { label: 'Warning', value: 'warning' },
+  { label: 'Salary Deduction', value: 'salary_deduction' },
+  { label: 'Half Day', value: 'deduct_half_day' },
+  { label: 'Full Day', value: 'deduct_full_day' },
+] as const;
+
+export const ATTENDANCE_HOLIDAY_COMPENSATION_OPTIONS = [
+  { label: 'No Benefit', value: 'no_benefit' },
+  { label: 'Comp Off', value: 'comp_off' },
+  { label: 'Overtime Pay', value: 'ot_payout' },
+  { label: 'Both', value: 'both' },
+  { label: 'Paid', value: 'paid' },
+] as const;
+
+export const ATTENDANCE_OVERTIME_CALCULATION_OPTIONS = [
+  { label: 'Fixed Rate', value: 'flat' },
+  { label: 'Multiplier (1.5x)', value: '1.5x' },
+  { label: 'Multiplier (2x)', value: '2.0x' },
+] as const;
+
+const optionLabel = (
+  options: readonly { label: string; value: string }[],
+  value: string | null | undefined,
+  fallback = 'None'
+) => options.find((option) => option.value === value)?.label ?? fallback;
+
+function buildAttendanceSummary(form: HRPolicyWorkspaceContext['attendanceForm']) {
+  const penaltyLabel = optionLabel(ATTENDANCE_PENALTY_ACTION_OPTIONS, form.penaltyType);
+  const holidayLabel = optionLabel(
+    ATTENDANCE_HOLIDAY_COMPENSATION_OPTIONS,
+    form.holidayWorkBehavior,
+    'Comp Off'
+  );
+  const earlyExitSummary = form.earlyExitEnabled
+    ? `Early exit tracking enabled after ${Number(form.earlyExitGraceTime || 0)} minutes grace`
+    : 'Early exit tracking disabled';
+  const holidaySummary =
+    form.holidayWorkBehavior === 'paid'
+      ? 'Holiday work is paid as regular work'
+      : `Holiday work grants ${holidayLabel}`;
+  const summary = [
+    `Employees receive ${Number(form.graceTime || 0)} minutes grace period`,
+    `${Number(form.maxLateAllowedPerMonth || 0)} late arrivals allowed per month`,
+    form.penaltyType === 'none'
+      ? 'No late-arrival penalty configured'
+      : `${penaltyLabel} applies after ${Number(form.penaltyCountThreshold || 0)} violations`,
+    earlyExitSummary,
+    form.overtimeEnabled
+      ? `Overtime enabled from ${Number(form.minOvertimeMinutes || 0)} minutes`
+      : 'Overtime disabled',
+    holidaySummary,
+    form.sandwichRuleEnabled ? 'Sandwich rule enabled' : 'Sandwich rule disabled',
+  ];
+
+  return summary;
+}
 
 function applyAttendanceAdvancedDefaults(
   form: HRPolicyWorkspaceContext['attendanceForm'],
@@ -267,118 +326,207 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
       {!isManualStatusMode && attendanceAdvancedMode ? (
         <PolicySection
           title="Advanced Rules"
-          description="Detailed attendance, penalty, overtime, holiday, and payroll integration rules."
+          description="Readable attendance behavior grouped by business rule."
         >
-          <DrawerFormGrid columns={3} alignItems="center">
-            <DrawerField
-              label="Absent threshold"
-              help="Worked time percentage at or below this value is treated as absent."
+          <Stack spacing={2}>
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2,
+                bgcolor: 'primary.lighter',
+                borderColor: 'primary.light',
+                borderRadius: 1,
+              }}
             >
-              <TextField {...getAttendanceNumericFieldProps('absentThresholdPercentage')} />
-            </DrawerField>
-            <DrawerField
-              label="Late grace minutes"
-              help="Late arrival minutes ignored before the employee is counted as late."
-            >
-              <TextField {...getAttendanceNumericFieldProps('graceTime')} />
-            </DrawerField>
-            <DrawerField
-              label="Allowed late arrivals per month"
-              help="Number of late arrivals allowed in a month before penalties can apply."
-            >
-              <TextField {...getAttendanceNumericFieldProps('maxLateAllowedPerMonth')} />
-            </DrawerField>
-            <DrawerSelectField
-              label="Penalty"
-              help="Attendance deduction applied after the configured late-arrival threshold is crossed."
-              value={attendanceForm.penaltyType}
-              onChange={(event) =>
-                setAttendanceForm((current) => ({ ...current, penaltyType: event.target.value }))
-              }
-            >
-              <MenuItem value="none">None</MenuItem>
-              <MenuItem value="deduct_half_day">Half Day</MenuItem>
-              <MenuItem value="deduct_full_day">Full Day</MenuItem>
-            </DrawerSelectField>
-            <DrawerField
-              label="Late count before deduction"
-              help="Number of qualifying late instances required before the selected penalty is applied."
-            >
-              <TextField {...getAttendanceNumericFieldProps('penaltyCountThreshold')} />
-            </DrawerField>
-            <DrawerSwitchField
-              label="Early exit"
-              help="Tracks employees leaving before the scheduled end time."
-              checked={attendanceForm.earlyExitEnabled}
-              onChange={(checked) =>
-                setAttendanceForm((current) => ({ ...current, earlyExitEnabled: checked }))
-              }
-            />
-            <DrawerSwitchField
-              label="Overtime"
-              help="Enables overtime calculation when employees work beyond the scheduled time."
-              checked={attendanceForm.overtimeEnabled}
-              onChange={(checked) =>
-                setAttendanceForm((current) => ({ ...current, overtimeEnabled: checked }))
-              }
-            />
-            <DrawerField
-              label="Early exit grace minutes"
-              help="Early departure minutes ignored before the exit is flagged."
-            >
-              <TextField {...getAttendanceNumericFieldProps('earlyExitGraceTime')} />
-            </DrawerField>
-            <DrawerField
-              label="Minimum overtime minutes"
-              help="Minimum extra minutes required before overtime is counted."
-            >
-              <TextField {...getAttendanceNumericFieldProps('minOvertimeMinutes')} />
-            </DrawerField>
-            <DrawerSelectField
-              label="Overtime Rate"
-              help="Optional rate or multiplier used by payroll when overtime is paid."
-              value={attendanceForm.overtimeRate}
-              onChange={(event) =>
-                setAttendanceForm((current) => ({ ...current, overtimeRate: event.target.value }))
-              }
-            >
-              <MenuItem value="">None</MenuItem>
-              <MenuItem value="1.5x">1.5x</MenuItem>
-              <MenuItem value="2.0x">2.0x</MenuItem>
-              <MenuItem value="flat">Flat</MenuItem>
-            </DrawerSelectField>
-            <DrawerSelectField
-              label="Work on holiday"
-              help="Defines how attendance on holidays should be handled."
-              value={attendanceForm.holidayWorkBehavior}
-              onChange={(event) =>
-                setAttendanceForm((current) => ({
-                  ...current,
-                  holidayWorkBehavior: event.target.value,
-                }))
-              }
-            >
-              <MenuItem value="comp_off">Comp Off</MenuItem>
-              <MenuItem value="ot_payout">Overtime</MenuItem>
-              <MenuItem value="paid">Paid</MenuItem>
-            </DrawerSelectField>
-            <DrawerSwitchField
-              label="Sandwich rule"
-              help="Counts leave or absence between non-working days according to the organization's sandwich policy."
-              checked={attendanceForm.sandwichRuleEnabled}
-              onChange={(checked) =>
-                setAttendanceForm((current) => ({ ...current, sandwichRuleEnabled: checked }))
-              }
-            />
-            <DrawerSwitchField
-              label="Show payroll impact"
-              help="Allows payroll impact to be previewed from attendance and leave records."
-              checked={attendanceForm.payrollPreviewEnabled}
-              onChange={(checked) =>
-                setAttendanceForm((current) => ({ ...current, payrollPreviewEnabled: checked }))
-              }
-            />
-          </DrawerFormGrid>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Attendance Policy Summary
+              </Typography>
+              <Stack spacing={0.75}>
+                {buildAttendanceSummary(attendanceForm).map((item) => (
+                  <Typography key={item} variant="body2" color="text.primary">
+                    ✓ {item}
+                  </Typography>
+                ))}
+              </Stack>
+            </Paper>
+
+            <DrawerFormGrid columns={2} alignItems="flex-start">
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 1, height: '100%' }}>
+                <Stack spacing={2}>
+                  <Typography variant="subtitle2">Late Arrival Policy</Typography>
+                  <DrawerField
+                    label="Grace Period"
+                    help="Late arrival minutes ignored before the employee is counted as late."
+                  >
+                    <TextField {...getAttendanceNumericFieldProps('graceTime')} />
+                  </DrawerField>
+                  <DrawerField
+                    label="Monthly Late Allowance"
+                    help="Number of late arrivals allowed in a month before penalties can apply."
+                  >
+                    <TextField {...getAttendanceNumericFieldProps('maxLateAllowedPerMonth')} />
+                  </DrawerField>
+                  <DrawerSelectField
+                    label="Penalty Action"
+                    help="Action applied after the configured late-arrival threshold is crossed."
+                    value={attendanceForm.penaltyType}
+                    onChange={(event) =>
+                      setAttendanceForm((current) => ({
+                        ...current,
+                        penaltyType: event.target.value,
+                      }))
+                    }
+                  >
+                    {ATTENDANCE_PENALTY_ACTION_OPTIONS.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </DrawerSelectField>
+                  {attendanceForm.penaltyType !== 'none' ? (
+                    <DrawerField
+                      label="Apply Penalty After"
+                      help="Number of qualifying late instances required before the selected action is applied."
+                    >
+                      <TextField {...getAttendanceNumericFieldProps('penaltyCountThreshold')} />
+                    </DrawerField>
+                  ) : null}
+                </Stack>
+              </Paper>
+
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 1, height: '100%' }}>
+                <Stack spacing={2}>
+                  <Typography variant="subtitle2">Early Exit Policy</Typography>
+                  <DrawerSwitchField
+                    compact
+                    label="Track Early Exit"
+                    help="Tracks employees leaving before the scheduled end time."
+                    checked={attendanceForm.earlyExitEnabled}
+                    onChange={(checked) =>
+                      setAttendanceForm((current) => ({ ...current, earlyExitEnabled: checked }))
+                    }
+                  />
+                  {attendanceForm.earlyExitEnabled ? (
+                    <DrawerField
+                      label="Grace Period"
+                      help="Early departure minutes ignored before the exit is flagged."
+                    >
+                      <TextField {...getAttendanceNumericFieldProps('earlyExitGraceTime')} />
+                    </DrawerField>
+                  ) : null}
+                </Stack>
+              </Paper>
+
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 1, height: '100%' }}>
+                <Stack spacing={2}>
+                  <Typography variant="subtitle2">Overtime Policy</Typography>
+                  <DrawerSwitchField
+                    compact
+                    label="Enable Overtime"
+                    help="Enables overtime calculation when employees work beyond the scheduled time."
+                    checked={attendanceForm.overtimeEnabled}
+                    onChange={(checked) =>
+                      setAttendanceForm((current) => ({
+                        ...current,
+                        overtimeEnabled: checked,
+                        overtimeRate: checked ? current.overtimeRate || 'flat' : '',
+                      }))
+                    }
+                  />
+                  {attendanceForm.overtimeEnabled ? (
+                    <>
+                      <DrawerField
+                        label="Minimum Overtime Minutes"
+                        help="Minimum extra minutes required before overtime is counted."
+                      >
+                        <TextField {...getAttendanceNumericFieldProps('minOvertimeMinutes')} />
+                      </DrawerField>
+                      <DrawerField
+                        label="Overtime Rate"
+                        help="Business-facing rate currently selected for overtime."
+                      >
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={optionLabel(
+                            ATTENDANCE_OVERTIME_CALCULATION_OPTIONS,
+                            attendanceForm.overtimeRate,
+                            'Fixed Rate'
+                          )}
+                          disabled
+                        />
+                      </DrawerField>
+                      <DrawerSelectField
+                        label="Calculation Method"
+                        help="How payroll should interpret overtime for this policy."
+                        value={attendanceForm.overtimeRate || 'flat'}
+                        onChange={(event) =>
+                          setAttendanceForm((current) => ({
+                            ...current,
+                            overtimeRate: event.target.value,
+                          }))
+                        }
+                      >
+                        {ATTENDANCE_OVERTIME_CALCULATION_OPTIONS.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </DrawerSelectField>
+                    </>
+                  ) : null}
+                </Stack>
+              </Paper>
+
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 1, height: '100%' }}>
+                <Stack spacing={2}>
+                  <Typography variant="subtitle2">Holiday & Leave Rules</Typography>
+                  <DrawerSelectField
+                    label="Holiday Compensation"
+                    help="Defines how work on holidays should be compensated."
+                    value={attendanceForm.holidayWorkBehavior}
+                    onChange={(event) =>
+                      setAttendanceForm((current) => ({
+                        ...current,
+                        holidayWorkBehavior: event.target.value,
+                      }))
+                    }
+                  >
+                    {ATTENDANCE_HOLIDAY_COMPENSATION_OPTIONS.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </DrawerSelectField>
+                  <DrawerSwitchField
+                    compact
+                    label="Enable Sandwich Rule"
+                    help="Counts leave or absence between non-working days according to the organization's sandwich policy."
+                    checked={attendanceForm.sandwichRuleEnabled}
+                    onChange={(checked) =>
+                      setAttendanceForm((current) => ({
+                        ...current,
+                        sandwichRuleEnabled: checked,
+                      }))
+                    }
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    If leave is taken before and after a holiday/weekend, those days may also be
+                    counted as leave.
+                  </Typography>
+                </Stack>
+              </Paper>
+            </DrawerFormGrid>
+
+            <DrawerFormGrid columns={2}>
+              <DrawerField
+                label="Absence Conversion Threshold"
+                help="Worked time percentage at or below this value is treated as absent."
+              >
+                <TextField {...getAttendanceNumericFieldProps('absentThresholdPercentage')} />
+              </DrawerField>
+            </DrawerFormGrid>
+          </Stack>
         </PolicySection>
       ) : null}
     </PolicyDrawerLayout>

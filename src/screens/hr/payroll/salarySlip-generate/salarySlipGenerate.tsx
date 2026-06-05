@@ -2,7 +2,6 @@
 
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
-import type { Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
@@ -48,19 +47,10 @@ import { usePayslipActions } from './use-payslip-actions';
 const PaySlipGenerationScreen = () => {
   const [employee, setEmployee] = useState<any>(null);
   const [monthYear, setMonthYear] = useState<null | Dayjs>(dayjs());
-  const [, setAllOrganization] = useState<Organization[]>([]);
-  const [, setOrganization] = useState<string>('');
 
-  const { currentMedium: medium, currentYear } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const printRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setAllOrganization(medium?.educationMediumStages || []);
-    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
-  }, [medium]);
 
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',

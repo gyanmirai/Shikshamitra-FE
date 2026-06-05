@@ -22,6 +22,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
@@ -43,6 +44,7 @@ import {
 } from 'src/redux/hr/leaveApi';
 
 import { LeaveRequestForm } from './leave-calender';
+import { formatLeaveCalendarDateForDisplay } from './leave-request.utils';
 import {
   getLeaveStatusColor,
   getLeaveStatusLabel,
@@ -55,8 +57,9 @@ type LeaveApprovalsProps = {
 };
 
 const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
-  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { employee } = useSelector((state: RootState) => state.auth);
+  const { byId: organizationById } = useAcademicOrganizationOptions(currentYear?.id);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
   const [statusFilter, setStatusFilter] = useState<EmployeeLeaveStatusType | ''>(
     EmployeeLeaveStatusType.Pending
@@ -129,32 +132,25 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
     const apiData =
       data?.items
         ?.filter((item: any) => String(item.employeeId ?? '') !== String(employee?.id ?? ''))
-        ?.map((item: any) => {
-          const start = dayjs(item.startDate);
-          const end = dayjs(item.endDate);
-
-          return {
-            id: item.id,
-            name: item.name || item.employeeName,
-            employeeIdentifier: item.employeeIdentifier || item.employeeCode,
-            leaveType: item.leaveType,
-            startDate: start.format('DD-MM-YYYY'),
-            endDate: end.format('DD-MM-YYYY'),
-            totalDays: item.totalDays,
-            organization:
-              item.mediumStageName ||
-              currentMedium?.educationMediumStages?.find(
-                (org: any) => String(org?.id ?? '') === String(item?.mediumStageId ?? '')
-              )?.name ||
-              '-',
-            description: item.description,
-            remarks: item.remarks,
-            status: getLeaveStatusFilterValue(item.status),
-          };
-        }) || [];
+        ?.map((item: any) => ({
+          id: item.id,
+          name: item.name || item.employeeName,
+          employeeIdentifier: item.employeeIdentifier || item.employeeCode,
+          leaveType: item.leaveType,
+          startDate: formatLeaveCalendarDateForDisplay(item.startDate),
+          endDate: formatLeaveCalendarDateForDisplay(item.endDate),
+          totalDays: item.totalDays,
+          organization:
+            item.mediumStageName ||
+            organizationById.get(String(item?.mediumStageId ?? ''))?.name ||
+            '-',
+          description: item.description,
+          remarks: item.remarks,
+          status: getLeaveStatusFilterValue(item.status),
+        })) || [];
 
     return apiData;
-  }, [currentMedium?.educationMediumStages, data, employee?.id]);
+  }, [data, employee?.id, organizationById]);
 
   const columns: IColumn[] = useMemo(
     () => [

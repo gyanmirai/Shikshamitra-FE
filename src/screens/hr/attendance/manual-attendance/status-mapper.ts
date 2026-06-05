@@ -3,6 +3,7 @@ export const TAKE_ATTENDANCE_STATUS = {
   Present: 1,
   Absent: 2,
   HalfDay: 3,
+  OnLeave: 4,
 } as const;
 
 export const MANUAL_ATTENDANCE_UI_STATUS = {
@@ -10,14 +11,19 @@ export const MANUAL_ATTENDANCE_UI_STATUS = {
   HalfDay: 'HalfDay',
   Absent: 'Absent',
   Pending: 'Pending',
+  OnLeave: 'OnLeave',
 } as const;
 
 export const MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS = [
   { label: 'Present', value: MANUAL_ATTENDANCE_UI_STATUS.Present },
   { label: 'Half Day', value: MANUAL_ATTENDANCE_UI_STATUS.HalfDay },
   { label: 'Absent', value: MANUAL_ATTENDANCE_UI_STATUS.Absent },
+  { label: 'On Leave', value: MANUAL_ATTENDANCE_UI_STATUS.OnLeave },
   { label: 'Pending', value: MANUAL_ATTENDANCE_UI_STATUS.Pending },
 ];
+
+export const APPROVED_LEAVE_OVERRIDE_WARNING =
+  'Approved leave exists for this date but attendance was manually overridden.';
 
 export type ManualAttendanceUiStatus =
   (typeof MANUAL_ATTENDANCE_UI_STATUS)[keyof typeof MANUAL_ATTENDANCE_UI_STATUS];
@@ -28,6 +34,8 @@ export type ManualAttendanceSaveRow = {
   id?: string;
   employeeId?: string;
   status?: ManualAttendanceUiStatus | string;
+  isApprovedLeave?: boolean;
+  warnings?: string[];
   captureMode?: 'manual_status' | 'manual_with_time' | 'integrated';
   timeIn?: string;
   timeOut?: string;
@@ -38,6 +46,70 @@ export type ManualAttendanceShiftTimeRow = ManualAttendanceSaveRow & {
   shiftStartTime?: string | null;
   shiftEndTime?: string | null;
 };
+
+export type ManualAttendanceApiDayResponse = {
+  isDayLocked?: boolean;
+  isHoliday?: boolean;
+  holidayName?: string | null;
+  holidayReason?: string | null;
+  captureMode?: 'manual_status' | 'manual_with_time' | 'integrated';
+  items?: ManualAttendanceApiEmployeeRow[];
+};
+
+export type ManualAttendanceApiEmployeeRow = {
+  employeeId: string;
+  fullName?: string;
+  employeeCode?: string;
+  department?: string;
+  dateIso?: string;
+  inTime?: string | null;
+  outTime?: string | null;
+  shiftStartTime?: string | null;
+  shiftEndTime?: string | null;
+  remarks?: string | null;
+  warnings?: string[];
+  errors?: string[];
+  isHoliday?: boolean;
+  holidayName?: string | null;
+  holidayReason?: string | null;
+  isApprovedLeave?: boolean;
+  approvedLeaveId?: string | null;
+  approvedLeaveKind?: string | null;
+  approvedLeaveLabel?: string | null;
+  captureMode?: 'manual_status' | 'manual_with_time' | 'integrated';
+  source?: string | null;
+  status?: number;
+};
+
+export const mapManualAttendanceDayResponseToRows = (
+  data?: ManualAttendanceApiDayResponse | null
+) =>
+  (data?.items ?? []).map((item) => ({
+    id: item.employeeId,
+    employeeId: item.employeeId,
+    fullName: item.fullName,
+    employeeCode: item.employeeCode,
+    department: item.department,
+    dateIso: item.dateIso,
+    timeIn: toAttendanceTableTimeValue(item.inTime),
+    timeOut: toAttendanceTableTimeValue(item.outTime),
+    shiftStartTime: item.shiftStartTime,
+    shiftEndTime: item.shiftEndTime,
+    remarks: item.remarks || '',
+    warnings: item.warnings || [],
+    errors: item.errors || [],
+    isHoliday: item.isHoliday || data?.isHoliday || false,
+    holidayName: item.holidayName || data?.holidayName,
+    holidayReason: item.holidayReason || data?.holidayReason,
+    isApprovedLeave: item.isApprovedLeave || false,
+    approvedLeaveId: item.approvedLeaveId,
+    approvedLeaveKind: item.approvedLeaveKind,
+    approvedLeaveLabel: item.approvedLeaveLabel,
+    captureMode: item.captureMode || data?.captureMode || 'integrated',
+    source:
+      item.source || (item.status === TAKE_ATTENDANCE_STATUS.OnLeave ? 'approved_leave' : 'manual'),
+    status: mapTakeAttendanceStatusToUi(item.status),
+  }));
 
 export const applyManualAttendanceShiftTimes = <TRow extends ManualAttendanceShiftTimeRow>(
   rows: TRow[]
@@ -101,6 +173,7 @@ export const mapTakeAttendanceStatusToUi = (status?: number): ManualAttendanceUi
   if (status === TAKE_ATTENDANCE_STATUS.Present) return MANUAL_ATTENDANCE_UI_STATUS.Present;
   if (status === TAKE_ATTENDANCE_STATUS.HalfDay) return MANUAL_ATTENDANCE_UI_STATUS.HalfDay;
   if (status === TAKE_ATTENDANCE_STATUS.Absent) return MANUAL_ATTENDANCE_UI_STATUS.Absent;
+  if (status === TAKE_ATTENDANCE_STATUS.OnLeave) return MANUAL_ATTENDANCE_UI_STATUS.OnLeave;
   return MANUAL_ATTENDANCE_UI_STATUS.Pending;
 };
 
@@ -111,6 +184,40 @@ export const mapManualAttendanceStatusToWire = (
   if (status === MANUAL_ATTENDANCE_UI_STATUS.HalfDay) return 'HALF_DAY';
   if (status === MANUAL_ATTENDANCE_UI_STATUS.Absent) return 'ABSENT';
   return null;
+};
+
+export const applyManualAttendanceBulkStatus = <TRow extends ManualAttendanceSaveRow>(
+  rows: TRow[],
+  status: ManualAttendanceUiStatus
+) =>
+  rows.map((row) =>
+    row.status === MANUAL_ATTENDANCE_UI_STATUS.OnLeave ? row : { ...row, status }
+  );
+
+export const applyManualAttendanceRowStatus = <TRow extends ManualAttendanceSaveRow>(
+  row: TRow,
+  status: ManualAttendanceUiStatus
+): TRow => {
+  if (row.isApprovedLeave && status === MANUAL_ATTENDANCE_UI_STATUS.Pending) {
+    return row;
+  }
+
+  if (
+    row.isApprovedLeave &&
+    status !== MANUAL_ATTENDANCE_UI_STATUS.OnLeave &&
+    status !== MANUAL_ATTENDANCE_UI_STATUS.Pending
+  ) {
+    const warnings = row.warnings || [];
+    return {
+      ...row,
+      status,
+      warnings: warnings.includes(APPROVED_LEAVE_OVERRIDE_WARNING)
+        ? warnings
+        : [...warnings, APPROVED_LEAVE_OVERRIDE_WARNING],
+    };
+  }
+
+  return { ...row, status };
 };
 
 export const buildManualAttendanceSaveEntries = (rows: ManualAttendanceSaveRow[]) =>

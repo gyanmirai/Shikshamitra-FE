@@ -129,6 +129,12 @@ export interface IPayrollInformation {
   salaryDetails: ISalaryDetails;
   earningComponents: ISalaryComponent[];
   deductionComponents: ISalaryComponent[];
+  policyOverrideEnabled?: boolean;
+  policyOverrideWasEnabled?: boolean;
+  policyOverridePayrollPolicyId?: string;
+  policyOverrideAttendancePolicyId?: string;
+  policyOverrideEffectiveFrom?: string;
+  policyOverrideAssignmentReason?: string;
 }
 
 export interface IReportingManager {
