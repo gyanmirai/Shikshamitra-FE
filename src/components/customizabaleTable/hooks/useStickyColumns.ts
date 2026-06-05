@@ -8,6 +8,8 @@ interface UseStickyColumnsProps {
   headerRefs: (number | null)[];
   paginatedData: IData[];
   columnWidths: Record<string, number>;
+  isLoading: boolean;
+  tableUniqId: string;
 }
 
 export const useStickyColumns = ({
@@ -16,6 +18,8 @@ export const useStickyColumns = ({
   headerRefs,
   paginatedData,
   columnWidths,
+  isLoading,
+  tableUniqId,
 }: UseStickyColumnsProps) => {
   const [stickyMap, setStickyMap] = useState<{
     left: Record<string, number>;
@@ -23,45 +27,59 @@ export const useStickyColumns = ({
   }>({ left: {}, right: {} });
   useEffect(() => {
     setTimeout(() => {
-      const leftSticky: { col: IColumn; idx: number }[] = [];
-      const rightSticky: { col: IColumn; idx: number }[] = [];
+      const table = document.getElementById(`${tableUniqId}`);
+      if (!table && !isLoading) return;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const leftSticky: { col: IColumn; idx: number }[] = [];
+          const rightSticky: { col: IColumn; idx: number }[] = [];
 
-      const totalVisibleColumns = columns.filter((col) => columnVisibility[col.id]);
+          const totalVisibleColumns = columns.filter((col) => columnVisibility[col.id]);
 
-      const half = Math.ceil(totalVisibleColumns.length / 2);
+          const half = Math.ceil(totalVisibleColumns.length / 2);
 
-      totalVisibleColumns.forEach((col, idx) => {
-        if (col.sticky) {
-          if (idx < half) {
-            leftSticky.push({ col, idx });
-          } else {
-            rightSticky.push({ col, idx });
-          }
-        }
+          totalVisibleColumns.forEach((col, idx) => {
+            if (col.sticky) {
+              if (idx < half) {
+                leftSticky.push({ col, idx });
+              } else {
+                rightSticky.push({ col, idx });
+              }
+            }
+          });
+
+          const leftOffsets: Record<string, number> = {};
+          let left = 0;
+          leftSticky.forEach(({ col, idx }) => {
+            const el = table
+              ?.querySelector(`#${tableUniqId}-column-${col.id}`)
+              ?.getBoundingClientRect()?.width;
+
+            console.log({ el, name: col.label });
+            const width = el ?? 100;
+            leftOffsets[col.id as string] = left;
+            left += width;
+          });
+
+          const rightOffsets: Record<string, number> = {};
+          let right = 0;
+          [...rightSticky].reverse().forEach(({ col, idx }) => {
+            const el = table
+              ?.querySelector(`#${tableUniqId}-column-${col.id}`)
+              ?.getBoundingClientRect()?.width;
+
+            console.log({ el, name: col.label });
+            const width = el ?? 100;
+
+            rightOffsets[col.id as string] = right;
+            right += width;
+          });
+
+          setStickyMap({ left: leftOffsets, right: rightOffsets });
+        });
       });
-
-      const leftOffsets: Record<string, number> = {};
-      let left = 0;
-      leftSticky.forEach(({ col, idx }) => {
-        const el = headerRefs[idx];
-        const width = el ?? 100;
-        leftOffsets[col.id as string] = left;
-        left += width;
-      });
-
-      const rightOffsets: Record<string, number> = {};
-      let right = 0;
-      [...rightSticky].reverse().forEach(({ col, idx }) => {
-        const el = headerRefs[idx];
-        const width = el ?? 100;
-
-        rightOffsets[col.id as string] = right;
-        right += width;
-      });
-
-      setStickyMap({ left: leftOffsets, right: rightOffsets });
     }, 100);
-  }, [columnVisibility, columns, headerRefs, paginatedData, columnWidths]);
+  }, [columnVisibility, columns, headerRefs, paginatedData, columnWidths, isLoading, tableUniqId]);
 
   /**
    * Memoization Justification:
