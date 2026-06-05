@@ -17,9 +17,10 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useDeleteChargeMutation } from 'src/redux/finance/ChargeManagement/chargeApi';
 
-import ChargeForm from './Component/ChargeForm';
 import ChargesTable from './Component/ChargesTable';
+import { UpdateChargeForm } from '../UpdateChargeForm';
 import ChargeDetailsCard from './Component/ViewChargeForm';
+import { ChargeApprovalReview } from '../ChargeApprovalReview';
 import ChargeReasonApprovalForm from './Component/ChargeApproveRejectForm';
 
 import type { IChargeData } from './Component/type';
@@ -50,6 +51,7 @@ const ChargesManagement = () => {
   const viewChargeDetailsDialog = useBoolean();
   const editChargeDialog = useBoolean();
   const removeChargeDialog = useBoolean();
+  const approvalReviewDialog = useBoolean();
 
   // Redux state and dispatch
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -139,7 +141,7 @@ const ChargesManagement = () => {
       ) : addChargeDialog.value ? (
         <CustomBreadcrumbs
           heading="Add Charge"
-          description="View and manage student charges."
+          description="Create a new charge for students."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/charge-management' },
@@ -161,7 +163,7 @@ const ChargesManagement = () => {
       ) : editChargeDialog.value ? (
         <CustomBreadcrumbs
           heading="Update Charge"
-          description="View and manage student charges."
+          description="Edit and update charge details and mappings."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/charge-management' },
@@ -179,6 +181,36 @@ const ChargesManagement = () => {
           onBack={() => {
             editChargeDialog.onFalse();
             setSelectedChargeData(null);
+          }}
+          sx={{ px: 1 }}
+        />
+      ) : approvalReviewDialog.value ? (
+        <CustomBreadcrumbs
+          heading={selectedMode === 'Approve' ? 'Approve Charge' : 'Reject Charge'}
+          description={
+            selectedMode === 'Approve'
+              ? 'Review and approve the charge for selected students.'
+              : 'Review and reject the charge request.'
+          }
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/charge-management' },
+            {
+              name: 'Charges',
+              href: '/finance/charge-management/chargesRequest',
+              onClick(e) {
+                approvalReviewDialog.onFalse();
+                setSelectedChargeData(null);
+                setSelectedMode('');
+              },
+            },
+            { name: selectedMode === 'Approve' ? 'Approve Charge' : 'Reject Charge' },
+          ]}
+          isBack
+          onBack={() => {
+            approvalReviewDialog.onFalse();
+            setSelectedChargeData(null);
+            setSelectedMode('');
           }}
           sx={{ px: 1 }}
         />
@@ -204,61 +236,63 @@ const ChargesManagement = () => {
           }
         />
       )}
-      {!addChargeDialog.value && !viewChargeDetailsDialog.value && !editChargeDialog.value && (
-        <ChargesTable
-          selectedBoard={selectedBoard}
-          setSelectedBoard={setSelectedBoard}
-          selectedMedium={selectedMedium}
-          setSelectedMedium={setSelectedMedium}
-          onView={(data) => {
-            viewChargeDetailsDialog.onTrue();
-            setSelectedChargeData(data);
-          }}
-          onEdit={(data) => {
-            editChargeDialog.onTrue();
-            setSelectedChargeData(data);
-          }}
-          onAddCharge={() => {
-            addChargeDialog.onTrue();
-          }}
-          onApprove={(data) => {
-            onConfirmDialg.onTrue();
-            setSelectedMode('Approve');
-            setSelectedChargeData(data);
-          }}
-          onReject={(data) => {
-            onConfirmDialg.onTrue();
-            setSelectedMode('Reject');
-            setSelectedChargeData(data);
-          }}
-          onRemove={(data) => {
-            removeChargeDialog.onTrue();
-            setSelectedChargeData(data);
-          }}
-          selectedTab={selectedTab}
-          setSelectedTab={setSelectedTab}
-          onRefetch={(refetchFn) => {
-            // Store refetch function in a ref so it can be called later
-            chargeRefetchRef.current = refetchFn;
-          }}
-        />
-      )}
+      {!addChargeDialog.value &&
+        !viewChargeDetailsDialog.value &&
+        !editChargeDialog.value &&
+        !approvalReviewDialog.value && (
+          <ChargesTable
+            selectedBoard={selectedBoard}
+            setSelectedBoard={setSelectedBoard}
+            selectedMedium={selectedMedium}
+            setSelectedMedium={setSelectedMedium}
+            onView={(data) => {
+              viewChargeDetailsDialog.onTrue();
+              setSelectedChargeData(data);
+            }}
+            onEdit={(data) => {
+              editChargeDialog.onTrue();
+              setSelectedChargeData(data);
+            }}
+            onAddCharge={() => {
+              addChargeDialog.onTrue();
+            }}
+            onApprove={(data) => {
+              approvalReviewDialog.onTrue();
+              setSelectedMode('Approve');
+              setSelectedChargeData(data);
+            }}
+            onReject={(data) => {
+              approvalReviewDialog.onTrue();
+              setSelectedMode('Reject');
+              setSelectedChargeData(data);
+            }}
+            onRemove={(data) => {
+              removeChargeDialog.onTrue();
+              setSelectedChargeData(data);
+            }}
+            selectedTab={selectedTab}
+            setSelectedTab={setSelectedTab}
+            onRefetch={(refetchFn) => {
+              // Store refetch function in a ref so it can be called later
+              chargeRefetchRef.current = refetchFn;
+            }}
+          />
+        )}
 
       {/* Add Charge Dialog */}
       {addChargeDialog.value && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <ChargeForm open={addChargeDialog} onClose={handleClose} />
+          <UpdateChargeForm open={addChargeDialog} onClose={handleClose} />
         </Card>
       )}
 
       {/* Edit Charge Dialog */}
-      {editChargeDialog.value && (
+      {editChargeDialog.value && selectedChargeData?.chargeId && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <ChargeForm
+          <UpdateChargeForm
+            chargeId={selectedChargeData.chargeId}
             open={editChargeDialog}
             onClose={handleEditClose}
-            editData={selectedChargeData}
-            isEdit
           />
         </Card>
       )}
@@ -282,6 +316,25 @@ const ChargesManagement = () => {
             onCancel={() => {
               viewChargeDetailsDialog.onFalse();
               setSelectedChargeData(null);
+            }}
+          />
+        </Card>
+      )}
+
+      {/* Charge Approval Review Screen */}
+      {approvalReviewDialog.value && selectedChargeData?.chargeId && (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <ChargeApprovalReview
+            chargeId={selectedChargeData.chargeId}
+            mode={(selectedMode.toLowerCase() as 'approve' | 'reject') || 'approve'}
+            open={approvalReviewDialog.value}
+            onClose={() => {
+              approvalReviewDialog.onFalse();
+              setSelectedChargeData(null);
+              setSelectedMode('');
+              if (chargeRefetchRef.current) {
+                chargeRefetchRef.current();
+              }
             }}
           />
         </Card>

@@ -6,8 +6,11 @@ const DEFAULT_FILTERS: AuditFilterValues = {
   startDate: null,
   endDate: null,
   studentId: '',
+  selectedStudentLabel: '',
   subModule: '',
+  action: '',
   search: '',
+  correlationId: '',
 };
 
 const PAGE_SIZE = 20;

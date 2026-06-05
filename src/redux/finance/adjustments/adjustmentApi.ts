@@ -1,5 +1,4 @@
 import type {
-  AdjustmentAuditLogInput,
   AdjustmentPendingFeeDto,
   ApplyAdjustmentRequestInput,
 } from 'src/screens/finance/adjustments/types/adjustmentApply.types';
@@ -48,20 +47,8 @@ export const adjustmentApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.feeDetails, financeModuleType.feeCollection],
     }),
-
-    createAdjustmentAuditLog: builder.mutation<void, AdjustmentAuditLogInput>({
-      query: (body) => ({
-        url: '/adjustments/audit-logs',
-        method: 'POST',
-        body,
-      }),
-    }),
   }),
   overrideExisting: false,
 });
 
-export const {
-  useLazyGetAdjustmentPendingFeesQuery,
-  useApplyAdjustmentMutation,
-  useCreateAdjustmentAuditLogMutation,
-} = adjustmentApi;
+export const { useLazyGetAdjustmentPendingFeesQuery, useApplyAdjustmentMutation } = adjustmentApi;

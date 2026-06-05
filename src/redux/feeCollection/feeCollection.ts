@@ -206,6 +206,29 @@ export interface CollectFeeInput {
   payments: FeePayment[];
 }
 
+export interface FinanceAuditAllocationLine {
+  dueFeeId: string;
+  feeHeadId: string;
+  feeHeadName: string;
+  installmentLabel: string;
+  amountPaid: number;
+  pendingBefore: number;
+  pendingAfter: number;
+}
+
+export interface FinanceAuditChangedField {
+  field: string;
+  oldValue?: string | null;
+  newValue?: string | null;
+}
+
+export interface FinanceAuditSummary {
+  headline: string;
+  totalAmount: number;
+  changedFields: FinanceAuditChangedField[];
+  allocationLines: FinanceAuditAllocationLine[];
+}
+
 export interface CollectFeeOutput {
   id: string;
   receiptNumber: string;
@@ -223,6 +246,9 @@ export interface CollectFeeOutput {
   paidCharges?: { chargeId: string; chargeName: string; amountPaid: number }[];
   receivedAmount: number;
   paidDueFees: { dueFeeId: string; feeHeadId: string; amountPaid: number }[];
+  correlationId?: string;
+  auditEventIds?: string[];
+  auditSummary?: FinanceAuditSummary;
 }
 
 // ─── RTK Query slice ──────────────────────────────────────────────────────────
@@ -287,7 +313,11 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financeModuleType.feeCollection, financeModuleType.feeDetails],
+      invalidatesTags: [
+        financeModuleType.feeCollection,
+        financeModuleType.feeDetails,
+        financeModuleType.financeAudit,
+      ],
     }),
 
     /**

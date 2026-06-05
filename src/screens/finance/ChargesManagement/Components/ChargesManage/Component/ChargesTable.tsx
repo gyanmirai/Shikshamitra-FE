@@ -347,21 +347,70 @@ const ChargesTable = ({
             align: 'left',
             isSort: false,
             isFilter: false,
-            width: 96,
-            minWidth: 80,
+            width: 150,
+            minWidth: 120,
             sticky: true,
             render(value, row) {
+              const isPending = row.status === 0;
               return (
-                <ThreeDotsActions
-                  placement="right-top"
-                  showViewIcon
-                  showEditIcon={row.status === 0}
-                  showThreeDots={false}
-                  showDeleteIcon={row.status === 0}
-                  handleDeleteClick={() => onRemove(row as IChargeData)}
-                  handleViewClick={() => onView(row as IChargeData)}
-                  handleEditClick={() => onEdit(row as IChargeData)}
-                />
+                <Box display="flex" gap={1} alignItems="center">
+                  <ThreeDotsActions
+                    placement="right-top"
+                    showViewIcon
+                    showEditIcon={isPending}
+                    showThreeDots={false}
+                    showDeleteIcon={isPending}
+                    handleDeleteClick={() => onRemove(row as IChargeData)}
+                    handleViewClick={() => onView(row as IChargeData)}
+                    handleEditClick={() => onEdit(row as IChargeData)}
+                  />
+                  {isPending && (
+                    <>
+                      <Typography
+                        component="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onApprove(row as IChargeData);
+                        }}
+                        sx={{
+                          p: '4px 8px',
+                          borderRadius: '4px',
+                          backgroundColor: 'success.lighter',
+                          color: 'success.main',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          '&:hover': { backgroundColor: 'success.light' },
+                          minWidth: '50px',
+                        }}
+                      >
+                        Approve
+                      </Typography>
+                      <Typography
+                        component="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onReject(row as IChargeData);
+                        }}
+                        sx={{
+                          p: '4px 8px',
+                          borderRadius: '4px',
+                          backgroundColor: 'error.lighter',
+                          color: 'error.main',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          '&:hover': { backgroundColor: 'error.light' },
+                          minWidth: '50px',
+                        }}
+                      >
+                        Reject
+                      </Typography>
+                    </>
+                  )}
+                </Box>
               );
             },
           },

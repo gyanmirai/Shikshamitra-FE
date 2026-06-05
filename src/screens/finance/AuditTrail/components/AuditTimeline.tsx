@@ -3,7 +3,6 @@
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
 import { Box, Typography } from '@mui/material';
-import { EmptyContent } from 'src/components/empty-content';
 
 import AuditCard from './AuditCard';
 import { getFinanceAuditSubModuleColor } from '../constants/subModuleColors';
@@ -12,6 +11,8 @@ import type { FinanceAuditLog } from '../types/financeAudit.types';
 
 interface AuditTimelineProps {
   logs: FinanceAuditLog[];
+  cardVariant?: 'default' | 'compact';
+  onFilterByStudent?: (studentId: string, label: string) => void;
 }
 
 function groupByDate(logs: FinanceAuditLog[]): Record<string, FinanceAuditLog[]> {
@@ -23,18 +24,11 @@ function groupByDate(logs: FinanceAuditLog[]): Record<string, FinanceAuditLog[]>
   }, {});
 }
 
-const AuditTimeline = ({ logs }: AuditTimelineProps) => {
-  if (logs.length === 0) {
-    return (
-      <EmptyContent
-        title="No audit history found"
-        description="There are no audit logs matching the selected filters."
-        imgUrl="/assets/illustrations/illustration-empty-content.svg"
-        sx={{ py: 10 }}
-      />
-    );
-  }
-
+const AuditTimeline = ({
+  logs,
+  cardVariant = 'default',
+  onFilterByStudent,
+}: AuditTimelineProps) => {
   const grouped = groupByDate(logs);
 
   // running index for stagger animations
@@ -149,7 +143,12 @@ const AuditTimeline = ({ logs }: AuditTimelineProps) => {
 
                   {/* ── Audit card ───────────────────── */}
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <AuditCard log={log} index={cardIndex} />
+                    <AuditCard
+                      log={log}
+                      index={cardIndex}
+                      variant={cardVariant}
+                      onFilterByStudent={onFilterByStudent}
+                    />
                   </Box>
                 </Box>
               );

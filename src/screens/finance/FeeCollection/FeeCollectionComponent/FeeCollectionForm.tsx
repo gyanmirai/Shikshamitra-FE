@@ -68,6 +68,7 @@ import {
 import FeeLedgerList from './FeeLedgerList';
 import { toPeriod } from './FeeLedgerShared';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
+import FeeCollectionOutcomePanel from './FeeCollectionOutcomePanel';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
 import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
 import { StudentFeeSummaryCard } from '../Components/StudentFeesSummaryCard';
@@ -330,6 +331,8 @@ const FeeCollectComponentForm = ({
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [generatedReceipt, setGeneratedReceipt] = useState<GeneratedReceipt | null>(null);
   const [receiptBlobUrl, setReceiptBlobUrl] = useState<string | null>(null);
+  const [lastCollectResponse, setLastCollectResponse] = useState<CollectFeeOutput | null>(null);
+  const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   // ── Fetch collect form data from V2 API ────────────────────────────────────
@@ -740,8 +743,13 @@ const FeeCollectComponentForm = ({
 
       shikshaMitraToast.success({ message: 'Fee collected successfully' });
       setFinalReviewOpen(false);
+      setLastCollectResponse(collectResponse);
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
-        onCancel?.(null, true);
+        if (collectResponse.auditSummary) {
+          setOutcomeDialogOpen(true);
+        } else {
+          onCancel?.(null, true);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -814,8 +822,13 @@ const FeeCollectComponentForm = ({
 
       shikshaMitraToast.success({ message: 'Payment saved as pending verification' });
       setFinalReviewOpen(false);
+      setLastCollectResponse(collectResponse);
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
-        onCancel?.(null, true);
+        if (collectResponse.auditSummary) {
+          setOutcomeDialogOpen(true);
+        } else {
+          onCancel?.(null, true);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -947,6 +960,7 @@ const FeeCollectComponentForm = ({
   };
 
   const showGeneratedReceiptDialog = async (collectResponse: CollectFeeOutput) => {
+    setLastCollectResponse(collectResponse);
     const receiptId = collectResponse.feeReceiptId ?? collectResponse.id;
     if (!receiptId) return false;
 
@@ -979,6 +993,7 @@ const FeeCollectComponentForm = ({
   const handleReceiptDialogClose = () => {
     setReceiptDialogOpen(false);
     setGeneratedReceipt(null);
+    setLastCollectResponse(null);
     if (receiptBlobUrl) {
       URL.revokeObjectURL(receiptBlobUrl);
       setReceiptBlobUrl(null);
@@ -1952,6 +1967,11 @@ const FeeCollectComponentForm = ({
               </Box>
             )}
           </Box>
+          {lastCollectResponse?.auditSummary && (
+            <Box sx={{ px: 2, pb: 1 }}>
+              <FeeCollectionOutcomePanel collectResponse={lastCollectResponse} />
+            </Box>
+          )}
           <DialogActions sx={{ borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.45)}` }}>
             <Button
               size="small"
@@ -1972,6 +1992,29 @@ const FeeCollectComponentForm = ({
             </Button>
           </DialogActions>
         </Box>
+      </CustomDialog>
+
+      <CustomDialog
+        open={outcomeDialogOpen}
+        handleClose={() => {
+          setOutcomeDialogOpen(false);
+          setLastCollectResponse(null);
+          onCancel?.(null, true);
+        }}
+        title="Payment summary"
+        maxWidth="sm"
+        hasForm={false}
+      >
+        {lastCollectResponse && (
+          <FeeCollectionOutcomePanel
+            collectResponse={lastCollectResponse}
+            onClose={() => {
+              setOutcomeDialogOpen(false);
+              setLastCollectResponse(null);
+              onCancel?.(null, true);
+            }}
+          />
+        )}
       </CustomDialog>
 
       {/* ── Fee Collection Preview Dialog ── */}

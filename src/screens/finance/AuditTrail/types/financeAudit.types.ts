@@ -18,12 +18,29 @@ export interface FinanceAuditLog {
   ipAddress?: string;
   device?: string;
   remarks?: string;
+  entityType?: string;
+  entityId?: string;
+  correlationId?: string;
+  academicYearId?: string;
+  contextJson?: string;
+}
+
+export interface FinanceAuditStudentLookup {
+  studentId: string;
+  displayName: string;
+  grNo?: string | null;
+  rollNo?: string | null;
+  standardDivision?: string | null;
+  label: string;
 }
 
 export interface AuditFilterValues {
   startDate: string | null;
   endDate: string | null;
   studentId: string;
+  selectedStudentLabel: string;
   subModule: string;
+  action: string;
   search: string;
+  correlationId: string;
 }

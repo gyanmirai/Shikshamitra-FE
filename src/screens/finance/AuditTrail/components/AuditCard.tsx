@@ -22,6 +22,8 @@ import type { FinanceAuditLog } from '../types/financeAudit.types';
 interface AuditCardProps {
   log: FinanceAuditLog;
   index?: number;
+  variant?: 'default' | 'compact';
+  onFilterByStudent?: (studentId: string, label: string) => void;
 }
 
 const ACTION_ICON_MAP: Record<string, string> = {
@@ -84,7 +86,16 @@ const MetaItem = ({ icon, text, muted }: MetaItemProps) => (
   </Box>
 );
 
-const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
+const buildStudentFilterLabel = (log: FinanceAuditLog) => {
+  const parts: string[] = [];
+  if (log.studentName) parts.push(log.studentName);
+  if (log.studentGrNo && log.studentGrNo !== '-') parts.push(`GR ${log.studentGrNo}`);
+  if (log.studentRollNo && log.studentRollNo !== '-') parts.push(`Roll ${log.studentRollNo}`);
+  return parts.join(' · ');
+};
+
+const AuditCard = ({ log, index = 0, variant = 'default', onFilterByStudent }: AuditCardProps) => {
+  const isCompact = variant === 'compact';
   const [expanded, setExpanded] = useState(false);
 
   const subModuleColor = getFinanceAuditSubModuleColor(log.subModule);
@@ -122,10 +133,16 @@ const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
     log.beforeData?.rollNo ||
     '-';
 
+  const studentFilterLabel = buildStudentFilterLabel(log);
+
+  const handleStudentClick = () => {
+    if (!log.studentId || !onFilterByStudent) return;
+    onFilterByStudent(log.studentId, studentFilterLabel || log.studentName || 'Student');
+  };
+
   const detailItems = [
     { label: 'IP Address', value: formatHrAuditValue(log.ipAddress) },
     { label: 'Device', value: deviceInfo },
-    { label: 'Student ID', value: formatHrAuditValue(log.studentId) },
     { label: 'GR No.', value: formatHrAuditValue(studentGrNo) },
     { label: 'Roll No.', value: formatHrAuditValue(studentRollNo) },
     {
@@ -165,7 +182,12 @@ const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
         },
       }}
     >
-      <Box sx={{ p: { xs: 1.5, sm: 2 }, pl: { xs: 2.5, sm: 3 } }}>
+      <Box
+        sx={{
+          p: isCompact ? { xs: 1, sm: 1.25 } : { xs: 1.5, sm: 2 },
+          pl: isCompact ? { xs: 2, sm: 2.25 } : { xs: 2.5, sm: 3 },
+        }}
+      >
         {/* Top row */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 1.25 }}>
           <Box
@@ -248,14 +270,63 @@ const AuditCard = ({ log, index = 0 }: AuditCardProps) => {
           variant="body2"
           fontWeight={600}
           color="text.primary"
-          sx={{ lineHeight: 1.6, mb: 1.5, fontSize: 13.5 }}
+          sx={{ lineHeight: 1.6, mb: isCompact ? 1 : 1.5, fontSize: isCompact ? 12.5 : 13.5 }}
         >
           {log.description}
         </Typography>
+        {log.remarks && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+            {log.remarks}
+          </Typography>
+        )}
 
         {/* Meta row */}
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          {log.studentName && <MetaItem icon="mdi:account-school-outline" text={log.studentName} />}
+          {log.studentName && (
+            <Box
+              component={log.studentId && onFilterByStudent ? 'button' : 'div'}
+              type={log.studentId && onFilterByStudent ? 'button' : undefined}
+              onClick={log.studentId && onFilterByStudent ? handleStudentClick : undefined}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                border: 'none',
+                bgcolor: 'transparent',
+                p: 0,
+                cursor: log.studentId && onFilterByStudent ? 'pointer' : 'default',
+                '&:hover':
+                  log.studentId && onFilterByStudent
+                    ? { '& .student-meta': { color: 'primary.main', textDecoration: 'underline' } }
+                    : undefined,
+              }}
+            >
+              <Iconify
+                icon="mdi:account-school-outline"
+                width={14}
+                sx={{ color: 'text.secondary' }}
+              />
+              <Typography
+                className="student-meta"
+                variant="caption"
+                sx={{ color: 'text.secondary', fontSize: 12 }}
+              >
+                {log.studentName}
+                {studentGrNo !== '-' && (
+                  <Typography component="span" variant="caption" sx={{ color: 'text.disabled' }}>
+                    {' '}
+                    · GR {studentGrNo}
+                  </Typography>
+                )}
+                {studentRollNo !== '-' && (
+                  <Typography component="span" variant="caption" sx={{ color: 'text.disabled' }}>
+                    {' '}
+                    · Roll {studentRollNo}
+                  </Typography>
+                )}
+              </Typography>
+            </Box>
+          )}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <Avatar
               sx={{ width: 20, height: 20, fontSize: 10, fontWeight: 700, bgcolor: 'primary.main' }}
