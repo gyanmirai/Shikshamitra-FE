@@ -16,6 +16,7 @@ import {
   Divider,
   TextField,
   Typography,
+  IconButton,
   DialogActions,
   DialogContent,
 } from '@mui/material';
@@ -60,6 +61,13 @@ export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             {isEdit ? 'Edit Manual Holiday' : 'Add Manual Holiday'}
           </Typography>
           <InfoTooltipIcon title="Add dates that should be treated as holidays in this work calendar." />
+          <IconButton
+            aria-label="Close dialog"
+            onClick={closeManualHolidayDialog}
+            sx={{ position: 'absolute', top: 12, right: 12 }}
+          >
+            <Iconify icon="mdi:close" />
+          </IconButton>
         </Stack>
       </DrawerDialogTitle>
       <Divider />

@@ -18,13 +18,15 @@ import {
 } from '@mui/material';
 
 import { SectionTable } from './HRPolicySharedUI';
+import { HR_POLICY_TABS } from '../hr-policy-workspace.constants';
+import { useHRPolicyWorkspace } from '../hooks/useHRPolicyWorkspace';
 import { toLabel, optionLabel, getErrorMessage } from '../hr-policy-workspace-utils';
-
-import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
 // ─── EffectivePreviewTab ────────────────────────────────────────────────────────
 
-export function EffectivePreviewTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
+export function EffectivePreviewTab() {
+  const ctx = useHRPolicyWorkspace({ focus: 'effective', tabs: [HR_POLICY_TABS[5]] });
+
   const {
     effectiveFilters,
     setEffectiveFilters,
@@ -39,9 +41,6 @@ export function EffectivePreviewTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
 
   return (
     <Card sx={{ p: 2, width: '100%' }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Effective Preview
-      </Typography>
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
         <Autocomplete
           options={effectiveEmployeeOptions}

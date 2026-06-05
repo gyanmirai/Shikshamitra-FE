@@ -21,14 +21,14 @@ export const HR_POLICY_TABS: Array<{
   { value: 'calendars', label: 'Work Calendars', icon: 'mdi:calendar-month-outline' },
   { value: 'payroll', label: 'Payroll Policies', icon: 'mdi:cash-sync' },
   { value: 'attendance', label: 'Attendance Policies', icon: 'mdi:account-clock-outline' },
-  { value: 'assignments', label: 'Assignments', icon: 'mdi:account-switch-outline' },
+  { value: 'assignments', label: 'Policy Assignments', icon: 'mdi:account-switch-outline' },
   {
     value: 'holiday',
     label: 'Holiday Impact',
     icon: 'mdi:calendar-search-outline',
     disabled: true,
   },
-  { value: 'effective', label: 'Effective Preview', icon: 'mdi:source-branch-check' },
+  { value: 'effective', label: 'Policy Impact', icon: 'mdi:source-branch-check' },
 ];
 
 // ─── Weekday / Weekly-Rule Options ───────────────────────────────────────────
