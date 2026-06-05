@@ -1,11 +1,11 @@
 import type { FormikErrors } from 'formik';
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import { useFormik } from 'formik';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useRef, useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
@@ -15,11 +15,6 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import {
-  usePutConcessionTypeMutation,
-  usePostConcessionTypeMutation,
-  useGetConcessionTypeByIdQuery,
-} from 'src/redux/finance/concessionType';
 import {
   Box,
   Grid,
@@ -33,6 +28,12 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
+import {
+  useGetConcessionTypesQuery,
+  usePutConcessionTypeMutation,
+  usePostConcessionTypeMutation,
+  useGetConcessionTypeByIdQuery,
+} from 'src/redux/finance/concessionType';
 
 import { ConcessionDocumentFormatArray } from '../type';
 import { getInitialConcessionTypeData } from './ConcessionInitialValues';
@@ -46,6 +47,26 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
   editData,
 }: IConcessionTypeFormProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const { data: concessionTypesData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetConcessionTypesQuery,
+    params: { academicYearId: currentYear?.id, maxResultCount: 1000 },
+    options: {
+      skip: !currentYear?.id || !open?.value,
+    },
+  });
+
+  const existingNames = useMemo(
+    () =>
+      new Set<string>(
+        (concessionTypesData?.data?.items ?? []).map((t: any) => t.name.trim().toLowerCase())
+      ),
+    [concessionTypesData]
+  );
+  const existingNamesRef = useRef<Set<string>>(new Set());
+  existingNamesRef.current = existingNames;
+
   const { data: concessionTypeDetails, isLoading: isLoadingDetails } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypeByIdQuery,
@@ -72,7 +93,10 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: getInitialConcessionTypeData(concessionTypeDetails?.data),
-    validationSchema: concessionTypeValidationSchema,
+    validationSchema: concessionTypeValidationSchema(
+      existingNames,
+      concessionTypeDetails?.data || editData
+    ),
     onSubmit: async (values) => {
       try {
         const payload = {

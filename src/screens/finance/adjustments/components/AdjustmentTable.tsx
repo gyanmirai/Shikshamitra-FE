@@ -34,22 +34,24 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
 
   const tabs = useTabs(AdjustmentStatusEnum.Pending);
 
+  // Reset board + medium whenever the academic year changes
   useEffect(() => {
-    if (currentYear?.boards) {
-      setBoards(currentYear.boards);
-      if (!selectedBoard) {
-        setSelectedBoard(currentYear.boards[0].id);
-        setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
-      }
-    }
+    if (!currentYear?.boards?.length) return;
+    const newBoards = currentYear.boards;
+    setBoards(newBoards);
+    const firstBoard = newBoards[0];
+    setSelectedBoard(firstBoard?.id ?? '');
+    setSelectedMedium(firstBoard?.educationMediums?.[0]?.id ?? '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentYear.boards]);
+  }, [currentYear?.id]);
 
+  // Sync mediums list when the selected board changes
   useEffect(() => {
-    setBoards(currentYear?.boards);
-    const board = boards?.find((item: any) => item.id === selectedBoard);
-    setMediums((board as unknown as Board)?.educationMediums || []);
-  }, [boards, currentYear?.boards, selectedBoard]);
+    if (!currentYear?.boards) return;
+    setBoards(currentYear.boards);
+    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums ?? []);
+  }, [currentYear?.boards, selectedBoard]);
 
   const tabCounts = useMemo(
     () =>
@@ -181,7 +183,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             label: 'Class/Div',
             isFilter: true,
             align: 'left',
-            width: 100,
+            width: 130,
             minWidth: 80,
             maxWidth: 150,
             render: (_v: any, row: any) =>
@@ -205,7 +207,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             align: 'left',
             isFilter: true,
             filterType: 'number' as any,
-            width: 140,
+            width: 150,
             minWidth: 120,
             maxWidth: 170,
             render: (value: any) => (value != null ? `₹ ${Number(value).toLocaleString()}` : '-'),
@@ -244,7 +246,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             align: 'left',
             isFilter: true,
             filterType: 'date' as any,
-            width: 150,
+            width: 180,
             minWidth: 130,
             maxWidth: 180,
             render: (value: any) =>

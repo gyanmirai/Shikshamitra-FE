@@ -2,11 +2,11 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useRef, useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -17,6 +17,7 @@ import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
+  useGetFeeHeadsQuery,
   useAddFeeHeadMutation,
   useUpdateFeeHeadMutation,
 } from 'src/redux/feeHeadManage/feeHeadManageApi';
@@ -51,9 +52,26 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
     currentQueryAndMutation: useUpdateFeeHeadMutation,
   });
 
+  const { data: feeHeadsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeHeadsQuery,
+    params: { academicYearId: currentYear?.id },
+    options: {
+      skip: !currentYear?.id || !open?.value,
+    },
+  });
+
+  const existingNames = useMemo(
+    () => new Set<string>((feeHeadsData?.items ?? []).map((t: any) => t.name.trim().toLowerCase())),
+    [feeHeadsData]
+  );
+  const existingNamesRef = useRef<Set<string>>(new Set());
+  existingNamesRef.current = existingNames;
+
   const formik = useFormik({
     initialValues: getFeeHeadInitialValues(editData),
-    validationSchema: feeHeadValidationSchema,
+    enableReinitialize: true,
+    validationSchema: feeHeadValidationSchema(existingNames, editData),
     onSubmit: async (values) => {
       try {
         // Transform form data to API format

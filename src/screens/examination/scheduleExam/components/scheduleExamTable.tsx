@@ -236,8 +236,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                     actions={(prop) => actions({ ...prop, row })}
                     placement="right-top"
                     showViewIcon
-                    showDeleteIcon
-                    showEditIcon
+                    showDeleteIcon={tabs.value === examScheduledStatus.Pending}
+                    showEditIcon={tabs.value === examScheduledStatus.Pending}
                     handleViewClick={() => onViewTimetable?.(row as IExamFormValues)}
                     handleDeleteClick={() => {
                       onDelete?.(row as IExamFormValues);

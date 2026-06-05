@@ -256,9 +256,17 @@ const SubjectPalette: React.FC<PaletteProps> = ({
           ))}
         </Box>
       ) : subjects?.length > 0 ? (
-        <>
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
           {/* Panel Header */}
-          <Box sx={{ p: 2, pb: 1 }}>
+          <Box sx={{ p: 2, pb: 1, flexShrink: 0 }}>
             <Box
               sx={{
                 display: 'flex',
@@ -366,32 +374,41 @@ const SubjectPalette: React.FC<PaletteProps> = ({
             })()}
           </Box>
 
-          <Divider />
+          <Divider sx={{ flexShrink: 0 }} />
 
-          {/* Subject List */}
-          <Scrollbar sx={{ flex: 1 }}>
-            <List sx={{ px: 1.5, py: 1 }}>
-              {subjects
-                .filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                .map((sub) => (
-                  <SubjectCard
-                    key={sub.subjectId}
-                    subject={sub}
-                    placedCount={placedCounts[sub.subjectId] || 0}
-                    totalSubjects={sub.totalSubjects || 0}
-                  />
-                ))}
-              {subjects.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                .length === 0 && (
-                <Box sx={{ textAlign: 'center', py: 3 }}>
-                  <Typography variant="body2" color="text.disabled">
-                    No subjects match
-                  </Typography>
-                </Box>
-              )}
-            </List>
-          </Scrollbar>
-        </>
+          {/* Subject List — flex: 1 + minHeight: 0 ensures the Scrollbar fills only
+              the remaining card height and never bleeds outside the card boundary */}
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+            <Scrollbar
+              sx={{
+                height: '100%',
+                '& .simplebar-content-wrapper': { height: '100%' },
+                '& .simplebar-track': { zIndex: 1 },
+              }}
+            >
+              <List sx={{ px: 1.5, py: 1 }}>
+                {subjects
+                  .filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .map((sub) => (
+                    <SubjectCard
+                      key={sub.subjectId}
+                      subject={sub}
+                      placedCount={placedCounts[sub.subjectId] || 0}
+                      totalSubjects={sub.totalSubjects || 0}
+                    />
+                  ))}
+                {subjects.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .length === 0 && (
+                  <Box sx={{ textAlign: 'center', py: 3 }}>
+                    <Typography variant="body2" color="text.disabled">
+                      No subjects match
+                    </Typography>
+                  </Box>
+                )}
+              </List>
+            </Scrollbar>
+          </Box>
+        </Box>
       ) : (
         <Box
           sx={{

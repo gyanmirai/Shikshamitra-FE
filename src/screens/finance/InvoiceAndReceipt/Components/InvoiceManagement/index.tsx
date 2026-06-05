@@ -242,16 +242,24 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
   // Get current year from global state to derive boards
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // Sync boards from current year
+  // Reset board + medium whenever the academic year changes
   useEffect(() => {
-    setBoards(currentYear?.boards || []);
-  }, [currentYear?.boards]);
+    if (!currentYear?.boards?.length) return;
+    const newBoards = currentYear.boards;
+    setBoards(newBoards);
+    const firstBoard = newBoards[0];
+    setSelectedBoard(firstBoard?.id ?? '');
+    setSelectedMedium(firstBoard?.educationMediums?.[0]?.id ?? '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear?.id]);
 
-  // Update mediums when selectedBoard changes
+  // Sync mediums list when the selected board changes
   useEffect(() => {
-    const board = boards.find((item: Board) => item.id === selectedBoard);
-    setMediums(board?.educationMediums || []);
-  }, [boards, selectedBoard]);
+    if (!currentYear?.boards) return;
+    setBoards(currentYear.boards);
+    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums ?? []);
+  }, [currentYear?.boards, selectedBoard]);
 
   // Update classes when medium changes
   useEffect(() => {

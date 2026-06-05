@@ -2,11 +2,11 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useRef, useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -15,6 +15,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
+  useGetFeeCategoriesQuery,
   useAddFeeCategoryMutation,
   useUpdateFeeCategoryMutation,
 } from 'src/redux/feeCategory/feeCategoryApi';
@@ -26,6 +27,26 @@ import type { IFeeCategoryFormProps } from './type';
 
 const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const { data: feeCategoriesData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeCategoriesQuery,
+    params: { academicYearId: currentYear?.id, page: 1, pageSize: 1000 },
+    options: {
+      skip: !currentYear?.id || !open?.value,
+    },
+  });
+
+  const existingNames = useMemo(
+    () =>
+      new Set<string>(
+        (feeCategoriesData?.items ?? []).map((t: any) => t.name.trim().toLowerCase())
+      ),
+    [feeCategoriesData]
+  );
+  const existingNamesRef = useRef<Set<string>>(new Set());
+  existingNamesRef.current = existingNames;
+
   const [addFeeCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddFeeCategoryMutation,
@@ -36,7 +57,8 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
   });
   const formik = useFormik({
     initialValues: getFeeCategoryInitialValues(editData),
-    validationSchema: feeCategoryValidationSchema,
+    enableReinitialize: true,
+    validationSchema: feeCategoryValidationSchema(existingNames, editData),
     onSubmit: (values) => {
       if (editData) {
         updateFeeCategory({
