@@ -58,7 +58,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
         then: (schema) => schema.required('Max value is required'),
         otherwise: (schema) => schema.nullable(),
       }),
-      filterValue: yup.mixed().when('filterType', {
+      filterValue: yup.string().when('filterType', {
         is: 'between',
         then: (schema) => schema.nullable(),
         otherwise: (schema) => schema.required('value is required'),
@@ -119,7 +119,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
     let value: any = formik.values.filterValue;
     let filterTypeValue = formik.values.filterType;
     if (anchorEl.column.filterType === 'date') {
-      value = value ? (value as Dayjs).format('DD-MM-YYYY') : null;
+      value = (value as Dayjs).format('DD-MM-YYYY');
     }
     if (anchorEl.column.filterType === 'enum') {
       filterTypeValue = 'equals';

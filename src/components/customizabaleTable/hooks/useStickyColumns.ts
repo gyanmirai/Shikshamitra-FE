@@ -5,7 +5,7 @@ import type { IData, IColumn } from '../types';
 interface UseStickyColumnsProps {
   columns: IColumn[];
   columnVisibility: Record<string, boolean>;
-  headerWidths: Record<string, number>;
+  headerRefs: (number | null)[];
   paginatedData: IData[];
   columnWidths: Record<string, number>;
 }
@@ -13,7 +13,7 @@ interface UseStickyColumnsProps {
 export const useStickyColumns = ({
   columns,
   columnVisibility,
-  headerWidths,
+  headerRefs,
   paginatedData,
   columnWidths,
 }: UseStickyColumnsProps) => {
@@ -21,44 +21,47 @@ export const useStickyColumns = ({
     left: Record<string, number>;
     right: Record<string, number>;
   }>({ left: {}, right: {} });
-
   useEffect(() => {
-    const leftSticky: IColumn[] = [];
-    const rightSticky: IColumn[] = [];
+    setTimeout(() => {
+      const leftSticky: { col: IColumn; idx: number }[] = [];
+      const rightSticky: { col: IColumn; idx: number }[] = [];
 
-    const totalVisibleColumns = columns.filter((col) => columnVisibility[col.id]);
-    const half = Math.ceil(totalVisibleColumns.length / 2);
+      const totalVisibleColumns = columns.filter((col) => columnVisibility[col.id]);
 
-    totalVisibleColumns.forEach((col, idx) => {
-      if (col.sticky) {
-        if (idx < half) {
-          leftSticky.push(col);
-        } else {
-          rightSticky.push(col);
+      const half = Math.ceil(totalVisibleColumns.length / 2);
+
+      totalVisibleColumns.forEach((col, idx) => {
+        if (col.sticky) {
+          if (idx < half) {
+            leftSticky.push({ col, idx });
+          } else {
+            rightSticky.push({ col, idx });
+          }
         }
-      }
-    });
+      });
 
-    const leftOffsets: Record<string, number> = {};
-    let left = 0;
-    leftSticky.forEach((col) => {
-      // const configuredWidth = typeof col.width === 'number' ? col.width : undefined;
-      const width = columnWidths[col.id] ?? headerWidths[col.id] ?? 100;
-      leftOffsets[col.id] = left;
-      left += width;
-    });
+      const leftOffsets: Record<string, number> = {};
+      let left = 0;
+      leftSticky.forEach(({ col, idx }) => {
+        const el = headerRefs[idx];
+        const width = el ?? 100;
+        leftOffsets[col.id as string] = left;
+        left += width;
+      });
 
-    const rightOffsets: Record<string, number> = {};
-    let right = 0;
-    [...rightSticky].reverse().forEach((col) => {
-      // const configuredWidth = typeof col.width === 'number' ? col.width : undefined;
-      const width = columnWidths[col.id] ?? headerWidths[col.id] ?? 100;
-      rightOffsets[col.id] = right;
-      right += width;
-    });
+      const rightOffsets: Record<string, number> = {};
+      let right = 0;
+      [...rightSticky].reverse().forEach(({ col, idx }) => {
+        const el = headerRefs[idx];
+        const width = el ?? 100;
 
-    setStickyMap({ left: leftOffsets, right: rightOffsets });
-  }, [columnVisibility, columns, headerWidths, paginatedData, columnWidths]);
+        rightOffsets[col.id as string] = right;
+        right += width;
+      });
+
+      setStickyMap({ left: leftOffsets, right: rightOffsets });
+    }, 100);
+  }, [columnVisibility, columns, headerRefs, paginatedData, columnWidths]);
 
   /**
    * Memoization Justification:

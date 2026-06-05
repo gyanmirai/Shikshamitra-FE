@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import _ from 'lodash';
 import { useTheme } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useRef, useMemo, useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -56,6 +56,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   isShowedDense = true,
   rowProps = () => ({}),
   tableId,
+  showCheckbox = false,
   onSendNotification = () => {},
   searchFieldProps = {},
   noDataText = <>No data available</>,
@@ -90,8 +91,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     serverSideFilter: shouldUseServerFilter,
     serverSideSort,
     serverSidePagination,
-    serverSideSearch,
-    isPagination,
   });
 
   const rowsPerPageOptions = useMemo(() => {
@@ -111,25 +110,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     return [...baseOptions, { value: rowCount, label: 'All' }];
   }, [filteredData.length, maxServerRowsPerPage, serverSidePagination, totalCount]);
 
-  const tableElementRef = useRef<HTMLTableElement | null>(null);
-  const [headerWidths, setHeaderWidths] = useState<Record<string, number>>({});
+  const [headerRefs, setHeaderRefs] = useState<number[]>([]);
   const [tableRef, setTableRef] = useState<number>(0);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => {
-    if (!tableElementRef.current) return;
-    const thElements = tableElementRef.current.querySelectorAll('thead th');
-    const widths: Record<string, number> = {};
-    thElements.forEach((th) => {
-      const colId = th.getAttribute('data-column-id');
-      if (colId) {
-        widths[colId] = th.getBoundingClientRect().width;
-      }
-    });
-    if (!_.isEqual(headerWidths, widths)) {
-      setHeaderWidths(widths);
-    }
-  });
 
   // For empty content width
   const fullScreenDialog = useBoolean();
@@ -138,19 +120,20 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   const { stickyMap, getStickyStyle } = useStickyColumns({
     columns: memoizedColumns,
     columnVisibility,
-    headerWidths,
+    headerRefs,
     paginatedData,
     columnWidths,
   });
 
   const effectiveColumnWidths = useMemo(() => {
+    if (Object.keys(columnWidths).length === 0) return {} as Record<string, number>;
     const widths: Record<string, number> = {};
-    memoizedColumns.forEach((col) => {
+    memoizedColumns.forEach((col, index) => {
       const configuredWidth = typeof col.width === 'number' ? col.width : undefined;
-      widths[col.id] = columnWidths[col.id] ?? configuredWidth ?? headerWidths[col.id] ?? 100;
+      widths[col.id] = columnWidths[col.id] ?? configuredWidth ?? headerRefs[index] ?? 100;
     });
     return widths;
-  }, [columnWidths, headerWidths, memoizedColumns]);
+  }, [columnWidths, headerRefs, memoizedColumns]);
 
   // Changes whenever search/filter/sort/page changes → triggers row re-animation
   const animationKey = useMemo(
@@ -159,20 +142,19 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   );
 
   useEffect(() => {
-    const activeId = fullScreenDialog.value ? `${tableUniqId}-fullscreen` : tableUniqId;
-    const tableElement = document.getElementById(activeId);
+    const tableElement = document.getElementById(tableUniqId);
 
     if (!tableElement) return;
 
     const observer = new ResizeObserver(() => {
-      setTableRef(tableElement?.getBoundingClientRect?.()?.width || 0);
+      setTableRef(tableElement?.getBoundingClientRect?.()?.width);
     });
 
     observer.observe(tableElement);
 
     // eslint-disable-next-line consistent-return
     return () => observer.disconnect();
-  }, [tableUniqId, fullScreenDialog.value]);
+  }, [tableUniqId]);
 
   const [filterAnchorEl, setFilterAnchorEl] = useState<IColumnFilterAnchor | null>(null);
   const [expandedRows, setExpandedRows] = useState<{ [key: number]: boolean }>({});
@@ -224,13 +206,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     return () => {};
   }, [searchTerm, serverSideSearch, onServerSearch]);
 
-  // Trigger onServerSort when sorts configuration changes
-  useEffect(() => {
-    if (serverSideSort && onServerSort) {
-      onServerSort(sorts[sorts.length - 1]?.column || '', sorts);
-    }
-  }, [sorts, serverSideSort, onServerSort]);
-
   const handleColumnVisibilityChange = useCallback(
     (columnId: string, isVisible: boolean) => {
       handleChangeParams({
@@ -274,23 +249,19 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   useEffect(() => {
     handleChangeParams({
       columnVisibility: memoizedColumns.reduce(
-        (acc, column) => ({
-          ...acc,
-          [column.id]: columnVisibility[column.id] ?? !column.defaultHidden,
-        }),
+        (acc, column) => ({ ...acc, [column.id]: !column.defaultHidden }),
         {}
       ),
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memoizedColumns, handleChangeParams]);
 
   const theme = useTheme();
 
-  const renderTable = (isFullScreenView: boolean) => {
-    const uniqId = isFullScreenView ? `${tableUniqId}-fullscreen` : tableUniqId;
-    return (
+  const tableContent = useMemo(
+    () => (
       <Box
         sx={{
+          // pt: 1,
           display: 'flex',
           flexDirection: 'column',
           flex: 1,
@@ -300,18 +271,11 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         {...boxOther}
       >
         <Card
-          ref={(el) => {
-            if (
-              el &&
-              ((isFullScreenView && fullScreenDialog.value) ||
-                (!isFullScreenView && !fullScreenDialog.value))
-            ) {
-              setTableRef(el.getBoundingClientRect().width);
-            }
-          }}
-          id={uniqId}
+          ref={(el) => setTableRef(el?.getBoundingClientRect()?.width || 0)}
+          id={tableUniqId}
           data-testid={tableId}
           sx={{
+            // boxShadow: theme.customShadows?.z20 || '0px 4px 20px rgba(0, 0, 0, 0.05)',
             borderRadius: 2,
             display: 'flex',
             flexDirection: 'column',
@@ -484,11 +448,11 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               {...other}
             >
               <Table
-                ref={isFullScreenView === fullScreenDialog.value ? tableElementRef : null}
                 stickyHeader
                 aria-label="customizable table"
                 size={dense ? 'small' : 'medium'}
                 sx={{
+                  // height: '100%',
                   '&:focus-visible': {
                     outline: 'none',
                   },
@@ -507,6 +471,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     e.stopPropagation();
                     setFilterAnchorEl({ element: e.currentTarget as HTMLElement, column: col });
                   }}
+                  headerRefs={headerRefs}
+                  setHeaderRef={setHeaderRefs}
                   stickyMap={stickyMap}
                   getStickyStyle={getStickyStyle}
                   columnWidths={effectiveColumnWidths}
@@ -581,8 +547,65 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           </ComponentBlock>
         </Card>
       </Box>
-    );
-  };
+    ),
+    [
+      boxSx,
+      boxOther,
+      tableUniqId,
+      theme.palette.divider,
+      theme.vars.palette.divider,
+      isSearch,
+      isFilter,
+      searchTerm,
+      handleSearch,
+      memoizedColumns,
+      columnVisibility,
+      handleColumnVisibilityChange,
+      handleResetColumns,
+      searchFieldProps,
+      fullScreenDialog.value,
+      fullScreenDialog.onToggle,
+      filters,
+      handleRemoveFilter,
+      handleClearAllFilters,
+      filterAnchorEl,
+      handleApplyColumnFilter,
+      sx,
+      other,
+      dense,
+      sorts,
+      handleSort,
+      headerRefs,
+      stickyMap,
+      getStickyStyle,
+      isLoading,
+      paginatedData,
+      handleRowClick,
+      rowProps,
+      expandedRows,
+      handleExpandRow,
+      noDataText,
+      tableRef,
+      rowsPerPage,
+      isShowedDense,
+      isPagination,
+      serverSidePagination,
+      totalCount,
+      rowsPerPageOptions,
+      filteredData.length,
+      page,
+      handlePageChange,
+      handleRowsPerPageChange,
+      handleChangeParams,
+      tableTitle,
+      tableId,
+      sortedData,
+      effectiveColumnWidths,
+      animationKey,
+      handleResizeStart,
+      handleResetWidth,
+    ]
+  );
 
   const handleCloseFullScreen = useCallback(() => {
     if (document.fullscreenElement) {
@@ -593,7 +616,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
   return (
     <>
-      {renderTable(false)}
+      {tableContent}
 
       <CustomDialog
         open={fullScreenDialog.value}
@@ -601,7 +624,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         title={tableTitle}
         handleClose={handleCloseFullScreen}
       >
-        {fullScreenDialog.value && renderTable(true)}
+        {tableContent}
       </CustomDialog>
     </>
   );

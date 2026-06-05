@@ -38,19 +38,20 @@ export const useTableConfig = ({ columns, defaultRowsPerPage = 10 }: UseTableCon
    */
   const handleSort = useCallback((column: string, originalId?: string) => {
     setTableConfig((prev) => {
-      const existingSort = prev.sorts.find((item) => item.column === column);
-      let newSorts: IParams['sorts'] = [];
+      const newSortConfig = [...prev.sorts];
+      const configIndex = newSortConfig.findIndex((item) => item.column === column);
 
-      if (existingSort) {
-        if (existingSort.direction === 'asc') {
-          newSorts = [{ column, direction: 'desc', originalId }];
+      if (configIndex > -1) {
+        if (newSortConfig[configIndex].direction === 'asc') {
+          newSortConfig[configIndex].direction = 'desc';
+          newSortConfig[configIndex].originalId = originalId;
         } else {
-          newSorts = [];
+          newSortConfig.splice(configIndex, 1);
         }
       } else {
-        newSorts = [{ column, direction: 'asc', originalId }];
+        newSortConfig.push({ column, direction: 'asc', originalId });
       }
-      return { ...prev, sorts: newSorts };
+      return { ...prev, sorts: newSortConfig };
     });
   }, []);
 
