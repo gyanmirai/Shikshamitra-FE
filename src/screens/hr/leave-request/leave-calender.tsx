@@ -433,7 +433,7 @@ export const LeaveRequestForm = ({
     </TableRow>
   ) : (
     <Scrollbar sx={{ maxHeight: 520 }}>
-      {/* â”€â”€ Header â”€â”€ */}
+      {/*  Header  */}
       <Box sx={{ px: 3, pt: 2.5, pb: 2 }}>
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={2}>
           <Box minWidth={0}>
@@ -484,7 +484,7 @@ export const LeaveRequestForm = ({
 
       <Divider />
 
-      {/* â”€â”€ Section: Employee Information â”€â”€ */}
+      {/*  Section: Employee Information  */}
       <Box sx={{ px: 3, py: 2.5 }}>
         <SectionHeader icon="mdi:account-outline" label="Employee Information" />
         <Stack spacing={1.5}>
@@ -497,7 +497,7 @@ export const LeaveRequestForm = ({
 
       <Divider />
 
-      {/* â”€â”€ Section: Leave Details â”€â”€ */}
+      {/*  Section: Leave Details  */}
       <Box sx={{ px: 3, py: 2.5 }}>
         <SectionHeader icon="mdi:calendar-outline" label="Leave Details" />
         <Stack spacing={1.5}>
@@ -540,7 +540,7 @@ export const LeaveRequestForm = ({
         </Stack>
       </Box>
 
-      {/* â”€â”€ Section: Reason â”€â”€ */}
+      {/*  Section: Reason  */}
       {(detail?.description || editData?.reason || editData?.description) && (
         <>
           <Divider />
@@ -568,7 +568,7 @@ export const LeaveRequestForm = ({
         </>
       )}
 
-      {/* â”€â”€ Section: Remarks â”€â”€ */}
+      {/*  Section: Remarks  */}
       {detail?.remarks && (
         <>
           <Divider />
@@ -581,7 +581,7 @@ export const LeaveRequestForm = ({
         </>
       )}
 
-      {/* â”€â”€ Section: Attachment â”€â”€ */}
+      {/*  Section: Attachment  */}
       {detail?.attachmentUrl && (
         <>
           <Divider />

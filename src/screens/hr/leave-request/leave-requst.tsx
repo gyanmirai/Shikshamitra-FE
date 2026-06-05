@@ -597,6 +597,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   value={values.startDate}
                   disabled={!!editData}
                   format="DD/MM/YYYY"
+                  disablePast
                   minDate={enforceLeaveNoticePeriod ? minimumLeaveStartDate : undefined}
                   onChange={(value) => {
                     setFieldValue('startDate', value);

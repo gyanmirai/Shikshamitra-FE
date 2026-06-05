@@ -1,6 +1,5 @@
-import { toast } from 'sonner';
 import { useEffect } from 'react';
-import { Alert } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 interface IQueryAndMutation<T> {
@@ -46,38 +45,12 @@ function useQueryAndMutation<T>({
   useEffect(() => {
     if (isError && popupConfig.error) {
       const parsed = parseApiProblemDetail(error);
-      const message = parsed.detail || popupConfig.errorMessage;
-      toast.custom(
-        (t) => (
-          <Alert
-            severity="error"
-            variant="filled"
-            onClose={() => {
-              toast.dismiss(t);
-            }}
-          >
-            {message}
-          </Alert>
-        ),
-        { id: message }
-      );
-      // toast.error(error?.data?.error?.message || popupConfig.errorMessage);
+      shikshaMitraToast.error({ message: parsed.detail || popupConfig.errorMessage });
     }
   }, [error, isError, popupConfig.error, popupConfig.errorMessage]);
   useEffect(() => {
     if (isSuccess && popupConfig.success) {
-      // toast.success(popupConfig.successMessage);
-      toast.custom((t) => (
-        <Alert
-          severity="success"
-          variant="filled"
-          onClose={() => {
-            toast.dismiss(t);
-          }}
-        >
-          {popupConfig.successMessage}
-        </Alert>
-      ));
+      shikshaMitraToast.success({ message: popupConfig.successMessage });
     }
   }, [isSuccess, popupConfig.success, popupConfig.successMessage]);
 
