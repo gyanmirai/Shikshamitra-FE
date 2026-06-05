@@ -46,19 +46,16 @@ export default function AttendancePoliciesWorkspace({ focus }: HRPolicyWorkspace
           { name: 'Policies & Rules' },
           { name: 'Attendance Policies' },
         ]}
-        action={
-          canViewAudit ? (
-            <Box sx={{ typography: 'caption', color: 'text.secondary' }}>
-              Set thresholds, grace time, penalties, and advanced rules for attendance
-            </Box>
-          ) : undefined
-        }
       />
       {!academicYearId ? (
         <Alert severity="warning">Select an academic year to manage HR policies.</Alert>
       ) : null}
       {isLoading ? <LinearProgress /> : null}
-
+      {canViewAudit ? (
+        <Box sx={{ typography: 'caption', color: 'text.secondary', pl: 1 }}>
+          Set thresholds, grace time, penalties, and advanced rules for attendance
+        </Box>
+      ) : undefined}
       {/* Tab content */}
       <Box sx={{ display: 'flex', flex: 1, minHeight: 0, mt: 1 }}>
         <PolicyTable type="attendance" ctx={ctx} />

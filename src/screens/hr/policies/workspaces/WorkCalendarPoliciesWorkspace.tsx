@@ -48,19 +48,16 @@ export default function WorkCalendarPoliciesWorkspace({ focus }: HRPolicyWorkspa
           { name: 'Policies & Rules' },
           { name: 'Work Calendars' },
         ]}
-        action={
-          canViewAudit ? (
-            <Box sx={{ typography: 'caption', color: 'text.secondary' }}>
-              Manage working calendars, weekly rules, and holidays
-            </Box>
-          ) : undefined
-        }
       />
       {!academicYearId ? (
         <Alert severity="warning">Select an academic year to manage HR policies.</Alert>
       ) : null}
       {isLoading ? <LinearProgress /> : null}
-
+      {canViewAudit ? (
+        <Box sx={{ typography: 'caption', color: 'text.secondary', pl: 1 }}>
+          Manage working calendars, weekly rules, and holidays
+        </Box>
+      ) : undefined}
       {/* Tab content */}
       <Box sx={{ display: 'flex', flex: 1, minHeight: 0, mt: 1 }}>
         <CalendarsTab ctx={ctx} />

@@ -46,19 +46,16 @@ export default function AssignmentsWorkspace({ focus }: HRPolicyWorkspaceProps) 
           { name: 'Policies & Rules' },
           { name: 'Policy Assignments' },
         ]}
-        action={
-          canViewAudit ? (
-            <Box sx={{ typography: 'caption', color: 'text.secondary' }}>
-              Assign payroll and attendance policies to employees and groups
-            </Box>
-          ) : undefined
-        }
       />
       {!academicYearId ? (
         <Alert severity="warning">Select an academic year to manage HR policies.</Alert>
       ) : null}
       {isLoading ? <LinearProgress /> : null}
-
+      {canViewAudit ? (
+        <Box sx={{ typography: 'caption', color: 'text.secondary', pl: 1 }}>
+          Assign payroll and attendance policies to employees and groups
+        </Box>
+      ) : undefined}
       {/* Tab content */}
       <Box sx={{ display: 'flex', flex: 1, minHeight: 0, mt: 1 }}>
         <AssignmentsTab ctx={ctx} />

@@ -41,9 +41,6 @@ export function EffectivePreviewTab() {
 
   return (
     <Card sx={{ p: 2, width: '100%' }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Policy Impact
-      </Typography>
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
         <Autocomplete
           options={effectiveEmployeeOptions}
