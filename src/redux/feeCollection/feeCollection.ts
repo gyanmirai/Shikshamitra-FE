@@ -4,7 +4,7 @@ import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from '../finance/financeModuleApi';
 
-export const FEE_COLLECTION_V2_BASE_URL = '/v2/fee-collections';
+export const FEE_COLLECTION_V2_BASE_URL = '/fee-collections';
 export const FEE_RECEIPT_BASE_URL = '/v1/fee-receipts';
 
 type StudentIdArg = string | { studentId: string };
