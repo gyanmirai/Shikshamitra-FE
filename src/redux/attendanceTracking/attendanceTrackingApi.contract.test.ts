@@ -28,6 +28,7 @@ describe('attendanceTrackingApi contract helpers', () => {
       employeeId: 'emp-1',
       startDate: '01/04/2026',
       endDate: '22/04/2026',
+      academicYearId: 'year-1',
       educationMediumStageId: 'stage-1',
       status: 'REJECTED_LEAVE',
     });
@@ -36,8 +37,47 @@ describe('attendanceTrackingApi contract helpers', () => {
       employeeId: 'emp-1',
       startDate: '01/04/2026',
       endDate: '22/04/2026',
+      academicYearId: 'year-1',
       educationMediumStageId: 'stage-1',
       status: 'REJECTED_LEAVE',
+      search: undefined,
+      page: 1,
+      pageSize: 10,
+    });
+  });
+
+  it('omits employee-wise stage id when backend should infer employee stages', () => {
+    const params = buildEmployeeWiseAttendanceParams({
+      employeeId: 'emp-1',
+      startDate: '01/04/2026',
+      endDate: '22/04/2026',
+    });
+
+    expect(params).toEqual({
+      employeeId: 'emp-1',
+      startDate: '01/04/2026',
+      endDate: '22/04/2026',
+      status: undefined,
+      search: undefined,
+      page: 1,
+      pageSize: 10,
+    });
+  });
+
+  it('includes employee-wise academic year id when supplied', () => {
+    const params = buildEmployeeWiseAttendanceParams({
+      employeeId: 'emp-1',
+      startDate: '01/04/2026',
+      endDate: '22/04/2026',
+      academicYearId: 'year-1',
+    });
+
+    expect(params).toEqual({
+      employeeId: 'emp-1',
+      startDate: '01/04/2026',
+      endDate: '22/04/2026',
+      academicYearId: 'year-1',
+      status: undefined,
       search: undefined,
       page: 1,
       pageSize: 10,

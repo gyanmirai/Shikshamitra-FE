@@ -91,7 +91,7 @@ export const TableBody = ({
                       position: column.sticky ? 'sticky' : 'static',
                       zIndex: column.sticky ? 10 : 2,
                       backgroundColor: column.sticky
-                        ? theme.palette.background.paper
+                        ? theme.vars.palette.background.paper
                         : 'transparent',
                       ...getColumnSizeSx(column, columnWidths[column.id]),
                       ...getStickyStyle(column),
@@ -172,10 +172,17 @@ export const TableBody = ({
                         position: column.sticky ? 'sticky' : 'static',
                         zIndex: column.sticky ? 10 : 2,
                         backgroundColor: column.sticky
-                          ? theme.palette.background.paper
+                          ? theme.vars.palette.background.paper
                           : 'transparent',
                         boxShadow: column.sticky ? '0px 0 4px rgba(0,0,0,0.08)' : 'none',
                         animation: `${fadeSlideIn} 0.4s ease both`,
+                        ...(column.sticky
+                          ? {
+                              'tr:hover &': {
+                                backgroundColor: theme.vars.palette.action.hover,
+                              },
+                            }
+                          : {}),
 
                         ...getColumnSizeSx(column, columnWidths[column.id]),
                         ...getStickyStyle(column),

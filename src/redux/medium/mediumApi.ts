@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { mediumType } from 'src/redux/tagTypes';
+import { mediumType, organizationType } from 'src/redux/tagTypes';
 
 import { boardApi } from '../board/boardApi';
 
@@ -19,7 +19,11 @@ export const mediumApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [mediumType.medium, mediumType.board],
+      invalidatesTags: [
+        mediumType.medium,
+        mediumType.board,
+        organizationType.academicOrganizationOptions,
+      ],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
@@ -37,7 +41,7 @@ export const mediumApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [mediumType.medium],
+      invalidatesTags: [mediumType.medium, organizationType.academicOrganizationOptions],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
@@ -54,7 +58,7 @@ export const mediumApi = api.injectEndpoints({
         url: `/app/education-medium/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [mediumType.medium],
+      invalidatesTags: [mediumType.medium, organizationType.academicOrganizationOptions],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;

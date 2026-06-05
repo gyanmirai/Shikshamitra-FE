@@ -33,6 +33,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { RoleColorIndicator } from 'src/components/role-color/RoleColorIndicator';
 import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
+import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   EmployeeStatusType,
   EmployeeStatusTypeColor,
@@ -66,7 +67,9 @@ import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salar
 
 const HrEmployee = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { options: organizationOptions, isLoading: organizationOptionsLoading } =
+    useAcademicOrganizationOptions(currentYear?.id);
   const dispatch = useDispatch();
   const statusDialog = useBoolean();
 
@@ -466,13 +469,11 @@ const HrEmployee = () => {
             <CustomSelect
               fullWidth
               label="Organization"
-              options={[
-                { id: '', name: 'All Organizations' },
-                ...(currentMedium?.educationMediumStages || []),
-              ]}
+              options={[{ id: '', name: 'All Organizations' }, ...organizationOptions]}
               value={employeeParams.mediumStageId}
               valueKey="id"
               labelKey="name"
+              isLoading={organizationOptionsLoading}
               onChange={(value) => {
                 const nextValue = Array.isArray(value) ? value[0] : value;
                 setEmployeeParams((pre) => ({

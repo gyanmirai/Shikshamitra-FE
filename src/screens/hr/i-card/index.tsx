@@ -1,8 +1,8 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Organization } from 'src/types/school';
 import type { EmployeeICardTemplate } from 'src/redux/hr/employee-icard-template-api';
+import type { AcademicOrganizationSelectOption } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 
 import Draggable from 'react-draggable';
 import { Add } from '@mui/icons-material';
@@ -21,6 +21,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   EmployeeICardStatusType,
   EmployeeICardStatusTypeColor,
@@ -363,15 +364,14 @@ const EmployeeIcardScreen = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<EmployeeICardTemplate | null>(null);
   const [showConfirm, ConfirmDialog] = useConfirmDialog();
 
-  const { currentMedium: medium, currentYear } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canAdd = hasGrantedPermission(permissions, iCardActionPermissions.add);
   const canDelete = hasGrantedPermission(permissions, iCardActionPermissions.delete);
   const canEdit = canAdd;
   const academicYearId = currentYear?.id;
-  const currentMediumStageId = medium?.educationMediumStages?.[0]?.id;
+  const { options: organizationOptions, byId: organizationById } =
+    useAcademicOrganizationOptions(academicYearId);
 
   const { data, isLoading } = useGetEmployeeICardTemplatesQuery(
     { academicYearId, page: 1, pageSize: 50 },
@@ -381,31 +381,22 @@ const EmployeeIcardScreen = () => {
   const { data: employeeData } = useGetEmployeeQuery({
     page: 1,
     pageSize: 100,
-    mediumStageId: currentMediumStageId,
   });
 
-  const templates = useMemo(
-    () =>
-      (data?.items || []).filter(
-        (template: EmployeeICardTemplate) =>
-          !template.mediumStageId || template.mediumStageId === currentMediumStageId
-      ),
-    [currentMediumStageId, data?.items]
-  );
+  const templates = useMemo(() => data?.items || [], [data?.items]);
 
   const rows = useMemo(
     () =>
       templates.map((template: EmployeeICardTemplate) => ({
         ...template,
         organization:
-          medium?.educationMediumStages?.find(
-            (item: Organization) => item.id === template.mediumStageId
-          )?.name || 'All organizations',
+          (template.mediumStageId ? organizationById.get(template.mediumStageId)?.name : null) ||
+          'All organizations',
         status: template.isActive
           ? EmployeeICardStatusType.Active
           : EmployeeICardStatusType.Inactive,
       })),
-    [medium?.educationMediumStages, templates]
+    [organizationById, templates]
   );
 
   const handleCreate = () => {
@@ -453,7 +444,7 @@ const EmployeeIcardScreen = () => {
           <Box sx={{ flex: 1, minHeight: 0 }}>
             <EmployeeICardBuilder
               template={selectedTemplate}
-              organizations={medium?.educationMediumStages || []}
+              organizations={organizationOptions}
               academicYearId={academicYearId}
               academicYearName={currentYear?.name}
               handleClose={form.onFalse}
@@ -595,7 +586,7 @@ const EmployeeICardBuilder = ({
   handleClose,
 }: {
   template: EmployeeICardTemplate | null;
-  organizations: Organization[];
+  organizations: AcademicOrganizationSelectOption[];
   academicYearId?: string;
   academicYearName?: string;
   handleClose: () => void;

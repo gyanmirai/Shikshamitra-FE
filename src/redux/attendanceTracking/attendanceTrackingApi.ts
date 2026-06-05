@@ -17,7 +17,8 @@ export interface GetEmployeeWiseAttendanceParams {
   employeeId: string;
   startDate: string;
   endDate: string;
-  educationMediumStageId: string;
+  academicYearId?: string;
+  educationMediumStageId?: string;
   status?: AttendanceTrackingFilterStatus;
   search?: string;
   page?: number;
@@ -44,6 +45,7 @@ export const buildEmployeeWiseAttendanceParams = ({
   employeeId,
   startDate,
   endDate,
+  academicYearId,
   educationMediumStageId,
   status,
   search,
@@ -53,7 +55,8 @@ export const buildEmployeeWiseAttendanceParams = ({
   employeeId,
   startDate,
   endDate,
-  educationMediumStageId,
+  ...(academicYearId ? { academicYearId } : {}),
+  ...(educationMediumStageId ? { educationMediumStageId } : {}),
   status,
   search,
   page,

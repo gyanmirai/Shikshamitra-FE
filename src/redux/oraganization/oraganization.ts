@@ -17,7 +17,10 @@ export const organizationApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [organizationType.organization],
+      invalidatesTags: [
+        organizationType.organization,
+        organizationType.academicOrganizationOptions,
+      ],
     }),
     updateOrganization: builder.mutation({
       query: ({ id, body }) => ({
@@ -25,14 +28,20 @@ export const organizationApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [organizationType.organization],
+      invalidatesTags: [
+        organizationType.organization,
+        organizationType.academicOrganizationOptions,
+      ],
     }),
     deleteOrganization: builder.mutation({
       query: (id) => ({
         url: `/app/education-medium-stage/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [organizationType.organization],
+      invalidatesTags: [
+        organizationType.organization,
+        organizationType.academicOrganizationOptions,
+      ],
     }),
   }),
 });

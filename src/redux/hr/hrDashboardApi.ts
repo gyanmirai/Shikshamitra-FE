@@ -114,6 +114,69 @@ export const parseHRDashboardPayload = <T>(preview?: HRDashboardPreview): T | un
   }
 };
 
+const dashboardExceptionTextPatterns = [
+  'exception of type',
+  'volo.abp',
+  'businessException',
+  'stack trace',
+];
+
+export const isDashboardExceptionText = (value?: string | null) => {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase();
+  return dashboardExceptionTextPatterns.some((pattern) =>
+    normalized.includes(pattern.toLowerCase())
+  );
+};
+
+export const sanitizeHRDashboardSummary = (
+  summary?: HRDashboardSummary
+): HRDashboardSummary | undefined => {
+  if (!summary) return undefined;
+
+  const blockingIssues = summary.payroll.blockingIssues.filter(
+    (issue) => !isDashboardExceptionText(issue)
+  );
+  let hasSanitizedInsights = false;
+  const insights = summary.insights.map((insight) => {
+    if (!isDashboardExceptionText(insight.title) && !isDashboardExceptionText(insight.summary)) {
+      return insight;
+    }
+
+    hasSanitizedInsights = true;
+
+    if (insight.source === 'payroll.readiness') {
+      return {
+        ...insight,
+        title: 'Payroll needs review',
+        summary: 'Payroll readiness needs attention before this month can be locked.',
+      };
+    }
+
+    return {
+      ...insight,
+      summary: 'This dashboard item needs attention. Open the module to review details.',
+    };
+  });
+
+  if (blockingIssues.length === summary.payroll.blockingIssues.length && !hasSanitizedInsights) {
+    return summary;
+  }
+
+  return {
+    ...summary,
+    payroll: {
+      ...summary.payroll,
+      canLock: false,
+      blockingIssues: blockingIssues.length
+        ? blockingIssues
+        : ['Payroll readiness needs attention. Open payroll to review the current cycle.'],
+    },
+    insights,
+  };
+};
+
 export type HRDashboardEmployeeSnapshot = {
   id: string;
   name: string;

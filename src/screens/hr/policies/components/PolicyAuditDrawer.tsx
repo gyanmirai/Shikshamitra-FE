@@ -2,8 +2,11 @@
 
 import React from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
+import { HrAuditValueView } from 'src/screens/hr/components/HrAuditValueView';
 import {
-  formatHrAuditValue,
+  toHrAuditLabel,
+  formatHrAuditText,
+  formatHrAuditActor,
   parseHrAuditContext,
   formatHrAuditDateTime,
 } from 'src/utils/hr-audit-format';
@@ -88,13 +91,21 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             <Stack spacing={0.5}>
               <Typography variant="caption" color="text.secondary">
                 Created by{' '}
-                <strong>{auditSummary.createdByName || auditSummary.creatorId || 'Unknown'}</strong>{' '}
+                <strong>
+                  {formatHrAuditActor(
+                    auditSummary.createdByName || auditSummary.creatorId,
+                    'Unknown user'
+                  )}
+                </strong>{' '}
                 on {formatHrAuditDateTime(auditSummary.creationTime)}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Last edited by{' '}
                 <strong>
-                  {auditSummary.lastModifiedByName || auditSummary.lastModifierId || 'Unknown'}
+                  {formatHrAuditActor(
+                    auditSummary.lastModifiedByName || auditSummary.lastModifierId,
+                    'Unknown user'
+                  )}
                 </strong>{' '}
                 on {formatHrAuditDateTime(auditSummary.lastModificationTime)}
               </Typography>
@@ -165,16 +176,17 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                           </Typography>
                         </Stack>
                         <Typography variant="body2" fontWeight={700}>
-                          {event.summary}
+                          {formatHrAuditText(event.summary)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {event.actorDisplayName ||
-                            event.actorNameSnapshot ||
-                            event.actorUserId ||
-                            'Unknown actor'}
+                          {formatHrAuditActor(
+                            event.actorDisplayName || event.actorNameSnapshot || event.actorUserId
+                          )}
                         </Typography>
                         {event.reason ? (
-                          <Typography variant="body2">Reason: {event.reason}</Typography>
+                          <Typography variant="body2">
+                            Reason: {formatHrAuditText(event.reason)}
+                          </Typography>
                         ) : null}
                         {event.changedFields?.length ? (
                           <Box
@@ -187,7 +199,7 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                               borderRadius: 1,
                             }}
                           >
-                            <Table size="small" sx={{ minWidth: 400 }}>
+                            <Table size="small" sx={{ width: 1, tableLayout: 'fixed' }}>
                               <TableHead>
                                 <TableRow>
                                   <TableCell sx={{ bgcolor: 'background.neutral' }}>
@@ -209,30 +221,33 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                                   >
                                     <TableCell
                                       sx={{
+                                        width: '28%',
                                         fontWeight: 600,
                                         color: 'text.secondary',
-                                        whiteSpace: 'nowrap',
+                                        wordBreak: 'break-word',
                                       }}
                                     >
-                                      {toLabel(field.field)}
+                                      {toHrAuditLabel(field.field)}
                                     </TableCell>
                                     <TableCell
                                       sx={{
+                                        width: '36%',
                                         color: 'text.primary',
-                                        wordBreak: 'break-all',
+                                        wordBreak: 'break-word',
                                         minWidth: 120,
                                       }}
                                     >
-                                      {formatHrAuditValue(field.oldValue)}
+                                      <HrAuditValueView value={field.oldValue} dense maxDepth={3} />
                                     </TableCell>
                                     <TableCell
                                       sx={{
+                                        width: '36%',
                                         color: 'text.primary',
-                                        wordBreak: 'break-all',
+                                        wordBreak: 'break-word',
                                         minWidth: 120,
                                       }}
                                     >
-                                      {formatHrAuditValue(field.newValue)}
+                                      <HrAuditValueView value={field.newValue} dense maxDepth={3} />
                                     </TableCell>
                                   </TableRow>
                                 ))}
@@ -241,17 +256,25 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                           </Box>
                         ) : null}
                         {context ? (
-                          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                          <Stack spacing={0.75}>
                             {Object.entries(context)
                               .slice(0, 6)
                               .map(([key, value]) => (
-                                <Chip
+                                <Box
                                   key={key}
-                                  size="small"
-                                  variant="outlined"
-                                  label={`${toLabel(key)}: ${formatHrAuditValue(value)}`}
-                                  sx={{ maxWidth: '100%' }}
-                                />
+                                  sx={{
+                                    p: 0.75,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    borderRadius: 1,
+                                  }}
+                                >
+                                  <HrAuditValueView
+                                    value={value}
+                                    label={toHrAuditLabel(key)}
+                                    dense
+                                  />
+                                </Box>
                               ))}
                           </Stack>
                         ) : null}
@@ -277,15 +300,17 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {formatHrAuditDateTime(event.timestamp)} ·{' '}
-                        {event.actorName || event.actorId || 'Unknown actor'}
+                        {formatHrAuditActor(event.actorName || event.actorId)}
                       </Typography>
                       {event.sourceMethod ? (
                         <Typography variant="caption" color="text.secondary">
-                          {event.sourceMethod}
+                          {formatHrAuditText(event.sourceMethod)}
                         </Typography>
                       ) : null}
                       {event.changedFieldsSummary ? (
-                        <Typography variant="body2">{event.changedFieldsSummary}</Typography>
+                        <Typography variant="body2">
+                          {formatHrAuditText(event.changedFieldsSummary)}
+                        </Typography>
                       ) : null}
                     </Stack>
                   </Paper>

@@ -164,6 +164,13 @@ export type EmployeePolicyOverrideRequest = {
   assignmentReason?: string | null;
 };
 
+export type DisableEmployeePolicyOverrideRequest = {
+  employeeId: string;
+  academicYearId: string;
+  effectiveDate: string;
+  assignmentReason?: string | null;
+};
+
 export type EffectiveEmployeePolicies = {
   employeeId: string;
   academicYearId?: string;
@@ -813,6 +820,14 @@ export const hrPolicyApi = api.injectEndpoints({
       }),
       invalidatesTags: policyTags,
     }),
+    disableEmployeePolicyOverride: builder.mutation<void, DisableEmployeePolicyOverrideRequest>({
+      query: (body) => ({
+        url: '/hr/policy-assignments/direct-employee-override/disable',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: policyTags,
+    }),
     updateHrPolicyAssignment: builder.mutation<
       HrPolicyAssignment,
       { id: string; body: CreateUpdateHrPolicyAssignment }
@@ -1006,6 +1021,7 @@ export const {
   useCreateHrPolicyAssignmentMutation,
   useCreateHrPolicyAssignmentWithTokenMutation,
   useUpsertEmployeePolicyOverrideMutation,
+  useDisableEmployeePolicyOverrideMutation,
   useUpdateHrPolicyAssignmentMutation,
   useUpdateHrPolicyAssignmentWithTokenMutation,
   usePreviewPolicyAssignmentImpactMutation,

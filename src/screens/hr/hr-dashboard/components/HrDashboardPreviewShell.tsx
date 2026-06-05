@@ -5,7 +5,7 @@ import type { HRDashboardPreview, HRDashboardPreviewStatus } from 'src/redux/hr/
 
 import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
-import { Box, Alert, Stack, Button, Typography, IconButton, LinearProgress } from '@mui/material';
+import { Box, Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 
 type Props = {
   title: string;
@@ -72,14 +72,6 @@ export const HrDashboardPreviewShell = ({
           >
             {refreshing ? 'Refreshing' : 'Refresh'}
           </Button>
-          <IconButton
-            size="small"
-            onClick={onRefresh}
-            disabled={refreshing || isFetching}
-            sx={{ width: 36, height: 36, border: (theme) => `1px solid ${theme.palette.divider}` }}
-          >
-            <Iconify icon="solar:refresh-linear" />
-          </IconButton>
         </Stack>
       </Stack>
 

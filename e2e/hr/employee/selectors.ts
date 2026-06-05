@@ -40,4 +40,5 @@ export const profileTabs = [
   'Library',
   'Calendar',
   'Leave Center',
+  'Attendance',
 ];

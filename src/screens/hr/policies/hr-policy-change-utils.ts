@@ -23,6 +23,9 @@ const normalizeNumberOrNull = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const normalizeOvertimeRate = (enabled: boolean, value?: string | null) =>
+  enabled ? normalizeText(value) || 'flat' : '';
+
 const sortNumbers = (items?: number[] | null) =>
   [...new Set(items || [])].sort((left, right) => left - right);
 
@@ -169,7 +172,8 @@ export function isAttendancePolicyUnchanged(
     policy.earlyExitEnabled === payload.earlyExitEnabled &&
     policy.earlyExitGraceTime === normalizeNumberOrNull(payload.earlyExitGraceTime) &&
     policy.overtimeEnabled === payload.overtimeEnabled &&
-    normalizeText(policy.overtimeRate) === normalizeText(payload.overtimeRate as string | null) &&
+    normalizeOvertimeRate(policy.overtimeEnabled, policy.overtimeRate) ===
+      normalizeOvertimeRate(payload.overtimeEnabled, payload.overtimeRate as string | null) &&
     normalizeNumberOrNull(policy.minOvertimeMinutes) ===
       normalizeNumberOrNull(payload.minOvertimeMinutes) &&
     policy.holidayWorkBehavior === payload.holidayWorkBehavior &&

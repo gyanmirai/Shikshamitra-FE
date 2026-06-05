@@ -12,11 +12,11 @@ import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
-import React, { useMemo, useState } from 'react';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -26,6 +26,7 @@ import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { isRegisterMissingPunch } from 'src/screens/hr/attendance-tracking/status-mapper';
+import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   useAdjustAttendanceRegisterMutation,
   useGetGroupedAttendanceRegisterQuery,
@@ -253,8 +254,7 @@ const validateAttendanceDraft = (draft: AttendanceDraft): AttendanceDraftErrors 
 
 const AttendanceTrackingScreen = () => {
   const theme = useTheme();
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
-  const stages = currentMedium?.educationMediumStages || [];
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [filters, setFilters] = useState(getDefaultFilters);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -270,6 +270,8 @@ const AttendanceTrackingScreen = () => {
     reason: '',
   });
   const [draftErrors, setDraftErrors] = useState<AttendanceDraftErrors>({});
+  const academicYearId = currentYear?.id;
+  const { options: stages } = useAcademicOrganizationOptions(academicYearId);
 
   const { data: employeeOptions } = useGetEmployeeQuery({
     page: 1,
@@ -277,10 +279,23 @@ const AttendanceTrackingScreen = () => {
     search: filters.search,
   });
 
+  useEffect(() => {
+    if (
+      filters.educationMediumStageId !== 'all' &&
+      stages.length > 0 &&
+      !stages.some((stage) => stage.id === filters.educationMediumStageId)
+    ) {
+      setFilters((prev) => ({ ...prev, educationMediumStageId: 'all' }));
+      setPage(1);
+      setSelectedIds([]);
+    }
+  }, [filters.educationMediumStageId, stages]);
+
   const queryParams = useMemo(
     () => ({
       startDate: filters.startDate ? filters.startDate.format('YYYY-MM-DD') : '',
       endDate: filters.endDate ? filters.endDate.format('YYYY-MM-DD') : '',
+      academicYearId,
       educationMediumStageId:
         filters.educationMediumStageId === 'all' ? undefined : filters.educationMediumStageId,
       employeeId: filters.employeeId,
@@ -295,14 +310,14 @@ const AttendanceTrackingScreen = () => {
       skipCount: (page - 1) * pageSize,
       maxResultCount: pageSize,
     }),
-    [filters, page, pageSize]
+    [academicYearId, filters, page, pageSize]
   );
 
   const { data, isLoading, isFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetGroupedAttendanceRegisterQuery,
     params: queryParams,
-    options: { skip: !filters.startDate || !filters.endDate },
+    options: { skip: !filters.startDate || !filters.endDate || !academicYearId },
   });
 
   const [adjustAttendance, { isLoading: isAdjusting }] = useQueryAndMutation({
@@ -1095,6 +1110,7 @@ const AttendanceTrackingScreen = () => {
         }}
       >
         <AccordionSummary
+          component="div"
           expandIcon={<Iconify icon="solar:alt-arrow-down-linear" />}
           sx={{ px: 1.5, minHeight: 'auto', m: 0 }}
         >
@@ -1212,9 +1228,9 @@ const AttendanceTrackingScreen = () => {
                   onChange={(event) => setFilter('educationMediumStageId', event.target.value)}
                 >
                   <MenuItem value="all">All organizations</MenuItem>
-                  {stages.map((stage: any) => (
+                  {stages.map((stage) => (
                     <MenuItem key={stage.id} value={stage.id}>
-                      {stage.name}
+                      {stage.label}
                     </MenuItem>
                   ))}
                 </Select>

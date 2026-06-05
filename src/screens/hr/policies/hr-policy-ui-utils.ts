@@ -23,15 +23,20 @@ export type AttendanceNumericRule = {
 export const attendanceNumericRules: Record<AttendanceNumericField, AttendanceNumericRule> = {
   fullDayThresholdPercentage: { min: 0, max: 100, maxLength: 3, label: 'Full day threshold' },
   halfDayThresholdPercentage: { min: 0, max: 100, maxLength: 3, label: 'Half day threshold' },
-  absentThresholdPercentage: { min: 0, max: 100, maxLength: 3, label: 'Absent threshold' },
-  graceTime: { min: 0, max: 240, maxLength: 3, label: 'Late grace minutes' },
+  absentThresholdPercentage: {
+    min: 0,
+    max: 100,
+    maxLength: 3,
+    label: 'Absence Conversion Threshold',
+  },
+  graceTime: { min: 0, max: 240, maxLength: 3, label: 'Grace Period' },
   maxLateAllowedPerMonth: {
     min: 0,
     max: 31,
     maxLength: 2,
-    label: 'Allowed late arrivals per month',
+    label: 'Monthly Late Allowance',
   },
-  penaltyCountThreshold: { min: 0, max: 31, maxLength: 2, label: 'Late count before deduction' },
+  penaltyCountThreshold: { min: 0, max: 31, maxLength: 2, label: 'Apply Penalty After' },
   earlyExitGraceTime: { min: 0, max: 240, maxLength: 3, label: 'Early exit grace minutes' },
   minOvertimeMinutes: {
     min: 0,

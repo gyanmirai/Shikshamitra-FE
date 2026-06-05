@@ -79,7 +79,7 @@ export const TableHeader = React.memo(
                     px: 2,
                     animation: `${fadeSlideIn} 0.4s ease both`,
 
-                    backgroundColor: 'background.neutral',
+                    backgroundColor: theme.vars.palette.background.neutral,
                     // boxShadow: column.sticky
                     //   ? '0px 0 8px rgba(0,0,0,0.08)'
                     //   : '1px 0 8px rgba(0,0,0,0.08)',

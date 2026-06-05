@@ -358,6 +358,7 @@ export const memberManagementType = {
 // ===== Organization API (reducerPath: organizationApi) =====
 export const organizationType = {
   organization: 'Organization',
+  academicOrganizationOptions: 'AcademicOrganizationOptions',
 } as const;
 
 // ===== Organization Unit API (reducerPath: organizationUnitApi) =====
