@@ -40,14 +40,14 @@ describe('HR dashboard preview state', () => {
     ).toBe(false);
   });
 
-  it('returns explicit failed and empty copy', () => {
+  it('returns explicit failed and automatic empty copy', () => {
     expect(getDashboardSnapshotEmptyStateCopy({ status: 'Failed' })).toMatchObject({
       title: 'Dashboard snapshot is not available',
       tone: 'error',
     });
 
     expect(getDashboardSnapshotEmptyStateCopy({ status: 'Empty' })).toMatchObject({
-      title: 'No HR dashboard snapshot yet',
+      title: 'Preparing first HR dashboard snapshot',
       tone: 'info',
     });
   });

@@ -285,6 +285,7 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
 
 const toOptionalGuid = (value: unknown) =>
   typeof value === 'string' && value.trim() ? value : null;
+const toOptionalNumber = (value: unknown) => (value === '' || value == null ? null : Number(value));
 
 const getPayrollComponentId = (item: any) => item?.componentId || item?._id || item?.id || null;
 export const getEmployeeUserId = (values: any, editData?: any) =>
@@ -610,11 +611,16 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         confirmationToken
       );
       const policyOverrideAction = buildEmployeePolicyOverrideAction(values, currentYear?.id);
+      const policyOverrideDisableEffectiveFrom =
+        values.policyOverrideEffectiveFrom ||
+        (values.dateOfJoining
+          ? dayjs(values.dateOfJoining).format('YYYY-MM-DD')
+          : dayjs().format('YYYY-MM-DD'));
       const disablePolicyOverride =
         policyOverrideAction === 'disable'
           ? {
               academicYearId: currentYear?.id,
-              effectiveFrom: values.policyOverrideEffectiveFrom,
+              effectiveFrom: policyOverrideDisableEffectiveFrom,
               assignmentReason:
                 values.policyOverrideAssignmentReason || 'Employee payroll step override disabled',
             }
@@ -635,7 +641,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             epfNumber: values.epfNumber,
             uanNumber: values.uanNumber,
             punchId: values.punchId,
-            totalWorkingHourPerMonth: Number(values.totalWorkingHourPerMonth),
+            totalWorkingHourPerMonth: toOptionalNumber(values.totalWorkingHourPerMonth),
           },
 
           earningComponents: values.earningComponents.map((item: any) => ({

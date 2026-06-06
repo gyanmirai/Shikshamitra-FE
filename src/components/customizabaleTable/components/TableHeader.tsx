@@ -63,6 +63,7 @@ export const TableHeader = React.memo(
     tableUniqId,
   }: TableHeaderProps) => {
     const theme = useTheme();
+    const headerWidthsRef = React.useRef<Record<number, number>>({});
 
     return (
       <TableHead>
@@ -75,10 +76,21 @@ export const TableHeader = React.memo(
                   key={column.id}
                   align={column.align}
                   id={`${tableUniqId}-column-${column.id}`}
-                  ref={(el: HTMLTableCellElement) => {
-                    setHeaderRef((pre: number[]) => {
-                      pre[index] = el?.getBoundingClientRect?.()?.width ?? null;
-                      return pre;
+                  ref={(el: HTMLTableCellElement | null) => {
+                    if (!el) {
+                      return;
+                    }
+
+                    const { width } = el.getBoundingClientRect();
+                    if (headerWidthsRef.current[index] === width) {
+                      return;
+                    }
+
+                    headerWidthsRef.current[index] = width;
+                    setHeaderRef((previous: number[]) => {
+                      const next = [...previous];
+                      next[index] = width;
+                      return next;
                     });
                   }}
                   sx={{

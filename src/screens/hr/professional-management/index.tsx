@@ -2,11 +2,11 @@
 
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
-import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
+import React, { useMemo, useState, useEffect } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -27,6 +27,7 @@ import {
   LinearProgress,
 } from '@mui/material';
 import {
+  PerformanceBoardType,
   type ProfessionalReview,
   type PerformanceTemplate,
   PerformanceStaffCategory,
@@ -38,6 +39,7 @@ import {
   useAddPerformanceFeedbackMutation,
   useSavePerformanceOutcomeMutation,
   useSubmitPerformanceStageMutation,
+  useGetPerformanceSqaaEvidenceQuery,
   useClonePerformanceTemplateMutation,
   useGetPerformanceTrainingNeedsQuery,
   useGetProfessionalReviewCyclesQuery,
@@ -61,6 +63,8 @@ import {
 
 import {
   stageLabels,
+  boardTypeLabels,
+  sqaaDomainLabels,
   cycleStatusLabels,
   staffCategoryLabels,
   isTemplatePublishable,
@@ -68,6 +72,7 @@ import {
 } from './performance-utils';
 
 const tabs = [
+  ['setup', 'Guided Setup', 'mdi:school-outline'],
   ['dashboard', 'Dashboard', 'mdi:view-dashboard-outline'],
   ['templates', 'Templates', 'mdi:clipboard-edit-outline'],
   ['cycles', 'Cycles', 'mdi:calendar-sync-outline'],
@@ -86,7 +91,7 @@ const getBackendApiUrl = (path: string) => {
 };
 
 const ProfessionalManagementScreen = () => {
-  const [tab, setTab] = useState('dashboard');
+  const [tab, setTab] = useState('setup');
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -125,6 +130,7 @@ const ProfessionalManagementScreen = () => {
       </CustomTabs>
 
       <Box sx={{ minWidth: 0, flex: 1 }}>
+        {tab === 'setup' && <GuidedSetupTab />}
         {tab === 'dashboard' && <DashboardTab />}
         {tab === 'templates' && <TemplatesTab />}
         {tab === 'cycles' && <CyclesTab />}
@@ -228,6 +234,253 @@ function MetricCard({
         </Box>
       </Stack>
     </Paper>
+  );
+}
+
+function GuidedSetupTab() {
+  const { data: defaults, isLoading: defaultsLoading } = useGetDefaultPerformanceTemplatesQuery();
+  const { data: templateData, isLoading: templatesLoading } = useGetPerformanceTemplatesQuery({});
+  const { data: cycleData, isLoading: cyclesLoading } = useGetProfessionalReviewCyclesQuery({});
+  const [createTemplate, createTemplateState] = useCreatePerformanceTemplateMutation();
+  const [publishTemplate] = usePublishPerformanceTemplateMutation();
+  const [createCycle, createCycleState] = useCreateProfessionalReviewCycleMutation();
+  const [publishCycle] = usePublishProfessionalReviewCycleMutation();
+  const [assignEmployees] = useAssignProfessionalReviewEmployeesMutation();
+  const [boardType, setBoardType] = useState(PerformanceBoardType.CBSE);
+  const [staffCategory, setStaffCategory] = useState(PerformanceStaffCategory.Teacher);
+  const [cycleName, setCycleName] = useState('Annual Appraisal');
+  const [periodStart, setPeriodStart] = useState(dayjs());
+  const [periodEnd, setPeriodEnd] = useState(dayjs().add(1, 'year'));
+  const isCyclePeriodInvalid = !periodEnd.isAfter(periodStart, 'day');
+  const { data: sqaaEvidence } = useGetPerformanceSqaaEvidenceQuery({ boardType, staffCategory });
+
+  const templates: PerformanceTemplate[] = templateData?.items || [];
+  const cycles: any[] = cycleData?.items || [];
+  const defaultItems = defaults?.items || [];
+  const boardTemplates = templates.filter(
+    (template) =>
+      (Number(template.boardType ?? 0) === boardType || Number(template.boardType ?? 0) === 0) &&
+      Number(template.staffCategory) === staffCategory
+  );
+  const selectedTemplate =
+    boardTemplates.find(
+      (template) => Number(template.boardType ?? 0) === boardType && Number(template.status) === 1
+    ) ||
+    boardTemplates.find((template) => Number(template.boardType ?? 0) === boardType) ||
+    boardTemplates.find((template) => Number(template.status) === 1) ||
+    boardTemplates[0];
+
+  const addPresets = async () => {
+    const items = defaultItems.filter((item: any) => {
+      const itemBoard = Number(item.boardType ?? 0);
+      return itemBoard === boardType || itemBoard === PerformanceBoardType.GenericIndian;
+    });
+    const existingNames = new Set(templates.map((template) => template.name.toLowerCase()));
+    const candidates = items.filter(
+      (item: any) => !existingNames.has(String(item.name).toLowerCase())
+    );
+    if (!candidates.length) {
+      toast.info('Board presets are already available');
+      return;
+    }
+
+    await Promise.all(
+      candidates.map(async (item: any) => {
+        const created = await createTemplate(item).unwrap();
+        await publishTemplate(created.id).unwrap();
+      })
+    );
+    toast.success(`${boardTypeLabels[boardType]} appraisal presets added`);
+  };
+
+  const createAndStartCycle = async () => {
+    if (!selectedTemplate?.id) {
+      toast.error('Add and publish a board preset before starting a cycle');
+      return;
+    }
+    if (isCyclePeriodInvalid) {
+      toast.error('Period end must be after period start');
+      return;
+    }
+
+    let templateId = selectedTemplate.id;
+    if (Number(selectedTemplate.status) !== 1) {
+      const published = await publishTemplate(selectedTemplate.id).unwrap();
+      templateId = published.id;
+    }
+
+    const cycle = await createCycle({
+      name: `${boardTypeLabels[boardType]} ${cycleName}`.trim(),
+      cycleType: 0,
+      periodStart: periodStart.startOf('day').toISOString(),
+      periodEnd: periodEnd.startOf('day').toISOString(),
+      selfReviewDueDate: periodStart.add(14, 'day').toISOString(),
+      reviewerDueDate: periodStart.add(28, 'day').toISOString(),
+      finalizationDueDate: periodStart.add(42, 'day').toISOString(),
+      ratingScaleMax: 5,
+      allowNotApplicable: true,
+      status: 0,
+    }).unwrap();
+    await publishCycle(cycle.id).unwrap();
+    await assignEmployees({
+      id: cycle.id,
+      body: {
+        templateId,
+        employeeIds: [],
+        activeEmployeesOnly: true,
+        staffCategory,
+      },
+    }).unwrap();
+    toast.success('Cycle created, published, and assigned to active staff');
+  };
+
+  const evidenceTotals = (sqaaEvidence || []).reduce(
+    (totals, item) => ({
+      mappedCriteria: totals.mappedCriteria + Number(item.mappedCriteria || 0),
+      evidenceSubmitted: totals.evidenceSubmitted + Number(item.evidenceSubmitted || 0),
+      missingEvidence: totals.missingEvidence + Number(item.missingEvidence || 0),
+    }),
+    { mappedCriteria: 0, evidenceSubmitted: 0, missingEvidence: 0 }
+  );
+
+  return (
+    <Stack spacing={2}>
+      {(defaultsLoading || templatesLoading || cyclesLoading) && <LinearProgress />}
+      <TabHeader title="Indian school appraisal setup" />
+
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <SectionPanel title="1. Choose school board">
+            <Stack spacing={1.5}>
+              <TextField
+                select
+                size="small"
+                label="Board preset"
+                value={boardType}
+                onChange={(event) => setBoardType(Number(event.target.value))}
+              >
+                {[PerformanceBoardType.CBSE, PerformanceBoardType.GSEB].map((value) => (
+                  <MenuItem key={value} value={value}>
+                    {boardTypeLabels[value]}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                size="small"
+                label="Staff group"
+                value={staffCategory}
+                onChange={(event) => setStaffCategory(Number(event.target.value))}
+              >
+                {Object.entries(staffCategoryLabels).map(([value, label]) => (
+                  <MenuItem key={value} value={Number(value)}>
+                    {label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <Button
+                variant="contained"
+                disabled={createTemplateState.isLoading}
+                startIcon={<Iconify icon="mdi:playlist-plus" />}
+                onClick={addPresets}
+              >
+                Add Board Presets
+              </Button>
+            </Stack>
+          </SectionPanel>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <SectionPanel title="2. Start appraisal cycle">
+            <Stack spacing={1.5}>
+              <TextField
+                size="small"
+                label="Cycle name"
+                value={cycleName}
+                onChange={(event) => setCycleName(event.target.value)}
+              />
+              <DatePicker
+                label="Period start"
+                value={periodStart}
+                onChange={(value) => value && setPeriodStart(value)}
+              />
+              <DatePicker
+                label="Period end"
+                value={periodEnd}
+                onChange={(value) => value && setPeriodEnd(value)}
+              />
+              <Button
+                variant="contained"
+                color="success"
+                disabled={
+                  !selectedTemplate?.id || isCyclePeriodInvalid || createCycleState.isLoading
+                }
+                startIcon={<Iconify icon="mdi:rocket-launch-outline" />}
+                onClick={createAndStartCycle}
+              >
+                Create & Assign
+              </Button>
+            </Stack>
+          </SectionPanel>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <SectionPanel title="3. Readiness snapshot">
+            <Stack spacing={1.25}>
+              <MetricCard
+                label="Matching Templates"
+                value={boardTemplates.length}
+                icon="mdi:clipboard-check-outline"
+                tone="info"
+              />
+              <MetricCard
+                label="Review Cycles"
+                value={cycles.length}
+                icon="mdi:calendar-sync-outline"
+                tone="success"
+              />
+              <MetricCard
+                label="SQAAF Criteria"
+                value={evidenceTotals.mappedCriteria}
+                icon="mdi:shield-check-outline"
+                tone="warning"
+              />
+            </Stack>
+          </SectionPanel>
+        </Grid>
+      </Grid>
+
+      <SectionPanel title="SQAAF evidence coverage">
+        <CustomizableTable
+          tableId="performance-sqaaf-evidence-setup"
+          columns={[
+            {
+              id: 'domain',
+              label: 'Domain',
+              minWidth: '240px',
+              render: (value) => sqaaDomainLabels[Number(value)] || '-',
+            },
+            { id: 'mappedCriteria', label: 'Criteria', minWidth: '100px' },
+            { id: 'evidenceRequiredCriteria', label: 'Required', minWidth: '110px' },
+            { id: 'evidenceSubmitted', label: 'Evidence', minWidth: '110px' },
+            {
+              id: 'missingEvidence',
+              label: 'Missing',
+              minWidth: '110px',
+              render: (value) => (
+                <Chip
+                  size="small"
+                  color={Number(value) > 0 ? 'warning' : 'success'}
+                  label={Number(value)}
+                />
+              ),
+            },
+          ]}
+          data={sqaaEvidence || []}
+          noDataText="Add board presets and run reviews to build SQAAF evidence coverage."
+        />
+      </SectionPanel>
+    </Stack>
   );
 }
 
@@ -344,8 +597,22 @@ function TemplatesTab() {
 
   const seedDefaults = async () => {
     const items = defaults?.items || [];
-    await Promise.all(items.map((item: any) => createTemplate(item).unwrap()));
-    toast.success('Default Indian school templates created');
+    const existingNames = new Set(templates.map((template) => template.name.toLowerCase()));
+    const candidates = items.filter(
+      (item: any) => !existingNames.has(String(item.name).toLowerCase())
+    );
+    if (!candidates.length) {
+      toast.info('Default Indian school templates are already available');
+      return;
+    }
+
+    await Promise.all(
+      candidates.map(async (item: any) => {
+        const created = await createTemplate(item).unwrap();
+        await publishTemplate(created.id).unwrap();
+      })
+    );
+    toast.success('Default Indian school templates created and published');
   };
 
   return (
@@ -381,6 +648,12 @@ function TemplatesTab() {
         columns={[
           { id: 'name', label: 'Template', minWidth: '220px' },
           {
+            id: 'boardType',
+            label: 'Board',
+            minWidth: '120px',
+            render: (value) => boardTypeLabels[Number(value ?? 0)] || '-',
+          },
+          {
             id: 'staffCategory',
             label: 'Category',
             minWidth: '150px',
@@ -402,6 +675,10 @@ function TemplatesTab() {
                     <Typography variant="caption" sx={{ minWidth: 120 }} noWrap>
                       {section.name}
                     </Typography>
+                    <Chip
+                      size="small"
+                      label={sqaaDomainLabels[Number(section.sqaaDomain ?? 2)] || 'SQAAF'}
+                    />
                     <LinearProgress
                       variant="determinate"
                       value={Number(section.weight || 0)}
@@ -510,10 +787,12 @@ function TemplateBuilderDialog({
   onCreate: (body: any) => Promise<void>;
 }) {
   const [name, setName] = useState('Teacher Annual Appraisal');
+  const [boardType, setBoardType] = useState(PerformanceBoardType.CBSE);
   const [staffCategory, setStaffCategory] = useState(PerformanceStaffCategory.Teacher);
   const [sections, setSections] = useState<any[]>([
     {
       name: 'Classroom practice',
+      sqaaDomain: 0,
       weight: 50,
       displayOrder: 1,
       criteria: [
@@ -528,6 +807,7 @@ function TemplateBuilderDialog({
     },
     {
       name: 'Professional conduct',
+      sqaaDomain: 2,
       weight: 50,
       displayOrder: 2,
       criteria: [
@@ -597,6 +877,21 @@ function TemplateBuilderDialog({
             select
             fullWidth
             size="small"
+            label="Board"
+            value={boardType}
+            onChange={(event) => setBoardType(Number(event.target.value))}
+            sx={{ minWidth: { md: 180 } }}
+          >
+            {Object.entries(boardTypeLabels).map(([value, label]) => (
+              <MenuItem key={value} value={Number(value)}>
+                {label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            fullWidth
+            size="small"
             label="Staff Category"
             value={staffCategory}
             onChange={(event) => setStaffCategory(Number(event.target.value))}
@@ -647,6 +942,22 @@ function TemplateBuilderDialog({
                   value={section.name}
                   onChange={(event) => updateSection(sectionIndex, { name: event.target.value })}
                 />
+                <TextField
+                  select
+                  size="small"
+                  label="SQAAF Domain"
+                  value={section.sqaaDomain ?? 2}
+                  onChange={(event) =>
+                    updateSection(sectionIndex, { sqaaDomain: Number(event.target.value) })
+                  }
+                  sx={{ width: { xs: 1, md: 240 }, flexShrink: 0 }}
+                >
+                  {Object.entries(sqaaDomainLabels).map(([value, label]) => (
+                    <MenuItem key={value} value={Number(value)}>
+                      {label}
+                    </MenuItem>
+                  ))}
+                </TextField>
                 <TextField
                   size="small"
                   type="number"
@@ -734,6 +1045,7 @@ function TemplateBuilderDialog({
                         ...section.criteria,
                         {
                           name: 'New criterion',
+                          sqaaDomain: section.sqaaDomain ?? 2,
                           weight: 0,
                           evidenceRequired: false,
                           displayOrder: section.criteria.length + 1,
@@ -760,7 +1072,13 @@ function TemplateBuilderDialog({
           onClick={() =>
             setSections((current) => [
               ...current,
-              { name: 'New section', weight: 0, displayOrder: current.length + 1, criteria: [] },
+              {
+                name: 'New section',
+                sqaaDomain: 2,
+                weight: 0,
+                displayOrder: current.length + 1,
+                criteria: [],
+              },
             ])
           }
         >
@@ -786,10 +1104,17 @@ function TemplateBuilderDialog({
           onClick={() =>
             onCreate({
               name,
+              boardType,
               staffCategory,
               ratingScaleMax: 5,
               allowNotApplicable: true,
-              sections,
+              sections: sections.map((section) => ({
+                ...section,
+                criteria: section.criteria.map((criterion: any) => ({
+                  ...criterion,
+                  sqaaDomain: criterion.sqaaDomain ?? section.sqaaDomain ?? 2,
+                })),
+              })),
             })
           }
         >
@@ -1075,6 +1400,7 @@ function ReportsTab() {
   const { data: training } = useGetPerformanceTrainingNeedsQuery({});
   const { data: increments } = useGetPerformanceIncrementRecommendationsQuery({});
   const { data: pendingActions } = useGetPerformancePendingActionsQuery({});
+  const { data: sqaaEvidence } = useGetPerformanceSqaaEvidenceQuery({});
 
   return (
     <Stack spacing={2}>
@@ -1108,6 +1434,38 @@ function ReportsTab() {
           </SectionPanel>
         </Grid>
       </Grid>
+
+      <SectionPanel title="SQAAF Evidence Coverage">
+        <CustomizableTable
+          tableId="performance-report-sqaaf-evidence"
+          columns={[
+            {
+              id: 'domain',
+              label: 'SQAAF Domain',
+              minWidth: '260px',
+              render: (value) => sqaaDomainLabels[Number(value)] || '-',
+            },
+            { id: 'templateCount', label: 'Templates', minWidth: '110px' },
+            { id: 'assignedReviewCount', label: 'Reviews', minWidth: '110px' },
+            { id: 'mappedCriteria', label: 'Criteria', minWidth: '110px' },
+            { id: 'evidenceSubmitted', label: 'Evidence', minWidth: '110px' },
+            {
+              id: 'missingEvidence',
+              label: 'Missing',
+              minWidth: '110px',
+              render: (value) => (
+                <Chip
+                  size="small"
+                  color={Number(value) > 0 ? 'warning' : 'success'}
+                  label={Number(value)}
+                />
+              ),
+            },
+          ]}
+          data={sqaaEvidence || []}
+          noDataText="No SQAAF evidence coverage found."
+        />
+      </SectionPanel>
 
       <SectionPanel title="Pending Reviews">
         <CustomizableTable
@@ -1251,6 +1609,7 @@ function CycleDialog({
   const [name, setName] = useState('Annual Appraisal');
   const [periodStart, setPeriodStart] = useState(dayjs());
   const [periodEnd, setPeriodEnd] = useState(dayjs().add(1, 'year'));
+  const isCyclePeriodInvalid = !periodEnd.isAfter(periodStart, 'day');
 
   return (
     <CustomDialog open={open} handleClose={onClose} title="New performance cycle">
@@ -1275,8 +1634,13 @@ function CycleDialog({
         <Button onClick={onClose}>Cancel</Button>
         <Button
           variant="contained"
-          disabled={!name.trim()}
-          onClick={() =>
+          disabled={!name.trim() || isCyclePeriodInvalid}
+          onClick={() => {
+            if (isCyclePeriodInvalid) {
+              toast.error('Period end must be after period start');
+              return;
+            }
+
             onCreate({
               name,
               cycleType: 0,
@@ -1288,8 +1652,8 @@ function CycleDialog({
               ratingScaleMax: 5,
               allowNotApplicable: true,
               status: 0,
-            })
-          }
+            });
+          }}
         >
           Create
         </Button>
@@ -1318,12 +1682,37 @@ function ReviewWorkspace({
   const [addDevelopmentPlan] = useAddPerformanceDevelopmentPlanMutation();
   const [stageType, setStageType] = useState<number>(initialPanel === 'outcome' ? 3 : 0);
   const [summary, setSummary] = useState('');
-  const [rating, setRating] = useState(4);
+  const [ratings, setRatings] = useState<Record<string, number>>({});
 
   const criteria = useMemo(
     () => review?.template?.sections?.flatMap((section) => section.criteria || []) || [],
     [review?.template?.sections]
   );
+  const evidenceCriterion =
+    criteria.find((criterion: any) => criterion.evidenceRequired) || criteria[0];
+  const responses = criteria.map((criterion: any) => ({
+    criterionId: criterion.id,
+    rating: ratings[criterion.id] ?? 4,
+    isNotApplicable: false,
+    comment: summary,
+  }));
+  const averageRating = responses.length
+    ? responses.reduce((sum, response) => sum + Number(response.rating || 0), 0) / responses.length
+    : 0;
+
+  useEffect(() => {
+    if (!criteria.length) return;
+
+    setRatings((current) => {
+      const next = { ...current };
+      criteria.forEach((criterion: any) => {
+        if (criterion.id && next[criterion.id] === undefined) {
+          next[criterion.id] = 4;
+        }
+      });
+      return next;
+    });
+  }, [criteria]);
 
   if (!reviewId) return null;
 
@@ -1371,7 +1760,12 @@ function ReviewWorkspace({
                 spacing={1}
               >
                 <Typography variant="body2">{criterion.name}</Typography>
-                <Rating value={rating} onChange={(_, value) => setRating(value || 0)} />
+                <Rating
+                  value={ratings[criterion.id] ?? 4}
+                  onChange={(_, value) =>
+                    setRatings((current) => ({ ...current, [criterion.id]: value || 0 }))
+                  }
+                />
               </Stack>
             ))}
             {!criteria.length && <EmptyState text="No criteria are available for this review." />}
@@ -1395,12 +1789,7 @@ function ReviewWorkspace({
               const body = {
                 stageType,
                 summaryComment: summary,
-                responses: criteria.map((criterion: any) => ({
-                  criterionId: criterion.id,
-                  rating,
-                  isNotApplicable: false,
-                  comment: summary,
-                })),
+                responses,
               };
               if (stageType === 0) {
                 await saveSelfAppraisal({ id: reviewId, body }).unwrap();
@@ -1420,12 +1809,7 @@ function ReviewWorkspace({
                 body: {
                   stageType,
                   summaryComment: summary,
-                  responses: criteria.map((criterion: any) => ({
-                    criterionId: criterion.id,
-                    rating,
-                    isNotApplicable: false,
-                    comment: summary,
-                  })),
+                  responses,
                 },
               }).unwrap();
               toast.success(`${stageLabels[stageType]} submitted`);
@@ -1460,7 +1844,11 @@ function ReviewWorkspace({
             onClick={async () => {
               await addEvidence({
                 id: reviewId,
-                body: { title: 'Review evidence', notes: summary || 'Evidence noted.' },
+                body: {
+                  criterionId: evidenceCriterion?.id,
+                  title: 'Review evidence',
+                  notes: summary || 'Evidence noted.',
+                },
               }).unwrap();
               toast.success('Evidence added');
             }}
@@ -1502,12 +1890,12 @@ function ReviewWorkspace({
               await saveOutcome({
                 id: reviewId,
                 body: {
-                  finalRating: rating >= 4 ? 'Very Good' : 'Good',
+                  finalRating: averageRating >= 4 ? 'Very Good' : 'Good',
                   strengths: summary,
                   improvementAreas: '',
-                  recommendation: rating >= 4 ? 1 : 6,
+                  recommendation: averageRating >= 4 ? 1 : 6,
                   recommendationNotes: 'Recommendation only; payroll is not updated automatically.',
-                  incrementRecommended: rating >= 4,
+                  incrementRecommended: averageRating >= 4,
                   promotionRecommended: false,
                 },
               }).unwrap();

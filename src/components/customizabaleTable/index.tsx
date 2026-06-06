@@ -126,7 +126,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     isLoading,
     tableUniqId,
   });
-  console.log(stickyMap, '[][][][');
 
   const effectiveColumnWidths = useMemo(() => {
     if (Object.keys(columnWidths).length === 0) return {} as Record<string, number>;

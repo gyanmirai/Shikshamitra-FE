@@ -39,6 +39,7 @@ import {
   Button,
   Select,
   Divider,
+  Collapse,
   Checkbox,
   MenuItem,
   TextField,
@@ -262,6 +263,7 @@ const AttendanceTrackingScreen = () => {
   const [editRow, setEditRow] = useState<AttendanceRegisterRow | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [draft, setDraft] = useState<AttendanceDraft>({
     status: 'Present' as RegisterStatus,
     inTime: '',
@@ -344,6 +346,52 @@ const AttendanceTrackingScreen = () => {
   const editableSelectedIds = selectedRows
     .filter((row) => row.canEdit && row.attendanceId)
     .map((row) => row.attendanceId as string);
+  const summary = data?.summary || {};
+  const summaryMetrics = [
+    {
+      label: 'Staff',
+      value: summary.staffCount || 0,
+      icon: 'solar:users-group-rounded-bold',
+      color: 'text.primary',
+      bg: varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+    },
+    {
+      label: 'Present',
+      value: summary.present || 0,
+      icon: 'solar:check-circle-bold',
+      color: 'success.main',
+      bg: varAlpha(theme.vars.palette.success.mainChannel, 0.12),
+    },
+    {
+      label: 'Needs attention',
+      value:
+        (summary.absent || 0) +
+        (summary.halfDay || 0) +
+        (summary.missingPunch || 0) +
+        (summary.notMarked || 0),
+      icon: 'solar:danger-triangle-bold',
+      color: 'warning.main',
+      bg: varAlpha(theme.vars.palette.warning.mainChannel, 0.12),
+    },
+    {
+      label: 'Editable',
+      value: summary.editable || 0,
+      icon: 'solar:pen-new-square-bold',
+      color: 'info.main',
+      bg: varAlpha(theme.vars.palette.info.mainChannel, 0.12),
+    },
+  ];
+  const secondarySummary = [
+    { label: 'Half day', value: summary.halfDay || 0, color: 'warning' },
+    { label: 'Absent', value: summary.absent || 0, color: 'error' },
+    { label: 'Missing punch', value: summary.missingPunch || 0, color: 'warning' },
+    { label: 'Not marked', value: summary.notMarked || 0, color: 'default' },
+    { label: 'Locked', value: summary.locked || 0, color: 'error' },
+  ] as const;
+  const dateRangeLabel =
+    filters.startDate && filters.endDate
+      ? `${filters.startDate.format('DD MMM YYYY')} - ${filters.endDate.format('DD MMM YYYY')}`
+      : 'Select a date range';
 
   const resetPaging = () => {
     setPage(1);
@@ -778,12 +826,14 @@ const AttendanceTrackingScreen = () => {
       isSort: true,
       isFilter: true,
       render: (value, row: any) => (
-        <Box>
-          <Typography variant="body2">{value}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            {[row.employeeCode, row.educationMediumStageName].filter(Boolean).join(' • ')}
+        <Stack spacing={0.35}>
+          <Typography variant="body2" sx={{ fontWeight: 700, lineHeight: 1.25 }}>
+            {value}
           </Typography>
-        </Box>
+          <Typography variant="caption" color="text.secondary" noWrap>
+            {[row.employeeCode, row.educationMediumStageName].filter(Boolean).join(' / ')}
+          </Typography>
+        </Stack>
       ),
       children: (row: any) => renderDailyRows(row),
     },
@@ -797,14 +847,14 @@ const AttendanceTrackingScreen = () => {
       isSort: true,
       isFilter: true,
       render: (_value, row: any) => (
-        <Box>
-          <Typography variant="body2" fontWeight={600}>
-            Present {row.present} / {row.recordedDays}
+        <Stack spacing={0.35}>
+          <Typography variant="body2" sx={{ fontWeight: 700, lineHeight: 1.25 }}>
+            {row.present} / {row.recordedDays}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Recorded days
+            Present days
           </Typography>
-        </Box>
+        </Stack>
       ),
     },
     {
@@ -816,13 +866,32 @@ const AttendanceTrackingScreen = () => {
       isSort: false,
       isFilter: false,
       render: (_value, row: any) => (
-        <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-          {row.absent > 0 && <Label color="error">Absent {row.absent}</Label>}
-          {row.halfDay > 0 && <Label color="warning">Half day {row.halfDay}</Label>}
-          {row.missingPunch > 0 && <Label color="warning">Missing punch {row.missingPunch}</Label>}
-          {row.holiday > 0 && <Label color="default">Holiday {row.holiday}</Label>}
-          {row.locked > 0 && <Label color="error">Locked {row.locked}</Label>}
-          {!row.hasExceptions && <Label color="success">Clear</Label>}
+        <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+          {row.absent > 0 && (
+            <Label color="error" variant="soft">
+              Absent {row.absent}
+            </Label>
+          )}
+          {row.halfDay > 0 && (
+            <Label color="warning" variant="soft">
+              Half day {row.halfDay}
+            </Label>
+          )}
+          {row.missingPunch > 0 && (
+            <Label color="warning" variant="soft">
+              Missing {row.missingPunch}
+            </Label>
+          )}
+          {row.locked > 0 && (
+            <Label color="error" variant="soft">
+              Locked {row.locked}
+            </Label>
+          )}
+          {!row.hasExceptions && (
+            <Label color="success" variant="soft">
+              Clear
+            </Label>
+          )}
         </Stack>
       ),
     },
@@ -850,6 +919,7 @@ const AttendanceTrackingScreen = () => {
       filterType: 'string',
       isSort: true,
       isFilter: true,
+      defaultHidden: true,
     },
     {
       id: 'editability',
@@ -859,7 +929,18 @@ const AttendanceTrackingScreen = () => {
       minWidth: 130,
       isSort: false,
       isFilter: false,
-      render: (_value, row: any) => `${row.editable} editable, ${row.locked} locked`,
+      render: (_value, row: any) => (
+        <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+          <Label color="info" variant="soft">
+            {row.editable} editable
+          </Label>
+          {row.locked > 0 && (
+            <Label color="error" variant="soft">
+              {row.locked} locked
+            </Label>
+          )}
+        </Stack>
+      ),
     },
     {
       id: 'actions',
@@ -1094,16 +1175,70 @@ const AttendanceTrackingScreen = () => {
         ]}
       />
 
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(4, minmax(0, 1fr))',
+          },
+          gap: 1,
+          px: 1,
+          pb: 1,
+        }}
+      >
+        {summaryMetrics.map((metric) => (
+          <Box
+            key={metric.label}
+            sx={{
+              minHeight: 76,
+              borderRadius: 1,
+              border: `1px solid ${theme.vars.palette.divider}`,
+              bgcolor: 'background.paper',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.25,
+              px: 1.5,
+            }}
+          >
+            <Box
+              sx={{
+                width: 38,
+                height: 38,
+                borderRadius: 1,
+                display: 'grid',
+                placeItems: 'center',
+                color: metric.color,
+                bgcolor: metric.bg,
+                flexShrink: 0,
+              }}
+            >
+              <Iconify icon={metric.icon} width={20} />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="h6" sx={{ lineHeight: 1.1 }}>
+                {metric.value}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {metric.label}
+              </Typography>
+            </Box>
+          </Box>
+        ))}
+      </Box>
+
       <Accordion
         expanded={filtersOpen}
         onChange={(_, expanded) => setFiltersOpen(expanded)}
         sx={{
           bgcolor: 'background.paper',
           borderRadius: 1,
-          boxShadow: 'var(--shadows-2)',
+          boxShadow: 'none',
+          border: `1px solid ${theme.vars.palette.divider}`,
           '&:before': { display: 'none' },
-          m: 0,
-          '&.Mui-expanded': { m: 0 },
+          mx: 1,
+          mb: 1,
+          '&.Mui-expanded': { mx: 1, mb: 1 },
           position: 'sticky',
           top: 0,
           zIndex: 10,
@@ -1112,24 +1247,35 @@ const AttendanceTrackingScreen = () => {
         <AccordionSummary
           component="div"
           expandIcon={<Iconify icon="solar:alt-arrow-down-linear" />}
-          sx={{ px: 1.5, minHeight: 'auto', m: 0 }}
+          sx={{
+            px: 1.5,
+            minHeight: 64,
+            m: 0,
+            '& .MuiAccordionSummary-content': { m: 0 },
+          }}
         >
           <Stack
-            direction="row"
-            spacing={1}
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={{ xs: 1, md: 1.5 }}
             justifyContent="space-between"
-            alignItems="center"
+            alignItems={{ xs: 'stretch', md: 'center' }}
             sx={{ width: '100%', pr: 1 }}
           >
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Label color="default">Staff {data?.summary?.staffCount || 0}</Label>
-              <Label color="success">Present {data?.summary?.present || 0}</Label>
-              <Label color="warning">Half day {data?.summary?.halfDay || 0}</Label>
-              <Label color="error">Absent {data?.summary?.absent || 0}</Label>
-              <Label color="default">Not marked {data?.summary?.notMarked || 0}</Label>
-              <Label color="warning">Missing punch {data?.summary?.missingPunch || 0}</Label>
-              <Label color="info">Editable {data?.summary?.editable || 0}</Label>
-              <Label color="error">Locked {data?.summary?.locked || 0}</Label>
+            <Stack spacing={0.35} sx={{ minWidth: 0 }}>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  Register view
+                </Typography>
+                <Label color="default" variant="soft">
+                  {dateRangeLabel}
+                </Label>
+              </Stack>
+              <Typography variant="caption" color="text.secondary">
+                {data?.totalCount || 0} employees found
+                {editableSelectedIds.length
+                  ? ` / ${editableSelectedIds.length} editable selected`
+                  : ''}
+              </Typography>
             </Stack>
             <Stack direction="row" spacing={1} flexShrink={0} onClick={(e) => e.stopPropagation()}>
               <Button
@@ -1144,24 +1290,37 @@ const AttendanceTrackingScreen = () => {
                 Reset
               </Button>
               <Button
+                variant="soft"
+                color="inherit"
+                size="small"
+                startIcon={
+                  <Iconify icon={filtersOpen ? 'solar:filter-bold' : 'solar:filter-linear'} />
+                }
+                onClick={() => setFiltersOpen((prev) => !prev)}
+              >
+                {filtersOpen ? 'Hide filters' : 'Show filters'}
+              </Button>
+              <Button
                 variant="contained"
                 size="small"
                 startIcon={<Iconify icon="solar:pen-2-bold" />}
-                disabled={!selectedIds.length}
+                disabled={!editableSelectedIds.length}
                 onClick={() => {
                   setDraft({ status: 'Present', inTime: '', outTime: '', remarks: '', reason: '' });
                   setDraftErrors({});
                   setBulkOpen(true);
                 }}
               >
-                Bulk adjust
+                {editableSelectedIds.length
+                  ? `Bulk adjust (${editableSelectedIds.length})`
+                  : 'Bulk adjust'}
               </Button>
             </Stack>
           </Stack>
         </AccordionSummary>
         <AccordionDetails sx={{ px: 1.5, pb: 1.5, pt: 0, mt: 0 }}>
           <Stack spacing={1.5}>
-            {/* Row 1: Search · Date Range · Organization · Employee */}
+            {/* Row 1: Search, Date Range, Organization, Employee */}
             <Box
               sx={{
                 display: 'grid',
@@ -1247,78 +1406,108 @@ const AttendanceTrackingScreen = () => {
               />
             </Box>
 
-            {/* Row 2: Group · Department · Status · Payroll State */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: 'repeat(2, 1fr)',
-                  md: 'repeat(4, 1fr)',
-                },
-                gap: 1.5,
-              }}
-            >
-              <FormControl size="small" fullWidth>
-                <InputLabel>Group</InputLabel>
-                <Select
-                  label="Group"
-                  value={filters.employeeGroup}
-                  onChange={(event) => setFilter('employeeGroup', event.target.value)}
-                >
-                  <MenuItem value="all">All groups</MenuItem>
-                  <MenuItem value="Teaching">Teaching</MenuItem>
-                  <MenuItem value="NonTeaching">Non teaching</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
+            {/* Advanced: Group, Status, Payroll State */}
+            <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+              <Typography variant="caption" color="text.secondary">
+                Attention view
+              </Typography>
+              <Button
                 size="small"
-                fullWidth
-                label="Department"
-                value={filters.department}
-                onChange={(event) => setFilter('department', event.target.value)}
-              />
-              <FormControl size="small" fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  label="Status"
-                  value={filters.status}
-                  onChange={(event) => setFilter('status', event.target.value)}
-                >
-                  <MenuItem value="all">All Status</MenuItem>
-                  {STATUS_OPTIONS.map((item) => (
-                    <MenuItem key={item.value} value={item.value}>
-                      {item.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" fullWidth>
-                <InputLabel>Payroll state</InputLabel>
-                <Select
-                  label="Payroll state"
-                  value={filters.payrollState}
-                  onChange={(event) => setFilter('payrollState', event.target.value)}
-                >
-                  {PAYROLL_STATES.map((item) => (
-                    <MenuItem key={item.value} value={item.value}>
-                      {item.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
+                color="inherit"
+                variant="text"
+                endIcon={
+                  <Iconify
+                    icon={
+                      advancedFiltersOpen
+                        ? 'solar:alt-arrow-up-linear'
+                        : 'solar:alt-arrow-down-linear'
+                    }
+                    width={16}
+                  />
+                }
+                onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
+              >
+                Advanced filters
+              </Button>
+            </Stack>
 
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Collapse in={advancedFiltersOpen} timeout="auto" unmountOnExit>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'repeat(2, 1fr)',
+                    md: 'repeat(3, 1fr)',
+                  },
+                  gap: 1.5,
+                }}
+              >
+                <FormControl size="small" fullWidth>
+                  <InputLabel>Group</InputLabel>
+                  <Select
+                    label="Group"
+                    value={filters.employeeGroup}
+                    onChange={(event) => setFilter('employeeGroup', event.target.value)}
+                  >
+                    <MenuItem value="all">All groups</MenuItem>
+                    <MenuItem value="Teaching">Teaching</MenuItem>
+                    <MenuItem value="NonTeaching">Non teaching</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl size="small" fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    label="Status"
+                    value={filters.status}
+                    onChange={(event) => setFilter('status', event.target.value)}
+                  >
+                    <MenuItem value="all">All Status</MenuItem>
+                    {STATUS_OPTIONS.map((item) => (
+                      <MenuItem key={item.value} value={item.value}>
+                        {item.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl size="small" fullWidth>
+                  <InputLabel>Payroll state</InputLabel>
+                  <Select
+                    label="Payroll state"
+                    value={filters.payrollState}
+                    onChange={(event) => setFilter('payrollState', event.target.value)}
+                  >
+                    {PAYROLL_STATES.map((item) => (
+                      <MenuItem key={item.value} value={item.value}>
+                        {item.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+            </Collapse>
+
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
               {EXCEPTION_FILTERS.map((item) => (
                 <Chip
                   key={item.value}
                   size="small"
                   label={item.label}
                   color={filters.exceptionFilter === item.value ? 'primary' : 'default'}
-                  variant={filters.exceptionFilter === item.value ? 'filled' : 'outlined'}
+                  variant={filters.exceptionFilter === item.value ? 'soft' : 'outlined'}
                   onClick={() => setFilter('exceptionFilter', item.value)}
+                  sx={{
+                    borderRadius: 1,
+                    fontWeight: filters.exceptionFilter === item.value ? 700 : 600,
+                  }}
                 />
+              ))}
+            </Stack>
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+              {secondarySummary.map((item) => (
+                <Label key={item.label} color={item.color as any} variant="soft">
+                  {item.label} {item.value}
+                </Label>
               ))}
             </Stack>
           </Stack>

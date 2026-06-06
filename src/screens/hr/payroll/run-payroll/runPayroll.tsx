@@ -12,7 +12,6 @@ import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
-import { Scrollbar } from 'src/components/scrollbar';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -198,8 +197,7 @@ const RunPayroll = () => {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
   const [activeRow, setActiveRow] = useState<PayrollRow | null>(null);
   const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
-  const [insightsOpen, setInsightsOpen] = useState(true);
-  const [checklistOpen, setChecklistOpen] = useState(true);
+  const [readinessOpen, setReadinessOpen] = useState(true);
   const [auditOpen, setAuditOpen] = useState(false);
   const [adjustmentDraft, setAdjustmentDraft] = useState({
     name: '',
@@ -411,7 +409,7 @@ const RunPayroll = () => {
       ticking = true;
       window.requestAnimationFrame(() => {
         if (window.scrollY > 120) {
-          setInsightsOpen(false);
+          setReadinessOpen(false);
         } else if (window.scrollY < 20) {
           /* empty */
         }
@@ -477,11 +475,10 @@ const RunPayroll = () => {
         setPreviewError(null);
         setPreviewIsGenerated(isGenerated);
         setLoadedMonthKey(requestedPayrollKey);
-        // Auto-collapse insights and checklist once data is loaded to focus on the table after 3 seconds
+        // Auto-collapse readiness once data is loaded to focus on the table after 3 seconds
         if (allItems.length > 0) {
           setTimeout(() => {
-            setInsightsOpen(false);
-            setChecklistOpen(false);
+            setReadinessOpen(false);
           }, 3000);
         }
         refetchReadiness();
@@ -924,8 +921,49 @@ const RunPayroll = () => {
           : previewReadiness
             ? { label: 'Ready to review', color: 'success' as const }
             : { label: 'Select month', color: 'default' as const };
-  const readinessActions = new Set(previewReadiness?.recommendedActions || []);
-  const showReadinessPanel = Boolean(previewReadiness || previewError || readinessBusy);
+  const totalForProgress = stats.total || Number(previewReadiness?.employeeCount || 0);
+  const readinessMetrics = [
+    {
+      label: 'Employees',
+      value: readinessBusy && !previewReadiness ? '...' : stats.total || '-',
+      icon: 'solar:users-group-rounded-linear',
+    },
+    {
+      label: 'Preview rows',
+      value: readinessBusy && !previewReadiness ? '...' : (previewReadiness?.snapshotCount ?? '-'),
+      icon: 'solar:document-text-linear',
+    },
+    {
+      label: 'Attendance gaps',
+      value: previewReadiness?.missingAttendanceCount ?? '-',
+      icon: 'solar:calendar-remove-linear',
+    },
+    {
+      label: 'Salary setup gaps',
+      value: previewReadiness?.missingSalaryStructureCount ?? '-',
+      icon: 'solar:wallet-money-linear',
+    },
+    {
+      label: 'Policy issues',
+      value: previewReadiness?.policyConfigurationIssueCount ?? '-',
+      icon: 'solar:shield-warning-linear',
+    },
+    {
+      label: 'Reviewed',
+      value: totalForProgress ? `${stats.reviewed}/${totalForProgress}` : '-',
+      icon: 'solar:check-circle-linear',
+    },
+    {
+      label: 'Locked',
+      value: totalForProgress ? `${stats.locked}/${totalForProgress}` : '-',
+      icon: 'solar:lock-keyhole-linear',
+    },
+    {
+      label: 'Net preview',
+      value: hasPreviewForSelectedMonth ? formatCurrency(stats.net) : '-',
+      icon: 'solar:wallet-money-linear',
+    },
+  ];
   const previewButtonIcon = isDataForSelectedMonth ? 'solar:refresh-linear' : 'solar:rocket-bold';
   const previewButtonLabel = previewBusy
     ? 'Generating preview...'
@@ -946,7 +984,7 @@ const RunPayroll = () => {
         flexWrap="wrap"
         useFlexGap
         alignItems={{ xs: 'stretch', sm: 'center' }}
-        spacing={1.5}
+        spacing={1.25}
         sx={{
           position: 'sticky',
           top: 0,
@@ -976,18 +1014,34 @@ const RunPayroll = () => {
           slotProps={{
             textField: {
               size: 'small',
-              helperText: currentYear?.name ? `Academic year: ${currentYear.name}` : undefined,
             },
           }}
           sx={{ width: { xs: '100%', sm: 220, md: 260 }, minWidth: { sm: 220 } }}
         />
-        <Chip
-          size="small"
-          variant="outlined"
-          icon={<Iconify icon="solar:calendar-date-linear" />}
-          label={currentYear?.name || 'Select academic year'}
-          sx={{ width: { xs: '100%', sm: 'auto' }, justifyContent: 'center', p: 2 }}
-        />
+        <Box
+          sx={{
+            minHeight: 40,
+            width: { xs: '100%', sm: 170 },
+            px: 1.5,
+            py: 0.5,
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+            borderRadius: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            bgcolor: 'background.neutral',
+          }}
+        >
+          <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1 }}>
+            Academic year
+          </Typography>
+          <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
+            <Iconify icon="solar:calendar-date-linear" width={16} />
+            <Typography variant="body2" fontWeight={700} noWrap>
+              {currentYear?.name || 'Select year'}
+            </Typography>
+          </Stack>
+        </Box>
         <LoadingButton
           variant="contained"
           loading={previewBusy}
@@ -1001,222 +1055,130 @@ const RunPayroll = () => {
         </LoadingButton>
       </Stack>
 
-      <Scrollbar sx={{ flexGrow: 1 }}>
-        <Stack spacing={1}>
+      <Box
+        sx={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+      >
+        <Stack spacing={1} sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <Card variant="outlined" sx={{ p: 0 }}>
             <Stack
-              direction="row"
-              alignItems="center"
+              direction={{ xs: 'column', md: 'row' }}
+              alignItems={{ xs: 'stretch', md: 'center' }}
               justifyContent="space-between"
-              onClick={() => setInsightsOpen((prev) => !prev)}
+              spacing={1}
+              onClick={() => setReadinessOpen((prev) => !prev)}
               sx={{
-                p: 1,
+                p: 1.25,
                 cursor: 'pointer',
                 transition: 'background-color 0.2s',
               }}
             >
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Typography variant="subtitle2">Payroll insights</Typography>
-                <Chip size="small" label="Summary" variant="outlined" />
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Typography variant="subtitle2">Payroll readiness</Typography>
+                <Chip size="small" color={monthStatus.color} label={monthStatus.label} />
               </Stack>
-              <IconButton size="small">
-                <Iconify
-                  icon={insightsOpen ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'}
-                  width={18}
-                />
-              </IconButton>
-            </Stack>
-            <Collapse in={insightsOpen} timeout={800} unmountOnExit>
-              <Box sx={{ p: 1, pt: 0 }}>
-                <Grid container spacing={1.25}>
-                  {[
-                    ['Employees', stats.total],
-                    ['Pending review', stats.pending],
-                    ['Reviewed', stats.reviewed],
-                    ['Locked', stats.locked],
-                    ['Net preview', hasPreviewForSelectedMonth ? formatCurrency(stats.net) : '-'],
-                  ].map(([label, value]) => (
-                    <Grid key={label} size={{ xs: 6, md: 2.4 }}>
-                      <Card variant="outlined" sx={{ p: 1.25, height: '100%' }}>
-                        <Typography variant="caption" color="text.secondary">
-                          {label}
-                        </Typography>
-                        <Typography variant="h6">{value}</Typography>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-                <Divider sx={{ my: 1 }} />
-                <Stack
-                  direction={{ xs: 'column', md: 'row' }}
-                  spacing={1.25}
-                  alignItems={{ md: 'center' }}
-                  sx={{ mt: 0.5 }}
-                >
-                  <Box
-                    sx={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 1.25,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: 'action.hover',
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                justifyContent={{ xs: 'space-between', md: 'flex-end' }}
+              >
+                {previewError ? (
+                  <LoadingButton
+                    size="small"
+                    variant="outlined"
+                    loading={previewBusy}
+                    disabled={previewBusy}
+                    startIcon={<Iconify icon="solar:refresh-linear" />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      loadPreview(false);
                     }}
                   >
-                    <Iconify icon="solar:magic-stick-3-bold-duotone" width={24} />
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Deterministic checks flag missing salary structures, attendance gaps, stale
-                    payroll previews, negative net pay, and large salary variance before lock.
-                  </Typography>
+                    Retry preview load
+                  </LoadingButton>
+                ) : null}
+                <IconButton size="small">
+                  <Iconify
+                    icon={
+                      readinessOpen ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'
+                    }
+                    width={18}
+                  />
+                </IconButton>
+              </Stack>
+            </Stack>
+            <Collapse in={readinessOpen} timeout={800} unmountOnExit>
+              <Box sx={{ px: 1.25, pb: 1.25 }}>
+                <Stack spacing={1}>
+                  {previewError ? (
+                    <Alert severity="error">
+                      Payroll preview could not be prepared for{' '}
+                      {dayjs(`${previewError.month || selectedMonthKey}-01`).isValid()
+                        ? dayjs(`${previewError.month || selectedMonthKey}-01`).format('MMMM YYYY')
+                        : selectedMonthKey}
+                      . {previewError.errorCode ? `Error code: ${previewError.errorCode}. ` : ''}
+                      Use Retry preview load after checking attendance and payroll policy setup.
+                    </Alert>
+                  ) : null}
+
+                  <Grid container spacing={0.75}>
+                    {readinessMetrics.map(({ label, value, icon }) => (
+                      <Grid key={label} size={{ xs: 6, sm: 3, lg: 1.5 }}>
+                        <Box
+                          sx={{
+                            height: '100%',
+                            minHeight: 64,
+                            px: 1,
+                            py: 0.75,
+                            border: (theme) => `1px solid ${theme.palette.divider}`,
+                            borderRadius: 1,
+                            bgcolor: 'background.neutral',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.75,
+                            minWidth: 0,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 30,
+                              height: 30,
+                              borderRadius: 1,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              color: 'primary.main',
+                              bgcolor: 'primary.lighter',
+                            }}
+                          >
+                            <Iconify icon={icon} width={18} />
+                          </Box>
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="caption" color="text.secondary" noWrap>
+                              {label}
+                            </Typography>
+                            <Typography variant="subtitle2" fontWeight={700} noWrap>
+                              {value}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
                 </Stack>
               </Box>
             </Collapse>
           </Card>
-
-          {showReadinessPanel ? (
-            <Card variant="outlined" sx={{ p: 0 }}>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                onClick={() => setChecklistOpen((prev) => !prev)}
-                sx={{
-                  p: 1,
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s',
-                }}
-              >
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="subtitle2">Payroll setup checklist</Typography>
-                  <Chip size="small" color={monthStatus.color} label={monthStatus.label} />
-                </Stack>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  {previewError ? (
-                    <LoadingButton
-                      size="small"
-                      variant="outlined"
-                      loading={previewBusy}
-                      disabled={previewBusy}
-                      startIcon={<Iconify icon="solar:refresh-linear" />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        loadPreview(false);
-                      }}
-                    >
-                      Retry preview load
-                    </LoadingButton>
-                  ) : null}
-                  <IconButton size="small">
-                    <Iconify
-                      icon={
-                        checklistOpen ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'
-                      }
-                      width={18}
-                    />
-                  </IconButton>
-                </Stack>
-              </Stack>
-              <Collapse in={checklistOpen} timeout={800} unmountOnExit>
-                <Box sx={{ p: 1, pt: 0 }}>
-                  <Stack spacing={1.25}>
-                    <Typography variant="body2" color="text.secondary">
-                      Load the saved payroll preview when setup is ready. Review the rows, fix any
-                      setup gaps, and use Refresh preview only when rows need to be recomputed.
-                    </Typography>
-
-                    {previewError ? (
-                      <Alert severity="error">
-                        Payroll preview could not be prepared for{' '}
-                        {dayjs(`${previewError.month || selectedMonthKey}-01`).isValid()
-                          ? dayjs(`${previewError.month || selectedMonthKey}-01`).format(
-                              'MMMM YYYY'
-                            )
-                          : selectedMonthKey}
-                        . {previewError.errorCode ? `Error code: ${previewError.errorCode}. ` : ''}
-                        Use Retry preview load after checking attendance and payroll policy setup.
-                      </Alert>
-                    ) : null}
-
-                    {previewReadiness ? (
-                      <Grid container spacing={1}>
-                        {[
-                          ['Employees', previewReadiness.employeeCount],
-                          ['Existing preview rows', previewReadiness.snapshotCount],
-                          ['Attendance found', previewReadiness.attendanceFoundCount],
-                          ['Missing attendance', previewReadiness.missingAttendanceCount],
-                          ['Missing salary setup', previewReadiness.missingSalaryStructureCount],
-                          ['Policy setup issues', previewReadiness.policyConfigurationIssueCount],
-                        ].map(([label, value]) => (
-                          <Grid key={label} size={{ xs: 6, md: 2 }}>
-                            <Card variant="outlined" sx={{ p: 1, height: '100%' }}>
-                              <Typography variant="caption" color="text.secondary">
-                                {label}
-                              </Typography>
-                              <Typography variant="h6">{value}</Typography>
-                            </Card>
-                          </Grid>
-                        ))}
-                      </Grid>
-                    ) : null}
-
-                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                      {(readinessActions.has('import-attendance') || previewError) && (
-                        <LoadingButton
-                          size="small"
-                          variant="outlined"
-                          startIcon={<Iconify icon="solar:upload-linear" />}
-                          onClick={() => router.push('/hr/attendance-tracking')}
-                        >
-                          Go to Attendance Import
-                        </LoadingButton>
-                      )}
-                      {(readinessActions.has('review-attendance') || previewError) && (
-                        <LoadingButton
-                          size="small"
-                          variant="outlined"
-                          startIcon={<Iconify icon="solar:calendar-mark-linear" />}
-                          onClick={() => router.push(hrPaths.attendance.markAttendance)}
-                        >
-                          Open Manual Attendance
-                        </LoadingButton>
-                      )}
-                      {(readinessActions.has('fix-payroll-policy') || previewError) && (
-                        <LoadingButton
-                          size="small"
-                          variant="outlined"
-                          color="warning"
-                          startIcon={<Iconify icon="solar:settings-linear" />}
-                          onClick={() => router.push('/hr/policies?tab=payroll')}
-                        >
-                          Open Payroll Policies
-                        </LoadingButton>
-                      )}
-                      {(readinessActions.has('assign-salary-structure') || previewError) && (
-                        <LoadingButton
-                          size="small"
-                          variant="outlined"
-                          color="warning"
-                          startIcon={<Iconify icon="solar:wallet-money-linear" />}
-                          onClick={() => router.push(hrPaths.payroll.structure)}
-                        >
-                          Open Salary Structures
-                        </LoadingButton>
-                      )}
-                    </Stack>
-                  </Stack>
-                </Box>
-              </Collapse>
-            </Card>
-          ) : null}
 
           <Card
             sx={{
               p: 1.25,
               display: 'flex',
               flexDirection: 'column',
-              minHeight: 480,
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
             }}
           >
             <Stack
@@ -1315,7 +1277,7 @@ const RunPayroll = () => {
               data={tableData}
               wrapperProps={{
                 sx: {
-                  flexGrow: 1,
+                  flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
                   minHeight: 0,
@@ -1323,6 +1285,9 @@ const RunPayroll = () => {
               }}
               tableContainerProps={{
                 sx: {
+                  flex: 1,
+                  minHeight: 0,
+                  height: '100%',
                   '& .MuiTableHead-root .MuiTableCell-root': {
                     py: 1,
                     px: 1.5,
@@ -2000,7 +1965,7 @@ const RunPayroll = () => {
             }
           />
         </Stack>
-      </Scrollbar>
+      </Box>
     </Box>
   );
 };
