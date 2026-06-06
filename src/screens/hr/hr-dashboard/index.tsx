@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { Theme, SxProps } from '@mui/material/styles';
 
 import dayjs from 'dayjs';
 import Link from 'next/link';
@@ -8,10 +9,10 @@ import dynamic from 'next/dynamic';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useSession } from 'next-auth/react';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { Scrollbar } from 'src/components/scrollbar';
+import { alpha, useTheme } from '@mui/material/styles';
 import { Chart, useChart } from 'src/components/chart';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
@@ -67,33 +68,96 @@ const hasRole = (role: unknown, expectedRole: string) => {
 
 const formatCount = (value?: number | null) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-const metricColor = {
-  success: '#22C55E',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#3B82F6',
-  primary: '#2563EB',
-};
-
-type MetricColor = keyof typeof metricColor;
-
 type DashboardMetric = {
   title: string;
   value: string | number;
   icon: string;
-  color: MetricColor;
   href?: string;
   helper?: string;
 };
 
-const severityColor = (severity: string): 'error' | 'warning' | 'info' | 'success' =>
-  severity === 'critical'
-    ? 'error'
-    : severity === 'warning'
-      ? 'warning'
-      : severity === 'success'
-        ? 'success'
-        : 'info';
+type DashboardCardDimension = number | string | Record<string, number | string>;
+
+const neutralStatusLabel = (payroll: HRDashboardSummary['payroll']) => {
+  if (payroll.canLock) return 'Ready to lock';
+  if (payroll.canPreview) return 'Review setup';
+  return 'Setup required';
+};
+
+const payrollReadinessValue = (payroll: HRDashboardSummary['payroll']) => {
+  if (payroll.canLock) return 'Ready';
+  if (payroll.canPreview) return 'Review';
+  return 'Setup';
+};
+
+const insightIcon = (severity: string) =>
+  severity === 'critical' || severity === 'warning'
+    ? 'solar:info-circle-bold'
+    : severity === 'success'
+      ? 'solar:check-circle-bold'
+      : 'solar:lightbulb-bold';
+
+const dashboardSurfaceSx = {
+  bgcolor: 'background.paper',
+  boxShadow: (theme: Theme) => `0 8px 20px ${alpha(theme.palette.common.black, 0.08)}`,
+  border: (theme: Theme) => `1px solid ${theme.palette.divider}`,
+};
+
+const DashboardSectionCard = ({
+  title,
+  subheader,
+  action,
+  minHeight,
+  height,
+  contentSx,
+  children,
+}: {
+  title: string;
+  subheader?: string;
+  action?: React.ReactNode;
+  minHeight?: DashboardCardDimension;
+  height?: DashboardCardDimension;
+  contentSx?: SxProps<Theme>;
+  children: React.ReactNode;
+}) => (
+  <Card
+    sx={{
+      height,
+      minHeight,
+      p: 2,
+      overflow: 'visible',
+      position: 'relative',
+      ...dashboardSurfaceSx,
+    }}
+  >
+    <CardHeader sx={{ p: 0, mb: 1.5 }} title={title} subheader={subheader} action={action} />
+    <Box sx={contentSx}>{children}</Box>
+  </Card>
+);
+
+const DashboardEmptyRow = ({
+  icon = 'solar:check-circle-bold',
+  children,
+}: {
+  icon?: string;
+  children: React.ReactNode;
+}) => (
+  <Box
+    sx={{
+      p: 1.5,
+      borderRadius: 1,
+      bgcolor: 'background.neutral',
+      border: (theme) => `1px solid ${theme.palette.divider}`,
+    }}
+  >
+    <Stack direction="row" spacing={1} alignItems="center">
+      <Iconify icon={icon} width={20} sx={{ color: 'text.secondary', flexShrink: 0 }} />
+      <Typography variant="body2" color="text.secondary">
+        {children}
+      </Typography>
+    </Stack>
+  </Box>
+);
 
 const DashboardSkeleton = () => (
   <Stack spacing={1.5}>
@@ -119,14 +183,12 @@ const MetricCard = ({
   title,
   value,
   icon,
-  color = 'info',
   href,
   helper,
 }: {
   title: string;
   value: string | number;
   icon: string;
-  color?: MetricColor;
   href?: string;
   helper?: string;
 }) => (
@@ -139,10 +201,8 @@ const MetricCard = ({
       textDecoration: 'none',
       color: 'text.primary',
       overflow: 'hidden',
-      display: 'flex',
-      alignItems: 'center',
-      border: (theme) => `1px solid ${theme.palette.divider}`,
-      boxShadow: 'none',
+      display: 'block',
+      ...dashboardSurfaceSx,
       transition: (theme) =>
         theme.transitions.create(['border-color', 'box-shadow', 'transform'], {
           duration: theme.transitions.duration.shorter,
@@ -150,13 +210,12 @@ const MetricCard = ({
       '&:hover': href
         ? {
             transform: 'translateY(-2px)',
-            borderColor: metricColor[color],
-            boxShadow: (theme) => theme.shadows[4],
+            borderColor: (theme) => alpha(theme.palette.text.secondary, 0.36),
+            boxShadow: (theme) => `0 10px 22px ${alpha(theme.palette.common.black, 0.1)}`,
           }
         : undefined,
     }}
   >
-    <Box sx={{ width: 4, alignSelf: 'stretch', bgcolor: metricColor[color], flexShrink: 0 }} />
     <Box
       sx={{
         p: 1.5,
@@ -193,8 +252,9 @@ const MetricCard = ({
           borderRadius: 1,
           display: 'grid',
           placeItems: 'center',
-          color: metricColor[color],
-          bgcolor: `${metricColor[color]}14`,
+          color: 'text.secondary',
+          bgcolor: (theme) => alpha(theme.palette.text.secondary, 0.08),
+          border: (theme) => `1px solid ${alpha(theme.palette.text.secondary, 0.14)}`,
           flexShrink: 0,
         }}
       >
@@ -204,11 +264,62 @@ const MetricCard = ({
   </Card>
 );
 
+const DashboardStatTile = ({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  icon?: string;
+}) => (
+  <Box
+    sx={{
+      p: 1.25,
+      borderRadius: 1,
+      bgcolor: 'background.neutral',
+      border: (theme) => `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+    }}
+  >
+    <Stack direction="row" spacing={1} alignItems="center">
+      {icon ? (
+        <Box
+          sx={{
+            width: 28,
+            height: 28,
+            borderRadius: 1,
+            display: 'grid',
+            flexShrink: 0,
+            placeItems: 'center',
+            color: 'text.secondary',
+            bgcolor: (theme) => alpha(theme.palette.text.secondary, 0.08),
+          }}
+        >
+          <Iconify icon={icon} width={16} />
+        </Box>
+      ) : null}
+      <Box sx={{ minWidth: 0 }}>
+        <Typography variant="caption" color="text.secondary" noWrap>
+          {label}
+        </Typography>
+        <Typography variant="subtitle1" sx={{ lineHeight: 1.15 }}>
+          {value}
+        </Typography>
+      </Box>
+    </Stack>
+  </Box>
+);
+
 const AttendanceTrendCard = ({ data }: { data: HRDashboardSummary }) => {
   const theme = useTheme();
   const categories = data.attendanceTrend.map((point) => dayjs(point.date).format('DD MMM'));
+  const latestTrend = data.attendanceTrend.at(-1);
   const chartOptions = useChart({
-    colors: [theme.palette.success.main, theme.palette.error.main, theme.palette.warning.main],
+    colors: [
+      alpha(theme.palette.info.main, 0.72),
+      alpha(theme.palette.text.secondary, 0.58),
+      alpha(theme.palette.text.primary, 0.36),
+    ],
     stroke: { width: 2.5, curve: 'smooth' },
     markers: { size: 3 },
     xaxis: { categories },
@@ -218,44 +329,70 @@ const AttendanceTrendCard = ({ data }: { data: HRDashboardSummary }) => {
   });
 
   return (
-    <Card
-      sx={{
-        height: '100%',
-        p: 2,
-        boxShadow: 'none',
-        border: (t) => `1px solid ${t.palette.divider}`,
-      }}
+    <DashboardSectionCard
+      title="Attendance Trend"
+      subheader={`${data.range}-day staff attendance view`}
+      height="100%"
+      minHeight={{ xs: 280, md: 290, lg: 300 }}
+      action={
+        <Button
+          component={Link}
+          href={hrPaths.attendance.markAttendance}
+          size="small"
+          startIcon={<Iconify icon="solar:calendar-mark-linear" />}
+        >
+          Mark
+        </Button>
+      }
     >
-      <CardHeader
-        sx={{ p: 0, mb: 1.5 }}
-        title="Attendance Trend"
-        subheader={`${data.range}-day staff attendance view`}
-        action={
-          <Button
-            component={Link}
-            href={hrPaths.attendance.markAttendance}
-            size="small"
-            startIcon={<Iconify icon="solar:calendar-mark-linear" />}
-          >
-            Mark
-          </Button>
-        }
-      />
-      {data.attendanceTrend.length ? (
-        <Chart
-          type="line"
-          height={270}
-          series={[
-            { name: 'Present', data: data.attendanceTrend.map((point) => point.present) },
-            { name: 'Absent', data: data.attendanceTrend.map((point) => point.absent) },
-            { name: 'On Leave', data: data.attendanceTrend.map((point) => point.leave) },
-          ]}
-          options={chartOptions}
-        />
-      ) : (
-        <Alert severity="info">No attendance trend data is available for this range.</Alert>
-      )}
-    </Card>
+      <Stack spacing={1.25}>
+        {data.attendanceTrend.length ? (
+          <Chart
+            type="line"
+            height="100%"
+            series={[
+              { name: 'Present', data: data.attendanceTrend.map((point) => point.present) },
+              { name: 'Absent', data: data.attendanceTrend.map((point) => point.absent) },
+              { name: 'On Leave', data: data.attendanceTrend.map((point) => point.leave) },
+            ]}
+            options={chartOptions}
+            sx={{ height: { xs: 190, md: 205, lg: 215 } }}
+          />
+        ) : (
+          <Alert severity="info">No attendance trend data is available for this range.</Alert>
+        )}
+        <Grid container spacing={1}>
+          <Grid size={{ xs: 6, sm: 3 }}>
+            <DashboardStatTile
+              label="Present"
+              value={formatCount(data.attendanceToday.present)}
+              icon="solar:user-check-bold"
+            />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 3 }}>
+            <DashboardStatTile
+              label="Missing"
+              value={formatCount(data.attendanceToday.missingAttendance)}
+              icon="solar:user-cross-bold"
+            />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 3 }}>
+            <DashboardStatTile
+              label="Exceptions"
+              value={formatCount(data.attendanceToday.lateOrException)}
+              icon="solar:clock-circle-bold"
+            />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 3 }}>
+            <DashboardStatTile
+              label="On leave"
+              value={formatCount(latestTrend?.leave || 0)}
+              icon="solar:calendar-mark-bold"
+            />
+          </Grid>
+        </Grid>
+      </Stack>
+    </DashboardSectionCard>
   );
 };
 
@@ -264,46 +401,45 @@ const PayrollReadinessCard = ({ data }: { data: HRDashboardSummary }) => {
   const reviewedPct = payroll.employeeCount
     ? Math.round(((payroll.reviewedCount + payroll.lockedCount) / payroll.employeeCount) * 100)
     : 0;
+  const advisoryText = payroll.blockingIssues.length
+    ? 'Payroll setup needs review before locking this month.'
+    : payroll.recommendedActions[0] || 'Payroll setup needs review before locking this month.';
 
   return (
-    <Card
-      sx={{
-        height: '100%',
-        p: 2,
-        boxShadow: 'none',
-        border: (t) => `1px solid ${t.palette.divider}`,
-      }}
+    <DashboardSectionCard
+      title="Payroll Readiness"
+      subheader={payroll.month || data.month}
+      height="100%"
+      action={
+        <Chip
+          size="small"
+          variant="outlined"
+          label={neutralStatusLabel(payroll)}
+          sx={{
+            color: 'text.secondary',
+            borderColor: 'divider',
+            bgcolor: 'background.neutral',
+            fontWeight: 700,
+          }}
+        />
+      }
     >
-      <CardHeader
-        sx={{ p: 0, mb: 1.5 }}
-        title="Payroll Readiness"
-        subheader={payroll.month || data.month}
-        action={
-          <Chip
-            size="small"
-            color={payroll.canLock ? 'success' : payroll.canPreview ? 'warning' : 'error'}
-            label={
-              payroll.canLock ? 'Ready to lock' : payroll.canPreview ? 'Review needed' : 'Blocked'
-            }
-          />
-        }
-      />
       <Stack spacing={1.25}>
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Chip
             label={`${formatCount(payroll.reviewedCount)} reviewed`}
-            color="info"
             variant="outlined"
+            sx={{ color: 'text.secondary', borderColor: 'divider' }}
           />
           <Chip
             label={`${formatCount(payroll.lockedCount)} locked`}
-            color="success"
             variant="outlined"
+            sx={{ color: 'text.secondary', borderColor: 'divider' }}
           />
           <Chip
             label={`${formatCount(payroll.pendingCount)} pending`}
-            color="warning"
             variant="outlined"
+            sx={{ color: 'text.secondary', borderColor: 'divider' }}
           />
         </Stack>
         <Box>
@@ -322,35 +458,49 @@ const PayrollReadinessCard = ({ data }: { data: HRDashboardSummary }) => {
               sx={{
                 width: `${reviewedPct}%`,
                 height: 1,
-                bgcolor: payroll.canLock ? 'success.main' : 'warning.main',
+                bgcolor: 'text.secondary',
               }}
             />
           </Box>
         </Box>
         <Grid container spacing={1}>
-          <Grid size={6}>
-            <Alert severity={payroll.missingAttendanceCount ? 'warning' : 'success'} icon={false}>
-              <Typography variant="caption">Missing attendance</Typography>
-              <Typography variant="h6">{formatCount(payroll.missingAttendanceCount)}</Typography>
-            </Alert>
+          <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
+            <DashboardStatTile
+              label="Missing attendance"
+              value={formatCount(payroll.missingAttendanceCount)}
+              icon="solar:calendar-remove-bold"
+            />
           </Grid>
-          <Grid size={6}>
-            <Alert
-              severity={payroll.missingSalaryStructureCount ? 'error' : 'success'}
-              icon={false}
-            >
-              <Typography variant="caption">Missing salary setup</Typography>
-              <Typography variant="h6">
-                {formatCount(payroll.missingSalaryStructureCount)}
-              </Typography>
-            </Alert>
+          <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
+            <DashboardStatTile
+              label="Missing salary setup"
+              value={formatCount(payroll.missingSalaryStructureCount)}
+              icon="solar:wallet-money-bold"
+            />
           </Grid>
         </Grid>
-        {payroll.blockingIssues.length ? (
-          <Alert severity="error">{payroll.blockingIssues[0]}</Alert>
-        ) : payroll.recommendedActions.length ? (
-          <Alert severity="info">{payroll.recommendedActions[0]}</Alert>
-        ) : null}
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 1,
+            bgcolor: 'background.neutral',
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="flex-start">
+            <Iconify
+              icon="solar:info-circle-bold"
+              width={20}
+              sx={{ color: 'text.secondary', mt: 0.25, flexShrink: 0 }}
+            />
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle2">{neutralStatusLabel(payroll)}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {payroll.canLock ? 'Payroll is ready for the current cycle.' : advisoryText}
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Button
             component={Link}
@@ -372,9 +522,49 @@ const PayrollReadinessCard = ({ data }: { data: HRDashboardSummary }) => {
           </Button>
         </Stack>
       </Stack>
-    </Card>
+    </DashboardSectionCard>
   );
 };
+
+const TodayOperationsCard = ({ data }: { data: HRDashboardSummary }) => (
+  <DashboardSectionCard
+    title="Today's Operations"
+    subheader="Compact staff operations pulse"
+    height="100%"
+    minHeight={220}
+  >
+    <Grid container spacing={1}>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <DashboardStatTile
+          label="Attendance rate"
+          value={`${data.attendanceToday.attendanceRate}%`}
+          icon="solar:chart-bold"
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <DashboardStatTile
+          label="Pending leave"
+          value={formatCount(data.leave.pending)}
+          icon="solar:clipboard-list-bold"
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <DashboardStatTile
+          label="Teaching staff"
+          value={formatCount(data.workforce.teachingStaff)}
+          icon="solar:users-group-rounded-bold"
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <DashboardStatTile
+          label="New joiners"
+          value={formatCount(data.workforce.newJoinersThisMonth)}
+          icon="solar:user-plus-bold"
+        />
+      </Grid>
+    </Grid>
+  </DashboardSectionCard>
+);
 
 const LeaveActionCenter = ({ requests }: { requests: HRDashboardLeaveRequest[] }) => {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -438,26 +628,19 @@ const LeaveActionCenter = ({ requests }: { requests: HRDashboardLeaveRequest[] }
   };
 
   return (
-    <Card
-      sx={{
-        height: '100%',
-        p: 2,
-        boxShadow: 'none',
-        border: (t) => `1px solid ${t.palette.divider}`,
-      }}
+    <DashboardSectionCard
+      title="Pending Leave Approvals"
+      subheader={`${requests.length} recent requests`}
+      height="100%"
+      minHeight={260}
+      action={
+        <Button component={Link} href={hrPaths.leaveManagement.approvals} size="small">
+          View all
+        </Button>
+      }
     >
-      <CardHeader
-        sx={{ p: 0, mb: 1.5 }}
-        title="Pending Leave Approvals"
-        subheader={`${requests.length} recent requests`}
-        action={
-          <Button component={Link} href={hrPaths.leaveManagement.approvals} size="small">
-            View all
-          </Button>
-        }
-      />
       {requests.length ? (
-        <Scrollbar sx={{ maxHeight: 330 }}>
+        <Scrollbar sx={{ maxHeight: 260 }}>
           <Stack spacing={1}>
             {requests.map((request) => (
               <Box
@@ -511,7 +694,7 @@ const LeaveActionCenter = ({ requests }: { requests: HRDashboardLeaveRequest[] }
           </Stack>
         </Scrollbar>
       ) : (
-        <Alert severity="success">No pending leave approvals.</Alert>
+        <DashboardEmptyRow>No pending leave approvals.</DashboardEmptyRow>
       )}
       <Dialog open={!!reviewAction} onClose={() => closeReviewAction()} fullWidth maxWidth="sm">
         <DialogTitle>
@@ -556,47 +739,79 @@ const LeaveActionCenter = ({ requests }: { requests: HRDashboardLeaveRequest[] }
           </LoadingButton>
         </DialogActions>
       </Dialog>
-    </Card>
+    </DashboardSectionCard>
   );
 };
 
-const InsightCenter = ({ insights }: { insights: HRDashboardInsight[] }) => (
-  <Card
+const InsightRow = ({ insight }: { insight: HRDashboardInsight }) => (
+  <Box
     sx={{
-      height: '100%',
-      p: 2,
-      boxShadow: 'none',
-      border: (t) => `1px solid ${t.palette.divider}`,
+      p: 1.5,
+      borderRadius: 1,
+      bgcolor: 'background.neutral',
+      border: (theme) => `1px solid ${theme.palette.divider}`,
     }}
   >
-    <CardHeader
-      sx={{ p: 0, mb: 1.5 }}
-      title="Smart HR Insights"
-      subheader="AI-ready deterministic recommendations"
-    />
+    <Stack
+      direction={{ xs: 'column', sm: 'row' }}
+      alignItems={{ xs: 'stretch', sm: 'flex-start' }}
+      justifyContent="space-between"
+      spacing={1}
+    >
+      <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ minWidth: 0 }}>
+        <Box
+          sx={{
+            width: 30,
+            height: 30,
+            borderRadius: 1,
+            display: 'grid',
+            placeItems: 'center',
+            color: 'text.secondary',
+            bgcolor: (theme) => alpha(theme.palette.text.secondary, 0.08),
+            flexShrink: 0,
+          }}
+        >
+          <Iconify icon={insightIcon(insight.severity)} width={18} />
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle2">{insight.title}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {insight.summary}
+          </Typography>
+        </Box>
+      </Stack>
+      {insight.actionHref ? (
+        <Button
+          component={Link}
+          href={insight.actionHref}
+          size="small"
+          variant="text"
+          sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, flexShrink: 0 }}
+        >
+          {insight.actionLabel || 'Open'}
+        </Button>
+      ) : null}
+    </Stack>
+  </Box>
+);
+
+const InsightCenter = ({ insights }: { insights: HRDashboardInsight[] }) => (
+  <DashboardSectionCard
+    title="Smart HR Insights"
+    subheader="Deterministic recommendations"
+    height="100%"
+    minHeight={220}
+  >
     {insights.length ? (
       <Stack spacing={1}>
         {insights.map((insight, index) => (
-          <Alert
-            key={`${insight.source}-${index}`}
-            severity={severityColor(insight.severity)}
-            action={
-              insight.actionHref ? (
-                <Button component={Link} href={insight.actionHref} size="small" color="inherit">
-                  {insight.actionLabel || 'Open'}
-                </Button>
-              ) : null
-            }
-          >
-            <Typography variant="subtitle2">{insight.title}</Typography>
-            <Typography variant="body2">{insight.summary}</Typography>
-          </Alert>
+          <InsightRow key={`${insight.source}-${index}`} insight={insight} />
         ))}
       </Stack>
     ) : (
-      <Alert severity="success">No urgent HR actions detected.</Alert>
+      <DashboardEmptyRow>No urgent HR actions detected.</DashboardEmptyRow>
     )}
-  </Card>
+  </DashboardSectionCard>
 );
 
 const CelebrationsCard = ({
@@ -608,19 +823,12 @@ const CelebrationsCard = ({
 }) => {
   const items = [...celebrations.today, ...celebrations.upcoming].slice(0, 8);
   return (
-    <Card
-      sx={{
-        height: '100%',
-        p: 2,
-        boxShadow: 'none',
-        border: (t) => `1px solid ${t.palette.divider}`,
-      }}
+    <DashboardSectionCard
+      title="Celebrations"
+      subheader="Birthdays and work anniversaries"
+      height="100%"
+      minHeight={260}
     >
-      <CardHeader
-        sx={{ p: 0, mb: 1.5 }}
-        title="Celebrations"
-        subheader="Birthdays and work anniversaries"
-      />
       {items.length ? (
         <Stack spacing={1}>
           {items.map((item) => (
@@ -649,9 +857,11 @@ const CelebrationsCard = ({
           ))}
         </Stack>
       ) : (
-        <Alert severity="info">No upcoming celebrations in the next 30 days.</Alert>
+        <DashboardEmptyRow icon="solar:calendar-linear">
+          No upcoming celebrations in the next 30 days.
+        </DashboardEmptyRow>
       )}
-    </Card>
+    </DashboardSectionCard>
   );
 };
 
@@ -660,24 +870,17 @@ const StaffSnapshotCard = ({
 }: {
   employees: HRDashboardSummary['workforce']['recentEmployees'];
 }) => (
-  <Card
-    sx={{
-      height: '100%',
-      p: 2,
-      boxShadow: 'none',
-      border: (t) => `1px solid ${t.palette.divider}`,
-    }}
+  <DashboardSectionCard
+    title="Staff Snapshot"
+    subheader="Recently added active staff"
+    height="100%"
+    minHeight={260}
+    action={
+      <Button component={Link} href={hrPaths.employee.list} size="small">
+        Directory
+      </Button>
+    }
   >
-    <CardHeader
-      sx={{ p: 0, mb: 1.5 }}
-      title="Staff Snapshot"
-      subheader="Recently added active staff"
-      action={
-        <Button component={Link} href={hrPaths.employee.list} size="small">
-          Directory
-        </Button>
-      }
-    />
     {employees.length ? (
       <Stack divider={<Divider flexItem />} spacing={1}>
         {employees.map((employee) => (
@@ -698,9 +901,9 @@ const StaffSnapshotCard = ({
         ))}
       </Stack>
     ) : (
-      <Alert severity="info">No active staff records found.</Alert>
+      <DashboardEmptyRow icon="solar:user-linear">No active staff records found.</DashboardEmptyRow>
     )}
-  </Card>
+  </DashboardSectionCard>
 );
 
 const AdminDashboard = () => {
@@ -730,7 +933,6 @@ const AdminDashboard = () => {
         title: 'Total Staff',
         value: formatCount(data.workforce.totalActiveStaff),
         icon: 'mdi:account-group-outline',
-        color: 'primary' as const,
         href: hrPaths.employee.list,
         helper: `${formatCount(data.workforce.teachingStaff)} teaching`,
       },
@@ -738,7 +940,6 @@ const AdminDashboard = () => {
         title: 'Present Today',
         value: formatCount(data.attendanceToday.present),
         icon: 'mdi:account-check-outline',
-        color: 'success' as const,
         href: hrPaths.attendance.markAttendance,
         helper: `${data.attendanceToday.attendanceRate}% attendance`,
       },
@@ -746,7 +947,6 @@ const AdminDashboard = () => {
         title: 'On Leave',
         value: formatCount(data.attendanceTrend.at(-1)?.leave || 0),
         icon: 'mdi:beach',
-        color: 'warning' as const,
         href: hrPaths.leaveManagement.leaveCenter,
         helper: 'Approved today',
       },
@@ -754,7 +954,6 @@ const AdminDashboard = () => {
         title: 'Late/Exceptions',
         value: formatCount(data.attendanceToday.lateOrException),
         icon: 'mdi:clock-alert-outline',
-        color: data.attendanceToday.lateOrException ? 'warning' : 'success',
         href: hrPaths.attendance.attendanceTracking,
         helper: `${formatCount(data.attendanceToday.missingAttendance)} missing`,
       },
@@ -762,15 +961,13 @@ const AdminDashboard = () => {
         title: 'Pending Leave',
         value: formatCount(data.leave.pending),
         icon: 'mdi:clipboard-clock-outline',
-        color: data.leave.pending ? 'warning' : 'success',
         href: hrPaths.leaveManagement.approvals,
         helper: `${formatCount(data.leave.approved)} approved`,
       },
       {
         title: 'Payroll Readiness',
-        value: data.payroll.canLock ? 'Ready' : data.payroll.canPreview ? 'Review' : 'Blocked',
+        value: payrollReadinessValue(data.payroll),
         icon: 'mdi:cash-multiple',
-        color: data.payroll.canLock ? 'success' : data.payroll.canPreview ? 'warning' : 'error',
         href: hrPaths.payroll.runPayroll,
         helper: `${formatCount(data.payroll.pendingCount)} pending rows`,
       },
@@ -778,7 +975,6 @@ const AdminDashboard = () => {
         title: 'New Joiners',
         value: formatCount(data.workforce.newJoinersThisMonth),
         icon: 'mdi:account-plus-outline',
-        color: 'info' as const,
         href: hrPaths.employee.list,
         helper: 'This month',
       },
@@ -786,7 +982,6 @@ const AdminDashboard = () => {
         title: 'Celebrations',
         value: formatCount(data.celebrations.today.length + data.celebrations.upcoming.length),
         icon: 'mdi:party-popper',
-        color: 'info' as const,
         helper: 'Next 30 days',
       },
     ] satisfies DashboardMetric[];
@@ -879,29 +1074,29 @@ const AdminDashboard = () => {
         ))}
       </Grid>
 
-      <Grid container spacing={1.5}>
-        <Grid size={{ xs: 12, md: 7 }}>
+      <Grid container spacing={1.5} alignItems="stretch">
+        <Grid size={{ xs: 12, lg: 6 }}>
           <AttendanceTrendCard data={data} />
         </Grid>
-        <Grid size={{ xs: 12, md: 5 }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
           <PayrollReadinessCard data={data} />
         </Grid>
-      </Grid>
-
-      <Grid container spacing={1.5}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <LeaveActionCenter requests={data.leave.recentPendingRequests} />
+        <Grid size={{ xs: 12, md: 5 }}>
+          <TodayOperationsCard data={data} />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <InsightCenter insights={data.insights} />
         </Grid>
       </Grid>
 
-      <Grid container spacing={1.5}>
-        <Grid size={{ xs: 12, md: 6 }}>
+      <Grid container spacing={1.5} alignItems="stretch">
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <LeaveActionCenter requests={data.leave.recentPendingRequests} />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
           <CelebrationsCard celebrations={data.celebrations} dashboardDate={data.date} />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
           <StaffSnapshotCard employees={data.workforce.recentEmployees} />
         </Grid>
       </Grid>

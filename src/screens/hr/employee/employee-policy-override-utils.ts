@@ -9,6 +9,17 @@ export type EmployeePolicyOverrideValues = {
 
 export const DEFAULT_EMPLOYEE_POLICY_OVERRIDE_REASON = 'Employee payroll step override';
 
+export function clearEmployeePolicyOverrideValues(values: EmployeePolicyOverrideValues) {
+  return {
+    policyOverrideEnabled: false,
+    policyOverrideWasEnabled: Boolean(values.policyOverrideWasEnabled),
+    policyOverridePayrollPolicyId: '',
+    policyOverrideAttendancePolicyId: '',
+    policyOverrideEffectiveFrom: '',
+    policyOverrideAssignmentReason: '',
+  };
+}
+
 export function buildEmployeePolicyOverride(
   values: EmployeePolicyOverrideValues,
   academicYearId?: string | null,

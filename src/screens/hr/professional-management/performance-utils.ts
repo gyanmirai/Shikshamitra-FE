@@ -34,6 +34,22 @@ export const staffCategoryLabels: Record<number, string> = {
   9: 'IT / Support',
 };
 
+export const boardTypeLabels: Record<number, string> = {
+  0: 'Generic Indian',
+  1: 'CBSE',
+  2: 'GSEB',
+};
+
+export const sqaaDomainLabels: Record<number, string> = {
+  0: 'Curriculum, Pedagogy & Assessment',
+  1: 'Infrastructure',
+  2: 'Human Resources',
+  3: 'Leadership & Governance',
+  4: 'Inclusiveness and Well-being',
+  5: 'Beneficiary Satisfaction',
+  6: 'Management and School Processes',
+};
+
 export function getSectionWeightTotal(sections: PerformanceTemplateSection[] = []) {
   return Number(sections.reduce((sum, section) => sum + Number(section.weight || 0), 0).toFixed(2));
 }

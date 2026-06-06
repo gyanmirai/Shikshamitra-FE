@@ -4,6 +4,7 @@ import {
   buildEmployeePolicyOverride,
   resolveEmployeePolicyPreviewDate,
   buildEmployeePolicyOverrideAction,
+  clearEmployeePolicyOverrideValues,
   hydrateEmployeePolicyOverrideFromPreview,
   buildEmployeePolicyOverridePreviewRequest,
 } from './employee-policy-override-utils';
@@ -68,6 +69,23 @@ describe('employee policy override helpers', () => {
       undefined
     );
     expect(buildEmployeePolicyOverridePreviewRequest(values, 'year-1', '')).toBeUndefined();
+  });
+
+  it('clears visible override fields while preserving disable intent', () => {
+    const cleared = clearEmployeePolicyOverrideValues({
+      ...values,
+      policyOverrideWasEnabled: true,
+    });
+
+    expect(cleared).toEqual({
+      policyOverrideEnabled: false,
+      policyOverrideWasEnabled: true,
+      policyOverridePayrollPolicyId: '',
+      policyOverrideAttendancePolicyId: '',
+      policyOverrideEffectiveFrom: '',
+      policyOverrideAssignmentReason: '',
+    });
+    expect(buildEmployeePolicyOverrideAction(cleared, 'year-1')).toBe('disable');
   });
 
   it('uses override effective date for payroll policy preview', () => {

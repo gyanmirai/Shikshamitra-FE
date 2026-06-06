@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
-import { varAlpha } from 'src/theme/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -42,12 +41,76 @@ import PayrollTempComponentDialog from './PayrollTempComponentDialog';
 import { isSalaryComponentFixed, isPercentageSalaryComponent } from '../salary-utils';
 import {
   resolveEmployeePolicyPreviewDate,
+  clearEmployeePolicyOverrideValues,
   hydrateEmployeePolicyOverrideFromPreview,
 } from '../employee-policy-override-utils';
 
 import type { FieldsType } from './types';
 
-export const RenderComponents = ({ formik, name, label, type, showTempAdd = false }: any) => {
+const getComponentAmount = (item: any) =>
+  isPercentageSalaryComponent(item) ? 0 : Number(item?.amount ?? 0);
+
+const getComponentTotal = (items: any[] = []) =>
+  items.reduce((total, item) => total + getComponentAmount(item), 0);
+
+const FieldGroupHeader = ({ title }: { title: string }) => (
+  <Grid size={{ xs: 12 }}>
+    <Typography variant="overline" color="text.secondary" fontWeight={700}>
+      {title}
+    </Typography>
+  </Grid>
+);
+
+const ifscHelperTextSx = {
+  mx: '14px',
+  mt: 0.75,
+  lineHeight: 1.25,
+  whiteSpace: 'normal',
+  overflowWrap: 'anywhere',
+};
+
+const SalarySummaryCard = ({
+  label,
+  value,
+  emphasis = false,
+}: {
+  label: string;
+  value: number;
+  emphasis?: boolean;
+}) => (
+  <Grid size={{ xs: 12, md: 4 }}>
+    <Paper
+      elevation={0}
+      sx={{
+        p: 1.5,
+        borderRadius: 1,
+        border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+        borderTop: (theme) =>
+          `3px solid ${
+            emphasis ? theme.vars.palette.primary.main : theme.vars.palette.text.disabled
+          }`,
+        bgcolor: (theme) => theme.vars.palette.background.paper,
+      }}
+    >
+      <Typography variant="caption" color="text.secondary" fontWeight={600}>
+        {label}
+      </Typography>
+      <Typography variant="h6" fontWeight={800} color={emphasis ? 'primary.main' : 'text.primary'}>
+        {formatCurrency(value)}
+      </Typography>
+    </Paper>
+  </Grid>
+);
+
+export const RenderComponents = ({
+  formik,
+  name,
+  label,
+  type,
+  showTempAdd = false,
+  emptyMessage,
+  emptyActionLabel,
+}: any) => {
   const { values } = formik;
   const components = values[name] || [];
   const isDialogOpen = useBoolean();
@@ -97,7 +160,8 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
     applicableMonth: c?.applicableMonth,
   }));
 
-  const accentColor = type === 'earning' ? 'success' : 'error';
+  const componentAccentColor = 'primary';
+  const addActionLabel = emptyActionLabel || (type === 'earning' ? 'Add Earning' : 'Add Deduction');
 
   return (
     <Paper
@@ -108,7 +172,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
         flexDirection: 'column',
         mt: 1,
         border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-        borderRadius: 2,
+        borderRadius: 1,
         overflow: 'hidden',
       }}
     >
@@ -117,9 +181,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
         sx={{
           height: '4px',
           background: (theme) =>
-            type === 'earning'
-              ? `linear-gradient(90deg, ${theme.palette.success.main}, ${theme.palette.success.light})`
-              : `linear-gradient(90deg, ${theme.palette.error.main}, ${theme.palette.error.light})`,
+            type === 'earning' ? theme.vars.palette.text.disabled : theme.vars.palette.divider,
         }}
       />
 
@@ -130,7 +192,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
         alignItems="center"
         px={2}
         py={1.5}
-        sx={{ bgcolor: (t) => varAlpha(t.vars.palette[accentColor].mainChannel, 0.04) }}
+        sx={{ bgcolor: (theme) => theme.vars.palette.background.neutral }}
       >
         <Box display="flex" alignItems="center" gap={1}>
           <Box
@@ -138,7 +200,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
               width: 4,
               height: 22,
               borderRadius: 1,
-              bgcolor: `${accentColor}.main`,
+              bgcolor: `${componentAccentColor}.main`,
               flexShrink: 0,
             }}
           />
@@ -148,7 +210,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
           <Chip
             label={components.length}
             size="small"
-            color={accentColor}
+            color={componentAccentColor}
             variant="soft"
             sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700, ml: 0.5 }}
           />
@@ -171,7 +233,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
           )}
           <Button
             variant="soft"
-            color={accentColor}
+            color={componentAccentColor}
             startIcon={<Add />}
             onClick={() => {
               isAddingTemp.onFalse();
@@ -196,9 +258,30 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
           isShowedDense={false}
           data={tableRows}
           noDataText={
-            <Typography variant="body2" color="text.secondary">
-              No {type} components added yet. Click the button above to add.
-            </Typography>
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              gap={1}
+              py={2}
+            >
+              <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                {emptyMessage || `No ${type} components added`}
+              </Typography>
+              <Button
+                variant="soft"
+                color={componentAccentColor}
+                startIcon={<Add />}
+                size="small"
+                onClick={() => {
+                  isAddingTemp.onFalse();
+                  isDialogOpen.onTrue();
+                }}
+              >
+                {addActionLabel}
+              </Button>
+            </Box>
           }
           columns={[
             {
@@ -213,11 +296,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                           width: 3,
                           height: 16,
                           borderRadius: 0.5,
-                          bgcolor: row.isTemp
-                            ? 'warning.main'
-                            : type === 'earning'
-                              ? 'success.main'
-                              : 'error.main',
+                          bgcolor: row.isTemp ? 'warning.main' : 'text.disabled',
                           flexShrink: 0,
                         }}
                       />
@@ -368,10 +447,10 @@ const RenderPayrollFields = (props: any) => {
   const { values, handleChange } = formik;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const isEditable = useBoolean(isMainForm);
-  const policyEffectiveDate = resolveEmployeePolicyPreviewDate(
-    values,
-    dayjs().format('YYYY-MM-DD')
-  );
+  const policyEffectiveFallbackDate = values.dateOfJoining
+    ? dayjs(values.dateOfJoining).format('YYYY-MM-DD')
+    : dayjs().format('YYYY-MM-DD');
+  const policyEffectiveDate = resolveEmployeePolicyPreviewDate(values, policyEffectiveFallbackDate);
   const { data: policyPreview, isFetching: isPreviewLoading } = useGetPolicyAssignmentPreviewQuery(
     {
       academicYearId: currentYear?.id,
@@ -396,6 +475,65 @@ const RenderPayrollFields = (props: any) => {
   const activeAttendancePolicies = (attendancePolicies?.items || []).filter(
     (item) => item.status === 'active'
   );
+  const grossEarnings = getComponentTotal(values.earningComponents || []);
+  const totalDeductions = getComponentTotal(values.deductionComponents || []);
+  const netSalary = grossEarnings - totalDeductions;
+  const policySourceLabel = isPreviewLoading
+    ? 'Resolving...'
+    : policyPreview?.policySource === 'employee'
+      ? 'Employee override'
+      : policyPreview?.policySource || 'Default policy';
+  const organizationPolicyEnabled = !values.policyOverrideEnabled;
+  const policyStatusLabel = organizationPolicyEnabled
+    ? 'Following Organization Policies'
+    : 'Custom Employee Override Applied';
+  const policySourceDetail =
+    policyPreview?.matchedTargetDisplayName ||
+    policyPreview?.matchedTargetKey ||
+    policyPreview?.policySource ||
+    'No source resolved yet';
+  const policySourcePriority =
+    policyPreview?.matchedPriority != null ? `Priority ${policyPreview.matchedPriority}` : null;
+  const policySummaryItems = [
+    { icon: '🧾', label: 'Payroll Policy', value: policyPreview?.payrollPolicy?.name },
+    { icon: '🕒', label: 'Attendance Policy', value: policyPreview?.attendancePolicy?.name },
+    {
+      icon: '📅',
+      label: 'Payroll Calendar',
+      value: policyPreview?.payrollWorkCalendarPolicy?.name,
+    },
+    {
+      icon: '📆',
+      label: 'Attendance Calendar',
+      value: policyPreview?.attendanceWorkCalendarPolicy?.name,
+    },
+  ];
+  const defaultPolicyOverrideEffectiveFrom = policyEffectiveDate || dayjs().format('YYYY-MM-DD');
+  const overrideTouchedFields = [
+    'policyOverridePayrollPolicyId',
+    'policyOverrideAttendancePolicyId',
+    'policyOverrideEffectiveFrom',
+    'policyOverrideAssignmentReason',
+  ];
+  const handlePolicyOverrideToggle = (isEnabled: boolean) => {
+    formik.setFieldTouched('policyOverrideEnabled', true, false);
+
+    if (isEnabled) {
+      formik.setFieldValue('policyOverrideEnabled', true);
+      formik.setFieldValue(
+        'policyOverrideEffectiveFrom',
+        values.policyOverrideEffectiveFrom || defaultPolicyOverrideEffectiveFrom
+      );
+      overrideTouchedFields.forEach((field) => formik.setFieldTouched(field, false, false));
+      return;
+    }
+
+    const clearedOverride = clearEmployeePolicyOverrideValues(values);
+    Object.entries(clearedOverride).forEach(([field, value]) => {
+      formik.setFieldValue(field, value, false);
+    });
+    overrideTouchedFields.forEach((field) => formik.setFieldTouched(field, false, false));
+  };
   useEffect(() => {
     if (!policyPreview || formik.touched.policyOverrideEnabled) {
       return;
@@ -437,186 +575,253 @@ const RenderPayrollFields = (props: any) => {
           <Paper
             elevation={0}
             sx={{
-              p: 1.5,
+              p: { xs: 1.25, md: 1.5 },
               border: (theme) => `1px solid ${theme.vars.palette.divider}`,
               borderRadius: 1,
-              bgcolor: (theme) => theme.vars.palette.background.neutral,
+              bgcolor: (theme) => theme.vars.palette.background.paper,
             }}
           >
-            <Box display="flex" justifyContent="space-between" gap={1.5} flexWrap="wrap">
-              <Typography variant="subtitle2" fontWeight={700}>
-                Policy Assignment
+            <Box
+              sx={{
+                mb: 1.25,
+                px: 1.5,
+                py: 1,
+                borderRadius: 1,
+                display: 'flex',
+                alignItems: 'center',
+                border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                bgcolor: (theme) => theme.vars.palette.background.paper,
+              }}
+            >
+              <Typography variant="body2" color="text.primary" fontWeight={700}>
+                {policyStatusLabel}
               </Typography>
-              <Chip
-                size="small"
-                color={policyPreview?.policySource === 'default' ? 'default' : 'primary'}
-                label={isPreviewLoading ? 'Resolving...' : policyPreview?.policySource || 'Default'}
-              />
             </Box>
-            <Grid container spacing={1.25} sx={{ mt: 1 }}>
-              <Grid size={{ xs: 12, md: 3 }}>
+            <Box
+              display="flex"
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              justifyContent="space-between"
+              gap={1.5}
+              flexDirection={{ xs: 'column', sm: 'row' }}
+            >
+              <Box>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  Policy Assignment
+                </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Payroll Policy
+                  {policySourceDetail}
+                  {policySourcePriority ? ` · ${policySourcePriority}` : ''}
                 </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {policyPreview?.payrollPolicy?.name || '-'}
-                </Typography>
-              </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Attendance Policy
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {policyPreview?.attendancePolicy?.name || '-'}
-                </Typography>
-              </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Payroll Calendar
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {policyPreview?.payrollWorkCalendarPolicy?.name || '-'}
-                </Typography>
-              </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Attendance Calendar
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {policyPreview?.attendanceWorkCalendarPolicy?.name || '-'}
-                </Typography>
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Source
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {policyPreview?.matchedTargetDisplayName ||
-                    policyPreview?.matchedTargetKey ||
-                    policyPreview?.policySource ||
-                    '-'}
-                  {policyPreview?.matchedPriority != null
-                    ? ` · Priority ${policyPreview.matchedPriority}`
-                    : ''}
-                </Typography>
-              </Grid>
+              </Box>
+              <Box display="flex" gap={1} flexWrap="wrap">
+                <Chip size="small" color="default" variant="outlined" label={policySourceLabel} />
+              </Box>
+            </Box>
+            <Grid container spacing={1} sx={{ mt: 1.25 }}>
+              {policySummaryItems.map((item) => (
+                <Grid key={item.label} size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Box
+                    display="flex"
+                    gap={1}
+                    sx={{
+                      height: '100%',
+                      p: 1.1,
+                      borderRadius: 1,
+                      border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                      bgcolor: (theme) => theme.vars.palette.background.neutral,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 28,
+                        height: 28,
+                        display: 'grid',
+                        placeItems: 'center',
+                        borderRadius: 1,
+                        bgcolor: (theme) => theme.vars.palette.background.paper,
+                        border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Typography component="span" aria-hidden>
+                        {item.icon}
+                      </Typography>
+                    </Box>
+                    <Box minWidth={0}>
+                      <Typography variant="caption" color="text.secondary">
+                        {item.label}
+                      </Typography>
+                      <Typography variant="body2" fontWeight={700} sx={{ mt: 0.1 }}>
+                        {item.value || '-'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+              ))}
             </Grid>
             {!policyPreview && !isPreviewLoading ? (
               <Alert severity="info" sx={{ mt: 1.5 }}>
                 Select employee scope fields and joining date to preview effective policies.
               </Alert>
             ) : null}
-            <Divider sx={{ my: 1.5 }} />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(values.policyOverrideEnabled)}
-                  disabled={!isEditable.value}
-                  onChange={(event) =>
-                    formik.setFieldValue('policyOverrideEnabled', event.target.checked)
-                  }
-                />
-              }
-              label="Override for this employee"
-            />
+            <Divider sx={{ my: 1.25 }} />
+            <Box
+              display="flex"
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              justifyContent="space-between"
+              gap={1.5}
+              flexDirection={{ xs: 'column', sm: 'row' }}
+            >
+              <Box>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  Employee Override
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {organizationPolicyEnabled
+                    ? 'Using the resolved organization policy chain.'
+                    : 'Select employee-specific payroll and attendance policies.'}
+                </Typography>
+              </Box>
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Switch
+                    checked={organizationPolicyEnabled}
+                    disabled={!isEditable.value}
+                    onChange={(event) => handlePolicyOverrideToggle(!event.target.checked)}
+                  />
+                }
+                label="Use Organization Policies"
+              />
+            </Box>
             {values.policyOverrideEnabled ? (
-              <Grid container spacing={1.5}>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Payroll Policy *</InputLabel>
-                    <Select
-                      label="Payroll Policy *"
-                      value={values.policyOverridePayrollPolicyId || ''}
+              <Box
+                sx={{
+                  mt: 1.5,
+                  p: 1.5,
+                  borderRadius: 1,
+                  border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                  bgcolor: (theme) => theme.vars.palette.background.neutral,
+                }}
+              >
+                <Grid container spacing={1.5}>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Payroll Policy *</InputLabel>
+                      <Select
+                        label="Payroll Policy *"
+                        value={values.policyOverridePayrollPolicyId || ''}
+                        disabled={!isEditable.value || activePayrollPolicies.length === 0}
+                        onChange={(event) =>
+                          formik.setFieldValue('policyOverridePayrollPolicyId', event.target.value)
+                        }
+                        error={
+                          Boolean(formik.touched.policyOverridePayrollPolicyId) &&
+                          Boolean(formik.errors.policyOverridePayrollPolicyId)
+                        }
+                      >
+                        {activePayrollPolicies.length === 0 ? (
+                          <MenuItem value="" disabled>
+                            No active payroll policies
+                          </MenuItem>
+                        ) : null}
+                        {activePayrollPolicies.map((item) => (
+                          <MenuItem key={item.id} value={item.id}>
+                            {item.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {formik.touched.policyOverridePayrollPolicyId &&
+                      formik.errors.policyOverridePayrollPolicyId ? (
+                        <FormHelperText error>
+                          {formik.errors.policyOverridePayrollPolicyId}
+                        </FormHelperText>
+                      ) : activePayrollPolicies.length === 0 ? (
+                        <FormHelperText>No active payroll policies are available.</FormHelperText>
+                      ) : null}
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Attendance Policy *</InputLabel>
+                      <Select
+                        label="Attendance Policy *"
+                        value={values.policyOverrideAttendancePolicyId || ''}
+                        disabled={!isEditable.value || activeAttendancePolicies.length === 0}
+                        onChange={(event) =>
+                          formik.setFieldValue(
+                            'policyOverrideAttendancePolicyId',
+                            event.target.value
+                          )
+                        }
+                        error={
+                          Boolean(formik.touched.policyOverrideAttendancePolicyId) &&
+                          Boolean(formik.errors.policyOverrideAttendancePolicyId)
+                        }
+                      >
+                        {activeAttendancePolicies.length === 0 ? (
+                          <MenuItem value="" disabled>
+                            No active attendance policies
+                          </MenuItem>
+                        ) : null}
+                        {activeAttendancePolicies.map((item) => (
+                          <MenuItem key={item.id} value={item.id}>
+                            {item.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {formik.touched.policyOverrideAttendancePolicyId &&
+                      formik.errors.policyOverrideAttendancePolicyId ? (
+                        <FormHelperText error>
+                          {formik.errors.policyOverrideAttendancePolicyId}
+                        </FormHelperText>
+                      ) : activeAttendancePolicies.length === 0 ? (
+                        <FormHelperText>
+                          No active attendance policies are available.
+                        </FormHelperText>
+                      ) : null}
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      type="date"
+                      label="Effective From *"
+                      InputLabelProps={{ shrink: true }}
                       disabled={!isEditable.value}
+                      value={values.policyOverrideEffectiveFrom || ''}
                       onChange={(event) =>
-                        formik.setFieldValue('policyOverridePayrollPolicyId', event.target.value)
+                        formik.setFieldValue('policyOverrideEffectiveFrom', event.target.value)
                       }
                       error={
-                        Boolean(formik.touched.policyOverridePayrollPolicyId) &&
-                        Boolean(formik.errors.policyOverridePayrollPolicyId)
+                        Boolean(formik.touched.policyOverrideEffectiveFrom) &&
+                        Boolean(formik.errors.policyOverrideEffectiveFrom)
                       }
-                    >
-                      {activePayrollPolicies.map((item) => (
-                        <MenuItem key={item.id} value={item.id}>
-                          {item.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {formik.touched.policyOverridePayrollPolicyId &&
-                    formik.errors.policyOverridePayrollPolicyId ? (
-                      <FormHelperText error>
-                        {formik.errors.policyOverridePayrollPolicyId}
-                      </FormHelperText>
-                    ) : null}
-                  </FormControl>
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Attendance Policy *</InputLabel>
-                    <Select
-                      label="Attendance Policy *"
-                      value={values.policyOverrideAttendancePolicyId || ''}
+                      helperText={
+                        formik.touched.policyOverrideEffectiveFrom &&
+                        formik.errors.policyOverrideEffectiveFrom
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      label="Assignment Reason"
                       disabled={!isEditable.value}
+                      value={values.policyOverrideAssignmentReason || ''}
                       onChange={(event) =>
-                        formik.setFieldValue('policyOverrideAttendancePolicyId', event.target.value)
+                        formik.setFieldValue('policyOverrideAssignmentReason', event.target.value)
                       }
-                      error={
-                        Boolean(formik.touched.policyOverrideAttendancePolicyId) &&
-                        Boolean(formik.errors.policyOverrideAttendancePolicyId)
-                      }
-                    >
-                      {activeAttendancePolicies.map((item) => (
-                        <MenuItem key={item.id} value={item.id}>
-                          {item.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {formik.touched.policyOverrideAttendancePolicyId &&
-                    formik.errors.policyOverrideAttendancePolicyId ? (
-                      <FormHelperText error>
-                        {formik.errors.policyOverrideAttendancePolicyId}
-                      </FormHelperText>
-                    ) : null}
-                  </FormControl>
+                    />
+                  </Grid>
                 </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    type="date"
-                    label="Effective From *"
-                    InputLabelProps={{ shrink: true }}
-                    disabled={!isEditable.value}
-                    value={values.policyOverrideEffectiveFrom || policyEffectiveDate}
-                    onChange={(event) =>
-                      formik.setFieldValue('policyOverrideEffectiveFrom', event.target.value)
-                    }
-                    error={
-                      Boolean(formik.touched.policyOverrideEffectiveFrom) &&
-                      Boolean(formik.errors.policyOverrideEffectiveFrom)
-                    }
-                    helperText={
-                      formik.touched.policyOverrideEffectiveFrom &&
-                      formik.errors.policyOverrideEffectiveFrom
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    label="Assignment Reason"
-                    disabled={!isEditable.value}
-                    value={values.policyOverrideAssignmentReason || ''}
-                    onChange={(event) =>
-                      formik.setFieldValue('policyOverrideAssignmentReason', event.target.value)
-                    }
-                  />
-                </Grid>
-              </Grid>
+              </Box>
             ) : null}
           </Paper>
         </Grid>
+        <FieldGroupHeader title="Bank Details" />
         <Grid size={{ xs: 12, sm: 4 }}>
           <ShakingTextField error={formik.touched.bankName && Boolean(formik.errors.bankName)}>
             <TextField
@@ -720,7 +925,10 @@ const RenderPayrollFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
+        <Grid
+          size={{ xs: 12, sm: 4 }}
+          sx={{ pb: formik.touched.ifscCode && formik.errors.ifscCode ? 1.5 : 0 }}
+        >
           <ShakingTextField error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}>
             <TextField
               size="small"
@@ -736,9 +944,11 @@ const RenderPayrollFields = (props: any) => {
               }}
               error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}
               helperText={formik.touched.ifscCode && formik.errors.ifscCode}
+              FormHelperTextProps={{ sx: ifscHelperTextSx }}
             />
           </ShakingTextField>
         </Grid>
+        <FieldGroupHeader title="Statutory Details" />
         <Grid size={{ xs: 12, sm: 4 }}>
           <RenderPfRules
             disabled={!isEditable.value}
@@ -753,7 +963,7 @@ const RenderPayrollFields = (props: any) => {
               size="small"
               fullWidth
               disabled={!isEditable.value}
-              label="EPF Number"
+              label="PF Number"
               name="epfNumber"
               value={values.epfNumber || ''}
               onChange={handleChange}
@@ -784,13 +994,14 @@ const RenderPayrollFields = (props: any) => {
           </ShakingTextField>
         </Grid>
 
+        <FieldGroupHeader title="Attendance Integration" />
         <Grid size={{ xs: 12, sm: 4 }}>
           <ShakingTextField error={formik.touched.punchId && Boolean(formik.errors.punchId)}>
             <TextField
               size="small"
               fullWidth
               disabled={!isEditable.value}
-              label="Punch Id"
+              label="Punch ID"
               name="punchId"
               onBlur={(e) => {
                 formik.setFieldValue('punchId', e.target.value.trim());
@@ -833,31 +1044,39 @@ const RenderPayrollFields = (props: any) => {
                 Boolean(formik.errors.totalWorkingHourPerMonth)
               }
               helperText={
-                formik.touched.totalWorkingHourPerMonth && formik.errors.totalWorkingHourPerMonth
+                (formik.touched.totalWorkingHourPerMonth &&
+                  formik.errors.totalWorkingHourPerMonth) ||
+                'Optional'
               }
             />
           </ShakingTextField>
         </Grid>
       </SectionCard>
-      Leave Center
-      <Grid container spacing={1}>
+      <SectionCard title="Compensation Structure">
+        <SalarySummaryCard label="Gross Earnings" value={grossEarnings} />
+        <SalarySummaryCard label="Total Deductions" value={totalDeductions} />
+        <SalarySummaryCard label="Net Salary" value={netSalary} emphasis />
         <Grid size={{ xs: 12, md: 6 }}>
           <RenderComponents
             formik={formik}
             name="earningComponents"
-            label="Earning Components"
+            label="Earnings"
             type="earning"
+            emptyMessage="No earning components added"
+            emptyActionLabel="Add Earning"
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <RenderComponents
             formik={formik}
             name="deductionComponents"
-            label="Deduction Components"
+            label="Deductions"
             type="deduction"
+            emptyMessage="No deduction components added"
+            emptyActionLabel="Add Deduction"
           />
         </Grid>
-      </Grid>
+      </SectionCard>
     </Box>
   );
 };

@@ -1,6 +1,8 @@
 import { it, expect, describe } from 'vitest';
 
 import {
+  boardTypeLabels,
+  sqaaDomainLabels,
   getSectionWeightTotal,
   isTemplatePublishable,
   calculateWeightedScore,
@@ -21,6 +23,13 @@ describe('performance-utils', () => {
     const sections = [{ id: 's1', name: 'Academic', weight: 100, displayOrder: 1, criteria: [] }];
 
     expect(isTemplatePublishable(sections as any)).toBe(false);
+  });
+
+  it('provides Indian board and SQAAF labels', () => {
+    expect(boardTypeLabels[1]).toBe('CBSE');
+    expect(boardTypeLabels[2]).toBe('GSEB');
+    expect(sqaaDomainLabels[0]).toContain('Curriculum');
+    expect(sqaaDomainLabels[6]).toContain('School Processes');
   });
 
   it('excludes not applicable criteria and normalizes remaining score', () => {

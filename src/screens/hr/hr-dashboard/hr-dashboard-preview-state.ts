@@ -32,16 +32,16 @@ export const getDashboardSnapshotEmptyStateCopy = ({
     return {
       title: 'Preparing HR dashboard snapshot',
       description:
-        'Refresh is running in the background. This page will update automatically when the saved view is ready.',
+        'Refresh is running automatically in the background. This page will update when the saved view is ready.',
       tone: 'warning' as const,
       icon: 'solar:refresh-linear',
     };
   }
 
   return {
-    title: 'No HR dashboard snapshot yet',
+    title: 'Preparing first HR dashboard snapshot',
     description:
-      'Start a refresh to prepare the saved HR view. Daily scheduled refresh will also prepare this automatically.',
+      'The saved HR view is being prepared automatically. You can keep using the HR screens below while it runs.',
     tone: 'info' as const,
     icon: 'solar:database-linear',
   };

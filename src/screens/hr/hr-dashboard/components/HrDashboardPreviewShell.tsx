@@ -56,7 +56,7 @@ export const HrDashboardPreviewShell = ({
             Last refreshed:{' '}
             {formatRefreshTime(preview?.lastSuccessfulRefreshAt || preview?.lastRefreshedAt)}
             {preview?.nextScheduledRefreshAt
-              ? ` • Next scheduled: ${formatScheduleTime(preview.nextScheduledRefreshAt)}`
+              ? ` | Next scheduled: ${formatScheduleTime(preview.nextScheduledRefreshAt)}`
               : ''}
           </Typography>
         </Box>
@@ -79,15 +79,14 @@ export const HrDashboardPreviewShell = ({
       {hasError ? <Alert severity="warning">{preview?.lastError}</Alert> : null}
       {preview?.isStale && preview?.status === 'Ready' ? (
         <Alert severity="info">
-          This snapshot is older than 24 hours. You can keep working with the saved view or refresh
-          it now.
+          This snapshot is older than 24 hours. A fresh view is being prepared automatically; you
+          can keep working with the saved data meanwhile.
         </Alert>
       ) : null}
       {preview?.status === 'Empty' ? (
         <Alert severity="info">
-          No saved HR dashboard snapshot is available yet. Use Refresh to prepare one; the next
-          automatic refresh is scheduled around {formatScheduleTime(preview.nextScheduledRefreshAt)}
-          .
+          The first saved HR dashboard snapshot is being prepared automatically. Next scheduled
+          refresh is around {formatScheduleTime(preview.nextScheduledRefreshAt)}.
         </Alert>
       ) : null}
       {preview?.status === 'Failed' ? (

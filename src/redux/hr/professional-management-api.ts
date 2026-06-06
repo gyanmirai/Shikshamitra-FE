@@ -21,6 +21,22 @@ export enum PerformanceStaffCategory {
   ItSupport = 9,
 }
 
+export enum PerformanceBoardType {
+  GenericIndian = 0,
+  CBSE = 1,
+  GSEB = 2,
+}
+
+export enum PerformanceSqaaDomain {
+  CurriculumPedagogyAssessment = 0,
+  Infrastructure = 1,
+  HumanResources = 2,
+  LeadershipGovernance = 3,
+  InclusivenessWellBeing = 4,
+  BeneficiarySatisfaction = 5,
+  ManagementSchoolProcesses = 6,
+}
+
 export enum PerformanceStageType {
   SelfAppraisal = 0,
   ReportingManager = 1,
@@ -34,7 +50,9 @@ export type PerformanceTemplateCriterion = {
   templateId?: string;
   sectionId?: string;
   name: string;
+  gujaratiName?: string | null;
   description?: string | null;
+  sqaaDomain?: PerformanceSqaaDomain;
   weight: number;
   evidenceRequired: boolean;
   displayOrder: number;
@@ -44,6 +62,8 @@ export type PerformanceTemplateSection = {
   id?: string;
   templateId?: string;
   name: string;
+  gujaratiName?: string | null;
+  sqaaDomain?: PerformanceSqaaDomain;
   weight: number;
   displayOrder: number;
   criteria: PerformanceTemplateCriterion[];
@@ -58,6 +78,8 @@ export type PerformanceTemplate = {
   allowNotApplicable: boolean;
   status: number;
   description?: string | null;
+  boardType?: PerformanceBoardType;
+  gujaratiName?: string | null;
   sections: PerformanceTemplateSection[];
 };
 
@@ -142,6 +164,16 @@ export type PerformanceDashboard = {
   finalizedReviews: number;
   trainingRecommendations: number;
   incrementRecommendations: number;
+};
+
+export type PerformanceSqaaEvidence = {
+  domain: PerformanceSqaaDomain;
+  templateCount: number;
+  assignedReviewCount: number;
+  mappedCriteria: number;
+  evidenceRequiredCriteria: number;
+  evidenceSubmitted: number;
+  missingEvidence: number;
 };
 
 export const professionalManagementApi = api.injectEndpoints({
@@ -395,6 +427,13 @@ export const professionalManagementApi = api.injectEndpoints({
       }),
       providesTags: [employeeType.professionalReview],
     }),
+    getPerformanceSqaaEvidence: builder.query<PerformanceSqaaEvidence[], any>({
+      query: (params = {}) => ({
+        url: '/hr/professional-management/reports/sqaaf-evidence',
+        params: compactParams(params),
+      }),
+      providesTags: [employeeType.professionalReview],
+    }),
     getPerformanceAuditTrail: builder.query<any, any>({
       query: (params = {}) => ({
         url: '/hr/professional-management/audit',
@@ -459,6 +498,7 @@ export const {
   useGetPerformancePendingActionsQuery,
   useGetPerformanceTrainingNeedsQuery,
   useGetPerformanceIncrementRecommendationsQuery,
+  useGetPerformanceSqaaEvidenceQuery,
   useGetPerformanceAuditTrailQuery,
   useSaveProfessionalReviewDraftMutation,
   useSubmitProfessionalReviewMutation,

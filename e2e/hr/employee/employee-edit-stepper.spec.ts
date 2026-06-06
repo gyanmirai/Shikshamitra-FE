@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 
 import { createEmployeeFixture } from './employee-fixtures';
 import {
@@ -12,6 +12,20 @@ import {
   openFirstRowEdit,
   pickFirstAutocompleteOption,
 } from './employee-page';
+
+async function expectBelow(referenceLocator: Locator, targetLocator: Locator) {
+  const referenceBox = await referenceLocator.boundingBox();
+  const targetBox = await targetLocator.boundingBox();
+
+  expect(referenceBox).not.toBeNull();
+  expect(targetBox).not.toBeNull();
+
+  if (!referenceBox || !targetBox) {
+    throw new Error('Unable to measure payroll field layout');
+  }
+
+  expect(targetBox.y).toBeGreaterThanOrEqual(referenceBox.y + referenceBox.height - 1);
+}
 
 test.describe('HR Employee edit stepper', () => {
   test('updates personal, family, additional, work experience, payroll, reporting, and academic steps', async ({
@@ -86,6 +100,14 @@ test.describe('HR Employee edit stepper', () => {
     await fillTextByLabel(page, 'IFSC', 'BAD');
     await saveStep(page);
     await expect(page.getByText(/Account number must contain only digits/i)).toBeVisible();
-    await expect(page.getByText(/IFSC code must follow/i)).toBeVisible();
+    const ifscInput = page.getByLabel('IFSC', { exact: false }).first();
+    const ifscError = page.getByText(/IFSC code must follow/i).first();
+    await expect(ifscError).toBeVisible();
+    await expectBelow(ifscInput, ifscError);
+
+    const saveButton = page.getByRole('button', { name: /^Save$/i });
+    await expect(saveButton).toBeVisible();
+    await expect(saveButton).toBeEnabled();
+    await saveButton.click({ trial: true });
   });
 });

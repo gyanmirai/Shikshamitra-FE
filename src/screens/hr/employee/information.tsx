@@ -60,6 +60,8 @@ import {
 //   InformationFields,
 import type { FieldsType } from './employee-form-fields/types';
 
+const toOptionalNumber = (value: unknown) => (value === '' || value == null ? null : Number(value));
+
 const TabSkeleton = ({ activeTabIndex }: { activeTabIndex: number }) => {
   switch (activeTabIndex) {
     case 0:
@@ -373,7 +375,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             epfNumber: values.epfNumber,
             uanNumber: values.uanNumber,
             punchId: values.punchId,
-            totalWorkingHourPerMonth: Number(values.totalWorkingHourPerMonth),
+            totalWorkingHourPerMonth: toOptionalNumber(values.totalWorkingHourPerMonth),
           },
 
           earningComponents: values.earningComponents.map((item: any) => ({
