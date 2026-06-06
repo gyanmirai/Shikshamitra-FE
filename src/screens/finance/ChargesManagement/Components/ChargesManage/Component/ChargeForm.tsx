@@ -203,9 +203,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
-  console.log('formik values=====', formik.values);
 
-  console.log('formik errors=====', formik.errors);
   const handleSubmit = useCallback(() => {
     formik.validateForm().then((validationErrors) => {
       formik.handleSubmit();

@@ -196,7 +196,6 @@ const StandardResultListReports = ({ report }: { report: string }) => {
           : {}),
       };
 
-      console.log(reportPayload);
       window.alert('Report Generated Successfully!');
       setSubmitting(false);
     },

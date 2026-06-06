@@ -82,8 +82,6 @@ const ExamBasicReview = ({
   // Extract values from formik for easier access
   const { values } = formik;
 
-  console.log('ExamBasicReview values:', values);
-
   // Get all classes by flattening the standards array from each education medium stage
   const allClass = useMemo(
     () => medium?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [],

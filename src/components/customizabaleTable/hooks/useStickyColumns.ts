@@ -55,7 +55,6 @@ export const useStickyColumns = ({
               ?.querySelector(`#${tableUniqId}-column-${col.id}`)
               ?.getBoundingClientRect()?.width;
 
-            console.log({ el, name: col.label });
             const width = el ?? 100;
             leftOffsets[col.id as string] = left;
             left += width;
@@ -68,7 +67,6 @@ export const useStickyColumns = ({
               ?.querySelector(`#${tableUniqId}-column-${col.id}`)
               ?.getBoundingClientRect()?.width;
 
-            console.log({ el, name: col.label });
             const width = el ?? 100;
 
             rightOffsets[col.id as string] = right;

@@ -76,7 +76,6 @@ export default function FinanceRequestStatusChart({ title, subheader, chart, ...
             enabled: true,
             distance: 32,
             formatter(this: any) {
-              console.log(this);
               // eslint-disable-next-line react/no-this-in-sfc
               return `<div style="text-align:center;"><span style="font-size:12px;font-weight:600;">${this.point.name}</span><br/><span style="font-size:11px;">${this.point.y}</span></div>`;
             },
