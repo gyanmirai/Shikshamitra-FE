@@ -3,11 +3,11 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -15,6 +15,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Grid, Button, TextField, DialogActions } from '@mui/material';
 import {
+  useGetExpenseCategoryQuery,
   usePutExpenseCategoryMutation,
   usePostExpenseCategoryMutation,
 } from 'src/redux/finance/expenseCategory';
@@ -26,6 +27,26 @@ import type { IExpenseCategoryFormProps } from './type';
 
 const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const { data: expenseCategoryData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExpenseCategoryQuery,
+    params: { academicYearId: currentYear?.id, page: 1, pageSize: 1000 },
+    options: {
+      skip: !currentYear?.id || !open?.value,
+    },
+  });
+
+  const existingNames = useMemo(
+    () =>
+      new Set<string>(
+        (expenseCategoryData?.items ?? []).map((t: any) => t.name.trim().toLowerCase())
+      ),
+    [expenseCategoryData]
+  );
+  const existingNamesRef = useRef<Set<string>>(new Set());
+  existingNamesRef.current = existingNames;
+
   const [tag, setTag] = useState('');
 
   // POST mutation for creating
@@ -42,7 +63,8 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
 
   const formik = useFormik({
     initialValues: getExpenseCategoryInitialValues(editData),
-    validationSchema: expenseCategoryValidationSchema,
+    enableReinitialize: true,
+    validationSchema: expenseCategoryValidationSchema(existingNames, editData),
     onSubmit: async (values) => {
       try {
         // Transform form data to API format

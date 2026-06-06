@@ -115,7 +115,7 @@ export default function QuickActions() {
                 },
               }}
             >
-              <Iconify icon={action.icon} width={22} sx={{ color: `${action.color}.main` }} />
+              <Iconify icon={action.icon} width={22} />
               <Typography
                 variant="caption"
                 sx={{ fontWeight: 600, lineHeight: 1.2, fontSize: '0.7rem', textAlign: 'center' }}

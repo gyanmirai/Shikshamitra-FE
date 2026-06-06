@@ -97,7 +97,6 @@ const MetricCard = ({ title, value, icon, color = 'info', href, helper }: Academ
           display: 'grid',
           placeItems: 'center',
           color: metricColor[color],
-          bgcolor: `${metricColor[color]}14`,
           flexShrink: 0,
         }}
       >
@@ -118,7 +117,7 @@ const METRICS: AcademicMetric[] = [
   {
     title: 'Total Teachers',
     value: '64',
-    icon: 'solar:graduation-cap-bold',
+    icon: 'solar:users-group-rounded-bold',
     color: 'success',
     helper: '48 teaching staff',
   },

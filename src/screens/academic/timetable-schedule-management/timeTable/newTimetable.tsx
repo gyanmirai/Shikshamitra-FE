@@ -11,6 +11,7 @@ import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { useRouter } from 'src/routes/hooks';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -375,6 +376,7 @@ const transformScheduleToGrid = (scheduleData: any[]): TimetableSlot[] => {
 const timetableData: TimetableSlot[] = transformScheduleToGrid(mockDayScheduleData);
 
 const TimeTableGrid = () => {
+  const router = useRouter();
   // Dialog state for creating time slots modal
   // const createSlotsDialog = useBoolean();
   const [subjectsGroups, setSubjectsGroups] = useState<any>(subjectGroupsData);
@@ -601,7 +603,25 @@ const TimeTableGrid = () => {
           </Card>
           <CustomizableTable
             tableId="timetable-table"
-            noDataText="No Time Table Data Found"
+            noDataText={
+              <>
+                No Time Table Data Found. <br />
+                <Box
+                  component="span"
+                  onClick={() => router.push('/academic/timetableSettings/lectureSlots')}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Create Lecture Slots
+                </Box>
+              </>
+            }
             columns={columns}
             isLoading={isTimetableManagementLoading || isTimetableManagementFetching}
             data={timetableManagementData?.items || []}

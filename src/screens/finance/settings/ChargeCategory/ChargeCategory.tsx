@@ -13,13 +13,13 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useCallback } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -333,12 +333,45 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
     currentQueryAndMutation: usePostChargeCategoryMutation,
   });
 
-  // Form validation schema using Yup
-  const validationSchema = Yup.object().shape({
-    chargeName: Yup.string().required('Charge Category Name is required'),
-    isRefundable: Yup.boolean().required(),
-    description: Yup.string().optional(),
+  const { data: chargeCategoriesData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChargeCategoriesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+    options: {
+      skip: !currentYear?.id || !open,
+    },
   });
+
+  const existingNames = useMemo(
+    () =>
+      new Set<string>(
+        (chargeCategoriesData?.items ?? []).map((t: any) => t.name.trim().toLowerCase())
+      ),
+    [chargeCategoriesData]
+  );
+  const existingNamesRef = useRef<Set<string>>(new Set());
+  existingNamesRef.current = existingNames;
+
+  // Form validation schema using Yup
+  const validationSchema = useMemo(
+    () =>
+      Yup.object().shape({
+        chargeName: Yup.string()
+          .required('Charge Category Name is required')
+          .test('unique-charge-category', 'This charge category name already exists', (value) => {
+            if (!value?.trim()) return true;
+            const trimmed = value.trim().toLowerCase();
+            // Allow saving the same name when editing the current record
+            if (editData && editData.name.trim().toLowerCase() === trimmed) return true;
+            return !existingNamesRef.current.has(trimmed);
+          }),
+        isRefundable: Yup.boolean().required(),
+        description: Yup.string().optional(),
+      }),
+    [editData]
+  );
 
   // Initialize formik form with initial values and submit handler
   const formik = useFormik({

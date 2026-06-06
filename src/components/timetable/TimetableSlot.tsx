@@ -268,7 +268,6 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   const fullText = subjectNames.join(' | ');
   const firstSubject = displaySubjects[0]?.name;
   const extraCount = displaySubjects.length - 1;
-  console.log('displaySubjects----', displaySubjects);
   return (
     <Box ref={attachRef} sx={getSx()}>
       <CustomTooltip title={getTooltipContent()} arrow placement="top">
@@ -278,6 +277,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
+            mb: 1,
           }}
         >
           {(isFilled || isBreak) && (
@@ -286,8 +286,6 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                mb: 0.5,
-                px: 0.5,
               }}
             >
               <Typography
@@ -305,7 +303,6 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
-              p: 0.5,
               textAlign: 'center',
             }}
           >
@@ -377,7 +374,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
             }}
             sx={{
               '& .MuiIconButton-root': {
-                padding: '4px',
+                padding: '2px',
               },
             }}
             actions={({ popover }) => (
