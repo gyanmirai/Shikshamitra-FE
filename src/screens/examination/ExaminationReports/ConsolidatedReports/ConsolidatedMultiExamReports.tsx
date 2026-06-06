@@ -177,8 +177,6 @@ const ConsolidatedMultiExamReports = ({ report }: { report: string }) => {
         dynamicExamColumns,
       };
 
-      console.log(reportPayload);
-
       window.alert('Report Generated Successfully!');
       setSubmitting(false);
     },

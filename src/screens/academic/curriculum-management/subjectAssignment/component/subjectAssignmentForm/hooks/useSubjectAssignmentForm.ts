@@ -137,8 +137,6 @@ export function useSubjectAssignmentForm({
   const latestSubjectsRef = useRef<ISubjectAssignmentFormValues['subjects']>([]);
   latestSubjectsRef.current = formik.values.subjects || [];
 
-  console.log(subjectOptionsData, '[][][][');
-
   /**
    * Memoization Justification:
    * Checks if a subject/group already exists in the table to prevent duplicates.

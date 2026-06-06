@@ -216,7 +216,6 @@ const AssignmentManagementReports = ({ report }: { report: string }) => {
 
       // Keep existing report workflow behavior while providing config-aligned payload generation.
       // eslint-disable-next-line no-console
-      console.log('Assignment report payload:', payload);
       window.alert('Assignment report generated...');
       setSubmitting(false);
     },

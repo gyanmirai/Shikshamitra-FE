@@ -17,8 +17,6 @@ const StudentDashboardScreen = () => {
   const actualRole = employee?.role?.name?.toLowerCase() || 'admin';
   const [selectedRole, setSelectedRole] = useState<string>('');
 
-  console.log('Employee Role from Redux:', actualRole);
-
   useEffect(() => {
     if (actualRole && !selectedRole) {
       setSelectedRole(actualRole);

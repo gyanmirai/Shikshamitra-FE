@@ -32,7 +32,6 @@ const ViewFeeDetails = ({
   viewDialog: UseBooleanReturn;
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  console.log('student====', student);
   const { data: feeDetails } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeDetailsQuery,

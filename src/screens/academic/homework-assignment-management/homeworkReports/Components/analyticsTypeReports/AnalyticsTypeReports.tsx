@@ -157,7 +157,6 @@ const HomeworkAssignmentAnalyticsReports = ({
       };
 
       // eslint-disable-next-line no-console
-      console.log('Homework/Assignment analytics payload:', payload);
       window.alert('Homework/Assignment Analytics Report Generated');
       setSubmitting(false);
     },

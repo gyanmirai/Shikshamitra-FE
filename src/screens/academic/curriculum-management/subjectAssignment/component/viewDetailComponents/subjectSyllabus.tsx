@@ -32,8 +32,6 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
     },
   });
 
-  console.log('chaptersData', chaptersData);
-
   const chapters: any[] =
     chaptersData?.data?.items ??
     chaptersData?.items ??

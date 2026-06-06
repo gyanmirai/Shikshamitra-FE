@@ -284,7 +284,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       setIsSaving(false);
     }
   };
-  console.log('formik---erroes----', formik.errors);
   const handleDelete = async () => {
     if (isNew) {
       onDeleted?.();

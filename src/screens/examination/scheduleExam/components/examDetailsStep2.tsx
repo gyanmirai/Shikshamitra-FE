@@ -677,8 +677,6 @@ const ElectiveGroupCard = memo(
       [formik, groupIndex]
     );
 
-    console.log('formik', formik);
-
     return (
       <Accordion
         defaultExpanded

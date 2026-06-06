@@ -113,8 +113,6 @@ export function useWeeklyLectureForm({
     },
   });
 
-  console.log('Formik values:', formik); // Debug log to trace form values
-
   const { data: subjectTableData, isLoading: isSubjectsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
