@@ -2,9 +2,9 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { sanitizeHtml } from 'src/utils/sanitize-html';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import React, { useMemo, useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -60,7 +60,6 @@ interface GroupViewDialogProps {
   onClose: () => void;
 }
 
-// --- Modernized InfoRow: left accent border, subtle background, premium typography ---
 const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
   <Box
     sx={{
@@ -88,18 +87,16 @@ const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, v
       {label}
     </Typography>
     <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500, lineHeight: 1.5 }}>
-      {value || '—'}
+      {value || '-'}
     </Typography>
   </Box>
 );
 
 const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose }) => {
-  const theme = useTheme();
   const [tab, setTab] = useState(0); // 0 = Rule Based, 1 = Name Based
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // --- Fetch Required Data for Mapping ---
   const { data: boardsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
@@ -126,7 +123,6 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
     },
   });
 
-  // --- Transform Fields Data into Options ---
   const studentFieldOptions = useMemo(() => {
     if (!studentFieldsData) return [];
     return (studentFieldsData as ApiFilterField[]).map((field) => ({
@@ -148,8 +144,6 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
       type: field.type,
     }));
   }, [employeeFieldsData]);
-
-  // --- Helpers to Resolve Names ---
 
   const getFieldLabel = useCallback(
     (fieldValue: number, isStudent: boolean) => {
@@ -183,7 +177,6 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
     return 'solar:list-bold-duotone';
   };
 
-  // --- Build Academic Tree ---
   const fullAcademicTree = useMemo(() => {
     if (!boardsData?.items) return [];
     return transformApiToTree(
@@ -207,8 +200,6 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
     [fullAcademicTree]
   );
 
-  // --- Render Functions ---
-
   const getFieldValueLabel = useCallback(
     (fieldValue: number, value: string, isStudent: boolean) => {
       const optionsList = isStudent ? studentFieldOptions : employeeFieldOptions;
@@ -222,7 +213,6 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
     [studentFieldOptions, employeeFieldOptions]
   );
 
-  // --- Modernized filter rows: pill-style field badge, operator chip, value badge ---
   const renderFilterRows = (filters: IFilter[], isStudent: boolean) => {
     const isLoading = isStudent ? isStudentFieldsLoading : isEmployeeFieldsLoading;
 
@@ -470,27 +460,27 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
             {/* Group Profile Card */}
             <Card
               sx={{
-                position: 'relative',
-                zIndex: 1,
-                overflow: 'visible',
+                overflow: 'hidden',
                 border: '1px solid',
                 borderColor: 'divider',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
               }}
             >
               {/* Gradient header strip */}
               <Box
                 sx={{
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                   p: 1,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.5,
+                  bgcolor: 'background.neutral',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
                 }}
               >
                 <Box
                   sx={{
-                    bgcolor: 'rgba(255,255,255,0.18)',
+                    bgcolor: 'primary.lighter',
+                    color: 'primary.dark',
                     borderRadius: 1.5,
                     width: 36,
                     height: 36,
@@ -500,16 +490,9 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                     flexShrink: 0,
                   }}
                 >
-                  <Iconify
-                    icon="solar:users-group-rounded-bold-duotone"
-                    width={20}
-                    sx={{ color: '#fff' }}
-                  />
+                  <Iconify icon="solar:users-group-rounded-bold-duotone" width={20} />
                 </Box>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: '#fff', fontWeight: 700, letterSpacing: 0.3 }}
-                >
+                <Typography variant="subtitle2" sx={{ color: 'text.primary', fontWeight: 700 }}>
                   Group Profile
                 </Typography>
               </Box>
@@ -542,7 +525,7 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                         color: 'text.primary',
                       }}
                       dangerouslySetInnerHTML={{
-                        __html: groupData.description,
+                        __html: sanitizeHtml(groupData.description),
                       }}
                     />
                   ) : (
@@ -560,22 +543,6 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                 p: 1,
                 border: '1px solid',
                 borderColor: 'divider',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                position: 'relative',
-                overflow: 'visible',
-                // UI-only: fade background watermark icon for visual depth
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  right: -16,
-                  top: -16,
-                  width: 100,
-                  height: 100,
-                  borderRadius: '50%',
-                  bgcolor: 'primary.lighter',
-                  opacity: 0.6,
-                  zIndex: -1,
-                },
               }}
             >
               <Typography
@@ -585,19 +552,11 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                   color: 'text.secondary',
                   fontSize: '0.68rem',
                   letterSpacing: 1,
-                  position: 'relative',
-                  zIndex: 1,
                 }}
               >
                 Total Audience
               </Typography>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                mt={0.75}
-                sx={{ position: 'relative', zIndex: 1 }}
-              >
+              <Stack direction="row" alignItems="center" justifyContent="space-between" mt={0.75}>
                 <Typography
                   variant="h3"
                   sx={{ color: 'text.primary', fontWeight: 800, lineHeight: 1 }}
@@ -611,7 +570,6 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                     bgcolor: 'primary.main',
                     width: 44,
                     height: 44,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                   }}
                 >
                   <Iconify icon="solar:users-group-two-rounded-bold" width={22} color="#fff" />
@@ -628,11 +586,8 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                     border: '1px solid',
                     borderColor: 'divider',
                     boxShadow: 'none',
-                    transition: 'all 0.22s ease',
                     '&:hover': {
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                      borderColor: 'transparent',
-                      transform: 'translateY(-3px)',
+                      borderColor: 'primary.light',
                     },
                   }}
                 >
@@ -680,11 +635,8 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                     border: '1px solid',
                     borderColor: 'divider',
                     boxShadow: 'none',
-                    transition: 'all 0.22s ease',
                     '&:hover': {
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                      borderColor: 'transparent',
-                      transform: 'translateY(-3px)',
+                      borderColor: 'info.light',
                     },
                     height: '100%',
                   }}
@@ -860,13 +812,18 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                 }}
               >
                 <Tab
-                  label="Rule Based Criteria"
+                  label="Rules"
                   icon={<Iconify icon="solar:sort-by-time-bold-duotone" width={18} />}
                   iconPosition="start"
                 />
                 <Tab
-                  label="Direct Selection"
+                  label="Direct Members"
                   icon={<Iconify icon="solar:user-hand-up-bold-duotone" width={18} />}
+                  iconPosition="start"
+                />
+                <Tab
+                  label="Audience Summary"
+                  icon={<Iconify icon="solar:chart-bold-duotone" width={18} />}
                   iconPosition="start"
                 />
               </Tabs>
@@ -1098,7 +1055,6 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                         height: 30,
                         borderRadius: 1.5,
                         '& .MuiChip-icon': { color: '#fff', ml: 0.75 },
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.18)',
                       }}
                     />
                   </Stack>
@@ -1250,11 +1206,8 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                             border: '1px solid',
                             borderColor: 'divider',
                             boxShadow: 'none',
-                            transition: 'all 0.22s ease',
                             '&:hover': {
                               borderColor: 'primary.light',
-                              boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
-                              transform: 'translateY(-2px)',
                             },
                           }}
                         >
@@ -1270,7 +1223,6 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                               fontSize: '1rem',
                               border: '2px solid',
                               borderColor: 'background.paper',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                             }}
                           >
                             {student.firstName?.[0]}
@@ -1355,11 +1307,8 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                             border: '1px solid',
                             borderColor: 'divider',
                             boxShadow: 'none',
-                            transition: 'all 0.22s ease',
                             '&:hover': {
                               borderColor: 'info.light',
-                              boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
-                              transform: 'translateY(-2px)',
                             },
                           }}
                         >
@@ -1375,7 +1324,6 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                               fontSize: '1rem',
                               border: '2px solid',
                               borderColor: 'background.paper',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                             }}
                           >
                             {emp.firstName?.[0]}
@@ -1449,6 +1397,55 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                     </Stack>
                   )}
                 </Box>
+              )}
+
+              {tab === 2 && (
+                <Grid container spacing={2}>
+                  {[
+                    {
+                      label: 'Total Audience',
+                      value:
+                        groupData.memberCount ?? selectedStudents.length + selectedEmployees.length,
+                      icon: 'solar:users-group-rounded-bold-duotone',
+                      color: 'primary',
+                    },
+                    {
+                      label: 'Students',
+                      value: groupData.studentCount ?? selectedStudents.length,
+                      icon: 'solar:user-rounded-bold-duotone',
+                      color: 'success',
+                    },
+                    {
+                      label: 'Employees',
+                      value: groupData.employeeCount ?? selectedEmployees.length,
+                      icon: 'solar:user-id-bold-duotone',
+                      color: 'info',
+                    },
+                  ].map((item) => (
+                    <Grid key={item.label} size={{ xs: 12, md: 4 }}>
+                      <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
+                        <Stack direction="row" alignItems="center" spacing={1.5}>
+                          <Avatar
+                            variant="rounded"
+                            sx={{
+                              bgcolor: `${item.color}.lighter`,
+                              color: `${item.color}.dark`,
+                              borderRadius: 1.5,
+                            }}
+                          >
+                            <Iconify icon={item.icon} width={22} />
+                          </Avatar>
+                          <Box>
+                            <Typography variant="h4">{item.value}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {item.label}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
               )}
             </Box>
           </Card>

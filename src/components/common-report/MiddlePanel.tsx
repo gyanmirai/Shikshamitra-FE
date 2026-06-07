@@ -59,6 +59,7 @@ export default function MiddlePanel({
   const filteredSubCategoriesBySearch = filteredSubCategories.filter((sub) =>
     sub.name.toLowerCase().includes(search.toLowerCase())
   );
+  const visibleReports = search ? filteredSubCategoriesBySearch : filteredSubCategories;
 
   return (
     <Paper
@@ -104,7 +105,12 @@ export default function MiddlePanel({
             animate="visible"
             exit="exit"
           >
-            {(search ? filteredSubCategoriesBySearch : filteredSubCategories).map((subCat) => (
+            {visibleReports.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+                No reports found.
+              </Typography>
+            ) : null}
+            {visibleReports.map((subCat) => (
               <motion.div key={subCat.id} variants={itemVariants}>
                 <Box sx={{ mb: 2 }}>
                   <Card
@@ -136,15 +142,37 @@ export default function MiddlePanel({
                         >
                           <Icon icon="proicons:document" width={24} />
                         </Box>
-                        <Stack direction="column" spacing={0} alignItems="flex-start">
+                        <Stack
+                          direction="column"
+                          spacing={0}
+                          alignItems="flex-start"
+                          sx={{ minWidth: 0 }}
+                        >
                           <Typography
                             variant="subtitle2"
-                            sx={{ mb: 0, color: 'text.secondary', px: 1 }}
+                            sx={{
+                              mb: 0,
+                              px: 1,
+                              maxWidth: '100%',
+                              color: 'text.secondary',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
                           >
                             {subCat.name}
                           </Typography>
-                          <Box sx={{ pl: 1 }}>
-                            <Typography variant="caption" color="text.secondary">
+                          <Box sx={{ pl: 1, minWidth: 0 }}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                display: '-webkit-box',
+                                overflow: 'hidden',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                              }}
+                            >
                               {subCat.description}
                             </Typography>
                           </Box>

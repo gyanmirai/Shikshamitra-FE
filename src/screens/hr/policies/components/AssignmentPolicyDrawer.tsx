@@ -269,7 +269,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
     >
       <DrawerHeader
         title={`${drawer.mode === 'edit' ? 'Edit' : 'New'} Assignment`}
-        helpText="Assign payroll and attendance policies to an employee or group for a specific date range."
+        helpText="Assign payroll and attendance policies to an employee or group. Groups cover role, department, employment type, and mixed dynamic targeting."
         onClose={closeDrawer}
         closeDisabled={isPolicyOperationActive}
       />
@@ -351,7 +351,10 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                   }}
                 />
               </DrawerField>
-              <DrawerField label="Effective To" helperText={assignmentDateError}>
+              <DrawerField
+                label="Effective To (optional)"
+                helperText={assignmentDateError || 'Leave blank for no end date.'}
+              >
                 <DatePicker
                   value={assignmentForm.effectiveTo ? dayjs(assignmentForm.effectiveTo) : null}
                   onChange={(val) => {
@@ -366,6 +369,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                     textField: {
                       size: 'small',
                       fullWidth: true,
+                      placeholder: 'No end date',
                       error: Boolean(assignmentDateError),
                     },
                   }}

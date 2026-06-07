@@ -2,9 +2,22 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 
-export const eventAnnouncementValidationSchema = (currentYear: any) =>
-  Yup.object().shape({
+import { isMeetingEventTypeName } from './buildEventPayload';
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+
+const formatDate = (value: dayjs.Dayjs | null) =>
+  value && value.isValid() ? value.format('DD/MM/YYYY') : '-';
+
+export const eventAnnouncementValidationSchema = (currentYear: any) => {
+  const academicStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
+  const academicEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
+
+  return Yup.object().shape({
     id: Yup.string().nullable(), // not required for creation
     title: Yup.string().required('Title is required'),
     description: Yup.string(),
@@ -27,30 +40,38 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
     //   .min(1, 'At least one division must be selected')
     //   .required('Divisions are required'),
 
-    startDate: Yup.mixed()
-      .required('Start Date-Time is required')
-      .test(
-        'is-valid-dayjs',
-        'Start Date-Time must be a valid date',
-        (value) => value && dayjs(value as Dayjs).isValid()
-      )
-      .test(
-        'min-date',
-        (value) =>
-          `Start Date-Time must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day')
-      )
-      .test(
-        'max-date',
-        (value) =>
-          `Start Date-Time must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
-      ),
+    startDate: Yup.mixed().when('typeName', {
+      is: (typeName: string) => !isMeetingEventTypeName(typeName),
+      then: (schema) =>
+        schema
+          .required('Start Date-Time is required')
+          .test(
+            'is-valid-dayjs',
+            'Start Date-Time must be a valid date',
+            (value) => value && dayjs(value as Dayjs).isValid()
+          )
+          .test(
+            'min-date',
+            () => `Start Date-Time must be on or after ${formatDate(academicStart)}`,
+            (value) =>
+              !academicStart ||
+              !academicStart.isValid() ||
+              (value && dayjs(value as Dayjs).isSameOrAfter(academicStart, 'day'))
+          )
+          .test(
+            'max-date',
+            () => `Start Date-Time must be on or before ${formatDate(academicEnd)}`,
+            (value) =>
+              !academicEnd ||
+              !academicEnd.isValid() ||
+              (value && dayjs(value as Dayjs).isSameOrBefore(academicEnd, 'day'))
+          ),
+      otherwise: (schema) => schema.nullable(),
+    }),
 
-    endDate: Yup.mixed().when('type', {
-      is: (type: string) => type !== 'Meeting',
-      then: (schema) => schema.nullable(),
-      otherwise: (schema) =>
+    endDate: Yup.mixed().when('typeName', {
+      is: (typeName: string) => !isMeetingEventTypeName(typeName),
+      then: (schema) =>
         schema
           .required('End Date-Time is required')
           .test(
@@ -68,19 +89,8 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
               return dayjs(value as Dayjs).isSameOrAfter(dayjs(startDate), 'day');
             }
           ),
+      otherwise: (schema) => schema.nullable(),
     }),
-    // .test(
-    //   'min-date',
-    //   (value) =>
-    //     `End Date-Time must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-    //   (value) => value && dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day')
-    // )
-    // .test(
-    //   'max-date',
-    //   (value) =>
-    //     `End Date-Time must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-    //   (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
-    // ),
 
     link: Yup.string().url('Must be a valid URL').nullable(),
 
@@ -113,13 +123,13 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
     createdOn: Yup.mixed().nullable(),
     status: Yup.number().required('Status is required'),
 
-    day: Yup.string().when('type', {
-      is: 'meeting',
+    day: Yup.string().when('typeName', {
+      is: (typeName: string) => isMeetingEventTypeName(typeName),
       then: (schema) => schema.required('Day is required'),
       otherwise: (schema) => schema.nullable(),
     }),
-    meetingDate: Yup.mixed().when('type', {
-      is: 'meeting',
+    meetingDate: Yup.mixed().when('typeName', {
+      is: (typeName: string) => isMeetingEventTypeName(typeName),
       then: (schema) =>
         schema
           .required('Meeting date is required')
@@ -140,8 +150,8 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
 
       // eslint-disable-next-line func-names
       .test('start-before-end', 'Start Time must be before End Time', function (value) {
-        const { endTime, type } = this.parent;
-        if (type === 'meeting' && !value) {
+        const { endTime, typeName } = this.parent;
+        if (isMeetingEventTypeName(typeName) && !value) {
           return this.createError({ message: 'Start Time is required' });
         }
         if (!value || !endTime) return true;
@@ -153,36 +163,38 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
 
       // eslint-disable-next-line func-names
       .test('end-after-start', 'End Time must be after Start Time', function (value) {
-        const { startTime, type } = this.parent;
-        if (type === 'meeting' && !value) {
+        const { startTime, typeName } = this.parent;
+        if (isMeetingEventTypeName(typeName) && !value) {
           return this.createError({ message: 'End Time is required' });
         }
         if (!value || !startTime) return true;
         // Compare times as HH:mm
         return (value as Dayjs).isAfter(startTime);
       }),
-    isRecurring: Yup.boolean().when('type', {
-      is: 'meeting',
+    isRecurring: Yup.boolean().when('typeName', {
+      is: (typeName: string) => isMeetingEventTypeName(typeName),
       then: (schema) => schema,
       otherwise: (schema) => schema.nullable(),
     }),
 
-    repeatFrequency: Yup.string().when(['type', 'isRecurring'], {
-      is: (type: string, isRecurring: boolean) => type === 'meeting' && isRecurring === true,
+    repeatFrequency: Yup.string().when(['typeName', 'isRecurring'], {
+      is: (typeName: string, isRecurring: boolean) =>
+        isMeetingEventTypeName(typeName) && isRecurring === true,
       then: (schema) => schema.required('Repeat frequency is required'),
       otherwise: (schema) => schema.nullable(),
     }),
 
-    repeatUntil: Yup.mixed().when(['type', 'isRecurring'], {
-      is: (type: string, isRecurring: boolean) => type === 'meeting' && isRecurring === true,
+    repeatUntil: Yup.mixed().when(['typeName', 'isRecurring'], {
+      is: (typeName: string, isRecurring: boolean) =>
+        isMeetingEventTypeName(typeName) && isRecurring === true,
       then: (schema) => schema.required('Repeat until date is required'),
       otherwise: (schema) => schema.nullable(),
     }),
 
-    // 🔁 Custom recurrence validation
-    customInterval: Yup.string().when(['type', 'isRecurring', 'repeatFrequency'], {
-      is: (type: string, isRecurring: boolean, repeatFrequency: string) =>
-        type === 'meeting' && isRecurring && repeatFrequency === 'Custom',
+    // Custom recurrence validation
+    customInterval: Yup.string().when(['typeName', 'isRecurring', 'repeatFrequency'], {
+      is: (typeName: string, isRecurring: boolean, repeatFrequency: string) =>
+        isMeetingEventTypeName(typeName) && isRecurring && repeatFrequency === 'Custom',
       then: (schema) =>
         schema
           .oneOf(['days', 'weeks', 'months'], 'Invalid interval type')
@@ -190,17 +202,22 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
       otherwise: (schema) => schema.nullable(),
     }),
 
-    customIntervalCount: Yup.number().when(['type', 'isRecurring', 'repeatFrequency'], {
-      is: (type: string, isRecurring: boolean, repeatFrequency: string) =>
-        type === 'meeting' && isRecurring && repeatFrequency === 'Custom',
+    customIntervalCount: Yup.number().when(['typeName', 'isRecurring', 'repeatFrequency'], {
+      is: (typeName: string, isRecurring: boolean, repeatFrequency: string) =>
+        isMeetingEventTypeName(typeName) && isRecurring && repeatFrequency === 'Custom',
       then: (schema) =>
         schema.required('Interval count is required').min(1, 'Interval must be at least 1'),
       otherwise: (schema) => schema.nullable(),
     }),
 
-    customDays: Yup.array().when(['type', 'isRecurring', 'repeatFrequency', 'customInterval'], {
-      is: (type: string, isRecurring: boolean, repeatFrequency: string, customInterval: string) =>
-        type === 'meeting' &&
+    customDays: Yup.array().when(['typeName', 'isRecurring', 'repeatFrequency', 'customInterval'], {
+      is: (
+        typeName: string,
+        isRecurring: boolean,
+        repeatFrequency: string,
+        customInterval: string
+      ) =>
+        isMeetingEventTypeName(typeName) &&
         isRecurring &&
         repeatFrequency === 'Custom' &&
         customInterval === 'weeks',
@@ -221,3 +238,4 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
       otherwise: (schema) => schema.nullable(),
     }),
   });
+};

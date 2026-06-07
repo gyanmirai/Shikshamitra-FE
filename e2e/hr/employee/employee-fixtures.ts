@@ -2,15 +2,22 @@ export type EmployeeFixture = ReturnType<typeof createEmployeeFixture>;
 
 const randomSuffix = () => `${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
-export function createEmployeeFixture(prefix = 'E2E HR EMP') {
+const alphaSuffix = (value: string) =>
+  value
+    .split('')
+    .map((digit) => String.fromCharCode(65 + Number(digit)))
+    .join('');
+
+export function createEmployeeFixture(prefix = 'Automation Employee') {
   const suffix = randomSuffix();
+  const nameSuffix = alphaSuffix(suffix);
 
   return {
     suffix,
-    firstName: `${prefix}`,
+    firstName: prefix,
     middleName: 'Auto',
-    lastName: suffix,
-    fullName: `${prefix} Auto ${suffix}`,
+    lastName: nameSuffix,
+    fullName: `${prefix} Auto ${nameSuffix}`,
     email: `e2e.hr.employee.${suffix}@ddvs.test`,
     primaryMobile: `9${suffix.slice(-9).padStart(9, '0')}`,
     secondaryMobile: `8${suffix.slice(-9).padStart(9, '1')}`,
@@ -27,7 +34,7 @@ export function createEmployeeFixture(prefix = 'E2E HR EMP') {
     bank: {
       bankName: 'State Bank of India',
       branchName: 'Automation Branch',
-      accountHolderName: `${prefix} ${suffix}`,
+      accountHolderName: `${prefix} ${nameSuffix}`,
       accountNumber: `12345${suffix.slice(-9).padStart(9, '0')}`,
       ifscCode: 'SBIN0001234',
       epfNumber: 'AP/12345/1234567',

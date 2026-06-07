@@ -25,8 +25,19 @@ export interface ISelectedMember {
   id?: string;
   memberType: number; // 0 for Student, 1 for Employee probably
   memberId: string;
-  userId: string;
+  userId?: string | null;
   displayName?: string;
+  employeeCode?: string;
+  identifier?: string;
+  roleName?: string;
+  department?: string;
+  designation?: string;
+  standardName?: string;
+  divisionName?: string;
+  mobileNo?: string;
+  email?: string;
+  status?: number;
+  employeeStatusType?: number;
 }
 
 export interface IStudent {
@@ -67,7 +78,7 @@ export interface IEmployee {
   mobileNo?: string;
   email?: string;
   employeeStatusType: number;
-  userId: string;
+  userId?: string | null;
   profilePicture?: string;
 }
 

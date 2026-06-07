@@ -58,16 +58,16 @@ const EventDetailsCard = ({ event }: { event: IEventAnnouncement | null }) => {
       <Grid container spacing={2}>
         {/* Category */}
         <Grid size={{ xs: 12, md: 4 }}>
-          <InfoItem icon={<EventNote />} label="Title" value={event?.title || '—'} />
+          <InfoItem icon={<EventNote />} label="Title" value={event?.title || '-'} />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <InfoItem icon={<Category />} label="Type" value={event?.type || '—'} />
+          <InfoItem icon={<Category />} label="Type" value={event?.type || '-'} />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <InfoItem
             icon={event?.eventMode === 'online' ? <LinkIcon /> : <LocationOn />}
             label={event?.eventMode === 'online' ? 'Online Link' : 'Venue'}
-            value={event?.eventMode === 'online' ? event?.onlineLink || '—' : event?.venue || '—'}
+            value={event?.eventMode === 'online' ? event?.onlineLink || '-' : event?.venue || '-'}
           />
         </Grid>
         {/* Status */}
@@ -83,13 +83,13 @@ const EventDetailsCard = ({ event }: { event: IEventAnnouncement | null }) => {
           />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <InfoItem icon={<EventNote />} label="Description" value={event?.description || '—'} />
+          <InfoItem icon={<EventNote />} label="Description" value={event?.description || '-'} />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <InfoItem
             icon={<EventNote />}
             label="Recurrence"
-            value={event?.recurrenceSummary || '—'}
+            value={event?.recurrenceSummary || '-'}
           />
         </Grid>
 

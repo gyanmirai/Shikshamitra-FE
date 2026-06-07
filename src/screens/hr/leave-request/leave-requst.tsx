@@ -66,10 +66,10 @@ import {
   LEAVE_TARGET_EMPLOYEE_REQUIRED,
   LEAVE_NO_BUSINESS_DAYS_IN_RANGE,
   buildCreateLeaveRequestFormData,
+  resolveLeavePolicyIdForLeaveType,
   LEAVE_DATES_OUTSIDE_ACADEMIC_YEAR,
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
-  resolveLeaveTypeMasterIdFromPolicy,
 } from './leave-request.utils';
 
 // ----------------------------------------------------------------------
@@ -189,7 +189,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     },
     validationSchema: Yup.object().shape({
       employee: Yup.object().nullable().required('Employee is required'),
-      leavePolicyId: Yup.string().required('Leave Policy is required'),
       startDate: Yup.mixed()
         .required('Start Date is required')
         .test(
@@ -232,6 +231,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           return dayjs(value as any).isSame(dayjs(startDate as any), 'day');
         }),
       halfDay: Yup.boolean(),
+      leaveTypeMasterId: Yup.string().required('Leave Type is required'),
       reason: Yup.string()
         .min(5, 'Reason must be at least 5 characters')
         .max(500, 'Reason must not exceed 500 characters')
@@ -294,10 +294,19 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             return;
           }
 
+          const policyResolution = resolveLeavePolicyIdForLeaveType(
+            leavePolicyOptions,
+            formValues.leaveTypeMasterId
+          );
+          if (policyResolution.status !== 'resolved') {
+            setFieldError('leaveTypeMasterId', policyResolution.message);
+            return;
+          }
+
           // --- Create flow: build multipart/form-data body as per API contract ---
           const formData = buildCreateLeaveRequestFormData({
             employee: formValues.employee as EmployeeOption | null,
-            leavePolicyId: formValues.leavePolicyId,
+            leavePolicyId: policyResolution.policyId,
             startDate: formValues.startDate,
             endDate: formValues.endDate,
             halfDay: formValues.halfDay,
@@ -436,25 +445,23 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     );
     if (!existsInCatalog) {
       setFieldValue('leaveTypeMasterId', '');
+      setFieldValue('leavePolicyId', '');
     }
   }, [editData, leaveTypeOptions, setFieldValue, values.leaveTypeMasterId]);
 
   useEffect(() => {
     if (editData) return;
-    if (!values.leavePolicyId) return;
-    const selectedPolicy = leavePolicyOptions.find(
-      (item: any) => item?.id === values.leavePolicyId
-    );
-    if (!selectedPolicy) {
+    if (!values.leaveTypeMasterId) {
       setFieldValue('leavePolicyId', '');
       return;
     }
 
-    const linkedLeaveTypeMasterId = resolveLeaveTypeMasterIdFromPolicy(selectedPolicy);
-    if (linkedLeaveTypeMasterId && linkedLeaveTypeMasterId !== values.leaveTypeMasterId) {
-      setFieldValue('leaveTypeMasterId', linkedLeaveTypeMasterId);
-    }
-  }, [editData, leavePolicyOptions, setFieldValue, values.leavePolicyId, values.leaveTypeMasterId]);
+    const policyResolution = resolveLeavePolicyIdForLeaveType(
+      leavePolicyOptions,
+      values.leaveTypeMasterId
+    );
+    setFieldValue('leavePolicyId', policyResolution.policyId, false);
+  }, [editData, leavePolicyOptions, setFieldValue, values.leaveTypeMasterId]);
 
   useEffect(() => {
     if (!values.halfDay || !values.startDate) {
@@ -543,48 +550,35 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             )}
 
             <Grid size={{ xs: 12 }}>
-              <ShakingTextField error={!!touched.leavePolicyId && !!errors.leavePolicyId}>
-                <CustomSelect
-                  isLoading={
-                    isLeavePolicyLoading ||
-                    isLeavePolicyFetching ||
-                    (!catalogAcademicYearId && (isYearsLoading || isYearsFetching))
-                  }
-                  options={leavePolicyOptions}
-                  label="Leave Policy *"
-                  value={values.leavePolicyId}
-                  name="leavePolicyId"
-                  valueKey="id"
-                  disabled={!!editData}
-                  labelKey="policyTitle"
-                  error={!!touched.leavePolicyId && !!errors.leavePolicyId}
-                  helperText={(touched.leavePolicyId && errors.leavePolicyId) || ''}
-                  onChange={(value) => {
-                    setFieldValue('leavePolicyId', value);
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <ShakingTextField error={false}>
+              <ShakingTextField error={!!touched.leaveTypeMasterId && !!errors.leaveTypeMasterId}>
                 <CustomSelect
                   isLoading={
                     isLeaveTypeLoading ||
                     isLeaveTypeFetching ||
+                    isLeavePolicyLoading ||
+                    isLeavePolicyFetching ||
                     (!catalogAcademicYearId && (isYearsLoading || isYearsFetching))
                   }
                   options={leaveTypeOptions}
-                  label="Leave Type"
+                  label="Leave Type *"
                   value={values.leaveTypeMasterId}
                   name="leaveTypeMasterId"
                   valueKey="id"
-                  disabled
+                  disabled={!!editData}
                   labelKey="name"
-                  error={false}
-                  helperText="Linked to selected leave policy"
+                  error={!!touched.leaveTypeMasterId && !!errors.leaveTypeMasterId}
+                  helperText={(touched.leaveTypeMasterId && errors.leaveTypeMasterId) || ''}
                   onChange={(value) => {
-                    setFieldValue('leaveTypeMasterId', value);
+                    const leaveTypeMasterId = typeof value === 'string' ? value : '';
+                    setFieldValue('leaveTypeMasterId', leaveTypeMasterId);
+                    const policyResolution = resolveLeavePolicyIdForLeaveType(
+                      leavePolicyOptions,
+                      leaveTypeMasterId
+                    );
+                    setFieldValue('leavePolicyId', policyResolution.policyId, false);
+                    if (policyResolution.status !== 'resolved') {
+                      setFieldError('leaveTypeMasterId', policyResolution.message);
+                    }
                   }}
                 />
               </ShakingTextField>

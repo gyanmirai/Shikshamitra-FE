@@ -31,6 +31,7 @@ export async function employeeApiRequest(
   init: RequestInit = {}
 ): Promise<APIResponse> {
   const token = await getAccessToken(page);
+  const { body, ...requestInit } = init;
   const requestHeaders =
     init.headers instanceof Headers
       ? Object.fromEntries(init.headers.entries())
@@ -39,7 +40,8 @@ export async function employeeApiRequest(
         : init.headers || {};
 
   return page.request.fetch(`${apiBaseUrl()}/api${path}`, {
-    ...init,
+    ...requestInit,
+    ...(body ? { data: body } : {}),
     headers: {
       accept: 'application/json',
       __tenant: process.env.E2E_TENANT || 'DDVS',
@@ -105,6 +107,26 @@ export async function createEmployeeFromExistingDefaults(page: Page, fixture: Em
       }
 
       const defaults = await detailResponse.json();
+      const rolesResponse = await fetch(`${evaluatedBaseUrl}/api/identity/roles/all`, {
+        headers,
+      });
+      const roles = rolesResponse.ok ? await rolesResponse.json() : [];
+      const shiftsResponse = await fetch(`${evaluatedBaseUrl}/api/app/shift-management`, {
+        headers,
+      });
+      const shifts = shiftsResponse.ok ? await shiftsResponse.json() : { items: [] };
+      const fallbackRole = (Array.isArray(roles) ? roles : roles?.items || []).find(
+        (role: any) => role?.id
+      );
+      const fallbackShift = (Array.isArray(shifts) ? shifts : shifts?.items || []).find(
+        (shift: any) => shift?.id
+      );
+      const isUsableId = (value: any) =>
+        typeof value === 'string' &&
+        value.trim() &&
+        value !== '00000000-0000-0000-0000-000000000000';
+      const roleId = isUsableId(defaults.roleId) ? defaults.roleId : fallbackRole?.id;
+      const shiftId = isUsableId(defaults.shiftId) ? defaults.shiftId : fallbackShift?.id;
       const body = {
         firstName: evaluatedFixture.firstName,
         middleName: evaluatedFixture.middleName,
@@ -125,7 +147,7 @@ export async function createEmployeeFromExistingDefaults(page: Page, fixture: Em
         department: defaults.department ?? 'Academics',
         doj: '2024-06-01',
         isTeaching: defaults.isTeaching ?? true,
-        roleId: defaults.roleId,
+        roleId,
         address1: evaluatedFixture.addressLine1,
         address2: evaluatedFixture.addressLine2,
         address3: evaluatedFixture.addressLine3,
@@ -133,11 +155,11 @@ export async function createEmployeeFromExistingDefaults(page: Page, fixture: Em
         state: defaults.state ?? { name: 'Gujarat', isoCode: 'GJ' },
         city: defaults.city ?? evaluatedFixture.city,
         pinCode: evaluatedFixture.pincode,
-        shiftId: defaults.shiftId,
+        shiftId,
       };
 
       if (!body.roleId || !body.shiftId) {
-        throw new Error('Existing employee did not expose roleId and shiftId.');
+        throw new Error('E2E setup could not resolve roleId and shiftId.');
       }
 
       const formData = new FormData();
@@ -150,7 +172,9 @@ export async function createEmployeeFromExistingDefaults(page: Page, fixture: Em
 
       const responseText = await createResponse.text();
       if (!createResponse.ok) {
-        throw new Error(`Employee create failed: ${createResponse.status} ${responseText}`);
+        throw new Error(
+          `Employee create failed: ${createResponse.status} ${responseText} roleId=${body.roleId} shiftId=${body.shiftId}`
+        );
       }
 
       return JSON.parse(responseText);

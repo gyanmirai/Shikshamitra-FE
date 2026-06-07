@@ -24,6 +24,7 @@ import { HolidayImpactTab } from './components/HolidayImpactTab';
 import { PolicyAuditDrawer } from './components/PolicyAuditDrawer';
 import { useHRPolicyWorkspace } from './hooks/useHRPolicyWorkspace';
 import { PolicyImpactDrawer } from './components/PolicyImpactDrawer';
+import { LeavePoliciesPanel } from './components/LeavePoliciesPanel';
 import { PolicyVersionDrawer } from './components/PolicyVersionDrawer';
 import { EffectivePreviewTab } from './components/EffectivePreviewTab';
 import { ManualHolidayDialog } from './components/ManualHolidayDialog';
@@ -98,9 +99,10 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         {tab === 'calendars' ? <CalendarsTab ctx={ctx} /> : null}
         {tab === 'payroll' ? <PolicyTable type="payroll" ctx={ctx} /> : null}
         {tab === 'attendance' ? <PolicyTable type="attendance" ctx={ctx} /> : null}
+        {tab === 'leave' ? <LeavePoliciesPanel /> : null}
         {tab === 'assignments' ? <AssignmentsTab ctx={ctx} /> : null}
         {tab === 'holiday' ? <HolidayImpactTab ctx={ctx} /> : null}
-        {tab === 'effective' ? <EffectivePreviewTab ctx={ctx} /> : null}
+        {tab === 'effective' ? <EffectivePreviewTab /> : null}
       </Box>
 
       {/* Drawers */}

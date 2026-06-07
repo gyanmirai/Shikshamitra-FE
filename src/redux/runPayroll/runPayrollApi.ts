@@ -112,6 +112,16 @@ export const runPayrollApi = employeeApi.injectEndpoints({
       }),
       providesTags: [employeeType.salarySlip],
     }),
+
+    getEmployeeSalarySlipPreviewPdf: builder.query({
+      query: (params) => ({
+        url: '/payroll/salary-slips/pdf-preview',
+        method: 'GET',
+        params,
+        responseHandler: (response) => response.blob(),
+      }),
+      providesTags: [employeeType.salarySlip],
+    }),
   }),
 });
 
@@ -128,4 +138,5 @@ export const {
   useGetEmployeeSalarySlipQuery,
   useLazyGetEmployeeSalarySlipQuery,
   useLazyGetEmployeeSalarySlipPdfQuery,
+  useLazyGetEmployeeSalarySlipPreviewPdfQuery,
 } = runPayrollApi;

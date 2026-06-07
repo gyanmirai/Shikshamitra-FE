@@ -8,7 +8,7 @@ export const eventApi = calendarModuleApi.injectEndpoints({
       query: (params) => ({
         url: `/calendar/events`,
         method: 'GET',
-        parama: params,
+        params,
       }),
       providesTags: [calendarModuleType.events],
     }),
@@ -28,18 +28,18 @@ export const eventApi = calendarModuleApi.injectEndpoints({
         url: `/calendar/events/${id}`,
         method: 'GET',
       }),
-      providesTags: (result, error, arg) => [{ type: calendarModuleType.events, id: arg }],
+      providesTags: (result, error, arg) => [{ type: calendarModuleType.events, id: arg.id }],
     }),
 
     updateEvent: builder.mutation({
-      query: ({ eventId, body }) => ({
-        url: `/calendar/events/${eventId}`,
+      query: ({ eventId, id, body, data, ...rest }) => ({
+        url: `/calendar/events/${eventId || id}`,
         method: 'PUT',
-        body,
+        body: body || data || rest,
       }),
       invalidatesTags: (result, error, arg) => [
         calendarModuleType.events,
-        { type: calendarModuleType.events, id: arg.eventId },
+        { type: calendarModuleType.events, id: arg.eventId || arg.id },
       ],
     }),
 

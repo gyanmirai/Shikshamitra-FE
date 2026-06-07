@@ -20,6 +20,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetGroupsQuery } from 'src/redux/calendar/GroupManagement/groupManagementApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
@@ -41,14 +42,27 @@ import { holidayValidationSchema } from './getHolidayValidationSchema';
 
 import type { IHoliday, IHolidayFormProps } from './type';
 
-const options = [
-  { value: 'cricketGroup', label: 'Cricket Group' },
-  { value: 'mathLegendGroup', label: 'Math Legend Group' },
-  { value: 'scienceInnovators', label: 'Science Innovators' },
-  { value: 'literatureClub', label: 'Literature Club' },
-  { value: 'musicTeam', label: 'Music Team' },
-  { value: 'artCrew', label: 'Art Crew' },
-];
+const toFileData = (value?: any) => {
+  if (!value) return null;
+  if (value instanceof File) return value;
+  if (typeof value === 'object') return value;
+
+  return {
+    name: value.split('/').pop() || value,
+    url: value,
+  };
+};
+
+const serializeFileValue = (value: any): string => {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (value instanceof File) return value.name;
+  if (value.url) return value.url;
+  if (value.base64) return value.base64;
+  if (value.name) return value.name;
+  return '';
+};
+
 const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEdit = false }) => {
   const theme = useTheme();
 
@@ -75,6 +89,12 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
     type: 'query',
     currentQueryAndMutation: useGetHolidayTypeQuery,
   });
+  const { data: groupData, isLoading: isGroupDataLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetGroupsQuery,
+    params: { academicYearId: currentYear?.id, includeDetails: true },
+    options: { skip: !currentYear?.id },
+  });
 
   const formik = useFormik<IHoliday>({
     initialValues: {
@@ -82,16 +102,23 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
       holidayName: initialValues?.holidayName || '',
       holidayTypeId: initialValues?.holidayTypeId || '',
       startDate: initialValues?.startDate || null,
-      audience: initialValues?.audience || [],
+      audience: initialValues?.audienceIds || initialValues?.audience || [],
       endDate: initialValues?.endDate || null,
       description: initialValues?.description || '',
-      attachment: initialValues?.attachment || null,
+      attachment: toFileData(initialValues?.attachment || initialValues?.attachments),
       createdBy: initialValues?.createdBy || '',
       createdOn: initialValues?.createdOn || dayjs(),
       status: initialValues?.status || 1, // Draft by default
     },
     validationSchema: holidayValidationSchema(currentYear),
     onSubmit: async (values) => {
+      if (!currentYear?.id) {
+        shikshaMitraToast.error({
+          message: 'Please select an academic year before saving holiday',
+        });
+        return;
+      }
+
       try {
         const payload = {
           // name: values.holidayName,
@@ -107,8 +134,8 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
           startDate: dayjs(values.startDate).toISOString(),
           endDate: dayjs(values.endDate).toISOString(),
           description: values.description,
-          audienceIds: ['3fa85f64-5717-4562-b3fc-2c963f66afa6'],
-          attachments: values.attachment ? 'base64-or-url' : '',
+          audienceIds: values.audience,
+          attachments: serializeFileValue(values.attachment),
         };
 
         if (initialValues) {
@@ -177,6 +204,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                     error={!!(formik.touched.holidayName && formik.errors.holidayName)}
                   >
                     <TextField
+                      data-testid="calendar-holiday-name-input"
                       label="Holiday Name *"
                       name="holidayName"
                       value={formik.values.holidayName}
@@ -219,7 +247,9 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                       helperText={
                         (formik.touched.holidayTypeId && formik.errors.holidayTypeId) as string
                       }
-                      formControlProps={{ fullWidth: true }}
+                      formControlProps={
+                        { fullWidth: true, 'data-testid': 'calendar-holiday-type-select' } as any
+                      }
                     />
                   </ShakingTextField>
                 </Grid>
@@ -235,11 +265,12 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                       maxDate={dayjs(currentYear?.endDate)}
                       slotProps={{
                         textField: {
+                          'data-testid': 'calendar-holiday-start-date',
                           fullWidth: true,
                           size: 'small',
                           error: formik.touched.startDate && Boolean(formik.errors.startDate),
                           helperText: formik.touched.startDate && formik.errors.startDate,
-                        },
+                        } as any,
                       }}
                     />
                   </ShakingTextField>
@@ -256,11 +287,12 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                       onChange={(date) => formik.setFieldValue('endDate', date)}
                       slotProps={{
                         textField: {
+                          'data-testid': 'calendar-holiday-end-date',
                           fullWidth: true,
                           size: 'small',
                           error: formik.touched.endDate && Boolean(formik.errors.endDate),
                           helperText: formik.touched.endDate && formik.errors.endDate,
-                        },
+                        } as any,
                       }}
                     />
                   </ShakingTextField>
@@ -306,24 +338,25 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                   <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                     <Autocomplete
                       multiple
+                      loading={isGroupDataLoading}
                       disableCloseOnSelect
-                      options={options}
-                      getOptionLabel={(option) => option?.label || ''}
+                      options={groupData?.items || []}
+                      getOptionLabel={(option) => option?.name || ''}
                       value={formik.values.audience
-                        .map((val) => options.find((opt) => opt.value === val))
+                        .map((val) => groupData?.items.find((opt: any) => opt.id === val))
                         .filter(Boolean)}
                       onChange={(_, newValue) =>
                         formik.setFieldValue(
                           'audience',
-                          newValue.map((opt) => opt?.value)
+                          newValue.map((opt: any) => opt?.id)
                         )
                       }
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
                           <Chip
                             {...getTagProps({ index })}
-                            key={option?.value}
-                            label={option?.label}
+                            key={option?.id}
+                            label={option?.name}
                             size="small"
                             color="default"
                             variant="soft"
@@ -332,18 +365,19 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                         ))
                       }
                       renderOption={(props, option, { selected }) => (
-                        <li {...props} key={option?.value}>
+                        <li {...props} key={option?.id}>
                           <Checkbox
                             icon={<CheckBoxOutlineBlank fontSize="small" />}
                             checkedIcon={<CheckBox fontSize="small" />}
                             checked={selected}
                           />
-                          {option?.label}
+                          {option?.name}
                         </li>
                       )}
                       renderInput={(params) => (
                         <TextField
                           {...params}
+                          data-testid="calendar-holiday-audience-select"
                           label="Audience *"
                           fullWidth
                           size="small"
@@ -369,6 +403,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
               Cancel
             </Button>
             <LoadingButton
+              data-testid="calendar-holiday-submit-button"
               variant="contained"
               size="small"
               type="submit"

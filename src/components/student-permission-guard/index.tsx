@@ -9,7 +9,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 
 interface Props {
   children: React.ReactNode;
-  permissionKey: string;
+  permissionKey: string | string[];
 }
 
 const StudentPermissionGuard = ({ children, permissionKey }: Props) => {
@@ -17,7 +17,9 @@ const StudentPermissionGuard = ({ children, permissionKey }: Props) => {
     (state: RootState) => state.auth
   );
 
-  const hasPermission = hasGrantedPermission(permissions, permissionKey);
+  const hasPermission = Array.isArray(permissionKey)
+    ? permissionKey.some((key) => hasGrantedPermission(permissions, key))
+    : hasGrantedPermission(permissions, permissionKey);
   if (loading || !permissionsInitialized) return <SplashScreen />;
   return hasPermission ? children : <View403 />;
 };

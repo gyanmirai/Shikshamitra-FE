@@ -26,7 +26,7 @@ export function formatDate(value?: string | null): string {
 }
 
 export function formatRange(from?: string | null, to?: string | null): string {
-  return `${formatDate(from)} - ${formatDate(to)}`;
+  return `${formatDate(from)} - ${to ? formatDate(to) : 'No end date'}`;
 }
 
 // ─── Date Range Checks ────────────────────────────────────────────────────────

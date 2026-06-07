@@ -1,8 +1,8 @@
 // enums/event_status.ts
 export enum EventStatus {
-  Active,
-  Upcoming,
-  Completed,
+  Upcoming = 0,
+  Active = 1,
+  Completed = 2,
 }
 
 export const EventStatusColor = {

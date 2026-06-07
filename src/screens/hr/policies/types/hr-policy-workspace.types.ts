@@ -18,6 +18,7 @@ export type WorkspaceTab =
   | 'calendars'
   | 'payroll'
   | 'attendance'
+  | 'leave'
   | 'assignments'
   | 'holiday'
   | 'effective';

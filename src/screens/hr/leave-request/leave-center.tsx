@@ -33,7 +33,7 @@ const HR_ROUTE = hrPaths.leaveManagement.leaveCenter;
 
 const SELF_ROUTE = '/dashboard/my-leave';
 
-const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) => {
+const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
   const isSelfContext = context === 'self';
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -68,8 +68,9 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
   const requestedTab = useMemo<LeaveCenterTab>(() => {
     if (isSelfContext) {
       const tabFromQuery = searchParams.get('tab');
+      if (tabFromQuery === 'my-requests') return 'my-requests';
       if (tabFromQuery === 'balance') return 'balance';
-      return initialTab === 'balance' ? 'balance' : 'my-requests';
+      return initialTab;
     }
 
     const tabFromQuery = searchParams.get('tab');
@@ -79,11 +80,7 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
     return initialTab;
   }, [initialTab, isSelfContext, searchParams]);
 
-  const activeTab = resolveLeaveCenterTab(
-    requestedTab,
-    visibleTabs,
-    canReviewLeaves ? 'approvals' : initialTab
-  );
+  const activeTab = resolveLeaveCenterTab(requestedTab, visibleTabs, initialTab);
 
   const handleTabChange = (_event: React.SyntheticEvent, nextTab: LeaveCenterTab) => {
     if (!visibleTabs.includes(nextTab)) {
@@ -93,9 +90,9 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
     if (isSelfContext) {
       const nextParams = new URLSearchParams(searchParams.toString());
       if (nextTab === 'balance') {
-        nextParams.set('tab', 'balance');
-      } else {
         nextParams.delete('tab');
+      } else {
+        nextParams.set('tab', nextTab);
       }
       const query = nextParams.toString();
       router.push(query ? `${SELF_ROUTE}?${query}` : SELF_ROUTE);
@@ -103,7 +100,7 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
     }
 
     const nextParams = new URLSearchParams(searchParams.toString());
-    if (nextTab === 'my-requests') {
+    if (nextTab === 'balance') {
       nextParams.delete('tab');
     } else {
       nextParams.set('tab', nextTab);
@@ -167,6 +164,13 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
           role="tablist"
         >
+          {visibleTabs.includes('balance') && (
+            <Tab
+              label="Balance"
+              value="balance"
+              icon={<Iconify icon="mdi:scale-balance" width={20} />}
+            />
+          )}
           {visibleTabs.includes('my-requests') && (
             <Tab
               label="My Requests"
@@ -179,13 +183,6 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
               label="Approvals"
               value="approvals"
               icon={<Iconify icon="mdi:check-circle-outline" width={20} />}
-            />
-          )}
-          {visibleTabs.includes('balance') && (
-            <Tab
-              label="Balance"
-              value="balance"
-              icon={<Iconify icon="mdi:scale-balance" width={20} />}
             />
           )}
         </CustomTabs>

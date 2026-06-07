@@ -92,10 +92,10 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
         ),
       },
       {
-        id: 'audience',
+        id: 'audienceIds',
         label: 'Audience',
         align: 'left',
-        render: (value) => <Box>-</Box>,
+        render: renderAudienceCount,
       },
       {
         id: 'startDate',
@@ -222,6 +222,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           }
           columns={columns}
           data={tableData || []}
+          rowProps={() => ({ 'data-testid': 'calendar-holiday-row' }) as any}
         />
       ) : tabs.value === HolidayStatus.Ongoing ? (
         <CustomizableTable
@@ -264,10 +265,10 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               ),
             },
             {
-              id: 'audience',
+              id: 'audienceIds',
               label: 'Audience',
               align: 'left',
-              render: (value) => <Box>-</Box>,
+              render: renderAudienceCount,
             },
             {
               id: 'startDate',
@@ -302,6 +303,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
             },
           ]}
           data={tableData || []}
+          rowProps={() => ({ 'data-testid': 'calendar-holiday-row' }) as any}
         />
       ) : tabs.value === HolidayStatus.Upcoming ? (
         <CustomizableTable
@@ -343,7 +345,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
                 </Box>
               ),
             },
-            { id: 'audience', label: 'Audience', align: 'left' },
+            { id: 'audienceIds', label: 'Audience', align: 'left', render: renderAudienceCount },
             {
               id: 'startDate',
               label: 'Start Date',
@@ -394,6 +396,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
             },
           ]}
           data={tableData || []}
+          rowProps={() => ({ 'data-testid': 'calendar-holiday-row' }) as any}
         />
       ) : tabs.value === HolidayStatus.Completed ? (
         <CustomizableTable
@@ -435,7 +438,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
                 </Box>
               ),
             },
-            { id: 'audience', label: 'Audience', align: 'left' },
+            { id: 'audienceIds', label: 'Audience', align: 'left', render: renderAudienceCount },
             {
               id: 'startDate',
               label: 'Start Date',
@@ -484,6 +487,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
             },
           ]}
           data={tableData || []}
+          rowProps={() => ({ 'data-testid': 'calendar-holiday-row' }) as any}
         />
       ) : null}
     </>
@@ -491,3 +495,12 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
 };
 
 export default HolidayTable;
+
+const renderAudienceCount = (value: unknown) => {
+  const count = Array.isArray(value) ? value.length : 0;
+  return (
+    <Typography fontSize="13px">
+      {count} {count === 1 ? 'group' : 'groups'}
+    </Typography>
+  );
+};

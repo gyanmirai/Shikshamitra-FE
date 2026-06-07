@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import { sanitizeHtml } from 'src/utils/sanitize-html';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -96,7 +97,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
         align: 'left',
         sticky: true,
         render: (value) => (
-          <Typography fontSize="13px" variant="caption">
+          <Typography fontSize="13px" variant="caption" sx={{ fontWeight: 600 }}>
             {value}
           </Typography>
         ),
@@ -110,8 +111,37 @@ const GroupTable: React.FC<GroupTableProps> = ({
           <Typography
             fontSize="13px"
             variant="caption"
-            dangerouslySetInnerHTML={{ __html: value || '-' }}
+            component="div"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(value || '-') }}
+            sx={{
+              maxWidth: 420,
+              overflow: 'hidden',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              '& p': { m: 0 },
+            }}
           />
+        ),
+      },
+      {
+        id: 'studentCount',
+        label: 'Students',
+        align: 'center',
+        render: (value) => (
+          <Typography fontSize="13px" variant="caption">
+            {value ?? 0}
+          </Typography>
+        ),
+      },
+      {
+        id: 'employeeCount',
+        label: 'Employees',
+        align: 'center',
+        render: (value) => (
+          <Typography fontSize="13px" variant="caption">
+            {value ?? 0}
+          </Typography>
         ),
       },
       {
@@ -148,6 +178,11 @@ const GroupTable: React.FC<GroupTableProps> = ({
       },
     ]}
     data={data || []}
+    rowProps={() =>
+      ({
+        'data-testid': 'calendar-group-row',
+      }) as any
+    }
   />
 );
 

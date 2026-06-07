@@ -232,8 +232,7 @@ const LeavePolicy = () => {
         description="Define and manage leave policies for your organization to ensure smooth attendance and leave management."
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Leave Management', href: hrPaths.leaveManagement.root },
-          { name: 'Settings', href: hrPaths.leaveManagement.setting.root },
+          { name: 'Policies & Rules', href: hrPaths.policies.root },
           { name: 'Leave Policy' },
         ]}
         action={
@@ -254,17 +253,20 @@ const LeavePolicy = () => {
           setEditData(null);
           confirm.onFalse();
         }}
-        title="Delete"
+        title="Archive"
         content={
           <>
-            Are you sure you want to delete <strong>{editData?.title || 'this policy'}</strong>?
+            Are you sure you want to archive{' '}
+            <strong>{editData?.policyTitle || editData?.title || 'this policy'}</strong>? Past leave
+            requests will keep this policy, but it will no longer be available for new leave
+            requests.
           </>
         }
         action={
           <LoadingButton
             variant="contained"
             loading={isDeleteLoading}
-            color="error"
+            color="warning"
             size="small"
             onClick={async () => {
               confirmWithUndo({
@@ -290,7 +292,7 @@ const LeavePolicy = () => {
               setEditData(null);
             }}
           >
-            Yes
+            Archive
           </LoadingButton>
         }
       />

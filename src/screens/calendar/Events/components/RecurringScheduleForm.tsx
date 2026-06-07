@@ -2,14 +2,16 @@ import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import CustomSelect from 'src/components/custom-select';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -32,8 +34,17 @@ interface RecurringScheduleFormProps {
   onClose: (e: any, isSubmit: boolean) => void;
 }
 
-const getValidationSchema = (currentYear: any) =>
-  Yup.object({
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+
+const formatDate = (value: dayjs.Dayjs | null) =>
+  value && value.isValid() ? value.format('DD/MM/YYYY') : '-';
+
+const getValidationSchema = (currentYear: any) => {
+  const academicStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
+  const academicEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
+
+  return Yup.object({
     isRecurring: Yup.boolean(),
 
     repeatFrequency: Yup.string().required('Repeat frequency is required'),
@@ -78,15 +89,19 @@ const getValidationSchema = (currentYear: any) =>
       )
       .test(
         'min-date',
+        () => `Start Date must be on or after ${formatDate(academicStart)}`,
         (value) =>
-          `Start Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+          !academicStart ||
+          !academicStart.isValid() ||
+          (value && dayjs(value as Dayjs).isSameOrAfter(academicStart, 'day'))
       )
       .test(
         'max-date',
+        () => `Start Date must be on or before ${formatDate(academicEnd)}`,
         (value) =>
-          `Start Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+          !academicEnd ||
+          !academicEnd.isValid() ||
+          (value && dayjs(value as Dayjs).isSameOrBefore(academicEnd, 'day'))
       ),
     repeatUntil: Yup.mixed()
       .required('Last Date is required')
@@ -103,18 +118,22 @@ const getValidationSchema = (currentYear: any) =>
       })
       .test(
         'min-date',
+        () => `Last Date must be on or after ${formatDate(academicStart)}`,
         (value) =>
-          `Last Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+          !academicStart ||
+          !academicStart.isValid() ||
+          (value && dayjs(value as Dayjs).isSameOrAfter(academicStart, 'day'))
       )
       .test(
         'max-date',
+        () => `Last Date must be on or before ${formatDate(academicEnd)}`,
         (value) =>
-          `Last Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+          !academicEnd ||
+          !academicEnd.isValid() ||
+          (value && dayjs(value as Dayjs).isSameOrBefore(academicEnd, 'day'))
       ),
 
-    // ✅ Weekly specific: at least one day required
+    // Weekly specific: at least one day required
     customDays: Yup.array().when(['repeatFrequency', 'customInterval'], {
       is: (repeatFrequency: string, customInterval: string) =>
         repeatFrequency === 'Weekly' ||
@@ -137,7 +156,7 @@ const getValidationSchema = (currentYear: any) =>
       otherwise: (schema) => schema.nullable(),
     }),
 
-    // ✅ Custom interval fields
+    // Custom interval fields
     customInterval: Yup.string().when('repeatFrequency', {
       is: (val: string) => val === 'Custom',
       then: (schema) =>
@@ -199,6 +218,7 @@ const getValidationSchema = (currentYear: any) =>
       otherwise: (schema) => schema.nullable(),
     }),
   });
+};
 
 const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
   initialValues,
@@ -232,11 +252,6 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
   });
 
   // const recurrenceMessage = useMemo(() => getRecurrenceSummary(formik.values), [formik.values]);
-
-  useEffect(() => {
-    formik.resetForm();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.repeatFrequency]);
 
   const renderRecurringFields = () => {
     switch (formik.values.repeatFrequency) {

@@ -18,8 +18,8 @@ import { EventStatus, EventStatusColor, EventStatusOptions } from 'src/enums/eve
 import type { IEventAnnouncement } from '../type';
 
 interface IEventAnnouncementTableProps {
-  status: string;
-  setStatus: (value: string) => void;
+  status: 'All' | EventStatus;
+  setStatus: (value: 'All' | EventStatus) => void;
   isLoading?: boolean;
   setOpen: (value: boolean) => void;
   data: IEventAnnouncement[];
@@ -141,9 +141,7 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
         label: 'Target Group',
         align: 'left',
         minWidth: 150,
-        render(value: any) {
-          return value.join(', ');
-        },
+        render: renderAudienceCount,
       },
       {
         id: 'eventMode',
@@ -239,9 +237,7 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
         label: 'Target Group',
         align: 'left',
         minWidth: 150,
-        render(value: any) {
-          return value.join(', ');
-        },
+        render: renderAudienceCount,
       },
       {
         id: 'mode',
@@ -361,9 +357,19 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
         }
         data={tableData || []}
         columns={tabs.value === 'All' ? allColumns : otherColumns}
+        rowProps={() => ({ 'data-testid': 'calendar-event-row' }) as any}
       />
     </>
   );
 };
 
 export default EventAnnouncementTable;
+
+const renderAudienceCount = (value: unknown) => {
+  const count = Array.isArray(value) ? value.length : 0;
+  return (
+    <Typography fontSize="13px">
+      {count} {count === 1 ? 'group' : 'groups'}
+    </Typography>
+  );
+};

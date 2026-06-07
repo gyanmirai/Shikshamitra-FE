@@ -23,13 +23,11 @@ import {
 } from 'src/redux/communication/holiday/holidayDataApi';
 
 import HolidayTypeForm from './Components/HoliayTypeForm';
-// Replace with actual API hook when available
 import HolidayTypeTable from './Components/HolidayTypeTable';
 
 import type { IHolidayType } from './type';
 
 const HolidayTypeCreation = () => {
-  // Custom hook to fetch holiday type data
   const {
     data: holidayTypeData,
     refetch,
@@ -40,17 +38,14 @@ const HolidayTypeCreation = () => {
     currentQueryAndMutation: useGetHolidayTypeQuery,
   });
 
-  // Dialog control states
   const deleteHolidayTypeDialog = useBoolean();
   const addHolidayTypeDialog = useBoolean();
   const [, setOpen] = useState(false);
 
-  // State management
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedHolidayType, setSelectedHolidayType] = useState<IHolidayType | null>(null);
   const dispatch = useDispatch();
 
-  // Delete mutation and undo hook
   const [deleteHolidayType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteHolidayTypeMutation,
@@ -58,7 +53,6 @@ const HolidayTypeCreation = () => {
 
   const { confirmWithUndo } = useConfirmWithUndo();
 
-  // Close handler
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
       setTimeout(() => {
@@ -82,11 +76,11 @@ const HolidayTypeCreation = () => {
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Holiday Type"
-        description="Manage holiday types such as National Holiday, Festival Holiday, Optional Holiday, etc. Use actions to edit or delete existing types. Click ‘Add Holiday Type’ to create a new one."
+        description="Manage holiday types such as national holiday, festival holiday, and optional holiday. Use actions to edit or delete existing types."
         links={[
           { name: 'Calendar', href: '/calendar/dashboard' },
-          { name: 'Settings', href: '/communication/setting' },
-          { name: 'Holiday Type', href: '/communication/holiday-type' },
+          { name: 'Settings', href: '/calendar/setting/holidayType' },
+          { name: 'Holiday Type' },
         ]}
         action={
           <Button
@@ -188,8 +182,11 @@ const HolidayTypeCreation = () => {
                       }
                     })
                   ),
-                onUndoRestore: (dispatchFn, index) => refetch(),
-                onCommit: () => deleteHolidayType(selectedHolidayType?.id || ''),
+                onUndoRestore: () => refetch(),
+                onCommit: () =>
+                  selectedHolidayType?.id
+                    ? deleteHolidayType(selectedHolidayType.id)
+                    : Promise.resolve(),
               });
               deleteHolidayTypeDialog.onFalse();
               setSelectedHolidayType(null);

@@ -24,12 +24,80 @@ describe('HR production menu', () => {
       permissionName: 'HR.Employee.ICard.View',
     });
     expect(items.find((item) => item.title === 'Performance Management')).toMatchObject({
-      path: '/hr/professional-management',
+      path: '/hr/professional-management/overview',
       permissionName: 'HR.ProfessionalManagement.View',
     });
+    const performanceManagement = items.find((item) => item.title === 'Performance Management');
+    expect(performanceManagement?.children?.map((item: any) => item.title)).toEqual([
+      'Overview',
+      'Reviews',
+      'Cycles & Templates',
+      'Outcomes',
+      'Reports',
+      'Settings',
+    ]);
+    expect(performanceManagement?.children).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: 'Overview',
+          path: hrPaths.professionalManagement.overview,
+          permissionName: 'HR.ProfessionalManagement.View',
+        }),
+        expect.objectContaining({
+          title: 'Reviews',
+          path: hrPaths.professionalManagement.reviews,
+          permissionName: 'HR.ProfessionalManagement.View',
+        }),
+        expect.objectContaining({
+          title: 'Cycles & Templates',
+          path: hrPaths.professionalManagement.cycles,
+          permissionName: 'HR.ProfessionalManagement.View',
+        }),
+        expect.objectContaining({
+          title: 'Outcomes',
+          path: hrPaths.professionalManagement.outcomes,
+          permissionName: 'HR.ProfessionalManagement.View',
+        }),
+        expect.objectContaining({
+          title: 'Reports',
+          path: hrPaths.professionalManagement.reports,
+          permissionName: 'HR.ProfessionalManagement.View',
+        }),
+        expect.objectContaining({
+          title: 'Settings',
+          path: hrPaths.professionalManagement.settings.root,
+          permissionName: 'HR.ProfessionalManagement.View',
+        }),
+      ])
+    );
+    const performanceSettings = performanceManagement?.children?.find(
+      (item: any) => item.title === 'Settings'
+    );
+    expect(performanceSettings?.children).toEqual([
+      expect.objectContaining({
+        title: 'Setup & Readiness',
+        path: hrPaths.professionalManagement.settings.setup,
+        permissionName: 'HR.ProfessionalManagement.View',
+      }),
+    ]);
     expect(items.find((item) => item.title === 'Run Payroll')).toMatchObject({
       path: hrPaths.payroll.runPayroll,
       permissionName: 'HR.PayrollManagement.RunPayroll',
+    });
+    expect(items.find((item) => item.title === 'Leave Policies')).toMatchObject({
+      path: hrPaths.policies.leavePolicies,
+      permissionName: 'HR.LeaveManagement.Setting.LeavePolicy',
+    });
+    expect(
+      items.find(
+        (item) =>
+          item.title === 'Leave Policy' && item.path === hrPaths.leaveManagement.setting.leavePolicy
+      )
+    ).toBeUndefined();
+    expect(
+      items.find((item) => item.title === 'Settings' && item._action === 'leave-policy-setup')
+    ).toMatchObject({
+      path: hrPaths.leaveManagement.setting.leaveType,
     });
   });
 });

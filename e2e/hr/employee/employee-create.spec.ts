@@ -22,7 +22,7 @@ test.describe('HR Employee create', () => {
     await fillRequiredPersonalInformation(page, employee);
     await saveAndNext(page);
 
-    await expect(page.getByText(/Family Information/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Father Details/i })).toBeVisible();
 
     const created = await findEmployeeBySearch(page, employee.email);
     expect(created?.id).toBeTruthy();
@@ -50,6 +50,6 @@ test.describe('HR Employee create', () => {
 
     await expect(page.getByText(/Primary Contact No\. is not valid/i)).toBeVisible();
     await expect(page.getByText(/Please enter a valid email/i)).toBeVisible();
-    await expect(page.getByText(/Date of Joining cannot be in the future/i)).toBeVisible();
+    await expect(page.getByText(/Must be exactly 6 numbers/i)).toBeVisible();
   });
 });

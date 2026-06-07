@@ -1,3 +1,5 @@
+import type { WorkCalendarPolicy } from 'src/redux/hr/hr-policy-api';
+
 import { it, expect, describe } from 'vitest';
 
 import {
@@ -10,6 +12,20 @@ import {
 describe('HR policy workspace date-only academic year handling', () => {
   const academicYearStart = '2026-06-01T00:00:00Z';
   const academicYearEnd = '2027-05-31T00:00:00Z';
+  const makeCalendar = (overrides: Partial<WorkCalendarPolicy> = {}): WorkCalendarPolicy => ({
+    id: 'calendar-1',
+    academicYearId: 'ay-2026-2027',
+    name: 'Test Calendar',
+    status: 'active',
+    effectiveFrom: academicYearStart,
+    effectiveTo: academicYearEnd,
+    weeklyOffPattern: 'saturday_sunday',
+    customWeeklyOffs: [],
+    holidaySyncMode: 'manual',
+    holidays: [],
+    version: 1,
+    ...overrides,
+  });
 
   it('builds month ranges from academic-year date parts instead of timezone-shifted instants', () => {
     const ranges = getAcademicYearMonthRanges(academicYearStart, academicYearEnd);
@@ -26,15 +42,15 @@ describe('HR policy workspace date-only academic year handling', () => {
     expect(formatRange(academicYearStart, academicYearEnd)).toBe('01 Jun 2026 - 31 May 2027');
   });
 
+  it('formats open-ended ranges as having no end date', () => {
+    expect(formatRange(academicYearStart, null)).toBe('01 Jun 2026 - No end date');
+  });
+
   it('does not include May 2026 in the standard payroll basis preview', () => {
     const rows = buildPayrollBasisPreviewRows({
       academicYearStart,
       academicYearEnd,
-      calendar: {
-        weeklyOffPattern: 'saturday_sunday',
-        customWeeklyOffs: [],
-        holidays: [],
-      } as Parameters<typeof buildPayrollBasisPreviewRows>[0]['calendar'],
+      calendar: makeCalendar(),
       dayCalculationType: 'working-days',
       saturdayWorkPolicy: 'full-day',
       manualMonthDays: {},
@@ -51,11 +67,7 @@ describe('HR policy workspace date-only academic year handling', () => {
   });
 
   it('detects whether the selected work calendar has Saturday as a working day', () => {
-    const calendar = {
-      weeklyOffPattern: 'saturday_sunday',
-      customWeeklyOffs: [],
-      holidays: [],
-    } as Parameters<typeof isSaturdayWorkingForCalendar>[0];
+    const calendar = makeCalendar();
 
     expect(isSaturdayWorkingForCalendar(calendar)).toBe(false);
     expect(isSaturdayWorkingForCalendar({ ...calendar, weeklyOffPattern: 'sunday' })).toBe(true);
@@ -79,11 +91,7 @@ describe('HR policy workspace date-only academic year handling', () => {
     const rows = buildPayrollBasisPreviewRows({
       academicYearStart: '2026-06-01',
       academicYearEnd: '2026-06-30',
-      calendar: {
-        weeklyOffPattern: 'saturday_sunday',
-        customWeeklyOffs: [],
-        holidays: [],
-      } as Parameters<typeof buildPayrollBasisPreviewRows>[0]['calendar'],
+      calendar: makeCalendar(),
       dayCalculationType: 'working-days',
       saturdayWorkPolicy: 'full-day',
       manualMonthDays: {},
@@ -100,11 +108,7 @@ describe('HR policy workspace date-only academic year handling', () => {
     const rows = buildPayrollBasisPreviewRows({
       academicYearStart: '2026-06-01',
       academicYearEnd: '2026-06-30',
-      calendar: {
-        weeklyOffPattern: 'sunday',
-        customWeeklyOffs: [],
-        holidays: [],
-      } as Parameters<typeof buildPayrollBasisPreviewRows>[0]['calendar'],
+      calendar: makeCalendar({ weeklyOffPattern: 'sunday' }),
       dayCalculationType: 'working-days',
       saturdayWorkPolicy: 'half-day',
       manualMonthDays: {},
@@ -121,9 +125,7 @@ describe('HR policy workspace date-only academic year handling', () => {
     const rows = buildPayrollBasisPreviewRows({
       academicYearStart: '2026-05-01',
       academicYearEnd: '2026-05-31',
-      calendar: {
-        weeklyOffPattern: 'saturday_sunday',
-        customWeeklyOffs: [],
+      calendar: makeCalendar({
         holidays: [
           {
             academicYearId: 'ay-2025-2026',
@@ -135,7 +137,7 @@ describe('HR policy workspace date-only academic year handling', () => {
             isIncluded: true,
           },
         ],
-      } as Parameters<typeof buildPayrollBasisPreviewRows>[0]['calendar'],
+      }),
       dayCalculationType: 'working-days',
       saturdayWorkPolicy: 'full-day',
       manualMonthDays: {},

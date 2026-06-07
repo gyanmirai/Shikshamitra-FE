@@ -36,6 +36,11 @@ export type LeavePolicyOption = {
   leaveTypeMasterId?: string | null;
 };
 
+export type LeavePolicyResolution =
+  | { status: 'resolved'; policyId: string }
+  | { status: 'missing'; policyId: ''; message: string }
+  | { status: 'ambiguous'; policyId: ''; message: string };
+
 export interface LeaveRequestFormValuesForPayload {
   employee: EmployeeOption | null;
   leavePolicyId: string;
@@ -110,6 +115,43 @@ export function resolveLeaveTypeMasterIdFromPolicy(
   }
 
   return policy.leaveType?.id || policy.leaveTypeMasterId || '';
+}
+
+export function resolveLeavePolicyIdForLeaveType(
+  policies: LeavePolicyOption[] | null | undefined,
+  leaveTypeMasterId: string | null | undefined
+): LeavePolicyResolution {
+  if (!leaveTypeMasterId) {
+    return {
+      status: 'missing',
+      policyId: '',
+      message: 'Please select a leave type.',
+    };
+  }
+
+  const matchingPolicies = (policies || []).filter(
+    (policy) => resolveLeaveTypeMasterIdFromPolicy(policy) === leaveTypeMasterId
+  );
+
+  if (matchingPolicies.length === 1 && matchingPolicies[0]?.id) {
+    return { status: 'resolved', policyId: matchingPolicies[0].id };
+  }
+
+  if (matchingPolicies.length > 1) {
+    return {
+      status: 'ambiguous',
+      policyId: '',
+      message:
+        'Multiple active leave policies are configured for this leave type. Please fix Policies & Rules before creating this request.',
+    };
+  }
+
+  return {
+    status: 'missing',
+    policyId: '',
+    message:
+      'No active leave policy is configured for this leave type. Please configure it in Policies & Rules.',
+  };
 }
 
 export function buildCreateLeaveRequestFormData(
@@ -210,9 +252,9 @@ export function getLeaveCenterVisibleTabs(
   canReviewLeaves: boolean
 ): LeaveCenterTab[] {
   if (canReviewLeaves) {
-    return ['my-requests', 'approvals', 'balance'];
+    return ['balance', 'my-requests', 'approvals'];
   }
-  return ['my-requests', 'balance'];
+  return ['balance', 'my-requests'];
 }
 
 export function resolveLeaveCenterTab(

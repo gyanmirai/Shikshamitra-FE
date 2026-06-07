@@ -2,6 +2,37 @@ import dayjs from 'dayjs';
 
 import type { IEventAnnouncement } from '../type';
 
+const parseClockTime = (value?: any) => {
+  if (!value) return null;
+  if (dayjs.isDayjs(value)) return value.isValid() ? value : null;
+
+  const parsed = dayjs(`2000-01-01T${value}`);
+  return parsed.isValid() ? parsed : null;
+};
+
+const getEventMode = (initialValues: IEventAnnouncement | null) => {
+  if (typeof initialValues?.eventMode === 'string' && initialValues.eventMode) {
+    return initialValues.eventMode;
+  }
+
+  if (initialValues?.mode === 0 || initialValues?.mode === '0') {
+    return 'online';
+  }
+
+  return 'offline';
+};
+
+const toFileData = (value?: any) => {
+  if (!value) return null;
+  if (value instanceof File) return value;
+  if (typeof value === 'object') return value;
+
+  return {
+    name: value.split('/').pop() || value,
+    url: value,
+  };
+};
+
 export const getEventInitialValues = (
   initialValues: IEventAnnouncement | null,
   currentYear: any
@@ -19,11 +50,11 @@ export const getEventInitialValues = (
   createdOn: initialValues?.createdOn ? dayjs(initialValues?.createdOn) : null,
   status: initialValues?.status || 0,
   type: initialValues?.eventTypeId || '',
-  typeName: initialValues?.typeName || '',
-  attachment: initialValues?.attachment || null,
+  typeName: initialValues?.typeName || initialValues?.eventType?.name || '',
+  attachment: toFileData(initialValues?.attachment || initialValues?.poster),
   link: initialValues?.link || '',
   active: initialValues?.active ?? 1,
-  eventMode: initialValues?.eventMode || 'offline',
+  eventMode: getEventMode(initialValues),
   onlineLink: initialValues?.onlineLink || '',
   venue: initialValues?.venue || '',
   recurrenceSummary: initialValues?.recurrenceSummary || '',
@@ -32,8 +63,8 @@ export const getEventInitialValues = (
   isRecurring: initialValues?.isRecurring || false,
   repeatFrequency: initialValues?.repeatFrequency || '',
   meetingDate: initialValues?.meetingDate ? dayjs(initialValues.meetingDate) : dayjs(),
-  startTime: initialValues?.startTime ? dayjs(initialValues.startTime) : null,
-  endTime: initialValues?.endTime ? dayjs(initialValues.endTime) : null,
+  startTime: parseClockTime(initialValues?.startTime),
+  endTime: parseClockTime(initialValues?.endTime),
   repeatUntil: initialValues?.repeatUntil ? dayjs(initialValues.repeatUntil) : null,
   day: initialValues?.day || '',
 

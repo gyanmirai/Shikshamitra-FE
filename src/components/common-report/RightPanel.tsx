@@ -32,6 +32,7 @@ export default function RightPanel({ selectedReport }: RightPanelProps) {
       elevation={0}
       sx={{
         height: '100%',
+        minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
         bgcolor: 'background.paper',
@@ -50,7 +51,7 @@ export default function RightPanel({ selectedReport }: RightPanelProps) {
           >
             <Iconify icon="proicons:document" width={32} />
           </Box>
-          <Box>
+          <Box sx={{ minWidth: 0 }}>
             <Typography variant="h6">{selectedReport?.name}</Typography>
             <Typography variant="body2" color="text.secondary">
               {selectedReport?.description}
@@ -59,7 +60,9 @@ export default function RightPanel({ selectedReport }: RightPanelProps) {
         </Stack>
       </Box>
 
-      {selectedReport.render(selectedReport)}
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        {selectedReport.render(selectedReport)}
+      </Box>
     </Paper>
   );
 }

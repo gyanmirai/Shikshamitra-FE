@@ -5,14 +5,12 @@ import { toast } from 'sonner';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import { CustomTabs } from 'src/components/custom-tabs';
 import React, { useMemo, useState, useEffect } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
-  Tab,
   Chip,
   Grid,
   Stack,
@@ -23,8 +21,10 @@ import {
   MenuItem,
   TextField,
   Typography,
+  ToggleButton,
   DialogActions,
   LinearProgress,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
   PerformanceBoardType,
@@ -62,6 +62,17 @@ import {
 } from 'src/redux/hr/professional-management-api';
 
 import {
+  type PerformanceWorkspaceTab,
+  performanceWorkspaceSubmodules,
+} from './components/performance-workspace-config';
+import {
+  PerformanceSurface,
+  PerformanceEmptyState,
+  PerformanceMetricCard,
+  PerformanceSectionHeader,
+  PerformanceWorkflowStepper,
+} from './components/PerformanceWorkspaceUI';
+import {
   stageLabels,
   boardTypeLabels,
   sqaaDomainLabels,
@@ -71,76 +82,51 @@ import {
   getSectionWeightTotal,
 } from './performance-utils';
 
-const tabs = [
-  ['setup', 'Guided Setup', 'mdi:school-outline'],
-  ['dashboard', 'Dashboard', 'mdi:view-dashboard-outline'],
-  ['templates', 'Templates', 'mdi:clipboard-edit-outline'],
-  ['cycles', 'Cycles', 'mdi:calendar-sync-outline'],
-  ['my-review', 'My Review', 'mdi:account-edit-outline'],
-  ['reviews', 'Reviews', 'mdi:account-check-outline'],
-  ['observations', 'Observations', 'mdi:school-outline'],
-  ['calibration', 'Calibration', 'mdi:scale-balance'],
-  ['outcomes', 'Outcomes', 'mdi:trophy-outline'],
-  ['development', 'Development', 'mdi:target-arrow'],
-  ['reports', 'Reports', 'mdi:chart-box-outline'],
-] as const;
-
 const getBackendApiUrl = (path: string) => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
   return `${baseUrl}/api${path}`;
 };
 
-const ProfessionalManagementScreen = () => {
-  const [tab, setTab] = useState('setup');
+type ProfessionalManagementScreenProps = {
+  workspace?: PerformanceWorkspaceTab;
+};
+
+const ProfessionalManagementScreen = ({
+  workspace = 'overview',
+}: ProfessionalManagementScreenProps) => {
+  const currentWorkspace =
+    performanceWorkspaceSubmodules.find((item) => item.value === workspace) ||
+    performanceWorkspaceSubmodules[0];
+  const breadcrumbLinks = [
+    { name: 'HR' },
+    { name: 'Performance Management' },
+    ...('parentLabel' in currentWorkspace ? [{ name: currentWorkspace.parentLabel }] : []),
+    { name: currentWorkspace.label },
+  ];
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: 'background.default',
+      }}
+    >
       <CustomBreadcrumbs
         heading="Performance Management"
-        description="Run school-ready appraisals with templates, self-review, reviewer stages, observations, outcomes, and development plans."
-        links={[{ name: 'HR' }, { name: 'Performance Management' }]}
+        description={currentWorkspace.description}
+        links={breadcrumbLinks}
       />
 
-      <CustomTabs
-        value={tab}
-        onChange={(_, value) => setTab(value)}
-        sx={{
-          mb: 2,
-          minHeight: 42,
-          '& .MuiTabs-scroller': { overflowX: 'auto !important' },
-          '& .MuiTab-root': {
-            minHeight: 42,
-            px: 1.25,
-            gap: 0.75,
-            whiteSpace: 'nowrap',
-          },
-        }}
-        variant="scrollable"
-        scrollButtons="auto"
-      >
-        {tabs.map(([value, label, icon]) => (
-          <Tab
-            key={value}
-            value={value}
-            label={label}
-            iconPosition="start"
-            icon={<Iconify icon={icon} width={18} />}
-          />
-        ))}
-      </CustomTabs>
-
-      <Box sx={{ minWidth: 0, flex: 1 }}>
-        {tab === 'setup' && <GuidedSetupTab />}
-        {tab === 'dashboard' && <DashboardTab />}
-        {tab === 'templates' && <TemplatesTab />}
-        {tab === 'cycles' && <CyclesTab />}
-        {tab === 'my-review' && <MyReviewTab />}
-        {tab === 'reviews' && <ReviewsTab />}
-        {tab === 'observations' && <ObservationsTab />}
-        {tab === 'calibration' && <CalibrationTab />}
-        {tab === 'outcomes' && <OutcomesTab />}
-        {tab === 'development' && <DevelopmentPlansTab />}
-        {tab === 'reports' && <ReportsTab />}
+      <Box sx={{ mt: 2, minWidth: 0, flex: 1 }}>
+        {workspace === 'overview' && <OverviewWorkspace />}
+        {workspace === 'setup-readiness' && <SetupReadinessWorkspace />}
+        {workspace === 'reviews' && <ReviewsWorkspace />}
+        {workspace === 'cycles-templates' && <CyclesTemplatesWorkspace />}
+        {workspace === 'outcomes' && <OutcomesWorkspace />}
+        {workspace === 'reports' && <ReportsTab />}
+        {workspace === 'settings' && <SettingsWorkspace />}
       </Box>
     </Box>
   );
@@ -150,50 +136,41 @@ export default ProfessionalManagementScreen;
 
 function SectionPanel({
   title,
+  description,
   action,
   children,
 }: {
   title: string;
+  description?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        alignItems={{ xs: 'stretch', sm: 'center' }}
-        justifyContent="space-between"
-        spacing={1.5}
-        sx={{ mb: 1.5 }}
-      >
-        <Typography variant="subtitle1">{title}</Typography>
-        {action}
-      </Stack>
+    <PerformanceSurface
+      title={title}
+      description={description}
+      action={action}
+      contentSx={{ minWidth: 0, overflowX: 'auto' }}
+    >
       {children}
-    </Paper>
+    </PerformanceSurface>
   );
 }
 
-function TabHeader({ title, action }: { title: string; action?: React.ReactNode }) {
-  return (
-    <Stack
-      direction={{ xs: 'column', sm: 'row' }}
-      spacing={1.5}
-      alignItems={{ xs: 'stretch', sm: 'center' }}
-      justifyContent="space-between"
-    >
-      <Typography variant="h6">{title}</Typography>
-      {action}
-    </Stack>
-  );
+function TabHeader({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+}) {
+  return <PerformanceSectionHeader title={title} description={description} action={action} />;
 }
 
 function EmptyState({ text }: { text: string }) {
-  return (
-    <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-      {text}
-    </Typography>
-  );
+  return <PerformanceEmptyState text={text} />;
 }
 
 function MetricCard({
@@ -207,33 +184,192 @@ function MetricCard({
   icon: string;
   tone?: 'primary' | 'info' | 'warning' | 'success' | 'error';
 }) {
+  return <PerformanceMetricCard label={label} value={value} icon={icon} tone={tone} />;
+}
+
+const setupSteps = [
+  {
+    label: 'Select board and staff group',
+    description: 'Choose CBSE, GSEB, or generic presets for teachers and admin teams.',
+  },
+  {
+    label: 'Add board presets',
+    description: 'Seed SQAAF-aligned Indian school templates without rebuilding them manually.',
+  },
+  {
+    label: 'Create appraisal cycle',
+    description: 'Set the review window and connect the right published template.',
+  },
+  {
+    label: 'Assign staff',
+    description: 'Publish the cycle and assign eligible employees for review.',
+  },
+  {
+    label: 'Check evidence readiness',
+    description: 'Review SQAAF coverage before audits and affiliation checkpoints.',
+  },
+];
+
+function SetupReadinessWorkspace() {
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1, height: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1.25}>
-        <Box
-          sx={{
-            width: 34,
-            height: 34,
-            borderRadius: 1,
-            display: 'grid',
-            placeItems: 'center',
-            bgcolor: `${tone}.lighter`,
-            color: `${tone}.main`,
-            flexShrink: 0,
-          }}
-        >
-          <Iconify icon={icon} width={19} />
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h5" sx={{ lineHeight: 1.1 }}>
-            {value ?? 0}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
-            {label}
-          </Typography>
-        </Box>
-      </Stack>
-    </Paper>
+    <Grid container spacing={2} alignItems="stretch">
+      <Grid size={{ xs: 12, md: 3 }}>
+        <PerformanceWorkflowStepper steps={setupSteps} activeStep={0} />
+      </Grid>
+      <Grid size={{ xs: 12, md: 9 }}>
+        <GuidedSetupTab />
+      </Grid>
+    </Grid>
+  );
+}
+
+const settingsCards = [
+  {
+    title: 'Setup & Readiness',
+    description: 'Prepare board presets, start cycles, assign active staff, and review SQAAF gaps.',
+    icon: 'mdi:shield-check-outline',
+    href: '/hr/professional-management/settings/setup',
+    action: 'Open setup',
+  },
+  {
+    title: 'Board Presets / SQAAF Mapping',
+    description: 'Seed CBSE/GSEB defaults and confirm evidence coverage by SQAAF domain.',
+    icon: 'mdi:school-outline',
+    href: '/hr/professional-management/settings/setup',
+    action: 'Manage presets',
+  },
+  {
+    title: 'Template Defaults',
+    description: 'Use role-based Indian school appraisal templates as the starting point.',
+    icon: 'mdi:clipboard-edit-outline',
+    href: '/hr/professional-management/cycles',
+    action: 'Open templates',
+  },
+  {
+    title: 'Cycle Configuration',
+    description: 'Create, publish, and monitor appraisal cycles for the academic year.',
+    icon: 'mdi:calendar-sync-outline',
+    href: '/hr/professional-management/cycles',
+    action: 'Open cycles',
+  },
+  {
+    title: 'Assignment Rules',
+    description: 'Assign published cycles to active staff through the guided readiness setup.',
+    icon: 'mdi:account-switch-outline',
+    href: '/hr/professional-management/settings/setup',
+    action: 'Assign staff',
+  },
+];
+
+function SettingsWorkspace() {
+  return (
+    <Stack spacing={2}>
+      <SectionPanel
+        title="Performance settings"
+        description="Configuration lives here so the daily review, outcomes, and reporting pages stay focused."
+      >
+        <Grid container spacing={1.5}>
+          {settingsCards.map((item) => (
+            <Grid
+              key={item.title}
+              size={{ xs: 12, sm: 6, lg: item.title === 'Setup & Readiness' ? 4 : 2 }}
+            >
+              <Button
+                fullWidth
+                component="a"
+                href={item.href}
+                variant="outlined"
+                startIcon={<Iconify icon={item.icon} />}
+                sx={{
+                  height: '100%',
+                  minHeight: 132,
+                  alignItems: 'flex-start',
+                  justifyContent: 'flex-start',
+                  p: 1.5,
+                  textAlign: 'left',
+                  whiteSpace: 'normal',
+                }}
+              >
+                <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle2">{item.title}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {item.description}
+                  </Typography>
+                  <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }}>
+                    {item.action}
+                  </Typography>
+                </Stack>
+              </Button>
+            </Grid>
+          ))}
+        </Grid>
+      </SectionPanel>
+    </Stack>
+  );
+}
+
+function ReviewsWorkspace() {
+  const [view, setView] = useState<'my' | 'queue' | 'observations'>('my');
+
+  return (
+    <Stack spacing={2}>
+      <PerformanceSurface>
+        <PerformanceSectionHeader
+          title="Review workspace"
+          description="Keep daily review work focused: self appraisal, reviewer queue, or classroom observations."
+          action={
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={view}
+              onChange={(_, nextView) => nextView && setView(nextView)}
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 1.5,
+                  whiteSpace: 'nowrap',
+                },
+              }}
+            >
+              <ToggleButton value="my">My Reviews</ToggleButton>
+              <ToggleButton value="queue">Reviewer Queue</ToggleButton>
+              <ToggleButton value="observations">Observations</ToggleButton>
+            </ToggleButtonGroup>
+          }
+        />
+        {view === 'my' && <MyReviewTab />}
+        {view === 'queue' && <ReviewsTab />}
+        {view === 'observations' && <ObservationsTab />}
+      </PerformanceSurface>
+    </Stack>
+  );
+}
+
+function CyclesTemplatesWorkspace() {
+  return (
+    <Grid container spacing={2} alignItems="stretch">
+      <Grid size={{ xs: 12, xl: 6 }}>
+        <CyclesTab />
+      </Grid>
+      <Grid size={{ xs: 12, xl: 6 }}>
+        <TemplatesTab />
+      </Grid>
+    </Grid>
+  );
+}
+
+function OutcomesWorkspace() {
+  return (
+    <Grid container spacing={2} alignItems="stretch">
+      <Grid size={{ xs: 12, xl: 6 }}>
+        <CalibrationTab />
+      </Grid>
+      <Grid size={{ xs: 12, xl: 6 }}>
+        <OutcomesTab />
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <DevelopmentPlansTab />
+      </Grid>
+    </Grid>
   );
 }
 
@@ -346,11 +482,17 @@ function GuidedSetupTab() {
   return (
     <Stack spacing={2}>
       {(defaultsLoading || templatesLoading || cyclesLoading) && <LinearProgress />}
-      <TabHeader title="Indian school appraisal setup" />
+      <TabHeader
+        title="Setup & readiness"
+        description="Prepare CBSE/GSEB appraisal presets, start cycles, and track SQAAF evidence readiness from one workspace."
+      />
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 4 }}>
-          <SectionPanel title="1. Choose school board">
+          <SectionPanel
+            title="1. Choose board"
+            description="Load appraisal presets that match the school's board and staff group."
+          >
             <Stack spacing={1.5}>
               <TextField
                 select
@@ -391,7 +533,10 @@ function GuidedSetupTab() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-          <SectionPanel title="2. Start appraisal cycle">
+          <SectionPanel
+            title="2. Start cycle"
+            description="Create, publish, and assign the selected appraisal template to active staff."
+          >
             <Stack spacing={1.5}>
               <TextField
                 size="small"
@@ -425,7 +570,10 @@ function GuidedSetupTab() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-          <SectionPanel title="3. Readiness snapshot">
+          <SectionPanel
+            title="3. Readiness snapshot"
+            description="A quick view of setup progress for the selected board and staff group."
+          >
             <Stack spacing={1.25}>
               <MetricCard
                 label="Matching Templates"
@@ -450,7 +598,10 @@ function GuidedSetupTab() {
         </Grid>
       </Grid>
 
-      <SectionPanel title="SQAAF evidence coverage">
+      <SectionPanel
+        title="SQAAF evidence coverage"
+        description="Evidence gaps are grouped by SQAAF domain so administrators can prepare audit-ready records."
+      >
         <CustomizableTable
           tableId="performance-sqaaf-evidence-setup"
           columns={[
@@ -484,11 +635,45 @@ function GuidedSetupTab() {
   );
 }
 
-function DashboardTab() {
+function OverviewWorkspace() {
   const { data, isLoading, isError } = useGetPerformanceDashboardQuery();
   const { data: pending } = useGetPerformanceReviewsQuery({ status: 2 });
   const { data: pendingActions } = useGetPerformancePendingActionsQuery({});
+  const { data: sqaaEvidence } = useGetPerformanceSqaaEvidenceQuery({});
+  const { data: templateData } = useGetPerformanceTemplatesQuery({});
   const rows = pending?.items || [];
+  const templates: PerformanceTemplate[] = templateData?.items || [];
+  const publishedTemplates = templates.filter((template) => Number(template.status) === 1).length;
+  const missingEvidence = (sqaaEvidence || []).reduce(
+    (total: number, item: any) => total + Number(item.missingEvidence || 0),
+    0
+  );
+  const actionItems = [
+    {
+      title: 'Review settings readiness',
+      description: 'Seed presets, assign staff, and check SQAAF coverage.',
+      path: '/hr/professional-management/settings/setup',
+      icon: 'mdi:cog-outline',
+    },
+    {
+      title: 'Work review queues',
+      description: 'Open self reviews, reviewer tasks, and observations.',
+      path: '/hr/professional-management/reviews',
+      icon: 'mdi:account-check-outline',
+    },
+    {
+      title: 'Manage cycles and templates',
+      description: 'Update appraisal templates and publish review cycles.',
+      path: '/hr/professional-management/cycles',
+      icon: 'mdi:calendar-sync-outline',
+    },
+    {
+      title: 'Open compliance reports',
+      description: 'Check SQAAF evidence, pending actions, and exports.',
+      path: '/hr/professional-management/reports',
+      icon: 'mdi:chart-box-outline',
+    },
+  ];
 
   return (
     <Stack spacing={2}>
@@ -534,10 +719,45 @@ function DashboardTab() {
       </Grid>
 
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 7 }}>
+        <Grid size={{ xs: 12, lg: 7 }}>
+          <SectionPanel
+            title="Next best actions"
+            description="Start from the most common school-admin workflows without hunting through tabs."
+          >
+            <Grid container spacing={1.5}>
+              {actionItems.map((item) => (
+                <Grid key={item.path} size={{ xs: 12, sm: 6 }}>
+                  <Button
+                    fullWidth
+                    component="a"
+                    href={item.path}
+                    variant="outlined"
+                    startIcon={<Iconify icon={item.icon} />}
+                    sx={{
+                      minHeight: 72,
+                      justifyContent: 'flex-start',
+                      alignItems: 'flex-start',
+                      p: 1.5,
+                      textAlign: 'left',
+                      whiteSpace: 'normal',
+                    }}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="subtitle2">{item.title}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {item.description}
+                      </Typography>
+                    </Box>
+                  </Button>
+                </Grid>
+              ))}
+            </Grid>
+          </SectionPanel>
+        </Grid>
+        <Grid size={{ xs: 12, lg: 5 }}>
           <SectionPanel title="Pending Actions">
             <Stack spacing={1}>
-              {(pendingActions || []).slice(0, 7).map((item: any) => (
+              {(pendingActions || []).slice(0, 5).map((item: any) => (
                 <Stack
                   key={`${item.reviewId}-${item.action}`}
                   direction={{ xs: 'column', sm: 'row' }}
@@ -556,7 +776,61 @@ function DashboardTab() {
             </Stack>
           </SectionPanel>
         </Grid>
-        <Grid size={{ xs: 12, md: 5 }}>
+      </Grid>
+
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <SectionPanel
+            title="Readiness summary"
+            description="Configuration health stays visible here, while setup actions live under Settings."
+            action={
+              <Button
+                size="small"
+                component="a"
+                href="/hr/professional-management/settings/setup"
+                startIcon={<Iconify icon="mdi:cog-outline" />}
+              >
+                Settings
+              </Button>
+            }
+          >
+            <Grid container spacing={1.5}>
+              <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                <MetricCard
+                  label="Published Templates"
+                  value={publishedTemplates}
+                  icon="mdi:clipboard-check-outline"
+                  tone="info"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                <MetricCard
+                  label="Active Cycles"
+                  value={data?.activeCycles}
+                  icon="mdi:calendar-star"
+                  tone="success"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                <MetricCard
+                  label="Assigned Reviews"
+                  value={rows.length}
+                  icon="mdi:account-switch-outline"
+                  tone="warning"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                <MetricCard
+                  label="SQAAF Evidence Gaps"
+                  value={missingEvidence}
+                  icon="mdi:file-alert-outline"
+                  tone={missingEvidence > 0 ? 'warning' : 'success'}
+                />
+              </Grid>
+            </Grid>
+          </SectionPanel>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Grid container spacing={1.5}>
             <Grid size={{ xs: 12, sm: 6, md: 12 }}>
               <MetricCard
@@ -576,11 +850,12 @@ function DashboardTab() {
             </Grid>
           </Grid>
         </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <SectionPanel title="Live Review Queue">
+            <ReviewTable rows={rows.slice(0, 5)} />
+          </SectionPanel>
+        </Grid>
       </Grid>
-
-      <SectionPanel title="Live Review Queue">
-        <ReviewTable rows={rows} />
-      </SectionPanel>
     </Stack>
   );
 }
@@ -1613,7 +1888,7 @@ function CycleDialog({
 
   return (
     <CustomDialog open={open} handleClose={onClose} title="New performance cycle">
-      <Stack spacing={2} sx={{ p: 2, bgcolor: 'background.neutral' }}>
+      <Stack spacing={2} sx={{ p: 2, bgcolor: 'background.default' }}>
         <TextField
           label="Cycle Name"
           value={name}
@@ -1722,7 +1997,7 @@ function ReviewWorkspace({
       handleClose={onClose}
       title="Performance review workspace"
     >
-      <Stack spacing={2} sx={{ p: 2, bgcolor: 'background.neutral', minWidth: { md: 720 } }}>
+      <Stack spacing={2} sx={{ p: 2, bgcolor: 'background.default', minWidth: { md: 720 } }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1.5}>
           <Box>
             <Typography variant="h6">{review?.employeeName}</Typography>
@@ -1746,7 +2021,16 @@ function ReviewWorkspace({
           ))}
         </TextField>
 
-        <Paper variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2,
+            borderRadius: 1,
+            bgcolor: 'background.paper',
+            borderColor: (theme) =>
+              theme.palette.mode === 'dark' ? 'rgba(145, 158, 171, 0.24)' : 'divider',
+          }}
+        >
           <Typography variant="subtitle2" sx={{ mb: 1 }}>
             Criteria Ratings
           </Typography>
@@ -1823,7 +2107,6 @@ function ReviewWorkspace({
               await addObservation({
                 id: reviewId,
                 body: {
-                  observerEmployeeId: review?.employeeId,
                   observationDate: new Date().toISOString(),
                   className: 'Class Observation',
                   subjectName: 'Subject',

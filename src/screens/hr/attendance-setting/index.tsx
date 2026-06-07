@@ -13,7 +13,6 @@ import { Tab, Box, Paper, Stack, Button, Typography } from '@mui/material';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import LeaveType from './leave-type';
-import LeavePolicy from './leave-policy';
 import ShiftManagement from './shift-management';
 
 const TABS = [
@@ -48,12 +47,6 @@ const TABS = [
     component: (props: any) => <LeaveType {...props} />,
   },
   {
-    value: 'leavePolicy',
-    label: 'Leave Policy',
-    icon: <Iconify icon="iconoir:privacy-policy" width={20} />,
-    component: (props: any) => <LeavePolicy {...props} />,
-  },
-  {
     value: 'deviceIntegration',
     label: 'Device Integration',
     icon: <Iconify icon="mdi:fingerprint" width={20} />,
@@ -69,7 +62,6 @@ const TABS = [
 
 const HrAttendanceSettingScreen = () => {
   const attendanceRuleDialog = useBoolean(false);
-  const leavePolicyDialog = useBoolean(false);
   const shiftManagementDialog = useBoolean(false);
   const leaveTypeDialog = useBoolean(false);
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'shiftManagement' });
@@ -89,17 +81,6 @@ const HrAttendanceSettingScreen = () => {
           size="small"
         >
           Attendance Rule
-        </Button>
-      ),
-      leavePolicy: (
-        <Button
-          sx={{ width: '160px' }}
-          startIcon={<Add />}
-          onClick={leavePolicyDialog.onTrue}
-          variant="contained"
-          size="small"
-        >
-          Leave Policy
         </Button>
       ),
       shiftManagement: (
@@ -149,12 +130,7 @@ const HrAttendanceSettingScreen = () => {
         </Button>
       ),
     }),
-    [
-      attendanceRuleDialog.onTrue,
-      leavePolicyDialog.onTrue,
-      leaveTypeDialog.onTrue,
-      shiftManagementDialog.onTrue,
-    ]
+    [attendanceRuleDialog.onTrue, leaveTypeDialog.onTrue, shiftManagementDialog.onTrue]
   );
 
   const currentActiveComponent = useMemo(
@@ -221,7 +197,6 @@ const HrAttendanceSettingScreen = () => {
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               attendanceRuleDialog={attendanceRuleDialog}
-              leavePolicyDialog={leavePolicyDialog}
               shiftManagementDialog={shiftManagementDialog}
               leaveTypeDialog={leaveTypeDialog}
               // searchParams={searchParams}

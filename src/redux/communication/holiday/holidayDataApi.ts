@@ -4,9 +4,10 @@ import { communicationType, calendarModuleType } from 'src/redux/tagTypes';
 export const holidayApi = calendarModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getHolidays: builder.query({
-      query: () => ({
+      query: (params) => ({
         url: '/calendar/holidays',
         method: 'GET',
+        params,
       }),
       providesTags: [communicationType.holiday],
     }),

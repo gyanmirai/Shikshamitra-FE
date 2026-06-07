@@ -82,7 +82,9 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
   const actions = useCallback(
     ({ popover }: any, row: any) => {
       const normalizedStatus = normalizeLeaveStatus(row?.status);
-      const canAct = normalizedStatus === 'PENDING' || normalizedStatus === 'REVIEWED';
+      const isOwnLeave = String(row?.employeeId ?? '') === String(employee?.id ?? '');
+      const canAct =
+        !isOwnLeave && (normalizedStatus === 'PENDING' || normalizedStatus === 'REVIEWED');
 
       return (
         <MenuList>
@@ -125,32 +127,31 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
         </MenuList>
       );
     },
-    [viewDialog, approveOrRejectConfirmation]
+    [employee?.id, viewDialog, approveOrRejectConfirmation]
   );
 
   const tableData = useMemo(() => {
     const apiData =
-      data?.items
-        ?.filter((item: any) => String(item.employeeId ?? '') !== String(employee?.id ?? ''))
-        ?.map((item: any) => ({
-          id: item.id,
-          name: item.name || item.employeeName,
-          employeeIdentifier: item.employeeIdentifier || item.employeeCode,
-          leaveType: item.leaveType,
-          startDate: formatLeaveCalendarDateForDisplay(item.startDate),
-          endDate: formatLeaveCalendarDateForDisplay(item.endDate),
-          totalDays: item.totalDays,
-          organization:
-            item.mediumStageName ||
-            organizationById.get(String(item?.mediumStageId ?? ''))?.name ||
-            '-',
-          description: item.description,
-          remarks: item.remarks,
-          status: getLeaveStatusFilterValue(item.status),
-        })) || [];
+      data?.items?.map((item: any) => ({
+        id: item.id,
+        employeeId: item.employeeId,
+        name: item.name || item.employeeName,
+        employeeIdentifier: item.employeeIdentifier || item.employeeCode,
+        leaveType: item.leaveType,
+        startDate: formatLeaveCalendarDateForDisplay(item.startDate),
+        endDate: formatLeaveCalendarDateForDisplay(item.endDate),
+        totalDays: item.totalDays,
+        organization:
+          item.mediumStageName ||
+          organizationById.get(String(item?.mediumStageId ?? ''))?.name ||
+          '-',
+        description: item.description,
+        remarks: item.remarks,
+        status: getLeaveStatusFilterValue(item.status),
+      })) || [];
 
     return apiData;
-  }, [data, employee?.id, organizationById]);
+  }, [data, organizationById]);
 
   const columns: IColumn[] = useMemo(
     () => [

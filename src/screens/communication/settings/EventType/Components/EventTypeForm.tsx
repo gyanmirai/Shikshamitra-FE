@@ -37,31 +37,27 @@ const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) =
     initialValues: getEventTypeInitialValues(editData),
     validationSchema: eventTypeValidationSchema,
     onSubmit: async (values) => {
+      const payload = {
+        name: values.name.trim(),
+        color: values.color,
+        description: values.description?.trim() || '',
+      };
+
       try {
         if (editData) {
-          // Update existing event type
           await updateEventType({
             eventTypeId: editData?.id,
-            body: {
-              name: values.name,
-              color: values.color,
-              description: values.description,
-            },
+            body: payload,
           }).unwrap();
 
           shikshaMitraToast.success({
-            message: `Event type: ${values.name} has been successfully updated`,
+            message: `Event type: ${payload.name} has been successfully updated`,
           });
         } else {
-          // Create new event type
-          await addEventType({
-            name: values.name,
-            color: values.color,
-            description: values.description,
-          }).unwrap();
+          await addEventType(payload).unwrap();
 
           shikshaMitraToast.success({
-            message: `Event type: ${values.name} has been successfully created`,
+            message: `Event type: ${payload.name} has been successfully created`,
           });
         }
         onClose(null, true);

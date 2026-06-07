@@ -194,7 +194,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
             />
           </DrawerField>
           <DrawerField
-            label="Effective To"
+            label="Effective To (optional)"
             help="Optional end date. Leave blank when this calendar should remain available until replaced."
           >
             <DatePicker
@@ -206,7 +206,14 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
                 }))
               }
               format="DD/MM/YYYY"
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  placeholder: 'No end date',
+                  helperText: 'Leave blank for no end date.',
+                },
+              }}
             />
           </DrawerField>
         </DrawerFormGrid>
