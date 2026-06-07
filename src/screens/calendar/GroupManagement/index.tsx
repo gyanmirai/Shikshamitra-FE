@@ -36,7 +36,7 @@ const GroupManagement = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetGroupsQuery,
-    params: { AcademicYearId: currentYear?.id, IncludeDetails: true },
+    params: { academicYearId: currentYear?.id, includeDetails: true },
   });
 
   const [deleteGroup, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -181,7 +181,7 @@ const GroupManagement = () => {
                   dispatchFn(
                     groupManagementApi.util.updateQueryData(
                       'getGroups',
-                      { AcademicYearId: currentYear?.id, IncludeDetails: true },
+                      { academicYearId: currentYear?.id, includeDetails: true },
                       (draft: any) => {
                         const index = draft?.items?.findIndex(
                           (item: any) => item.id === selectedGroup?.id

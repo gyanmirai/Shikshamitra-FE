@@ -47,12 +47,18 @@ export interface IEventAnnouncement {
   createdOn: string | null; // fixed typo
   status: number;
   type: string;
-  attachment: File | null;
+  attachment:
+    | File
+    | { name: string; url?: string; base64?: string; size?: number; type?: string }
+    | null;
+  poster?: string | null;
   link: string;
   active?: number;
   eventMode: string; // was 'offline' | 'online'
+  mode?: number | string;
   onlineLink?: string;
   venue?: string;
+  eventType?: { id?: string; name?: string };
   recurrenceSummary: string;
 
   // recurrence

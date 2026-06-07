@@ -10,6 +10,7 @@ export type HrReportFilter = {
   genderType?: number;
   month?: string;
   componentNames?: string[];
+  dateField?: string;
   fromDate?: string;
   toDate?: string;
   conditions?: HrReportFilterCondition[];

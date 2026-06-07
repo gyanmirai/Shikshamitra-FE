@@ -22,6 +22,7 @@ import {
   shouldEnforceLeaveNoticePeriod,
   buildCreateLeaveRequestFormData,
   buildLeaveAttachmentDownloadPath,
+  resolveLeavePolicyIdForLeaveType,
   formatLeaveCalendarDateForPayload,
   formatLeaveCalendarDateForDisplay,
   isEmployeeSelectionValidForCreate,
@@ -168,6 +169,31 @@ describe('leave notice period helpers', () => {
     expect(
       resolveLeaveTypeMasterIdFromPolicy({ id: 'policy-3', leaveTypeMasterId: 'type-3' })
     ).toBe('type-3');
+  });
+
+  it('resolves exactly one active policy from a selected leave type', () => {
+    expect(
+      resolveLeavePolicyIdForLeaveType(
+        [
+          { id: 'policy-1', leaveType: { id: 'type-1' } },
+          { id: 'policy-2', leaveType: { id: 'type-2' } },
+        ],
+        'type-2'
+      )
+    ).toEqual({ status: 'resolved', policyId: 'policy-2' });
+  });
+
+  it('blocks create when leave type policy configuration is missing or ambiguous', () => {
+    expect(resolveLeavePolicyIdForLeaveType([], 'type-1').status).toBe('missing');
+    expect(
+      resolveLeavePolicyIdForLeaveType(
+        [
+          { id: 'policy-1', leaveType: { id: 'type-1' } },
+          { id: 'policy-2', leaveTypeMasterId: 'type-1' },
+        ],
+        'type-1'
+      ).status
+    ).toBe('ambiguous');
   });
 
   it('enforces notice only for self-created leave requests', () => {
@@ -337,23 +363,35 @@ describe('problem details parsing', () => {
 
 describe('leave center tab visibility', () => {
   it('shows approvals alongside personal tabs for reviewers', () => {
-    expect(getLeaveCenterVisibleTabs('hr', true)).toEqual(['my-requests', 'approvals', 'balance']);
+    expect(getLeaveCenterVisibleTabs('hr', true)).toEqual(['balance', 'my-requests', 'approvals']);
     expect(getLeaveCenterVisibleTabs('self', true)).toEqual([
+      'balance',
       'my-requests',
       'approvals',
-      'balance',
     ]);
     expect(
-      resolveLeaveCenterTab('approvals', ['my-requests', 'approvals', 'balance'], 'my-requests')
+      resolveLeaveCenterTab('approvals', ['balance', 'my-requests', 'approvals'], 'balance')
     ).toBe('approvals');
   });
 
   it('keeps personal leave tabs for users who cannot review leaves', () => {
-    expect(getLeaveCenterVisibleTabs('self', false)).toEqual(['my-requests', 'balance']);
-    expect(getLeaveCenterVisibleTabs('hr', false)).toEqual(['my-requests', 'balance']);
-    expect(resolveLeaveCenterTab('balance', ['my-requests', 'balance'], 'my-requests')).toBe(
+    expect(getLeaveCenterVisibleTabs('self', false)).toEqual(['balance', 'my-requests']);
+    expect(getLeaveCenterVisibleTabs('hr', false)).toEqual(['balance', 'my-requests']);
+    expect(resolveLeaveCenterTab('balance', ['balance', 'my-requests'], 'balance')).toBe('balance');
+  });
+
+  it('uses balance as the fallback tab when the requested tab is not visible', () => {
+    expect(resolveLeaveCenterTab('approvals', ['balance', 'my-requests'], 'balance')).toBe(
       'balance'
     );
+  });
+
+  it('keeps explicit request and approval tab selections when visible', () => {
+    const reviewerTabs = ['balance', 'my-requests', 'approvals'] as const;
+
+    expect(resolveLeaveCenterTab('my-requests', [...reviewerTabs], 'balance')).toBe('my-requests');
+    expect(resolveLeaveCenterTab('approvals', [...reviewerTabs], 'balance')).toBe('approvals');
+    expect(resolveLeaveCenterTab('balance', [...reviewerTabs], 'balance')).toBe('balance');
   });
 });
 

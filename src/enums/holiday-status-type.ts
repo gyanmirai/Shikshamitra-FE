@@ -1,8 +1,8 @@
 // ---------------- Holiday Status Enum ----------------
 export enum HolidayStatus {
-  Ongoing,
-  Upcoming,
-  Completed,
+  Upcoming = 0,
+  Ongoing = 1,
+  Completed = 2,
 }
 
 // ---------------- Holiday Status Colors ----------------

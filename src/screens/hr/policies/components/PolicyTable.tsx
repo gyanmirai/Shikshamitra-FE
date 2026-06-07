@@ -258,10 +258,10 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
                       icon={
                         item.status === 'archived'
                           ? 'mdi:archive-arrow-up-outline'
-                          : 'mdi:trash-can-outline'
+                          : 'mdi:archive-outline'
                       }
                     />
-                    {item.status === 'archived' ? 'Restore' : 'Remove'}
+                    {item.status === 'archived' ? 'Restore' : 'Archive'}
                   </MenuItem>
                 )}
               </MenuList>

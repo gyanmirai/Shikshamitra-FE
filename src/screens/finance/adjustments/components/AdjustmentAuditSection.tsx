@@ -19,7 +19,7 @@ function mapLocalTrail(items: AdjustmentAuditTrail[]) {
     action: 'ADJUSTMENT',
     description: item.message,
     performedBy: item.actor,
-    createdAt: item.timestamp,
+    createdAt: item.createdAt,
   }));
 }
 

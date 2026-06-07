@@ -40,9 +40,10 @@ export const groupManagementApi = calendarModuleApi.injectEndpoints({
       invalidatesTags: [calendarModuleType.groups],
     }),
     updateGroup: builder.mutation({
-      query: ({ groupId, body }) => ({
+      query: ({ groupId, academicYearId, body }) => ({
         url: `/groups/${groupId}`,
         method: 'PUT',
+        params: academicYearId ? { academicYearId } : undefined,
         body,
       }),
       invalidatesTags: [calendarModuleType.groups, calendarModuleType.groupDetails],

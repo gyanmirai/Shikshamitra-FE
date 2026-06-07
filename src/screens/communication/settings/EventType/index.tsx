@@ -22,14 +22,12 @@ import {
   useGetEventTypeOptionsQuery,
 } from 'src/redux/calendar/events/eventTypeApi';
 
-// Replace with actual API hook when available
 import EventTypeForm from './Components/EventTypeForm';
 import EventTypeTable from './Components/EventTypeTable';
 
 import type { IEventType } from './type';
 
 const EventTypeCreation = () => {
-  // Custom hook to fetch event type data
   const {
     data: eventTypeData,
     refetch: refetchEventTypeData,
@@ -40,17 +38,14 @@ const EventTypeCreation = () => {
     currentQueryAndMutation: useGetEventTypeOptionsQuery,
   });
 
-  // Dialog control states
   const deleteEventTypeDialog = useBoolean();
   const addEventTypeDialog = useBoolean();
   const [, setOpen] = useState(false);
 
-  // State management
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedEventType, setSelectedEventType] = useState<IEventType | null>(null);
   const dispatch = useDispatch();
 
-  // Delete mutation and undo hook
   const [deleteEventType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteEventTypeMutation,
@@ -58,7 +53,6 @@ const EventTypeCreation = () => {
 
   const { confirmWithUndo } = useConfirmWithUndo();
 
-  // Close handler
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
       setTimeout(() => {
@@ -82,11 +76,11 @@ const EventTypeCreation = () => {
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Event Type"
-        description="Manage event types such as Workshop, Seminar, Sports Event, etc. Use actions to edit or delete existing types. Click ‘Add Event Type’ to create a new one."
+        description="Manage event types such as workshop, seminar, sports event, and cultural event. Use actions to edit or delete existing types."
         links={[
           { name: 'Calendar', href: '/calendar/dashboard' },
-          { name: 'Settings', href: '/communication/setting' },
-          { name: 'Event Type', href: '/communication/event-type' },
+          { name: 'Settings', href: '/calendar/setting/eventType' },
+          { name: 'Event Type' },
         ]}
         action={
           <Button
@@ -192,7 +186,8 @@ const EventTypeCreation = () => {
                     )
                   ),
                 onUndoRestore: () => refetchEventTypeData(),
-                onCommit: () => deleteEventType((selectedEventType as any)?.id || ''),
+                onCommit: () =>
+                  selectedEventType?.id ? deleteEventType(selectedEventType.id) : Promise.resolve(),
               });
               deleteEventTypeDialog.onFalse();
               setSelectedEventType(null);

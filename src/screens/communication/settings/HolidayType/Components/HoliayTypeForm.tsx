@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -22,12 +23,12 @@ import { getHolidayTypeInitialValues } from './HolidayTypeInitialValues';
 import type { IHolidayFormProps } from '../type';
 
 const HolidayTypeForm: React.FC<IHolidayFormProps> = ({ open, onClose, editData }) => {
-  const [addHolidayType] = useQueryAndMutation({
+  const [addHolidayType, { isLoading: addHolidayTypeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddHolidayTypeMutation,
   });
 
-  const [updateHolidayType] = useQueryAndMutation({
+  const [updateHolidayType, { isLoading: updateHolidayTypeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHolidayTypeMutation,
   });
@@ -36,36 +37,31 @@ const HolidayTypeForm: React.FC<IHolidayFormProps> = ({ open, onClose, editData 
     initialValues: getHolidayTypeInitialValues(editData),
     validationSchema: holidayTypeValidationSchema,
     onSubmit: async (values) => {
+      const payload = {
+        name: values.holidayType.trim(),
+        color: values.color,
+        description: values.description?.trim() || '',
+      };
+
       try {
         if (editData) {
-          // Update existing holiday type
           await updateHolidayType({
             holidayTypeId: editData.id || '',
-            data: {
-              name: values.holidayType,
-              color: values.color,
-              description: values.description,
-            },
+            data: payload,
           }).unwrap();
 
           shikshaMitraToast.success({
-            message: `Holiday type: ${values.holidayType} has been successfully updated`,
+            message: `Holiday type: ${payload.name} has been successfully updated`,
           });
         } else {
-          // Create new holiday type
-          await addHolidayType({
-            name: values.holidayType,
-            color: values.color,
-            description: values.description,
-          }).unwrap();
+          await addHolidayType(payload).unwrap();
 
           shikshaMitraToast.success({
-            message: `Holiday type: ${values.holidayType} has been successfully created`,
+            message: `Holiday type: ${payload.name} has been successfully created`,
           });
         }
         onClose(null, true);
       } catch (error: any) {
-        console.error(error);
         shikshaMitraToast.error({
           message:
             error?.data?.message || `Failed to ${editData ? 'update' : 'create'} holiday type`,
@@ -144,7 +140,8 @@ const HolidayTypeForm: React.FC<IHolidayFormProps> = ({ open, onClose, editData 
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
+          loading={addHolidayTypeLoading || updateHolidayTypeLoading}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -156,10 +153,9 @@ const HolidayTypeForm: React.FC<IHolidayFormProps> = ({ open, onClose, editData 
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
-          disabled={formik.isSubmitting}
         >
           {formik.isSubmitting ? 'Submitting...' : editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

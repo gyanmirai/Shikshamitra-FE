@@ -9,7 +9,7 @@ import type {
   AssignmentFilters,
   AttendanceAdvancedKey,
 } from './types/hr-policy-workspace.types';
-
+// Tab configuration
 // ─── Tab Configuration ────────────────────────────────────────────────────────
 
 export const HR_POLICY_TABS: Array<{
@@ -22,6 +22,7 @@ export const HR_POLICY_TABS: Array<{
   { value: 'payroll', label: 'Payroll Policies', icon: 'mdi:cash-sync' },
   { value: 'attendance', label: 'Attendance Policies', icon: 'mdi:account-clock-outline' },
   { value: 'assignments', label: 'Policy Assignments', icon: 'mdi:account-switch-outline' },
+  { value: 'leave', label: 'Leave Policies', icon: 'mdi:calendar-text-outline' },
   {
     value: 'holiday',
     label: 'Holiday Impact',
@@ -30,7 +31,7 @@ export const HR_POLICY_TABS: Array<{
   },
   { value: 'effective', label: 'Policy Impact', icon: 'mdi:source-branch-check' },
 ];
-
+// Weekday and weekly-rule options
 // ─── Weekday / Weekly-Rule Options ───────────────────────────────────────────
 
 export const WEEKDAY_OPTIONS = [
@@ -49,7 +50,7 @@ export const WEEKLY_RULE_OPTIONS = [
   { value: 'no_weekly_off', label: 'No Weekly Off' },
   { value: 'custom', label: 'Custom' },
 ];
-
+// Payroll options
 // ─── Payroll Options ──────────────────────────────────────────────────────────
 
 export const PAYROLL_DAY_CALCULATION_OPTIONS = [
@@ -75,7 +76,7 @@ export const PAYROLL_SATURDAY_POLICY_OPTIONS = [
   { value: 'half-day', label: 'Half', description: 'Each working Saturday counts as 0.5 day.' },
   { value: 'off', label: 'Off', description: 'Saturdays do not add working units.' },
 ];
-
+// Attendance advanced keys
 // ─── Attendance Advanced Keys ─────────────────────────────────────────────────
 
 export const ATTENDANCE_ADVANCED_KEYS: AttendanceAdvancedKey[] = [
@@ -93,17 +94,14 @@ export const ATTENDANCE_ADVANCED_KEYS: AttendanceAdvancedKey[] = [
   'sandwichRuleEnabled',
   'payrollPreviewEnabled',
 ];
-
+// Default form factories
 // ─── Default Form Factories ───────────────────────────────────────────────────
 
-export const defaultCalendarForm = (
-  start?: string | null,
-  end?: string | null
-): WorkCalendarForm => ({
+export const defaultCalendarForm = (start?: string | null): WorkCalendarForm => ({
   name: '',
   status: 'active',
   effectiveFrom: start ? dayjs(start).format('YYYY-MM-DD') : '',
-  effectiveTo: end ? dayjs(end).format('YYYY-MM-DD') : '',
+  effectiveTo: '',
   weeklyOffPattern: 'saturday_sunday',
   customWeeklyOffs: [],
   holidaySyncMode: 'snapshot',

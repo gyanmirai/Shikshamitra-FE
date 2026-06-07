@@ -1,26 +1,44 @@
-import React, { useMemo } from 'react';
+import { Label } from 'src/components/label';
+import React, { useMemo, useEffect } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
+import { sanitizeHtml } from 'src/utils/sanitize-html';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEventByIdQuery } from 'src/redux/calendar/events/eventApi';
-import {
-  Box,
-  Chip,
-  Grid,
-  Link,
-  Dialog,
-  IconButton,
-  Typography,
-  DialogContent,
-} from '@mui/material';
 import {
   Close,
   Group,
   AccessTime,
+  LocationOn,
   InfoTwoTone,
   CalendarToday,
   Link as LinkIcon,
 } from '@mui/icons-material';
+import {
+  Box,
+  Grid,
+  Link,
+  Stack,
+  Dialog,
+  Divider,
+  Typography,
+  IconButton,
+  DialogTitle,
+  DialogContent,
+} from '@mui/material';
 
 import type { IEventAnnouncement } from '../../type';
+
+type EventDetails = Partial<IEventAnnouncement> & {
+  mode?: number | string;
+  poster?: string | null;
+  eventType?: {
+    name?: string;
+    typeName?: string;
+    color?: string;
+  } | null;
+  audienceIds?: string[];
+  recurrenceJson?: string | null;
+};
 
 const EventDetailsComponent = ({
   open,
@@ -31,23 +49,31 @@ const EventDetailsComponent = ({
   open: boolean;
   onClose: () => void;
 }) => {
-  // Safely create an object URL for the attachment (if any)
-  const attachmentUrl = useMemo(() => {
-    if (event?.attachment) {
-      try {
-        return URL.createObjectURL(event.attachment);
-      } catch (_) {
-        return null;
-      }
-    }
-    return null;
-  }, [event]);
-
-  const { data: eventData } = useQueryAndMutation({
+  const { data } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEventByIdQuery,
     params: { id: event?.id || '' },
+    options: { skip: !event?.id },
   });
+
+  const eventData = useMemo(() => (data || event || {}) as EventDetails, [data, event]);
+  const title = eventData.title || 'Event details';
+  const eventType = eventData.eventType?.name || eventData.typeName || eventData.type || 'General';
+  const mode = getEventMode(eventData);
+  const isOnline = mode === 'Online';
+  const startDate = eventData.meetingDate || eventData.startDate;
+  const endDate = eventData.endDate || eventData.meetingDate || eventData.startDate;
+  const audienceCount = eventData.audienceIds?.length ?? eventData.audience?.length ?? 0;
+  const meetingTarget = isOnline ? eventData.onlineLink || eventData.link : eventData.venue;
+  const attachment = useMemo(() => resolveAttachment(eventData), [eventData]);
+
+  useEffect(() => {
+    if (!attachment.objectUrl) {
+      return undefined;
+    }
+
+    return () => URL.revokeObjectURL(attachment.objectUrl!);
+  }, [attachment.objectUrl]);
 
   return (
     <Dialog
@@ -55,199 +81,127 @@ const EventDetailsComponent = ({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{
-        sx: { borderRadius: 3, overflow: 'hidden' },
-      }}
+      PaperProps={{ sx: { borderRadius: 2, overflow: 'hidden' } }}
     >
-      {/* Redesigned Header (gradient instead of image) */}
-      <Box
-        sx={{
-          position: 'relative',
-          background: 'linear-gradient(135deg, #065f46 0%, #0d9b6b 45%, #10b981 70%, #34d399 100%)',
-          color: 'white',
-          px: { xs: 2.5, md: 4 },
-          pt: { xs: 3, md: 4 },
-          pb: { xs: 4, md: 5 },
-        }}
-      >
-        {/* Decorative blurred circles */}
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            '&:before': {
-              content: '""',
-              position: 'absolute',
-              top: -30,
-              right: -20,
-              width: 120,
-              height: 120,
-              background:
-                'radial-gradient(circle at center, rgba(255,255,255,0.25), transparent 70%)',
-              filter: 'blur(6px)',
-            },
-            '&:after': {
-              content: '""',
-              position: 'absolute',
-              bottom: -40,
-              left: -30,
-              width: 160,
-              height: 160,
-              background:
-                'radial-gradient(circle at center, rgba(255,255,255,0.18), transparent 70%)',
-              filter: 'blur(8px)',
-            },
-          }}
-        />
-
-        <IconButton
-          onClick={onClose}
-          sx={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            color: 'white',
-            backgroundColor: 'rgba(255,255,255,0.15)',
-            backdropFilter: 'blur(4px)',
-            '&:hover': { backgroundColor: 'rgba(255,255,255,0.28)' },
-            transition: 'background-color .2s',
-          }}
-          aria-label="Close dialog"
+      <DialogTitle sx={{ p: 0 }}>
+        <Stack
+          direction="row"
+          alignItems="flex-start"
+          justifyContent="space-between"
+          gap={2}
+          sx={{ px: 3, py: 2.5 }}
         >
-          <Close />
-        </IconButton>
+          <Stack gap={1} minWidth={0}>
+            <Stack direction="row" gap={1} flexWrap="wrap">
+              <Label color="primary">{eventType}</Label>
+              <Label color={isOnline ? 'info' : 'default'}>{mode}</Label>
+              <Label color={getStatusColor(eventData.status)}>
+                {getStatusLabel(eventData.status)}
+              </Label>
+            </Stack>
+            <Typography variant="h6" sx={{ wordBreak: 'break-word' }}>
+              {title}
+            </Typography>
+          </Stack>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: { md: '68%' } }}>
-          <Chip
-            label={`${eventData?.type}`}
-            color="success"
-            variant="outlined"
-            sx={{
-              alignSelf: 'flex-start',
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              color: 'white',
-              borderColor: 'rgba(255,255,255,0.35)',
-              fontWeight: 500,
-              letterSpacing: 0.4,
-            }}
-            size="small"
-          />
-          <Typography
-            variant="h6"
-            fontWeight={700}
-            sx={{
-              textShadow: '0 1px 2px rgba(0,0,0,0.25)',
-              lineHeight: 1.3,
-            }}
-          >
-            {eventData?.title}
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 0.5 }}>
-            <Chip
-              label={eventData?.type || eventData?.type || 'General'}
-              size="small"
-              variant="outlined"
-              sx={{
-                backgroundColor: (theme) => theme.palette.background.paper,
-                color: (theme) => theme.palette.text.primary,
-                fontWeight: 500,
-                backdropFilter: 'blur(3px)',
-              }}
-            />
-            <Chip
-              label={eventData?.eventMode || 'Offline'}
-              size="small"
-              variant="outlined"
-              sx={{
-                backgroundColor: (theme) => theme.palette.background.paper,
-                color: (theme) => theme.palette.text.primary,
-                fontWeight: 500,
-                backdropFilter: 'blur(3px)',
-              }}
-            />
+          <IconButton onClick={onClose} aria-label="Close dialog" sx={{ flexShrink: 0 }}>
+            <Close />
+          </IconButton>
+        </Stack>
+        <Divider />
+      </DialogTitle>
+
+      <DialogContent sx={{ p: 0 }}>
+        <Scrollbar sx={{ maxHeight: { xs: '72vh', md: '68vh' } }}>
+          <Box sx={{ p: 3 }}>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <InfoCard
+                  icon={<CalendarToday color="primary" />}
+                  title="Date"
+                  value={formatDateRange(startDate, endDate)}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <InfoCard
+                  icon={<AccessTime color="primary" />}
+                  title="Time"
+                  value={formatTimeRange(eventData.startTime, eventData.endTime)}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <InfoCard
+                  icon={<Group color="primary" />}
+                  title="Audience"
+                  value={`${audienceCount} ${audienceCount === 1 ? 'group' : 'groups'}`}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <InfoCard
+                  icon={isOnline ? <LinkIcon color="primary" /> : <LocationOn color="primary" />}
+                  title={isOnline ? 'Meeting Link' : 'Venue'}
+                  value={
+                    isOnline && meetingTarget ? (
+                      <Link href={meetingTarget} target="_blank" rel="noopener" underline="hover">
+                        {meetingTarget}
+                      </Link>
+                    ) : (
+                      meetingTarget || '-'
+                    )
+                  }
+                />
+              </Grid>
+
+              {eventData.isRecurring && (
+                <Grid size={{ xs: 12 }}>
+                  <InfoCard
+                    icon={<AccessTime color="primary" />}
+                    title="Recurrence"
+                    value={
+                      eventData.recurrenceSummary || eventData.recurrenceJson || 'Recurring event'
+                    }
+                  />
+                </Grid>
+              )}
+
+              <Grid size={{ xs: 12 }}>
+                <InfoCard
+                  icon={<InfoTwoTone color="primary" />}
+                  title="Description"
+                  value={
+                    eventData.description ? (
+                      <Typography
+                        component="div"
+                        variant="body2"
+                        sx={{ color: 'text.primary', wordBreak: 'break-word' }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(eventData.description) }}
+                      />
+                    ) : (
+                      '-'
+                    )
+                  }
+                />
+              </Grid>
+
+              {attachment.url && (
+                <Grid size={{ xs: 12 }}>
+                  <InfoCard
+                    icon={<LinkIcon color="primary" />}
+                    title="Poster"
+                    value={
+                      <Link href={attachment.url} download={attachment.name} underline="hover">
+                        {attachment.name}
+                      </Link>
+                    }
+                  />
+                </Grid>
+              )}
+            </Grid>
           </Box>
-        </Box>
-      </Box>
-
-      {/* Content */}
-      <DialogContent sx={{ backgroundColor: '#f8fafc', p: 2.25 }}>
-        <Grid container spacing={1.5}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <InfoCard
-              icon={<CalendarToday color="primary" />}
-              title="Date"
-              subtitle={eventData ? `${eventData.startDate} to ${eventData.endDate}` : '-'}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <InfoCard
-              icon={<AccessTime color="primary" />}
-              title="Time"
-              subtitle={eventData ? `${eventData.startTime} - ${eventData.endTime}` : '-'}
-            />
-          </Grid>
-          {eventData?.typeName === 'Meeting' && (
-            <Grid size={{ xs: 12, md: 6 }}>
-              <InfoCard
-                icon={<AccessTime color="primary" />}
-                title="Meeting Info"
-                subtitle={eventData ? `${eventData.recurrenceSummary}` : '-'}
-              />
-            </Grid>
-          )}
-
-          <Grid size={{ xs: 12 }}>
-            <InfoCard icon={<Group color="primary" />} title="Audience" subtitle="120 Users" />
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <InfoCard
-              icon={<LinkIcon color="primary" />}
-              title={eventData?.eventMode === 'online' ? 'Meeting Link' : 'Venue'}
-              subtitle={
-                eventData?.eventMode === 'online' ? (
-                  <Link
-                    href="https://meet.example.com/ptc-2025"
-                    target="_blank"
-                    underline="hover"
-                    sx={{ color: 'success.main', fontWeight: 600 }}
-                  >
-                    https://meet.example.com/ptc-2025
-                  </Link>
-                ) : (
-                  eventData?.venue || '-'
-                )
-              }
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <InfoCard
-              icon={<InfoTwoTone color="success" />}
-              title="Description"
-              subtitle={eventData?.description || '-'}
-            />
-          </Grid>
-          {attachmentUrl && eventData?.attachment && (
-            <Grid size={{ xs: 12 }}>
-              <InfoCard
-                icon={<LinkIcon color="primary" />}
-                title="Attachment"
-                subtitle={
-                  <Link
-                    href={attachmentUrl}
-                    download={eventData.attachment.name}
-                    underline="hover"
-                    sx={{ fontWeight: 600, color: 'success.main', wordBreak: 'break-all' }}
-                  >
-                    {eventData.attachment.name}
-                  </Link>
-                }
-              />
-            </Grid>
-          )}
-        </Grid>
+        </Scrollbar>
       </DialogContent>
     </Dialog>
   );
@@ -258,72 +212,162 @@ export default EventDetailsComponent;
 type InfoCardProps = {
   icon: React.ReactNode;
   title: string;
-  subtitle: React.ReactNode;
+  value: React.ReactNode;
 };
 
-// Reusable info card component
-const InfoCard: React.FC<InfoCardProps> = ({ icon, title, subtitle }) => (
+const InfoCard: React.FC<InfoCardProps> = ({ icon, title, value }) => (
   <Box
     sx={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 1.6,
-      backgroundColor: 'white',
-      borderRadius: 2.5,
-      p: 1.75,
-      boxShadow: '0 2px 6px rgba(16,185,129,0.08)',
-      border: '1px solid #E3F9EF',
-      position: 'relative',
-      overflow: 'hidden',
-      '&:before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        width: 60,
-        height: 60,
-        background: 'radial-gradient(circle at top right, rgba(16,185,129,0.14), transparent 70%)',
-        pointerEvents: 'none',
-      },
+      p: 2,
+      height: '100%',
+      borderRadius: 1,
+      border: (theme) => `1px solid ${theme.palette.divider}`,
+      bgcolor: 'background.paper',
     }}
   >
-    <Box
-      sx={{
-        width: 36,
-        height: 36,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        // background: 'linear-gradient(135deg,#dcfce7,#bbf7d0)',
-        borderRadius: 1.5,
-        color: 'success.main',
-        boxShadow: 'inset 0 0 0 1px rgba(16,185,129,0.22)',
-        flexShrink: 0,
-        fontSize: 18,
-        '& svg': { fontSize: 20 },
-      }}
-    >
-      {icon}
-    </Box>
-    <Box>
-      <Typography
-        variant="caption"
-        color="text.secondary"
+    <Stack direction="row" gap={1.5} alignItems="flex-start">
+      <Box
         sx={{
-          fontWeight: 600,
-          letterSpacing: 0.25,
-          color: (theme) => theme.palette.text.secondary,
+          width: 36,
+          height: 36,
+          flexShrink: 0,
+          display: 'flex',
+          borderRadius: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'background.neutral',
+          '& svg': { fontSize: 20 },
         }}
       >
-        {title}
-      </Typography>
-      <Typography
-        variant="body2"
-        fontWeight={600}
-        sx={{ mt: 0.15, color: (theme) => theme.palette.text.primary }}
-      >
-        {subtitle}
-      </Typography>
-    </Box>
+        {icon}
+      </Box>
+      <Stack gap={0.5} minWidth={0}>
+        <Typography variant="caption" color="text.secondary" fontWeight={600}>
+          {title}
+        </Typography>
+        <Typography component="div" variant="body2" sx={{ wordBreak: 'break-word' }}>
+          {value}
+        </Typography>
+      </Stack>
+    </Stack>
   </Box>
 );
+
+const getEventMode = (eventData: EventDetails) => {
+  if (typeof eventData.eventMode === 'string' && eventData.eventMode) {
+    return eventData.eventMode.toLowerCase() === 'online' ? 'Online' : 'Offline';
+  }
+
+  if (typeof eventData.mode === 'number') {
+    return eventData.mode === 0 ? 'Online' : 'Offline';
+  }
+
+  if (typeof eventData.mode === 'string') {
+    return eventData.mode.toLowerCase() === 'online' || eventData.mode === '0'
+      ? 'Online'
+      : 'Offline';
+  }
+
+  return 'Offline';
+};
+
+const resolveAttachment = (eventData: EventDetails) => {
+  const { attachment } = eventData;
+  if (attachment instanceof File) {
+    const objectUrl = URL.createObjectURL(attachment);
+    return {
+      name: attachment.name,
+      url: objectUrl,
+      objectUrl,
+    };
+  }
+
+  if (attachment && typeof attachment === 'object') {
+    return {
+      name: attachment.name || attachment.url || attachment.base64 || 'Poster',
+      url: attachment.url || attachment.base64 || '',
+      objectUrl: undefined,
+    };
+  }
+
+  if (typeof eventData.poster === 'string' && eventData.poster) {
+    const posterName = eventData.poster.split('/').pop();
+    return {
+      name: posterName || eventData.poster,
+      url: eventData.poster,
+      objectUrl: undefined,
+    };
+  }
+
+  return { name: '', url: '', objectUrl: undefined };
+};
+
+const getStatusLabel = (status?: number) => {
+  switch (status) {
+    case 0:
+      return 'Upcoming';
+    case 1:
+      return 'Active';
+    case 2:
+      return 'Completed';
+    default:
+      return 'Draft';
+  }
+};
+
+const getStatusColor = (status?: number): 'default' | 'info' | 'success' | 'warning' => {
+  switch (status) {
+    case 0:
+      return 'info';
+    case 1:
+      return 'success';
+    case 2:
+      return 'default';
+    default:
+      return 'warning';
+  }
+};
+
+const formatDateRange = (start?: string | null, end?: string | null) => {
+  if (!start && !end) {
+    return '-';
+  }
+
+  if (!end || start === end) {
+    return formatDate(start);
+  }
+
+  return `${formatDate(start)} - ${formatDate(end)}`;
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) {
+    return '-';
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
+const formatTimeRange = (start?: unknown, end?: unknown) => {
+  const startText = typeof start === 'string' ? start : '';
+  const endText = typeof end === 'string' ? end : '';
+
+  if (!startText && !endText) {
+    return '-';
+  }
+
+  if (!endText) {
+    return startText;
+  }
+
+  return `${startText} - ${endText}`;
+};

@@ -210,7 +210,7 @@ export function useHRPolicyWorkspace({
 
   // ─── Calendar form state ──────────────────────────────────────────────────
   const [calendarForm, setCalendarForm] = useState<WorkCalendarForm>(
-    defaultCalendarForm(currentYear?.startDate, currentYear?.endDate)
+    defaultCalendarForm(currentYear?.startDate)
   );
   const [holidayReviewFilters, setHolidayReviewFilters] = useState<{
     search: string;
@@ -916,7 +916,7 @@ export function useHRPolicyWorkspace({
               holidaySyncMode: 'snapshot',
               holidays,
             }
-          : defaultCalendarForm(currentYear?.startDate, currentYear?.endDate)
+          : defaultCalendarForm(currentYear?.startDate)
       );
 
       if (academicYearId) {
@@ -1614,8 +1614,8 @@ export function useHRPolicyWorkspace({
       await runPolicyOperation(
         {
           key: 'archive-policy',
-          title: 'Removing policy',
-          message: 'Checking impact before removing this policy...',
+          title: 'Archiving policy',
+          message: 'Checking impact before archiving this policy...',
         },
         async () => {
           try {
@@ -1626,7 +1626,7 @@ export function useHRPolicyWorkspace({
               academicYearId: item.academicYearId,
               action: 'archive',
             }).unwrap();
-            await runWithImpactConfirmation(preview, 'Remove policy', async (token) => {
+            await runWithImpactConfirmation(preview, 'Archive policy', async (token) => {
               if (type === 'payroll')
                 await deletePayrollPolicyWithToken({ id: item.id, token }).unwrap();
               else if (type === 'attendance')
@@ -1635,7 +1635,7 @@ export function useHRPolicyWorkspace({
               shikshaMitraToast.success({ message: 'Policy archived successfully' });
             });
           } catch (error) {
-            setImpactPreviewError(getErrorMessage(error, 'Could not remove policy.'));
+            setImpactPreviewError(getErrorMessage(error, 'Could not archive policy.'));
           }
         }
       );

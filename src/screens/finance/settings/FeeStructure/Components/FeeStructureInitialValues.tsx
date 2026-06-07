@@ -15,8 +15,8 @@ export const getInitialFeeStructureData = (
   receiptBookName: editData?.receiptBookName || '',
   // paymentTerm: editData?.paymentTerm || '',
   // paymentMethod: editData?.paymentMethod || [],
-  totalFeeHead: editData?.totalFeeHead ?? 0,
-  totalClass: editData?.totalClass ?? 0,
+  totalFeeHeads: editData?.totalFeeHeads ?? 0,
+  totalClasses: editData?.totalClasses ?? 0,
   feeStructureClasses: editData?.feeStructureClasses || {},
   id: editData?.id || undefined,
 });

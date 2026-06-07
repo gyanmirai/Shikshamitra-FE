@@ -180,17 +180,18 @@ const LeaveType = () => {
           setEditData(null);
           confirm.onFalse();
         }}
-        title="Delete"
+        title="Archive Leave Type"
         content={
           <>
-            Are you sure you want to delete <strong>{editData?.name}</strong>?
+            Archive <strong>{editData?.name}</strong>? It will no longer be available for new leave
+            requests, but historical leave records will keep this leave type.
           </>
         }
         action={
           <LoadingButton
             variant="contained"
             loading={isDeleteLoading}
-            color="error"
+            color="warning"
             size="small"
             onClick={async () => {
               confirmWithUndo({
@@ -216,7 +217,7 @@ const LeaveType = () => {
               setEditData(null);
             }}
           >
-            Yes
+            Archive
           </LoadingButton>
         }
       />

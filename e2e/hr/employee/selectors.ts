@@ -5,6 +5,7 @@ export const testIds = {
   employeeList: 'hr-employee-list',
   employeeTable: 'employee-table',
   addEmployeeButton: 'hr-employee-add-button',
+  employeeListFilters: 'hr-employee-list-filters',
   employeeForm: 'hr-employee-form',
   employeeProfile: 'hr-employee-profile',
   profileHeader: 'hr-employee-profile-header',

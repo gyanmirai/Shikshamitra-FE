@@ -52,7 +52,10 @@ interface CustomStepperWithFormikProps {
   activeStep: number;
   initialValues: any;
   steps: string[];
+  formikInstance?: any;
   validateOnChange?: boolean;
+  nextButtonLabel?: React.ReactNode;
+  finalButtonLabel?: React.ReactNode;
   handleNext: (
     isLastStep: boolean,
     value: any,
@@ -236,6 +239,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   activeStep,
   initialValues,
   steps,
+  formikInstance,
   handleNext,
   handleBack,
   validationSchema,
@@ -249,6 +253,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   isDisabledLabel = false,
   showSaveButton = true,
   disableSubmit = false,
+  nextButtonLabel = 'Save & Next',
+  finalButtonLabel = 'Submit',
   saveButtonProps = {},
   saveAndNextButtonProps = {},
   viewMode = 'horizontal', // Default to horizontal
@@ -257,16 +263,17 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   const [isBackClick, setIsBackClick] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const isSaveLoading = useBoolean();
-  const formik = useFormik({
+  const internalFormik = useFormik({
     initialValues,
     validationSchema,
     validateOnMount: true,
     onSubmit: (values) => {
       setIsBackClick(false);
-      handleNext(activeStep === steps.length - 1, values, formik, setIsLoading);
+      handleNext(activeStep === steps.length - 1, values, internalFormik, setIsLoading);
     },
     validateOnChange,
   });
+  const formik = formikInstance ?? internalFormik;
 
   const isVertical = viewMode === 'vertical' && !isMobile;
   const hasExplicitCompletedSteps = Array.isArray(completedSteps);
@@ -402,6 +409,11 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (formikInstance) {
+          setIsBackClick(false);
+          handleNext(activeStep === steps.length - 1, formik.values, formik, setIsLoading);
+          return;
+        }
         formik.handleSubmit(e);
       }}
     >
@@ -517,7 +529,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             disabled={activeStep === steps.length - 1 ? disableSubmit : false}
             {...saveAndNextButtonProps}
           >
-            {activeStep === steps.length - 1 ? 'Submit' : 'Save & Next'}
+            {activeStep === steps.length - 1 ? finalButtonLabel : nextButtonLabel}
           </LoadingButton>
         </Box>
       </Box>

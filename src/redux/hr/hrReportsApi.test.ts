@@ -12,6 +12,34 @@ describe('hrReportsApi helpers', () => {
     });
   });
 
+  it('preserves valid paging and filters', () => {
+    expect(
+      normalizeHrReportRequest({
+        reportType: 'Employee List',
+        page: 3,
+        pageSize: 100,
+        filters: { departments: ['HR'] },
+      })
+    ).toMatchObject({
+      page: 3,
+      pageSize: 100,
+      filters: { departments: ['HR'] },
+    });
+  });
+
+  it('normalizes invalid paging values', () => {
+    expect(
+      normalizeHrReportRequest({
+        reportType: 'Employee List',
+        page: 0,
+        pageSize: -1,
+      })
+    ).toMatchObject({
+      page: 1,
+      pageSize: 50,
+    });
+  });
+
   it('builds export download URLs', () => {
     expect(buildHrReportDownloadUrl('job-123')).toBe('/hr/reports/exports/job-123/download');
   });

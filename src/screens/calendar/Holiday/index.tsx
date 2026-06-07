@@ -3,10 +3,10 @@
 import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -30,6 +30,11 @@ import type { IHoliday } from './Components/type';
 
 const HolidayManagement = (props: TabComponentType) => {
   const [open, setOpen] = useState(false);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const holidayListParams = useMemo(
+    () => ({ academicYearId: currentYear?.id, maxResultCount: 500 }),
+    [currentYear?.id]
+  );
 
   const {
     data: holidayData,
@@ -39,6 +44,8 @@ const HolidayManagement = (props: TabComponentType) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetHolidaysQuery,
+    params: holidayListParams,
+    options: { skip: !currentYear?.id },
   });
 
   const [editingHoliday, setEditingHoliday] = useState<IHoliday | null>(null);
@@ -163,18 +170,23 @@ const HolidayManagement = (props: TabComponentType) => {
                 message: `Holiday: ${selectedHoliday?.holidayName} deleted successfully`,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
-                    holidayApi.util.updateQueryData('getHolidays', undefined, (draft: any) => {
-                      const index = draft?.items?.findIndex(
-                        (item: any) => item.id === selectedHoliday?.id
-                      );
-                      setDeleteIndex(index);
-                      if (index !== -1 && draft) {
-                        draft.items.splice(index, 1);
+                    holidayApi.util.updateQueryData(
+                      'getHolidays',
+                      holidayListParams,
+                      (draft: any) => {
+                        const index = draft?.items?.findIndex(
+                          (item: any) => item.id === selectedHoliday?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1 && draft) {
+                          draft.items.splice(index, 1);
+                        }
                       }
-                    })
+                    )
                   ),
-                onUndoRestore: (dispatchFn, index) => refetch(),
-                onCommit: () => deleteHoliday(selectedHoliday?.id || ''),
+                onUndoRestore: () => refetch(),
+                onCommit: () =>
+                  selectedHoliday?.id ? deleteHoliday(selectedHoliday.id) : Promise.resolve(),
               });
               confirm_dialog.onFalse();
               setSelectedHoliday(null);

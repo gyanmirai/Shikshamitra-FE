@@ -1,162 +1,167 @@
 'use client';
 
-import React from 'react';
+import type { RootState } from 'src/redux/store';
+
+import dayjs from 'dayjs';
+import React, { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import { Box, Grid, Card, CardHeader } from '@mui/material';
 import { DashboardCard } from 'src/components/dashboard-card';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
+import { useGetCalendarViewQuery } from 'src/redux/calendar/calendarApi';
+import { useGetGroupsQuery } from 'src/redux/calendar/GroupManagement/groupManagementApi';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-// Mock data for Admin Dashboard
+type CalendarDashboardItem = {
+  id: string;
+  title: string;
+  calendarItemType: number | string;
+  typeName?: string;
+  startDate?: string;
+  endDate?: string;
+  audienceCount?: number;
+  status?: number;
+};
 
-// KPI Card Data
-const TOTAL_EVENTS_THIS_MONTH = 45;
-const UPCOMING_HOLIDAYS = 3;
-const ACTIVE_GROUPS = 12;
-
-// Chart Data - Event Type Breakdown (Pie Chart)
-const EVENT_TYPE_DATA = [
-  { label: 'Meetings', value: 25 },
-  { label: 'Exams', value: 30 },
-  { label: 'Cultural', value: 20 },
-  { label: 'Sports', value: 15 },
-  { label: 'Other', value: 10 },
+const monthLabels = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 
-// Monthly Event Load Trend (Line Chart)
-const getLast4Weeks = () => {
-  const weeks = [];
-  for (let i = 3; i >= 0; i -= 1) {
-    weeks.push(`Week ${4 - i}`);
-  }
-  return weeks;
-};
+const isEvent = (item: CalendarDashboardItem) =>
+  item.calendarItemType === 0 || item.calendarItemType === 'Event';
 
-const MONTHLY_EVENT_LOAD_DATA = {
-  categories: getLast4Weeks(),
-  series: [
-    { name: 'Events Scheduled', data: [12, 15, 18, 20] },
-    { name: 'Events Completed', data: [10, 12, 14, 16] },
-  ],
-};
-
-// Audience Participation Trend (Bar Chart)
-const AUDIENCE_PARTICIPATION_DATA = {
-  categories: ['Students', 'Teachers', 'Parents', 'Staff'],
-  series: [{ name: 'Participation Count', data: [450, 120, 200, 80] }],
-};
-
-// Holiday Heatmap - simplified as bar chart for now
-const HOLIDAY_DISTRIBUTION_DATA = {
-  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-  series: [{ name: 'Holidays', data: [2, 1, 3, 2, 1, 0, 1, 2, 3, 4, 2, 4] }],
-};
+const isHoliday = (item: CalendarDashboardItem) =>
+  item.calendarItemType === 1 || item.calendarItemType === 'Holiday';
 
 const AdminDashboard = () => {
   const theme = useTheme();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { data: calendarViewData } = useGetCalendarViewQuery(
+    {
+      academicYearId: currentYear?.id,
+      maxResultCount: 500,
+    },
+    { skip: !currentYear?.id }
+  );
+  const { data: groupData } = useGetGroupsQuery(
+    { academicYearId: currentYear?.id, includeDetails: true, maxResultCount: 500 },
+    { skip: !currentYear?.id }
+  );
 
-  // Monthly Event Load Trend Chart Options
+  const items = useMemo<CalendarDashboardItem[]>(
+    () => calendarViewData?.items || [],
+    [calendarViewData?.items]
+  );
+  const events = useMemo(() => items.filter(isEvent), [items]);
+  const holidays = useMemo(() => items.filter(isHoliday), [items]);
+
+  const todayKey = dayjs().format('YYYY-MM-DD');
+  const now = useMemo(() => dayjs(todayKey), [todayKey]);
+  const totalEventsThisMonth = events.filter((item) =>
+    dayjs(item.startDate).isSame(now, 'month')
+  ).length;
+  const upcomingHolidays = holidays.filter((item) => {
+    const start = dayjs(item.startDate);
+    return start.isAfter(now.subtract(1, 'day')) && start.isBefore(now.add(8, 'day'));
+  }).length;
+  const activeGroups =
+    groupData?.items?.filter((group: any) => (group.memberCount || 0) > 0).length || 0;
+
+  const eventTypeData = useMemo(() => {
+    const counts = new Map<string, number>();
+    events.forEach((item) => {
+      const label = item.typeName || 'General';
+      counts.set(label, (counts.get(label) || 0) + 1);
+    });
+    return Array.from(counts.entries()).map(([label, value]) => ({ label, value }));
+  }, [events]);
+
+  const holidayDistributionData = useMemo(() => {
+    const counts = Array.from({ length: 12 }, () => 0);
+    holidays.forEach((item) => {
+      const monthIndex = dayjs(item.startDate).month();
+      if (monthIndex >= 0) counts[monthIndex] += 1;
+    });
+    return {
+      categories: monthLabels,
+      series: [{ name: 'Holidays', data: counts }],
+    };
+  }, [holidays]);
+
+  const eventLoadData = useMemo(() => {
+    const weekStarts = [3, 2, 1, 0].map((offset) => now.subtract(offset, 'week').startOf('week'));
+    return {
+      categories: weekStarts.map((week) => week.format('MMM D')),
+      series: [
+        {
+          name: 'Events Scheduled',
+          data: weekStarts.map(
+            (week) => events.filter((item) => dayjs(item.startDate).isSame(week, 'week')).length
+          ),
+        },
+        {
+          name: 'Events Completed',
+          data: weekStarts.map(
+            (week) =>
+              events.filter(
+                (item) => item.status === 2 && dayjs(item.startDate).isSame(week, 'week')
+              ).length
+          ),
+        },
+      ],
+    };
+  }, [events, now]);
+
+  const audienceData = useMemo(
+    () => ({
+      categories: ['Events', 'Holidays'],
+      series: [
+        {
+          name: 'Audience Groups',
+          data: [
+            events.reduce((sum, item) => sum + (item.audienceCount || 0), 0),
+            holidays.reduce((sum, item) => sum + (item.audienceCount || 0), 0),
+          ],
+        },
+      ],
+    }),
+    [events, holidays]
+  );
+
   const eventLoadTrendOptions = useChart({
     colors: [theme.palette.success.main, theme.palette.warning.main],
-    stroke: {
-      width: 3,
-      curve: 'smooth',
-    },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shade: 'light',
-        type: 'vertical',
-        shadeIntensity: 0.5,
-        gradientToColors: undefined,
-        inverseColors: true,
-        opacityFrom: 0.6,
-        opacityTo: 0.1,
-        stops: [0, 90, 100],
-      },
-    },
-    xaxis: {
-      categories: MONTHLY_EVENT_LOAD_DATA.categories,
-      labels: {
-        style: {
-          colors: theme.palette.text.secondary,
-        },
-      },
-    },
-    yaxis: {
-      labels: {
-        style: {
-          colors: theme.palette.text.secondary,
-        },
-        formatter: (value: number) => `${value}`,
-      },
-    },
-    grid: {
-      borderColor: theme.palette.divider,
-      strokeDashArray: 3,
-    },
-    tooltip: {
-      shared: true,
-      intersect: false,
-      x: {
-        show: true,
-      },
-      y: {
-        formatter: (value: number) => `${value} Events`,
-      },
-    },
-    legend: {
-      show: true,
-      position: 'top',
-      horizontalAlign: 'right',
-    },
+    stroke: { width: 3, curve: 'smooth' },
+    xaxis: { categories: eventLoadData.categories },
+    yaxis: { labels: { formatter: (value: number) => `${value}` } },
+    grid: { borderColor: theme.palette.divider, strokeDashArray: 3 },
+    tooltip: { y: { formatter: (value: number) => `${value} Events` } },
+    legend: { show: true, position: 'top', horizontalAlign: 'right' },
   });
 
-  // Holiday Distribution Chart Options
   const holidayDistributionOptions = useChart({
     colors: [theme.palette.info.main],
-    stroke: {
-      width: 0,
-    },
-    xaxis: {
-      categories: HOLIDAY_DISTRIBUTION_DATA.categories,
-      labels: {
-        style: {
-          colors: theme.palette.text.secondary,
-        },
-      },
-      axisBorder: {
-        show: false,
-      },
-      axisTicks: {
-        show: false,
-      },
-    },
-    yaxis: {
-      labels: {
-        style: {
-          colors: theme.palette.text.secondary,
-        },
-      },
-    },
-    grid: {
-      show: false,
-    },
-    plotOptions: {
-      bar: {
-        columnWidth: '40%',
-        borderRadius: 4,
-      },
-    },
-    tooltip: {
-      y: {
-        formatter: (value: number) => `${value} Holidays`,
-      },
-    },
+    stroke: { width: 0 },
+    xaxis: { categories: holidayDistributionData.categories },
+    plotOptions: { bar: { columnWidth: '40%', borderRadius: 4 } },
+    tooltip: { y: { formatter: (value: number) => `${value} Holidays` } },
   });
 
-  // Event Type Breakdown Chart Options (Donut)
-  const eventTypeChartSeries = EVENT_TYPE_DATA.map((item) => item.value);
+  const eventTypeChartSeries = eventTypeData.length ? eventTypeData.map((item) => item.value) : [0];
+  const eventTypeChartLabels = eventTypeData.length
+    ? eventTypeData.map((item) => item.label)
+    : ['No Events'];
   const eventTypeChartColors = [
     theme.palette.primary.main,
     theme.palette.warning.main,
@@ -166,55 +171,23 @@ const AdminDashboard = () => {
   ];
 
   const eventTypeOptions = useChart({
-    chart: {
-      sparkline: {
-        enabled: true,
-      },
-    },
+    chart: { sparkline: { enabled: true } },
     colors: eventTypeChartColors,
-    labels: EVENT_TYPE_DATA.map((item) => item.label),
-    stroke: {
-      colors: [theme.palette.background.paper],
-    },
-    legend: {
-      floating: true,
-      position: 'bottom',
-      horizontalAlign: 'center',
-    },
-    dataLabels: {
-      enabled: true,
-      dropShadow: {
-        enabled: false,
-      },
-    },
-    tooltip: {
-      fillSeriesColor: false,
-      y: {
-        formatter: (value: number) => `${value}`,
-        title: {
-          formatter: (seriesName: string) => `${seriesName}`,
-        },
-      },
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          labels: {
-            show: false,
-          },
-        },
-      },
-    },
+    labels: eventTypeChartLabels,
+    stroke: { colors: [theme.palette.background.paper] },
+    legend: { floating: true, position: 'bottom', horizontalAlign: 'center' },
+    dataLabels: { enabled: true, dropShadow: { enabled: false } },
+    tooltip: { fillSeriesColor: false },
+    plotOptions: { pie: { donut: { labels: { show: false } } } },
   });
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      {/* A. DASHBOARD CARDS (KPIs) */}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <DashboardCard
             title="Total Events"
-            value={TOTAL_EVENTS_THIS_MONTH}
+            value={totalEventsThisMonth}
             icon="mdi:calendar-multiple"
             color="primary.main"
             bgColor="primary.lighter"
@@ -224,7 +197,7 @@ const AdminDashboard = () => {
         <Grid size={{ xs: 12, sm: 4 }}>
           <DashboardCard
             title="Upcoming Holidays"
-            value={UPCOMING_HOLIDAYS}
+            value={upcomingHolidays}
             icon="mdi:beach"
             color="info.main"
             bgColor="info.lighter"
@@ -234,7 +207,7 @@ const AdminDashboard = () => {
         <Grid size={{ xs: 12, sm: 4 }}>
           <DashboardCard
             title="Active Groups"
-            value={ACTIVE_GROUPS}
+            value={activeGroups}
             icon="mdi:account-group"
             color="success.main"
             bgColor="success.lighter"
@@ -243,9 +216,7 @@ const AdminDashboard = () => {
         </Grid>
       </Grid>
 
-      {/* B. CHARTS SECTION */}
       <Grid container spacing={3} sx={{ mt: 3 }}>
-        {/* Holiday Distribution (Monthly) */}
         <Grid size={{ xs: 12, md: 8 }}>
           <Card sx={{ height: '100%' }}>
             <CardHeader title="Holiday Distribution (Monthly)" />
@@ -253,7 +224,7 @@ const AdminDashboard = () => {
               <Chart
                 dir="ltr"
                 type="bar"
-                series={HOLIDAY_DISTRIBUTION_DATA.series}
+                series={holidayDistributionData.series}
                 options={holidayDistributionOptions}
                 width="100%"
                 height={364}
@@ -262,45 +233,31 @@ const AdminDashboard = () => {
           </Card>
         </Grid>
 
-        {/* Audience Participation Trend */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <AnalyticsWebsiteVisits
-              title="Audience Participation"
+              title="Audience Groups"
               chart={{
-                categories: AUDIENCE_PARTICIPATION_DATA.categories,
-                series: AUDIENCE_PARTICIPATION_DATA.series,
-                colors: [
-                  theme.palette.primary.main,
-                  theme.palette.warning.main,
-                  theme.palette.info.main,
-                  theme.palette.success.main,
-                ],
+                categories: audienceData.categories,
+                series: audienceData.series,
+                colors: [theme.palette.primary.main, theme.palette.success.main],
                 options: {
-                  plotOptions: {
-                    bar: {
-                      distributed: true,
-                      borderRadius: 4,
-                    },
-                  },
-                  legend: {
-                    show: false,
-                  },
+                  plotOptions: { bar: { distributed: true, borderRadius: 4 } },
+                  legend: { show: false },
                 },
               }}
             />
           </Card>
         </Grid>
 
-        {/* Monthly Event Load Trend */}
         <Grid size={{ xs: 12, md: 8 }}>
           <Card sx={{ height: '100%' }}>
-            <CardHeader title="Monthly Event Load Trend" />
+            <CardHeader title="Weekly Event Load" />
             <Box sx={{ p: 3, pb: 1 }}>
               <Chart
                 dir="ltr"
                 type="area"
-                series={MONTHLY_EVENT_LOAD_DATA.series}
+                series={eventLoadData.series}
                 options={eventLoadTrendOptions}
                 width="100%"
                 height={364}
@@ -309,18 +266,10 @@ const AdminDashboard = () => {
           </Card>
         </Grid>
 
-        {/* Event Type Breakdown */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <CardHeader title="Event Type Breakdown" />
-            <Box
-              sx={{
-                my: 6,
-                '& .apexcharts-canvas': {
-                  margin: '0 auto',
-                },
-              }}
-            >
+            <Box sx={{ my: 6, '& .apexcharts-canvas': { margin: '0 auto' } }}>
               <Chart
                 dir="ltr"
                 type="donut"

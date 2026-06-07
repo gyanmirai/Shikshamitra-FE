@@ -25,7 +25,9 @@ import { toLabel, optionLabel, getErrorMessage } from '../hr-policy-workspace-ut
 // ─── EffectivePreviewTab ────────────────────────────────────────────────────────
 
 export function EffectivePreviewTab() {
-  const ctx = useHRPolicyWorkspace({ focus: 'effective', tabs: [HR_POLICY_TABS[5]] });
+  const effectiveTab =
+    HR_POLICY_TABS.find((item) => item.value === 'effective') || HR_POLICY_TABS[0];
+  const ctx = useHRPolicyWorkspace({ focus: 'effective', tabs: [effectiveTab] });
 
   const {
     effectiveFilters,

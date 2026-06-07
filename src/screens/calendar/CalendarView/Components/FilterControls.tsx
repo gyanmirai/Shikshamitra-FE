@@ -1,91 +1,65 @@
 import type { AutocompleteChangeReason, AutocompleteChangeDetails } from '@mui/material';
 
-import React, { useState } from 'react';
 import { Box, Checkbox, TextField, Typography, Autocomplete } from '@mui/material';
 
-import type { Filters } from './FilterDialog';
-
-// Keeping the original static option sets (duplicated so this component is independent of the drawer implementation)
-export const eventTypesOptions: string[] = [
-  'ALL',
-  'Meeting',
-  'Sports Event',
-  'Academic',
-  'Workshop',
-  'Cultural Event',
-  'Holiday',
-];
-export const holidayTypesOptions: string[] = [
-  'ALL',
-  'Sports Event',
-  'Academic',
-  'Workshop',
-  'Cultural Event',
-  'Holiday',
-];
 export const statusOptions: string[] = ['ALL', 'Active', 'Upcoming', 'Completed'];
+
+export interface Filters {
+  eventType: string[];
+  holidayType: string[];
+  status: string[];
+}
 
 interface FilterControlsProps {
   filters: Filters;
   onChange: (filters: Filters) => void;
+  eventTypeOptions: string[];
+  holidayTypeOptions: string[];
+  getOptionLabel?: (value: string) => string;
 }
 
-/**
- * Inline filter controls using MUI Autocomplete (multiple + searchable).
- * Replaces the previous drawer-based filter dialog.
- */
-const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) => {
-  // Derived counts for resetting / UX (optional future use)
-
-  // Normalize selection with simpler ALL toggle logic:
-  // Behavior:
-  // 1. Clicking ALL alone selects all options (returns full array including ALL).
-  // 2. When ALL is part of a multi-selection and the user toggles ALL off, we remove ALL but keep others.
-  // 3. Selecting all individual items except ALL no longer auto-adds ALL (allows unchecking ALL cleanly).
-  // 4. We don't auto-promote subsets to ALL; ALL only appears if explicitly chosen or via rule #1.
+const FilterControls = ({
+  filters,
+  onChange,
+  eventTypeOptions,
+  holidayTypeOptions,
+  getOptionLabel = (value) => value,
+}: FilterControlsProps) => {
   const normalize = (
     selected: string[],
     options: string[],
     reason: AutocompleteChangeReason,
     details: AutocompleteChangeDetails<string> | undefined
   ) => {
-    if (details?.option === 'ALL' && reason === 'removeOption') {
-      return [];
-    }
     if (details?.option === 'ALL' && reason === 'selectOption') {
-      return options;
+      return ['ALL'];
     }
-    if (selected.length === options.length - 1 && selected.includes('ALL')) {
-      return selected.filter((v) => v !== 'ALL');
-    }
-    if (selected.length === options.length - 1 && !selected.includes('ALL')) {
-      selected.push('ALL');
-      return selected;
+    if (details?.option === 'ALL' && reason === 'removeOption') {
+      return ['ALL'];
     }
 
-    return selected;
+    const concreteSelected = selected.filter((value) => value !== 'ALL');
+    if (!concreteSelected.length) {
+      return ['ALL'];
+    }
+
+    const concreteOptions = options.filter((value) => value !== 'ALL');
+    if (concreteOptions.length > 0 && concreteSelected.length === concreteOptions.length) {
+      return ['ALL'];
+    }
+
+    return concreteSelected;
   };
 
-  // No fixed width; let the parent grid/flex handle sizing.
-  // const DROPDOWN_WIDTH = 300;
-
-  // Track search input text separately so we can show counts when not searching
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [search, setSearch] = useState({ eventType: '', holidayType: '', status: '' });
+  const countSelected = (selected: string[], options: string[]) => {
+    if (selected.includes('ALL')) return options.filter((value) => value !== 'ALL').length;
+    return selected.filter((value) => value !== 'ALL').length;
+  };
 
   const makeDisplayValue = (selected: string[], options: string[]) => {
-    const fullSelected = selected.includes('ALL') && selected.length === options.length;
+    if (selected.includes('ALL')) return 'All';
     const count = countSelected(selected, options);
-    if (search.eventType || search.holidayType || search.status) return undefined; // per-field handled below
-    if (fullSelected) return 'All selected';
     return count ? `(${count}) selected` : '';
-  };
-
-  // Compute display counts (exclude 'ALL' meta).
-  const countSelected = (arr: string[], options: string[]) => {
-    const fullSelected = arr.includes('ALL') && arr.length === options.length;
-    if (fullSelected) return options.length - 1; // exclude ALL from count
-    return arr.filter((v) => v !== 'ALL').length;
   };
 
   return (
@@ -102,37 +76,25 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
         multiple
         size="small"
         disableCloseOnSelect
-        options={eventTypesOptions}
+        options={eventTypeOptions}
         value={filters.eventType}
-        // inputValue={
-        //   search.eventType || makeDisplayValue(filters.eventType, eventTypesOptions) || ''
-        // }
+        getOptionLabel={getOptionLabel}
         onChange={(_, value, reason, details) =>
           onChange({
             ...filters,
-            eventType: normalize(value, eventTypesOptions, reason, details),
+            eventType: normalize(value, eventTypeOptions, reason, details),
           })
         }
-        // onInputChange={(_, value, reason) => {
-        //   if (reason === 'input') setSearch((prev) => ({ ...prev, eventType: value }));
-        //   if (reason === 'clear') setSearch((prev) => ({ ...prev, eventType: '' }));
-        // }}
         renderOption={(props, option, { selected }) => (
           <li {...props}>
             <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
-            {option}
+            {getOptionLabel(option)}
           </li>
         )}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Event Type"
-            placeholder={search.eventType ? 'Search…' : ''}
-          />
-        )}
+        renderInput={(params) => <TextField {...params} label="Event Type" />}
         renderTags={() => (
           <Typography ml={1} variant="body2">
-            {makeDisplayValue(filters.eventType, eventTypesOptions)}
+            {makeDisplayValue(filters.eventType, eventTypeOptions)}
           </Typography>
         )}
         sx={{ width: '100%' }}
@@ -142,37 +104,25 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
         multiple
         size="small"
         disableCloseOnSelect
-        options={holidayTypesOptions}
+        options={holidayTypeOptions}
         value={filters.holidayType}
-        // inputValue={
-        //   search.holidayType || makeDisplayValue(filters.holidayType, holidayTypesOptions) || ''
-        // }
+        getOptionLabel={getOptionLabel}
         onChange={(_, value, reason, details) =>
           onChange({
             ...filters,
-            holidayType: normalize(value, holidayTypesOptions, reason, details),
+            holidayType: normalize(value, holidayTypeOptions, reason, details),
           })
         }
-        // onInputChange={(_, value, reason) => {
-        //   if (reason === 'input') setSearch((prev) => ({ ...prev, holidayType: value }));
-        //   if (reason === 'clear') setSearch((prev) => ({ ...prev, holidayType: '' }));
-        // }}
         renderOption={(props, option, { selected }) => (
           <li {...props}>
             <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
-            {option}
+            {getOptionLabel(option)}
           </li>
         )}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Holiday Type"
-            placeholder={search.holidayType ? 'Search…' : ''}
-          />
-        )}
+        renderInput={(params) => <TextField {...params} label="Holiday Type" />}
         renderTags={() => (
           <Typography variant="body2">
-            {makeDisplayValue(filters.holidayType, holidayTypesOptions)}
+            {makeDisplayValue(filters.holidayType, holidayTypeOptions)}
           </Typography>
         )}
         sx={{ width: '100%' }}
@@ -184,30 +134,21 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
         disableCloseOnSelect
         options={statusOptions}
         value={filters.status}
-        // inputValue={search.status || makeDisplayValue(filters.status, statusOptions) || ''}
         onChange={(_, value, reason, details) =>
           onChange({
             ...filters,
             status: normalize(value, statusOptions, reason, details),
           })
         }
-        // onInputChange={(_, value, reason) => {
-        //   if (reason === 'input') setSearch((prev) => ({ ...prev, status: value }));
-        //   if (reason === 'clear') setSearch((prev) => ({ ...prev, status: '' }));
-        // }}
         renderOption={(props, option, { selected }) => (
           <li {...props}>
             <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
             {option}
           </li>
         )}
-        renderInput={(params) => (
-          <TextField {...params} label="Status" placeholder={search.status ? 'Search…' : ''} />
-        )}
+        renderInput={(params) => <TextField {...params} label="Status" />}
         renderTags={() => (
-          <Typography variant="body2">
-            {makeDisplayValue(filters?.status, statusOptions)}
-          </Typography>
+          <Typography variant="body2">{makeDisplayValue(filters.status, statusOptions)}</Typography>
         )}
         sx={{ width: '100%' }}
       />

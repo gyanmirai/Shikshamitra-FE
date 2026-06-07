@@ -1,12 +1,13 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { EventStatus } from 'src/enums/event-type';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -33,8 +34,12 @@ import EventDetailsComponent from './components/EventDetails/EventDetailsCompone
 import type { IEventAnnouncement } from './type';
 
 const Events = (props: TabComponentType) => {
-  // State to store the selected event details
-  const [status, setStatus] = useState('All');
+  const [status, setStatus] = useState<'All' | EventStatus>('All');
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const eventListParams = useMemo(
+    () => ({ academicYearId: currentYear?.id, maxResultCount: 500 }),
+    [currentYear?.id]
+  );
 
   const {
     data: eventTableData,
@@ -44,12 +49,11 @@ const Events = (props: TabComponentType) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEventsQuery,
-    params: { status: status === 'All' ? undefined : status },
-    options: { skip: !status },
+    params: eventListParams,
+    options: { skip: !currentYear?.id },
   });
   const { confirmWithUndo } = useConfirmWithUndo();
 
-  // State to store the event being edited
   const [editingEvent, setEditingEvent] = useState<IEventAnnouncement | null>(null);
 
   const confirm_dialog = useBoolean();
@@ -57,17 +61,12 @@ const Events = (props: TabComponentType) => {
   const publish_modal = useBoolean();
   const viewGalleryDialog = useBoolean();
   const uploadPhotoVideoDialog = useBoolean();
-  // State to control add/edit event form dialog
   const [open, setOpen] = useState(false);
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   const dispatch = useDispatch();
 
-  /**
-   * Closes all dialogs and resets form-related states
-   * Clears editing event and closes modal
-   */
   const handleCloseDialog = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
       setTimeout(() => {
@@ -75,7 +74,7 @@ const Events = (props: TabComponentType) => {
         uploadPhotoVideoDialog.onFalse();
         setOpen(false);
         dispatch(setIsChanges(false));
-      }, 200); // Delay for dialog transition
+      }, 200);
     };
 
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -85,7 +84,6 @@ const Events = (props: TabComponentType) => {
     }
   };
 
-  // Delete mutation and undo hook
   const [deleteEvent, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteEventMutation,
@@ -164,12 +162,10 @@ const Events = (props: TabComponentType) => {
           onUploadPhotoVideo={(row) => {
             uploadPhotoVideoDialog.onTrue();
             setEditingEvent(row);
-            // TODO: Implement upload photo/video logic
           }}
           onViewGallery={(row) => {
             viewGalleryDialog.onTrue();
             setEditingEvent(row);
-            // TODO: Implement view gallery logic
           }}
         />
       )}
@@ -200,19 +196,16 @@ const Events = (props: TabComponentType) => {
                 message: `Event: ${editingEvent?.title} deleted successfully`,
                 onOptimisticRemove: (dispatchFn) =>
                   dispatchFn(
-                    eventApi.util.updateQueryData(
-                      'getEvents',
-                      { status: status === 'All' ? undefined : status },
-                      (draft: any) => {
-                        const index = draft.items.findIndex(
-                          (item: any) => item.id === editingEvent?.id
-                        );
-                        if (index !== -1) draft.items.splice(index, 1);
-                      }
-                    )
+                    eventApi.util.updateQueryData('getEvents', eventListParams, (draft: any) => {
+                      const index = draft.items.findIndex(
+                        (item: any) => item.id === editingEvent?.id
+                      );
+                      if (index !== -1) draft.items.splice(index, 1);
+                    })
                   ),
                 onUndoRestore: () => refetchEventTableData(),
-                onCommit: () => deleteEvent(editingEvent?.id || ''),
+                onCommit: () =>
+                  editingEvent?.id ? deleteEvent(editingEvent.id) : Promise.resolve(),
               });
 
               confirm_dialog.onFalse();

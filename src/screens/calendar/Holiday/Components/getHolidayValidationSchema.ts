@@ -1,11 +1,21 @@
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 
-export const holidayValidationSchema = (currentYear: any) =>
-  Yup.object().shape({
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+
+const formatDate = (value: dayjs.Dayjs | null) =>
+  value && value.isValid() ? value.format('DD/MM/YYYY') : '-';
+
+export const holidayValidationSchema = (currentYear: any) => {
+  const academicStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
+  const academicEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
+
+  return Yup.object().shape({
     holidayName: Yup.string().required('Holiday Name is required'),
     holidayTypeId: Yup.string().required('Holiday Type is required'),
-    // importanceLevel: Yup.string().required('Importance Level is required'),
     startDate: Yup.mixed()
       .required('Start Date is required')
       .test(
@@ -14,21 +24,20 @@ export const holidayValidationSchema = (currentYear: any) =>
         (value) => value && dayjs(value as any).isValid()
       )
       .test(
-        'not-past-date',
-        'Start Date cannot be in the past',
-        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(), 'day')
-      )
-      .test(
         'min-date',
+        () => `Start Date must be on or after ${formatDate(academicStart)}`,
         (value) =>
-          `Start Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+          !academicStart ||
+          !academicStart.isValid() ||
+          (value && dayjs(value as any).isSameOrAfter(academicStart, 'day'))
       )
       .test(
         'max-date',
+        () => `Start Date must be on or before ${formatDate(academicEnd)}`,
         (value) =>
-          `Start Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+          !academicEnd ||
+          !academicEnd.isValid() ||
+          (value && dayjs(value as any).isSameOrBefore(academicEnd, 'day'))
       ),
 
     endDate: Yup.mixed()
@@ -46,15 +55,19 @@ export const holidayValidationSchema = (currentYear: any) =>
       })
       .test(
         'min-date',
+        () => `End Date must be on or after ${formatDate(academicStart)}`,
         (value) =>
-          `End Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+          !academicStart ||
+          !academicStart.isValid() ||
+          (value && dayjs(value as any).isSameOrAfter(academicStart, 'day'))
       )
       .test(
         'max-date',
+        () => `End Date must be on or before ${formatDate(academicEnd)}`,
         (value) =>
-          `End Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+          !academicEnd ||
+          !academicEnd.isValid() ||
+          (value && dayjs(value as any).isSameOrBefore(academicEnd, 'day'))
       ),
-    // classes: Yup.array().min(1, 'At least one class must be selected'),
   });
+};

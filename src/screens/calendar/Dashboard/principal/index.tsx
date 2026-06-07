@@ -1,8 +1,13 @@
 'use client';
 
-import React from 'react';
+import type { RootState } from 'src/redux/store';
+
+import dayjs from 'dayjs';
+import React, { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import { DashboardCard } from 'src/components/dashboard-card';
+import { useGetCalendarViewQuery } from 'src/redux/calendar/calendarApi';
 import { AppCurrentDownload } from 'src/sections/overview/app/app-current-download';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsConversionRates } from 'src/sections/overview/analytics/analytics-conversion-rates';
@@ -21,113 +26,156 @@ import {
   CardContent,
 } from '@mui/material';
 
-// Mock data for Principal Dashboard
-
-// KPI Card Data
-const TODAY_IMPORTANT_EVENTS = 5;
-const UPCOMING_ACADEMIC_EVENTS = 12;
-const TOTAL_HOLIDAYS = 25;
-
-// Chart Data - Academic vs Non-Academic Events (Donut Chart)
-const ACADEMIC_VS_NON_ACADEMIC_DATA = [
-  { label: 'Academic', value: 65 },
-  { label: 'Non-Academic', value: 35 },
-];
-
-// Student Participation Trend (Line Chart)
-const getLast6Months = () => {
-  const months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return months;
+type CalendarDashboardItem = {
+  id: string;
+  title: string;
+  calendarItemType: number | string;
+  typeName?: string;
+  startDate?: string;
+  endDate?: string;
+  audienceCount?: number;
+  status?: number;
+  startTime?: string;
+  endTime?: string;
 };
 
-const STUDENT_PARTICIPATION_DATA = {
-  categories: getLast6Months(),
-  series: [{ name: 'Student Participation', data: [320, 380, 420, 450, 480, 500] }],
-};
-
-// Holiday Distribution Chart (Bar Chart)
-const HOLIDAY_DISTRIBUTION_DATA = {
-  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-  series: [{ name: 'Holidays', data: [2, 1, 3, 2, 1, 0, 1, 2, 3, 4, 2, 4] }],
-};
-
-// Weekly Event Density (Bar Chart)
-const WEEKLY_EVENT_DENSITY_DATA = {
-  categories: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-  series: [{ name: 'Events', data: [8, 12, 10, 15, 9] }],
-};
-
-// List Data
-const TODAY_SCHEDULE_DATA = [
-  { id: 1, time: '09:00 AM', event: 'Morning Assembly', importance: 'High' },
-  { id: 2, time: '10:30 AM', event: 'Principal Meeting with HODs', importance: 'High' },
-  { id: 3, time: '02:00 PM', event: 'School Inspection', importance: 'Medium' },
-  { id: 4, time: '04:00 PM', event: 'Parent Committee Meeting', importance: 'Medium' },
+const monthLabels = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
+const weekdayLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-const TEACHER_EVENT_REQUESTS = [
-  {
-    id: 1,
-    teacher: 'Sarah Williams',
-    eventType: 'Field Trip',
-    date: '2024-12-18',
-    status: 'Pending',
-  },
-  {
-    id: 2,
-    teacher: 'Robert Brown',
-    eventType: 'Quiz Competition',
-    date: '2024-12-20',
-    status: 'Pending',
-  },
-  {
-    id: 3,
-    teacher: 'Emily Davis',
-    eventType: 'Science Fair',
-    date: '2024-12-22',
-    status: 'Approved',
-  },
-];
+const isEvent = (item: CalendarDashboardItem) =>
+  item.calendarItemType === 0 || item.calendarItemType === 'Event';
 
-const UPCOMING_HOLIDAYS_DATA = [
-  { id: 1, name: 'Christmas', type: 'Public Holiday', date: '2024-12-25', audience: 'All' },
-  { id: 2, name: 'New Year', type: 'Public Holiday', date: '2025-01-01', audience: 'All' },
-  {
-    id: 3,
-    name: 'Winter Break',
-    type: 'Academic Break',
-    date: '2024-12-26 - 2025-01-05',
-    audience: 'Students',
-  },
-];
-
-const GROUP_ACTIVITIES_DATA = [
-  {
-    id: 1,
-    group: 'Grade 12 Students',
-    upcomingEvent: 'Board Exam Prep',
-    lastActivity: '2024-11-28',
-  },
-  { id: 2, group: 'Drama Club', upcomingEvent: 'Annual Play', lastActivity: '2024-11-30' },
-  {
-    id: 3,
-    group: 'Debate Team',
-    upcomingEvent: 'Inter-School Competition',
-    lastActivity: '2024-12-01',
-  },
-];
+const isHoliday = (item: CalendarDashboardItem) =>
+  item.calendarItemType === 1 || item.calendarItemType === 'Holiday';
 
 const PrincipalDashboard = () => {
   const theme = useTheme();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { data: calendarViewData } = useGetCalendarViewQuery(
+    {
+      academicYearId: currentYear?.id,
+      maxResultCount: 500,
+    },
+    { skip: !currentYear?.id }
+  );
+
+  const items = useMemo<CalendarDashboardItem[]>(
+    () => calendarViewData?.items || [],
+    [calendarViewData?.items]
+  );
+  const events = useMemo(() => items.filter(isEvent), [items]);
+  const holidays = useMemo(() => items.filter(isHoliday), [items]);
+  const todayKey = dayjs().format('YYYY-MM-DD');
+  const now = useMemo(() => dayjs(todayKey), [todayKey]);
+
+  const todaySchedule = useMemo(
+    () =>
+      items
+        .filter((item) => dayjs(item.startDate).isSame(now, 'day'))
+        .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''))
+        .slice(0, 5),
+    [items, now]
+  );
+
+  const upcomingEvents = useMemo(
+    () =>
+      events
+        .filter((item) => dayjs(item.startDate).isAfter(now.subtract(1, 'day')))
+        .sort((a, b) => dayjs(a.startDate).valueOf() - dayjs(b.startDate).valueOf())
+        .slice(0, 5),
+    [events, now]
+  );
+
+  const upcomingHolidays = useMemo(
+    () =>
+      holidays
+        .filter((item) => dayjs(item.startDate).isAfter(now.subtract(1, 'day')))
+        .sort((a, b) => dayjs(a.startDate).valueOf() - dayjs(b.startDate).valueOf())
+        .slice(0, 5),
+    [holidays, now]
+  );
+
+  const importantEventsToday = todaySchedule.filter((item) => isEvent(item)).length;
+  const upcomingAcademicEvents = events.filter((item) => {
+    const start = dayjs(item.startDate);
+    return (
+      start.isAfter(now.subtract(1, 'day')) &&
+      start.isBefore(now.add(11, 'day')) &&
+      (item.typeName || '').toLowerCase().includes('academic')
+    );
+  }).length;
+
+  const participationData = useMemo(() => {
+    const months = [5, 4, 3, 2, 1, 0].map((offset) => now.subtract(offset, 'month'));
+    return {
+      categories: months.map((month) => month.format('MMM')),
+      series: [
+        {
+          name: 'Audience Groups',
+          data: months.map((month) =>
+            items
+              .filter((item) => dayjs(item.startDate).isSame(month, 'month'))
+              .reduce((sum, item) => sum + (item.audienceCount || 0), 0)
+          ),
+        },
+      ],
+    };
+  }, [items, now]);
+
+  const academicVsNonAcademicData = useMemo(() => {
+    const academic = events.filter((item) =>
+      (item.typeName || '').toLowerCase().includes('academic')
+    ).length;
+    return [
+      { label: 'Academic', value: academic },
+      { label: 'Non-Academic', value: Math.max(events.length - academic, 0) },
+    ];
+  }, [events]);
+
+  const holidayDistributionData = useMemo(() => {
+    const counts = Array.from({ length: 12 }, () => 0);
+    holidays.forEach((item) => {
+      const monthIndex = dayjs(item.startDate).month();
+      if (monthIndex >= 0) counts[monthIndex] += 1;
+    });
+    return {
+      categories: monthLabels,
+      series: [{ name: 'Holidays', data: counts }],
+    };
+  }, [holidays]);
+
+  const weeklyEventDensityData = useMemo(() => {
+    const counts = Array.from({ length: 5 }, () => 0);
+    events.forEach((item) => {
+      const day = dayjs(item.startDate).day();
+      if (day >= 1 && day <= 5) counts[day - 1] += 1;
+    });
+    return {
+      categories: weekdayLabels,
+      series: [{ name: 'Events', data: counts }],
+    };
+  }, [events]);
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      {/* A. DASHBOARD CARDS (KPIs) */}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <DashboardCard
             title="Important Events"
-            value={TODAY_IMPORTANT_EVENTS}
+            value={importantEventsToday}
             icon="mdi:star-circle"
             color="primary.main"
             bgColor="primary.lighter"
@@ -137,7 +185,7 @@ const PrincipalDashboard = () => {
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <DashboardCard
             title="Academic Events"
-            value={UPCOMING_ACADEMIC_EVENTS}
+            value={upcomingAcademicEvents}
             icon="mdi:school"
             color="info.main"
             bgColor="info.lighter"
@@ -147,7 +195,7 @@ const PrincipalDashboard = () => {
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <DashboardCard
             title="Total Holidays"
-            value={TOTAL_HOLIDAYS}
+            value={holidays.length}
             icon="mdi:calendar-blank"
             color="success.main"
             bgColor="success.lighter"
@@ -156,207 +204,131 @@ const PrincipalDashboard = () => {
         </Grid>
       </Grid>
 
-      {/* B. CHARTS SECTION */}
       <Grid container spacing={3} sx={{ mt: 3 }}>
-        {/* Student Participation Trend */}
         <Grid size={{ xs: 12, md: 8 }}>
           <CommunicationTrendChart
-            title="Student Participation Trend (Monthly)"
-            chart={{
-              categories: STUDENT_PARTICIPATION_DATA.categories,
-              series: STUDENT_PARTICIPATION_DATA.series,
-            }}
+            title="Audience Groups Trend (Monthly)"
+            chart={participationData}
           />
         </Grid>
 
-        {/* Academic vs Non-Academic Events */}
         <Grid size={{ xs: 12, md: 4 }}>
           <AppCurrentDownload
             title="Academic vs Non-Academic"
             chart={{
-              series: ACADEMIC_VS_NON_ACADEMIC_DATA,
+              series: academicVsNonAcademicData,
               colors: [theme.palette.primary.main, theme.palette.info.main],
             }}
           />
         </Grid>
 
-        {/* Holiday Distribution Chart */}
         <Grid size={{ xs: 12, md: 8 }}>
           <AnalyticsConversionRates
             title="Holiday Distribution (Monthly)"
             chart={{
-              categories: HOLIDAY_DISTRIBUTION_DATA.categories,
-              series: HOLIDAY_DISTRIBUTION_DATA.series,
+              categories: holidayDistributionData.categories,
+              series: holidayDistributionData.series,
               colors: [theme.palette.success.main],
             }}
           />
         </Grid>
 
-        {/* Weekly Event Density */}
         <Grid size={{ xs: 12, md: 4 }}>
           <AnalyticsWebsiteVisits
             title="Weekly Event Density"
             chart={{
-              categories: WEEKLY_EVENT_DENSITY_DATA.categories,
-              series: WEEKLY_EVENT_DENSITY_DATA.series,
+              categories: weeklyEventDensityData.categories,
+              series: weeklyEventDensityData.series,
               colors: [theme.palette.warning.main],
             }}
           />
         </Grid>
       </Grid>
 
-      {/* C. LISTS / TABLES SECTION */}
       <Grid container spacing={3} sx={{ mt: 3 }}>
-        {/* Today's Schedule List */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Today&apos;s Schedule
-              </Typography>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Time</TableCell>
-                    <TableCell>Event</TableCell>
-                    <TableCell>Importance</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {TODAY_SCHEDULE_DATA.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <strong>{item.time}</strong>
-                      </TableCell>
-                      <TableCell>{item.event}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={item.importance}
-                          size="small"
-                          color={item.importance === 'High' ? 'error' : 'warning'}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <CalendarTable
+            title="Today's Schedule"
+            items={todaySchedule}
+            emptyText="No calendar items scheduled today."
+          />
         </Grid>
 
-        {/* Teacher Event Request List */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Teacher Event Requests
-              </Typography>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Teacher Name</TableCell>
-                    <TableCell>Event Type</TableCell>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Status</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {TEACHER_EVENT_REQUESTS.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell>{request.teacher}</TableCell>
-                      <TableCell>{request.eventType}</TableCell>
-                      <TableCell>{request.date}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={request.status}
-                          size="small"
-                          color={request.status === 'Approved' ? 'success' : 'warning'}
-                          variant="outlined"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <CalendarTable
+            title="Upcoming Events"
+            items={upcomingEvents}
+            emptyText="No upcoming events."
+          />
         </Grid>
 
-        {/* Upcoming Holidays List */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Upcoming Holidays
-              </Typography>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Holiday Name</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Audience</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {UPCOMING_HOLIDAYS_DATA.map((holiday) => (
-                    <TableRow key={holiday.id}>
-                      <TableCell>
-                        <strong>{holiday.name}</strong>
-                      </TableCell>
-                      <TableCell>
-                        <Chip label={holiday.type} size="small" color="info" variant="outlined" />
-                      </TableCell>
-                      <TableCell>{holiday.date}</TableCell>
-                      <TableCell>{holiday.audience}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Group Activities Snapshot */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Group Activities Snapshot
-              </Typography>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Group Name</TableCell>
-                    <TableCell>Upcoming Event</TableCell>
-                    <TableCell>Last Activity</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {GROUP_ACTIVITIES_DATA.map((group) => (
-                    <TableRow key={group.id}>
-                      <TableCell>
-                        <strong>{group.group}</strong>
-                      </TableCell>
-                      <TableCell>{group.upcomingEvent}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={group.lastActivity}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <CalendarTable
+            title="Upcoming Holidays"
+            items={upcomingHolidays}
+            emptyText="No upcoming holidays."
+          />
         </Grid>
       </Grid>
     </Box>
   );
 };
+
+const CalendarTable = ({
+  title,
+  items,
+  emptyText,
+}: {
+  title: string;
+  items: CalendarDashboardItem[];
+  emptyText: string;
+}) => (
+  <Card>
+    <CardContent>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        {title}
+      </Typography>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Date</TableCell>
+            <TableCell>Title</TableCell>
+            <TableCell>Type</TableCell>
+            <TableCell>Audience</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {items.length ? (
+            items.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>
+                  <strong>{dayjs(item.startDate).format('MMM D, YYYY')}</strong>
+                </TableCell>
+                <TableCell>{item.title}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={item.typeName || 'General'}
+                    size="small"
+                    color="info"
+                    variant="outlined"
+                  />
+                </TableCell>
+                <TableCell>{item.audienceCount || 0}</TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={4}>
+                <Typography variant="body2" color="text.secondary">
+                  {emptyText}
+                </Typography>
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </CardContent>
+  </Card>
+);
 
 export default PrincipalDashboard;

@@ -54,7 +54,7 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true, onRemov
     (names: string[], nodes: PathNode[]): PathRow => {
       const users = collectUsers(nodes);
       return {
-        display: names.join(' → '),
+        display: names.join(' -> '),
         users,
         selectedCount: users.filter((u) => u.selected).length,
         totalCount: users.length,
@@ -119,39 +119,9 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true, onRemov
     );
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const current = viewIndex != null ? paths[viewIndex] : null;
-  // Dummy data for students and employees if current is null
-  // Use original names from the current path if available, otherwise fallback to dummy data
-  const students = [
-    { id: 'dummy-stu-1', name: 'Prerna Atre', role: 'student' },
-    { id: 'dummy-stu-2', name: 'Raj Baku', role: 'student', selected: true },
-    { id: 'dummy-stu-3', name: 'Dummy Student 3', role: 'student' },
-    { id: 'dummy-stu-4', name: 'Dummy Student 4', role: 'student' },
-    { id: 'dummy-stu-5', name: 'Dummy Student 5', role: 'student', selected: true },
-    { id: 'dummy-stu-6', name: 'Dummy Student 6', role: 'student' },
-    { id: 'dummy-stu-7', name: 'Dummy Student 7', role: 'student' },
-    { id: 'dummy-stu-8', name: 'Dummy Student 8', role: 'student' },
-    { id: 'dummy-stu-9', name: 'Dummy Student 9', role: 'student', selected: true },
-    { id: 'dummy-stu-10', name: 'Dummy Student 10', role: 'student' },
-    { id: 'dummy-stu-11', name: 'Dummy Student 11', role: 'student' },
-    { id: 'dummy-stu-12', name: 'Dummy Student 12', role: 'student' },
-  ];
-
-  const employees = [
-    { id: 'dummy-emp-1', name: 'Dummy Employee 1', role: 'employee' },
-    { id: 'dummy-emp-2', name: 'Dummy Employee 2', role: 'employee', selected: true },
-    { id: 'dummy-emp-3', name: 'Dummy Employee 3', role: 'employee' },
-    { id: 'dummy-emp-4', name: 'Dummy Employee 4', role: 'employee' },
-    { id: 'dummy-emp-5', name: 'Dummy Employee 5', role: 'employee', selected: true },
-    { id: 'dummy-emp-6', name: 'Dummy Employee 6', role: 'employee' },
-    { id: 'dummy-emp-7', name: 'Dummy Employee 7', role: 'employee' },
-    { id: 'dummy-emp-8', name: 'Dummy Employee 8', role: 'employee' },
-    { id: 'dummy-emp-9', name: 'Dummy Employee 9', role: 'employee', selected: true },
-    { id: 'dummy-emp-10', name: 'Dummy Employee 10', role: 'employee' },
-    { id: 'dummy-emp-11', name: 'Dummy Employee 11', role: 'employee' },
-    { id: 'dummy-emp-12', name: 'Dummy Employee 12', role: 'employee' },
-  ];
+  const students = current?.users.filter((user) => user.role === 'student') ?? [];
+  const employees = current?.users.filter((user) => user.role === 'employee') ?? [];
 
   return (
     <>
@@ -175,13 +145,17 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true, onRemov
                 <Typography component="span" sx={{ flexGrow: 1 }} fontFamily="Monospace">
                   {p.display}
                 </Typography>
-                {/* <Typography component="span" color="text.secondary" sx={{ fontSize: 12 }}>
-                  {p.selectedCount || 60} / {p.totalCount || 60}
-                </Typography> */}
+                {p.totalCount > 0 && (
+                  <Typography component="span" color="text.secondary" sx={{ fontSize: 12 }}>
+                    {p.selectedCount} / {p.totalCount}
+                  </Typography>
+                )}
               </Stack>
-              {/* <IconButton size="small" onClick={() => setViewIndex(i)}>
-                <Icon icon="mdi:eye-outline" />
-              </IconButton> */}
+              {p.totalCount > 0 && (
+                <IconButton size="small" onClick={() => setViewIndex(i)}>
+                  <Icon icon="mdi:eye-outline" />
+                </IconButton>
+              )}
               {isShowDelete && (
                 <IconButton size="small" color="error" onClick={() => handleRemovePath(i)}>
                   <Icon icon="mdi:close-circle-outline" />
