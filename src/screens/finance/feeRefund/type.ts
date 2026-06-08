@@ -30,13 +30,8 @@ export interface IStudentFeeData {
 }
 
 export interface IStudentFeeTableProps {
-  data: IStudentFeeData[];
   onRequestRefund?: (row: IStudentFeeData) => void;
   onView?: (row: IStudentFeeData) => void;
-  selectedBoard: string;
-  setSelectedBoard: (value: string) => void;
-  selectedMedium: string;
-  setSelectedMedium: (value: string) => void;
 }
 
 export interface IRefundFormProps {

@@ -36,10 +36,6 @@ const Concession = () => {
   const onConfirmDialg = useBoolean();
   const [selectedMode, setSelectedMode] = useState('');
 
-  // Board/medium state lifted here so it survives form open/close cycles
-  const [selectedBoard, setSelectedBoard] = useState<string>('');
-  const [selectedMedium, setSelectedMedium] = useState<string>('');
-
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       addConcessionRequest.onFalse();
@@ -164,13 +160,6 @@ const Concession = () => {
             setSelectedConcession(data);
             addConcessionRequest.onTrue();
           }}
-          selectedBoard={selectedBoard}
-          selectedMedium={selectedMedium}
-          onBoardChange={(val) => {
-            setSelectedBoard(val);
-            setSelectedMedium('');
-          }}
-          onMediumChange={setSelectedMedium}
         />
       )}
 

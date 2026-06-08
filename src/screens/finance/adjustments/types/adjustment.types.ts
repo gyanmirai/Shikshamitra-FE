@@ -78,11 +78,6 @@ export interface AdjustmentFormValues {
 }
 
 export interface IAdjustmentTableProps {
-  data: AdjustmentRequest[];
-  selectedBoard: string;
-  setSelectedBoard: (v: string) => void;
-  selectedMedium: string;
-  setSelectedMedium: (v: string) => void;
   onCreateAdjustment: (row: AdjustmentRequest) => void;
   onView: (row: AdjustmentRequest) => void;
 }

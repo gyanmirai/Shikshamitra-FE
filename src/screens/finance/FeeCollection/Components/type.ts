@@ -19,10 +19,6 @@ export interface IFeeData {
 
 export interface IFeeTableProps {
   onAddFee: UseBooleanReturn;
-  selectedBoard: string;
-  setSelectedBoard: (value: string) => void;
-  selectedMedium: string;
-  setSelectedMedium: (value: string) => void;
   onDelete: (row: IFeeData) => void;
   onCollectFee: (row: IFeeData) => void;
   onView: (row: IFeeData) => void;

@@ -24,8 +24,6 @@ import AdjustmentApproveRejectForm from './components/AdjustmentApproveRejectFor
 import type { AdjustmentRequest } from './types/adjustment.types';
 
 const Adjustments = () => {
-  const [selectedBoard, setSelectedBoard] = useState('');
-  const [selectedMedium, setSelectedMedium] = useState('');
   const [selectedAdjustment, setSelectedAdjustment] = useState<AdjustmentRequest | null>(null);
   const [selectedMode, setSelectedMode] = useState<'Approve' | 'Reject' | ''>('');
 
@@ -37,8 +35,7 @@ const Adjustments = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
-  const { adjustments, createAdjustment, applyApprovedAdjustment, rejectAdjustment } =
-    useAdjustment();
+  const { createAdjustment, applyApprovedAdjustment, rejectAdjustment } = useAdjustment();
 
   // ── Logged-in user (replace with actual auth selector) ──────────────────
   const currentUser = 'Admin User';
@@ -177,11 +174,6 @@ const Adjustments = () => {
       {/* ── Main Table ──────────────────────────────────────────── */}
       {!addDialog.value && !viewDialog.value && (
         <AdjustmentTable
-          data={adjustments}
-          selectedBoard={selectedBoard}
-          setSelectedBoard={setSelectedBoard}
-          selectedMedium={selectedMedium}
-          setSelectedMedium={setSelectedMedium}
           onCreateAdjustment={(row) => {
             setSelectedAdjustment(row);
             addDialog.onTrue();

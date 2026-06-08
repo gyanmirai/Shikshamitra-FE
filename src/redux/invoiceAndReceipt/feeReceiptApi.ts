@@ -92,6 +92,8 @@ export interface GetFeeReceiptListParams {
   academicYearId: string;
   boardId: string;
   educationMediumId: string;
+  standardId?: string;
+  divisionId?: string;
   month?: number;
   receiptKind?: FeeReceiptKind;
   search?: string;

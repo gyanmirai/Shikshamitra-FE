@@ -25,8 +25,65 @@ export interface ApplyAdjustmentOutput {
   remainingAdjustmentBalance: number;
 }
 
+export interface FeeAdjustmentApplicationItemDto {
+  id: string;
+  studentId: string;
+  studentName: string;
+  grNumber: string;
+  rollNo: string;
+  standardName: string;
+  divisionName: string;
+  adjustmentType: number;
+  adjustmentTypeName: string;
+  requestedAmount: number;
+  appliedAmount: number;
+  remainingAmount: number;
+  status: number;
+  statusName: string;
+  requestedByName?: string;
+  createdAt: string;
+}
+
+export interface FeeAdjustmentApplicationsDto {
+  pendingCount: number;
+  partiallyAppliedCount: number;
+  appliedCount: number;
+  rejectedCount: number;
+  cancelledCount: number;
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  items: FeeAdjustmentApplicationItemDto[];
+}
+
+export interface GetFeeAdjustmentApplicationsInput {
+  boardId: string;
+  educationMediumId: string;
+  academicYearId: string;
+  standardId?: string;
+  divisionId?: string;
+  status?: number;
+  completedOnly?: boolean;
+  filter?: string;
+  page?: number;
+  pageSize?: number;
+}
+
 export const adjustmentApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getAdjustmentApplications: builder.query<
+      FeeAdjustmentApplicationsDto,
+      GetFeeAdjustmentApplicationsInput
+    >({
+      query: (params) => ({
+        url: '/fee-adjustments/applications',
+        method: 'GET',
+        params,
+      }),
+      providesTags: [financeModuleType.feeDetails],
+    }),
+
     getAdjustmentPendingFees: builder.query<
       GetAdjustmentPendingFeesOutput,
       GetAdjustmentPendingFeesInput
@@ -51,4 +108,8 @@ export const adjustmentApi = financeModuleApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useLazyGetAdjustmentPendingFeesQuery, useApplyAdjustmentMutation } = adjustmentApi;
+export const {
+  useGetAdjustmentApplicationsQuery,
+  useLazyGetAdjustmentPendingFeesQuery,
+  useApplyAdjustmentMutation,
+} = adjustmentApi;
