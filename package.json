@@ -101,7 +101,7 @@
     "highcharts": "^12.6.0",
     "input-otp": "^1.4.2",
     "iron-session": "^8.0.4",
-    "js-cookie": "^3.0.5",
+    "js-cookie": "^3.0.8",
     "jspdf": "^4.1.0",
     "jspdf-autotable": "^5.0.2",
     "jwt-decode": "^4.0.0",
@@ -139,7 +139,7 @@
     "stylis": "^4.3.6",
     "stylis-plugin-rtl": "^2.1.1",
     "swr": "^2.3.6",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.8",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "yet-another-react-lightbox": "^3.25.0",
     "yup": "^1.7.0",
@@ -164,8 +164,8 @@
     "@types/stylis": "^4.2.7",
     "@typescript-eslint/eslint-plugin": "^7.13.0",
     "@typescript-eslint/parser": "^7.13.0",
-    "@vitest/coverage-v8": "^3.2.4",
-    "eslint": "^8.57.0",
+    "@vitest/coverage-v8": "^4.1.8",
+    "eslint": "^8.57.1",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^18.0.0",
     "eslint-config-prettier": "^9.1.0",
@@ -178,7 +178,7 @@
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-unused-imports": "^3.2.0",
     "globals": "^17.2.0",
-    "happy-dom": "^17.6.3",
+    "happy-dom": "^20.10.2",
     "husky": "^9.1.7",
     "jsdom": "^27.0.1",
     "lint-staged": "^16.1.5",
@@ -186,5 +186,9 @@
     "typescript": "5.5",
     "vite": "^6.3.5",
     "vite-tsconfig-paths": "^5.1.4"
+  },
+  "overrides": {
+    "js-cookie": "^3.0.8",
+    "postcss": "^8.5.15"
   }
 }
