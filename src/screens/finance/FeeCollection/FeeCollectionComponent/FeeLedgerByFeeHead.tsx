@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { FeeMonth } from 'src/enums/fee-collection-type';
-import { Box, Card, Chip, Checkbox, Collapse, Typography } from '@mui/material';
+import { Box, Card, Chip, Divider, Checkbox, Collapse, Typography } from '@mui/material';
 
 import { FeeRow, toPeriod, ColHeader } from './FeeLedgerShared';
 
@@ -68,14 +68,14 @@ const FeeHeadGroup = ({
     >
       <Box
         sx={{
-          px: 1.35,
-          py: 1,
+          px: 1.5,
+          py: 1.25,
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.65)}`,
           bgcolor: isAllSelected
             ? alpha(theme.palette.primary.main, 0.08)
             : theme.palette.mode === 'dark'
-              ? alpha(theme.palette.background.neutral ?? theme.palette.action.hover, 0.55)
-              : alpha(theme.palette.background.default, 0.35),
+              ? 'transparent'
+              : 'transparent',
           cursor: 'pointer',
           position: 'relative',
           '&::before': {
@@ -126,8 +126,9 @@ const FeeHeadGroup = ({
           />
         </Box>
       </Box>
-
       <Collapse in={open} timeout={300} easing="cubic-bezier(0.4, 0, 0.2, 1)">
+        <Divider />
+
         <ColHeader firstLabel="Month" showStatus />
         {group.items.map((item, idx) => {
           const period = toPeriod(FeeMonth[item.month] as string, item.year ?? year);

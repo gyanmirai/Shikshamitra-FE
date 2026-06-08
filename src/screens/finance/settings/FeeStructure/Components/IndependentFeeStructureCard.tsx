@@ -99,6 +99,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLocking, setIsLocking] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const isNew = !cardId;
   const isLocked = status === FeeStructureLockStatusType.Locked;
@@ -172,7 +173,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     { label: 'Quarterly', value: 'quarterly' },
     { label: 'Yearly', value: 'yearly' },
   ];
-
+  console.log('------formik', formik.errors);
   useEffect(() => {
     onDirtyChange?.(isEditing && (isNew || formik.dirty));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -182,6 +183,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const discardEdit = () => {
     formik.resetForm();
+    setSubmitAttempted(false);
     setIsEditing(false);
   };
 
@@ -210,11 +212,14 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const getFeeHeadError = (idx: number, field: string): string | undefined => {
     const errors = formik.errors.feeHeads as any;
+    if (!errors?.[idx]?.[field]) return undefined;
+    if (submitAttempted) return errors[idx][field];
     const touched = formik.touched.feeHeads as any;
-    return touched?.[idx]?.[field] && errors?.[idx]?.[field] ? errors[idx][field] : undefined;
+    return touched?.[idx]?.[field] ? errors[idx][field] : undefined;
   };
 
   const handleSave = async () => {
+    setSubmitAttempted(true);
     formik.setTouched({
       name: true,
       feeHeads: formik.values.feeHeads.map(() => ({ paybleMonth: true, amount: true })) as any,
@@ -257,6 +262,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         });
         setIsEditing(false);
         setIsSaving(false);
+        setSubmitAttempted(false);
         onSaved?.({ ...initialData, ...saved, _id: newId });
         shikshaMitraToast.success({ message: 'Fee structure created successfully' });
       } else {
@@ -277,6 +283,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         });
         setIsEditing(false);
         setIsSaving(false);
+        setSubmitAttempted(false);
         onSaved?.({ ...initialData, ...saved, _id: cardId });
         shikshaMitraToast.success({ message: 'Fee structure updated successfully' });
       }
@@ -348,7 +355,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               borderBottom: `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.08)}`,
               borderRadius: '10px 10px 0 0',
             },
-            '& .MuiAccordionSummary-content': {
+            '& .MuiAccordionSummary-content-expanded': {
               alignItems: 'center',
               gap: 1.5,
               my: 0.75,
@@ -391,7 +398,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                   helperText={formik.touched.name && formik.errors.name}
                   sx={{
                     maxWidth: 260,
-                    mb: 2,
+                    mb: 1.5,
                     '& .MuiFormHelperText-root': {
                       // horizontal padding
                       mr: 0, // top spacing
@@ -413,7 +420,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               color="success"
               size="small"
               variant="soft"
-              sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11 }}
+              sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11, mb: 0.5 }}
             />
 
             {formik.values.feeHeads.length > 0 && (
@@ -422,7 +429,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 size="small"
                 variant="soft"
                 color="default"
-                sx={{ fontWeight: 500, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
+                sx={{ fontWeight: 500, borderRadius: 1, fontSize: 11, flexShrink: 0, mb: 0.5 }}
               />
             )}
             {formik.touched.feeHeads && typeof formik.errors.feeHeads === 'string' && (
@@ -442,7 +449,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 color="error"
                 size="small"
                 variant="soft"
-                sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
+                sx={{ fontWeight: 500, borderRadius: 1, fontSize: 11, flexShrink: 0, mb: 0.5 }}
               />
             )}
             {isLocked ? (
@@ -457,6 +464,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                     px: 1,
                     py: 1.2,
                     gap: 1.2,
+                    // mb: 0.5
                   }}
                 >
                   <Iconify icon="mdi:lock" color={theme.palette.warning.main} width={15} />
@@ -466,7 +474,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 </Box>
               </Box>
             ) : (
-              <Box>
+              <Box mr={1}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -581,7 +589,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                     size="small"
                     sx={{
                       minWidth: 0,
-                      p: 0.6,
+                      p: 0.8,
                       borderRadius: '50%',
                       bgcolor: isLocked ? theme.palette.grey[500] : theme.vars.palette.success.main,
                       '&:hover': {
@@ -653,6 +661,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 {formik.values.feeHeads.map((item, idx) => {
                   const paybleMonthError = getFeeHeadError(idx, 'paybleMonth');
                   const amountError = getFeeHeadError(idx, 'amount');
+                  console.log('paybleMonthError----', paybleMonthError);
                   return (
                     <Grid
                       container
@@ -931,7 +940,19 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       <CustomDialog
         open={addFeeHeadDialog.value}
         handleClose={addFeeHeadDialog.onFalse}
-        title="Add Fee Head"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Add Fee Head</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="You can add existing fee heads to this fee structure."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <AddFeeHeadToCardDialog
           existingFeeHeadIds={new Set(formik.values.feeHeads.map((fh) => fh.feeHeadId))}
