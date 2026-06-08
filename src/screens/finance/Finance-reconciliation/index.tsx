@@ -11,8 +11,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Tab, Card, Tabs } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useCallback } from 'react';
-import { useNewSearchParam } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ReconciliationtatusType } from 'src/enums/reconciliation-status-type';
@@ -68,8 +68,11 @@ const reconciliationTabConfig = [
 
 const FinanceReconciliation = () => {
   // Tab state
-  const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
-  const activeTab = searchParams?.tab || ReconciliationtatusType.UPI;
+  // const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
+
+  const { getParam, setParam } = useCustomSearchParams({ tab: 'UPI' });
+  const searchParams = getParam('tab');
+  const activeTab = searchParams || ReconciliationtatusType.UPI;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
@@ -165,9 +168,9 @@ const FinanceReconciliation = () => {
     (event: React.SyntheticEvent, newValue: string | number) => {
       const newIndex = TABS.findIndex((tab) => tab.value === newValue);
       setIsBack(currentIndex > newIndex);
-      setSearchParams({ tab: String(newValue) });
+      setParam('tab', String(newValue));
     },
-    [TABS, currentIndex, setSearchParams]
+    [TABS, currentIndex, setParam]
   );
 
   // Extract month, year, academicYearId from date picker + global state
