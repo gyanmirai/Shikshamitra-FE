@@ -14,6 +14,7 @@ import SubjectPalette from './SubjectPalette';
 import AssignRoomDialog from './AssignRoomDialog';
 import AssignTeacherDialog from './AssignTeacherDialog';
 import {
+  SLOT_HEIGHT_BASE,
   TIMELINE_END_HOUR,
   parseTimeToMinutes,
   TIMELINE_START_HOUR,
@@ -83,6 +84,49 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
 
   // --- Actions ---
 
+  const handleSwapSlots = (
+    fromDay: DayOfWeek,
+    fromSlotIndex: number,
+    toDay: DayOfWeek,
+    toSlotIndex: number
+  ) => {
+    if (readOnly) return;
+
+    const newWeeklySlots = { ...slots };
+    const fromSlot = newWeeklySlots[fromDay][fromSlotIndex];
+    const toSlot = newWeeklySlots[toDay][toSlotIndex];
+
+    const fromProps = {
+      subjectId: fromSlot.subjectId,
+      subjectAssignmentId: fromSlot.subjectAssignmentId,
+      _attachedSubject: fromSlot._attachedSubject,
+      subjects: fromSlot.subjects,
+      subjectType: fromSlot.subjectType,
+      electiveGroupId: fromSlot.electiveGroupId,
+      electiveGroupName: fromSlot.electiveGroupName,
+    };
+
+    const toProps = {
+      subjectId: toSlot.subjectId,
+      subjectAssignmentId: toSlot.subjectAssignmentId,
+      _attachedSubject: toSlot._attachedSubject,
+      subjects: toSlot.subjects,
+      subjectType: toSlot.subjectType,
+      electiveGroupId: toSlot.electiveGroupId,
+      electiveGroupName: toSlot.electiveGroupName,
+    };
+
+    newWeeklySlots[fromDay] = newWeeklySlots[fromDay].map((s, index) =>
+      index === fromSlotIndex ? { ...s, ...toProps } : s
+    );
+
+    newWeeklySlots[toDay] = newWeeklySlots[toDay].map((s, index) =>
+      index === toSlotIndex ? { ...s, ...fromProps } : s
+    );
+
+    onChange(newWeeklySlots);
+  };
+
   const handleDropSubject = (
     dayKey: string,
     slotId: string,
@@ -110,6 +154,24 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
 
     // 1. Update State
     const newWeeklySlots = { ...slots };
+
+    // -- HANDLE SWAP (Drag and drop over filled slot) --
+    if (fromSlotId) {
+      const targetSlot = newWeeklySlots[dayKey as DayOfWeek]?.[parseInt(slotId, 10)];
+      const targetIsFilled =
+        targetSlot && (targetSlot.subjectId || (targetSlot.subjects?.length ?? 0) > 0);
+
+      if (targetIsFilled) {
+        const [fromDayStr, fromDayIndex] = fromSlotId.split('-');
+        handleSwapSlots(
+          fromDayStr as DayOfWeek,
+          parseInt(fromDayIndex, 10),
+          dayKey as DayOfWeek,
+          parseInt(slotId, 10)
+        );
+        return;
+      }
+    }
 
     // -- HANDLE MOVE (Remove from old slot) --
     if (fromSlotId) {
@@ -404,7 +466,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
                 <Box
                   key={time}
                   sx={{
-                    height: '50px',
+                    height: `${SLOT_HEIGHT_BASE}px`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'flex-end',

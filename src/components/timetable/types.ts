@@ -91,8 +91,8 @@ export interface TimeSlot {
   subjects?: SlotSubject[];
 
   // Deprecated/Legacy (kept for now to avoid breaking everything immediately, will be mapped)
-  // Deprecated/Legacy (kept for now to avoid breaking everything immediately, will be mapped)
   subjectId?: string | null;
+  subjectAssignmentId?: string | null;
   _attachedSubject?: Subject; // Temp property for drag-and-drop state
 }
 

@@ -6,7 +6,6 @@ import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useCallback } from 'react';
@@ -120,7 +119,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               pop.onClose();
             }}
           >
-            <Iconify icon={GlobalIcons.download} />
+            <Iconify icon="solar:printer-outline" />
             Print Timetable
           </MenuItem>
 
@@ -134,7 +133,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                 pop.onClose();
               }}
             >
-              <Iconify icon={GlobalIcons.publish} />
+              <Iconify icon="solar:cloud-upload-outline" />
               Publish Exam
             </MenuItem>
           )}
@@ -317,7 +316,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             variant="contained"
             loading={isPublishing}
             disabled={isPublishing}
-            startIcon={<Iconify icon={GlobalIcons.publish} />}
+            startIcon={<Iconify icon="solar:cloud-upload-outline" />}
             onClick={handlePublishExam}
             size="small"
           >

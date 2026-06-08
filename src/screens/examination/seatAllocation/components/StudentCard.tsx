@@ -29,9 +29,10 @@ const StudentCard = ({ student, theme }: { student: IStudentRoomAssignment; them
         cursor: isAssigned ? 'pointer' : 'grab',
         transition: 'all 0.2s ease-in-out',
         borderRadius: 1.5,
-        border: (t) => `1px solid ${t.palette.divider}`,
+        border: '1px solid',
+        borderColor: 'divider',
         boxShadow: (t) => (isAssigned ? 'none' : t.shadows[2]),
-        bgcolor: (t) => (isAssigned ? t.palette.action.selected : t.palette.background.paper),
+        bgcolor: isAssigned ? 'action.selected' : 'background.paper',
         opacity: isAssigned ? 0.6 : 1,
         '&:hover': {
           transform: isAssigned ? 'none' : 'translateY(-2px)',
@@ -46,9 +47,8 @@ const StudentCard = ({ student, theme }: { student: IStudentRoomAssignment; them
         sx={{
           width: 40,
           height: 40,
-          bgcolor: (t) =>
-            isAssigned ? t.palette.action.disabledBackground : t.palette.primary.main,
-          color: (t) => (isAssigned ? t.palette.text.disabled : t.palette.primary.contrastText),
+          bgcolor: isAssigned ? 'action.disabledBackground' : 'primary.main',
+          color: isAssigned ? 'text.disabled' : 'primary.contrastText',
           fontWeight: 700,
           fontSize: '0.875rem',
         }}

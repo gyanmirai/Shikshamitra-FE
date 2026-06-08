@@ -73,6 +73,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   const isFilled = hasSubjects || !!attachedSubject;
 
   const displaySubjects = hasSubjects ? slot.subjects! : attachedSubject ? [attachedSubject] : [];
+  const allTeachersAssigned = displaySubjects.every((s) => s.teacherId);
   const theme = useTheme();
 
   const [{ isDragging }, drag] = useDrag({
@@ -116,7 +117,13 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
 
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ItemTypes.SUBJECT,
-    canDrop: () => !isBreak && !isFilled,
+    canDrop: (item: DragItem) => {
+      if (isBreak) return false;
+      if (isFilled) {
+        return !!item.fromSlotId && item.fromSlotId !== `${day}-${index}`;
+      }
+      return true;
+    },
     drop: (item: DragItem) => {
       if (item.subject) {
         onDrop(String(index), item.subject, item.fromSlotId);
@@ -321,21 +328,115 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                     {displaySubjects[0].division ? `-${displaySubjects[0].division}` : ''}
                   </Typography>
                 )}
-                {!isBreak && displaySubjects[0]?.roomName && (
-                  <Typography
-                    variant="caption"
-                    display="block"
-                    sx={{ color: 'text.secondary', lineHeight: 1.2 }}
+                {!isBreak && (
+                  <Box
+                    sx={{
+                      mt: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 1,
+                      flexWrap: 'wrap',
+                    }}
                   >
-                    {displaySubjects[0].roomName}
-                  </Typography>
+                    {/* Room Name */}
+                    {displaySubjects[0]?.roomName && (
+                      <Box
+                        sx={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 0.25,
+                          color: 'text.secondary',
+                        }}
+                      >
+                        <Iconify icon="solar:home-bold-duotone" width={11} />
+                        <Typography variant="caption" sx={{ fontSize: '0.65rem', fontWeight: 500 }}>
+                          {displaySubjects[0].roomName}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {/* Divider dot */}
+                    {displaySubjects[0]?.roomName && (
+                      <Box component="span" sx={{ fontSize: '0.65rem', color: 'text.disabled' }}>
+                        •
+                      </Box>
+                    )}
+
+                    {/* Teacher status */}
+                    {allTeachersAssigned ? (
+                      <Box
+                        sx={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 0.25,
+                          color: 'text.secondary',
+                        }}
+                      >
+                        <Iconify
+                          icon="solar:user-bold-duotone"
+                          width={11}
+                          sx={{ color: 'success.main' }}
+                        />
+                        <Typography variant="caption" sx={{ fontSize: '0.65rem', fontWeight: 500 }}>
+                          {displaySubjects.length === 1
+                            ? displaySubjects[0].teacherName
+                            : 'Assigned'}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Tooltip title="No teacher assigned" arrow>
+                        <Box
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            color: 'text.disabled',
+                          }}
+                        >
+                          <Iconify icon="solar:user-bold-duotone" width={11} />
+                        </Box>
+                      </Tooltip>
+                    )}
+                  </Box>
                 )}
               </Box>
             ) : (
               <Tooltip title={fullText}>
                 <Box>
-                  <Typography variant="body2" fontWeight="bold" sx={{ lineHeight: 1.3 }}>
+                  <Typography
+                    variant="body2"
+                    fontWeight="bold"
+                    sx={{
+                      lineHeight: 1.3,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      justifyContent: 'center',
+                    }}
+                  >
                     {isBreak ? slot.breakType : firstSubject}
+                    {!isBreak && !allTeachersAssigned && (
+                      <Tooltip title="No teacher assigned" arrow>
+                        <span>
+                          <Iconify
+                            icon="solar:user-bold-duotone"
+                            width={12}
+                            sx={{ color: 'text.disabled', verticalAlign: 'middle' }}
+                          />
+                        </span>
+                      </Tooltip>
+                    )}
+                    {!isBreak && allTeachersAssigned && (
+                      <Tooltip title="Teacher assigned" arrow>
+                        <span>
+                          <Iconify
+                            icon="solar:user-bold-duotone"
+                            width={12}
+                            sx={{ color: 'success.main', verticalAlign: 'middle' }}
+                          />
+                        </span>
+                      </Tooltip>
+                    )}
                   </Typography>
                   {!isBreak && displaySubjects[0]?.className && (
                     <Typography

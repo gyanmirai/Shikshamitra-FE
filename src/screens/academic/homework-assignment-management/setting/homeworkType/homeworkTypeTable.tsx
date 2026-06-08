@@ -26,6 +26,7 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
         id: 'action',
         label: 'Actions',
         minWidth: 50,
+        width: 50,
         isSort: false,
         sticky: true,
         isFilter: false,

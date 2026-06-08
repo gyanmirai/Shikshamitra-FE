@@ -298,21 +298,17 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       size="small"
                       disableCloseOnSelect
                       renderOption={(optionProps, option, { selected }) => {
+                        const { key, ...restOptionProps } = optionProps as any;
                         const label =
                           option?.electiveGroupName ||
                           option?.subjectName ||
                           option?.subjects?.[0]?.subjectName ||
                           option?.name ||
                           '';
+                        const optionKey =
+                          option?.electiveGroupId || option?.subjects?.[0]?.subjectId || option?.id;
                         return (
-                          <li
-                            {...optionProps}
-                            key={
-                              option?.electiveGroupId ||
-                              option?.subjects?.[0]?.subjectId ||
-                              option?.id
-                            }
-                          >
+                          <li key={key ?? optionKey} {...restOptionProps}>
                             <Checkbox checked={selected} size="small" sx={{ mr: 0.5, p: 0.5 }} />
                             {label}
                           </li>

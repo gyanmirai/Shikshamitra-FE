@@ -109,7 +109,14 @@ const SubjectAssignmentForm = ({
                     disabled={isPublished}
                     options={subjectsOptions}
                     loading={isSubjectOptionsLoading}
-                    getOptionLabel={(option: any) => option?.label ?? ''}
+                    noOptionsText={
+                      formik.values.classId
+                        ? 'All available subjects have already been allocated to this class'
+                        : 'Please select a class first'
+                    }
+                    getOptionLabel={(option: { label?: string; value?: string }) =>
+                      option?.label ?? ''
+                    }
                     isOptionEqualToValue={(option, val) => option.value === val.value}
                     value={formik?.values?.selectedSubjects || []}
                     onChange={(_, newValue) => handleSubjectChange(newValue as any)}

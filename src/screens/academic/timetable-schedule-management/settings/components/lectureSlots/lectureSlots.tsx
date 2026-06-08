@@ -147,7 +147,8 @@ const LectureSlots = () => {
         align: 'left',
         isSort: false,
         isFilter: false,
-        minWidth: '80px',
+        minWidth: 80,
+        width: 80,
         render(value, row) {
           return (
             <ThreeDotsActions

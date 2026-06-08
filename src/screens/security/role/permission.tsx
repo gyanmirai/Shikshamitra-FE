@@ -226,7 +226,7 @@ export default function Permission({
                         color: isSelected ? 'primary.main' : 'text.secondary',
                         bgcolor: isSelected
                           ? (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
-                          : (theme) => theme.palette.grey[200],
+                          : (theme) => theme.vars.palette.background.neutral,
                         '&:hover': {
                           bgcolor: (theme) =>
                             varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
