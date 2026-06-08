@@ -7,15 +7,19 @@ import { Box, Card } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useCreateFeeAdjustmentMutation } from 'src/redux/finance/adjustments/adjustmentApi';
 
 import ViewFeeDetails from './Components/ViewFeeDetails';
 import FeeCollectionTable from './Components/FeeCollectionTable';
 import AdjustmentForm from '../adjustments/components/AdjustmentForm';
 import FeeCollectComponentForm from './FeeCollectionComponent/FeeCollectionForm';
+import { buildAdjustmentApiPayload } from '../adjustments/types/adjustmentFormValues';
 
 import type { IStudentFee } from './Components/type';
+import type { IAdjustmentFullFormValues } from '../adjustments/types/adjustmentFormValues';
 
 const FeeCollection = () => {
   const [selectedBoard, setSelectedBoard] = useState('');
@@ -27,9 +31,10 @@ const FeeCollection = () => {
   const [selectedStudent, setSelectedStudent] = useState<IStudentFee | null>(null);
   // Get the changes status from the confirm popup redux state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // Redux dispatch function for triggering actions
   const dispatch = useDispatch();
+  const [createFeeAdjustment] = useCreateFeeAdjustmentMutation();
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       studentDialog.onFalse();
@@ -169,9 +174,27 @@ const FeeCollection = () => {
               adjustmentDialog.onFalse();
               setSelectedStudent(null);
             }}
-            onSubmit={(values) => {
-              adjustmentDialog.onFalse();
-              setSelectedStudent(null);
+            onSubmit={async (values: IAdjustmentFullFormValues) => {
+              try {
+                if (!currentYear?.id) {
+                  shikshaMitraToast.error({ message: 'Academic year is required.' });
+                  return;
+                }
+                const body = buildAdjustmentApiPayload({
+                  ...values,
+                  studentId: selectedStudent.id,
+                });
+                await createFeeAdjustment({ academicYearId: currentYear.id, body }).unwrap();
+                adjustmentDialog.onFalse();
+                setSelectedStudent(null);
+                shikshaMitraToast.success({
+                  message: 'Adjustment request created. View it under Finance → Adjustments.',
+                });
+              } catch (err: any) {
+                shikshaMitraToast.error({
+                  message: err?.data?.error?.message || 'Failed to create adjustment.',
+                });
+              }
             }}
             hideStudentInfoForm
             initialData={{ studentId: selectedStudent.id }}
