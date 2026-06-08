@@ -25,7 +25,9 @@ const CurriculumReports = ({ addReportDialog }: { addReportDialog: UseBooleanRet
     icon: '',
     description: opt.label,
     categoryId: 'CurriculumReports',
-    render: () => <CurriculumReportForm report={opt.name} />,
+    render: () => (
+      <CurriculumReportForm report={opt.name} onSuccess={() => addReportDialog?.onFalse()} />
+    ),
   }));
 
   return (

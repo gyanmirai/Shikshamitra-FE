@@ -1,18 +1,125 @@
 'use client';
 
-import React from 'react';
+import dayjs from 'dayjs';
+import { toast } from 'sonner';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Chip, Button, IconButton } from '@mui/material';
+import React, { useRef, useState, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Chip, Button, Tooltip, IconButton } from '@mui/material';
+import {
+  useGetAcademicReportExportsQuery,
+  useLazyDownloadAcademicReportQuery,
+  useLazyGetAcademicReportExportJobQuery,
+} from 'src/redux/academicAPI/AcademicReportApi';
 
 import CurriculumReports from './CurriculumReports';
 
+const STATUS_COLOR: Record<string, 'default' | 'primary' | 'success' | 'error' | 'warning'> = {
+  Queued: 'default',
+  Processing: 'warning',
+  Completed: 'success',
+  Failed: 'error',
+};
+
 const CurriculumReportList = () => {
   const addReportDialog = useBoolean(false);
+
+  const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const { data: exportsData, isLoading: isExportsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAcademicReportExportsQuery,
+    popupConfig: { error: true, errorMessage: 'Failed to load export history' },
+  });
+
+  const [pollJobStatus] = useLazyGetAcademicReportExportJobQuery();
+  const [triggerDownload] = useLazyDownloadAcademicReportQuery();
+
+  const stopPolling = useCallback(() => {
+    if (pollIntervalRef.current !== null) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  }, []);
+
+  const saveFile = useCallback(
+    (data: { bytes: string; contentType?: string | null; fileName?: string | null }) => {
+      const byteChars = atob(data.bytes);
+      const byteArr = new Uint8Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i += 1) {
+        byteArr[i] = byteChars.charCodeAt(i);
+      }
+      const blob = new Blob([byteArr], { type: data.contentType || 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = data.fileName || 'report.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    },
+    []
+  );
+
+  const handleDownload = useCallback(
+    async (jobId: string, currentStatus: string) => {
+      if (downloadingJobId) return;
+
+      if (currentStatus === 'Completed') {
+        setDownloadingJobId(jobId);
+        try {
+          const dlResult = await triggerDownload({ jobId }, false);
+          if ('data' in dlResult && dlResult.data?.bytes) {
+            saveFile(dlResult.data);
+          }
+        } catch {
+          toast.error('Download failed. Please try again.');
+        } finally {
+          setDownloadingJobId(null);
+        }
+        return;
+      }
+
+      setDownloadingJobId(jobId);
+      pollIntervalRef.current = setInterval(async () => {
+        try {
+          const statusResult = await pollJobStatus({ jobId }, false);
+          if (!('data' in statusResult) || !statusResult.data) return;
+
+          const { status } = statusResult.data;
+          if (status === 'Completed') {
+            stopPolling();
+            try {
+              const dlResult = await triggerDownload({ jobId }, false);
+              if ('data' in dlResult && dlResult.data?.bytes) {
+                saveFile(dlResult.data);
+              }
+            } catch {
+              toast.error('Download failed. Please try again.');
+            } finally {
+              setDownloadingJobId(null);
+            }
+          } else if (status === 'Failed') {
+            stopPolling();
+            setDownloadingJobId(null);
+            toast.error(statusResult.data.errorMessage || 'Export job failed');
+          }
+        } catch {
+          // transient error — retry on next tick
+        }
+      }, 2000);
+    },
+    [downloadingJobId, pollJobStatus, saveFile, stopPolling, triggerDownload]
+  );
+
+  const rows = Array.isArray(exportsData) ? exportsData : [];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -42,99 +149,113 @@ const CurriculumReportList = () => {
       ) : (
         <CustomizableTable
           tableId="curriculum-reports"
+          isLoading={isExportsLoading}
+          data={rows}
           columns={[
             {
-              label: 'Name',
-              id: 'reportName',
-              minWidth: '90px',
+              label: 'Report Type',
+              id: 'reportType',
+              minWidth: '180px',
               align: 'left',
               sticky: true,
             },
             {
-              label: 'Category',
-              id: 'reportCategory',
-              minWidth: '90px',
+              label: 'Format',
+              id: 'format',
+              minWidth: '80px',
               align: 'left',
             },
             {
-              label: 'Description',
-              id: 'reportDescription',
-              minWidth: '170px',
+              label: 'Status',
+              id: 'status',
+              minWidth: '110px',
               align: 'left',
+              render(value) {
+                const color = STATUS_COLOR[value] ?? 'default';
+                return <Chip label={value ?? '—'} size="small" color={color} variant="soft" />;
+              },
             },
             {
-              label: 'Generated Date',
-              id: 'generatedDate',
+              label: 'File Name',
+              id: 'fileName',
+              minWidth: '200px',
+              align: 'left',
+              render(value) {
+                return value ?? '—';
+              },
+            },
+            {
+              label: 'Created At',
+              id: 'creationTime',
               minWidth: '150px',
               align: 'left',
+              render(value) {
+                return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—';
+              },
             },
             {
-              label: 'Applied Filters',
-              id: 'appliedFilters',
-              align: 'left',
+              label: 'Completed At',
+              id: 'completedAt',
               minWidth: '150px',
-              render(value, row) {
-                return (
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {row.appliedFilters?.map((filter: any) => (
-                      <Chip
-                        key={filter.name}
-                        size="small"
-                        variant="soft"
-                        label={`${filter.name}: ${filter.value}`}
-                      />
-                    ))}
-                  </Box>
-                );
+              align: 'left',
+              render(value) {
+                return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—';
+              },
+            },
+            {
+              label: 'Expires At',
+              id: 'expiresAt',
+              minWidth: '150px',
+              align: 'left',
+              render(value) {
+                return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—';
               },
             },
             {
               label: 'Action',
-              id: 'reportAction',
-              minWidth: '40px',
-              align: 'left',
+              id: 'id',
+              minWidth: '60px',
+              align: 'center',
               isFilter: false,
               isSort: false,
               sticky: true,
-              render() {
+              stickyPosition: 'right',
+              render(value, row) {
+                const isThisDownloading = downloadingJobId === value;
+                const canDownload =
+                  row.status === 'Completed' ||
+                  row.status === 'Queued' ||
+                  row.status === 'Processing';
                 return (
-                  <IconButton size="small" onClick={() => {}}>
-                    <Iconify icon={GlobalIcons.report} />
-                  </IconButton>
+                  <Tooltip
+                    title={
+                      row.status === 'Failed'
+                        ? (row.errorMessage ?? 'Export failed')
+                        : isThisDownloading
+                          ? 'Downloading...'
+                          : 'Download'
+                    }
+                  >
+                    <span>
+                      <IconButton
+                        size="small"
+                        disabled={!canDownload || !!downloadingJobId}
+                        onClick={() => handleDownload(value, row.status)}
+                      >
+                        <Iconify
+                          icon={
+                            isThisDownloading
+                              ? 'eos-icons:loading'
+                              : row.status === 'Failed'
+                                ? 'mdi:alert-circle-outline'
+                                : GlobalIcons.report
+                          }
+                        />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
                 );
               },
-            },
-          ]}
-          data={[
-            {
-              reportName: 'Chapter Progress Report',
-              reportCategory: 'Curriculum Reports',
-              reportDescription: 'Status of chapters (Upcoming, In Progress, Completed).',
-              generatedDate: '01-12-2025',
-              appliedFilters: [
-                { name: 'Subject', value: 'Mathematics' },
-                { name: 'Class', value: '10th' },
-              ],
-              reportAction: 'View',
-            },
-            {
-              reportName: 'Subject-wise Chapter Coverage',
-              reportCategory: 'Curriculum Reports',
-              reportDescription: 'Coverage of chapters across subjects.',
-              generatedDate: '02-12-2025',
-              appliedFilters: [
-                { name: 'Subject', value: 'Science' },
-                { name: 'Class', value: '9th' },
-              ],
-              reportAction: 'View',
-            },
-            {
-              reportName: 'Curriculum Completion Report',
-              reportCategory: 'Curriculum Reports',
-              reportDescription: 'Overall completion status of the curriculum.',
-              generatedDate: '03-12-2025',
-              appliedFilters: [{ name: 'Class', value: 'All' }],
-              reportAction: 'View',
             },
           ]}
         />
