@@ -60,7 +60,7 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
       maxWidth: 'min(420px, calc(100vw - 32px))',
       minHeight: 52,
       display: 'flex',
-      position: 'relative',
+      position: 'absolute',
       borderRadius: 12,
       alignItems: 'center',
       padding: 0,
