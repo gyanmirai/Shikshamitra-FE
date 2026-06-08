@@ -1,7 +1,7 @@
 const isStaticExport = 'false';
 
 const nextConfig = {
-  productionBrowserSourceMaps: false, // ✅ IMPORTANT (memory fix)
+  productionBrowserSourceMaps: false,
 
   trailingSlash: true,
   basePath: process.env.NEXT_PUBLIC_BASE_PATH,
@@ -22,30 +22,13 @@ const nextConfig = {
     },
   },
 
-  // ❌ REMOVE webpack (huge improvement)
-  // webpack(config) {
-  //   config.module.rules.push({
-  //     test: /\.svg$/,
-  //     use: ['@svgr/webpack'],
-  //   });
-  //   return config;
-  // },
-
-  ...(isStaticExport === 'true' && {
-    output: 'export',
-  }),
-
   reactStrictMode: false,
 
   distDir: 'build',
-  output: 'standalone',
+
+  output: isStaticExport === 'true' ? 'export' : 'standalone',
 
   transpilePackages: ['mui-tel-input'],
-
-  // ✅ Add these
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 
   typescript: {
     ignoreBuildErrors: true,

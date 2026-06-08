@@ -6,11 +6,11 @@ import type { Viewport } from 'next';
 import { CONFIG } from 'src/config-global';
 import { primary } from 'src/theme/core/palette';
 import { Snackbar } from 'src/components/snackbar';
-import { InitColorSchemeScript } from '@mui/material';
 import { ThemeProvider } from 'src/theme/theme-provider';
 import { ProgressBar } from 'src/components/progress-bar';
 import { detectSettings } from 'src/components/settings/server';
 import KeyboardShortcut from 'src/components/keyboard-shortcut';
+import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 import { SettingsDrawer, defaultSettings, SettingsProvider } from 'src/components/settings';
 import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
 

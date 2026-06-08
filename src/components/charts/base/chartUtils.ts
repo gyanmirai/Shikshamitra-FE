@@ -147,10 +147,9 @@ export function premiumTooltipFormatter(theme: Theme) {
         const isPieLike =
           p.series?.type === 'pie' || p.series?.type === 'funnel' || p.series?.type === 'pyramid';
         const label = isPieLike ? (p.name ?? p.series.name) : p.series.name;
+        const fontFamily = theme.typography.fontFamily?.replace(/"/g, "'");
         return `
-          <div style="display:flex;align-items:center;gap:8px;padding:4px 12px;font-family:${
-            theme.typography.fontFamily
-          };">
+          <div style="display:flex;align-items:center;gap:8px;padding:4px 12px;font-family:${fontFamily};">
             <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${color};"></span>
             <span style="color:${theme.palette.text.secondary};font-size:12px;flex:1;">${label}</span>
             <span style="color:${
@@ -173,8 +172,9 @@ export function premiumTooltipFormatter(theme: Theme) {
 /** Centered text inside a donut. */
 export function donutCenterTitle(label: string, value: string | number, theme: Theme) {
   const p = getThemePalette(theme);
+  const fontFamily = theme.typography.fontFamily?.replace(/"/g, "'");
   return `
-    <div style="text-align:center;font-family:${theme.typography.fontFamily};">
+    <div style="text-align:center;font-family:${fontFamily};">
       <div style="font-size:12px;font-weight:600;color:${p.textSecondary};">${label}</div>
       <div style="font-size:22px;font-weight:700;color:${p.textPrimary};margin-top:4px;">${value}</div>
     </div>`;
