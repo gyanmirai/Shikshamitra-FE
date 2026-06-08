@@ -26,6 +26,8 @@ export const academicType = {
   weeklyLectureSlot: 'WeeklyLectureSlot',
   lectureSlot: 'LectureSlot',
   timetableManagement: 'TimetableManagement',
+  academicReport: 'AcademicReport',
+  academicReportExport: 'AcademicReportExport',
 } as const;
 
 // ===== Quiz Management API (reducerPath: quizManagementApi) =====
