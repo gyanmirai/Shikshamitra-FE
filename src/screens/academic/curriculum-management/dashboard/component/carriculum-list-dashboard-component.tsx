@@ -4,15 +4,11 @@ import type { Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import React, { useMemo } from 'react';
 import { alpha, useTheme } from '@mui/material/styles';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useEffect } from 'react';
-import { useGetClassQuery } from 'src/redux/class/classApi';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import {
@@ -26,85 +22,61 @@ import {
   DialogActions,
   DialogContentText,
 } from '@mui/material';
-import {
-  useGetSubjectAssignmentsQuery,
-  usePublishSubjectAssignmentMutation,
-} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+
+import { useCurriculumListDashboard } from '../hooks/useCurriculumListDashboard';
 
 const CarriculumListDashboardComponent = (props: TabComponentType) => {
   const theme = useTheme();
+  const {
+    classData,
+    classId,
+    setClassId,
+    classes,
+    setClasses,
+    curriculumTableData,
+    isAssignmentsLoading,
+    confirmPublishDialog,
+    pendingStatusChange,
+    handleStatusChange,
+    confirmStatusChange,
+    handleCloseDialog,
+  } = useCurriculumListDashboard();
 
-  const { data: classData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
-  const [classId, setClassId] = useState('');
-  const [publishSubjectAssignment] = usePublishSubjectAssignmentMutation();
-  const [classes, setClasses] = useState('');
-  const [pendingStatusChange, setPendingStatusChange] = useState<{
-    id: string;
-    newValue: PublishUnpublishStatusType;
-  } | null>(null);
-  const confirmPublishDialog = useBoolean();
-
-  const { data: assignmentsData, isLoading: isAssignmentsLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
-    params: { standardId: classId, page: 1, pageSize: 100 },
-    options: { skip: !classId },
-  });
-
-  const curriculumTableData = useMemo(() => {
-    const items: any[] = assignmentsData?.items ?? assignmentsData?.data?.items ?? [];
-    return items.map((item: any) => ({
-      id: item.subjectAssignmentId ?? item.id ?? '',
-      curriculumName: item.name ?? item.curriculumName ?? `${item.standardName ?? ''} Curriculum`,
-      className: item.standardName ?? item.className ?? '',
-      subjects: item.subjectCount ?? item.subjects?.length ?? 0,
-      lastUpdated: item.updatedAt ?? item.lastModifiedAt ?? item.createdAt ?? new Date(),
-      status: item.status ?? PublishUnpublishStatusType.Draft,
-    }));
-  }, [assignmentsData]);
-
-  const handleStatusChange = (id: string, currentStatus: PublishUnpublishStatusType) => {
-    const newStatus =
-      currentStatus === PublishUnpublishStatusType.Published
-        ? PublishUnpublishStatusType.Draft
-        : PublishUnpublishStatusType.Published;
-    setPendingStatusChange({ id, newValue: newStatus });
-    confirmPublishDialog.onTrue();
-  };
-
-  const confirmStatusChange = async () => {
-    if (pendingStatusChange) {
-      const { id, newValue } = pendingStatusChange;
-      try {
-        await publishSubjectAssignment({ assignmentId: id, status: newValue }).unwrap();
-        shikshaMitraToast.success({
-          message: `Curriculum ${
-            newValue === PublishUnpublishStatusType.Published ? 'published' : 'unpublished'
-          } successfully.`,
-        });
-      } catch {
-        shikshaMitraToast.error({ message: 'Failed to update curriculum status.' });
-      }
-    }
-    confirmPublishDialog.onFalse();
-    setPendingStatusChange(null);
-  };
-
-  const handleCloseDialog = () => {
-    confirmPublishDialog.onFalse();
-    setPendingStatusChange(null);
-  };
-
-  useEffect(() => {
-    if (!classId && classData?.items?.length > 0) {
-      const firstClass = classData.items[0];
-      setClasses(firstClass?.name ?? '');
-      setClassId(firstClass?.id ?? '');
-    }
-  }, [classData?.items, classId]);
+  /**
+   * Memoization Justification:
+   * Memoizes table column configurations to prevent useless re-computation
+   * and preserves stable Switch checked handlers across render boundaries.
+   */
+  const columns = useMemo(
+    () => [
+      { id: 'curriculumName', label: 'Curriculum Name' },
+      { id: 'className', label: 'Class' },
+      { id: 'subjects', label: 'Subjects' },
+      {
+        id: 'lastUpdated',
+        label: 'Last Updated',
+        render: (value: any) => (
+          <Typography fontSize="12px" gutterBottom>
+            {dayjs(value).format('DD MMM YYYY')}
+          </Typography>
+        ),
+      },
+      {
+        id: 'status',
+        label: 'Publish',
+        render: (value: PublishUnpublishStatusType, row: any) => (
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Switch
+              size="small"
+              checked={value === PublishUnpublishStatusType.Published}
+              onChange={() => handleStatusChange(row.id, value)}
+            />
+          </Box>
+        ),
+      },
+    ],
+    [handleStatusChange]
+  );
 
   return (
     <Box>
@@ -123,33 +95,7 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
       <CustomizableTable
         tableId="curriculum-table"
         isLoading={isAssignmentsLoading}
-        columns={[
-          { id: 'curriculumName', label: 'Curriculum Name' },
-          { id: 'className', label: 'Class' },
-          { id: 'subjects', label: 'Subjects' },
-          {
-            id: 'lastUpdated',
-            label: 'Last Updated',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('DD MMM YYYY')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'status',
-            label: 'Publish',
-            render: (value: PublishUnpublishStatusType, row: any) => (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Switch
-                  size="small"
-                  checked={value === PublishUnpublishStatusType.Published}
-                  onChange={() => handleStatusChange(row.id, value)}
-                />
-              </Box>
-            ),
-          },
-        ]}
+        columns={columns}
         data={curriculumTableData}
       />
 
@@ -192,8 +138,7 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
                   const selectedClass: Standards = classData.items.find(
                     (i: Standards) => i.id === val
                   );
-                  // formik.setFieldValue('class', selectedClass?.name || '');
-                  setClasses(selectedClass?.name);
+                  setClasses(selectedClass?.name || '');
                 }}
                 value={classes}
                 formControlProps={{ sx: { minWidth: 120 } }}
@@ -201,7 +146,6 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
             </Box>
             <AnalyticsWebsiteVisits
               title=""
-              //   subheader="(+43%) than last year"
               chart={{
                 categories: ['Math', 'Science', 'History', 'ENG', 'Social Science', 'Gujarati'],
                 series: [
@@ -209,7 +153,6 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
                   { name: 'Video', data: [20, 45, 15, 65, 80, 5] },
                   { name: 'Audio', data: [10, 30, 29, 24, 8, 65] },
                 ],
-
                 colors: [
                   alpha(theme.vars.palette.primary.dark, 0.8),
                   alpha(theme.vars.palette.warning.main, 0.8),

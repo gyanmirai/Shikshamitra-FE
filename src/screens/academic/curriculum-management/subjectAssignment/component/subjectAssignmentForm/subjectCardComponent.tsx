@@ -1,32 +1,25 @@
-import { getIn } from 'formik';
-import { useMemo, useState } from 'react';
-import { Editor } from 'src/components/editor';
 import CloseIcon from '@mui/icons-material/Close';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { fileData } from 'src/components/file-thumbnail';
 import { SingleFilePreview } from 'src/components/upload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ShakingTextField from 'src/components/shaking-text-field';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   Box,
-  Grid,
   Chip,
   Tooltip,
   Accordion,
-  TextField,
   IconButton,
   Typography,
-  FormHelperText,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
 
-import TeacherSelectionFields from './TeacherSelectionFields';
-import { useTeacherSelection } from './hooks/useTeacherSelection';
+import { useSubjectCard } from './hooks/useSubjectCard';
+import { SubjectSetupSection } from './components/SubjectSetupSection';
+import { LearningContentSection } from './components/LearningContentSection';
 
 import type { ISubjectCardProps } from '../type';
 
@@ -48,41 +41,20 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     setSecondaryTeacherObjs,
     fetchPrimaryTeacherOptions,
     fetchSecondaryTeacherOptions,
-  } = useTeacherSelection({
-    primaryTeacherId: subject.primaryTeacherId,
-    secondaryTeacherIds: subject.secondaryTeacherIds,
+    previewFile,
+    setPreviewFile,
+    previewDialog,
+    isExpanded,
+    handleChange,
+    getError,
+    hasSubjectError,
+  } = useSubjectCard({
+    formik,
+    subject,
+    index,
+    onSubjectChange,
+    activeSubjectId,
   });
-
-  const [previewFile, setPreviewFile] = useState<File | string | null>(null);
-  const previewDialog = useBoolean();
-
-  // Derived from parent-controlled state — enables single-expand accordion behavior.
-  const isExpanded = activeSubjectId === subject.subjectNo;
-
-  const handleChange = (field: string, value: unknown) => {
-    if (!subject?.subjectNo) return;
-    onSubjectChange(subject.subjectNo, field, value);
-  };
-
-  const getError = (field: string) =>
-    getIn(formik.touched, `subjects[${index}].${field}`) &&
-    getIn(formik.errors, `subjects[${index}].${field}`);
-
-  const hasSubjectError = useMemo(() => {
-    const subjectErrors = getIn(formik.errors, `subjects[${index}]`);
-    const subjectTouched = getIn(formik.touched, `subjects[${index}]`);
-    if (!subjectErrors || typeof subjectErrors !== 'object') return false;
-    if (!subjectTouched || typeof subjectTouched !== 'object') return false;
-    return Object.keys(subjectErrors as object).some(
-      (field) =>
-        !!(subjectTouched as Record<string, unknown>)[field] &&
-        !!(subjectErrors as Record<string, unknown>)[field]
-    );
-  }, [formik.errors, formik.touched, index]);
-
-  const subjectDocuments = subject.documents.map(
-    (doc) => `${process.env.NEXT_PUBLIC_API_URL}${doc}`
-  );
 
   return (
     <>
@@ -93,7 +65,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
           borderRadius: 1.5,
           border: (theme) =>
             `1px solid ${hasSubjectError ? theme.palette.error.main : theme.palette.divider}`,
-
           transition: (theme) =>
             theme.transitions.create(['box-shadow', 'border-color', 'background-color']),
           '&:before': { display: 'none' },
@@ -115,11 +86,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             pb: 0,
             pt: 0,
             bgcolor: (theme) => (isExpanded ? theme.palette.action.hover : 'transparent'),
-            '& .MuiAccordionSummary-content': {
-              alignItems: 'center',
-              display: 'flex',
-              gap: 1,
-            },
+            '& .MuiAccordionSummary-content': { alignItems: 'center', display: 'flex', gap: 1 },
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1 }}>
@@ -174,7 +141,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
         </AccordionSummary>
 
         <AccordionDetails sx={{ p: 3, bgcolor: 'background.paper' }}>
-          {/* ── Subject Setup ── */}
           <Box sx={{ mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
               <Typography
@@ -190,58 +156,36 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               </Typography>
               <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
             </Box>
-            <Grid container spacing={3}>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <ShakingTextField error={!!getError('subjectCode')}>
-                  <TextField
-                    fullWidth
-                    label="Subject Code *"
-                    placeholder="e.g. MATH-101"
-                    size="small"
-                    value={subject.subjectCode || ''}
-                    onChange={(e) => {
-                      const uppercaseValue = e.target.value
-                        .toUpperCase()
-                        .replace(/[^A-Z0-9\-_]/g, '');
-                      handleChange('subjectCode', uppercaseValue);
-                    }}
-                    error={!!getError('subjectCode')}
-                    helperText={
-                      getError('subjectCode') || 'Auto-formatted to uppercase (e.g. MATH-101)'
-                    }
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <TeacherSelectionFields
-                index={index ?? 0}
-                primaryTeacherObj={primaryTeacherObj}
-                secondaryTeacherObjs={secondaryTeacherObjs}
-                secondaryTeacherIds={subject.secondaryTeacherIds}
-                primaryTeacherId={subject.primaryTeacherId}
-                fetchPrimaryTeacherOptions={fetchPrimaryTeacherOptions}
-                fetchSecondaryTeacherOptions={fetchSecondaryTeacherOptions}
-                onPrimaryChange={(newValue) => {
-                  setPrimaryTeacherObj(newValue);
-                  formik.setFieldValue(`subjects.${index}.primaryTeacherId`, newValue?.id ?? '');
-                  formik.setFieldTouched(`subjects.${index}.primaryTeacherId`, true, false);
-                  formik.setFieldTouched(`subjects.${index}.secondaryTeacherIds`, true, false);
-                }}
-                onSecondaryChange={(newValues) => {
-                  setSecondaryTeacherObjs(newValues);
-                  formik.setFieldValue(
-                    `subjects.${index}.secondaryTeacherIds`,
-                    newValues.map((item) => item.id)
-                  );
-                  formik.setFieldTouched(`subjects.${index}.secondaryTeacherIds`, true, false);
-                  formik.setFieldTouched(`subjects.${index}.primaryTeacherId`, true, false);
-                }}
-                getError={getError}
-              />
-            </Grid>
+            <SubjectSetupSection
+              index={index ?? 0}
+              subjectCode={subject.subjectCode}
+              primaryTeacherId={subject.primaryTeacherId}
+              secondaryTeacherIds={subject.secondaryTeacherIds}
+              primaryTeacherObj={primaryTeacherObj}
+              secondaryTeacherObjs={secondaryTeacherObjs}
+              fetchPrimaryTeacherOptions={fetchPrimaryTeacherOptions}
+              fetchSecondaryTeacherOptions={fetchSecondaryTeacherOptions}
+              onPrimaryChange={(newValue) => {
+                setPrimaryTeacherObj(newValue);
+                formik.setFieldValue(`subjects.${index}.primaryTeacherId`, newValue?.id ?? '');
+                formik.setFieldTouched(`subjects.${index}.primaryTeacherId`, true, false);
+                formik.setFieldTouched(`subjects.${index}.secondaryTeacherIds`, true, false);
+              }}
+              onSecondaryChange={(newValues) => {
+                setSecondaryTeacherObjs(newValues);
+                formik.setFieldValue(
+                  `subjects.${index}.secondaryTeacherIds`,
+                  newValues.map((item) => item.id)
+                );
+                formik.setFieldTouched(`subjects.${index}.secondaryTeacherIds`, true, false);
+                formik.setFieldTouched(`subjects.${index}.primaryTeacherId`, true, false);
+              }}
+              getError={getError}
+              onChange={handleChange}
+              formik={formik}
+            />
           </Box>
 
-          {/* ── Learning Content ── */}
           <Box sx={{ mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
               <Typography
@@ -257,77 +201,9 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               </Typography>
               <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
             </Box>
-            <Grid container spacing={3}>
-              {[
-                {
-                  label: 'Learning Goals',
-                  field: 'learningGoal',
-                  helperText: 'Define measurable outcomes students should achieve',
-                  placeholder:
-                    'e.g. Students will explain core concepts, analyze data, and apply problem-solving techniques independently...',
-                },
-                {
-                  label: 'Prerequisites',
-                  field: 'prerequisites',
-                  helperText:
-                    'List concepts or skills students should already know before starting',
-                  placeholder:
-                    'e.g. Basic arithmetic, understanding of fractions and decimals, ability to read simple charts...',
-                },
-                {
-                  label: 'Description',
-                  field: 'description',
-                  helperText:
-                    'Provide a clear overview of the subject scope and teaching objectives',
-                  placeholder:
-                    'e.g. This subject introduces foundational concepts and builds critical thinking skills through structured activities...',
-                },
-              ].map((section) => (
-                <Grid key={section.field} size={{ xs: 12 }}>
-                  <Box sx={{ mb: 0.5, display: 'flex', alignItems: 'baseline', gap: 1 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                      {section.label}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                      {section.helperText}
-                    </Typography>
-                  </Box>
-                  <ShakingTextField error={!!getError(section.field)}>
-                    <Editor
-                      onChange={(value) => handleChange(section.field, value)}
-                      value={
-                        ((subject as unknown as Record<string, unknown>)[
-                          section.field
-                        ] as string) || ''
-                      }
-                      placeholder={section.placeholder}
-                      error={!!getError(section.field)}
-                      sx={{
-                        borderRadius: 1,
-                        border: (theme) =>
-                          `1px solid ${
-                            getError(section.field)
-                              ? theme.palette.error.main
-                              : theme.palette.divider
-                          }`,
-                        '&:hover': { borderColor: 'text.secondary' },
-                        '&:focus-within': { borderColor: 'primary.main', borderWidth: 2 },
-                        maxHeight: 250,
-                        overflow: 'hidden',
-                      }}
-                    />
-                    {getError(section.field) && (
-                      <FormHelperText error sx={{ ml: 1 }}>
-                        {getError(section.field)}
-                      </FormHelperText>
-                    )}
-                  </ShakingTextField>
-                </Grid>
-              ))}
-            </Grid>
+            <LearningContentSection subject={subject} getError={getError} onChange={handleChange} />
           </Box>
 
-          {/* ── Attachments ── */}
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
               <Typography

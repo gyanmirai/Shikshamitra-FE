@@ -122,12 +122,7 @@ export function useSubjectAssignmentForm({
     },
   });
 
-  const {
-    data: subjectTableData = [],
-    isLoading: isSubjectLoading,
-    refetch,
-    isFetching,
-  } = useQueryAndMutation({
+  const { data: subjectTableData = [] } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
     params: { standardId: formik?.values?.classId || classId, page: 0, pageSize: 20 },

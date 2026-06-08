@@ -1,91 +1,119 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
-
-import { useSelector } from 'react-redux';
+import React, { useMemo } from 'react';
 import { Box, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import React, { useState, useEffect } from 'react';
 import { Save, RestartAlt } from '@mui/icons-material';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-const electiveGroups = [
-  {
-    id: 'elective1',
-    name: 'Elective Group 1',
-    subjects: [
-      { id: 'computer', name: 'Computer' },
-      { id: 'pt', name: 'Physical Training' },
-    ],
-  },
-  {
-    id: 'elective2',
-    name: 'Elective Group 2',
-    subjects: [
-      { id: 'hindi', name: 'Hindi' },
-      { id: 'sanskrit', name: 'Sanskrit' },
-    ],
-  },
-];
+import { electiveGroups, useAssignElectiveSubject } from './hooks/useAssignElectiveSubject';
 
 const AssignElectiveSubject = () => {
   const theme = useTheme();
-  // State to store all classes/standards for the selected organization
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
-  const [classes, setClasses] = useState<string>('');
-  // State to store all divisions for the selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
-  const [division, setDivision] = useState<string>('');
-  const [studentSelections, setStudentSelections] = useState<Record<string, string>>({});
-  const [students, setStudents] = useState<any[]>([]);
+  const {
+    allClass,
+    classes,
+    setClasses,
+    allDivision,
+    division,
+    setDivision,
+    studentSelections,
+    students,
+    electiveSubject,
+    setElectiveSubject,
+    selectedElectiveSubject,
+    handleSelectElectiveForStudent,
+    handleApplyElectiveToAll,
+  } = useAssignElectiveSubject();
 
-  // Query hook to fetch class data from the API
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  /**
+   * Memoization Justification:
+   * Memoizes standard/elective subject assignment columns configuration
+   * to prevent re-creation of headers and cell render buttons.
+   * This preserves focus and selection state of buttons inside each row.
+   */
+  const columns = useMemo(() => {
+    const group = electiveGroups.find((g) => g.id === electiveSubject);
+    const subjects = group?.subjects || [];
 
-  // Update classes when organization changes
-  useEffect(() => {
-    // Flatten the list of standards from all stages
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
-  }, [medium]);
-
-  // Update divisions when class changes
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
-    const dummyStudents = [
-      { srNo: 1, rollNo: 'R001', name: 'Atre Prerna Bhanudas' },
-      { srNo: 2, rollNo: 'R002', name: 'Mehta Divya Hitesh' },
-      { srNo: 3, rollNo: 'R003', name: 'Patel Jiya Ganesh' },
-      { srNo: 4, rollNo: 'R004', name: 'Shah Rohan Nirav' },
-      { srNo: 5, rollNo: 'R005', name: 'Desai Krisha Manoj' },
-      { srNo: 6, rollNo: 'R006', name: 'Joshi Aarav Mihir' },
-      { srNo: 7, rollNo: 'R007', name: 'Kapadia Reeva Suresh' },
-      { srNo: 8, rollNo: 'R008', name: 'Trivedi Anaya Harsh' },
-      { srNo: 9, rollNo: 'R009', name: 'Modi Parth Bhargav' },
-      { srNo: 10, rollNo: 'R010', name: 'Rathod Yashika Sanjay' },
+    return [
+      {
+        id: 'name',
+        label: 'Student Name',
+        minWidth: '200px',
+        align: 'left' as const,
+        sticky: true,
+      },
+      { id: 'rollNo', label: 'Roll No.', minWidth: '120px', align: 'left' as const },
+      {
+        id: 'electiveSubject',
+        label: '',
+        minWidth: '500px',
+        align: 'left' as const,
+        isSort: false,
+        isFilter: false,
+        renderColumn: () => (
+          <Box display="flex" alignItems="center" gap={2}>
+            {subjects.map((subj) => {
+              const isSelected = selectedElectiveSubject === subj.id;
+              return (
+                <Button
+                  key={subj.id}
+                  variant={isSelected ? 'contained' : 'outlined'}
+                  size="small"
+                  color="primary"
+                  onClick={() => handleApplyElectiveToAll(subj.id)}
+                  sx={{
+                    color: isSelected ? '#fff' : theme.palette.mode === 'dark' ? '#fff' : '#000',
+                    borderColor: theme.palette.primary.main,
+                    backgroundColor: isSelected ? theme.palette.primary.main : 'transparent',
+                    '&:hover': {
+                      backgroundColor: isSelected
+                        ? theme.vars.palette.primary.dark
+                        : theme.vars.palette.action.hover,
+                    },
+                  }}
+                >
+                  {subj.name}
+                </Button>
+              );
+            })}
+          </Box>
+        ),
+        render: (_: any, row: any) => (
+          <Box display="flex" alignItems="center" gap={2}>
+            {subjects.map((subj) => {
+              const isSelected = studentSelections[row.grNo] === subj.id;
+              return (
+                <Button
+                  key={subj.id}
+                  variant={isSelected ? 'contained' : 'outlined'}
+                  size="small"
+                  color="primary"
+                  onClick={() => handleSelectElectiveForStudent(row.grNo, subj.id)}
+                  sx={{
+                    color: isSelected ? 'white' : 'primary',
+                    borderColor: isSelected ? 'primary' : 'primary',
+                  }}
+                >
+                  {subj.name}
+                </Button>
+              );
+            })}
+          </Box>
+        ),
+      },
     ];
-
-    setElectiveSubject(electiveGroups[0].id);
-
-    setStudents(dummyStudents);
-    setStudentSelections({});
-  }, [allClass, classes, setDivision]);
-
-  // State to store the selected elective subject from dropdown
-  const [electiveSubject, setElectiveSubject] = useState<string>('');
-
-  // State to store the selected elective subject for individual students in the table
-  const [selectedElectiveSubject, setSelectedElectiveSubject] = useState<string>('');
+  }, [
+    electiveSubject,
+    selectedElectiveSubject,
+    studentSelections,
+    handleApplyElectiveToAll,
+    handleSelectElectiveForStudent,
+    theme,
+  ]);
 
   return (
     <Box>
@@ -99,7 +127,6 @@ const AssignElectiveSubject = () => {
         ]}
       />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        {/* Left side - Selects */}
         <Box sx={{ display: 'flex', gap: 2 }}>
           <CustomSelect
             options={allClass}
@@ -124,17 +151,13 @@ const AssignElectiveSubject = () => {
             label="Elective Group"
             labelKey="name"
             valueKey="id"
-            // disabled={!division}
             options={electiveGroups}
             value={electiveSubject}
-            onChange={(value) => {
-              setElectiveSubject(value as string);
-            }}
+            onChange={(value) => setElectiveSubject(value as string)}
             formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
           />
         </Box>
 
-        {/* Right side - Save Button */}
         <Box display="flex" gap={2} justifyContent="flex-end">
           <Button variant="outlined" startIcon={<RestartAlt />} onClick={() => {}} size="small">
             Reset
@@ -158,104 +181,11 @@ const AssignElectiveSubject = () => {
           label: 'Search by Sr. No, GR No, Student Name...',
           sx: { maxWidth: '400px', width: '100%' },
         }}
-        columns={[
-          { id: 'name', label: 'Student Name', minWidth: '200px', align: 'left', sticky: true },
-          { id: 'rollNo', label: 'Roll No.', minWidth: '120px', align: 'left' },
-          {
-            id: 'electiveSubject',
-            label: '',
-            minWidth: '500px',
-            align: 'left',
-            isSort: false,
-            isFilter: false,
-            renderColumn: () => {
-              const group = electiveGroups.find((g) => g.id === electiveSubject);
-              const subjects = group?.subjects || [];
-
-              return (
-                <Box display="flex" alignItems="center" gap={2}>
-                  {subjects.map((subj) => {
-                    const isSelected = selectedElectiveSubject === subj.id;
-                    return (
-                      <Button
-                        key={subj.id}
-                        variant={isSelected ? 'contained' : 'outlined'}
-                        size="small"
-                        color="primary"
-                        onClick={() => {
-                          const isSame = selectedElectiveSubject === subj.id;
-                          const newValue = isSame ? '' : subj.id;
-                          setSelectedElectiveSubject(newValue);
-
-                          if (!isSame) {
-                            const newSelections = students.reduce(
-                              (acc, student) => {
-                                acc[student.grNo] = subj.id;
-                                return acc;
-                              },
-                              {} as Record<string, string>
-                            );
-                            setStudentSelections(newSelections);
-                          }
-                        }}
-                        sx={{
-                          color: isSelected
-                            ? '#fff' // For contained: always white text
-                            : theme.palette.mode === 'dark'
-                              ? '#fff'
-                              : '#000', // For outlined: black in light, white in dark
-                          borderColor: theme.palette.primary.main,
-                          backgroundColor: isSelected ? theme.palette.primary.main : 'transparent',
-                          '&:hover': {
-                            backgroundColor: isSelected
-                              ? theme.vars.palette.primary.dark
-                              : theme.vars.palette.action.hover,
-                          },
-                        }}
-                      >
-                        {subj.name}
-                      </Button>
-                    );
-                  })}
-                </Box>
-              );
-            },
-            render: (_, row: any) => {
-              const group = electiveGroups.find((g) => g.id === electiveSubject);
-              const subjects = group?.subjects || [];
-
-              return (
-                <Box display="flex" alignItems="center" gap={2}>
-                  {subjects.map((subj) => {
-                    const isSelected = studentSelections[row.grNo] === subj.id;
-                    return (
-                      <Button
-                        key={subj.id}
-                        // color="primary"
-                        // fontColor={isSelected? 'white' : 'primary'}
-                        variant={isSelected ? 'contained' : 'outlined'}
-                        size="small"
-                        color="primary"
-                        onClick={() =>
-                          setStudentSelections((prev) => ({ ...prev, [row.grNo]: subj.id }))
-                        }
-                        sx={{
-                          color: isSelected ? 'white' : 'primary',
-                          borderColor: isSelected ? 'primary' : 'primary',
-                        }}
-                      >
-                        {subj.name}
-                      </Button>
-                    );
-                  })}
-                </Box>
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={students}
       />
     </Box>
   );
 };
+
 export default AssignElectiveSubject;

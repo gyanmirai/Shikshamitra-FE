@@ -11,7 +11,6 @@ import {
   Grid,
   Chip,
   Checkbox,
-  Skeleton,
   ListItem,
   TextField,
   Autocomplete,
@@ -22,6 +21,7 @@ import SubjectCard from './subjectCardComponent';
 import SubjectFormActions from './SubjectFormActions';
 import { SubjectAssignmentStatus } from '../../enum/subjectType';
 import { useSubjectAssignmentForm } from './hooks/useSubjectAssignmentForm';
+import { SubjectAssignmentFormSkeleton } from './components/SubjectAssignmentFormSkeleton';
 
 import type { ISubjectAssignmentFormProps } from './type';
 
@@ -35,11 +35,10 @@ const SubjectAssignmentForm = ({
 }: ISubjectAssignmentFormProps) => {
   const isPublished =
     SubjectAssignmentStatus[data?.status as SubjectAssignmentStatus] === 'Published';
-
-  // Single-expand accordion: tracks which subject (by subjectNo) is currently open.
   const [activeSubjectId, setActiveSubjectId] = useState<string | null>(null);
+
   const handleAccordionToggle = useCallback(
-    (subjectId: string) => setActiveSubjectId((prev) => (prev === subjectId ? null : subjectId)),
+    (subjId: string) => setActiveSubjectId((prev) => (prev === subjId ? null : subjId)),
     []
   );
 
@@ -54,17 +53,8 @@ const SubjectAssignmentForm = ({
     handleSubjectChange,
     handleSubjectFieldChange,
     handleFileUpload,
-  } = useSubjectAssignmentForm({
-    onClose,
-    data,
-    isEdit,
-    selectedClass,
-    classId,
-    subjectTableData,
-  });
+  } = useSubjectAssignmentForm({ onClose, data, isEdit, selectedClass, classId, subjectTableData });
 
-  // Remove a subject card by filtering it out of selectedSubjects then letting
-  // handleSubjectChange rebuild the subjects array consistently.
   const handleRemoveSubject = useCallback(
     (subject: { subjectId: string; electiveGroupId?: string; subjectType: number }) => {
       const removeKey = subject.subjectType === 1 ? subject.electiveGroupId : subject.subjectId;
@@ -73,27 +63,10 @@ const SubjectAssignmentForm = ({
       );
       handleSubjectChange(nextSelected);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [formik.values.selectedSubjects, handleSubjectChange]
   );
 
-  if (isLoading) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Skeleton variant="rounded" height={40} width="100%" />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Skeleton variant="rounded" height={40} width="100%" />
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Skeleton variant="rounded" height={56} width="100%" />
-          </Grid>
-        </Grid>
-      </Box>
-    );
-  }
+  if (isLoading) return <SubjectAssignmentFormSkeleton />;
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -112,14 +85,13 @@ const SubjectAssignmentForm = ({
                     disabled={isEdit}
                     onChange={(val) => {
                       formik.setFieldValue('classId', val);
-                      const standard = classOptions.find((c: { value: string }) => c.value === val);
+                      const standard = classOptions.find((c: any) => c.value === val);
                       formik.setFieldValue('className', standard?.label);
                     }}
                     formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                     error={Boolean(formik.touched.className && formik.errors.className)}
                     helperText={
-                      (formik.touched.className && formik.errors.className) ||
-                      'Select the class for this subject allocation'
+                      (formik.touched.className && formik.errors.className) || 'Select the class'
                     }
                   />
                 </ShakingTextField>
@@ -137,25 +109,13 @@ const SubjectAssignmentForm = ({
                     disabled={isPublished}
                     options={subjectsOptions}
                     loading={isSubjectOptionsLoading}
-                    getOptionLabel={(option: { label?: string; value?: string }) =>
-                      option?.label ?? ''
-                    }
+                    getOptionLabel={(option: any) => option?.label ?? ''}
                     isOptionEqualToValue={(option, val) => option.value === val.value}
                     value={formik?.values?.selectedSubjects || []}
-                    onChange={(_, newValue) =>
-                      handleSubjectChange(
-                        newValue as Array<{
-                          type: number;
-                          value: string;
-                          label: string;
-                          color?: string;
-                          subjects?: Array<{ id: string; name: string; color?: string }>;
-                        }>
-                      )
-                    }
+                    onChange={(_, newValue) => handleSubjectChange(newValue as any)}
                     ListboxProps={{ style: { maxHeight: 200, overflow: 'auto' } }}
-                    renderTags={(value, getTagProps) =>
-                      (value as Array<{ label?: string }>).map((option, index) => {
+                    renderTags={(val, getTagProps) =>
+                      val.map((option: any, index) => {
                         const { key, ...tagProps } = getTagProps({ index });
                         return (
                           <Chip
@@ -169,9 +129,8 @@ const SubjectAssignmentForm = ({
                         );
                       })
                     }
-                    renderOption={(props, option, { selected }) => {
+                    renderOption={(props, option: any, { selected }) => {
                       const { key, ...restProps } = props;
-                      const typedOption = option as { label?: string; type?: number };
                       return (
                         <ListItem disablePadding key={key} {...restProps}>
                           <ListItemButton
@@ -198,11 +157,11 @@ const SubjectAssignmentForm = ({
                                 alignItems: 'center',
                               }}
                             >
-                              {typedOption.label}
+                              {option.label}
                               <Chip
                                 size="small"
-                                label={typedOption.type === 0 ? 'Core' : 'Elective'}
-                                color={typedOption.type === 0 ? 'primary' : 'secondary'}
+                                label={option.type === 0 ? 'Core' : 'Elective'}
+                                color={option.type === 0 ? 'primary' : 'secondary'}
                                 sx={{ ml: 1, height: 20 }}
                               />
                             </Box>
@@ -220,7 +179,7 @@ const SubjectAssignmentForm = ({
                         )}
                         helperText={
                           (formik.touched.selectedSubjects && formik.errors.selectedSubjects) ||
-                          'Choose one or more subjects to assign to this class'
+                          'Choose subjects'
                         }
                         inputProps={{ ...params.inputProps, readOnly: true }}
                       />

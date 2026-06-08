@@ -4,17 +4,18 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { sanitizeHtml } from 'src/utils/sanitize-html';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   Box,
   Paper,
   Divider,
-  Skeleton,
   Accordion,
   Typography,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
+import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+
+import { SubjectSyllabusSkeleton } from './SubjectSyllabusSkeleton';
 
 import type { ISubjectDetail } from '../type';
 
@@ -27,9 +28,7 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
     type: 'query',
     currentQueryAndMutation: useGetChaptersByStandardQuery,
     params: { standardId: subject?.classId, subjectId: subject?.subjectId },
-    options: {
-      skip: !subject?.classId || !subject?.subjectId,
-    },
+    options: { skip: !subject?.classId || !subject?.subjectId },
   });
 
   const chapters: any[] =
@@ -39,49 +38,7 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
     (Array.isArray(chaptersData) ? chaptersData : []);
 
   if (isLoading || isFetching) {
-    return (
-      <Box sx={{ height: '100%' }}>
-        <Scrollbar sx={{ height: '100%', pb: 2 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {[...Array(5)].map((_, index) => (
-              <Box
-                key={index}
-                sx={{
-                  borderRadius: 2,
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                  overflow: 'hidden',
-                }}
-              >
-                {/* AccordionSummary skeleton */}
-                <Box
-                  sx={{
-                    minHeight: 64,
-                    px: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Skeleton
-                      variant="rounded"
-                      width={40}
-                      height={40}
-                      sx={{ borderRadius: 1, mr: 2, flexShrink: 0 }}
-                    />
-                    <Box>
-                      <Skeleton variant="text" width={80} height={16} />
-                      <Skeleton variant="text" width={180} height={22} sx={{ mt: 0.5 }} />
-                    </Box>
-                  </Box>
-                  <Skeleton variant="circular" width={20} height={20} />
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        </Scrollbar>
-      </Box>
-    );
+    return <SubjectSyllabusSkeleton />;
   }
 
   return (
@@ -96,9 +53,9 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
                   borderRadius: 2,
                   boxShadow: 'none',
                   border: (theme) => `1px solid ${theme.palette.divider}`,
-                  '&:before': { display: 'none' }, // Remove default divider
+                  '&:before': { display: 'none' },
                   '&.Mui-expanded': {
-                    margin: 0, // Prevent default margin shift
+                    margin: 0,
                     boxShadow: 'var(--shadows-3)',
                     borderColor: 'transparent',
                   },

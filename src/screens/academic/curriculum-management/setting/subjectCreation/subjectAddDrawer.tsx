@@ -1,15 +1,9 @@
 'use client';
 
-import type { Medium } from 'src/types/school';
-import type { RootState } from 'src/redux/store';
-
+import React from 'react';
 import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useCallback } from 'react';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import {
@@ -22,140 +16,36 @@ import {
   IconButton,
   Typography,
 } from '@mui/material';
-import {
-  useAddSubjectMutation,
-  useGetCoreSubjectsByMediumQuery,
-} from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
-import type { IPendingRow } from './type';
+import { useSubjectAddDrawer } from './hooks/useSubjectAddDrawer';
 
-// ─────────────────────────────────────────────────────────────
 interface SubjectAddDrawerProps {
   open: boolean;
   onClose: () => void;
 }
 
 const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) => {
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const {
+    rows,
+    isSaving,
+    showErrors,
+    addRow,
+    updateRow,
+    removeRow,
+    getDuplicateError,
+    resetAndClose,
+    handleSave,
+  } = useSubjectAddDrawer({ onClose });
 
-  const { data: existingSubjects } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
-    options: { skip: !(currentMedium as Medium)?.id },
-  });
-
-  const [addSubject, { isLoading: isSaving }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddSubjectMutation,
-  });
-
-  const [rows, setRows] = useState<IPendingRow[]>([
-    { tempId: `temp-${Date.now()}`, name: '', color: '' },
-  ]);
-  const [showErrors, setShowErrors] = useState(false);
-
-  // Lowercase set of existing names for O(1) duplicate look-ups
-  const existingNames = useMemo(
-    () => new Set((existingSubjects || []).map((s: any) => s.name.trim().toLowerCase())),
-    [existingSubjects]
-  );
-
-  // ── Row helpers ──
-  const addRow = useCallback(() => {
-    setRows((prev) => [
-      ...prev,
-      { tempId: `temp-${Date.now()}-${Math.random()}`, name: '', color: '' },
-    ]);
-  }, []);
-
-  const updateRow = useCallback((tempId: string, field: 'name' | 'color', value: string) => {
-    setRows((prev) => prev.map((r) => (r.tempId === tempId ? { ...r, [field]: value } : r)));
-  }, []);
-
-  const removeRow = useCallback((tempId: string) => {
-    setRows((prev) => {
-      const next = prev.filter((r) => r.tempId !== tempId);
-      // Always keep at least one empty row
-      return next.length === 0 ? [{ tempId: `temp-${Date.now()}`, name: '', color: '' }] : next;
-    });
-  }, []);
-
-  // Returns an error string if the name is a duplicate, null otherwise
-  const getDuplicateError = useCallback(
-    (name: string, tempId: string): string | null => {
-      const trimmed = name.trim().toLowerCase();
-      if (!trimmed) return null;
-      if (existingNames.has(trimmed)) return 'Subject already exists';
-      const countInList = rows.filter(
-        (r) => r.tempId !== tempId && r.name.trim().toLowerCase() === trimmed
-      ).length;
-      return countInList > 0 ? 'Duplicate in this list' : null;
-    },
-    [existingNames, rows]
-  );
-
-  // ── Close & reset ──
-  const resetAndClose = useCallback(() => {
-    onClose();
-    // Reset after the drawer close animation finishes
-    setTimeout(() => {
-      setRows([{ tempId: `temp-${Date.now()}`, name: '', color: '' }]);
-      setShowErrors(false);
-    }, 300);
-  }, [onClose]);
-
-  // ── Save ──
-  const handleSave = async () => {
-    const hasError = rows.some(
-      (r) => !r.name.trim() || !r.color || !!getDuplicateError(r.name, r.tempId)
-    );
-    if (hasError) {
-      setShowErrors(true);
-      shikshaMitraToast.error({ message: 'Please fix all errors before saving.' });
-      return;
-    }
-    setShowErrors(false);
-    try {
-      await Promise.all(
-        rows.map((row) =>
-          (addSubject as any)({
-            academicMediumId: (currentMedium as Medium).id,
-            body: {
-              name: row.name.trim(),
-              color: row.color,
-              educationMediumId: (currentMedium as Medium).id,
-            },
-          }).unwrap()
-        )
-      );
-      shikshaMitraToast.success({
-        message:
-          rows.length === 1
-            ? `"${rows[0].name.trim()}" added successfully`
-            : `${rows.length} subjects added successfully`,
-      });
-      resetAndClose();
-    } catch (error) {
-      console.error('Failed to save subjects', error);
-    }
-  };
-
-  // ─────────────────────────────────────────────────────────
   return (
     <Drawer
       anchor="right"
       open={open}
       onClose={resetAndClose}
       PaperProps={{
-        sx: {
-          width: { xs: '100%', sm: 440 },
-          display: 'flex',
-          flexDirection: 'column',
-        },
+        sx: { width: { xs: '100%', sm: 440 }, display: 'flex', flexDirection: 'column' },
       }}
     >
-      {/* ── Header ── */}
       <Box
         sx={{
           px: 2.5,
@@ -191,7 +81,6 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
         </IconButton>
       </Box>
 
-      {/* ── Scrollable body ── */}
       <Box
         sx={{
           flex: 1,
@@ -206,7 +95,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
         {rows.map((row, index) => {
           const nameEmpty = showErrors && !row.name.trim();
           const dupError = row.name.trim() ? getDuplicateError(row.name, row.tempId) : null;
-          const nameError: string | null = nameEmpty ? 'Subject name is required' : dupError;
+          const nameError = nameEmpty ? 'Subject name is required' : dupError;
           const colorError = showErrors && !row.color;
 
           return (
@@ -221,12 +110,11 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 transition: 'border-color 0.2s',
               }}
             >
-              {/* Card header: index label + remove button */}
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
+                  justify: 'space-between',
                   mb: 1.5,
                   minHeight: 24,
                 }}
@@ -245,14 +133,13 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                     color="error"
                     disabled={isSaving}
                     onClick={() => removeRow(row.tempId)}
-                    sx={{ p: 0.25, ml: 1 }}
+                    sx={{ p: 0.25, ml: 'auto' }}
                   >
                     <CloseIcon sx={{ fontSize: 16 }} />
                   </IconButton>
                 )}
               </Box>
 
-              {/* Subject name */}
               <TextField
                 size="small"
                 fullWidth
@@ -280,7 +167,6 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 sx={{ mb: 1.5 }}
               />
 
-              {/* Color picker */}
               <Box>
                 <Typography
                   variant="caption"
@@ -309,7 +195,6 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           );
         })}
 
-        {/* ── Add another subject — dashed CTA ── */}
         <Box
           onClick={!isSaving ? addRow : undefined}
           sx={{
@@ -335,7 +220,6 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
         </Box>
       </Box>
 
-      {/* ── Footer ── */}
       <Divider />
       <Box
         sx={{

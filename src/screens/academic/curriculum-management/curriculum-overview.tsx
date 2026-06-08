@@ -1,194 +1,120 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
-import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
-  Grid,
-  Card,
   Chip,
   Button,
   Switch,
-  TextField,
   Typography,
   DialogActions,
   DialogContent,
   DialogContentText,
 } from '@mui/material';
 
-interface TSubject {
-  name: string;
-  color: string;
-}
-
-// interface Document {
-//   id: string;
-//   name: string;
-//   url: string;
-//   file?: File;
-// }
-
-interface TCurriculum {
-  id: number;
-  className: string;
-  curriculumName: string; // Added curriculumName to the interface
-  subjects: TSubject[];
-  startDate: Dayjs | null;
-  endDate: Dayjs | null;
-  scheduleDate: Dayjs | null;
-  // documents?: Document[];
-  status: string;
-}
-
-const CurriculumData: TCurriculum[] = [
-  {
-    id: 1,
-    className: '1',
-    curriculumName: 'First Grade Curriculum', // Added curriculumName
-    subjects: [
-      { name: 'Math', color: '#0077b6' },
-      { name: 'Science', color: '#8e44ad' },
-      { name: 'English', color: '#2980b9' },
-      { name: 'Gujarati', color: '#e74c3c' },
-    ],
-    startDate: dayjs('2024-10-28'),
-    endDate: dayjs('2024-12-28'),
-    scheduleDate: dayjs('2024-10-28'),
-    status: 'Unpublish',
-  },
-  {
-    id: 2,
-    className: '2',
-    curriculumName: 'Second Grade Curriculum', // Added curriculumName
-    subjects: [
-      { name: 'Math', color: '#0077b6' },
-      { name: 'Science', color: '#8e44ad' },
-      { name: 'English', color: '#2980b9' },
-      { name: 'Gujarati', color: '#e74c3c' },
-    ],
-    startDate: dayjs('2023-10-28'),
-    endDate: dayjs('2024-10-20'),
-    scheduleDate: dayjs('2024-10-28'),
-    status: 'Publish',
-  },
-  {
-    id: 3,
-    className: '3',
-    curriculumName: 'Third Grade Curriculum', // Added curriculumName
-    subjects: [
-      { name: 'Math', color: '#0077b6' },
-      { name: 'Science', color: '#8e44ad' },
-      { name: 'English', color: '#2980b9' },
-      { name: 'Gujarati', color: '#e74c3c' },
-    ],
-    startDate: dayjs('2024-10-11'),
-    endDate: dayjs('2024-10-28'),
-    scheduleDate: dayjs('2024-10-28'),
-    status: 'Unpublish',
-  },
-];
-
-// const subjectData = {
-//   id: 1,
-//   subjectName: 'Mathematics',
-//   subjectCode: 'Math01',
-//   scheduleDate: dayjs('2024-10-28'),
-//   description: '',
-//   subjectColor: '',
-//   className: '1',
-//   primaryTeacher: 'Ms. Johnson',
-//   secondaryTeacher: ['Mr. Smith'],
-//   prerequisites: 'Basic counting skills',
-//   learningGoal: 'Develop understanding of numbers, addition, and subtraction.',
-//   status: 'Publish',
-// };
+import { CurriculumForm } from './components/CurriculumForm';
+import { useCurriculumOverview } from './hooks/useCurriculumOverview';
 
 const CurriculumOverview = (props: TabComponentType) => {
   const { setSearchParams } = props;
-  const [curriculumTableData, setCurriculumTableData] = useState<TCurriculum[]>(CurriculumData);
-  const [selectedCurriculum, setSelectedCurriculum] = useState<TCurriculum | null>(null);
-  const [isEdit, setIsEdit] = useState(false);
-  // const dialog = useBoolean();
-  const [open, setOpen] = useState(false);
-  const [pendingStatusChange, setPendingStatusChange] = useState<{
-    id: number;
-    newValue: string;
-  } | null>(null);
-  const confirmPublishDialog = useBoolean();
+  const {
+    curriculumTableData,
+    selectedCurriculum,
+    isEdit,
+    open,
+    pendingStatusChange,
+    confirmPublishDialog,
+    handleCloseDialog,
+    handleEditCurriculum,
+    confirmStatusChange,
+    handleSubmit,
+    handleStatusChange,
+    handleOpenAdd,
+  } = useCurriculumOverview();
 
-  const handleCloseDialog = () => {
-    setOpen(false);
-    setSelectedCurriculum(null);
-    setIsEdit(false);
-    confirmPublishDialog.onFalse();
-  };
-
-  const handleEditCurriculum = (curriculum: any) => {
-    setSelectedCurriculum(curriculum);
-    setIsEdit(true);
-    setOpen(true);
-  };
-
-  const confirmStatusChange = () => {
-    if (pendingStatusChange) {
-      const { id, newValue } = pendingStatusChange;
-      setCurriculumTableData((curriculum) =>
-        curriculum.map((curr) => (curr.id === id ? { ...curr, status: newValue } : curr))
-      );
-    }
-    confirmPublishDialog.onFalse();
-    setPendingStatusChange(null);
-  };
-
-  const handleSubmit = (values: any) => {
-    // const newCurriculum: TCurriculum = {
-    //   className: values.className,
-    //   subjects: values.subjects.map((name: string) => ({
-    //     name,
-    //     color:
-    //       CurriculumData.find((c) => c.subjects.some((s) => s.name === name))?.subjects.find(
-    //         (s) => s.name === name
-    //       )?.color || '#000',
-    //   })),
-    //   startDate: values.startDate,
-    //   endDate: values.endDate,
-    //   documents: values.documents || [],
-    //   status: isDraft ? 'Unpublish' : 'Publish',
-    // };
-
-    if (isEdit) {
-      setCurriculumTableData((prev) =>
-        prev.map((curr) => (curr.id === selectedCurriculum!.id ? values : curr))
-      );
-    } else {
-      setCurriculumTableData((prev) => [...prev, values]);
-    }
-
-    handleCloseDialog();
-  };
-
-  const handleStatusChange = (id: number, value: string) => {
-    setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
-    confirmPublishDialog.onTrue();
-  };
-
-  // const handleSubjectClick = () => {};
+  /**
+   * Memoization Justification:
+   * Prevents re-creating table column definitions on every render.
+   * Ensures stable render functions for cells, avoiding unexpected switch/chip resets.
+   */
+  const columns = useMemo(
+    () => [
+      { id: 'className', label: 'Class', minWidth: '100px', align: 'left' as const },
+      { id: 'curriculumName', label: 'Curriculum Name', minWidth: '200px', align: 'left' as const },
+      {
+        id: 'startDate',
+        label: 'Start Date',
+        minWidth: '130px',
+        align: 'left' as const,
+        render: (value: any) => (
+          <Typography fontSize="12px" gutterBottom>
+            {dayjs(value).format('DD MMM YYYY')}
+          </Typography>
+        ),
+      },
+      {
+        id: 'endDate',
+        label: 'End Date',
+        minWidth: '130px',
+        align: 'left' as const,
+        render: (value: any) => (
+          <Typography fontSize="12px" gutterBottom>
+            {dayjs(value).format('DD MMM YYYY')}
+          </Typography>
+        ),
+      },
+      {
+        id: 'subjects',
+        label: 'Subjects',
+        render: (value: any, row: any) =>
+          row.subjects.map((subj: any, index: number) => (
+            <Chip
+              key={`${subj.name}-${index}`}
+              size="small"
+              label={subj.name}
+              variant="outlined"
+              sx={{ m: 0.1 }}
+            />
+          )),
+      },
+      {
+        id: 'status',
+        label: 'Publish',
+        render: (value: string, row: any) => (
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Switch
+              size="small"
+              checked={value === 'Publish'}
+              onChange={() => handleStatusChange(row.id, value)}
+            />
+          </Box>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        isSort: false,
+        render: (value: any, row: any) => (
+          <ThreeDotsActions
+            placement="right-top"
+            showEditIcon
+            showThreeDots={false}
+            handleEditClick={() => handleEditCurriculum(row)}
+          />
+        ),
+      },
+    ],
+    [handleStatusChange, handleEditCurriculum]
+  );
 
   return (
     <Box>
@@ -213,15 +139,13 @@ const CurriculumOverview = (props: TabComponentType) => {
               </Button>
             }
           />
-          <Card>
-            <CurriculumForm
-              setSearchParams={setSearchParams}
-              onSubmit={handleSubmit}
-              onClose={handleCloseDialog}
-              isEdit={isEdit}
-              data={selectedCurriculum}
-            />
-          </Card>
+          <CurriculumForm
+            setSearchParams={setSearchParams}
+            onSubmit={handleSubmit}
+            onClose={handleCloseDialog}
+            isEdit={isEdit}
+            data={selectedCurriculum}
+          />
         </>
       ) : (
         <>
@@ -229,108 +153,18 @@ const CurriculumOverview = (props: TabComponentType) => {
             heading="Curriculum Overview"
             links={[{ name: 'Academics' }, { name: 'Curriculum' }, { name: 'Curriculum Overview' }]}
             action={
-              <Button
-                startIcon={<Add />}
-                variant="contained"
-                size="small"
-                onClick={() => {
-                  setIsEdit(false);
-                  setSelectedCurriculum(null);
-                  setOpen(true);
-                }}
-              >
+              <Button startIcon={<Add />} variant="contained" size="small" onClick={handleOpenAdd}>
                 Curriculum
               </Button>
             }
           />
           <CustomizableTable
             tableId="curriculum-overview-table"
-            columns={[
-              { id: 'className', label: 'Class', minWidth: '100px', align: 'left' },
-              {
-                id: 'curriculumName',
-                label: 'Curriculum Name',
-                minWidth: '200px',
-                align: 'left',
-              },
-              {
-                id: 'startDate',
-                label: 'Start Date',
-                minWidth: '130px',
-                align: 'left',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD MMM YYYY')}
-                  </Typography>
-                ),
-              },
-              {
-                id: 'endDate',
-                label: 'End Date',
-                minWidth: '130px',
-                align: 'left',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD MMM YYYY')}
-                  </Typography>
-                ),
-              },
-              {
-                id: 'subjects',
-                label: 'Subjects',
-                render(value, row) {
-                  return row.subjects.map((data: any, index: any) => (
-                    <Chip size="small" label={data.name} variant="outlined" sx={{ m: 0.1 }} />
-                  ));
-                },
-              },
-              {
-                id: 'status',
-                label: 'Publish',
-                render: (value: string, row: any) => (
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Switch
-                      size="small"
-                      checked={value === 'Publish'}
-                      onChange={() => handleStatusChange(row.id, value as string)}
-                    />
-                  </Box>
-                ),
-              },
-              {
-                id: 'action',
-                label: 'Actions',
-                isSort: false,
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      // actions={(prop) => actions({ ...props, row })}
-                      placement="right-top"
-                      showEditIcon
-                      showThreeDots={false}
-                      handleEditClick={() => {
-                        handleEditCurriculum(row);
-                      }}
-                    />
-                  );
-                },
-              },
-            ]}
+            columns={columns}
             data={curriculumTableData}
           />
         </>
       )}
-
-      {/* <CustomDialog
-        title="Subject Details"
-        open={showDialog.value}
-        handleClose={() => {
-          showDialog.onFalse();
-        }}
-        maxWidth="sm"
-      >
-        <ViewSubject subject={subjectData} />
-      </CustomDialog> */}
 
       <CustomDialog
         title="Confirm Publication"
@@ -358,192 +192,3 @@ const CurriculumOverview = (props: TabComponentType) => {
 };
 
 export default CurriculumOverview;
-
-interface CurriculumFormProps {
-  setSearchParams: any;
-  onSubmit: (values: TCurriculum) => void;
-  onClose: () => void;
-  data: TCurriculum | null;
-  isEdit: boolean;
-}
-
-const CurriculumForm: React.FC<CurriculumFormProps> = ({
-  setSearchParams,
-  onSubmit,
-  onClose,
-  data,
-  isEdit,
-}) => {
-  // const [documents, setDocuments] = useState<Document[]>(data?.documents || []);
-  const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
-
-  const formik = useFormik({
-    initialValues: {
-      className: data?.className || '',
-      curriculumName: data?.curriculumName || '',
-      subjects: data?.subjects.map((subject) => subject.name) || [],
-      startDate: data?.startDate ? dayjs(data?.startDate) : dayjs(),
-      endDate: data?.endDate ? dayjs(data?.endDate) : null,
-      scheduleDate: data?.startDate ? dayjs(data?.startDate) : dayjs(),
-      status: data?.status || 'Unpublish',
-    },
-    onSubmit: (values) => {
-      const formData = {
-        ...values,
-        id: data?.id || Date.now(),
-        status: isDraft ? 'Unpublish' : 'Publish',
-        subjects: values.subjects.map((name: string) => ({
-          name,
-          color: '#000',
-        })),
-        // documents,
-      };
-      onSubmit(formData);
-      onClose();
-    },
-  });
-
-  // const handleFileUpload = (files: File[]) => {
-  //   const newDocs: Document[] = files.map((file) => ({
-  //     id: Math.random().toString(36).substr(2, 9),
-  //     name: file.name,
-  //     url: '',
-  //     file,
-  //   }));
-  //   setDocuments((prev) => [...prev, ...newDocs]);
-  // };
-
-  // const handleRemoveDocument = (docId: string) => {
-  //   setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
-  // };
-
-  return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '200px' }}>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                name="curriculumName"
-                label="Curriculum Name"
-                value={formik.values.curriculumName}
-                onChange={formik.handleChange}
-                size="small"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CustomSelect
-                label="Class"
-                options={classData?.items || []}
-                value={formik.values.className}
-                isLoading={isLoading}
-                labelKey="name"
-                valueKey="name"
-                onChange={(val) => {
-                  formik.setFieldValue('className', val);
-                }}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CustomSelect
-                label="Subject"
-                name="subjects"
-                options={[
-                  { value: 'Math', label: 'Math' },
-                  { value: 'Science', label: 'Science' },
-                  { value: 'English', label: 'English' },
-                  { value: 'Gujarati', label: 'Gujarati' },
-                ]}
-                multiple
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                value={formik.values.subjects}
-                onChange={(value) => formik.setFieldValue('subjects', value)}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <DatePicker
-                label="Start Date"
-                name="startDate"
-                value={formik.values.startDate}
-                onChange={(value) => formik.setFieldValue('startDate', value)}
-                format="DD-MM-YYYY"
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <DatePicker
-                label="End Date"
-                name="endDate"
-                value={formik.values.endDate}
-                onChange={(value) => formik.setFieldValue('endDate', value)}
-                format="DD-MM-YYYY"
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <DateTimePicker
-                label="Schedule Date"
-                value={formik.values.scheduleDate}
-                onChange={(value) => {
-                  formik.setFieldValue('scheduleDate', value);
-                }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                  },
-                }}
-                disablePast
-              />
-            </Grid>
-          </Grid>
-        </Scrollbar>
-        <DialogActions>
-          {isEdit ? (
-            <Button
-              variant="contained"
-              onClick={() => {
-                setIsDraft(true);
-                formik.handleSubmit();
-              }}
-            >
-              Update
-            </Button>
-          ) : (
-            <>
-              <Button
-                onClick={() => {
-                  setIsDraft(true);
-                  formik.handleSubmit();
-                }}
-              >
-                Save Draft
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                onClick={() => {
-                  setIsDraft(false);
-                  formik.handleSubmit();
-                }}
-              >
-                Publish
-              </Button>
-            </>
-          )}
-        </DialogActions>
-      </form>
-    </Box>
-  );
-};

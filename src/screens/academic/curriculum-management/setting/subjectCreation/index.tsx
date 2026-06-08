@@ -1,68 +1,36 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
-import React, { useState } from 'react';
+import React from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import {
-  subjectsApi,
-  useDeleteSubjectMutation,
-} from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { subjectsApi } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import SettingSubjectForm from './subjectForm';
 import SubjectAddDrawer from './subjectAddDrawer';
 import SettingSubjectTable from './settingSubjectTable';
-
-import type { ISubject } from './type';
+import { useSubjectCreation } from './hooks/useSubjectCreation';
 
 const SubjectCreation = () => {
-  const deleteSubjectDialog = useBoolean();
-  const [open, setOpen] = useState(false);
-  const addSubjectDialog = useBoolean(false);
-  const drawerOpen = useBoolean(false);
-
-  const [deleteSubject, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteSubjectMutation,
-  });
-
-  const { confirmWithUndo } = useConfirmWithUndo();
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const [selectedSubject, setSelectedSubject] = useState<ISubject | null>(null);
-  const dispatch = useDispatch();
-
-  // ── Edit dialog close handler ──
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedSubject(null);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addSubjectDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addSubjectDialog.onFalse();
-      setTimeout(() => {
-        setSelectedSubject(null);
-      }, 200);
-    }
-  };
+  const {
+    deleteSubjectDialog,
+    open,
+    setOpen,
+    addSubjectDialog,
+    drawerOpen,
+    isDeleteLoading,
+    currentMedium,
+    selectedSubject,
+    setSelectedSubject,
+    confirmWithUndo,
+    deleteSubject,
+    handleClose,
+  } = useSubjectCreation();
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
@@ -105,7 +73,6 @@ const SubjectCreation = () => {
 
       <SubjectAddDrawer open={drawerOpen.value} onClose={drawerOpen.onFalse} />
 
-      {/* Edit dialog — only opens when a subject is selected for editing */}
       <CustomDialog
         open={addSubjectDialog.value && selectedSubject !== null}
         handleClose={() => {
