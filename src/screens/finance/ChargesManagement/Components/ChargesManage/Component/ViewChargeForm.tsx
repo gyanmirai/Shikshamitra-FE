@@ -30,7 +30,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
   const { data: selectedCharge, isLoading: isChargeLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargeByIdQuery,
-    params: charge?.chargeId,
+    params: { id: charge?.chargeId ?? '' },
     options: { skip: !charge?.chargeId },
   });
 
@@ -44,23 +44,23 @@ const ChargeDetailsCard: React.FC<Props> = ({
         <Grid container spacing={2}>
           {/* Left section (size 10) */}
           <Grid size={{ xs: 12 }}>
-            <ChargeInformationAccordion charge={selectedCharge?.data} />
+            <ChargeInformationAccordion charge={selectedCharge} />
           </Grid>
 
           {/* Right section (size 2) */}
 
           {/* Full-width section (size 12) */}
           <Grid size={{ xs: 12, md: 7 }}>
-            <ChargeViewDetailsCard charge={selectedCharge?.data} />
+            <ChargeViewDetailsCard charge={selectedCharge} />
           </Grid>
           <Grid size={{ xs: 12, md: 5 }}>
-            <RequestorInfoCard charge={selectedCharge?.data} />
+            <RequestorInfoCard charge={selectedCharge} />
           </Grid>
         </Grid>
       </Scrollbar>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        {selectedCharge?.data?.status === 0 ? (
+        {selectedCharge?.status === 0 ? (
           <>
             <Button
               variant="soft"

@@ -77,6 +77,9 @@ const ChargesManagement = () => {
       setSelectedMode('');
       setSelectedChargeData(null);
       addChargeDialog.onFalse();
+      if (isSubmit) {
+        chargeRefetchRef.current?.();
+      }
       resetState();
     } else if (!isChanges) {
       onConfirmDialg.onFalse();
@@ -105,6 +108,9 @@ const ChargesManagement = () => {
     // Close dialog if form was submitted or user confirms leaving with unsaved changes
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       editChargeDialog.onFalse();
+      if (isSubmit) {
+        chargeRefetchRef.current?.();
+      }
       resetState();
     } else if (!isChanges) {
       // Close dialog if there are no unsaved changes

@@ -77,23 +77,39 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
 
   // Initialize students when charge data loads
   useEffect(() => {
-    if (chargeData?.id && open) {
+    if (chargeData?.chargeId && open) {
       // Extract students from charge data
-      const chargeStudents: IApprovalReviewStudent[] = chargeData.student
-        ? [
-            {
-              studentId: chargeData.student.studentId || '',
-              studentName: chargeData.student.studentName || '',
-              grNumber: chargeData.student.grNumber,
-              rollNumber: chargeData.student.rollNumber,
-              standardName: chargeData.student.standardName,
-              divisionName: chargeData.student.divisionName,
-            },
-          ]
-        : [];
+      const pendingStudents = (chargeData.students ?? [])
+        .filter((s: any) => s.status === 0)
+        .map(
+          (s: any): IApprovalReviewStudent => ({
+            studentId: s.studentId || '',
+            studentName: s.studentName || '',
+            grNumber: s.grNumber,
+            rollNumber: s.rollNumber,
+            standardName: s.standardName,
+            divisionName: s.divisionName,
+          })
+        );
+
+      const chargeStudents =
+        pendingStudents.length > 0
+          ? pendingStudents
+          : chargeData.student
+            ? [
+                {
+                  studentId: chargeData.student.studentId || '',
+                  studentName: chargeData.student.studentName || '',
+                  grNumber: chargeData.student.grNumber,
+                  rollNumber: chargeData.student.rollNumber,
+                  standardName: chargeData.student.standardName,
+                  divisionName: chargeData.student.divisionName,
+                },
+              ]
+            : [];
 
       setStudents(chargeStudents);
-      setSelectedStudentIds(chargeStudents.map((s) => s.studentId));
+      setSelectedStudentIds(chargeStudents.map((s: IApprovalReviewStudent) => s.studentId));
     }
   }, [chargeData, open]);
 

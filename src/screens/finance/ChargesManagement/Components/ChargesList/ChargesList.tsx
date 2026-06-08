@@ -17,7 +17,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ChargesPaymentStatus } from 'src/enums/fee-charges-status';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
+import { useGetChargeLinesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
 
 import StudentChargeListTable from './StudentChargeTable';
 import ViewStudentAllCharges from './StudentChargesListTable';
@@ -47,21 +47,21 @@ const ChargesList = () => {
   // Fetch all three statuses in parallel and merge to build full charge history.
   const { data: pendingData, isLoading: pendingLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetChargesQuery,
+    currentQueryAndMutation: useGetChargeLinesQuery,
     params: { ...baseParams, status: ChargesPaymentStatus.Pending },
     options: { skip: skipQuery },
   });
 
   const { data: approvedData, isLoading: approvedLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetChargesQuery,
+    currentQueryAndMutation: useGetChargeLinesQuery,
     params: { ...baseParams, status: ChargesPaymentStatus.Approved },
     options: { skip: skipQuery },
   });
 
   const { data: rejectedData, isLoading: rejectedLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetChargesQuery,
+    currentQueryAndMutation: useGetChargeLinesQuery,
     params: { ...baseParams, status: ChargesPaymentStatus.Rejected },
     options: { skip: skipQuery },
   });
@@ -78,6 +78,10 @@ const ChargesList = () => {
 
     const map = new Map<string, IStudentChargeData>();
     allItems.forEach((charge: IChargeData) => {
+      if (!charge.studentId) {
+        return;
+      }
+
       if (!map.has(charge.studentId)) {
         map.set(charge.studentId, {
           studentId: charge.studentId,

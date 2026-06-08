@@ -2,6 +2,12 @@ import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from '../financeModuleApi';
 
+const unwrapDetail = (response: any) => response?.data ?? response;
+const unwrapList = (response: any) => ({
+  ...response,
+  items: response?.items ?? [],
+});
+
 export const chargesApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getCharges: builder.query({
@@ -10,6 +16,16 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
+      transformResponse: unwrapList,
+      providesTags: [financeModuleType.charges],
+    }),
+    getChargeLines: builder.query({
+      query: (params) => ({
+        url: '/charges/lines',
+        method: 'GET',
+        params,
+      }),
+      transformResponse: unwrapList,
       providesTags: [financeModuleType.charges],
     }),
     postCharge: builder.mutation({
@@ -57,6 +73,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         url: `/charges/${id}`,
         method: 'GET',
       }),
+      transformResponse: unwrapDetail,
       providesTags: [financeModuleType.charges],
     }),
   }),
@@ -65,6 +82,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
 
 export const {
   useGetChargesQuery,
+  useGetChargeLinesQuery,
   usePostChargeMutation,
   useUpdateChargeMutation,
   useDeleteChargeMutation,

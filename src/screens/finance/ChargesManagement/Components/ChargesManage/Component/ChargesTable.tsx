@@ -242,43 +242,32 @@ const ChargesTable = ({
         }
         columns={[
           {
-            id: 'studentName',
-            label: 'Name(Gr No.)',
+            id: 'chargeName',
+            label: 'Charge Name',
             align: 'left',
             isFilter: true,
-            width: 150,
-            minWidth: 150,
-            maxWidth: 200,
+            width: 160,
+            minWidth: 140,
+            maxWidth: 220,
             sticky: true,
-            render: (value, row) => (
+            render: (value) => (
               <Typography variant="caption" fontSize="13px">
-                {value || '-'} {row.grNumber && `(${row.grNumber})`}
+                {value || '-'}
               </Typography>
             ),
           },
           {
-            id: 'rollNumber',
-            label: 'Roll No.',
+            id: 'studentCount',
+            label: 'Students',
             align: 'left',
             width: 100,
-            minWidth: 100,
-            maxWidth: 150,
+            minWidth: 90,
+            maxWidth: 120,
             filterType: 'number',
             isFilter: true,
-          },
-          {
-            id: 'standardName',
-            label: 'Class/Div',
-            align: 'left',
-            width: 110,
-            minWidth: 90,
-            maxWidth: 140,
-            isFilter: true,
-            render: (value, row) => (
+            render: (value) => (
               <Typography variant="caption" fontSize="13px">
-                {row.standardName
-                  ? `${row.standardName}${row.divisionName ? ` - ${row.divisionName}` : ''}`
-                  : '-'}
+                {value ?? 0}
               </Typography>
             ),
           },
