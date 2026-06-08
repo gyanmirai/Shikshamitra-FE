@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
+import { isNaN } from 'lodash';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { Box, Alert, Typography } from '@mui/material';
@@ -77,7 +78,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   // State for "apply in all" per fee head: { feeHeadId: { isApplying: boolean, amount: number } }
   const [applyInAllState, setApplyInAllState] = useState<
-    Record<string, { isApplying: boolean; amount: number }>
+    Record<string, { isApplying: boolean; amount: number | string }>
   >({});
 
   /**
@@ -146,12 +147,12 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
       let updated;
       if (!existing) {
-        updated = [...refunds, { feeHeadId, months: [{ month, dueFeeId, amount: 0 }] }];
+        updated = [...refunds, { feeHeadId, months: [{ month, dueFeeId, amount: '' }] }];
       } else {
         const hasMonth = existing.months.some((m) => m.month === month);
         const updatedMonths = hasMonth
           ? existing.months.filter((m) => m.month !== month)
-          : [...existing.months, { month, dueFeeId, amount: 0 }];
+          : [...existing.months, { month, dueFeeId, amount: '' }];
 
         if (updatedMonths.length === 0) {
           updated = refunds.filter((fh) => fh.feeHeadId !== feeHeadId);
@@ -194,14 +195,14 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
             months: refundableItems.map((i) => ({
               month: i.month,
               dueFeeId: i.dueFeeId,
-              amount: 0,
+              amount: '',
             })),
           },
         ];
       } else {
         const toAdd = refundableItems
           .filter((i) => !existing.months.some((e) => e.month === i.month))
-          .map((i) => ({ month: i.month, dueFeeId: i.dueFeeId, amount: 0 }));
+          .map((i) => ({ month: i.month, dueFeeId: i.dueFeeId, amount: '' }));
         updated = refunds.map((fh) =>
           fh.feeHeadId === feeHead.feeHeadId ? { ...fh, months: [...fh.months, ...toAdd] } : fh
         );
@@ -226,15 +227,18 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
    * Handle "apply in all" amount input change for a fee head
    * Reset toggle state when amount becomes 0 to avoid confusion
    */
-  const handleApplyInAllAmountChange = useCallback((feeHeadId: string, amount: number): void => {
-    setApplyInAllState((prev) => ({
-      ...prev,
-      [feeHeadId]: {
-        isApplying: amount === 0 ? false : (prev[feeHeadId]?.isApplying ?? false),
-        amount,
-      },
-    }));
-  }, []);
+  const handleApplyInAllAmountChange = useCallback(
+    (feeHeadId: string, amount: number | string): void => {
+      setApplyInAllState((prev) => ({
+        ...prev,
+        [feeHeadId]: {
+          isApplying: amount === 0 ? false : (prev[feeHeadId]?.isApplying ?? false),
+          amount,
+        },
+      }));
+    },
+    []
+  );
 
   /**
    * Handle "apply in all" toggle - applies/removes amount for all selected months
@@ -242,22 +246,34 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   const handleApplyInAllToggle = useCallback(
     (feeHeadId: string): void => {
       setApplyInAllState((prev) => {
-        const current = prev[feeHeadId] ?? { isApplying: false, amount: 0 };
+        const current = prev[feeHeadId] ?? { isApplying: false, amount: '' };
         const newIsApplying = !current.isApplying;
         const refunds = formik.values.feeHeadRefunds;
         const existing = refunds.find((fh) => fh.feeHeadId === feeHeadId);
 
         if (existing) {
-          if (newIsApplying && current.amount > 0) {
-            // Apply amount to all selected months
+          if (newIsApplying && current.amount !== '') {
+            // Find items for this fee head to get their refundable amounts
+            const fhItems = feeHeads.find((f) => f.feeHeadId === feeHeadId)?.items || [];
+
+            // Apply clamped amount to all selected months
             const updated = refunds.map((fh) =>
               fh.feeHeadId === feeHeadId
                 ? {
                     ...fh,
-                    months: fh.months.map((m) => ({
-                      ...m,
-                      amount: current.amount,
-                    })),
+                    months: fh.months.map((m) => {
+                      const item = fhItems.find((i) => i.month === m.month);
+                      const refundable = Math.max(0, item?.refundable ?? 0);
+                      const amountToApply = Number(current.amount);
+                      const clampedAmount = isNaN(amountToApply)
+                        ? 0
+                        : Math.min(Math.max(0, amountToApply), refundable);
+
+                      return {
+                        ...m,
+                        amount: clampedAmount,
+                      };
+                    }),
                   }
                 : fh
             );
@@ -271,7 +287,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
                     ...fh,
                     months: fh.months.map((m) => ({
                       ...m,
-                      amount: 0,
+                      amount: '',
                     })),
                   }
                 : fh
@@ -290,6 +306,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
         };
       });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [formik]
   );
 
@@ -399,8 +416,8 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
           mode={mode}
           onToggleMonth={(month, dueFeeId) => toggleMonth(feeHead.feeHeadId, month, dueFeeId)}
           onToggleAll={() => toggleAll(feeHead)}
-          applyInAllState={applyInAllState[feeHead.feeHeadId] ?? { isApplying: false, amount: 0 }}
-          onApplyInAllAmountChange={(amount: number) =>
+          applyInAllState={applyInAllState[feeHead.feeHeadId] ?? { isApplying: false, amount: '' }}
+          onApplyInAllAmountChange={(amount: number | string) =>
             handleApplyInAllAmountChange(feeHead.feeHeadId, amount)
           }
           onApplyInAllToggle={() => handleApplyInAllToggle(feeHead.feeHeadId)}

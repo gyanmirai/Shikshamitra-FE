@@ -39,7 +39,7 @@ export interface IFeeHeadMonthRefund {
   month: string;
   /** Stable DueFee row ID — sent to the create-refund API. */
   dueFeeId: string;
-  amount: number;
+  amount: number | string;
 }
 
 export interface IFeeHeadRefundItem {

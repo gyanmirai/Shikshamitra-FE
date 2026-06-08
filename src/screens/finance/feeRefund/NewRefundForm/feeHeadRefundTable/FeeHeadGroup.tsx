@@ -1,5 +1,6 @@
 'use client';
 
+import { isNaN } from 'lodash';
 import React, { useMemo, useState } from 'react';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatCurrency } from 'src/utils/cureencyFormater';
@@ -20,8 +21,8 @@ export interface FeeHeadGroupProps {
   mode?: 'refund' | 'adjustment';
   onToggleMonth: (month: string, dueFeeId: string) => void;
   onToggleAll: () => void;
-  applyInAllState?: { isApplying: boolean; amount: number };
-  onApplyInAllAmountChange?: (amount: number) => void;
+  applyInAllState?: { isApplying: boolean; amount: number | string };
+  onApplyInAllAmountChange?: (amount: number | string) => void;
   onApplyInAllToggle?: () => void;
 }
 
@@ -76,8 +77,13 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
     [feeHead.items, selectedMonths]
   );
 
-  const handleAmountChange = (month: string, refundable: number, value: number): void => {
-    const clamped = Math.min(Math.max(0, value), refundable);
+  const handleAmountChange = (month: string, refundable: number, value: number | string): void => {
+    let clamped: number | string = value;
+    if (value !== '' && !isNaN(Number(value))) {
+      clamped = Math.min(Math.max(0, Number(value)), refundable);
+    } else if (value === '') {
+      clamped = '';
+    }
     const refunds = formik.values.feeHeadRefunds;
     const updated = refunds.map((fh) =>
       fh.feeHeadId === feeHead.feeHeadId
@@ -135,9 +141,11 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
         {visibleItems.map((item, idx) => {
           const refundable = Math.max(0, item.refundable);
           const isSelected = selectedMonths.includes(item.month);
-          const refundValue = fhEntry?.months.find((m) => m.month === item.month)?.amount ?? 0;
+          const refundValue = fhEntry?.months.find((m) => m.month === item.month)?.amount ?? '';
           const inputError =
-            showValidation && isSelected && (refundValue <= 0 || refundValue > refundable);
+            showValidation &&
+            isSelected &&
+            (refundValue === '' || Number(refundValue) <= 0 || Number(refundValue) > refundable);
 
           return (
             <React.Fragment key={item.month}>

@@ -25,7 +25,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
     }),
 
     getConcessionRequestById: builder.query({
-      query: (concessionRequestId) => ({
+      query: ({ concessionRequestId }: { concessionRequestId: string }) => ({
         url: `/concession-request/${concessionRequestId}`,
         method: 'GET',
       }),

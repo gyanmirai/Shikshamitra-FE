@@ -67,7 +67,7 @@ const Concession = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {addConcessionRequest.value ? (
         <CustomBreadcrumbs
-          heading="Concession Request"
+          heading={selectedConcession ? 'Update Concession Request' : 'Concession Request'}
           description="View and manage student concession requests."
           links={[
             { name: 'Finance', href: financePaths.dashboard },
@@ -79,7 +79,7 @@ const Concession = () => {
                 handleClose(null, false);
               },
             },
-            { name: 'Concession Request' },
+            { name: selectedConcession ? 'Update Concession Request' : 'Concession Request' },
           ]}
           isBack
           onBack={() => {
@@ -161,6 +161,7 @@ const Concession = () => {
             addConcessionRequest.onTrue();
           }}
           onEditConcession={(data) => {
+            console.log('data---', data);
             setSelectedConcession(data);
             addConcessionRequest.onTrue();
           }}
