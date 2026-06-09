@@ -219,9 +219,9 @@ const UpiTable = ({
         isFilter: false,
         sticky: true,
         align: 'left',
-        width: 100,
+        width: 150,
         minWidth: 80,
-        maxWidth: 120,
+        maxWidth: 150,
         render(value, row: any) {
           const handleDownloadReceipt = () => {
             shikshaMitraToast.info({
