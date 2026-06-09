@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PayrollPoliciesWorkspace — Dedicated workspace for payroll policies.
+ * PayrollPoliciesWorkspace - Dedicated workspace for payroll policies.
  *
  * Focused on payroll policy management with breadcrumbs and permission display.
  */

@@ -131,6 +131,7 @@ export interface IPayrollInformation {
   deductionComponents: ISalaryComponent[];
   policyOverrideEnabled?: boolean;
   policyOverrideWasEnabled?: boolean;
+  policyOverrideAssignmentId?: string;
   policyOverridePayrollPolicyId?: string;
   policyOverrideAttendancePolicyId?: string;
   policyOverrideEffectiveFrom?: string;

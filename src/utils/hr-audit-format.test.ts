@@ -16,7 +16,8 @@ describe('HR audit formatting', () => {
     expect(formatHrAuditDateTime('2026-05-24T10:00:00Z', '24 May 2026, 03:30 PM')).toBe(
       '24 May 2026, 03:30 PM'
     );
-    expect(formatHrAuditDateTime('20260525T10:19:04.4720646+00:00')).toContain('25 May 2026');
+    expect(formatHrAuditDateTime('2026-06-08T17:51:05.304718+00:00')).toBe('08 Jun 2026, 11:21 PM');
+    expect(formatHrAuditDateTime('20260525T10:19:04.4720646+00:00')).toBe('25 May 2026, 03:49 PM');
     expect(formatHrAuditDateTime('not-a-date')).toBe('-');
     expect(formatHrAuditRelativeTime('not-a-date')).toBe('-');
   });
@@ -28,7 +29,7 @@ describe('HR audit formatting', () => {
     expect(formatHrAuditValue({ reason: 'manual lock', scope: { month: '2026-05' } })).toBe(
       'Reason: manual lock; Scope: Month: 2026-05'
     );
-    expect(formatHrAuditValue('2026-05-24T15:30:00')).toBe('24 May 2026, 03:30 PM');
+    expect(formatHrAuditValue('2026-05-24T15:30:00')).toBe('24 May 2026, 09:00 PM');
     expect(formatHrAuditValue('x'.repeat(125))).toBe(`${'x'.repeat(120)}...`);
   });
 
@@ -40,6 +41,36 @@ describe('HR audit formatting', () => {
     expect(formatHrAuditValue('297f91e4-1d0c-4c6e-b823-7df6f0c8f9a7')).toBe('Unknown reference');
   });
 
+  it('renders business date fields without timezone-shifted clock times', () => {
+    const cases = [
+      [{ date: '20250601T00:00:00+00:00' }, 'Date: 01 Jun 2025'],
+      [{ fromDate: '2025-06-02T00:00:00+00:00' }, 'From Date: 02 Jun 2025'],
+      [{ toDate: '20250603' }, 'To Date: 03 Jun 2025'],
+      [{ effectiveFrom: '20250604T00:00:00+00:00' }, 'Effective From: 04 Jun 2025'],
+      [{ effectiveTo: '2025-06-05' }, 'Effective To: 05 Jun 2025'],
+      [{ holiday_date: '2025-06-06T00:00:00+00:00' }, 'Holiday Date: 06 Jun 2025'],
+    ] as const;
+
+    cases.forEach(([value, expected]) => {
+      const rendered = formatHrAuditValue(value);
+      expect(rendered).toContain(expected);
+      expect(rendered).not.toContain('05:30 AM');
+    });
+
+    expect(formatHrAuditValue({ candidate: '20250601T00:00:00+00:00' })).toContain(
+      'Candidate: 01 Jun 2025, 05:30 AM'
+    );
+  });
+
+  it('uses direct changed-field keys when formatting scalar business dates', () => {
+    const formatted = formatHrAuditValue('20250601T00:00:00+00:00', 120, 'effectiveFrom');
+    const rendered = toHrAuditRenderValue('20250601T00:00:00+00:00', 'effectiveFrom');
+
+    expect(formatted).toBe('01 Jun 2025');
+    expect(formatted).not.toContain('05:30 AM');
+    expect(rendered).toEqual({ kind: 'date', text: '01 Jun 2025' });
+  });
+
   it('renders JSON strings as readable summaries instead of raw payloads', () => {
     const rendered = formatHrAuditValue(
       '{"employeeId":"297f91e4-1d0c-4c6e-b823-7df6f0c8f9a7","effectiveFrom":"20250601T00:00:00+00:00"}'
@@ -47,6 +78,7 @@ describe('HR audit formatting', () => {
 
     expect(rendered).toContain('Employee ID: Linked record');
     expect(rendered).toContain('Effective From: 01 Jun 2025');
+    expect(rendered).not.toContain('05:30 AM');
     expect(rendered).not.toContain('{');
     expect(rendered).not.toContain('297f91e4-1d0c-4c6e-b823-7df6f0c8f9a7');
   });
@@ -67,6 +99,7 @@ describe('HR audit formatting', () => {
     expect(rendered).toContain('Effective From: 01 Jun 2025');
     expect(rendered).toContain('Payroll Policy ID: Linked record');
     expect(rendered).toContain('Status: active');
+    expect(rendered).not.toContain('05:30 AM');
     expect(rendered).not.toContain('{');
     expect(rendered).not.toContain('297f91e4-1d0c-4c6e-b823-7df6f0c8f9a7');
   });
@@ -118,6 +151,7 @@ describe('HR audit formatting', () => {
       expect(rendered.text).not.toContain('3a2170d2-084c-e067-2a5c-0539716dd973');
       expect(rendered.text).toContain('Holiday Name: Annual day');
       expect(rendered.text).toContain('Date: 01 Jun 2025');
+      expect(rendered.text).not.toContain('05:30 AM');
     }
   });
 

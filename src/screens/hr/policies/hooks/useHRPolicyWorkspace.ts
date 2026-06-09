@@ -8,6 +8,8 @@ import type {
   AttendancePolicy,
   WorkCalendarPolicy,
   HrPolicyAssignment,
+  WorkCalendarHoliday,
+  EditablePolicyStatus,
   CreateUpdatePayrollPolicy,
   CreateUpdateAttendancePolicy,
   CreateUpdateWorkCalendarPolicy,
@@ -41,9 +43,11 @@ import {
 import {
   attendanceNumericRules,
   clampNumericPolicyInput,
+  normalizeEditableDefault,
   getNumericPolicyInputError,
   sanitizeNumericPolicyInput,
   isAttendanceThresholdOrderValid,
+  getAttendanceOvertimeValidationError,
 } from 'src/screens/hr/policies/hr-policy-ui-utils';
 import {
   useGetPolicyVersionsQuery,
@@ -52,15 +56,15 @@ import {
   useComparePolicyVersionsQuery,
   useGetAttendancePoliciesQuery,
   useGetPolicyAuditSummaryQuery,
-  useCreatePayrollPolicyMutation,
   useGetHrEntityAuditEventsQuery,
   useGetHrPolicyAssignmentsQuery,
   usePreviewPolicyImpactMutation,
+  useCreatePayrollPolicyMutation,
   useGetPolicyRestorePreviewQuery,
   useGetWorkCalendarPoliciesQuery,
   useCloneAttendancePolicyMutation,
-  useCreateAttendancePolicyMutation,
   useUnarchivePayrollPolicyMutation,
+  useCreateAttendancePolicyMutation,
   useCloneWorkCalendarPolicyMutation,
   useGetPolicyAssignmentPreviewQuery,
   useCreateWorkCalendarPolicyMutation,
@@ -68,14 +72,17 @@ import {
   useUnarchiveAttendancePolicyMutation,
   useGetPolicyHolidayImpactPreviewQuery,
   useUnarchiveWorkCalendarPolicyMutation,
+  useCreatePayrollPolicyWithTokenMutation,
   useDeletePayrollPolicyWithTokenMutation,
   useUpdatePayrollPolicyWithTokenMutation,
   usePreviewPolicyAssignmentImpactMutation,
   useLazyGetWorkCalendarPolicyHolidaysQuery,
+  useCreateAttendancePolicyWithTokenMutation,
   useDeleteAttendancePolicyWithTokenMutation,
   useUpdateAttendancePolicyWithTokenMutation,
   useSetDefaultPayrollPolicyWithTokenMutation,
   useCreateHrPolicyAssignmentWithTokenMutation,
+  useDeleteHrPolicyAssignmentWithTokenMutation,
   useDeleteWorkCalendarPolicyWithTokenMutation,
   useUpdateHrPolicyAssignmentWithTokenMutation,
   useUpdateWorkCalendarPolicyWithTokenMutation,
@@ -114,6 +121,8 @@ import {
   buildManualMonthDaysPayload,
   payrollManualMonthDaysToMap,
   formatHolidayOverlapMessage,
+  selectSingleActiveDefaultPolicy,
+  getAssignmentFormValidationError,
   normalizePayrollDayCalculationType,
 } from '../hr-policy-workspace-utils';
 
@@ -142,7 +151,7 @@ import type {
   HrPolicyAssignmentConflict,
 } from '../types/hr-policy-workspace.types';
 
-// ─── Re-export AttendanceNumericField so callers don't need to import from ui-utils ──
+// --- Re-export AttendanceNumericField so callers don't need to import from ui-utils --
 
 export type { AttendanceNumericField };
 
@@ -170,7 +179,7 @@ function resolveInitialTab(
   return 'calendars';
 }
 
-// ─── Attendance advanced helpers ──────────────────────────────────────────────
+// --- Attendance advanced helpers ----------------------------------------------
 
 function applyAttendanceAdvancedDefaults(form: AttendanceForm): AttendanceForm {
   const defaults = defaultAttendanceForm(form.workCalendarPolicyId);
@@ -185,7 +194,11 @@ function hasCustomAttendanceAdvancedSettings(form: AttendanceForm): boolean {
   return ATTENDANCE_ADVANCED_KEYS.some((key) => form[key] !== defaults[key]);
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
+function toEditablePolicyStatus(status?: string): EditablePolicyStatus {
+  return status === 'active' ? 'active' : 'draft';
+}
+
+// --- Hook ---------------------------------------------------------------------
 
 export function useHRPolicyWorkspace({
   focus,
@@ -201,14 +214,14 @@ export function useHRPolicyWorkspace({
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const academicYearId = currentYear?.id;
 
-  // ─── Navigation ───────────────────────────────────────────────────────────
+  // --- Navigation -----------------------------------------------------------
   const [tab, setTab] = useState<WorkspaceTab>(() => resolveInitialTab(tabs, focus, queryTab));
 
-  // ─── Drawer ───────────────────────────────────────────────────────────────
+  // --- Drawer ---------------------------------------------------------------
   const [drawer, setDrawer] = useState<DrawerState>(null);
   const [formError, setFormError] = useState('');
 
-  // ─── Calendar form state ──────────────────────────────────────────────────
+  // --- Calendar form state --------------------------------------------------
   const [calendarForm, setCalendarForm] = useState<WorkCalendarForm>(
     defaultCalendarForm(currentYear?.startDate)
   );
@@ -217,9 +230,9 @@ export function useHRPolicyWorkspace({
     month: string;
     source: HolidayReviewFilter;
   }>({ search: '', month: '', source: 'all' });
-  const [centralHolidayPreviewRows, setCentralHolidayPreviewRows] = useState<
-    import('src/redux/hr/hr-policy-api').WorkCalendarHoliday[]
-  >([]);
+  const [centralHolidayPreviewRows, setCentralHolidayPreviewRows] = useState<WorkCalendarHoliday[]>(
+    []
+  );
   const [holidayReviewError, setHolidayReviewError] = useState('');
   const [holidayReviewInfo, setHolidayReviewInfo] = useState('');
   const [manualHolidayForm, setManualHolidayForm] = useState<ManualHolidayForm>({
@@ -231,14 +244,14 @@ export function useHRPolicyWorkspace({
   const [manualHolidayDialogOpen, setManualHolidayDialogOpen] = useState(false);
   const [editingManualHolidayIndex, setEditingManualHolidayIndex] = useState<number | null>(null);
 
-  // ─── Payroll form state ────────────────────────────────────────────────────
+  // --- Payroll form state ----------------------------------------------------
   const [payrollForm, setPayrollForm] = useState<PayrollForm>(defaultPayrollForm());
 
-  // ─── Attendance form state ─────────────────────────────────────────────────
+  // --- Attendance form state -------------------------------------------------
   const [attendanceForm, setAttendanceForm] = useState<AttendanceForm>(defaultAttendanceForm());
   const [attendanceAdvancedMode, setAttendanceAdvancedMode] = useState(false);
 
-  // ─── Assignment form state ─────────────────────────────────────────────────
+  // --- Assignment form state -------------------------------------------------
   const [assignmentForm, setAssignmentForm] = useState<AssignmentForm>(
     defaultAssignmentForm(currentYear?.startDate)
   );
@@ -254,28 +267,28 @@ export function useHRPolicyWorkspace({
     null
   );
 
-  // ─── Archive view ──────────────────────────────────────────────────────────
+  // --- Archive view ----------------------------------------------------------
   const [policyArchiveView, setPolicyArchiveView] = useState<Record<DrawerKind, PolicyArchiveView>>(
     { calendar: 'current', payroll: 'current', attendance: 'current', assignment: 'current' }
   );
 
-  // ─── Impact drawer state ───────────────────────────────────────────────────
+  // --- Impact drawer state ---------------------------------------------------
   const [impactDrawerOpen, setImpactDrawerOpen] = useState(false);
   const [impactPreview, setImpactPreview] = useState<HrPolicyImpactPreview | null>(null);
   const [impactPreviewError, setImpactPreviewError] = useState('');
   const [pendingImpactAction, setPendingImpactAction] = useState<PendingImpactAction>(null);
 
-  // ─── Audit / Version state ─────────────────────────────────────────────────
+  // --- Audit / Version state -------------------------------------------------
   const [auditTarget, setAuditTarget] = useState<AuditTarget>(null);
   const [versionTarget, setVersionTarget] = useState<VersionTarget>(null);
   const [compareVersionIds, setCompareVersionIds] = useState({ from: '', to: '' });
   const [versionFilters, setVersionFilters] = useState({ search: '', action: 'all' });
   const [restoreVersion, setRestoreVersion] = useState<RestoreVersionState>(null);
 
-  // ─── Operation overlay state ───────────────────────────────────────────────
+  // --- Operation overlay state -----------------------------------------------
   const [activePolicyOperation, setActivePolicyOperation] = useState<PolicyOperationState>(null);
 
-  // ─── Holiday Impact + Effective Preview filters ────────────────────────────
+  // --- Holiday Impact + Effective Preview filters ----------------------------
   const [holidayFilters, setHolidayFilters] = useState({
     workCalendarPolicyId: '',
     payrollPolicyId: '',
@@ -290,7 +303,7 @@ export function useHRPolicyWorkspace({
     date: toDateInput(currentYear?.startDate) || dayjs().format('YYYY-MM-DD'),
   });
 
-  // ─── API Queries ──────────────────────────────────────────────────────────
+  // --- API Queries ----------------------------------------------------------
   const listArgs = { academicYearId, maxResultCount: 200 };
   const assignmentListArgs = { academicYearId, maxResultCount: 1000 };
 
@@ -380,7 +393,7 @@ export function useHRPolicyWorkspace({
   //   ) ||
   //   '';
 
-  // This is resolved inline below after memos are declared — see derived values section.
+  // This is resolved inline below after memos are declared - see derived values section.
 
   const {
     data: holidayImpact,
@@ -445,7 +458,7 @@ export function useHRPolicyWorkspace({
     }
   );
 
-  // ─── API Mutations ────────────────────────────────────────────────────────
+  // --- API Mutations --------------------------------------------------------
   const [createWorkCalendarPolicy, createCalendarState] = useCreateWorkCalendarPolicyMutation();
   const [updateWorkCalendarPolicyWithToken, updateCalendarState] =
     useUpdateWorkCalendarPolicyWithTokenMutation();
@@ -460,6 +473,7 @@ export function useHRPolicyWorkspace({
     useLazyGetWorkCalendarHolidayImportPreviewQuery();
 
   const [createPayrollPolicy, createPayrollState] = useCreatePayrollPolicyMutation();
+  const [createPayrollPolicyWithToken] = useCreatePayrollPolicyWithTokenMutation();
   const [updatePayrollPolicyWithToken, updatePayrollState] =
     useUpdatePayrollPolicyWithTokenMutation();
   const [clonePayrollPolicy, clonePayrollState] = useClonePayrollPolicyMutation();
@@ -468,6 +482,7 @@ export function useHRPolicyWorkspace({
   const [unarchivePayrollPolicy, unarchivePayrollState] = useUnarchivePayrollPolicyMutation();
 
   const [createAttendancePolicy, createAttendanceState] = useCreateAttendancePolicyMutation();
+  const [createAttendancePolicyWithToken] = useCreateAttendancePolicyWithTokenMutation();
   const [updateAttendancePolicyWithToken, updateAttendanceState] =
     useUpdateAttendancePolicyWithTokenMutation();
   const [cloneAttendancePolicy, cloneAttendanceState] = useCloneAttendancePolicyMutation();
@@ -485,13 +500,15 @@ export function useHRPolicyWorkspace({
     useCreateHrPolicyAssignmentWithTokenMutation();
   const [updateHrPolicyAssignmentWithToken, updateAssignmentState] =
     useUpdateHrPolicyAssignmentWithTokenMutation();
+  const [deleteHrPolicyAssignmentWithToken, deleteAssignmentState] =
+    useDeleteHrPolicyAssignmentWithTokenMutation();
 
   const [previewPolicyImpact, previewPolicyImpactState] = usePreviewPolicyImpactMutation();
   const [previewPolicyAssignmentImpact, previewPolicyAssignmentImpactState] =
     usePreviewPolicyAssignmentImpactMutation();
   const [restorePolicyVersionDraft, restoreVersionState] = useRestorePolicyVersionDraftMutation();
 
-  // ─── Derived values (memoized) ────────────────────────────────────────────
+  // --- Derived values (memoized) --------------------------------------------
 
   /**
    * Memoization Justification:
@@ -503,14 +520,14 @@ export function useHRPolicyWorkspace({
 
   /**
    * Memoization Justification:
-   * Same as `calendars` — prevents cascading recomputation of payroll-derived values
+   * Same as `calendars` - prevents cascading recomputation of payroll-derived values
    * (visiblePayroll, archivedPayrollCount, defaultPayroll) when the parent renders.
    */
   const payroll = useMemo(() => payrollPolicies?.items || [], [payrollPolicies?.items]);
 
   /**
    * Memoization Justification:
-   * Same pattern as payroll/calendars — stable array reference prevents unnecessary
+   * Same pattern as payroll/calendars - stable array reference prevents unnecessary
    * re-renders of the attendance table and derived default policy lookup.
    */
   const attendance = useMemo(() => attendancePolicies?.items || [], [attendancePolicies?.items]);
@@ -518,14 +535,12 @@ export function useHRPolicyWorkspace({
   const visibleCalendars = filterPoliciesByArchiveView(calendars, policyArchiveView.calendar);
   const visiblePayroll = filterPoliciesByArchiveView(payroll, policyArchiveView.payroll);
   const visibleAttendance = filterPoliciesByArchiveView(attendance, policyArchiveView.attendance);
-  const archivedCalendarCount = calendars.filter((item: any) => item.status === 'archived').length;
-  const archivedPayrollCount = payroll.filter((item: any) => item.status === 'archived').length;
-  const archivedAttendanceCount = attendance.filter(
-    (item: any) => item.status === 'archived'
-  ).length;
-  const activeCalendars = calendars.filter((item: any) => item.status === 'active');
-  const activePayroll = payroll.filter((item: any) => item.status === 'active');
-  const activeAttendance = attendance.filter((item: any) => item.status === 'active');
+  const archivedCalendarCount = calendars.filter((item) => item.status === 'archived').length;
+  const archivedPayrollCount = payroll.filter((item) => item.status === 'archived').length;
+  const archivedAttendanceCount = attendance.filter((item) => item.status === 'archived').length;
+  const activeCalendars = calendars.filter((item) => item.status === 'active');
+  const activePayroll = payroll.filter((item) => item.status === 'active');
+  const activeAttendance = attendance.filter((item) => item.status === 'active');
 
   const isPolicyOperationActive = Boolean(activePolicyOperation);
 
@@ -544,16 +559,15 @@ export function useHRPolicyWorkspace({
     [muiTheme.transitions.duration.enteringScreen, muiTheme.transitions.duration.leavingScreen]
   );
 
-  const defaultPayroll = activePayroll.find((item) => item.isDefault) || activePayroll[0];
-  const defaultAttendancePolicy =
-    activeAttendance.find((item) => item.isDefault) || activeAttendance[0];
+  const defaultPayroll = selectSingleActiveDefaultPolicy(activePayroll);
+  const defaultAttendancePolicy = selectSingleActiveDefaultPolicy(activeAttendance);
 
   const employeeOptions = getItems<LookupOption>(employees);
   const groupOptions = getItems<LookupOption>(groups);
 
   /**
    * Memoization Justification:
-   * Expensive O(n × m) operation — filters and maps up to 1000 assignments across
+   * Expensive O(n x m) operation - filters and maps up to 1000 assignments across
    * multiple Maps and multi-field search predicates. Without memoization this runs
    * on every keystroke in any unrelated form field. Dependency list covers all inputs
    * that affect the output: assignment data, active filters, and policy name maps.
@@ -658,7 +672,7 @@ export function useHRPolicyWorkspace({
   /**
    * Memoization Justification:
    * Builds a Set of group IDs from potentially long resolution chains. Used as a
-   * dependency for effectiveGroupOptions — without memoization, every parent
+   * dependency for effectiveGroupOptions - without memoization, every parent
    * re-render would create a new Set object, causing effectiveGroupOptions to
    * re-filter even when effective preview data has not changed.
    */
@@ -718,7 +732,7 @@ export function useHRPolicyWorkspace({
     return groupOptions.filter((group) => group.id && effectiveEmployeeGroupIds.has(group.id));
   }, [effectiveEmployeeGroupIds, effectiveFilters.employeeId, effectiveLoading, groupOptions]);
 
-  // ─── Permissions ───────────────────────────────────────────────────────────
+  // --- Permissions -----------------------------------------------------------
   const canCreatePolicy = hasGrantedPermission(permissions, hrPermissions.policyActions.create);
   const canEditPolicy = hasGrantedPermission(permissions, hrPermissions.policyActions.edit);
   const canArchivePolicy = hasGrantedPermission(permissions, hrPermissions.policyActions.archive);
@@ -734,7 +748,7 @@ export function useHRPolicyWorkspace({
   );
   const canViewAudit = hasGrantedPermission(permissions, hrPermissions.policyActions.viewAudit);
 
-  // ─── Auto-seed version compare on first load ──────────────────────────────
+  // --- Auto-seed version compare on first load ------------------------------
   useEffect(() => {
     const versions = versionHistory?.items || [];
     if (!versionTarget || compareVersionIds.from || compareVersionIds.to || versions.length < 2) {
@@ -747,7 +761,7 @@ export function useHRPolicyWorkspace({
     }
   }, [compareVersionIds.from, compareVersionIds.to, versionHistory?.items, versionTarget]);
 
-  // ─── Payload builders ─────────────────────────────────────────────────────
+  // --- Payload builders -----------------------------------------------------
 
   const buildCalendarPayload = useCallback((): CreateUpdateWorkCalendarPolicy | null => {
     if (!academicYearId) return null;
@@ -786,7 +800,7 @@ export function useHRPolicyWorkspace({
       workCalendarPolicyId: payrollForm.workCalendarPolicyId,
       name: payrollForm.name.trim(),
       status: payrollForm.status,
-      isDefault: payrollForm.isDefault,
+      isDefault: normalizeEditableDefault(payrollForm.status, payrollForm.isDefault),
       dayCalculationType,
       manualDays: null,
       manualMonthDays: dayCalculationType === 'manual-days' ? manualMonthDaysResult.items : [],
@@ -805,7 +819,7 @@ export function useHRPolicyWorkspace({
       workCalendarPolicyId: formToSave.workCalendarPolicyId,
       name: formToSave.name.trim(),
       status: formToSave.status,
-      isDefault: formToSave.isDefault,
+      isDefault: normalizeEditableDefault(formToSave.status, formToSave.isDefault),
       captureMode: formToSave.captureMode,
       fullDayThresholdPercentage: Number(formToSave.fullDayThresholdPercentage),
       halfDayThresholdPercentage: Number(formToSave.halfDayThresholdPercentage),
@@ -827,7 +841,7 @@ export function useHRPolicyWorkspace({
     };
   }, [academicYearId, attendanceAdvancedMode, attendanceForm]);
 
-  // ─── Diff checks ──────────────────────────────────────────────────────────
+  // --- Diff checks ----------------------------------------------------------
   const calendarPayload = buildCalendarPayload();
   const payrollPayload = buildPayrollPayload();
   const attendancePayload = buildAttendancePayload();
@@ -854,7 +868,7 @@ export function useHRPolicyWorkspace({
     isAttendancePolicyUnchanged(drawer.item as AttendancePolicy, attendancePayload)
   );
 
-  // ─── Operation runner ─────────────────────────────────────────────────────
+  // --- Operation runner -----------------------------------------------------
   const runPolicyOperation = async <T>(
     operation: Exclude<PolicyOperationState, null>,
     task: () => Promise<T>
@@ -868,7 +882,7 @@ export function useHRPolicyWorkspace({
     }
   };
 
-  // ─── Drawer open / close ──────────────────────────────────────────────────
+  // --- Drawer open / close --------------------------------------------------
   const clearDrawer = useCallback(() => {
     setDrawer(null);
     setFormError('');
@@ -908,7 +922,7 @@ export function useHRPolicyWorkspace({
         item
           ? {
               name: item.name,
-              status: item.status,
+              status: toEditablePolicyStatus(item.status),
               effectiveFrom: toDateInput(item.effectiveFrom),
               effectiveTo: toDateInput(item.effectiveTo),
               weeklyOffPattern: normalizeWeeklyRule(item.weeklyOffPattern, customWeeklyOffs),
@@ -953,7 +967,7 @@ export function useHRPolicyWorkspace({
         item
           ? {
               name: item.name,
-              status: item.status,
+              status: toEditablePolicyStatus(item.status),
               workCalendarPolicyId: item.workCalendarPolicyId,
               isDefault: item.isDefault,
               dayCalculationType: normalizePayrollDayCalculationType(item.dayCalculationType),
@@ -973,7 +987,7 @@ export function useHRPolicyWorkspace({
       const nextForm = item
         ? {
             name: item.name,
-            status: item.status,
+            status: toEditablePolicyStatus(item.status),
             workCalendarPolicyId: item.workCalendarPolicyId,
             isDefault: item.isDefault,
             captureMode: item.captureMode || 'integrated',
@@ -1034,7 +1048,7 @@ export function useHRPolicyWorkspace({
     [currentYear, defaultAttendancePolicy?.id, defaultPayroll?.id]
   );
 
-  // ─── Impact drawer ────────────────────────────────────────────────────────
+  // --- Impact drawer --------------------------------------------------------
   const clearImpactDrawer = useCallback(() => {
     setImpactDrawerOpen(false);
     setImpactPreview(null);
@@ -1069,8 +1083,9 @@ export function useHRPolicyWorkspace({
       }
       setPendingImpactAction(null);
       await run();
+      clearImpactDrawer();
     },
-    []
+    [clearImpactDrawer]
   );
 
   const confirmPendingImpactAction = useCallback(async () => {
@@ -1096,7 +1111,7 @@ export function useHRPolicyWorkspace({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clearImpactDrawer, impactPreview, pendingImpactAction]);
 
-  // ─── Policy Actions ────────────────────────────────────────────────────────
+  // --- Policy Actions --------------------------------------------------------
 
   const previewPolicyRowImpact = useCallback(
     async (
@@ -1246,7 +1261,7 @@ export function useHRPolicyWorkspace({
               openAttendanceDrawer(cloned);
             }
             shikshaMitraToast.success({
-              message: 'Draft copy created — review and save when ready',
+              message: 'Draft copy created - review and save when ready',
             });
           } catch (error) {
             shikshaMitraToast.error({ message: getErrorMessage(error, 'Could not clone policy.') });
@@ -1413,6 +1428,18 @@ export function useHRPolicyWorkspace({
               shikshaMitraToast.success({ message: 'Payroll policy updated successfully' });
               clearDrawer();
             });
+          } else if (body.status === 'active' && body.isDefault) {
+            const preview = await previewPolicyImpact({
+              policyType: 'payroll',
+              academicYearId,
+              action: 'create-default',
+              payrollPolicy: body,
+            }).unwrap();
+            await runWithImpactConfirmation(preview, 'Create payroll policy', async (token) => {
+              await createPayrollPolicyWithToken({ body, token }).unwrap();
+              shikshaMitraToast.success({ message: 'Payroll policy created successfully' });
+              clearDrawer();
+            });
           } else {
             await createPayrollPolicy(body).unwrap();
             shikshaMitraToast.success({ message: 'Payroll policy created successfully' });
@@ -1429,6 +1456,7 @@ export function useHRPolicyWorkspace({
     buildPayrollPayload,
     clearDrawer,
     createPayrollPolicy,
+    createPayrollPolicyWithToken,
     currentYear,
     drawer,
     payrollForm,
@@ -1452,12 +1480,17 @@ export function useHRPolicyWorkspace({
       setFormError('Thresholds must be ordered as full day > half day >= absent.');
       return;
     }
-    const invalidRule = (
-      Object.keys(
-        attendanceNumericRules
-      ) as import('src/screens/hr/policies/hr-policy-ui-utils').AttendanceNumericField[]
-    ).find((field) =>
-      getNumericPolicyInputError(formToSave[field] || '', attendanceNumericRules[field])
+    const overtimeValidationError = getAttendanceOvertimeValidationError({
+      overtimeEnabled: formToSave.overtimeEnabled,
+      overtimeRate: formToSave.overtimeRate,
+      minOvertimeMinutes: formToSave.minOvertimeMinutes,
+    });
+    if (overtimeValidationError) {
+      setFormError(overtimeValidationError);
+      return;
+    }
+    const invalidRule = (Object.keys(attendanceNumericRules) as AttendanceNumericField[]).find(
+      (field) => getNumericPolicyInputError(formToSave[field] || '', attendanceNumericRules[field])
     );
     if (invalidRule) {
       setFormError(
@@ -1494,6 +1527,18 @@ export function useHRPolicyWorkspace({
               shikshaMitraToast.success({ message: 'Attendance policy updated successfully' });
               clearDrawer();
             });
+          } else if (body.status === 'active' && body.isDefault) {
+            const preview = await previewPolicyImpact({
+              policyType: 'attendance',
+              academicYearId,
+              action: 'create-default',
+              attendancePolicy: body,
+            }).unwrap();
+            await runWithImpactConfirmation(preview, 'Create attendance policy', async (token) => {
+              await createAttendancePolicyWithToken({ body, token }).unwrap();
+              shikshaMitraToast.success({ message: 'Attendance policy created successfully' });
+              clearDrawer();
+            });
           } else {
             await createAttendancePolicy(body).unwrap();
             shikshaMitraToast.success({ message: 'Attendance policy created successfully' });
@@ -1512,6 +1557,7 @@ export function useHRPolicyWorkspace({
     buildAttendancePayload,
     clearDrawer,
     createAttendancePolicy,
+    createAttendancePolicyWithToken,
     drawer,
     previewPolicyImpact,
     runWithImpactConfirmation,
@@ -1530,6 +1576,15 @@ export function useHRPolicyWorkspace({
       if (!assignmentForm.effectiveFrom) setAssignmentDateError('Effective from is required.');
       return;
     }
+    const assignmentValidationError = getAssignmentFormValidationError(assignmentForm);
+    if (assignmentValidationError) {
+      if (assignmentValidationError.toLowerCase().includes('effective')) {
+        setAssignmentDateError(assignmentValidationError);
+      }
+      setFormError(assignmentValidationError);
+      return;
+    }
+    const priority = Number(assignmentForm.priority || 0);
     const body = {
       academicYearId,
       targetType: assignmentForm.targetType,
@@ -1539,7 +1594,7 @@ export function useHRPolicyWorkspace({
       attendancePolicyId: assignmentForm.attendancePolicyId,
       effectiveFrom: assignmentForm.effectiveFrom,
       effectiveTo: assignmentForm.effectiveTo || null,
-      priority: Number(assignmentForm.priority || 0),
+      priority,
       assignmentReason: assignmentForm.assignmentReason || null,
       isActive: assignmentForm.isActive,
     };
@@ -1651,6 +1706,57 @@ export function useHRPolicyWorkspace({
     ]
   );
 
+  const deleteAssignment = useCallback(
+    async (item: HrPolicyAssignment) => {
+      openImpactDrawerLoading();
+      await runPolicyOperation(
+        {
+          key: 'delete-assignment',
+          title: 'Deactivating assignment',
+          message: 'Checking impact before deactivating this policy assignment...',
+        },
+        async () => {
+          try {
+            const preview = await previewPolicyAssignmentImpact({
+              action: 'delete',
+              assignmentId: item.id,
+              assignment: {
+                academicYearId: item.academicYearId,
+                targetType: item.targetType,
+                targetKey: item.targetKey,
+                targetDisplayName: item.targetDisplayName || null,
+                payrollPolicyId: item.payrollPolicyId,
+                attendancePolicyId: item.attendancePolicyId,
+                effectiveFrom: item.effectiveFrom,
+                effectiveTo: item.effectiveTo || null,
+                priority: item.priority,
+                assignmentReason: item.assignmentReason || null,
+                isActive: false,
+              },
+            }).unwrap();
+            await runWithImpactConfirmation(
+              preview,
+              'Deactivate policy assignment',
+              async (token) => {
+                await deleteHrPolicyAssignmentWithToken({ id: item.id, token }).unwrap();
+                shikshaMitraToast.success({ message: 'Policy assignment deactivated' });
+              }
+            );
+          } catch (error) {
+            setImpactPreviewError(getErrorMessage(error, 'Could not deactivate assignment.'));
+          }
+        }
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      deleteHrPolicyAssignmentWithToken,
+      openImpactDrawerLoading,
+      previewPolicyAssignmentImpact,
+      runWithImpactConfirmation,
+    ]
+  );
+
   const unarchivePolicy = useCallback(
     async (
       type: 'payroll' | 'attendance' | 'calendar',
@@ -1720,8 +1826,23 @@ export function useHRPolicyWorkspace({
   );
 
   const previewCurrentAssignmentImpact = useCallback(async () => {
-    if (!academicYearId || !assignmentForm.targetKey || !assignmentForm.effectiveFrom) {
-      setFormError('Target and effective from are required before impact preview.');
+    if (
+      !academicYearId ||
+      !assignmentForm.targetKey.trim() ||
+      !assignmentForm.payrollPolicyId ||
+      !assignmentForm.attendancePolicyId ||
+      !assignmentForm.effectiveFrom
+    ) {
+      setFormError('Target, policies, and effective from are required before impact preview.');
+      if (!assignmentForm.effectiveFrom) setAssignmentDateError('Effective from is required.');
+      return;
+    }
+    const assignmentValidationError = getAssignmentFormValidationError(assignmentForm);
+    if (assignmentValidationError) {
+      if (assignmentValidationError.toLowerCase().includes('effective')) {
+        setAssignmentDateError(assignmentValidationError);
+      }
+      setFormError(assignmentValidationError);
       return;
     }
     openImpactDrawerLoading();
@@ -1773,7 +1894,7 @@ export function useHRPolicyWorkspace({
    * from re-rendering on unrelated state changes.
    */
   const previewAssignment = useCallback(
-    (item: import('src/redux/hr/hr-policy-api').HrPolicyAssignment) => {
+    (item: HrPolicyAssignment) => {
       setEffectiveFilters({
         employeeId: item.targetType === 'employee' ? item.targetKey : '',
         groupId: item.targetType === 'group' ? item.targetKey : '',
@@ -1784,7 +1905,7 @@ export function useHRPolicyWorkspace({
     [setEffectiveFilters, setTab]
   );
 
-  // ─── Holiday form actions ──────────────────────────────────────────────────
+  // --- Holiday form actions --------------------------------------------------
 
   /**
    * Memoization Justification:
@@ -1909,7 +2030,7 @@ export function useHRPolicyWorkspace({
       setFormError(manualHolidayConflictMessage);
       return;
     }
-    const row: import('src/redux/hr/hr-policy-api').WorkCalendarHoliday = {
+    const row: WorkCalendarHoliday = {
       academicYearId,
       date: manualHolidayForm.fromDate,
       fromDate: manualHolidayForm.fromDate,
@@ -1948,7 +2069,7 @@ export function useHRPolicyWorkspace({
   ]);
 
   const updateCalendarHoliday = useCallback(
-    (index: number, changes: Partial<import('src/redux/hr/hr-policy-api').WorkCalendarHoliday>) => {
+    (index: number, changes: Partial<WorkCalendarHoliday>) => {
       setCalendarForm((current) => ({
         ...current,
         holidays: current.holidays.map((item, i) => (i === index ? { ...item, ...changes } : item)),
@@ -1964,9 +2085,9 @@ export function useHRPolicyWorkspace({
     }));
   }, []);
 
-  // ─── Numeric field props helper ────────────────────────────────────────────
+  // --- Numeric field props helper --------------------------------------------
   const getAttendanceNumericFieldProps = useCallback(
-    (field: import('src/screens/hr/policies/hr-policy-ui-utils').AttendanceNumericField) => {
+    (field: AttendanceNumericField) => {
       const rule = attendanceNumericRules[field];
       const value = attendanceForm[field] || '';
       const helperText =
@@ -1995,7 +2116,7 @@ export function useHRPolicyWorkspace({
     [attendanceForm]
   );
 
-  // ─── Returned state surface ────────────────────────────────────────────────
+  // --- Returned state surface ------------------------------------------------
   return {
     // Navigation
     tab,
@@ -2135,6 +2256,7 @@ export function useHRPolicyWorkspace({
     assignmentPreviewError,
     createAssignmentState,
     updateAssignmentState,
+    deleteAssignmentState,
     previewPolicyAssignmentImpactState,
     formError,
     setFormError,
@@ -2193,6 +2315,7 @@ export function useHRPolicyWorkspace({
     savePayroll,
     saveAttendance,
     saveAssignment,
+    deleteAssignment,
     archivePolicy,
     unarchivePolicy,
     setDefaultWithImpact,

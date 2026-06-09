@@ -42,7 +42,7 @@ export const leaveApi = api.injectEndpoints({
         url: `/hr-leave-types/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [employeeType.employeeType],
+      invalidatesTags: [employeeType.employeeType, employeeType.employeeLeavePolicy],
     }),
 
     // Leave Policies
@@ -61,7 +61,12 @@ export const leaveApi = api.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [employeeType.employeeLeavePolicy],
+      invalidatesTags: [
+        employeeType.employeeLeavePolicy,
+        employeeType.employee,
+        employeeType.hrDashboard,
+        employeeType.runPayroll,
+      ],
     }),
     getLeavePolicyById: builder.query({
       query: (id) => ({
@@ -76,14 +81,24 @@ export const leaveApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [employeeType.employeeLeavePolicy],
+      invalidatesTags: [
+        employeeType.employeeLeavePolicy,
+        employeeType.employee,
+        employeeType.hrDashboard,
+        employeeType.runPayroll,
+      ],
     }),
     deleteLeavePolicy: builder.mutation({
       query: (id) => ({
         url: `/leave-policies/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [employeeType.employeeLeavePolicy],
+      invalidatesTags: [
+        employeeType.employeeLeavePolicy,
+        employeeType.employee,
+        employeeType.hrDashboard,
+        employeeType.runPayroll,
+      ],
     }),
 
     // Leave Management
@@ -176,7 +191,7 @@ export const leaveApi = api.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [employeeType.employee, employeeType.hrDashboard],
+      invalidatesTags: [employeeType.employee, employeeType.hrDashboard, employeeType.runPayroll],
     }),
     createMyLeaveRequest: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -185,7 +200,7 @@ export const leaveApi = api.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [employeeType.employee, employeeType.hrDashboard],
+      invalidatesTags: [employeeType.employee, employeeType.hrDashboard, employeeType.runPayroll],
     }),
     getLeaveRequestById: builder.query({
       query: ({ id }) => ({
@@ -206,14 +221,14 @@ export const leaveApi = api.injectEndpoints({
         url: `/leave-management/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [employeeType.employee],
+      invalidatesTags: [employeeType.employee, employeeType.hrDashboard, employeeType.runPayroll],
     }),
     cancelMyLeaveRequest: builder.mutation({
       query: (id) => ({
         url: `/leave-management/my/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [employeeType.employee],
+      invalidatesTags: [employeeType.employee, employeeType.hrDashboard, employeeType.runPayroll],
     }),
     approveLeaveRequest: builder.mutation({
       query: ({ id, body }) => ({
@@ -221,7 +236,7 @@ export const leaveApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [employeeType.employee, employeeType.hrDashboard],
+      invalidatesTags: [employeeType.employee, employeeType.hrDashboard, employeeType.runPayroll],
     }),
     rejectLeaveRequest: builder.mutation({
       query: ({ id, body }) => ({
@@ -229,7 +244,7 @@ export const leaveApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [employeeType.employee, employeeType.hrDashboard],
+      invalidatesTags: [employeeType.employee, employeeType.hrDashboard, employeeType.runPayroll],
     }),
 
     // Leave Balance

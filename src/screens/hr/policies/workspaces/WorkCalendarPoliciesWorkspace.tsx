@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * WorkCalendarPoliciesWorkspace — Dedicated workspace for work calendar policies.
+ * WorkCalendarPoliciesWorkspace - Dedicated workspace for work calendar policies.
  *
  * Similar structure to HRPolicyWorkspace but focused on calendars only.
  * Includes breadcrumbs and permission display.

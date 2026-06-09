@@ -4,8 +4,8 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import { useMemo } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, IconButton, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Chip, Stack, Tooltip, IconButton, Typography, LinearProgress } from '@mui/material';
 
 import { formatHrReportDateTime, getHrReportExportFileName } from '../hr-report-utils';
 
@@ -13,14 +13,18 @@ type HrReportExportHistoryProps = {
   exportJobs: HrReportExportJob[];
   isFetching: boolean;
   isDownloading: boolean;
+  canExport?: boolean;
   onDownload: (jobId: string, fileName?: string) => void;
+  onAction?: (action: 'cancel' | 'retry' | 'regenerate', jobId: string) => void;
 };
 
 export function HrReportExportHistory({
   exportJobs,
   isFetching,
   isDownloading,
+  canExport = true,
   onDownload,
+  onAction,
 }: HrReportExportHistoryProps) {
   const historyColumns = useMemo<IColumn[]>(
     () => [
@@ -29,18 +33,42 @@ export function HrReportExportHistory({
       {
         id: 'status',
         label: 'Status',
-        minWidth: '9vw',
+        minWidth: '12vw',
         align: 'left' as const,
         render: (_value: any, row: any) => (
-          <Chip
-            size="small"
-            label={row.status}
-            color={
-              row.status === 'Completed' ? 'success' : row.status === 'Failed' ? 'error' : 'info'
-            }
-            variant="soft"
-          />
+          <Stack spacing={0.5}>
+            <Chip
+              size="small"
+              label={row.isExpired ? 'Expired' : row.status}
+              color={
+                row.isExpired
+                  ? 'warning'
+                  : row.status === 'Completed'
+                    ? 'success'
+                    : row.status === 'Failed'
+                      ? 'error'
+                      : row.status === 'Cancelled'
+                        ? 'default'
+                        : 'info'
+              }
+              variant="soft"
+            />
+            {row.status === 'Queued' || row.status === 'Running' ? (
+              <LinearProgress
+                variant="determinate"
+                value={row.progressPercent ?? (row.status === 'Queued' ? 5 : 35)}
+                sx={{ height: 4, borderRadius: 1 }}
+              />
+            ) : null}
+          </Stack>
         ),
+      },
+      {
+        id: 'rowCount',
+        label: 'Rows',
+        minWidth: '7vw',
+        align: 'left' as const,
+        render: (value: number) => (value ? value.toLocaleString() : '-'),
       },
       {
         id: 'creationTime',
@@ -57,17 +85,46 @@ export function HrReportExportHistory({
         isFilter: false,
         isSort: false,
         render: (_value: any, row: any) => (
-          <IconButton
-            size="small"
-            disabled={row.status !== 'Completed' || isDownloading}
-            onClick={() => onDownload(row.id, getHrReportExportFileName(row))}
-          >
-            <Iconify icon={GlobalIcons.download} />
-          </IconButton>
+          <Stack direction="row" spacing={0.5}>
+            <Tooltip title="Download">
+              <span>
+                <IconButton
+                  size="small"
+                  disabled={
+                    !canExport || row.status !== 'Completed' || row.isExpired || isDownloading
+                  }
+                  onClick={() => onDownload(row.id, getHrReportExportFileName(row))}
+                >
+                  <Iconify icon={GlobalIcons.download} />
+                </IconButton>
+              </span>
+            </Tooltip>
+            {canExport && (row.status === 'Queued' || row.status === 'Running') ? (
+              <Tooltip title="Cancel export">
+                <IconButton size="small" onClick={() => onAction?.('cancel', row.id)}>
+                  <Iconify icon="solar:close-circle-bold" />
+                </IconButton>
+              </Tooltip>
+            ) : null}
+            {canExport && (row.status === 'Failed' || row.status === 'Cancelled') ? (
+              <Tooltip title="Retry export">
+                <IconButton size="small" onClick={() => onAction?.('retry', row.id)}>
+                  <Iconify icon="solar:refresh-bold" />
+                </IconButton>
+              </Tooltip>
+            ) : null}
+            {canExport && row.status === 'Completed' && row.isExpired ? (
+              <Tooltip title="Regenerate export">
+                <IconButton size="small" onClick={() => onAction?.('regenerate', row.id)}>
+                  <Iconify icon="solar:restart-bold" />
+                </IconButton>
+              </Tooltip>
+            ) : null}
+          </Stack>
         ),
       },
     ],
-    [isDownloading, onDownload]
+    [canExport, isDownloading, onAction, onDownload]
   );
 
   return (

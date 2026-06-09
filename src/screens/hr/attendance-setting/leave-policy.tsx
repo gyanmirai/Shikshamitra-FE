@@ -431,21 +431,23 @@ export const LeavePolicyForm = ({
   });
 
   const leaveTypeOptions = useMemo(() => leaveTypesData?.items || [], [leaveTypesData?.items]);
+  const firstRule = editData?.rules?.[0];
   const formik = useFormik({
     initialValues: {
       policyTitle: editData?.policyTitle || editData?.title || '',
       leaveType:
+        firstRule?.leaveType?.id ||
         (typeof editData?.leaveType === 'object' ? editData?.leaveType?.id : editData?.leaveType) ||
         '',
       accuralPolicyType: normalizeAccrualPolicyTypeValue(
-        editData?.accrualPolicyType ?? editData?.accuralPolicyType
+        firstRule?.accrualPolicyType ?? editData?.accrualPolicyType ?? editData?.accuralPolicyType
       ),
-      leaveCount: editData?.leaveCount || '1',
-      paidType: editData?.paidType || 'Paid',
-      carryForward: editData?.carryForward ?? false,
-      encashmentAllowed: editData?.encashmentAllowed ?? false,
-      encashmentTiming: editData?.encashmentTiming || 'next_payroll',
-      requiresApproval: editData?.requiresApproval ?? false,
+      leaveCount: firstRule?.leaveCount ?? editData?.leaveCount ?? '1',
+      paidType: firstRule?.paidType || editData?.paidType || 'Paid',
+      carryForward: firstRule?.carryForward ?? editData?.carryForward ?? false,
+      encashmentAllowed: firstRule?.encashmentAllowed ?? editData?.encashmentAllowed ?? false,
+      encashmentTiming: firstRule?.encashmentTiming || editData?.encashmentTiming || 'next_payroll',
+      requiresApproval: firstRule?.requiresApproval ?? editData?.requiresApproval ?? true,
       description: editData?.description || '',
     },
     enableReinitialize: true,
@@ -454,15 +456,30 @@ export const LeavePolicyForm = ({
       try {
         const payload = {
           policyTitle: values.policyTitle,
-          leaveType: values.leaveType,
-          leaveCount: Number(values.leaveCount),
-          accrualPolicyType: toAccrualPolicyTypeApiValue(values.accuralPolicyType),
-          paidType: values.paidType,
-          carryForward: values.carryForward,
-          encashmentAllowed: values.encashmentAllowed,
-          encashmentTiming: values.encashmentAllowed ? values.encashmentTiming : undefined,
-          requiresApproval: values.requiresApproval,
+          status: editData?.status || 'Active',
+          effectiveFrom:
+            editData?.effectiveFrom ||
+            currentYear?.startDate ||
+            new Date().toISOString().slice(0, 10),
           description: values.description || undefined,
+          rules: [
+            {
+              leaveTypeId: values.leaveType,
+              leaveCount: Number(values.leaveCount),
+              accrualPolicyType: toAccrualPolicyTypeApiValue(values.accuralPolicyType),
+              paidType: values.paidType,
+              carryForward: values.carryForward,
+              encashmentAllowed: values.encashmentAllowed,
+              encashmentTiming: values.encashmentAllowed ? values.encashmentTiming : undefined,
+              requiresApproval: values.requiresApproval,
+              minNoticeDays: firstRule?.minNoticeDays ?? 2,
+              maxDaysPerRequest: firstRule?.maxDaysPerRequest ?? 30,
+              allowHalfDay: firstRule?.allowHalfDay ?? true,
+              attachmentRequiredAfterDays: firstRule?.attachmentRequiredAfterDays ?? undefined,
+              allowNegativeBalance: firstRule?.allowNegativeBalance ?? false,
+              isActive: true,
+            },
+          ],
         };
 
         if (!editData) {

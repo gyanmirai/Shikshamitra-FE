@@ -4,7 +4,6 @@ import type { HrPolicyAssignment } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
 import dayjs from 'dayjs';
-import { LoadingButton } from '@mui/lab';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import {
@@ -43,7 +42,7 @@ import {
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 import type { PolicyAssignmentTargetType } from '../types/hr-policy-workspace.types';
 
-// ─── AssignmentPreviewPanel ────────────────────────────────────────────────────
+// --- AssignmentPreviewPanel ----------------------------------------------------
 
 function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -62,7 +61,7 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         width: '100%',
         p: 2,
         borderRadius: 1,
-        bgcolor: (theme) => theme.vars.palette.background.neutral,
+        bgcolor: (theme) => (theme.vars || theme).palette.background.neutral,
       }}
     >
       <Stack spacing={1.5}>
@@ -85,7 +84,7 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             {assignmentForm.targetDisplayName || assignmentForm.targetKey || '-'}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {toLabel(assignmentForm.targetType)} ·{' '}
+            {toLabel(assignmentForm.targetType)} -{' '}
             {formatRange(assignmentForm.effectiveFrom, assignmentForm.effectiveTo)}
           </Typography>
         </Box>
@@ -116,9 +115,9 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
               ? `${toLabel(assignmentPreview.policySource)} scope`
               : `${toLabel(assignmentForm.targetType)} scope`}
             {assignmentPreview?.matchedPriority != null
-              ? ` · Priority ${assignmentPreview.matchedPriority}`
+              ? ` - Priority ${assignmentPreview.matchedPriority}`
               : assignmentForm.priority
-                ? ` · Priority ${assignmentForm.priority}`
+                ? ` - Priority ${assignmentForm.priority}`
                 : ''}
           </Typography>
           <Typography variant="caption" color="text.secondary">
@@ -153,14 +152,14 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         ) : null}
         <Divider />
         <Typography variant="caption" color="text.secondary">
-          Precedence: Employee &gt; Shift &gt; Role &gt; Department &gt; Employee Type &gt; Default
+          Precedence: Employee &gt; Group &gt; Default
         </Typography>
       </Stack>
     </Paper>
   );
 }
 
-// ─── AssignmentTargetPicker ────────────────────────────────────────────────────
+// --- AssignmentTargetPicker ----------------------------------------------------
 
 function AssignmentTargetPicker({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const { assignmentForm, setAssignmentForm, employeeOptions, groupOptions } = ctx;
@@ -210,7 +209,7 @@ function AssignmentTargetPicker({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   );
 }
 
-// ─── AssignmentPolicyDrawer ────────────────────────────────────────────────────
+// --- AssignmentPolicyDrawer ----------------------------------------------------
 
 export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -392,10 +391,10 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                   </Typography>
                   <Typography variant="caption">
                     {formatRange(assignmentConflict.effectiveFrom, assignmentConflict.effectiveTo)}{' '}
-                    · Priority {assignmentConflict.priority}
+                    - Priority {assignmentConflict.priority}
                   </Typography>
                   <Typography variant="caption">
-                    Payroll: {assignmentConflict.payrollPolicyName} · Attendance:{' '}
+                    Payroll: {assignmentConflict.payrollPolicyName} - Attendance:{' '}
                     {assignmentConflict.attendancePolicyName}
                   </Typography>
                 </Stack>
@@ -481,7 +480,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
         >
           Cancel
         </Button>
-        <LoadingButton
+        <Button
           variant="outlined"
           disabled={!canPreviewImpact || isPolicyOperationActive}
           loading={
@@ -492,8 +491,8 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
           onClick={previewCurrentAssignmentImpact}
         >
           Preview impact
-        </LoadingButton>
-        <LoadingButton
+        </Button>
+        <Button
           variant="contained"
           disabled={!canAssignPolicy || isPolicyOperationActive}
           loading={
@@ -506,7 +505,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
           onClick={saveAssignment}
         >
           {activePolicyOperation?.key === 'save-assignment' ? 'Saving...' : 'Submit'}
-        </LoadingButton>
+        </Button>
       </Stack>
     </Box>
   );

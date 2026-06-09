@@ -28,7 +28,7 @@ import { toLabel, formatDate, getErrorMessage } from '../hr-policy-workspace-uti
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
-// ─── HolidayImpactTab ──────────────────────────────────────────────────────────
+// --- HolidayImpactTab ----------------------------------------------------------
 
 export function HolidayImpactTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -43,7 +43,8 @@ export function HolidayImpactTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     openPayrollDrawer,
   } = ctx;
 
-  const selectedHolidayCalendarId = holidayFilters.workCalendarPolicyId || calendars[0]?.id || '';
+  const activeCalendars = calendars.filter((item) => item.status === 'active');
+  const selectedHolidayCalendarId = holidayFilters.workCalendarPolicyId || '';
   const selectedHolidayPayrollId = holidayFilters.payrollPolicyId || '';
   const selectedHolidayAttendanceId = holidayFilters.attendancePolicyId || '';
 
@@ -57,7 +58,13 @@ export function HolidayImpactTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           <InputLabel>Work Calendar</InputLabel>
           <Select
             label="Work Calendar"
+            displayEmpty
             value={selectedHolidayCalendarId}
+            renderValue={(value) =>
+              value
+                ? calendars.find((item) => item.id === value)?.name || 'Selected calendar'
+                : 'Use payroll policy calendar'
+            }
             onChange={(event) =>
               setHolidayFilters((current) => ({
                 ...current,
@@ -65,7 +72,10 @@ export function HolidayImpactTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
               }))
             }
           >
-            {calendars.map((item) => (
+            <MenuItem value="">
+              <em>Use payroll policy calendar</em>
+            </MenuItem>
+            {activeCalendars.map((item) => (
               <MenuItem key={item.id} value={item.id}>
                 {item.name}
               </MenuItem>

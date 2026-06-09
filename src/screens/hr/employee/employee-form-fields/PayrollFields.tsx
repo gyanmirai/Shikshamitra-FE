@@ -2,7 +2,6 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
-import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatCurrency } from 'src/utils/cureencyFormater';
@@ -10,6 +9,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Add, Today, Payments, FactCheck, EventAvailable } from '@mui/icons-material';
 import {
   useGetPayrollPoliciesQuery,
   useGetAttendancePoliciesQuery,
@@ -147,7 +147,7 @@ export const RenderComponents = ({
     formik.setFieldValue(name, updatedComponents);
   };
 
-  // Build table rows — attach original index for edit/delete
+  // Build table rows and attach original index for edit/delete.
   const tableRows = components.map((c: any, idx: number) => ({
     _idx: idx,
     _raw: c,
@@ -340,12 +340,15 @@ export const RenderComponents = ({
                           py: 0.25,
                           borderRadius: 1,
                           color: 'text.secondary',
-                          display: 'inline-block',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 0.5,
                           width: 'fit-content',
                           ml: 2,
                         }}
                       >
-                        📅 {dayjs(row.applicableMonth).format('MMM YYYY')}
+                        <Today sx={{ fontSize: 14 }} />
+                        {dayjs(row.applicableMonth).format('MMM YYYY')}
                       </Typography>
                     )}
                   </Box>
@@ -359,7 +362,7 @@ export const RenderComponents = ({
                 if (row.isPercentage) {
                   return (
                     <Chip
-                      label={row.percentage != null ? `${row.percentage}%` : '—'}
+                      label={row.percentage != null ? `${row.percentage}%` : '-'}
                       size="small"
                       color="info"
                       variant="soft"
@@ -495,15 +498,23 @@ const RenderPayrollFields = (props: any) => {
   const policySourcePriority =
     policyPreview?.matchedPriority != null ? `Priority ${policyPreview.matchedPriority}` : null;
   const policySummaryItems = [
-    { icon: '🧾', label: 'Payroll Policy', value: policyPreview?.payrollPolicy?.name },
-    { icon: '🕒', label: 'Attendance Policy', value: policyPreview?.attendancePolicy?.name },
     {
-      icon: '📅',
+      icon: <Payments fontSize="small" />,
+      label: 'Payroll Policy',
+      value: policyPreview?.payrollPolicy?.name,
+    },
+    {
+      icon: <FactCheck fontSize="small" />,
+      label: 'Attendance Policy',
+      value: policyPreview?.attendancePolicy?.name,
+    },
+    {
+      icon: <Today fontSize="small" />,
       label: 'Payroll Calendar',
       value: policyPreview?.payrollWorkCalendarPolicy?.name,
     },
     {
-      icon: '📆',
+      icon: <EventAvailable fontSize="small" />,
       label: 'Attendance Calendar',
       value: policyPreview?.attendanceWorkCalendarPolicy?.name,
     },
@@ -535,7 +546,28 @@ const RenderPayrollFields = (props: any) => {
     overrideTouchedFields.forEach((field) => formik.setFieldTouched(field, false, false));
   };
   useEffect(() => {
-    if (!policyPreview || formik.touched.policyOverrideEnabled) {
+    if (!policyPreview) {
+      return;
+    }
+
+    if (formik.touched.policyOverrideEnabled) {
+      if (values.policyOverrideWasEnabled) {
+        const hydrated = hydrateEmployeePolicyOverrideFromPreview(
+          policyPreview,
+          policyEffectiveDate
+        );
+        const retainedFields = [
+          'policyOverrideAssignmentId',
+          'policyOverridePayrollPolicyId',
+          'policyOverrideAttendancePolicyId',
+          'policyOverrideEffectiveFrom',
+        ] as const;
+        retainedFields.forEach((field) => {
+          if (!formik.values[field] && hydrated[field]) {
+            formik.setFieldValue(field, hydrated[field], false);
+          }
+        });
+      }
       return;
     }
 
@@ -545,7 +577,14 @@ const RenderPayrollFields = (props: any) => {
         formik.setFieldValue(key, value, false);
       }
     });
-  }, [formik, policyEffectiveDate, policyPreview]);
+  }, [
+    formik,
+    policyEffectiveDate,
+    policyPreview,
+    values.policyOverrideAssignmentId,
+    values.policyOverrideEnabled,
+    values.policyOverrideWasEnabled,
+  ]);
 
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
@@ -610,7 +649,7 @@ const RenderPayrollFields = (props: any) => {
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   {policySourceDetail}
-                  {policySourcePriority ? ` · ${policySourcePriority}` : ''}
+                  {policySourcePriority ? ` - ${policySourcePriority}` : ''}
                 </Typography>
               </Box>
               <Box display="flex" gap={1} flexWrap="wrap">
@@ -643,7 +682,7 @@ const RenderPayrollFields = (props: any) => {
                         flexShrink: 0,
                       }}
                     >
-                      <Typography component="span" aria-hidden>
+                      <Typography component="span" aria-hidden sx={{ display: 'inline-flex' }}>
                         {item.icon}
                       </Typography>
                     </Box>

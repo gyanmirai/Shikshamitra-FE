@@ -1,10 +1,9 @@
 'use client';
 
-import type { PolicyStatus } from 'src/redux/hr/hr-policy-api';
+import type { EditablePolicyStatus } from 'src/redux/hr/hr-policy-api';
 
 import dayjs from 'dayjs';
 import React from 'react';
-import { LoadingButton } from '@mui/lab';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import {
@@ -56,7 +55,7 @@ import {
 import type { HolidayReviewFilter } from '../types/hr-policy-workspace.types';
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
-// ─── CalendarPolicyDrawer ──────────────────────────────────────────────────────
+// --- CalendarPolicyDrawer ------------------------------------------------------
 
 export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -169,13 +168,12 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
             onChange={(event) =>
               setCalendarForm((current) => ({
                 ...current,
-                status: event.target.value as PolicyStatus,
+                status: event.target.value as EditablePolicyStatus,
               }))
             }
           >
             <MenuItem value="draft">Draft</MenuItem>
             <MenuItem value="active">Active</MenuItem>
-            <MenuItem value="archived">Archived</MenuItem>
           </DrawerSelectField>
           <DrawerField
             label="Effective From *"
@@ -359,7 +357,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
               />
               <HolidayMetricCard label="Manual" value={holidaySummary.manual} color="info.main" />
             </Stack>
-            <LoadingButton
+            <Button
               size="small"
               variant="outlined"
               startIcon={<Iconify icon="mdi:calendar-import" />}
@@ -368,7 +366,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
               onClick={importCentralHolidays}
             >
               {hasFinalizedHolidays ? 'Import from central Calendar' : 'Add all to calendar'}
-            </LoadingButton>
+            </Button>
           </Stack>
           {holidayReviewError ? <Alert severity="error">{holidayReviewError}</Alert> : null}
           {holidayReviewInfo ? <Alert severity="info">{holidayReviewInfo}</Alert> : null}
@@ -492,7 +490,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
           {loadCalendarHolidaysState.isFetching ? <LinearProgress /> : null}
           <TableContainer
             sx={{
-              border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+              border: (theme) => `1px solid ${(theme.vars || theme).palette.divider}`,
               borderRadius: 1,
               maxHeight: 360,
             }}

@@ -10,7 +10,7 @@ import type {
   AttendanceAdvancedKey,
 } from './types/hr-policy-workspace.types';
 // Tab configuration
-// ─── Tab Configuration ────────────────────────────────────────────────────────
+// --- Tab Configuration --------------------------------------------------------
 
 export const HR_POLICY_TABS: Array<{
   value: WorkspaceTab;
@@ -32,7 +32,7 @@ export const HR_POLICY_TABS: Array<{
   { value: 'effective', label: 'Policy Impact', icon: 'mdi:source-branch-check' },
 ];
 // Weekday and weekly-rule options
-// ─── Weekday / Weekly-Rule Options ───────────────────────────────────────────
+// --- Weekday / Weekly-Rule Options -------------------------------------------
 
 export const WEEKDAY_OPTIONS = [
   { value: 0, short: 'Sun', label: 'Sunday' },
@@ -47,11 +47,10 @@ export const WEEKDAY_OPTIONS = [
 export const WEEKLY_RULE_OPTIONS = [
   { value: 'saturday_sunday', label: 'Saturday + Sunday Off' },
   { value: 'sunday', label: 'Sunday Off' },
-  { value: 'no_weekly_off', label: 'No Weekly Off' },
   { value: 'custom', label: 'Custom' },
 ];
 // Payroll options
-// ─── Payroll Options ──────────────────────────────────────────────────────────
+// --- Payroll Options ----------------------------------------------------------
 
 export const PAYROLL_DAY_CALCULATION_OPTIONS = [
   {
@@ -77,7 +76,7 @@ export const PAYROLL_SATURDAY_POLICY_OPTIONS = [
   { value: 'off', label: 'Off', description: 'Saturdays do not add working units.' },
 ];
 // Attendance advanced keys
-// ─── Attendance Advanced Keys ─────────────────────────────────────────────────
+// --- Attendance Advanced Keys -------------------------------------------------
 
 export const ATTENDANCE_ADVANCED_KEYS: AttendanceAdvancedKey[] = [
   'absentThresholdPercentage',
@@ -95,7 +94,7 @@ export const ATTENDANCE_ADVANCED_KEYS: AttendanceAdvancedKey[] = [
   'payrollPreviewEnabled',
 ];
 // Default form factories
-// ─── Default Form Factories ───────────────────────────────────────────────────
+// --- Default Form Factories ---------------------------------------------------
 
 export const defaultCalendarForm = (start?: string | null): WorkCalendarForm => ({
   name: '',

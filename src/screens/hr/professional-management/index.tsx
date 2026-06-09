@@ -40,6 +40,7 @@ import {
   useSavePerformanceOutcomeMutation,
   useSubmitPerformanceStageMutation,
   useGetPerformanceSqaaEvidenceQuery,
+  useGetPerformanceSqaaAuditPackQuery,
   useClonePerformanceTemplateMutation,
   useGetPerformanceTrainingNeedsQuery,
   useGetProfessionalReviewCyclesQuery,
@@ -57,21 +58,16 @@ import {
   usePublishProfessionalReviewCycleMutation,
   useFinalizeProfessionalReviewCycleMutation,
   useAssignProfessionalReviewEmployeesMutation,
+  useLazyGetPerformanceSqaaAuditPackExportQuery,
   useGetPerformanceIncrementRecommendationsQuery,
   useMoveProfessionalReviewCycleToCalibrationMutation,
 } from 'src/redux/hr/professional-management-api';
 
+import { summarizeSqaaAuditPack } from './performance-sqaa-utils';
 import {
   type PerformanceWorkspaceTab,
   performanceWorkspaceSubmodules,
 } from './components/performance-workspace-config';
-import {
-  PerformanceSurface,
-  PerformanceEmptyState,
-  PerformanceMetricCard,
-  PerformanceSectionHeader,
-  PerformanceWorkflowStepper,
-} from './components/PerformanceWorkspaceUI';
 import {
   stageLabels,
   boardTypeLabels,
@@ -81,11 +77,66 @@ import {
   isTemplatePublishable,
   getSectionWeightTotal,
 } from './performance-utils';
+import {
+  PerformanceSurface,
+  PerformanceEmptyState,
+  PerformanceMetricCard,
+  PerformanceTablePanel,
+  PerformanceSectionHeader,
+  PerformanceWorkspaceShell,
+  PerformanceWorkflowStepper,
+  PerformanceScrollableContent,
+} from './components/PerformanceWorkspaceUI';
 
 const getBackendApiUrl = (path: string) => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
   return `${baseUrl}/api${path}`;
 };
+
+const tablePanelProps = {
+  wrapperProps: {
+    sx: {
+      height: '100%',
+      minHeight: 0,
+    },
+  },
+  tableContainerProps: {
+    sx: {
+      minHeight: 0,
+      overflow: 'auto',
+    },
+  },
+};
+
+function PerformanceDataTable({
+  wrapperProps,
+  tableContainerProps,
+  ...other
+}: React.ComponentProps<typeof CustomizableTable>) {
+  return (
+    <PerformanceTablePanel>
+      <CustomizableTable
+        {...other}
+        wrapperProps={{
+          ...tablePanelProps.wrapperProps,
+          ...wrapperProps,
+          sx: {
+            ...tablePanelProps.wrapperProps.sx,
+            ...wrapperProps?.sx,
+          },
+        }}
+        tableContainerProps={{
+          ...tablePanelProps.tableContainerProps,
+          ...tableContainerProps,
+          sx: {
+            ...tablePanelProps.tableContainerProps.sx,
+            ...tableContainerProps?.sx,
+          },
+        }}
+      />
+    </PerformanceTablePanel>
+  );
+}
 
 type ProfessionalManagementScreenProps = {
   workspace?: PerformanceWorkspaceTab;
@@ -119,7 +170,7 @@ const ProfessionalManagementScreen = ({
         links={breadcrumbLinks}
       />
 
-      <Box sx={{ mt: 2, minWidth: 0, flex: 1 }}>
+      <PerformanceWorkspaceShell>
         {workspace === 'overview' && <OverviewWorkspace />}
         {workspace === 'setup-readiness' && <SetupReadinessWorkspace />}
         {workspace === 'reviews' && <ReviewsWorkspace />}
@@ -127,7 +178,7 @@ const ProfessionalManagementScreen = ({
         {workspace === 'outcomes' && <OutcomesWorkspace />}
         {workspace === 'reports' && <ReportsTab />}
         {workspace === 'settings' && <SettingsWorkspace />}
-      </Box>
+      </PerformanceWorkspaceShell>
     </Box>
   );
 };
@@ -150,7 +201,7 @@ function SectionPanel({
       title={title}
       description={description}
       action={action}
-      contentSx={{ minWidth: 0, overflowX: 'auto' }}
+      contentSx={{ minWidth: 0, overflow: 'hidden' }}
     >
       {children}
     </PerformanceSurface>
@@ -178,13 +229,17 @@ function MetricCard({
   value,
   icon,
   tone = 'primary',
+  helper,
 }: {
   label: string;
   value?: number;
   icon: string;
   tone?: 'primary' | 'info' | 'warning' | 'success' | 'error';
+  helper?: string;
 }) {
-  return <PerformanceMetricCard label={label} value={value} icon={icon} tone={tone} />;
+  return (
+    <PerformanceMetricCard label={label} value={value} icon={icon} tone={tone} helper={helper} />
+  );
 }
 
 const setupSteps = [
@@ -212,14 +267,16 @@ const setupSteps = [
 
 function SetupReadinessWorkspace() {
   return (
-    <Grid container spacing={2} alignItems="stretch">
-      <Grid size={{ xs: 12, md: 3 }}>
-        <PerformanceWorkflowStepper steps={setupSteps} activeStep={0} />
+    <PerformanceScrollableContent>
+      <Grid container spacing={2} alignItems="stretch">
+        <Grid size={{ xs: 12, md: 3 }}>
+          <PerformanceWorkflowStepper steps={setupSteps} activeStep={0} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 9 }}>
+          <GuidedSetupTab />
+        </Grid>
       </Grid>
-      <Grid size={{ xs: 12, md: 9 }}>
-        <GuidedSetupTab />
-      </Grid>
-    </Grid>
+    </PerformanceScrollableContent>
   );
 }
 
@@ -263,48 +320,66 @@ const settingsCards = [
 
 function SettingsWorkspace() {
   return (
-    <Stack spacing={2}>
-      <SectionPanel
-        title="Performance settings"
-        description="Configuration lives here so the daily review, outcomes, and reporting pages stay focused."
-      >
-        <Grid container spacing={1.5}>
-          {settingsCards.map((item) => (
-            <Grid
-              key={item.title}
-              size={{ xs: 12, sm: 6, lg: item.title === 'Setup & Readiness' ? 4 : 2 }}
-            >
-              <Button
-                fullWidth
-                component="a"
-                href={item.href}
-                variant="outlined"
-                startIcon={<Iconify icon={item.icon} />}
-                sx={{
-                  height: '100%',
-                  minHeight: 132,
-                  alignItems: 'flex-start',
-                  justifyContent: 'flex-start',
-                  p: 1.5,
-                  textAlign: 'left',
-                  whiteSpace: 'normal',
-                }}
+    <PerformanceScrollableContent>
+      <Stack spacing={2}>
+        <SectionPanel
+          title="Performance settings"
+          description="Configuration lives here so the daily review, outcomes, and reporting pages stay focused."
+        >
+          <Grid container spacing={1.5} alignItems="stretch">
+            {settingsCards.map((item, index) => (
+              <Grid
+                key={item.title}
+                size={{ xs: 12, sm: index === 0 ? 12 : 6, lg: index === 0 ? 4 : 2 }}
               >
-                <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-                  <Typography variant="subtitle2">{item.title}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {item.description}
-                  </Typography>
-                  <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }}>
-                    {item.action}
-                  </Typography>
-                </Stack>
-              </Button>
-            </Grid>
-          ))}
-        </Grid>
-      </SectionPanel>
-    </Stack>
+                <Button
+                  fullWidth
+                  component="a"
+                  href={item.href}
+                  variant={index === 0 ? 'contained' : 'outlined'}
+                  startIcon={<Iconify icon={item.icon} />}
+                  sx={{
+                    height: '100%',
+                    minHeight: { xs: 118, sm: 148 },
+                    alignItems: 'flex-start',
+                    justifyContent: 'flex-start',
+                    p: 2,
+                    textAlign: 'left',
+                    whiteSpace: 'normal',
+                    borderRadius: 1,
+                    '& .MuiButton-startIcon': {
+                      mt: 0.25,
+                      mr: 1.25,
+                      flexShrink: 0,
+                    },
+                  }}
+                >
+                  <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+                    <Typography variant="subtitle2" sx={{ lineHeight: 1.3 }}>
+                      {item.title}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color={index === 0 ? 'primary.contrastText' : 'text.secondary'}
+                      sx={{ opacity: index === 0 ? 0.88 : 1 }}
+                    >
+                      {item.description}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color={index === 0 ? 'primary.contrastText' : 'primary.main'}
+                      sx={{ fontWeight: 700, pt: 0.5 }}
+                    >
+                      {item.action}
+                    </Typography>
+                  </Stack>
+                </Button>
+              </Grid>
+            ))}
+          </Grid>
+        </SectionPanel>
+      </Stack>
+    </PerformanceScrollableContent>
   );
 }
 
@@ -312,8 +387,24 @@ function ReviewsWorkspace() {
   const [view, setView] = useState<'my' | 'queue' | 'observations'>('my');
 
   return (
-    <Stack spacing={2}>
-      <PerformanceSurface>
+    <PerformanceSurface
+      sx={{
+        flex: 1,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+      contentSx={{ minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}
+    >
+      <Box
+        sx={{
+          flexShrink: 0,
+          '& .MuiToggleButtonGroup-root': {
+            maxWidth: '100%',
+            overflowX: 'auto',
+          },
+        }}
+      >
         <PerformanceSectionHeader
           title="Review workspace"
           description="Keep daily review work focused: self appraisal, reviewer queue, or classroom observations."
@@ -336,38 +427,93 @@ function ReviewsWorkspace() {
             </ToggleButtonGroup>
           }
         />
+      </Box>
+      <Box sx={{ minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
         {view === 'my' && <MyReviewTab />}
         {view === 'queue' && <ReviewsTab />}
         {view === 'observations' && <ObservationsTab />}
-      </PerformanceSurface>
-    </Stack>
+      </Box>
+    </PerformanceSurface>
   );
 }
 
 function CyclesTemplatesWorkspace() {
+  const [view, setView] = useState<'cycles' | 'templates'>('cycles');
+
   return (
-    <Grid container spacing={2} alignItems="stretch">
-      <Grid size={{ xs: 12, xl: 6 }}>
-        <CyclesTab />
-      </Grid>
-      <Grid size={{ xs: 12, xl: 6 }}>
-        <TemplatesTab />
-      </Grid>
-    </Grid>
+    <PerformanceSurface
+      sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+      contentSx={{ minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}
+    >
+      <PerformanceSectionHeader
+        title="Cycles & templates"
+        description="Manage one operational surface at a time: cycle execution or appraisal design."
+        action={
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={view}
+            onChange={(_, nextView) => nextView && setView(nextView)}
+          >
+            <ToggleButton value="cycles">Review Cycles</ToggleButton>
+            <ToggleButton value="templates">Templates</ToggleButton>
+          </ToggleButtonGroup>
+        }
+      />
+      <Box sx={{ minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {view === 'cycles' && <CyclesTab />}
+        {view === 'templates' && <TemplatesTab />}
+      </Box>
+    </PerformanceSurface>
   );
 }
 
 function OutcomesWorkspace() {
+  const [view, setView] = useState<'calibration' | 'outcomes' | 'plans'>('calibration');
+
   return (
-    <Grid container spacing={2} alignItems="stretch">
-      <Grid size={{ xs: 12, xl: 6 }}>
-        <CalibrationTab />
+    <Grid container spacing={2} alignItems="stretch" sx={{ minHeight: 0, flex: 1, height: '100%' }}>
+      <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', minHeight: 0 }}>
+        <PerformanceWorkflowStepper
+          steps={[
+            { label: 'Review', description: 'Complete self and reviewer stages.' },
+            { label: 'Calibration', description: 'Normalize ratings before closure.' },
+            { label: 'Outcome', description: 'Finalize recommendations.' },
+            { label: 'Development Plan', description: 'Track follow-up growth actions.' },
+          ]}
+          activeStep={view === 'calibration' ? 1 : view === 'outcomes' ? 2 : 3}
+        />
       </Grid>
-      <Grid size={{ xs: 12, xl: 6 }}>
-        <OutcomesTab />
-      </Grid>
-      <Grid size={{ xs: 12 }}>
-        <DevelopmentPlansTab />
+      <Grid
+        size={{ xs: 12, md: 9 }}
+        sx={{ minHeight: 0, display: 'flex', flexDirection: 'column', height: '100%' }}
+      >
+        <PerformanceSurface
+          sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+          contentSx={{ minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}
+        >
+          <PerformanceSectionHeader
+            title="Outcome workspace"
+            description="Move from calibration to final outcomes and development follow-up."
+            action={
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={view}
+                onChange={(_, nextView) => nextView && setView(nextView)}
+              >
+                <ToggleButton value="calibration">Calibration</ToggleButton>
+                <ToggleButton value="outcomes">Outcomes</ToggleButton>
+                <ToggleButton value="plans">Plans</ToggleButton>
+              </ToggleButtonGroup>
+            }
+          />
+          <Box sx={{ minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
+            {view === 'calibration' && <CalibrationTab />}
+            {view === 'outcomes' && <OutcomesTab />}
+            {view === 'plans' && <DevelopmentPlansTab />}
+          </Box>
+        </PerformanceSurface>
       </Grid>
     </Grid>
   );
@@ -480,158 +626,160 @@ function GuidedSetupTab() {
   );
 
   return (
-    <Stack spacing={2}>
-      {(defaultsLoading || templatesLoading || cyclesLoading) && <LinearProgress />}
-      <TabHeader
-        title="Setup & readiness"
-        description="Prepare CBSE/GSEB appraisal presets, start cycles, and track SQAAF evidence readiness from one workspace."
-      />
-
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <SectionPanel
-            title="1. Choose board"
-            description="Load appraisal presets that match the school's board and staff group."
-          >
-            <Stack spacing={1.5}>
-              <TextField
-                select
-                size="small"
-                label="Board preset"
-                value={boardType}
-                onChange={(event) => setBoardType(Number(event.target.value))}
-              >
-                {[PerformanceBoardType.CBSE, PerformanceBoardType.GSEB].map((value) => (
-                  <MenuItem key={value} value={value}>
-                    {boardTypeLabels[value]}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                size="small"
-                label="Staff group"
-                value={staffCategory}
-                onChange={(event) => setStaffCategory(Number(event.target.value))}
-              >
-                {Object.entries(staffCategoryLabels).map(([value, label]) => (
-                  <MenuItem key={value} value={Number(value)}>
-                    {label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <Button
-                variant="contained"
-                disabled={createTemplateState.isLoading}
-                startIcon={<Iconify icon="mdi:playlist-plus" />}
-                onClick={addPresets}
-              >
-                Add Board Presets
-              </Button>
-            </Stack>
-          </SectionPanel>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <SectionPanel
-            title="2. Start cycle"
-            description="Create, publish, and assign the selected appraisal template to active staff."
-          >
-            <Stack spacing={1.5}>
-              <TextField
-                size="small"
-                label="Cycle name"
-                value={cycleName}
-                onChange={(event) => setCycleName(event.target.value)}
-              />
-              <DatePicker
-                label="Period start"
-                value={periodStart}
-                onChange={(value) => value && setPeriodStart(value)}
-              />
-              <DatePicker
-                label="Period end"
-                value={periodEnd}
-                onChange={(value) => value && setPeriodEnd(value)}
-              />
-              <Button
-                variant="contained"
-                color="success"
-                disabled={
-                  !selectedTemplate?.id || isCyclePeriodInvalid || createCycleState.isLoading
-                }
-                startIcon={<Iconify icon="mdi:rocket-launch-outline" />}
-                onClick={createAndStartCycle}
-              >
-                Create & Assign
-              </Button>
-            </Stack>
-          </SectionPanel>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <SectionPanel
-            title="3. Readiness snapshot"
-            description="A quick view of setup progress for the selected board and staff group."
-          >
-            <Stack spacing={1.25}>
-              <MetricCard
-                label="Matching Templates"
-                value={boardTemplates.length}
-                icon="mdi:clipboard-check-outline"
-                tone="info"
-              />
-              <MetricCard
-                label="Review Cycles"
-                value={cycles.length}
-                icon="mdi:calendar-sync-outline"
-                tone="success"
-              />
-              <MetricCard
-                label="SQAAF Criteria"
-                value={evidenceTotals.mappedCriteria}
-                icon="mdi:shield-check-outline"
-                tone="warning"
-              />
-            </Stack>
-          </SectionPanel>
-        </Grid>
-      </Grid>
-
-      <SectionPanel
-        title="SQAAF evidence coverage"
-        description="Evidence gaps are grouped by SQAAF domain so administrators can prepare audit-ready records."
-      >
-        <CustomizableTable
-          tableId="performance-sqaaf-evidence-setup"
-          columns={[
-            {
-              id: 'domain',
-              label: 'Domain',
-              minWidth: '240px',
-              render: (value) => sqaaDomainLabels[Number(value)] || '-',
-            },
-            { id: 'mappedCriteria', label: 'Criteria', minWidth: '100px' },
-            { id: 'evidenceRequiredCriteria', label: 'Required', minWidth: '110px' },
-            { id: 'evidenceSubmitted', label: 'Evidence', minWidth: '110px' },
-            {
-              id: 'missingEvidence',
-              label: 'Missing',
-              minWidth: '110px',
-              render: (value) => (
-                <Chip
-                  size="small"
-                  color={Number(value) > 0 ? 'warning' : 'success'}
-                  label={Number(value)}
-                />
-              ),
-            },
-          ]}
-          data={sqaaEvidence || []}
-          noDataText="Add board presets and run reviews to build SQAAF evidence coverage."
+    <PerformanceScrollableContent>
+      <Stack spacing={2}>
+        {(defaultsLoading || templatesLoading || cyclesLoading) && <LinearProgress />}
+        <TabHeader
+          title="Setup & readiness"
+          description="Prepare CBSE/GSEB appraisal presets, start cycles, and track SQAAF evidence readiness from one workspace."
         />
-      </SectionPanel>
-    </Stack>
+
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <SectionPanel
+              title="1. Choose board"
+              description="Load appraisal presets that match the school's board and staff group."
+            >
+              <Stack spacing={1.5}>
+                <TextField
+                  select
+                  size="small"
+                  label="Board preset"
+                  value={boardType}
+                  onChange={(event) => setBoardType(Number(event.target.value))}
+                >
+                  {[PerformanceBoardType.CBSE, PerformanceBoardType.GSEB].map((value) => (
+                    <MenuItem key={value} value={value}>
+                      {boardTypeLabels[value]}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  size="small"
+                  label="Staff group"
+                  value={staffCategory}
+                  onChange={(event) => setStaffCategory(Number(event.target.value))}
+                >
+                  {Object.entries(staffCategoryLabels).map(([value, label]) => (
+                    <MenuItem key={value} value={Number(value)}>
+                      {label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <Button
+                  variant="contained"
+                  disabled={createTemplateState.isLoading}
+                  startIcon={<Iconify icon="mdi:playlist-plus" />}
+                  onClick={addPresets}
+                >
+                  Add Board Presets
+                </Button>
+              </Stack>
+            </SectionPanel>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 4 }}>
+            <SectionPanel
+              title="2. Start cycle"
+              description="Create, publish, and assign the selected appraisal template to active staff."
+            >
+              <Stack spacing={1.5}>
+                <TextField
+                  size="small"
+                  label="Cycle name"
+                  value={cycleName}
+                  onChange={(event) => setCycleName(event.target.value)}
+                />
+                <DatePicker
+                  label="Period start"
+                  value={periodStart}
+                  onChange={(value) => value && setPeriodStart(value)}
+                />
+                <DatePicker
+                  label="Period end"
+                  value={periodEnd}
+                  onChange={(value) => value && setPeriodEnd(value)}
+                />
+                <Button
+                  variant="contained"
+                  color="success"
+                  disabled={
+                    !selectedTemplate?.id || isCyclePeriodInvalid || createCycleState.isLoading
+                  }
+                  startIcon={<Iconify icon="mdi:rocket-launch-outline" />}
+                  onClick={createAndStartCycle}
+                >
+                  Create & Assign
+                </Button>
+              </Stack>
+            </SectionPanel>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 4 }}>
+            <SectionPanel
+              title="3. Readiness snapshot"
+              description="A quick view of setup progress for the selected board and staff group."
+            >
+              <Stack spacing={1.25}>
+                <MetricCard
+                  label="Matching Templates"
+                  value={boardTemplates.length}
+                  icon="mdi:clipboard-check-outline"
+                  tone="info"
+                />
+                <MetricCard
+                  label="Review Cycles"
+                  value={cycles.length}
+                  icon="mdi:calendar-sync-outline"
+                  tone="success"
+                />
+                <MetricCard
+                  label="SQAAF Criteria"
+                  value={evidenceTotals.mappedCriteria}
+                  icon="mdi:shield-check-outline"
+                  tone="warning"
+                />
+              </Stack>
+            </SectionPanel>
+          </Grid>
+        </Grid>
+
+        <SectionPanel
+          title="SQAAF evidence coverage"
+          description="Evidence gaps are grouped by SQAAF domain so administrators can prepare audit-ready records."
+        >
+          <PerformanceDataTable
+            tableId="performance-sqaaf-evidence-setup"
+            columns={[
+              {
+                id: 'domain',
+                label: 'Domain',
+                minWidth: '240px',
+                render: (value) => sqaaDomainLabels[Number(value)] || '-',
+              },
+              { id: 'mappedCriteria', label: 'Criteria', minWidth: '100px' },
+              { id: 'evidenceRequiredCriteria', label: 'Required', minWidth: '110px' },
+              { id: 'evidenceSubmitted', label: 'Evidence', minWidth: '110px' },
+              {
+                id: 'missingEvidence',
+                label: 'Missing',
+                minWidth: '110px',
+                render: (value) => (
+                  <Chip
+                    size="small"
+                    color={Number(value) > 0 ? 'warning' : 'success'}
+                    label={Number(value)}
+                  />
+                ),
+              },
+            ]}
+            data={sqaaEvidence || []}
+            noDataText="Add board presets and run reviews to build SQAAF evidence coverage."
+          />
+        </SectionPanel>
+      </Stack>
+    </PerformanceScrollableContent>
   );
 }
 
@@ -639,21 +787,19 @@ function OverviewWorkspace() {
   const { data, isLoading, isError } = useGetPerformanceDashboardQuery();
   const { data: pending } = useGetPerformanceReviewsQuery({ status: 2 });
   const { data: pendingActions } = useGetPerformancePendingActionsQuery({});
-  const { data: sqaaEvidence } = useGetPerformanceSqaaEvidenceQuery({});
+  const { data: sqaaAuditPack } = useGetPerformanceSqaaAuditPackQuery({});
   const { data: templateData } = useGetPerformanceTemplatesQuery({});
   const rows = pending?.items || [];
   const templates: PerformanceTemplate[] = templateData?.items || [];
   const publishedTemplates = templates.filter((template) => Number(template.status) === 1).length;
-  const missingEvidence = (sqaaEvidence || []).reduce(
-    (total: number, item: any) => total + Number(item.missingEvidence || 0),
-    0
-  );
+  const sqaaSummary = summarizeSqaaAuditPack(sqaaAuditPack);
+  const missingEvidence = sqaaSummary.totalMissingEvidence;
   const actionItems = [
     {
-      title: 'Review settings readiness',
-      description: 'Seed presets, assign staff, and check SQAAF coverage.',
-      path: '/hr/professional-management/settings/setup',
-      icon: 'mdi:cog-outline',
+      title: 'Prepare SQAAF Audit Pack',
+      description: 'Check readiness, gaps, and export evidence for CBSE review.',
+      path: '/hr/professional-management/reports',
+      icon: 'mdi:file-certificate-outline',
     },
     {
       title: 'Work review queues',
@@ -668,195 +814,233 @@ function OverviewWorkspace() {
       icon: 'mdi:calendar-sync-outline',
     },
     {
-      title: 'Open compliance reports',
-      description: 'Check SQAAF evidence, pending actions, and exports.',
-      path: '/hr/professional-management/reports',
-      icon: 'mdi:chart-box-outline',
+      title: 'Review settings readiness',
+      description: 'Seed presets, assign staff, and check board mappings.',
+      path: '/hr/professional-management/settings/setup',
+      icon: 'mdi:cog-outline',
     },
   ];
 
   return (
-    <Stack spacing={2}>
-      {isLoading && <LinearProgress />}
-      {isError && <EmptyState text="Performance dashboard could not be loaded." />}
+    <PerformanceScrollableContent>
+      <Stack spacing={2}>
+        {isLoading && <LinearProgress />}
+        {isError && <EmptyState text="Performance dashboard could not be loaded." />}
 
-      <Grid container spacing={1.5}>
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <MetricCard label="Active Cycles" value={data?.activeCycles} icon="mdi:calendar-star" />
+        <Grid container spacing={1.5}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <MetricCard label="Active Cycles" value={data?.activeCycles} icon="mdi:calendar-star" />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <MetricCard
+              label="Self Reviews"
+              value={data?.pendingSelfReviews}
+              icon="mdi:account-edit"
+              tone="info"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <MetricCard
+              label="Reviewer Actions"
+              value={data?.pendingReviewerReviews}
+              icon="mdi:account-check"
+              tone="warning"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <MetricCard
+              label="Overdue"
+              value={data?.overdueReviews}
+              icon="mdi:clock-alert-outline"
+              tone="error"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <MetricCard
+              label="SQAAF Ready"
+              value={sqaaSummary.overallReadinessPercentage}
+              icon="mdi:shield-check-outline"
+              tone={sqaaSummary.totalMissingEvidence > 0 ? 'warning' : 'success'}
+              helper="% readiness"
+            />
+          </Grid>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <MetricCard
-            label="Self Reviews"
-            value={data?.pendingSelfReviews}
-            icon="mdi:account-edit"
-            tone="info"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <MetricCard
-            label="Reviewer Actions"
-            value={data?.pendingReviewerReviews}
-            icon="mdi:account-check"
-            tone="warning"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <MetricCard
-            label="Overdue"
-            value={data?.overdueReviews}
-            icon="mdi:clock-alert-outline"
-            tone="error"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <MetricCard
-            label="Finalized"
-            value={data?.finalizedReviews}
-            icon="mdi:check-decagram-outline"
-            tone="success"
-          />
-        </Grid>
-      </Grid>
 
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, lg: 7 }}>
-          <SectionPanel
-            title="Next best actions"
-            description="Start from the most common school-admin workflows without hunting through tabs."
-          >
-            <Grid container spacing={1.5}>
-              {actionItems.map((item) => (
-                <Grid key={item.path} size={{ xs: 12, sm: 6 }}>
-                  <Button
-                    fullWidth
-                    component="a"
-                    href={item.path}
-                    variant="outlined"
-                    startIcon={<Iconify icon={item.icon} />}
-                    sx={{
-                      minHeight: 72,
-                      justifyContent: 'flex-start',
-                      alignItems: 'flex-start',
-                      p: 1.5,
-                      textAlign: 'left',
-                      whiteSpace: 'normal',
-                    }}
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, lg: 7 }}>
+            <SectionPanel
+              title="Next best actions"
+              description="Start from the most common school-admin workflows without hunting through tabs."
+            >
+              <Grid container spacing={1.5}>
+                {actionItems.map((item) => (
+                  <Grid key={item.path} size={{ xs: 12, sm: 6 }}>
+                    <Button
+                      fullWidth
+                      component="a"
+                      href={item.path}
+                      variant="outlined"
+                      startIcon={<Iconify icon={item.icon} />}
+                      sx={{
+                        minHeight: 72,
+                        justifyContent: 'flex-start',
+                        alignItems: 'flex-start',
+                        p: 1.5,
+                        textAlign: 'left',
+                        whiteSpace: 'normal',
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography variant="subtitle2">{item.title}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.description}
+                        </Typography>
+                      </Box>
+                    </Button>
+                  </Grid>
+                ))}
+              </Grid>
+            </SectionPanel>
+          </Grid>
+          <Grid size={{ xs: 12, lg: 5 }}>
+            <SectionPanel title="Pending Actions">
+              <Stack spacing={1}>
+                {(pendingActions || []).slice(0, 5).map((item: any) => (
+                  <Stack
+                    key={`${item.reviewId}-${item.action}`}
+                    direction={{ xs: 'column', sm: 'row' }}
+                    justifyContent="space-between"
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    spacing={1}
                   >
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="subtitle2">{item.title}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {item.description}
-                      </Typography>
-                    </Box>
-                  </Button>
-                </Grid>
-              ))}
-            </Grid>
-          </SectionPanel>
+                    <Typography variant="body2">{item.employeeName}</Typography>
+                    <Chip
+                      size="small"
+                      label={`${item.action}${item.dueDate ? ` by ${dayjs(item.dueDate).format('DD MMM')}` : ''}`}
+                    />
+                  </Stack>
+                ))}
+                {!pendingActions?.length && <EmptyState text="No pending actions right now." />}
+              </Stack>
+            </SectionPanel>
+          </Grid>
         </Grid>
-        <Grid size={{ xs: 12, lg: 5 }}>
-          <SectionPanel title="Pending Actions">
-            <Stack spacing={1}>
-              {(pendingActions || []).slice(0, 5).map((item: any) => (
-                <Stack
-                  key={`${item.reviewId}-${item.action}`}
-                  direction={{ xs: 'column', sm: 'row' }}
-                  justifyContent="space-between"
-                  alignItems={{ xs: 'flex-start', sm: 'center' }}
-                  spacing={1}
-                >
-                  <Typography variant="body2">{item.employeeName}</Typography>
-                  <Chip
-                    size="small"
-                    label={`${item.action}${item.dueDate ? ` by ${dayjs(item.dueDate).format('DD MMM')}` : ''}`}
-                  />
-                </Stack>
-              ))}
-              {!pendingActions?.length && <EmptyState text="No pending actions right now." />}
-            </Stack>
-          </SectionPanel>
-        </Grid>
-      </Grid>
 
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <SectionPanel
-            title="Readiness summary"
-            description="Configuration health stays visible here, while setup actions live under Settings."
-            action={
-              <Button
-                size="small"
-                component="a"
-                href="/hr/professional-management/settings/setup"
-                startIcon={<Iconify icon="mdi:cog-outline" />}
-              >
-                Settings
-              </Button>
-            }
-          >
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <SectionPanel
+              title="SQAAF readiness"
+              description="Principal/admin snapshot for CBSE/GSEB evidence review."
+              action={
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    component="a"
+                    href="/hr/professional-management/reports"
+                    startIcon={<Iconify icon="mdi:file-certificate-outline" />}
+                  >
+                    Audit Pack
+                  </Button>
+                  <Button
+                    size="small"
+                    component="a"
+                    href="/hr/professional-management/settings/setup"
+                    startIcon={<Iconify icon="mdi:cog-outline" />}
+                  >
+                    Settings
+                  </Button>
+                </Stack>
+              }
+            >
+              <Stack spacing={1.5}>
+                <Grid container spacing={1.5}>
+                  <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                    <MetricCard
+                      label="Overall Readiness"
+                      value={sqaaSummary.overallReadinessPercentage}
+                      icon="mdi:shield-check-outline"
+                      tone={missingEvidence > 0 ? 'warning' : 'success'}
+                      helper="% ready"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                    <MetricCard
+                      label="Evidence Gaps"
+                      value={missingEvidence}
+                      icon="mdi:file-alert-outline"
+                      tone={missingEvidence > 0 ? 'warning' : 'success'}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                    <MetricCard
+                      label="Domains Ready"
+                      value={sqaaSummary.readyDomainCount}
+                      icon="mdi:domain"
+                      tone="info"
+                      helper={`${sqaaSummary.totalDomainCount} tracked`}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                    <MetricCard
+                      label="Published Templates"
+                      value={publishedTemplates}
+                      icon="mdi:clipboard-check-outline"
+                      tone="info"
+                    />
+                  </Grid>
+                </Grid>
+                <Stack spacing={1}>
+                  <Typography variant="subtitle2">Top gaps</Typography>
+                  {sqaaSummary.topGaps.map((domain) => (
+                    <Stack
+                      key={domain.domain}
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      spacing={1}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {sqaaDomainLabels[Number(domain.domain)] || 'SQAAF domain'}
+                      </Typography>
+                      <Chip size="small" color="warning" label={`${domain.missingEvidence} gaps`} />
+                    </Stack>
+                  ))}
+                  {!sqaaSummary.topGaps.length && (
+                    <EmptyState text="No SQAAF evidence gaps found for the current data." />
+                  )}
+                </Stack>
+              </Stack>
+            </SectionPanel>
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Grid container spacing={1.5}>
               <Grid size={{ xs: 12, sm: 6, md: 12 }}>
                 <MetricCard
-                  label="Published Templates"
-                  value={publishedTemplates}
-                  icon="mdi:clipboard-check-outline"
+                  label="Training Recommendations"
+                  value={data?.trainingRecommendations}
+                  icon="mdi:school-outline"
                   tone="info"
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 12 }}>
                 <MetricCard
-                  label="Active Cycles"
-                  value={data?.activeCycles}
-                  icon="mdi:calendar-star"
+                  label="Increment Recommendations"
+                  value={data?.incrementRecommendations}
+                  icon="mdi:cash-plus"
                   tone="success"
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-                <MetricCard
-                  label="Assigned Reviews"
-                  value={rows.length}
-                  icon="mdi:account-switch-outline"
-                  tone="warning"
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-                <MetricCard
-                  label="SQAAF Evidence Gaps"
-                  value={missingEvidence}
-                  icon="mdi:file-alert-outline"
-                  tone={missingEvidence > 0 ? 'warning' : 'success'}
-                />
-              </Grid>
-            </Grid>
-          </SectionPanel>
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Grid container spacing={1.5}>
-            <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-              <MetricCard
-                label="Training Recommendations"
-                value={data?.trainingRecommendations}
-                icon="mdi:school-outline"
-                tone="info"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-              <MetricCard
-                label="Increment Recommendations"
-                value={data?.incrementRecommendations}
-                icon="mdi:cash-plus"
-                tone="success"
-              />
             </Grid>
           </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <SectionPanel title="Live Review Queue">
+              <ReviewTable rows={rows.slice(0, 5)} />
+            </SectionPanel>
+          </Grid>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <SectionPanel title="Live Review Queue">
-            <ReviewTable rows={rows.slice(0, 5)} />
-          </SectionPanel>
-        </Grid>
-      </Grid>
-    </Stack>
+      </Stack>
+    </PerformanceScrollableContent>
   );
 }
 
@@ -891,7 +1075,7 @@ function TemplatesTab() {
   };
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
       {isLoading && <LinearProgress />}
       <TabHeader
         title="Role-based appraisal templates"
@@ -918,7 +1102,7 @@ function TemplatesTab() {
         }
       />
 
-      <CustomizableTable
+      <PerformanceDataTable
         tableId="performance-templates"
         columns={[
           { id: 'name', label: 'Template', minWidth: '220px' },
@@ -1413,7 +1597,7 @@ function CyclesTab() {
   const cycles = cycleData?.items || [];
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
       {isLoading && <LinearProgress />}
       <TabHeader
         title="Review cycles"
@@ -1428,7 +1612,7 @@ function CyclesTab() {
           </Button>
         }
       />
-      <CustomizableTable
+      <PerformanceDataTable
         tableId="performance-cycles"
         columns={[
           { id: 'name', label: 'Cycle', minWidth: '220px' },
@@ -1535,7 +1719,7 @@ function ReviewsTab() {
   const rows = data?.items || [];
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
       {isLoading && <LinearProgress />}
       <ReviewTable rows={rows} onOpen={(row) => setSelectedId(row.id)} />
       <ReviewWorkspace reviewId={selectedId} onClose={() => setSelectedId(null)} />
@@ -1549,7 +1733,7 @@ function MyReviewTab() {
   const rows = (data?.items || []).filter((row: ProfessionalReview) => row.status !== 3);
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
       {isLoading && <LinearProgress />}
       <TabHeader title="Self-appraisal drafts and submissions" />
       <ReviewTable rows={rows} onOpen={(row) => setSelectedId(row.id)} actionLabel="Self Review" />
@@ -1572,7 +1756,7 @@ function ObservationsTab() {
   );
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
       {isLoading && <LinearProgress />}
       <TabHeader title="Classroom observations" />
       <ReviewTable rows={rows} onOpen={(row) => setSelectedId(row.id)} actionLabel="Observe" />
@@ -1592,13 +1776,16 @@ function CalibrationTab() {
   const rows = (data?.items || []).filter((row: ProfessionalReview) => row.status !== 3);
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{ minHeight: 0, flex: 1, height: '100%' }}>
       {isLoading && <LinearProgress />}
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 4 }}>
+      <Grid container spacing={2} sx={{ minHeight: 0, flex: 1, height: '100%' }}>
+        <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', minHeight: 0 }}>
           <RatingDistributionPanel distribution={distribution || []} />
         </Grid>
-        <Grid size={{ xs: 12, md: 8 }}>
+        <Grid
+          size={{ xs: 12, md: 8 }}
+          sx={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}
+        >
           <ReviewTable
             rows={rows}
             onOpen={(row) => setSelectedId(row.id)}
@@ -1619,10 +1806,10 @@ function DevelopmentPlansTab() {
   const { data: training, isLoading } = useGetPerformanceTrainingNeedsQuery({});
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{ minHeight: 0, flex: 1, height: '100%' }}>
       {isLoading && <LinearProgress />}
       <TabHeader title="Development plans and training needs" />
-      <CustomizableTable
+      <PerformanceDataTable
         tableId="performance-development-plans"
         columns={[
           { id: 'goal', label: 'Goal', minWidth: '220px' },
@@ -1657,7 +1844,7 @@ function OutcomesTab() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rows = (data?.items || []).filter((row: ProfessionalReview) => row.status !== 3);
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{ minHeight: 0, flex: 1, height: '100%' }}>
       {isLoading && <LinearProgress />}
       <TabHeader title="Calibration and final outcomes" />
       <ReviewTable rows={rows} onOpen={(row) => setSelectedId(row.id)} actionLabel="Finalize" />
@@ -1678,41 +1865,258 @@ function ReportsTab() {
   const { data: sqaaEvidence } = useGetPerformanceSqaaEvidenceQuery({});
 
   return (
-    <Stack spacing={2}>
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <RatingDistributionPanel distribution={distribution || []} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <SectionPanel title="Training Needs">
-            <Stack spacing={1}>
-              {(training || []).slice(0, 6).map((item: any) => (
-                <Typography key={item.id} variant="body2">
-                  {item.goal}
-                </Typography>
-              ))}
-              {!training?.length && <EmptyState text="No training recommendations found." />}
-            </Stack>
-          </SectionPanel>
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <SectionPanel title="Increment Recommendations">
-            <Stack spacing={1}>
-              {(increments || []).slice(0, 6).map((item: any) => (
-                <Stack key={item.id} direction="row" justifyContent="space-between" spacing={1}>
-                  <Typography variant="body2">{item.finalRating || 'Recommended'}</Typography>
-                  <Chip size="small" label={`Score ${item.finalScore}`} />
-                </Stack>
-              ))}
-              {!increments?.length && <EmptyState text="No increment recommendations found." />}
-            </Stack>
-          </SectionPanel>
-        </Grid>
-      </Grid>
+    <PerformanceScrollableContent>
+      <Stack spacing={2}>
+        <SqaaAuditPackSection />
 
-      <SectionPanel title="SQAAF Evidence Coverage">
-        <CustomizableTable
-          tableId="performance-report-sqaaf-evidence"
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <RatingDistributionPanel distribution={distribution || []} />
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <SectionPanel title="Training Needs">
+              <Stack spacing={1}>
+                {(training || []).slice(0, 6).map((item: any) => (
+                  <Typography key={item.id} variant="body2">
+                    {item.goal}
+                  </Typography>
+                ))}
+                {!training?.length && <EmptyState text="No training recommendations found." />}
+              </Stack>
+            </SectionPanel>
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <SectionPanel title="Increment Recommendations">
+              <Stack spacing={1}>
+                {(increments || []).slice(0, 6).map((item: any) => (
+                  <Stack key={item.id} direction="row" justifyContent="space-between" spacing={1}>
+                    <Typography variant="body2">{item.finalRating || 'Recommended'}</Typography>
+                    <Chip size="small" label={`Score ${item.finalScore}`} />
+                  </Stack>
+                ))}
+                {!increments?.length && <EmptyState text="No increment recommendations found." />}
+              </Stack>
+            </SectionPanel>
+          </Grid>
+        </Grid>
+
+        <SectionPanel title="SQAAF Evidence Coverage">
+          <PerformanceDataTable
+            tableId="performance-report-sqaaf-evidence"
+            columns={[
+              {
+                id: 'domain',
+                label: 'SQAAF Domain',
+                minWidth: '260px',
+                render: (value) => sqaaDomainLabels[Number(value)] || '-',
+              },
+              { id: 'templateCount', label: 'Templates', minWidth: '110px' },
+              { id: 'assignedReviewCount', label: 'Reviews', minWidth: '110px' },
+              { id: 'mappedCriteria', label: 'Criteria', minWidth: '110px' },
+              { id: 'evidenceSubmitted', label: 'Evidence', minWidth: '110px' },
+              {
+                id: 'missingEvidence',
+                label: 'Missing',
+                minWidth: '110px',
+                render: (value) => (
+                  <Chip
+                    size="small"
+                    color={Number(value) > 0 ? 'warning' : 'success'}
+                    label={Number(value)}
+                  />
+                ),
+              },
+            ]}
+            data={sqaaEvidence || []}
+            noDataText="No SQAAF evidence coverage found."
+          />
+        </SectionPanel>
+
+        <SectionPanel title="Pending Reviews">
+          <PerformanceDataTable
+            tableId="performance-report-pending-actions"
+            columns={[
+              { id: 'employeeName', label: 'Employee', minWidth: '220px' },
+              { id: 'action', label: 'Action', minWidth: '220px' },
+              {
+                id: 'dueDate',
+                label: 'Due Date',
+                minWidth: '140px',
+                render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : '-'),
+              },
+              {
+                id: 'reviewId',
+                label: 'PDF',
+                isSort: false,
+                isFilter: false,
+                minWidth: '90px',
+                render: (value) => (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() =>
+                      window.open(
+                        getBackendApiUrl(`/hr/professional-management/reviews/${value}/pdf`),
+                        '_blank'
+                      )
+                    }
+                  >
+                    Export
+                  </Button>
+                ),
+              },
+            ]}
+            data={pendingActions || []}
+            noDataText="No pending actions found."
+          />
+        </SectionPanel>
+      </Stack>
+    </PerformanceScrollableContent>
+  );
+}
+
+function SqaaAuditPackSection() {
+  const [boardType, setBoardType] = useState<PerformanceBoardType | ''>(PerformanceBoardType.CBSE);
+  const [staffCategory, setStaffCategory] = useState<PerformanceStaffCategory | ''>(
+    PerformanceStaffCategory.Teacher
+  );
+  const queryParams = {
+    boardType: boardType === '' ? undefined : boardType,
+    staffCategory: staffCategory === '' ? undefined : staffCategory,
+  };
+  const { data: auditPack, isFetching } = useGetPerformanceSqaaAuditPackQuery(queryParams);
+  const [exportAuditPack, exportState] = useLazyGetPerformanceSqaaAuditPackExportQuery();
+  const summary = summarizeSqaaAuditPack(auditPack);
+
+  const handleExport = async () => {
+    try {
+      const file = await exportAuditPack(queryParams).unwrap();
+      const binary = window.atob(file.contentBase64);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      const url = window.URL.createObjectURL(
+        new Blob([bytes], { type: file.contentType || 'text/csv' })
+      );
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.fileName || 'sqaaf-audit-pack.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('SQAAF audit pack export is ready');
+    } catch {
+      toast.error('Unable to export SQAAF audit pack');
+    }
+  };
+
+  return (
+    <SectionPanel
+      title="SQAAF Audit Pack"
+      description="Principal/admin readiness view for Indian school audits, affiliation reviews, and evidence follow-up."
+      action={
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          flexWrap="wrap"
+          useFlexGap
+          sx={{
+            width: '100%',
+            '& .MuiTextField-root': { width: { xs: '100%', sm: 'auto' } },
+            '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } },
+          }}
+        >
+          <TextField
+            select
+            size="small"
+            label="Board"
+            value={boardType}
+            onChange={(event) =>
+              setBoardType(
+                event.target.value === ''
+                  ? ''
+                  : (Number(event.target.value) as PerformanceBoardType)
+              )
+            }
+            sx={{ minWidth: { xs: 0, sm: 140 } }}
+          >
+            <MenuItem value="">All boards</MenuItem>
+            <MenuItem value={PerformanceBoardType.CBSE}>CBSE</MenuItem>
+            <MenuItem value={PerformanceBoardType.GSEB}>GSEB</MenuItem>
+            <MenuItem value={PerformanceBoardType.GenericIndian}>Generic</MenuItem>
+          </TextField>
+          <TextField
+            select
+            size="small"
+            label="Staff"
+            value={staffCategory}
+            onChange={(event) =>
+              setStaffCategory(
+                event.target.value === ''
+                  ? ''
+                  : (Number(event.target.value) as PerformanceStaffCategory)
+              )
+            }
+            sx={{ minWidth: { xs: 0, sm: 170 } }}
+          >
+            <MenuItem value="">All staff</MenuItem>
+            {Object.entries(staffCategoryLabels).map(([value, label]) => (
+              <MenuItem key={value} value={Number(value)}>
+                {label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <Button
+            variant="contained"
+            onClick={handleExport}
+            disabled={exportState.isFetching}
+            startIcon={<Iconify icon="mdi:download-outline" />}
+          >
+            Export Audit Pack
+          </Button>
+        </Stack>
+      }
+    >
+      <Stack spacing={2}>
+        {isFetching && <LinearProgress />}
+        <Grid container spacing={1.5}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <MetricCard
+              label="Readiness"
+              value={summary.overallReadinessPercentage}
+              icon="mdi:shield-check-outline"
+              tone={summary.totalMissingEvidence > 0 ? 'warning' : 'success'}
+              helper="% ready"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <MetricCard
+              label="Missing Evidence"
+              value={summary.totalMissingEvidence}
+              icon="mdi:file-alert-outline"
+              tone={summary.totalMissingEvidence > 0 ? 'warning' : 'success'}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <MetricCard
+              label="Submitted Evidence"
+              value={summary.totalEvidenceSubmitted}
+              icon="mdi:file-check-outline"
+              tone="info"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <MetricCard
+              label="Domains Ready"
+              value={summary.readyDomainCount}
+              icon="mdi:domain"
+              tone="success"
+              helper={`${summary.totalDomainCount} tracked`}
+            />
+          </Grid>
+        </Grid>
+
+        <PerformanceDataTable
+          tableId="performance-report-sqaaf-audit-pack-domains"
           columns={[
             {
               id: 'domain',
@@ -1720,10 +2124,25 @@ function ReportsTab() {
               minWidth: '260px',
               render: (value) => sqaaDomainLabels[Number(value)] || '-',
             },
+            {
+              id: 'readinessPercentage',
+              label: 'Ready',
+              minWidth: '120px',
+              render: (value) => (
+                <Chip
+                  size="small"
+                  color={
+                    Number(value) >= 80 ? 'success' : Number(value) > 0 ? 'warning' : 'default'
+                  }
+                  label={`${Number(value || 0)}%`}
+                />
+              ),
+            },
             { id: 'templateCount', label: 'Templates', minWidth: '110px' },
             { id: 'assignedReviewCount', label: 'Reviews', minWidth: '110px' },
             { id: 'mappedCriteria', label: 'Criteria', minWidth: '110px' },
-            { id: 'evidenceSubmitted', label: 'Evidence', minWidth: '110px' },
+            { id: 'evidenceRequiredCriteria', label: 'Required', minWidth: '110px' },
+            { id: 'evidenceSubmitted', label: 'Submitted', minWidth: '110px' },
             {
               id: 'missingEvidence',
               label: 'Missing',
@@ -1737,50 +2156,30 @@ function ReportsTab() {
               ),
             },
           ]}
-          data={sqaaEvidence || []}
-          noDataText="No SQAAF evidence coverage found."
+          data={auditPack?.domains || []}
+          noDataText="No SQAAF readiness domains found."
         />
-      </SectionPanel>
 
-      <SectionPanel title="Pending Reviews">
-        <CustomizableTable
-          tableId="performance-report-pending-actions"
+        <PerformanceDataTable
+          tableId="performance-report-sqaaf-audit-pack-missing-evidence"
           columns={[
-            { id: 'employeeName', label: 'Employee', minWidth: '220px' },
-            { id: 'action', label: 'Action', minWidth: '220px' },
             {
-              id: 'dueDate',
-              label: 'Due Date',
-              minWidth: '140px',
-              render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : '-'),
+              id: 'domain',
+              label: 'Domain',
+              minWidth: '230px',
+              render: (value) => sqaaDomainLabels[Number(value)] || '-',
             },
-            {
-              id: 'reviewId',
-              label: 'PDF',
-              isSort: false,
-              isFilter: false,
-              minWidth: '90px',
-              render: (value) => (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() =>
-                    window.open(
-                      getBackendApiUrl(`/hr/professional-management/reviews/${value}/pdf`),
-                      '_blank'
-                    )
-                  }
-                >
-                  Export
-                </Button>
-              ),
-            },
+            { id: 'cycleName', label: 'Cycle', minWidth: '180px' },
+            { id: 'employeeName', label: 'Staff', minWidth: '180px' },
+            { id: 'employeeIdentifier', label: 'Code', minWidth: '120px' },
+            { id: 'templateName', label: 'Template', minWidth: '220px' },
+            { id: 'criterionName', label: 'Missing Evidence', minWidth: '260px' },
           ]}
-          data={pendingActions || []}
-          noDataText="No pending actions found."
+          data={auditPack?.missingEvidenceItems || []}
+          noDataText="No missing SQAAF evidence found for the selected filters."
         />
-      </SectionPanel>
-    </Stack>
+      </Stack>
+    </SectionPanel>
   );
 }
 
@@ -1820,7 +2219,7 @@ function ReviewTable({
   actionLabel?: string;
 }) {
   return (
-    <CustomizableTable
+    <PerformanceDataTable
       tableId="performance-reviews"
       columns={[
         { id: 'employeeName', label: 'Employee', minWidth: '220px', sticky: true },
@@ -1997,7 +2396,17 @@ function ReviewWorkspace({
       handleClose={onClose}
       title="Performance review workspace"
     >
-      <Stack spacing={2} sx={{ p: 2, bgcolor: 'background.default', minWidth: { md: 720 } }}>
+      <Stack
+        spacing={2}
+        sx={{
+          p: 2,
+          bgcolor: 'background.default',
+          width: { xs: 'min(92vw, 100%)', md: 760 },
+          maxWidth: '100%',
+          maxHeight: 'calc(100vh - 160px)',
+          overflow: 'auto',
+        }}
+      >
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1.5}>
           <Box>
             <Typography variant="h6">{review?.employeeName}</Typography>
@@ -2043,8 +2452,11 @@ function ReviewWorkspace({
                 justifyContent="space-between"
                 spacing={1}
               >
-                <Typography variant="body2">{criterion.name}</Typography>
+                <Typography variant="body2" sx={{ minWidth: 0, flex: 1 }}>
+                  {criterion.name}
+                </Typography>
                 <Rating
+                  sx={{ flexShrink: 0 }}
                   value={ratings[criterion.id] ?? 4}
                   onChange={(_, value) =>
                     setRatings((current) => ({ ...current, [criterion.id]: value || 0 }))
@@ -2066,7 +2478,12 @@ function ReviewWorkspace({
 
         <Divider />
 
-        <Stack direction="row" flexWrap="wrap" gap={1}>
+        <Stack
+          direction="row"
+          flexWrap="wrap"
+          gap={1}
+          sx={{ '& .MuiButton-root': { flexShrink: 0 } }}
+        >
           <Button
             variant="outlined"
             onClick={async () => {

@@ -25,6 +25,14 @@ export function getLeavePolicyTitle(policy: Partial<ILeavePolicy> | null | undef
 }
 
 export function getLeavePolicyLeaveTypeName(policy: Partial<ILeavePolicy> | null | undefined) {
+  const activeRules = (policy?.rules || []).filter((rule) => rule?.isActive !== false);
+  if (activeRules.length > 0) {
+    const names = activeRules
+      .map((rule) => rule.leaveType?.name)
+      .filter((name): name is string => Boolean(name));
+    return names.length > 0 ? names.join(', ') : `${activeRules.length} leave rules`;
+  }
+
   const leaveType = policy?.leaveType;
 
   if (!leaveType) {
@@ -35,7 +43,12 @@ export function getLeavePolicyLeaveTypeName(policy: Partial<ILeavePolicy> | null
 }
 
 export function isLeavePolicyArchived(policy: Partial<ILeavePolicy> | null | undefined) {
-  return Boolean(policy?.isDeleted || policy?.deletionTime || policy?.isActive === false);
+  return Boolean(
+    policy?.isDeleted ||
+    policy?.deletionTime ||
+    policy?.isActive === false ||
+    String(policy?.status || '').toLowerCase() === 'archived'
+  );
 }
 
 export function buildLeavePolicyImpactReview(
@@ -44,10 +57,11 @@ export function buildLeavePolicyImpactReview(
 ): LeavePolicyImpactReview {
   const policyName = getLeavePolicyTitle(policy);
   const leaveTypeName = getLeavePolicyLeaveTypeName(policy);
-  const leaveCount = Number(policy.leaveCount ?? 0);
-  const requiresApproval = Boolean(policy.requiresApproval);
-  const carryForward = Boolean(policy.carryForward);
-  const encashmentAllowed = Boolean(policy.encashmentAllowed);
+  const activeRules = (policy.rules || []).filter((rule) => rule?.isActive !== false);
+  const leaveCount = activeRules.reduce((sum, rule) => sum + Number(rule.leaveCount ?? 0), 0);
+  const requiresApproval = activeRules.some((rule) => Boolean(rule.requiresApproval));
+  const carryForward = activeRules.some((rule) => Boolean(rule.carryForward));
+  const encashmentAllowed = activeRules.some((rule) => Boolean(rule.encashmentAllowed));
   const archived = isLeavePolicyArchived(policy);
 
   const risks: LeavePolicyImpactReview['risks'] = [];
@@ -81,7 +95,7 @@ export function buildLeavePolicyImpactReview(
     risks.push({
       severity: 'confirmation',
       label: 'Needs confirmation',
-      message: `${policyName} currently grants ${leaveCount} leave day${leaveCount === 1 ? '' : 's'} per cycle. Balance changes can affect employees with this leave type.`,
+      message: `${policyName} currently grants ${leaveCount} total leave day${leaveCount === 1 ? '' : 's'} across ${activeRules.length || 1} rule${activeRules.length === 1 ? '' : 's'}. Balance changes can affect assigned employees.`,
     });
   }
 

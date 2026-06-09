@@ -14,6 +14,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Chip,
+  Alert,
   Stack,
   Button,
   MenuItem,
@@ -27,15 +28,20 @@ import {
 } from '@mui/material';
 import {
   usePreviewHrReportMutation,
+  useRetryHrReportExportMutation,
   useCreateHrReportExportMutation,
+  useCancelHrReportExportMutation,
+  useCreateHrReportScheduleMutation,
   useDownloadHrReportExportMutation,
   useCreateHrReportTemplateMutation,
   useDeleteHrReportTemplateMutation,
   useUpdateHrReportTemplateMutation,
+  useRegenerateHrReportExportMutation,
   useDuplicateHrReportTemplateMutation,
 } from 'src/redux/hr/hrReportsApi';
 
 import { HrReportPreviewTable } from './HrReportPreviewTable';
+import { HrReportChartPreview } from './HrReportChartPreview';
 import { HrReportExportHistory } from './HrReportExportHistory';
 import {
   buildHrReportRequest,
@@ -43,10 +49,15 @@ import {
   isHrReportPayrollSource,
   defaultHrReportOperator,
   getHrReportDateRangeError,
+  type HrReportBuilderState,
   DEFAULT_HR_REPORT_PAGE_SIZE,
+  getHrReportChartValueFields,
   createHrReportStateFromSource,
+  getHrReportChartCategoryFields,
   createHrReportStateFromTemplate,
 } from '../hr-report-utils';
+
+import type { HrReportPermissions } from '../hr-report-permissions';
 
 type HrReportBuilderProps = {
   source: HrReportSource;
@@ -54,6 +65,7 @@ type HrReportBuilderProps = {
   exportJobs: HrReportExportJob[];
   isFetchingExports: boolean;
   refetchExports: () => any;
+  permissions: HrReportPermissions;
 };
 
 export function HrReportBuilder({
@@ -62,10 +74,15 @@ export function HrReportBuilder({
   exportJobs,
   isFetchingExports,
   refetchExports,
+  permissions,
 }: HrReportBuilderProps) {
   const [previewReport, { data: preview, isLoading: isPreviewLoading }] =
     usePreviewHrReportMutation();
   const [createExport, { isLoading: isCreatingExport }] = useCreateHrReportExportMutation();
+  const [createSchedule, { isLoading: isScheduling }] = useCreateHrReportScheduleMutation();
+  const [cancelExport] = useCancelHrReportExportMutation();
+  const [retryExport] = useRetryHrReportExportMutation();
+  const [regenerateExport] = useRegenerateHrReportExportMutation();
   const [downloadExport, { isLoading: isDownloading }] = useDownloadHrReportExportMutation();
   const [createTemplate, { isLoading: isSavingTemplate }] = useCreateHrReportTemplateMutation();
   const [updateTemplate] = useUpdateHrReportTemplateMutation();
@@ -105,6 +122,16 @@ export function HrReportBuilder({
     () => columnFields.filter((field) => field.summarizable),
     [columnFields]
   );
+  const chartCategoryFields = useMemo(() => getHrReportChartCategoryFields(source), [source]);
+  const chartValueFields = useMemo(() => getHrReportChartValueFields(source), [source]);
+  const chartCategoryValue = chartCategoryFields.some(
+    (field) => field.id === state.chartCategoryField
+  )
+    ? state.chartCategoryField
+    : '';
+  const chartValueField = chartValueFields.some((field) => field.id === state.chartValueField)
+    ? state.chartValueField
+    : '';
   const dateFields = useMemo(() => getHrReportDateFields(source), [source]);
   const isPayrollSource = isHrReportPayrollSource(source);
   const dateRangeError = getHrReportDateRangeError(state.fromDate, state.toDate);
@@ -143,6 +170,18 @@ export function HrReportBuilder({
     },
     [createExport, refetchExports, requestFor]
   );
+
+  const handleSchedule = useCallback(async () => {
+    await createSchedule({
+      name: `${state.reportName || source.label} Schedule`,
+      templateId: state.selectedTemplate?.id,
+      frequency: 'monthly',
+      deliveryMode: 'inAppAndEmail',
+      recipientUserIds: [],
+      definition: requestFor(1, DEFAULT_HR_REPORT_PAGE_SIZE, 'excel'),
+    }).unwrap();
+    toast.success('Monthly report schedule created');
+  }, [createSchedule, requestFor, source.label, state.reportName, state.selectedTemplate?.id]);
 
   const handleSaveTemplate = useCallback(
     async (publish = false) => {
@@ -183,6 +222,23 @@ export function HrReportBuilder({
     [downloadExport]
   );
 
+  const handleExportAction = useCallback(
+    async (action: 'cancel' | 'retry' | 'regenerate', jobId: string) => {
+      if (action === 'cancel') {
+        await cancelExport(jobId).unwrap();
+        toast.success('Export cancelled');
+      } else if (action === 'retry') {
+        await retryExport(jobId).unwrap();
+        toast.success('Export retry queued');
+      } else {
+        await regenerateExport(jobId).unwrap();
+        toast.success('Export regeneration queued');
+      }
+      await refetchExports();
+    },
+    [cancelExport, refetchExports, regenerateExport, retryExport]
+  );
+
   const updateCondition = (
     index: number,
     updater: (condition: HrReportFilterCondition) => HrReportFilterCondition
@@ -213,6 +269,7 @@ export function HrReportBuilder({
 
   return (
     <Stack
+      data-testid="hr-report-builder"
       spacing={2}
       sx={{
         p: 2,
@@ -225,6 +282,7 @@ export function HrReportBuilder({
       <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2 }}>
         <Stack spacing={2}>
           <Box
+            data-testid="hr-report-builder-controls"
             sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr' } }}
           >
             <TextField
@@ -422,6 +480,80 @@ export function HrReportBuilder({
             </TextField>
           </Box>
 
+          <Box sx={{ border: '1px dashed', borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2">Analytics</Typography>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 2,
+                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
+                }}
+              >
+                <TextField
+                  select
+                  size="small"
+                  label="Chart Type"
+                  value={state.chartType}
+                  onChange={(event) =>
+                    setState((current) => ({
+                      ...current,
+                      chartType: event.target.value as HrReportBuilderState['chartType'],
+                    }))
+                  }
+                >
+                  <MenuItem value="none">None</MenuItem>
+                  <MenuItem value="kpi">KPI</MenuItem>
+                  <MenuItem value="bar">Bar</MenuItem>
+                  <MenuItem value="line">Line</MenuItem>
+                  <MenuItem value="donut">Donut</MenuItem>
+                </TextField>
+                <TextField
+                  select
+                  size="small"
+                  label="Chart Category"
+                  value={chartCategoryValue}
+                  disabled={
+                    state.chartType === 'none' ||
+                    state.chartType === 'kpi' ||
+                    chartCategoryFields.length === 0
+                  }
+                  onChange={(event) =>
+                    setState((current) => ({ ...current, chartCategoryField: event.target.value }))
+                  }
+                >
+                  <MenuItem value="">Auto</MenuItem>
+                  {chartCategoryFields.map((field) => (
+                    <MenuItem key={field.id} value={field.id}>
+                      {field.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  size="small"
+                  label="Chart Value"
+                  value={chartValueField}
+                  disabled={
+                    state.chartType === 'none' ||
+                    state.chartType === 'kpi' ||
+                    chartValueFields.length === 0
+                  }
+                  onChange={(event) =>
+                    setState((current) => ({ ...current, chartValueField: event.target.value }))
+                  }
+                >
+                  <MenuItem value="">Count rows</MenuItem>
+                  {chartValueFields.map((field) => (
+                    <MenuItem key={field.id} value={field.id}>
+                      Sum {field.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+            </Stack>
+          </Box>
+
           <Stack spacing={1}>
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Typography variant="subtitle2">Filters</Typography>
@@ -518,6 +650,7 @@ export function HrReportBuilder({
 
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Button
+              data-testid="hr-report-preview-button"
               variant="contained"
               size="small"
               startIcon={<Iconify icon={GlobalIcons.report} />}
@@ -526,43 +659,68 @@ export function HrReportBuilder({
             >
               Preview
             </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={isSavingTemplate}
-              onClick={() => handleSaveTemplate(false)}
-            >
-              Save Template
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={isSavingTemplate}
-              onClick={() => handleSaveTemplate(true)}
-            >
-              Publish
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Iconify icon={GlobalIcons.excel} />}
-              disabled={isCreatingExport || isTimelineInvalid}
-              onClick={() => handleExport('excel')}
-            >
-              Excel
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Iconify icon={GlobalIcons.pdf} />}
-              disabled={isCreatingExport || isTimelineInvalid}
-              onClick={() => handleExport('pdf')}
-            >
-              PDF
-            </Button>
-            {state.selectedTemplate ? (
+            {permissions.canManageTemplates ? (
+              <>
+                <Button
+                  data-testid="hr-report-save-template-button"
+                  variant="outlined"
+                  size="small"
+                  disabled={isSavingTemplate}
+                  onClick={() => handleSaveTemplate(false)}
+                >
+                  Save Template
+                </Button>
+                <Button
+                  data-testid="hr-report-publish-template-button"
+                  variant="outlined"
+                  size="small"
+                  disabled={isSavingTemplate}
+                  onClick={() => handleSaveTemplate(true)}
+                >
+                  Publish
+                </Button>
+              </>
+            ) : null}
+            {permissions.canExport ? (
+              <>
+                <Button
+                  data-testid="hr-report-export-excel-button"
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Iconify icon={GlobalIcons.excel} />}
+                  disabled={isCreatingExport || isTimelineInvalid}
+                  onClick={() => handleExport('excel')}
+                >
+                  Excel
+                </Button>
+                <Button
+                  data-testid="hr-report-export-pdf-button"
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Iconify icon={GlobalIcons.pdf} />}
+                  disabled={isCreatingExport || isTimelineInvalid}
+                  onClick={() => handleExport('pdf')}
+                >
+                  PDF
+                </Button>
+              </>
+            ) : null}
+            {permissions.canSchedule ? (
+              <Button
+                data-testid="hr-report-schedule-button"
+                variant="outlined"
+                size="small"
+                startIcon={<Iconify icon="solar:calendar-add-bold" />}
+                disabled={isScheduling || isTimelineInvalid}
+                onClick={handleSchedule}
+              >
+                Schedule
+              </Button>
+            ) : null}
+            {state.selectedTemplate && permissions.canManageTemplates ? (
               <>
                 <IconButton
+                  data-testid="hr-report-duplicate-template-button"
                   size="small"
                   onClick={async () => {
                     const duplicated = await duplicateTemplate(state.selectedTemplate!.id).unwrap();
@@ -576,24 +734,39 @@ export function HrReportBuilder({
                 >
                   <Iconify icon="solar:copy-bold" />
                 </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={async () => {
-                    await deleteTemplate(state.selectedTemplate!.id).unwrap();
-                    setState(createHrReportStateFromSource(source));
-                    toast.success('Template deleted');
-                  }}
-                >
-                  <Iconify icon="solar:trash-bin-trash-bold" />
-                </IconButton>
+                {permissions.canDelete ? (
+                  <IconButton
+                    data-testid="hr-report-delete-template-button"
+                    size="small"
+                    onClick={async () => {
+                      await deleteTemplate(state.selectedTemplate!.id).unwrap();
+                      setState(createHrReportStateFromSource(source));
+                      toast.success('Template deleted');
+                    }}
+                  >
+                    <Iconify icon="solar:trash-bin-trash-bold" />
+                  </IconButton>
+                ) : null}
               </>
             ) : null}
-            {(isPreviewLoading || isCreatingExport || isFetchingExports) && (
+            {(isPreviewLoading || isCreatingExport || isFetchingExports || isScheduling) && (
               <CircularProgress size={24} />
             )}
           </Stack>
         </Stack>
       </Box>
+
+      {preview?.queryWarnings?.length ? (
+        <Stack spacing={1}>
+          {preview.queryWarnings.map((warning) => (
+            <Alert key={warning} severity="warning">
+              {warning}
+            </Alert>
+          ))}
+        </Stack>
+      ) : null}
+
+      <HrReportChartPreview chart={preview?.chart} />
 
       <HrReportPreviewTable
         preview={preview}
@@ -607,7 +780,9 @@ export function HrReportBuilder({
         exportJobs={exportJobs}
         isFetching={isFetchingExports}
         isDownloading={isDownloading}
+        canExport={permissions.canExport}
         onDownload={handleDownload}
+        onAction={permissions.canExport ? handleExportAction : undefined}
       />
     </Stack>
   );

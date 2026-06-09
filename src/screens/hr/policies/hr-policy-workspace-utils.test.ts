@@ -2,11 +2,14 @@ import type { WorkCalendarPolicy } from 'src/redux/hr/hr-policy-api';
 
 import { it, expect, describe } from 'vitest';
 
+import { WEEKLY_RULE_OPTIONS } from './hr-policy-workspace.constants';
 import {
   formatRange,
   getAcademicYearMonthRanges,
   isSaturdayWorkingForCalendar,
   buildPayrollBasisPreviewRows,
+  selectSingleActiveDefaultPolicy,
+  getAssignmentFormValidationError,
 } from './hr-policy-workspace-utils';
 
 describe('HR policy workspace date-only academic year handling', () => {
@@ -71,13 +74,6 @@ describe('HR policy workspace date-only academic year handling', () => {
 
     expect(isSaturdayWorkingForCalendar(calendar)).toBe(false);
     expect(isSaturdayWorkingForCalendar({ ...calendar, weeklyOffPattern: 'sunday' })).toBe(true);
-    expect(
-      isSaturdayWorkingForCalendar({
-        ...calendar,
-        weeklyOffPattern: 'custom',
-        customWeeklyOffs: [],
-      })
-    ).toBe(true);
     expect(
       isSaturdayWorkingForCalendar({
         ...calendar,
@@ -159,5 +155,75 @@ describe('HR policy workspace date-only academic year handling', () => {
 
     expect(rows[0].monthStart.format('YYYY-MM')).toBe('2026-06');
     expect(rows.at(-1)?.monthStart.format('YYYY-MM')).toBe('2027-05');
+  });
+
+  it('offers only weekly rules accepted by the backend work-calendar contract', () => {
+    expect(WEEKLY_RULE_OPTIONS.map((option) => option.value)).toEqual([
+      'saturday_sunday',
+      'sunday',
+      'custom',
+    ]);
+  });
+
+  it('validates assignment date ranges and priority before save', () => {
+    const form = {
+      targetType: 'employee' as const,
+      targetKey: 'employee-1',
+      targetDisplayName: 'Employee One',
+      payrollPolicyId: 'payroll-1',
+      attendancePolicyId: 'attendance-1',
+      effectiveFrom: '2026-06-01',
+      effectiveTo: '2026-06-30',
+      priority: '100',
+      assignmentReason: '',
+      isActive: true,
+    };
+
+    expect(getAssignmentFormValidationError(form)).toBe('');
+    expect(
+      getAssignmentFormValidationError({
+        ...form,
+        effectiveTo: '2026-05-31',
+      })
+    ).toBe('Effective to must be on or after effective from.');
+    expect(
+      getAssignmentFormValidationError({
+        ...form,
+        effectiveFrom: 'not-a-date',
+      })
+    ).toBe('Effective from must be a valid date.');
+    expect(
+      getAssignmentFormValidationError({
+        ...form,
+        effectiveTo: 'not-a-date',
+      })
+    ).toBe('Effective to must be a valid date.');
+    expect(
+      getAssignmentFormValidationError({
+        ...form,
+        priority: '1001',
+      })
+    ).toBe('Priority must be between -1000 and 1000.');
+  });
+
+  it('selects only one active default policy for assignment prefill', () => {
+    const policies = [
+      { id: 'draft-default', status: 'draft', isDefault: true },
+      { id: 'active-default', status: 'active', isDefault: true },
+      { id: 'active-non-default', status: 'active', isDefault: false },
+    ];
+
+    expect(selectSingleActiveDefaultPolicy(policies)?.id).toBe('active-default');
+    expect(
+      selectSingleActiveDefaultPolicy([
+        { id: 'active-non-default', status: 'active', isDefault: false },
+      ])
+    ).toBeUndefined();
+    expect(
+      selectSingleActiveDefaultPolicy([
+        { id: 'first-default', status: 'active', isDefault: true },
+        { id: 'second-default', status: 'active', isDefault: true },
+      ])
+    ).toBeUndefined();
   });
 });

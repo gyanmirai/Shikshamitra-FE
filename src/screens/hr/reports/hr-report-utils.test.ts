@@ -10,7 +10,9 @@ import {
   getHrReportDateRangeError,
   mapHrSourcesToSubCategories,
   DEFAULT_HR_REPORT_PAGE_SIZE,
+  getHrReportChartValueFields,
   createHrReportStateFromSource,
+  getHrReportChartCategoryFields,
   createHrReportStateFromTemplate,
 } from './hr-report-utils';
 
@@ -157,6 +159,42 @@ describe('HR report utils', () => {
         conditions: [{ field: 'employeeCode', operator: 'contains', value: 'EMP' }],
       },
     });
+  });
+
+  it('adds chart definition when analytics are enabled', () => {
+    const state = {
+      ...createHrReportStateFromTemplate(template, source),
+      chartType: 'bar' as const,
+      chartCategoryField: 'employeeCode',
+      chartValueField: 'grossSalary',
+    };
+
+    expect(buildHrReportRequest(state, source)).toMatchObject({
+      chart: {
+        type: 'bar',
+        categoryField: 'employeeCode',
+        valueField: 'grossSalary',
+        function: 'sum',
+      },
+    });
+  });
+
+  it('uses source metadata to expose only chart-compatible fields', () => {
+    const chartSource: HrReportSource = {
+      ...source,
+      fields: [
+        { ...source.fields[0], chartable: true },
+        { ...source.fields[1], groupable: true, chartable: false },
+        { ...source.fields[2], chartable: true },
+      ],
+    };
+
+    expect(getHrReportChartCategoryFields(chartSource).map((field) => field.id)).toEqual([
+      'employeeCode',
+    ]);
+    expect(getHrReportChartValueFields(chartSource).map((field) => field.id)).toEqual([
+      'grossSalary',
+    ]);
   });
 
   it('validates timeline ranges', () => {

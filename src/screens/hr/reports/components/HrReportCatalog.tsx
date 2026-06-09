@@ -10,6 +10,8 @@ import CommonReport from 'src/components/common-report';
 import { HrReportBuilder } from './HrReportBuilder';
 import { mapHrSourcesToCategories, mapHrSourcesToSubCategories } from '../hr-report-utils';
 
+import type { HrReportPermissions } from '../hr-report-permissions';
+
 type HrReportCatalogProps = {
   sources: HrReportSource[];
   templates: HrReportTemplate[];
@@ -17,6 +19,7 @@ type HrReportCatalogProps = {
   isLoadingSources: boolean;
   isFetchingExports: boolean;
   refetchExports: () => any;
+  permissions: HrReportPermissions;
 };
 
 export function HrReportCatalog({
@@ -26,6 +29,7 @@ export function HrReportCatalog({
   isLoadingSources,
   isFetchingExports,
   refetchExports,
+  permissions,
 }: HrReportCatalogProps) {
   const categories = useMemo(() => mapHrSourcesToCategories(sources), [sources]);
 
@@ -38,9 +42,10 @@ export function HrReportCatalog({
           exportJobs={exportJobs}
           isFetchingExports={isFetchingExports}
           refetchExports={refetchExports}
+          permissions={permissions}
         />
       )),
-    [exportJobs, isFetchingExports, refetchExports, sources, templates]
+    [exportJobs, isFetchingExports, permissions, refetchExports, sources, templates]
   );
 
   return (

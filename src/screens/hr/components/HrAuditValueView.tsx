@@ -12,6 +12,7 @@ type HrAuditValueViewProps = {
   dense?: boolean;
   maxDepth?: number;
   renderValue?: HrAuditRenderValue;
+  sourceKey?: string;
 };
 
 export function HrAuditValueView({
@@ -20,8 +21,9 @@ export function HrAuditValueView({
   dense = false,
   maxDepth = 3,
   renderValue,
+  sourceKey,
 }: HrAuditValueViewProps) {
-  const auditValue = renderValue || toHrAuditRenderValue(value);
+  const auditValue = renderValue || toHrAuditRenderValue(value, sourceKey);
 
   return (
     <Stack spacing={dense ? 0.5 : 0.75} sx={{ minWidth: 0 }} data-testid="hr-audit-value">

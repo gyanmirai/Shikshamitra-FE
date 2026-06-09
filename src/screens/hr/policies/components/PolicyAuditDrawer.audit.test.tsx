@@ -48,6 +48,11 @@ describe('PolicyAuditDrawer audit rendering', () => {
                       newValue:
                         '[{"id":"3a2170d2-084c-e067-2a5c-0539716dd973","holidayName":"Annual day","date":"20250601T00:00:00+00:00","source":"manual"}]',
                     },
+                    {
+                      field: 'effectiveFrom',
+                      oldValue: '20250601T00:00:00+00:00',
+                      newValue: '20250602T00:00:00+00:00',
+                    },
                   ],
                   contextJson:
                     '{"sourcePolicyId":"3a216aea-8273-8586-a1a3-3bffdc298e2e","holidaySummary":{"totalCount":8,"includedCount":3}}',
@@ -68,11 +73,16 @@ describe('PolicyAuditDrawer audit rendering', () => {
     expect(scope.getAllByText('Total 8').length).toBeGreaterThan(0);
     expect(scope.getAllByText('Included 3').length).toBeGreaterThan(0);
     expect(scope.getByText('Annual day')).toBeInTheDocument();
+    expect(scope.getAllByText('01 Jun 2025').length).toBeGreaterThan(0);
+    expect(scope.getByText('02 Jun 2025')).toBeInTheDocument();
     expect(scope.getByText('Source Policy ID')).toBeInTheDocument();
     expect(scope.getAllByText('Linked record').length).toBeGreaterThan(0);
+    expect(scope.getAllByText('25 May 2026, 09:19 PM').length).toBeGreaterThan(0);
     expect(drawer?.textContent).not.toContain('{');
     expect(drawer?.textContent).not.toContain('3a216aea-8273-8586-a1a3-3bffdc298e2e');
     expect(drawer?.textContent).not.toContain('3a2170d2-084c-e067-2a5c-0539716dd973');
+    expect(drawer?.textContent).not.toContain('05:30 AM');
+    expect(drawer?.textContent).not.toContain('25 May 2026, 03:49 PM');
   });
 
   it('sanitizes fallback audit summaries from summary endpoint events', () => {
@@ -109,8 +119,10 @@ describe('PolicyAuditDrawer audit rendering', () => {
     const drawer = screen.getByText('Fallback Calendar').closest('.MuiDrawer-paper');
     expect(drawer).toBeTruthy();
     expect(drawer?.textContent).toContain('HolidaySummary: Total: 8; Included: 3');
+    expect(drawer?.textContent).toContain('25 May 2026, 09:19 PM');
     expect(drawer?.textContent).not.toContain('{');
     expect(drawer?.textContent).not.toContain('"totalCount"');
     expect(drawer?.textContent).not.toContain('3a216aea-8273-8586-a1a3-3bffdc298e2e');
+    expect(drawer?.textContent).not.toContain('25 May 2026, 03:49 PM');
   });
 });

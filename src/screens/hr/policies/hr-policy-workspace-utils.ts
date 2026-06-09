@@ -1,5 +1,6 @@
 import type {
   HrPolicyAssignment,
+  WorkCalendarPolicy,
   WorkCalendarHoliday,
   HrPolicyAssignmentConflict,
 } from 'src/redux/hr/hr-policy-api';
@@ -13,9 +14,9 @@ import {
 
 import { WEEKDAY_OPTIONS } from './hr-policy-workspace.constants';
 
-import type { LookupOption } from './types/hr-policy-workspace.types';
+import type { LookupOption, AssignmentForm } from './types/hr-policy-workspace.types';
 
-// ─── Date Formatting ──────────────────────────────────────────────────────────
+// --- Date Formatting ----------------------------------------------------------
 
 export function toDateInput(value?: string | null): string {
   return parseDateOnly(value)?.format('YYYY-MM-DD') ?? '';
@@ -29,7 +30,7 @@ export function formatRange(from?: string | null, to?: string | null): string {
   return `${formatDate(from)} - ${to ? formatDate(to) : 'No end date'}`;
 }
 
-// ─── Date Range Checks ────────────────────────────────────────────────────────
+// --- Date Range Checks --------------------------------------------------------
 
 export function isDateWithinRange(date: string, from?: string | null, to?: string | null): boolean {
   const target = dayjs(date);
@@ -53,6 +54,36 @@ export function overlapsDateRange(item: HrPolicyAssignment, from: string, to: st
   return true;
 }
 
+export function getAssignmentFormValidationError(form: AssignmentForm): string {
+  const effectiveFrom = form.effectiveFrom ? dayjs(form.effectiveFrom) : null;
+  if (!effectiveFrom?.isValid()) {
+    return 'Effective from must be a valid date.';
+  }
+
+  const effectiveTo = form.effectiveTo ? dayjs(form.effectiveTo) : null;
+  if (form.effectiveTo && !effectiveTo?.isValid()) {
+    return 'Effective to must be a valid date.';
+  }
+
+  if (form.effectiveTo && effectiveTo?.isBefore(effectiveFrom, 'day')) {
+    return 'Effective to must be on or after effective from.';
+  }
+
+  const priority = Number(form.priority || 0);
+  if (!Number.isFinite(priority) || priority < -1000 || priority > 1000) {
+    return 'Priority must be between -1000 and 1000.';
+  }
+
+  return '';
+}
+
+export function selectSingleActiveDefaultPolicy<T extends { status?: string; isDefault?: boolean }>(
+  policies: T[]
+): T | undefined {
+  const activeDefaults = policies.filter((item) => item.status === 'active' && item.isDefault);
+  return activeDefaults.length === 1 ? activeDefaults[0] : undefined;
+}
+
 export function isDateInsideRange(date: string, from?: string, to?: string): boolean {
   const value = dayjs(date);
   if (!value.isValid()) return false;
@@ -74,7 +105,7 @@ export function isHolidayRangeInsideRange(
   );
 }
 
-// ─── Holiday Helpers ──────────────────────────────────────────────────────────
+// --- Holiday Helpers ----------------------------------------------------------
 
 export function getHolidayDayCount(item: WorkCalendarHoliday): number {
   if (typeof item.dayCount === 'number' && item.dayCount > 0) return item.dayCount;
@@ -140,7 +171,7 @@ export function getHolidayMonthOptions(holidays: WorkCalendarHoliday[]): string[
     .sort();
 }
 
-// ─── Payroll Calculation Helpers ──────────────────────────────────────────────
+// --- Payroll Calculation Helpers ----------------------------------------------
 
 export function formatBasisDays(value?: number | null): string {
   if (value == null || !Number.isFinite(value)) return '-';
@@ -320,7 +351,7 @@ export function buildPayrollBasisPreviewRows({
 }: {
   academicYearStart?: string | null;
   academicYearEnd?: string | null;
-  calendar?: import('src/redux/hr/hr-policy-api').WorkCalendarPolicy;
+  calendar?: WorkCalendarPolicy;
   dayCalculationType: string;
   saturdayWorkPolicy: string;
   manualMonthDays: Record<string, string>;
@@ -395,7 +426,7 @@ export function buildPayrollBasisPreviewRows({
   );
 }
 
-// ─── Weekly Rule Helpers ──────────────────────────────────────────────────────
+// --- Weekly Rule Helpers ------------------------------------------------------
 
 export function sortWeekDays(days: number[]): number[] {
   return [...new Set(days)]
@@ -414,14 +445,12 @@ export function formatWeekDays(days: number[]): string {
 
 export function normalizeWeeklyRule(pattern: string, customWeeklyOffs: number[]): string {
   if (pattern === 'sunday_only') return 'sunday';
-  if (pattern === 'custom' && sortWeekDays(customWeeklyOffs).length === 0) return 'no_weekly_off';
   return pattern || 'saturday_sunday';
 }
 
 export function getWeeklyOffsForRule(pattern: string, customWeeklyOffs: number[]): number[] {
   if (pattern === 'saturday_sunday') return [0, 6];
   if (pattern === 'sunday' || pattern === 'sunday_only') return [0];
-  if (pattern === 'no_weekly_off') return [];
   return sortWeekDays(customWeeklyOffs);
 }
 
@@ -430,31 +459,25 @@ export function getWorkingDaysForRule(pattern: string, customWeeklyOffs: number[
   return WEEKDAY_OPTIONS.map((item) => item.value).filter((day) => !weeklyOffs.has(day));
 }
 
-export function isSaturdayWorkingForCalendar(
-  calendar?: import('src/redux/hr/hr-policy-api').WorkCalendarPolicy | null
-): boolean {
+export function isSaturdayWorkingForCalendar(calendar?: WorkCalendarPolicy | null): boolean {
   if (!calendar) return false;
   const pattern = normalizeWeeklyRule(calendar.weeklyOffPattern, calendar.customWeeklyOffs || []);
   return !getWeeklyOffsForRule(pattern, calendar.customWeeklyOffs || []).includes(6);
 }
 
 export function toApiWeeklyPattern(pattern: string): string {
-  if (pattern === 'no_weekly_off') return 'custom';
   if (pattern === 'sunday_only') return 'sunday';
   return pattern;
 }
 
-export function getCalendarWeeklyRuleLabel(
-  item: import('src/redux/hr/hr-policy-api').WorkCalendarPolicy
-): string {
+export function getCalendarWeeklyRuleLabel(item: WorkCalendarPolicy): string {
   const pattern = normalizeWeeklyRule(item.weeklyOffPattern, item.customWeeklyOffs || []);
   if (pattern === 'saturday_sunday') return 'Saturday + Sunday Off';
   if (pattern === 'sunday') return 'Sunday Off';
-  if (pattern === 'no_weekly_off') return 'No Weekly Off';
   return `Custom: ${formatWeekDays(item.customWeeklyOffs || [])}`;
 }
 
-// ─── Lookup / Display Helpers ─────────────────────────────────────────────────
+// --- Lookup / Display Helpers -------------------------------------------------
 
 export function getItems<T extends LookupOption>(data: unknown): T[] {
   if (Array.isArray(data)) return data as T[];
@@ -512,7 +535,7 @@ export function formatNumber(value?: number | null): string {
   return value == null ? '-' : value.toLocaleString();
 }
 
-// ─── Error Extraction ─────────────────────────────────────────────────────────
+// --- Error Extraction ---------------------------------------------------------
 
 export function getErrorMessage(error: unknown, fallback: string): string {
   const value = error as

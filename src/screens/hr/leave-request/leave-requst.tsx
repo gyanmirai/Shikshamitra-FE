@@ -66,7 +66,7 @@ import {
   LEAVE_TARGET_EMPLOYEE_REQUIRED,
   LEAVE_NO_BUSINESS_DAYS_IN_RANGE,
   buildCreateLeaveRequestFormData,
-  resolveLeavePolicyIdForLeaveType,
+  getSelectableLeaveRequestOptions,
   LEAVE_DATES_OUTSIDE_ACADEMIC_YEAR,
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
@@ -92,7 +92,6 @@ type AddLeaveRequestProps = {
 
 interface FormValues {
   employee: { id: string; label: string } | null;
-  leavePolicyId: string;
   leaveTypeMasterId: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
@@ -177,7 +176,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         : shouldUseAdminSelectionRules
           ? null
           : SELF_OPTION,
-      leavePolicyId: editData?.leavePolicyId || '',
       leaveTypeMasterId: editData?.leaveTypeMasterId || '',
       reason: editData?.reason || editData?.description || '',
       startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
@@ -294,19 +292,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             return;
           }
 
-          const policyResolution = resolveLeavePolicyIdForLeaveType(
-            leavePolicyOptions,
-            formValues.leaveTypeMasterId
-          );
-          if (policyResolution.status !== 'resolved') {
-            setFieldError('leaveTypeMasterId', policyResolution.message);
-            return;
-          }
-
           // --- Create flow: build multipart/form-data body as per API contract ---
           const formData = buildCreateLeaveRequestFormData({
             employee: formValues.employee as EmployeeOption | null,
-            leavePolicyId: policyResolution.policyId,
+            leaveTypeMasterId: formValues.leaveTypeMasterId,
             startDate: formValues.startDate,
             endDate: formValues.endDate,
             halfDay: formValues.halfDay,
@@ -337,8 +326,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               parsedError.errorCode === LEAVE_INSUFFICIENT_BALANCE
             ) {
               setFieldError(
-                'leavePolicyId',
-                parsedError.detail || 'Please select a valid leave policy.'
+                'leaveTypeMasterId',
+                parsedError.detail || 'Please select a valid leave type.'
               );
             }
             if (
@@ -403,14 +392,15 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     const cachedLeaveTypes = leaveTypeOptionsCacheByAcademicYear[cacheYearKey];
     const cachedLeavePolicies = leavePolicyOptionsCacheByAcademicYear[cacheYearKey];
 
-    if (cachedLeaveTypes?.length) {
-      setLeaveTypeOptions(cachedLeaveTypes);
+    if (cachedLeaveTypes?.length || cachedLeavePolicies?.length) {
+      const selectableOptions = getSelectableLeaveRequestOptions(
+        cachedLeaveTypes || [],
+        cachedLeavePolicies || []
+      );
+      setLeaveTypeOptions(selectableOptions.leaveTypes);
+      setLeavePolicyOptions(selectableOptions.leavePolicies);
     } else {
       setLeaveTypeOptions([]);
-    }
-    if (cachedLeavePolicies?.length) {
-      setLeavePolicyOptions(cachedLeavePolicies);
-    } else {
       setLeavePolicyOptions([]);
     }
 
@@ -421,14 +411,16 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           triggerLeavePolicies({ academicYearId: catalogAcademicYearId }).unwrap(),
         ]);
 
-        const nextLeaveTypes = typesRes?.items || [];
-        const nextLeavePolicies = policiesRes?.items || [];
+        const selectableOptions = getSelectableLeaveRequestOptions(
+          typesRes?.items || [],
+          policiesRes?.items || []
+        );
 
-        leaveTypeOptionsCacheByAcademicYear[cacheYearKey] = nextLeaveTypes;
-        leavePolicyOptionsCacheByAcademicYear[cacheYearKey] = nextLeavePolicies;
+        leaveTypeOptionsCacheByAcademicYear[cacheYearKey] = selectableOptions.leaveTypes;
+        leavePolicyOptionsCacheByAcademicYear[cacheYearKey] = selectableOptions.leavePolicies;
 
-        setLeaveTypeOptions(nextLeaveTypes);
-        setLeavePolicyOptions(nextLeavePolicies);
+        setLeaveTypeOptions(selectableOptions.leaveTypes);
+        setLeavePolicyOptions(selectableOptions.leavePolicies);
       } catch (loadError) {
         console.error(loadError);
       }
@@ -445,23 +437,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     );
     if (!existsInCatalog) {
       setFieldValue('leaveTypeMasterId', '');
-      setFieldValue('leavePolicyId', '');
+      setFieldError(
+        'leaveTypeMasterId',
+        'Selected leave policy is no longer available. Please choose another leave type.'
+      );
     }
-  }, [editData, leaveTypeOptions, setFieldValue, values.leaveTypeMasterId]);
-
-  useEffect(() => {
-    if (editData) return;
-    if (!values.leaveTypeMasterId) {
-      setFieldValue('leavePolicyId', '');
-      return;
-    }
-
-    const policyResolution = resolveLeavePolicyIdForLeaveType(
-      leavePolicyOptions,
-      values.leaveTypeMasterId
-    );
-    setFieldValue('leavePolicyId', policyResolution.policyId, false);
-  }, [editData, leavePolicyOptions, setFieldValue, values.leaveTypeMasterId]);
+  }, [editData, leaveTypeOptions, setFieldError, setFieldValue, values.leaveTypeMasterId]);
 
   useEffect(() => {
     if (!values.halfDay || !values.startDate) {
@@ -571,14 +552,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   onChange={(value) => {
                     const leaveTypeMasterId = typeof value === 'string' ? value : '';
                     setFieldValue('leaveTypeMasterId', leaveTypeMasterId);
-                    const policyResolution = resolveLeavePolicyIdForLeaveType(
-                      leavePolicyOptions,
-                      leaveTypeMasterId
-                    );
-                    setFieldValue('leavePolicyId', policyResolution.policyId, false);
-                    if (policyResolution.status !== 'resolved') {
-                      setFieldError('leaveTypeMasterId', policyResolution.message);
-                    }
                   }}
                 />
               </ShakingTextField>

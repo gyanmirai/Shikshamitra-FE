@@ -84,6 +84,7 @@ export function mapFinanceAuditEventDtoToLog(dto: FinanceAuditEvent): FinanceAud
     beforeData: Object.keys(beforeData).length ? beforeData : undefined,
     afterData: Object.keys(afterData).length ? afterData : undefined,
     createdAt: dto.occurredAt,
+    createdAtDisplay: dto.occurredAtDisplay || undefined,
     remarks: dto.reason ?? undefined,
     entityType: dto.entityType,
     entityId: dto.entityId,

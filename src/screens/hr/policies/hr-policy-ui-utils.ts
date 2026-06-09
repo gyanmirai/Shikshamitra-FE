@@ -75,6 +75,27 @@ export function isAttendanceThresholdOrderValid(full: number, half: number, abse
   return full > half && half >= absent;
 }
 
+export function normalizeEditableDefault(status?: string, isDefault?: boolean) {
+  return status === 'active' && Boolean(isDefault);
+}
+
+export function getAttendanceOvertimeValidationError({
+  overtimeEnabled,
+  overtimeRate,
+  minOvertimeMinutes,
+}: {
+  overtimeEnabled: boolean;
+  overtimeRate?: string | null;
+  minOvertimeMinutes?: string | null;
+}) {
+  if (!overtimeEnabled) return '';
+  if (!overtimeRate?.trim()) return 'Overtime rate is required when overtime is enabled.';
+  if (minOvertimeMinutes == null || minOvertimeMinutes.trim() === '') {
+    return 'Minimum overtime minutes are required when overtime is enabled.';
+  }
+  return '';
+}
+
 export function versionMatchesHistorySearch(version: HrPolicyVersion, rawSearch: string) {
   const search = rawSearch.trim().toLowerCase();
   if (!search) return true;

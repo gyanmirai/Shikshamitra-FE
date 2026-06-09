@@ -181,6 +181,15 @@ export const hrPermissions = {
     exportReports: `${defaultHrPermissionName}PerformanceManagement.ExportReports`,
   },
   reports: `${defaultModulePermissionName}${defaultHrPermissionName}Reports`,
+  reportActions: {
+    view: `${defaultHrPermissionName}Reports.View`,
+    build: `${defaultHrPermissionName}Reports.Build`,
+    export: `${defaultHrPermissionName}Reports.Export`,
+    schedule: `${defaultHrPermissionName}Reports.Schedule`,
+    manageTemplates: `${defaultHrPermissionName}Reports.ManageTemplates`,
+    delete: `${defaultHrPermissionName}Reports.Delete`,
+    share: `${defaultHrPermissionName}Reports.Share`,
+  },
   notification: `${defaultModulePermissionName}${defaultHrPermissionName}Notification`,
 };
 

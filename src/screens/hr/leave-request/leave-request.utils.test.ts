@@ -22,12 +22,11 @@ import {
   shouldEnforceLeaveNoticePeriod,
   buildCreateLeaveRequestFormData,
   buildLeaveAttachmentDownloadPath,
-  resolveLeavePolicyIdForLeaveType,
+  getSelectableLeaveRequestOptions,
   formatLeaveCalendarDateForPayload,
   formatLeaveCalendarDateForDisplay,
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
-  resolveLeaveTypeMasterIdFromPolicy,
   shouldDisableMonthBeforeAcademicYearStart,
 } from 'src/screens/hr/leave-request/leave-request.utils';
 
@@ -35,7 +34,7 @@ describe('leave request payload mapping', () => {
   it('uses forEmployeeId for non-self selection and never sends employeeId', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: 'emp-123', label: 'John Doe' },
-      leavePolicyId: 'policy-1',
+      leaveTypeMasterId: 'type-1',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
       halfDay: false,
@@ -45,14 +44,14 @@ describe('leave request payload mapping', () => {
 
     expect(formData.get('forEmployeeId')).toBe('emp-123');
     expect(formData.get('employeeId')).toBeNull();
-    expect(formData.get('leavePolicyId')).toBe('policy-1');
-    expect(formData.get('leaveTypeId')).toBeNull();
+    expect(formData.get('leavePolicyId')).toBeNull();
+    expect(formData.get('leaveTypeId')).toBe('type-1');
   });
 
   it('omits forEmployeeId for self selection', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: SELF_EMPLOYEE_ID, label: 'Self' },
-      leavePolicyId: 'policy-1',
+      leaveTypeMasterId: 'type-1',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
       halfDay: false,
@@ -67,7 +66,7 @@ describe('leave request payload mapping', () => {
   it('does not append file when docs is empty', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: 'emp-123', label: 'John Doe' },
-      leavePolicyId: 'policy-1',
+      leaveTypeMasterId: 'type-1',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
       halfDay: false,
@@ -81,7 +80,7 @@ describe('leave request payload mapping', () => {
   it('sends half-day flag in create payloads', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: 'emp-123', label: 'John Doe' },
-      leavePolicyId: 'policy-1',
+      leaveTypeMasterId: 'type-1',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-01'),
       halfDay: true,
@@ -95,7 +94,7 @@ describe('leave request payload mapping', () => {
   it('sends selected leave days as date-only values to avoid timezone date shifts', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: 'emp-123', label: 'John Doe' },
-      leavePolicyId: 'policy-1',
+      leaveTypeMasterId: 'type-1',
       startDate: dayjs('2026-07-06'),
       endDate: dayjs('2026-07-10'),
       halfDay: false,
@@ -159,41 +158,58 @@ describe('leave notice period helpers', () => {
     expect(getLeaveNoticePeriodMessage(today)).toContain('Earliest available date is 30/05/2026.');
   });
 
-  it('resolves the leave type linked to a selected policy', () => {
-    expect(
-      resolveLeaveTypeMasterIdFromPolicy({ id: 'policy-1', leaveType: { id: 'type-1' } })
-    ).toBe('type-1');
-    expect(resolveLeaveTypeMasterIdFromPolicy({ id: 'policy-2', leaveType: 'type-2' })).toBe(
-      'type-2'
+  it('excludes policy rules whose leave type is missing from the active catalog', () => {
+    const result = getSelectableLeaveRequestOptions(
+      [{ id: 'type-1', name: 'Sick' } as any],
+      [
+        {
+          id: 'policy-1',
+          rules: [{ id: 'rule-1', leaveType: { id: 'deleted-type' }, isActive: true }],
+        } as any,
+      ]
     );
-    expect(
-      resolveLeaveTypeMasterIdFromPolicy({ id: 'policy-3', leaveTypeMasterId: 'type-3' })
-    ).toBe('type-3');
+
+    expect(result.leaveTypes).toEqual([]);
+    expect(result.leavePolicies).toEqual([]);
   });
 
-  it('resolves exactly one active policy from a selected leave type', () => {
-    expect(
-      resolveLeavePolicyIdForLeaveType(
-        [
-          { id: 'policy-1', leaveType: { id: 'type-1' } },
-          { id: 'policy-2', leaveType: { id: 'type-2' } },
-        ],
-        'type-2'
-      )
-    ).toEqual({ status: 'resolved', policyId: 'policy-2' });
+  it('excludes policies without active rules', () => {
+    const result = getSelectableLeaveRequestOptions(
+      [{ id: 'type-1', name: 'Sick' } as any],
+      [{ id: 'policy-1', rules: [] } as any]
+    );
+
+    expect(result.leaveTypes).toEqual([]);
+    expect(result.leavePolicies).toEqual([]);
   });
 
-  it('blocks create when leave type policy configuration is missing or ambiguous', () => {
-    expect(resolveLeavePolicyIdForLeaveType([], 'type-1').status).toBe('missing');
-    expect(
-      resolveLeavePolicyIdForLeaveType(
-        [
-          { id: 'policy-1', leaveType: { id: 'type-1' } },
-          { id: 'policy-2', leaveTypeMasterId: 'type-1' },
-        ],
-        'type-1'
-      ).status
-    ).toBe('ambiguous');
+  it('keeps leave types from active policy rules selectable', () => {
+    const result = getSelectableLeaveRequestOptions(
+      [
+        { id: 'type-1', name: 'Sick' },
+        { id: 'type-2', name: 'Casual' },
+      ] as any,
+      [
+        { id: 'policy-1', rules: [{ id: 'rule-1', leaveType: { id: 'type-1' }, isActive: true }] },
+      ] as any
+    );
+
+    expect(result.leaveTypes.map((item: any) => item.id)).toEqual(['type-1']);
+    expect(result.leavePolicies.map((item: any) => item.id)).toEqual(['policy-1']);
+  });
+
+  it('deduplicates the same leave type across policy rules', () => {
+    const policies = [
+      { id: 'policy-1', rules: [{ id: 'rule-1', leaveType: { id: 'type-1' }, isActive: true }] },
+      { id: 'policy-2', rules: [{ id: 'rule-2', leaveType: { id: 'type-1' }, isActive: true }] },
+    ];
+    const result = getSelectableLeaveRequestOptions(
+      [{ id: 'type-1', name: 'Sick' } as any],
+      policies
+    );
+
+    expect(result.leaveTypes.map((item: any) => item.id)).toEqual(['type-1']);
+    expect(result.leavePolicies.map((item: any) => item.id)).toEqual(['policy-1', 'policy-2']);
   });
 
   it('enforces notice only for self-created leave requests', () => {

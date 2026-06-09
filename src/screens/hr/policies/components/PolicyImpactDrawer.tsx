@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -27,7 +26,7 @@ import { toLabel, formatDate, formatNumber } from '../hr-policy-workspace-utils'
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
-// ─── PolicyImpactDrawer ────────────────────────────────────────────────────────
+// --- PolicyImpactDrawer --------------------------------------------------------
 
 export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -44,10 +43,26 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     confirmPendingImpactAction,
   } = ctx;
 
-  const warningCount =
-    (impactPreview?.warnings?.length ?? 0) + (impactPreview?.requiresConfirmation ? 1 : 0);
+  const displayedWarnings = [
+    ...(impactPreview?.warnings ?? []),
+    ...(impactPreview?.blockingWarnings ?? []).filter(
+      (blockingWarning) =>
+        !(impactPreview?.warnings ?? []).some(
+          (warning) =>
+            warning.code === blockingWarning.code && warning.message === blockingWarning.message
+        )
+    ),
+  ];
+  const warningCount = displayedWarnings.length + (impactPreview?.requiresConfirmation ? 1 : 0);
   const conflictCount = impactPreview?.effectiveAssignmentConflicts?.length ?? 0;
   const hasBlockingWarnings = Boolean(impactPreview?.blockingWarnings?.length);
+  const summarySeverity = hasBlockingWarnings
+    ? 'error'
+    : impactPreview?.requiresConfirmation
+      ? 'warning'
+      : impactPreview?.warnings?.length
+        ? 'info'
+        : 'success';
 
   return (
     <Drawer
@@ -69,17 +84,22 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           <LinearProgress />
         ) : null}
 
-        {/* ── Sticky top: alerts + chips + accordions ── */}
+        {/* -- Sticky top: alerts + chips + accordions -- */}
         <Box sx={{ px: 2.5, pt: 2.5, pb: 1.5, flexShrink: 0 }}>
           <Stack spacing={1.5}>
             {impactPreviewError ? <Alert severity="error">{impactPreviewError}</Alert> : null}
             {!impactPreview && !impactPreviewError ? (
               <Alert severity="info">Loading impact preview...</Alert>
             ) : null}
+            {impactPreview?.resolutionSummary ? (
+              <Alert severity="info" sx={{ py: 0.75 }}>
+                {impactPreview.resolutionSummary}
+              </Alert>
+            ) : null}
 
             {impactPreview ? (
               <>
-                {/* Summary chips — single row */}
+                {/* Summary chips - single row */}
                 <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                   <Chip
                     size="small"
@@ -90,7 +110,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                   <Chip size="small" label={toLabel(impactPreview.action)} variant="outlined" />
                   <Chip
                     size="small"
-                    label={`v${impactPreview.currentVersion ?? '-'} → v${impactPreview.proposedVersion ?? '-'}`}
+                    label={`v${impactPreview.currentVersion ?? '-'} -> v${impactPreview.proposedVersion ?? '-'}`}
                   />
                   <Chip
                     size="small"
@@ -114,7 +134,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                     elevation={0}
                     sx={{
                       backgroundColor: (theme) =>
-                        `${theme.vars.palette.background.neutral} !important`,
+                        `${(theme.vars || theme).palette.background.neutral} !important`,
                       border: '1px solid',
                       borderColor: hasBlockingWarnings ? 'error.light' : 'warning.light',
                       borderRadius: '8px !important',
@@ -122,11 +142,11 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                       '&:before': { display: 'none' },
                       '& .MuiAccordionSummary-root': {
                         backgroundColor: (theme) =>
-                          `${theme.vars.palette.background.neutral} !important`,
+                          `${(theme.vars || theme).palette.background.neutral} !important`,
                       },
                       '& .MuiAccordionDetails-root': {
                         backgroundColor: (theme) =>
-                          `${theme.vars.palette.background.neutral} !important`,
+                          `${(theme.vars || theme).palette.background.neutral} !important`,
                       },
                     }}
                   >
@@ -140,7 +160,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                     </AccordionSummary>
                     <AccordionDetails sx={{ pt: 0, pb: 1.5, px: 2 }}>
                       <Stack spacing={1}>
-                        {impactPreview.warnings?.map((warning) => (
+                        {displayedWarnings.map((warning) => (
                           <Alert
                             key={`${warning.code}-${warning.message}`}
                             severity={warning.severity === 'blocking' ? 'error' : warning.severity}
@@ -163,6 +183,13 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                     </AccordionDetails>
                   </Accordion>
                 ) : null}
+                {impactPreview.riskSummary || impactPreview.recommendedAction ? (
+                  <Alert severity={summarySeverity} sx={{ py: 0.75 }}>
+                    {impactPreview.riskSummary || ''}
+                    {impactPreview.riskSummary && impactPreview.recommendedAction ? ' ' : ''}
+                    {impactPreview.recommendedAction || ''}
+                  </Alert>
+                ) : null}
 
                 {/* Effective assignment conflicts accordion */}
                 {conflictCount > 0 ? (
@@ -171,7 +198,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                     elevation={0}
                     sx={{
                       backgroundColor: (theme) =>
-                        `${theme.vars.palette.background.neutral} !important`,
+                        `${(theme.vars || theme).palette.background.neutral} !important`,
                       border: '1px solid',
                       borderColor: 'warning.light',
                       borderRadius: '8px !important',
@@ -179,11 +206,11 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                       '&:before': { display: 'none' },
                       '& .MuiAccordionSummary-root': {
                         backgroundColor: (theme) =>
-                          `${theme.vars.palette.background.neutral} !important`,
+                          `${(theme.vars || theme).palette.background.neutral} !important`,
                       },
                       '& .MuiAccordionDetails-root': {
                         backgroundColor: (theme) =>
-                          `${theme.vars.palette.background.neutral} !important`,
+                          `${(theme.vars || theme).palette.background.neutral} !important`,
                       },
                     }}
                   >
@@ -206,7 +233,8 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                                 p: 1.25,
                                 borderRadius: 1,
                                 bgcolor: 'background.paper',
-                                border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                                border: (theme) =>
+                                  `1px solid ${(theme.vars || theme).palette.divider}`,
                               }}
                             >
                               <Typography variant="body2" fontWeight={600} color="text.primary">
@@ -223,7 +251,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                                 {conflict.candidateAssignments
                                   .map(
                                     (candidate) =>
-                                      `${candidate.targetDisplayName || candidate.targetKey} (${candidate.status}: ${candidate.skipReason})`
+                                      `${candidate.targetDisplayName || candidate.targetKey} (${toLabel(candidate.status)}: ${toLabel(candidate.skipReason)})`
                                   )
                                   .join(', ')}
                               </Typography>
@@ -238,7 +266,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           </Stack>
         </Box>
 
-        {/* ── Scrollable: Affected Employees only ── */}
+        {/* -- Scrollable: Affected Employees only -- */}
         {impactPreview ? (
           <>
             <Divider />
@@ -275,7 +303,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           </>
         ) : null}
 
-        {/* ── Sticky footer: action buttons ── */}
+        {/* -- Sticky footer: action buttons -- */}
         {pendingImpactAction ? (
           <>
             <Divider />
@@ -294,7 +322,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
               >
                 Cancel
               </Button>
-              <LoadingButton
+              <Button
                 variant="contained"
                 color="warning"
                 disabled={
@@ -306,7 +334,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                 size="small"
               >
                 Confirm {pendingImpactAction.label}
-              </LoadingButton>
+              </Button>
             </Stack>
           </>
         ) : null}

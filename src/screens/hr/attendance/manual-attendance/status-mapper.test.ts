@@ -3,12 +3,15 @@ import {
   TAKE_ATTENDANCE_STATUS,
   MANUAL_ATTENDANCE_UI_STATUS,
   mapTakeAttendanceStatusToUi,
+  getDirtyManualAttendanceRows,
   applyManualAttendanceRowStatus,
   mapManualAttendanceStatusToWire,
   applyManualAttendanceShiftTimes,
   applyManualAttendanceBulkStatus,
   APPROVED_LEAVE_OVERRIDE_WARNING,
+  getTimeBasedAttendanceTimeIssues,
   buildManualAttendanceSaveEntries,
+  isManualAttendanceBulkStatusDisabled,
   mapManualAttendanceDayResponseToRows,
   MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS,
 } from 'src/screens/hr/attendance/manual-attendance/status-mapper';
@@ -142,7 +145,10 @@ describe('manual attendance status mapper', () => {
 
     expect(rows).toEqual([
       { employeeId: 'employee-1', status: MANUAL_ATTENDANCE_UI_STATUS.OnLeave },
-      { employeeId: 'employee-2', status: MANUAL_ATTENDANCE_UI_STATUS.Absent },
+      {
+        employeeId: 'employee-2',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
+      },
     ]);
   });
 
@@ -180,6 +186,150 @@ describe('manual attendance status mapper', () => {
     expect(row).toEqual({
       employeeId: 'employee-1',
       status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+    });
+  });
+
+  it('fills full shift times when applying present to time-based rows', () => {
+    const rows = applyManualAttendanceBulkStatus(
+      [
+        {
+          employeeId: 'employee-1',
+          status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+          captureMode: 'manual_with_time',
+          shiftStartTime: '09:00:00',
+          shiftEndTime: '17:00:00',
+        },
+        {
+          employeeId: 'employee-2',
+          status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+          captureMode: 'integrated',
+          shiftStartTime: '08:30:00',
+          shiftEndTime: '16:30:00',
+        },
+        {
+          employeeId: 'employee-3',
+          status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+          captureMode: 'manual_status',
+          shiftStartTime: '10:00:00',
+          shiftEndTime: '18:00:00',
+        },
+      ],
+      MANUAL_ATTENDANCE_UI_STATUS.Present
+    );
+
+    expect(rows).toEqual([
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        timeIn: '09:00',
+        timeOut: '17:00',
+      }),
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        timeIn: '08:30',
+        timeOut: '16:30',
+      }),
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        timeIn: '',
+        timeOut: '',
+      }),
+    ]);
+  });
+
+  it('fills first-half shift times when applying half day to time-based rows', () => {
+    const rows = applyManualAttendanceBulkStatus(
+      [
+        {
+          employeeId: 'employee-1',
+          status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+          captureMode: 'manual_with_time',
+          shiftStartTime: '09:00:00',
+          shiftEndTime: '17:00:00',
+        },
+        {
+          employeeId: 'employee-2',
+          status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+          captureMode: 'integrated',
+          shiftStartTime: '08:30:00',
+          shiftEndTime: '16:30:00',
+        },
+      ],
+      MANUAL_ATTENDANCE_UI_STATUS.HalfDay
+    );
+
+    expect(rows).toEqual([
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.HalfDay,
+        timeIn: '09:00',
+        timeOut: '13:00',
+      }),
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.HalfDay,
+        timeIn: '08:30',
+        timeOut: '12:30',
+      }),
+    ]);
+  });
+
+  it('does not auto-fill overnight or invalid shift ranges', () => {
+    const rows = applyManualAttendanceBulkStatus(
+      [
+        {
+          employeeId: 'employee-1',
+          status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+          captureMode: 'manual_with_time',
+          shiftStartTime: '22:00:00',
+          shiftEndTime: '06:00:00',
+        },
+        {
+          employeeId: 'employee-2',
+          status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+          captureMode: 'integrated',
+          shiftStartTime: '09:00:00',
+          shiftEndTime: '09:00:00',
+        },
+      ],
+      MANUAL_ATTENDANCE_UI_STATUS.HalfDay
+    );
+
+    expect(rows).toEqual([
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.HalfDay,
+        timeIn: '',
+        timeOut: '',
+      }),
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.HalfDay,
+        timeIn: '',
+        timeOut: '',
+      }),
+    ]);
+  });
+
+  it('applies single-row status defaults and clears absent times', () => {
+    const present = applyManualAttendanceRowStatus(
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+        captureMode: 'manual_with_time',
+        shiftStartTime: '09:00:00',
+        shiftEndTime: '17:00:00',
+      },
+      MANUAL_ATTENDANCE_UI_STATUS.Present
+    );
+    const absent = applyManualAttendanceRowStatus(
+      {
+        ...present,
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+      },
+      MANUAL_ATTENDANCE_UI_STATUS.Absent
+    );
+
+    expect(present).toMatchObject({ timeIn: '09:00', timeOut: '17:00' });
+    expect(absent).toMatchObject({
+      status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
+      timeIn: '',
+      timeOut: '',
     });
   });
 
@@ -234,7 +384,7 @@ describe('manual attendance status mapper', () => {
     ]);
   });
 
-  it('applies shift time only to manual-with-time present rows', () => {
+  it('applies shift time only to time-based present rows', () => {
     const result = applyManualAttendanceShiftTimes([
       {
         employeeId: 'employee-1',
@@ -273,13 +423,146 @@ describe('manual attendance status mapper', () => {
       },
     ]);
 
-    expect(result.updated).toBe(1);
+    expect(result.updated).toBe(2);
     expect(result.skipped).toBe(1);
     expect(result.rows[0]).toMatchObject({ timeIn: '09:00', timeOut: '17:00' });
     expect(result.rows[1]).not.toHaveProperty('timeIn');
     expect(result.rows[2]).not.toHaveProperty('timeIn');
-    expect(result.rows[3]).not.toHaveProperty('timeIn');
+    expect(result.rows[3]).toMatchObject({ timeIn: '09:00', timeOut: '17:00' });
     expect(result.rows[4]).not.toHaveProperty('timeIn');
+  });
+
+  it('reports time-based present and half-day rows missing shift or attendance times', () => {
+    const issues = getTimeBasedAttendanceTimeIssues([
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        captureMode: 'manual_with_time',
+        shiftStartTime: '09:00:00',
+        shiftEndTime: '17:00:00',
+        timeIn: '',
+        timeOut: '',
+      },
+      {
+        employeeId: 'employee-2',
+        status: MANUAL_ATTENDANCE_UI_STATUS.HalfDay,
+        captureMode: 'integrated',
+        shiftStartTime: '17:00:00',
+        shiftEndTime: '17:00:00',
+        timeIn: '',
+        timeOut: '',
+      },
+      {
+        employeeId: 'employee-3',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        captureMode: 'manual_status',
+      },
+      {
+        employeeId: 'employee-4',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
+        captureMode: 'manual_with_time',
+      },
+      {
+        employeeId: 'employee-5',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        captureMode: 'integrated',
+        shiftStartTime: '09:00:00',
+        shiftEndTime: '17:00:00',
+        timeIn: '09:00',
+        timeOut: '17:00',
+      },
+    ]);
+
+    expect(issues).toHaveLength(2);
+    expect(issues[0]).toMatchObject({
+      missingShiftTime: false,
+      invalidShiftTime: false,
+      missingAttendanceTime: true,
+    });
+    expect(issues[1]).toMatchObject({
+      missingShiftTime: false,
+      invalidShiftTime: true,
+      missingAttendanceTime: true,
+    });
+  });
+
+  it('returns only dirty manual attendance rows before saving', () => {
+    const originalRows = [
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        remarks: '',
+        timeIn: '09:00',
+        timeOut: '17:00',
+      },
+      {
+        employeeId: 'employee-2',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
+        remarks: 'Sick',
+      },
+    ];
+
+    const dirtyRows = getDirtyManualAttendanceRows(
+      [
+        { ...originalRows[0] },
+        { ...originalRows[1], remarks: 'Personal work' },
+        { employeeId: 'employee-3', status: MANUAL_ATTENDANCE_UI_STATUS.Present },
+      ],
+      originalRows
+    );
+
+    expect(dirtyRows.map((row) => row.employeeId)).toEqual(['employee-2', 'employee-3']);
+  });
+
+  it('builds save entries from dirty rows only and ignores unchanged invalid page rows', () => {
+    const originalRows = [
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        captureMode: 'manual_with_time' as const,
+        shiftStartTime: '09:00:00',
+        shiftEndTime: '17:00:00',
+        timeIn: '',
+        timeOut: '',
+      },
+      {
+        employeeId: 'employee-2',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
+        captureMode: 'manual_status' as const,
+        remarks: '',
+      },
+    ];
+
+    const dirtyRows = getDirtyManualAttendanceRows(
+      [{ ...originalRows[0] }, { ...originalRows[1], remarks: 'Out' }],
+      originalRows
+    );
+
+    expect(getTimeBasedAttendanceTimeIssues(dirtyRows)).toEqual([]);
+    expect(buildManualAttendanceSaveEntries(dirtyRows)).toEqual([
+      {
+        employeeId: 'employee-2',
+        statusWire: 'ABSENT',
+        inTime: null,
+        outTime: null,
+        remarks: 'Out',
+      },
+    ]);
+  });
+
+  it('includes outside-academic-year in bulk status disabled checks', () => {
+    const rows = [{ employeeId: 'employee-1', status: MANUAL_ATTENDANCE_UI_STATUS.Pending }];
+
+    expect(
+      isManualAttendanceBulkStatusDisabled(rows, MANUAL_ATTENDANCE_UI_STATUS.Present, {
+        isOutsideAcademicYear: true,
+      })
+    ).toBe(true);
+    expect(
+      isManualAttendanceBulkStatusDisabled(rows, MANUAL_ATTENDANCE_UI_STATUS.Present, {
+        isOutsideAcademicYear: false,
+      })
+    ).toBe(false);
   });
 
   it('exposes status filter options for locked read-only attendance tables', () => {

@@ -32,7 +32,7 @@ import { toLabel } from '../hr-policy-workspace-utils';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
-// ─── PolicyAuditDrawer ─────────────────────────────────────────────────────────
+// --- PolicyAuditDrawer ---------------------------------------------------------
 
 export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const { auditTarget, auditSummary, auditEvents, auditLoading, setAuditTarget } = ctx;
@@ -237,7 +237,12 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                                         minWidth: 120,
                                       }}
                                     >
-                                      <HrAuditValueView value={field.oldValue} dense maxDepth={3} />
+                                      <HrAuditValueView
+                                        value={field.oldValue}
+                                        sourceKey={field.field}
+                                        dense
+                                        maxDepth={3}
+                                      />
                                     </TableCell>
                                     <TableCell
                                       sx={{
@@ -247,7 +252,12 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                                         minWidth: 120,
                                       }}
                                     >
-                                      <HrAuditValueView value={field.newValue} dense maxDepth={3} />
+                                      <HrAuditValueView
+                                        value={field.newValue}
+                                        sourceKey={field.field}
+                                        dense
+                                        maxDepth={3}
+                                      />
                                     </TableCell>
                                   </TableRow>
                                 ))}
@@ -299,7 +309,7 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                         {toLabel(event.action)}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {formatHrAuditDateTime(event.timestamp)} ·{' '}
+                        {formatHrAuditDateTime(event.timestamp)} -{' '}
                         {formatHrAuditActor(event.actorName || event.actorId)}
                       </Typography>
                       {event.sourceMethod ? (

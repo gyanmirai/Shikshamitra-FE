@@ -22,7 +22,7 @@ import { HR_POLICY_TABS } from '../hr-policy-workspace.constants';
 import { useHRPolicyWorkspace } from '../hooks/useHRPolicyWorkspace';
 import { toLabel, optionLabel, getErrorMessage } from '../hr-policy-workspace-utils';
 
-// ─── EffectivePreviewTab ────────────────────────────────────────────────────────
+// --- EffectivePreviewTab --------------------------------------------------------
 
 export function EffectivePreviewTab() {
   const effectiveTab =
@@ -91,6 +91,11 @@ export function EffectivePreviewTab() {
           {getErrorMessage(effectiveError, 'Could not resolve effective policies.')}
         </Alert>
       ) : null}
+      {effectivePreview?.resolutionSummary ? (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          {effectivePreview.resolutionSummary}
+        </Alert>
+      ) : null}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
         <Alert severity="info" sx={{ flex: 1 }}>
           Source: {effectivePreview?.policySource || '-'}
@@ -107,6 +112,11 @@ export function EffectivePreviewTab() {
           {effectivePreview?.attendanceWorkCalendarPolicy?.name || '-'}
         </Alert>
       </Stack>
+      {effectivePreview?.recommendedAction ? (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          {effectivePreview.recommendedAction}
+        </Alert>
+      ) : null}
       {effectivePreview?.resolutionSteps?.length ? (
         <Box sx={{ mt: 2 }}>
           <Typography variant="subtitle2" sx={{ mb: 1 }}>

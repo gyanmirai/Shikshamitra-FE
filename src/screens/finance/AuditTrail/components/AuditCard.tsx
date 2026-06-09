@@ -111,8 +111,8 @@ const AuditCard = ({ log, index = 0, variant = 'default', onFilterByStudent }: A
     .map((key) => ({
       key,
       label: toHrAuditLabel(key),
-      before: formatHrAuditValue(beforeData[key]),
-      after: formatHrAuditValue(afterData[key]),
+      before: formatHrAuditValue(beforeData[key], 120, key),
+      after: formatHrAuditValue(afterData[key], 120, key),
     }));
 
   const deviceInfo = formatHrAuditValue(
@@ -147,7 +147,7 @@ const AuditCard = ({ log, index = 0, variant = 'default', onFilterByStudent }: A
     { label: 'Roll No.', value: formatHrAuditValue(studentRollNo) },
     {
       label: 'Paid At',
-      value: formatHrAuditValue(log.createdAt),
+      value: formatHrAuditDateTime(log.createdAt, log.createdAtDisplay),
     },
   ];
 
@@ -226,7 +226,11 @@ const AuditCard = ({ log, index = 0, variant = 'default', onFilterByStudent }: A
             {log.action.replace(/_/g, ' ')}
           </Label>
           <Box sx={{ flexGrow: 1 }} />
-          <Tooltip title={formatHrAuditDateTime(log.createdAt)} arrow placement="top">
+          <Tooltip
+            title={formatHrAuditDateTime(log.createdAt, log.createdAtDisplay)}
+            arrow
+            placement="top"
+          >
             <Box
               sx={{
                 display: 'flex',

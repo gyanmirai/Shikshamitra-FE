@@ -17,7 +17,6 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
@@ -31,10 +30,14 @@ import {
 } from 'src/redux/hr/attendanceApi';
 import {
   toAttendanceTableTimeValue,
+  isManualAttendanceRowDirty,
+  getDirtyManualAttendanceRows,
   applyManualAttendanceRowStatus,
   applyManualAttendanceShiftTimes,
   applyManualAttendanceBulkStatus,
   buildManualAttendanceSaveEntries,
+  getTimeBasedAttendanceTimeIssues,
+  isManualAttendanceBulkStatusDisabled,
   mapManualAttendanceDayResponseToRows,
   MANUAL_ATTENDANCE_UI_STATUS as STATUS,
   MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS,
@@ -61,6 +64,8 @@ const segmentBtnBase = {
   borderRadius: '4px',
   transition: 'all 0.2s',
 };
+
+const toAttendanceDateParam = (value: Dayjs | null) => (value ? value.format('YYYY-MM-DD') : '');
 
 const ManualAttendanceScreen = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
@@ -110,7 +115,7 @@ const ManualAttendanceScreen = () => {
     type: 'query',
     currentQueryAndMutation: useGetDayAttendanceQuery,
     params: {
-      attendanceDate: dateConvertor(dayjs(date).format(dateFormat)),
+      attendanceDate: toAttendanceDateParam(date),
       search: query.search,
       skipCount: query.skipCount,
       maxResultCount: query.maxResultCount,
@@ -185,13 +190,7 @@ const ManualAttendanceScreen = () => {
     () =>
       employeeData.some((emp) => {
         const original = originalDataRef.current.find((o: any) => o.id === emp.id);
-        if (!original) return true;
-        return (
-          emp.status !== original.status ||
-          emp.remarks !== original.remarks ||
-          emp.timeIn !== original.timeIn ||
-          emp.timeOut !== original.timeOut
-        );
+        return isManualAttendanceRowDirty(emp, original);
       }),
     [employeeData]
   );
@@ -245,13 +244,27 @@ const ManualAttendanceScreen = () => {
     setEmployeeData((prev) => applyManualAttendanceBulkStatus(prev, status));
   };
 
+  const isBulkStatusDisabled = useCallback(
+    (status: AttendanceStatusType) =>
+      isManualAttendanceBulkStatusDisabled(employeeData, status, {
+        isLocked,
+        isHoliday,
+        isFutureDate,
+        isOutsideAcademicYear,
+      }),
+    [employeeData, isFutureDate, isHoliday, isLocked, isOutsideAcademicYear]
+  );
+
   const showTimeColumns = useMemo(
     () => employeeData.some((emp) => emp.captureMode !== 'manual_status'),
     [employeeData]
   );
 
   const canApplyShiftTime = useMemo(
-    () => employeeData.some((emp) => emp.captureMode === 'manual_with_time'),
+    () =>
+      employeeData.some(
+        (emp) => emp.captureMode === 'manual_with_time' || emp.captureMode === 'integrated'
+      ),
     [employeeData]
   );
 
@@ -299,7 +312,21 @@ const ManualAttendanceScreen = () => {
     }
 
     try {
-      const entries = buildManualAttendanceSaveEntries(employeeData);
+      const dirtyRows = getDirtyManualAttendanceRows(employeeData, originalDataRef.current);
+      const timeIssues = getTimeBasedAttendanceTimeIssues(dirtyRows);
+      if (timeIssues.length > 0) {
+        const hasShiftIssue = timeIssues.some(
+          (issue) => issue.missingShiftTime || issue.invalidShiftTime
+        );
+        shikshaMitraToast.error({
+          message: hasShiftIssue
+            ? 'Shift start and end time are required for Present or Half Day time-based attendance. Please fix the employee shift or enter both times.'
+            : 'In-Time and Out-Time are required for Present or Half Day time-based attendance. Please enter both times.',
+        });
+        return;
+      }
+
+      const entries = buildManualAttendanceSaveEntries(dirtyRows);
       if (entries.length === 0) {
         const refreshed = await refetchDayAttendance().unwrap();
         syncRowsFromDayResponse(refreshed);
@@ -308,7 +335,7 @@ const ManualAttendanceScreen = () => {
       }
 
       const payload = {
-        attendanceDate: dateConvertor(dayjs(date).format(dateFormat)),
+        attendanceDate: toAttendanceDateParam(date),
         entries,
       };
 
@@ -333,7 +360,7 @@ const ManualAttendanceScreen = () => {
     }
 
     try {
-      const payload = { attendanceDate: dateConvertor(dayjs(date).format(dateFormat)) };
+      const payload = { attendanceDate: toAttendanceDateParam(date) };
       if (isLocked) {
         await unlockDayAttendance(payload).unwrap();
       } else {
@@ -913,34 +940,13 @@ const ManualAttendanceScreen = () => {
                       <Box
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (
-                            isLocked ||
-                            isHoliday ||
-                            isFutureDate ||
-                            employeeData.length === 0 ||
-                            employeeData.every((emp) => emp.status === STATUS.Present)
-                          )
-                            return;
+                          if (isBulkStatusDisabled(STATUS.Present)) return;
                           setAllStatus(STATUS.Present);
                         }}
                         sx={{
                           ...segmentBtnBase,
-                          cursor:
-                            isLocked ||
-                            isHoliday ||
-                            isFutureDate ||
-                            employeeData.length === 0 ||
-                            employeeData.every((e) => e.status === STATUS.Present)
-                              ? 'not-allowed'
-                              : 'pointer',
-                          opacity:
-                            isLocked ||
-                            isHoliday ||
-                            isFutureDate ||
-                            employeeData.length === 0 ||
-                            employeeData.every((e) => e.status === STATUS.Present)
-                              ? 0.5
-                              : 1,
+                          cursor: isBulkStatusDisabled(STATUS.Present) ? 'not-allowed' : 'pointer',
+                          opacity: isBulkStatusDisabled(STATUS.Present) ? 0.5 : 1,
                           bgcolor: (t) =>
                             presentCount > 0 ? t.vars.palette.success.main : 'transparent',
                           color: (t) =>
@@ -961,34 +967,13 @@ const ManualAttendanceScreen = () => {
                       <Box
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (
-                            isLocked ||
-                            isHoliday ||
-                            isFutureDate ||
-                            employeeData.length === 0 ||
-                            employeeData.every((emp) => emp.status === STATUS.HalfDay)
-                          )
-                            return;
+                          if (isBulkStatusDisabled(STATUS.HalfDay)) return;
                           setAllStatus(STATUS.HalfDay);
                         }}
                         sx={{
                           ...segmentBtnBase,
-                          cursor:
-                            isLocked ||
-                            isHoliday ||
-                            isFutureDate ||
-                            employeeData.length === 0 ||
-                            employeeData.every((e) => e.status === STATUS.HalfDay)
-                              ? 'not-allowed'
-                              : 'pointer',
-                          opacity:
-                            isLocked ||
-                            isHoliday ||
-                            isFutureDate ||
-                            employeeData.length === 0 ||
-                            employeeData.every((e) => e.status === STATUS.HalfDay)
-                              ? 0.5
-                              : 1,
+                          cursor: isBulkStatusDisabled(STATUS.HalfDay) ? 'not-allowed' : 'pointer',
+                          opacity: isBulkStatusDisabled(STATUS.HalfDay) ? 0.5 : 1,
                           bgcolor: (t) =>
                             halfDayCount > 0 ? t.vars.palette.info.main : 'transparent',
                           color: (t) =>
@@ -1025,34 +1010,13 @@ const ManualAttendanceScreen = () => {
                       <Box
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (
-                            isLocked ||
-                            isHoliday ||
-                            isFutureDate ||
-                            employeeData.length === 0 ||
-                            employeeData.every((emp) => emp.status === STATUS.Absent)
-                          )
-                            return;
+                          if (isBulkStatusDisabled(STATUS.Absent)) return;
                           setAllStatus(STATUS.Absent);
                         }}
                         sx={{
                           ...segmentBtnBase,
-                          cursor:
-                            isLocked ||
-                            isHoliday ||
-                            isFutureDate ||
-                            employeeData.length === 0 ||
-                            employeeData.every((e) => e.status === STATUS.Absent)
-                              ? 'not-allowed'
-                              : 'pointer',
-                          opacity:
-                            isLocked ||
-                            isHoliday ||
-                            isFutureDate ||
-                            employeeData.length === 0 ||
-                            employeeData.every((e) => e.status === STATUS.Absent)
-                              ? 0.5
-                              : 1,
+                          cursor: isBulkStatusDisabled(STATUS.Absent) ? 'not-allowed' : 'pointer',
+                          opacity: isBulkStatusDisabled(STATUS.Absent) ? 0.5 : 1,
                           bgcolor: (t) =>
                             absentCount > 0 ? t.vars.palette.error.main : 'transparent',
                           color: (t) =>
@@ -1223,6 +1187,7 @@ const ManualAttendanceScreen = () => {
       showTimeColumns,
       editingCell,
       updateRow,
+      isBulkStatusDisabled,
     ]
   );
 
@@ -1313,7 +1278,9 @@ const ManualAttendanceScreen = () => {
               disabled={
                 employeeData.length === 0 ||
                 !employeeData.some(
-                  (e) => e.captureMode === 'manual_with_time' && e.status === STATUS.Present
+                  (e) =>
+                    (e.captureMode === 'manual_with_time' || e.captureMode === 'integrated') &&
+                    e.status === STATUS.Present
                 )
               }
               onClick={applyShiftTime}

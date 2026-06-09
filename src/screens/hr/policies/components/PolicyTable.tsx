@@ -16,11 +16,11 @@ import { formatDate, getErrorMessage } from '../hr-policy-workspace-utils';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// --- Types --------------------------------------------------------------------
 
 type PolicyType = 'payroll' | 'attendance';
 
-// ─── ArchiveToggle ─────────────────────────────────────────────────────────────
+// --- ArchiveToggle -------------------------------------------------------------
 
 function ArchiveToggle({
   current,
@@ -45,7 +45,7 @@ function ArchiveToggle({
   );
 }
 
-// ─── PolicyTable ──────────────────────────────────────────────────────────────
+// --- PolicyTable --------------------------------------------------------------
 
 export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -127,7 +127,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
       label: (
         <Stack direction="row" spacing={0.5} alignItems="center">
           <span>Integration</span>
-          <InfoTooltipIcon title="Determines how attendance data is pulled — per employee or globally." />
+          <InfoTooltipIcon title="Determines how attendance data is pulled - per employee or globally." />
         </Stack>
       ),
       minWidth: 140,
@@ -178,7 +178,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
             handleViewClick={() =>
               previewPolicyRowImpact(isPayroll ? 'payroll' : 'attendance', item)
             }
-            showEditIcon={canEditPolicy}
+            showEditIcon={canEditPolicy && item.status !== 'archived'}
             handleEditClick={() =>
               isPayroll
                 ? openPayrollDrawer(item as PayrollPolicy)
