@@ -28,8 +28,6 @@ import type { AdjustmentRequest } from './types/adjustment.types';
 import type { IAdjustmentFullFormValues } from './types/adjustmentFormValues';
 
 const Adjustments = () => {
-  const [selectedBoard, setSelectedBoard] = useState('');
-  const [selectedMedium, setSelectedMedium] = useState('');
   const [activeTab, setActiveTab] = useState(AdjustmentTabEnum.Pending);
   const [selectedAdjustment, setSelectedAdjustment] = useState<AdjustmentRequest | null>(null);
 
@@ -45,8 +43,7 @@ const Adjustments = () => {
   const currentUserId = user?.id ?? '';
   const currentUserName = user?.name ?? user?.userName ?? 'User';
 
-  const { adjustments, tabCounts, isLoading, createAdjustment, rejectAdjustment, refetch } =
-    useAdjustment(selectedBoard, selectedMedium, activeTab);
+  const { tabCounts, createAdjustment, rejectAdjustment, refetch } = useAdjustment(activeTab);
 
   const [fetchDetail] = useLazyGetFeeAdjustmentQuery();
 
@@ -190,15 +187,9 @@ const Adjustments = () => {
 
       {!addDialog.value && !viewDialog.value && (
         <AdjustmentTable
-          data={adjustments}
-          selectedBoard={selectedBoard}
-          setSelectedBoard={setSelectedBoard}
-          selectedMedium={selectedMedium}
-          setSelectedMedium={setSelectedMedium}
           activeTab={activeTab}
           onTabChange={setActiveTab}
           tabCounts={tabCounts}
-          isLoading={isLoading}
           onCreateAdjustment={() => addDialog.onTrue()}
           onView={handleView}
         />

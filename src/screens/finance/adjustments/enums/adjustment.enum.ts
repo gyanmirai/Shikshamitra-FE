@@ -1,9 +1,9 @@
 /** Matches backend FeeAdjustmentStatus numeric values. */
 export enum AdjustmentStatusEnum {
   Pending = 0,
-  Rejected = 1,
+  Approved = 1,
   PartiallyApplied = 2,
-  Applied = 3,
+  Rejected = 3,
   Cancelled = 4,
 }
 

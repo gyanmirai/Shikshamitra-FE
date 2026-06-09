@@ -1,17 +1,13 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { Board, Medium } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import { useSelector } from 'react-redux';
+import React, { useMemo } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
-import React, { useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
@@ -19,6 +15,9 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import { Box, Tab, Card, Tabs, Button, Typography } from '@mui/material';
+import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
+import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
+import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
   concessionManagementApi,
   useGetConcessionApplicationsQuery,
@@ -35,10 +34,6 @@ interface ICombinedProps {
   onViewConcession?: (student: IStudentInfo) => void;
   onEditConcession?: (student: IStudentInfo) => void;
   onViewAllConcession?: (student: IStudentInfo) => void;
-  selectedBoard: string;
-  selectedMedium: string;
-  onBoardChange: (value: string) => void;
-  onMediumChange: (value: string) => void;
 }
 
 const StudentConcessionTable: React.FC<ICombinedProps> = ({
@@ -49,11 +44,25 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   onViewConcession,
   onEditConcession,
   onViewAllConcession,
-  selectedBoard,
-  selectedMedium,
-  onBoardChange,
-  onMediumChange,
 }) => {
+  const {
+    boards,
+    mediums,
+    selectedBoard,
+    selectedMedium,
+    selectedStandardId,
+    selectedDivisionId,
+    isReady,
+    classOptions,
+    divisionOptions,
+    isDivisionDisabled,
+    filterPayload,
+    setSelectedBoard,
+    setSelectedMedium,
+    setSelectedStandardId,
+    setSelectedDivisionId,
+    classesLoading,
+  } = useFinanceAcademicFilters();
   const tabs = useTabs(ConcessionStatusType.Pending);
   const [selectedConcession, setSelectedConcession] = React.useState<IStudentInfo | null>(null);
   const removeConcessionDialog = useBoolean();
@@ -63,32 +72,6 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     currentQueryAndMutation: useDeleteConcessionApplicationMutation,
   });
 
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [boards, setBoards] = useState<Board[]>(() => currentYear?.boards ?? []);
-  const [mediums, setMediums] = useState<Medium[]>(() => {
-    if (!selectedBoard || !currentYear?.boards) return [];
-    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
-    return (board as unknown as Board)?.educationMediums ?? [];
-  });
-  // Reset board + medium whenever the academic year changes
-  useEffect(() => {
-    if (!currentYear?.boards?.length) return;
-    const newBoards = currentYear.boards;
-    setBoards(newBoards);
-    const firstBoard = newBoards[0];
-    onBoardChange(firstBoard?.id ?? '');
-    onMediumChange(firstBoard?.educationMediums?.[0]?.id ?? '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentYear?.id]);
-
-  // Sync mediums list when the selected board changes
-  useEffect(() => {
-    if (!currentYear?.boards) return;
-    setBoards(currentYear.boards);
-    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
-    setMediums((board as unknown as Board)?.educationMediums ?? []);
-  }, [currentYear?.boards, selectedBoard]);
-  // Fetch concession requests from API
   const {
     data: allConcessionData,
     isLoading: isLoadingConcessionData,
@@ -97,11 +80,15 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     type: 'query',
     currentQueryAndMutation: useGetConcessionApplicationsQuery,
     params: {
-      boardId: selectedBoard,
-      educationMediumId: selectedMedium,
+      boardId: filterPayload?.boardId,
+      educationMediumId: filterPayload?.educationMediumId,
+      standardId:
+        filterPayload?.standardId === 'All Classes' ? undefined : filterPayload?.standardId,
+      divisionId:
+        filterPayload?.divisionId === 'All Divisions' ? undefined : filterPayload?.divisionId,
     },
     options: {
-      skip: !selectedMedium,
+      skip: !isReady,
     },
   });
 
@@ -115,12 +102,12 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   const concessionCounts = useMemo(
     () => ({
-      pending: allItems.filter((i: any) => i.status === ConcessionStatusType.Pending).length,
-      approved: allItems.filter((i: any) => i.status === ConcessionStatusType.Approved).length,
-      rejected: allItems.filter((i: any) => i.status === ConcessionStatusType.Rejected).length,
-      cancelled: allItems.filter((i: any) => i.status === ConcessionStatusType.Cancelled).length,
+      pending: allConcessionData?.pendingCount ?? 0,
+      approved: allConcessionData?.approvedCount ?? 0,
+      rejected: allConcessionData?.rejectedCount ?? 0,
+      cancelled: allConcessionData?.cancelledCount ?? 0,
     }),
-    [allItems]
+    [allConcessionData]
   );
 
   const TABS = useMemo(
@@ -155,59 +142,56 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, mb: 1 }}>
-        <Box display="flex" justifyContent="space-between">
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <CustomSelect
-              label="Board"
-              options={boards || []}
-              labelKey="name"
-              valueKey="id"
-              value={selectedBoard}
-              onChange={(value) => {
-                onBoardChange(value as string);
-                onMediumChange('');
-              }}
-              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
-            />
-            <CustomSelect
-              label="Medium"
-              options={mediums || []}
-              labelKey="name"
-              disabled={!selectedBoard}
-              valueKey="id"
-              value={selectedMedium}
-              onChange={(value) => onMediumChange(value as string)}
-              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
-            />
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Tabs
-              value={tabs.value}
-              onChange={tabs.onChange}
-              sx={{
-                '& .MuiTabs-flexContainer': { gap: 2 },
-                flexGrow: 1,
-              }}
-            >
-              {TABS.map((tab) => (
-                <Tab
-                  key={String(tab.value)}
-                  value={tab.value}
-                  sx={{ fontSize: '12px' }}
-                  label={
-                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                      {tab.label}
-                      <Label color={tab.color as LabelColor}>{tab.count}</Label>
-                    </Box>
-                  }
-                />
-              ))}
-            </Tabs>
-          </Box>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <FinanceAcademicContextFilter
+            boards={boards}
+            mediums={mediums}
+            selectedBoard={selectedBoard}
+            selectedMedium={selectedMedium}
+            onBoardChange={setSelectedBoard}
+            onMediumChange={setSelectedMedium}
+            selectSx={{ maxWidth: '248px', width: '100%' }}
+          />
+          <FinanceClassDivisionFilter
+            classOptions={classOptions}
+            divisionOptions={divisionOptions}
+            selectedStandardId={selectedStandardId}
+            selectedDivisionId={selectedDivisionId}
+            isDivisionDisabled={isDivisionDisabled}
+            onClassChange={setSelectedStandardId}
+            onDivisionChange={setSelectedDivisionId}
+            classesLoading={classesLoading}
+            selectSx={{ maxWidth: '248px', width: '100%' }}
+          />
         </Box>
       </Card>
-
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Tabs
+            value={tabs.value}
+            onChange={tabs.onChange}
+            sx={{
+              '& .MuiTabs-flexContainer': { gap: 2 },
+              flexGrow: 1,
+            }}
+          >
+            {TABS.map((tab) => (
+              <Tab
+                key={String(tab.value)}
+                value={tab.value}
+                sx={{ fontSize: '12px' }}
+                label={
+                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                    {tab.label}
+                    <Label color={tab.color as LabelColor}>{tab.count}</Label>
+                  </Box>
+                }
+              />
+            ))}
+          </Tabs>
+        </Box>
+      </Card>
       <CustomizableTable
         tableId="student-concession-table"
         isLoading={isLoadingConcessionData || isFetchingConcessionData}

@@ -16,7 +16,7 @@ export const ADJUSTMENT_STATUS_COLORS: Record<
   [AdjustmentStatusEnum.Pending]: 'warning',
   [AdjustmentStatusEnum.Rejected]: 'error',
   [AdjustmentStatusEnum.PartiallyApplied]: 'info',
-  [AdjustmentStatusEnum.Applied]: 'success',
+  [AdjustmentStatusEnum.Approved]: 'success',
   [AdjustmentStatusEnum.Cancelled]: 'default',
 };
 
@@ -34,8 +34,8 @@ export const formatAdjustmentStatusLabel = (status: AdjustmentStatusEnum): strin
       return 'Rejected';
     case AdjustmentStatusEnum.PartiallyApplied:
       return 'Partially Applied';
-    case AdjustmentStatusEnum.Applied:
-      return 'Applied';
+    case AdjustmentStatusEnum.Approved:
+      return 'Approved';
     case AdjustmentStatusEnum.Cancelled:
       return 'Cancelled';
     default:

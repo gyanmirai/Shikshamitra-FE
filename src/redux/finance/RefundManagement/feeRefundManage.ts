@@ -98,6 +98,8 @@ export interface GetFeeRefundsInput {
   studentId?: string;
   /** Filter to students enrolled in a specific academic medium. */
   academicMediumId?: string;
+  standardId?: string;
+  divisionId?: string;
   status?: number;
   search?: string;
   skipCount?: number;

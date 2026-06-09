@@ -22,9 +22,6 @@ import type { IStudentFee } from './Components/type';
 import type { IAdjustmentFullFormValues } from '../adjustments/types/adjustmentFormValues';
 
 const FeeCollection = () => {
-  const [selectedBoard, setSelectedBoard] = useState('');
-  const [selectedMedium, setSelectedMedium] = useState('');
-
   const studentDialog = useBoolean();
   const viewDialog = useBoolean();
   const adjustmentDialog = useBoolean();
@@ -129,10 +126,6 @@ const FeeCollection = () => {
       {!studentDialog.value && !viewDialog.value && !adjustmentDialog.value && (
         <FeeCollectionTable
           onAddFee={studentDialog}
-          selectedBoard={selectedBoard}
-          setSelectedBoard={setSelectedBoard}
-          selectedMedium={selectedMedium}
-          setSelectedMedium={setSelectedMedium}
           onDelete={() => {}}
           onCollectFee={(row) => {
             studentDialog.onTrue();

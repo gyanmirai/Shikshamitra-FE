@@ -9,6 +9,7 @@ import {
 } from 'src/redux/finance/adjustments/adjustmentApi';
 
 import { buildAdjustmentApiPayload } from '../types/adjustmentFormValues';
+import { useFinanceAcademicFilters } from '../../hooks/useFinanceAcademicFilters';
 import { AdjustmentTabEnum, AdjustmentStatusEnum } from '../enums/adjustment.enum';
 
 import type { AdjustmentRequest } from '../types/adjustment.types';
@@ -33,20 +34,19 @@ const mapItemToAdjustmentRequest = (item: FeeAdjustmentApplicationItemDto): Adju
   remainingAdjustmentBalance: item.remainingAmount,
 });
 
-export function useAdjustment(
-  selectedBoard: string,
-  selectedMedium: string,
-  activeTab: AdjustmentTabEnum
-) {
+export function useAdjustment(activeTab: AdjustmentTabEnum) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { filterPayload, isReady } = useFinanceAcademicFilters();
 
   const queryParams = useMemo(() => {
-    if (!selectedBoard || !selectedMedium || !currentYear?.id) return null;
+    if (!isReady || !filterPayload || !currentYear?.id) return null;
 
     const base = {
-      boardId: selectedBoard,
-      educationMediumId: selectedMedium,
+      boardId: filterPayload.boardId,
+      educationMediumId: filterPayload.educationMediumId,
       academicYearId: currentYear.id,
+      standardId: filterPayload.standardId,
+      divisionId: filterPayload.divisionId,
       page: 1,
       pageSize: 100,
     };
@@ -58,7 +58,7 @@ export function useAdjustment(
       return { ...base, status: AdjustmentStatusEnum.Rejected };
     }
     return { ...base, completedOnly: true };
-  }, [selectedBoard, selectedMedium, currentYear?.id, activeTab]);
+  }, [filterPayload, currentYear?.id, activeTab, isReady]);
 
   const {
     data: applications,

@@ -4,6 +4,8 @@ export interface GetFeeAdjustmentApplicationsInput {
   boardId: string;
   educationMediumId: string;
   academicYearId: string;
+  standardId?: string;
+  divisionId?: string;
   status?: AdjustmentStatusEnum;
   completedOnly?: boolean;
   filter?: string;
