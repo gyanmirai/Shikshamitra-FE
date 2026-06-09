@@ -108,6 +108,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
         const monthLabel = MONTH_NAMES[monthIndex] ?? `Month ${m.month}`;
         const refunded = isAdj ? ((m as any).adjusted ?? 0) : ((m as any).refunded ?? 0);
         const refundable = isAdj ? ((m as any).adjustable ?? 0) : ((m as any).refundable ?? 0);
+        const concession = (m as any).concession ?? 0;
         return {
           dueFeeId: m.dueFeeId,
           month: monthLabel,
@@ -116,6 +117,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
           paid: m.paid,
           refunded,
           refundable,
+          concession,
           status:
             m.paid >= m.total
               ? FeeCollectionStatusType.Paid

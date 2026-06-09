@@ -36,6 +36,15 @@ const parsePaidAmount = (raw: string | number): number => {
 
 const isCashPayment = (method: string): boolean => method?.toLowerCase() === 'cash';
 
+const isChequeOrDemandDraft = (method: string): boolean => {
+  const normalizedMethod = method?.toLowerCase().trim() || '';
+  return (
+    normalizedMethod === 'cheque' ||
+    normalizedMethod.includes('demand draft') ||
+    normalizedMethod === 'dd'
+  );
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const FinalPaymentReviewDialog = ({
@@ -198,23 +207,45 @@ const FinalPaymentReviewDialog = ({
               sx={{
                 p: 2,
                 borderRadius: 2,
-                bgcolor: alpha(theme.palette.warning.main, 0.06),
-                border: `1px dashed ${alpha(theme.palette.warning.main, 0.3)}`,
+                bgcolor: alpha(
+                  theme.palette[isChequeOrDemandDraft(paymentMethod) ? 'info' : 'warning'].main,
+                  0.06
+                ),
+                border: `1px dashed ${alpha(
+                  theme.palette[isChequeOrDemandDraft(paymentMethod) ? 'info' : 'warning'].main,
+                  0.3
+                )}`,
               }}
             >
               <Stack direction="row" alignItems="flex-start" spacing={1.5}>
                 <Iconify
-                  icon="solar:info-circle-bold"
+                  icon={
+                    isChequeOrDemandDraft(paymentMethod)
+                      ? 'solar:inbox-archive-bold'
+                      : 'solar:info-circle-bold'
+                  }
                   width={20}
-                  sx={{ color: 'warning.main', mt: 0.25, flexShrink: 0 }}
+                  sx={{
+                    color: isChequeOrDemandDraft(paymentMethod) ? 'info.main' : 'warning.main',
+                    mt: 0.25,
+                    flexShrink: 0,
+                  }}
                 />
                 <Box>
-                  <Typography variant="subtitle2" fontWeight={700} color="warning.dark" mb={0.5}>
-                    Payment Verification Required
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={700}
+                    color={isChequeOrDemandDraft(paymentMethod) ? 'info.dark' : 'warning.dark'}
+                    mb={0.5}
+                  >
+                    {isChequeOrDemandDraft(paymentMethod)
+                      ? 'Move to Reconciliation'
+                      : 'Payment Verification Required'}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" lineHeight={1.6}>
-                    Non-cash payments require verification before a receipt is generated. You can
-                    either confirm immediately or save for later verification by the finance team.
+                    {isChequeOrDemandDraft(paymentMethod)
+                      ? 'This payment will be moved to reconciliation. The finance team will verify and generate the receipt once the cheque/demand draft is cleared.'
+                      : 'Non-cash payments require verification before a receipt is generated. You can either confirm immediately or save for later verification by the finance team.'}
                   </Typography>
                 </Box>
               </Stack>
@@ -251,20 +282,37 @@ const FinalPaymentReviewDialog = ({
               </LoadingButton>
             </Tooltip>
           </Stack>
-        ) : (
-          /* ── NON-CASH: Two actions ── */
-          <Stack direction="row" justifyContent="flex-end" spacing={1.5} flexWrap="wrap">
-            <Tooltip title="Save payment as pending - receipt will be generated after verification by finance team">
+        ) : isChequeOrDemandDraft(paymentMethod) ? (
+          /* ── CHEQUE/DEMAND DRAFT: Single action for reconciliation ── */
+          <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
+            <Tooltip title="Move payment to reconciliation - receipt will be generated after verification by finance team">
               <LoadingButton
-                variant="soft"
+                variant="contained"
                 color="warning"
                 loading={loading}
                 onClick={onSavePending}
-                startIcon={<Iconify icon="solar:clock-circle-bold" />}
+                startIcon={<Iconify icon="ic:round-arrow-forward" />}
                 size="small"
                 sx={{ fontWeight: 600 }}
               >
-                Save as Pending Verification
+                Move to Reconciliation
+              </LoadingButton>
+            </Tooltip>
+          </Stack>
+        ) : (
+          /* ── OTHER NON-CASH: Two actions ── */
+          <Stack direction="row" justifyContent="flex-end" spacing={1.5} flexWrap="wrap">
+            <Tooltip title="Save payment as pending - receipt will be generated after verification by finance team">
+              <LoadingButton
+                variant="contained"
+                color="warning"
+                loading={loading}
+                onClick={onSavePending}
+                startIcon={<Iconify icon="ic:round-arrow-forward" />}
+                size="small"
+                sx={{ fontWeight: 600 }}
+              >
+                Move to Reconciliation
               </LoadingButton>
             </Tooltip>
 

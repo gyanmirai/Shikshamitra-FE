@@ -18,6 +18,7 @@ export interface IMonthItem {
   paid: number;
   refunded: number;
   refundable: number;
+  concession?: number;
   status: FeeCollectionStatusType;
 }
 

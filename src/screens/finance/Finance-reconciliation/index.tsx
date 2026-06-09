@@ -10,13 +10,13 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Tab, Card, Tabs } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useCallback } from 'react';
 import { useNewSearchParam } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ReconciliationtatusType } from 'src/enums/reconciliation-status-type';
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import { useGetReconciliationTabCountsQuery } from 'src/redux/finance/reconciliation';
 
 import UpiTable from './Component/UpiTable';
@@ -69,9 +69,18 @@ const reconciliationTabConfig = [
 const FinanceReconciliation = () => {
   // Tab state
   const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
-  const activeTab = searchParams?.tab || ReconciliationtatusType.UPI;
+  const [activeTab, setActiveTab] = useState<string>(
+    searchParams?.tab || ReconciliationtatusType.UPI
+  );
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
+
+  // Sync activeTab with URL params on initial load and when searchParams change
+  React.useEffect(() => {
+    if (searchParams?.tab) {
+      setActiveTab(searchParams.tab);
+    }
+  }, [searchParams?.tab]);
 
   // Dialogs
   const addOverviewDialog = useBoolean(false);
@@ -92,30 +101,73 @@ const FinanceReconciliation = () => {
     options: { skip: !currentYear?.id },
   });
 
-  // Map tab counts to per-tab pending counts for badge display
-  const counts = useMemo<Record<ReconciliationtatusType, number>>(
+  // Map tab counts to per-tab stats (pending, approved, rejected, total)
+  const tabStats = useMemo(
     () => ({
-      [ReconciliationtatusType.All]: tabCounts?.totalPending ?? 0,
-      [ReconciliationtatusType.Cheque]: tabCounts?.chequePending ?? 0,
-      [ReconciliationtatusType.DemandDraft]: tabCounts?.demandDraftPending ?? 0,
-      [ReconciliationtatusType.BankTransfer]: tabCounts?.bankTransferPending ?? 0,
-      [ReconciliationtatusType.CreditCard]: tabCounts?.creditCardPending ?? 0,
-      [ReconciliationtatusType.DebitCard]: 0,
-      [ReconciliationtatusType.UPI]: tabCounts?.upiPending ?? 0,
-      [ReconciliationtatusType.OnlineGateway]: tabCounts?.onlineGatewayPending ?? 0,
-      [ReconciliationtatusType.Wallet]: tabCounts?.walletPending ?? 0,
+      [ReconciliationtatusType.All]: {
+        pending: tabCounts?.totalPending ?? 0,
+        approved: 0,
+        rejected: 0,
+      },
+      [ReconciliationtatusType.Cheque]: {
+        pending: tabCounts?.chequePending ?? 0,
+        approved: tabCounts?.chequeApproved ?? 0,
+        rejected: tabCounts?.chequeRejected ?? 0,
+      },
+      [ReconciliationtatusType.DemandDraft]: {
+        pending: tabCounts?.demandDraftPending ?? 0,
+        approved: tabCounts?.demandDraftApproved ?? 0,
+        rejected: tabCounts?.demandDraftRejected ?? 0,
+      },
+      [ReconciliationtatusType.BankTransfer]: {
+        pending: tabCounts?.bankTransferPending ?? 0,
+        approved: tabCounts?.bankTransferApproved ?? 0,
+        rejected: tabCounts?.bankTransferRejected ?? 0,
+      },
+      [ReconciliationtatusType.CreditCard]: {
+        pending: tabCounts?.creditCardPending ?? 0,
+        approved: tabCounts?.creditCardApproved ?? 0,
+        rejected: tabCounts?.creditCardRejected ?? 0,
+      },
+      [ReconciliationtatusType.DebitCard]: {
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+      },
+      [ReconciliationtatusType.UPI]: {
+        pending: tabCounts?.upiPending ?? 0,
+        approved: tabCounts?.upiApproved ?? 0,
+        rejected: tabCounts?.upiRejected ?? 0,
+      },
+      [ReconciliationtatusType.OnlineGateway]: {
+        pending: tabCounts?.onlineGatewayPending ?? 0,
+        approved: tabCounts?.onlineGatewayApproved ?? 0,
+        rejected: tabCounts?.onlineGatewayRejected ?? 0,
+      },
+      [ReconciliationtatusType.Wallet]: {
+        pending: tabCounts?.walletPending ?? 0,
+        approved: tabCounts?.walletApproved ?? 0,
+        rejected: tabCounts?.walletRejected ?? 0,
+      },
     }),
     [tabCounts]
   );
 
-  // Tabs config with counts
+  // Tabs config with stats
   const TABS = useMemo(
     () =>
-      reconciliationTabConfig.map((tab) => ({
-        ...tab,
-        count: counts[tab.value] || 0,
-      })),
-    [counts]
+      reconciliationTabConfig.map((tab) => {
+        const stats = tabStats[tab.value] ?? { pending: 0, approved: 0, rejected: 0 };
+        const processed = stats.approved + stats.rejected;
+        const total = processed + stats.pending;
+        return {
+          ...tab,
+          stats,
+          processed,
+          total,
+        };
+      }),
+    [tabStats]
   );
 
   // Find current tab/component
@@ -163,9 +215,11 @@ const FinanceReconciliation = () => {
   // Tab change handler
   const handleTabChange = useCallback(
     (event: React.SyntheticEvent, newValue: string | number) => {
-      const newIndex = TABS.findIndex((tab) => tab.value === newValue);
+      const newTabValue = String(newValue);
+      const newIndex = TABS.findIndex((tab) => tab.value === newTabValue);
       setIsBack(currentIndex > newIndex);
-      setSearchParams({ tab: String(newValue) });
+      setActiveTab(newTabValue);
+      setSearchParams({ tab: newTabValue });
     },
     [TABS, currentIndex, setSearchParams]
   );
@@ -192,7 +246,7 @@ const FinanceReconciliation = () => {
           { name: 'Reconciliation' },
         ]}
       />
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, pb: 1, mb: 1 }}>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, mb: 1 }}>
         <Box display="flex" justifyContent="space-between">
           <DatePicker
             label="Month-Year"
@@ -217,12 +271,38 @@ const FinanceReconciliation = () => {
           >
             {TABS.map((tab) => (
               <Tab
-                sx={{ fontSize: '12px' }}
                 key={tab.value}
+                sx={{ fontSize: '12px' }}
                 label={
-                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                    {tab.label} <Label color={tab.color}>{tab.count}</Label>
-                  </Box>
+                  <CustomTooltip
+                    title={
+                      <Box sx={{ fontSize: '12px', lineHeight: 1.8 }}>
+                        <Box>
+                          ✅ Approved: <strong>{tab.stats.approved}</strong>
+                        </Box>
+                        <Box>
+                          ❌ Rejected: <strong>{tab.stats.rejected}</strong>
+                        </Box>
+                        <Box>
+                          ⏳ Pending: <strong>{tab.stats.pending}</strong>
+                        </Box>
+                        <Box
+                          sx={{ borderTop: '1px solid rgba(255,255,255,0.3)', mt: 0.5, pt: 0.5 }}
+                        >
+                          📊 Total: <strong>{tab.total}</strong>
+                        </Box>
+                      </Box>
+                    }
+                    arrow
+                    placement="top"
+                  >
+                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                      {tab.label}
+                      <Label color={tab.color}>
+                        {tab.processed}/{tab.total}
+                      </Label>
+                    </Box>
+                  </CustomTooltip>
                 }
                 value={tab.value}
               />
@@ -230,29 +310,18 @@ const FinanceReconciliation = () => {
           </Tabs>
         </Box>
       </Card>
-      <FormSlider
-        steps={TABS}
-        isBackClick={isBack}
-        step={currentIndex}
-        containerProps={{
-          sx: {
-            p: 0,
-            minHeight: 0,
-          },
-        }}
-      >
-        <Box sx={{ height: '100%' }}>
-          {currentActiveComponent?.component && (
-            <currentActiveComponent.component
-              addOverviewDialog={addOverviewDialog}
-              addDiscrepancyDialog={addDiscrepancyDialog}
-              addBankStatementsDialog={addBankStatementsDialog}
-              handleClose={handleClose}
-              queryParams={queryParams}
-            />
-          )}
-        </Box>
-      </FormSlider>
+      <Box sx={{ height: '100%', flex: 1, overflow: 'hidden' }}>
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+            key={activeTab}
+            addOverviewDialog={addOverviewDialog}
+            addDiscrepancyDialog={addDiscrepancyDialog}
+            addBankStatementsDialog={addBankStatementsDialog}
+            handleClose={handleClose}
+            queryParams={queryParams}
+          />
+        )}
+      </Box>
     </Box>
   );
 };

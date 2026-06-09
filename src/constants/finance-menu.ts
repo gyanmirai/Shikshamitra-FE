@@ -200,7 +200,7 @@ const financeModule = {
             },
             {
               title: 'Adjustments',
-              path: financePaths.adjustments,
+              path: financePaths.fees.adjustments,
               _action: 'fee-adjustments',
               shortcutKey: 'Alt+F+2+J',
               shortcutKeyName: 'Alt+F+2+J',

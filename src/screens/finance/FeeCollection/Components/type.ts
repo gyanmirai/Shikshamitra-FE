@@ -148,9 +148,11 @@ export interface IPaymentFieldConfig {
   required?: boolean;
   min?: number;
   max?: number;
+  maxLength?: number;
   pattern?: string;
   patternMessage?: string;
   options?: string[];
+  isDefaultToday?: boolean;
 }
 
 export type IPaymentMethodsConfig = Record<string, IPaymentFieldConfig[]>;

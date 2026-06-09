@@ -71,6 +71,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   );
 
   const handleAmountChange = (month: string, refundable: number, value: number): void => {
+    // Clamp to refundable/adjustable amount for both modes
     const clamped = Math.min(Math.max(0, value), refundable);
     const refunds = formik.values.feeHeadRefunds;
     const updated = refunds.map((fh) =>
@@ -114,6 +115,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
         selectedMonths={selectedMonths}
         isOpen={open}
         totalRefundInput={totalRefundInput}
+        mode={mode}
         onCheckboxToggle={onToggleAll}
         onExpandToggle={() => setOpen((o) => !o)}
       />
@@ -137,6 +139,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
                 isDisabled={refundable === 0}
                 refundValue={refundValue}
                 showInputError={inputError}
+                mode={mode}
                 onToggle={() => onToggleMonth(item.month, (item as any).dueFeeId ?? '')}
                 onAmountChange={(value) => handleAmountChange(item.month, refundable, value)}
               />

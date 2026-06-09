@@ -19,6 +19,7 @@ export interface RefundMonthRowProps {
   isDisabled: boolean;
   refundValue: number;
   showInputError: boolean;
+  mode?: 'refund' | 'adjustment';
   onToggle: () => void;
   /** Receives the parsed float value from react-number-format's onValueChange. */
   onAmountChange: (value: number) => void;
@@ -30,12 +31,16 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
   isDisabled,
   refundValue,
   showInputError,
+  mode = 'refund',
   onToggle,
   onAmountChange,
 }): React.ReactElement => {
   const theme = useTheme();
+  const isAdj = mode === 'adjustment';
   const refundable = Math.max(0, item.paid - item.refunded);
   const isFullyRefunded = refundable === 0;
+
+  // Disable row if not selectable (only check refundable for both modes)
   const effectivelyDisabled = isDisabled || isFullyRefunded;
 
   return (
@@ -101,7 +106,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
         {formatCurrency(item.paid)}
       </Typography>
 
-      {/* Refunded */}
+      {/* Refunded/Adjusted */}
       <Typography
         variant="body2"
         fontWeight={item.refunded > 0 ? 600 : 400}
@@ -111,17 +116,17 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
         {formatCurrency(item.refunded)}
       </Typography>
 
-      {/* Refundable */}
+      {/* Adjustable/Refundable amount */}
       <Typography
         variant="body2"
         fontWeight={refundable > 0 ? 600 : 400}
-        color={refundable > 0 ? 'success.main' : 'text.disabled'}
+        color={refundable > 0 ? (isAdj ? 'info.main' : 'success.main') : 'text.disabled'}
         sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
         {formatCurrency(refundable)}
       </Typography>
 
-      {/* Refund amount input or placeholder */}
+      {/* Refund/Adjustment amount input or placeholder */}
       <Box sx={{ width: 124, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
         {isSelected ? (
           <NumericFormatCustom
@@ -129,7 +134,9 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
             value={refundValue}
             onValueChange={(vals) => onAmountChange(vals.floatValue ?? 0)}
             onClick={(e) => e.stopPropagation()}
-            isAllowed={({ floatValue }) => floatValue === undefined || floatValue <= refundable}
+            isAllowed={
+              ({ floatValue }) => floatValue === undefined || floatValue <= refundable // Limit to refundable/adjustable for both modes
+            }
             error={showInputError}
             helperText={
               showInputError
