@@ -19,7 +19,6 @@ const toComparableString = (structures: any[]): string =>
         isOneTime: fh.isOneTime,
         isOptional: fh.isOptional,
         isRefundable: fh.isRefundable,
-        paymentTermId: fh.paymentTermId,
       })),
     }))
   );

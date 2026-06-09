@@ -38,7 +38,6 @@ const mapToCardModel = (
     isOneTime: fh.isOneTime ?? false,
     isOptional: fh.isOptional ?? false,
     isRefundable: fh.isRefundable ?? false,
-    // paymentTermId: fh.paymentTermId ?? '',
     paybleMonth: fh.payableMonth ?? null,
     payableYear: fh.payableYear ?? null,
   })),

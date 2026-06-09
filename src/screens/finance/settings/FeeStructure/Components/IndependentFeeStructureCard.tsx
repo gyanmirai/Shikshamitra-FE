@@ -28,13 +28,11 @@ import {
   Chip,
   Grid,
   Stack,
-  Button,
   Tooltip,
   Accordion,
   TextField,
   IconButton,
   Typography,
-  Autocomplete,
   AccordionDetails,
   AccordionSummary,
 } from '@mui/material';
@@ -99,6 +97,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLocking, setIsLocking] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const isNew = !cardId;
   const isLocked = status === FeeStructureLockStatusType.Locked;
@@ -147,17 +146,16 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const COLUMNS = [
     { label: '#', size: 0.5, align: 'left' },
-    { label: 'Fee Head', size: 1.5, align: 'left' },
-    { label: 'Amount', size: 1.3, align: 'left' },
+    { label: 'Fee Head', size: 2.0, align: 'left' },
+    { label: 'Amount', size: 1.8, align: 'left' },
     { label: 'One Time', size: 1.5, align: 'center' },
-    { label: 'Payable Month', size: 2, align: 'left' },
+    { label: 'Payable Month', size: 2.5, align: 'left' },
     {
       label: 'Optional',
-      size: 1.5,
+      size: 1.7,
       align: 'center',
       desc: 'This is an optional fee head, it may or may not be applicable to all students. Select applicable students accordingly when you assign fee structures.',
     },
-    { label: 'Payment Term', size: 1.5, align: 'left' },
     {
       label: 'Refundable',
       size: 1.5,
@@ -167,12 +165,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     { label: '', size: 0.5, align: 'left' },
   ];
 
-  const PAYMENT_TERM_OPTIONS = [
-    { label: 'Monthly', value: 'monthly' },
-    { label: 'Quarterly', value: 'quarterly' },
-    { label: 'Yearly', value: 'yearly' },
-  ];
-
+  console.log('------formik', formik.errors);
   useEffect(() => {
     onDirtyChange?.(isEditing && (isNew || formik.dirty));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -182,6 +175,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const discardEdit = () => {
     formik.resetForm();
+    setSubmitAttempted(false);
     setIsEditing(false);
   };
 
@@ -210,11 +204,14 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const getFeeHeadError = (idx: number, field: string): string | undefined => {
     const errors = formik.errors.feeHeads as any;
+    if (!errors?.[idx]?.[field]) return undefined;
+    if (submitAttempted) return errors[idx][field];
     const touched = formik.touched.feeHeads as any;
-    return touched?.[idx]?.[field] && errors?.[idx]?.[field] ? errors[idx][field] : undefined;
+    return touched?.[idx]?.[field] ? errors[idx][field] : undefined;
   };
 
   const handleSave = async () => {
+    setSubmitAttempted(true);
     formik.setTouched({
       name: true,
       feeHeads: formik.values.feeHeads.map(() => ({ paybleMonth: true, amount: true })) as any,
@@ -257,6 +254,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         });
         setIsEditing(false);
         setIsSaving(false);
+        setSubmitAttempted(false);
         onSaved?.({ ...initialData, ...saved, _id: newId });
         shikshaMitraToast.success({ message: 'Fee structure created successfully' });
       } else {
@@ -277,6 +275,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         });
         setIsEditing(false);
         setIsSaving(false);
+        setSubmitAttempted(false);
         onSaved?.({ ...initialData, ...saved, _id: cardId });
         shikshaMitraToast.success({ message: 'Fee structure updated successfully' });
       }
@@ -348,7 +347,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               borderBottom: `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.08)}`,
               borderRadius: '10px 10px 0 0',
             },
-            '& .MuiAccordionSummary-content': {
+            '& .MuiAccordionSummary-content-expanded': {
               alignItems: 'center',
               gap: 1.5,
               my: 0.75,
@@ -357,7 +356,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             },
           }}
         >
-          <Box display="flex" alignItems="center" gap={1.5} flex={1} minWidth={0} overflow="hidden">
+          <Box display="flex" alignItems="center" gap={1.5} flex={1} minWidth={0}>
             <Box
               sx={{
                 width: 28,
@@ -377,7 +376,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             </Box>
 
             {isEditing && !isLocked ? (
-              <Box sx={{ overflow: 'visible', pt: '6px' }}>
+              <Box sx={{ width: 220, flexShrink: 0, overflow: 'visible', pt: '6px' }}>
                 <TextField
                   size="small"
                   name="name"
@@ -390,12 +389,11 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
                   sx={{
-                    maxWidth: 260,
-                    mb: 2,
+                    width: '100%',
+                    mb: 1.5,
                     '& .MuiFormHelperText-root': {
-                      // horizontal padding
-                      mr: 0, // top spacing
-                      ml: 0, // remove default margin if needed
+                      mr: 0,
+                      ml: 0,
                       overflow: 'visible',
                     },
                   }}
@@ -403,7 +401,12 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 />
               </Box>
             ) : (
-              <Typography variant="subtitle2" fontWeight={700} noWrap>
+              <Typography
+                variant="subtitle2"
+                fontWeight={700}
+                noWrap
+                sx={{ maxWidth: 260, flexShrink: 0 }}
+              >
                 {formik.values.name || `Fee Structure ${index + 1}`}
               </Typography>
             )}
@@ -413,7 +416,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               color="success"
               size="small"
               variant="soft"
-              sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11 }}
+              sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
             />
 
             {formik.values.feeHeads.length > 0 && (
@@ -425,12 +428,14 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 sx={{ fontWeight: 500, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
               />
             )}
+
             {formik.touched.feeHeads && typeof formik.errors.feeHeads === 'string' && (
               <Tooltip title={formik.errors.feeHeads}>
                 <Iconify
                   icon="mdi:alert-circle-outline"
                   color={theme.palette.error.main}
                   width={16}
+                  sx={{ flexShrink: 0 }}
                 />
               </Tooltip>
             )}
@@ -442,11 +447,12 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 color="error"
                 size="small"
                 variant="soft"
-                sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
+                sx={{ fontWeight: 500, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
               />
             )}
-            {isLocked ? (
-              <Box>
+
+            <Box flex={1} display="flex" alignItems="center" minWidth={0} mr={1}>
+              {isLocked ? (
                 <Box
                   sx={{
                     display: 'flex',
@@ -459,14 +465,27 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                     gap: 1.2,
                   }}
                 >
-                  <Iconify icon="mdi:lock" color={theme.palette.warning.main} width={15} />
-                  <Typography variant="caption" color="warning.main" fontWeight="bold">
+                  <Iconify
+                    icon="mdi:lock"
+                    color={theme.palette.warning.main}
+                    width={15}
+                    flexShrink={0}
+                  />
+                  <Typography
+                    variant="caption"
+                    color="warning.main"
+                    fontWeight="bold"
+                    sx={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
                     This fee structure is locked. Changes are restricted.
                   </Typography>
                 </Box>
-              </Box>
-            ) : (
-              <Box>
+              ) : (
                 <Box
                   sx={{
                     display: 'flex',
@@ -483,14 +502,25 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                     icon="solar:info-circle-bold"
                     color={theme.palette.info.main}
                     width={15}
+                    flexShrink={0}
                   />
-                  <Typography variant="caption" color="info.main" fontWeight="bold">
+                  <Typography
+                    variant="caption"
+                    color="info.main"
+                    fontWeight="bold"
+                    sx={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
                     Lock this fee structure for assigning it to students. Changes will be restricted
                     after locking.
                   </Typography>
                 </Box>
-              </Box>
-            )}
+              )}
+            </Box>
           </Box>
 
           <Box
@@ -502,15 +532,22 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             mr={2}
           >
             {isEditing && !isLocked && (
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Iconify icon="lucide:plus" width={14} />}
-                onClick={addFeeHeadDialog.onTrue}
-                sx={{ fontSize: 12 }}
-              >
-                Fee Head
-              </Button>
+              <Tooltip title="Add Fee Head">
+                <IconButton
+                  size="small"
+                  color="primary"
+                  onClick={addFeeHeadDialog.onTrue}
+                  sx={{
+                    borderRadius: 1,
+                    border: `1px solid ${varAlpha(theme.palette.primary.mainChannel, 0.2)}`,
+                    '&:hover': {
+                      bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.16),
+                    },
+                  }}
+                >
+                  <Iconify icon="lucide:plus" width={16} />
+                </IconButton>
+              </Tooltip>
             )}
 
             {!isNew && !isLocked && !isEditing && (
@@ -525,28 +562,44 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               <>
                 {!isNew && (
                   <Tooltip title="Discard Changes">
-                    <Button
+                    <IconButton
                       size="small"
-                      variant="outlined"
+                      color="warning"
                       onClick={discardEdit}
-                      sx={{ borderRadius: 1 }}
-                      startIcon={<Iconify icon={GlobalIcons.cancel} width={14} />}
+                      sx={{
+                        borderRadius: 1,
+                        border: `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.2)}`,
+                        '&:hover': {
+                          bgcolor: varAlpha(theme.palette.warning.mainChannel, 0.16),
+                        },
+                      }}
                     >
-                      Cancel
-                    </Button>
+                      <Iconify icon={GlobalIcons.cancel} width={16} />
+                    </IconButton>
                   </Tooltip>
                 )}
-                <LoadingButton
-                  variant="contained"
-                  size="small"
-                  loading={isSaving}
-                  startIcon={<Iconify icon={GlobalIcons.submit} width={14} />}
-                  onClick={handleSave}
-                  disabled={!isNew && !formik.dirty}
-                  sx={{ fontSize: 12 }}
-                >
-                  {isNew ? 'Save' : 'Update'}
-                </LoadingButton>
+                <Tooltip title={isNew ? 'Save' : 'Update'}>
+                  <span>
+                    <LoadingButton
+                      size="small"
+                      color="success"
+                      loading={isSaving}
+                      onClick={handleSave}
+                      disabled={!isNew && !formik.dirty}
+                      sx={{
+                        minWidth: 0,
+                        p: 0.6,
+                        borderRadius: 1,
+                        border: `1px solid ${varAlpha(theme.palette.success.mainChannel, 0.2)}`,
+                        '&:hover': {
+                          border: `1px solid ${varAlpha(theme.palette.success.mainChannel, 0.5)}`,
+                        },
+                      }}
+                    >
+                      <Iconify icon={GlobalIcons.submit} width={16} />
+                    </LoadingButton>
+                  </span>
+                </Tooltip>
               </>
             )}
 
@@ -581,7 +634,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                     size="small"
                     sx={{
                       minWidth: 0,
-                      p: 0.6,
+                      p: 0.8,
                       borderRadius: '50%',
                       bgcolor: isLocked ? theme.palette.grey[500] : theme.vars.palette.success.main,
                       '&:hover': {
@@ -678,13 +731,13 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         </Typography>
                       </Grid>
 
-                      <Grid size={1.5} sx={{ pr: 1, pt: 0.75 }}>
+                      <Grid size={2.0} sx={{ pr: 1, pt: 0.75 }}>
                         <Typography variant="body2" noWrap>
                           {item.feeHeadName}
                         </Typography>
                       </Grid>
 
-                      <Grid size={1.3} sx={{ pr: 1 }}>
+                      <Grid size={1.8} sx={{ pr: 1 }}>
                         <NumericFormatCustom
                           size="small"
                           fullWidth
@@ -749,7 +802,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         </Box>
                       </Grid>
 
-                      <Grid size={2} sx={{ pr: 1, display: 'flex', flexDirection: 'column' }}>
+                      <Grid size={2.5} sx={{ pr: 1, display: 'flex', flexDirection: 'column' }}>
                         <CustomSelect
                           label="Month"
                           options={monthOptions}
@@ -780,7 +833,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         />
                       </Grid>
 
-                      <Grid size={1.5} display="flex" justifyContent="center" sx={{ pt: 0.5 }}>
+                      <Grid size={1.7} display="flex" justifyContent="center" sx={{ pt: 0.5 }}>
                         <Box
                           component="div"
                           onClick={() =>
@@ -819,27 +872,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                             Optional
                           </Typography>
                         </Box>
-                      </Grid>
-
-                      <Grid size={1.5}>
-                        <Autocomplete
-                          size="small"
-                          fullWidth
-                          options={PAYMENT_TERM_OPTIONS}
-                          getOptionLabel={(option) => option.label}
-                          isOptionEqualToValue={(option, value) => option.value === value.value}
-                          value={
-                            PAYMENT_TERM_OPTIONS.find(
-                              (option) => option.value === item.paymentTermId
-                            ) ?? null
-                          }
-                          onChange={(_, selectedOption) =>
-                            updateFeeHead(idx, 'paymentTermId', selectedOption?.value ?? '')
-                          }
-                          disabled={!isEditing || isLocked}
-                          clearIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}
-                          renderInput={(params) => <TextField {...params} />}
-                        />
                       </Grid>
 
                       <Grid size={1.5} display="flex" justifyContent="center" sx={{ pt: 0.5 }}>
@@ -931,7 +963,19 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       <CustomDialog
         open={addFeeHeadDialog.value}
         handleClose={addFeeHeadDialog.onFalse}
-        title="Add Fee Head"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Add Fee Head</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="You can add existing fee heads to this fee structure."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <AddFeeHeadToCardDialog
           existingFeeHeadIds={new Set(formik.values.feeHeads.map((fh) => fh.feeHeadId))}

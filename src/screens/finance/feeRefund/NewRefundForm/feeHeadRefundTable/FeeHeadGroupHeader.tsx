@@ -25,8 +25,8 @@ export interface FeeHeadGroupHeaderProps {
   totalRefundInput: number;
   onCheckboxToggle: () => void;
   onExpandToggle: () => void;
-  applyInAllState?: { isApplying: boolean; amount: number };
-  onApplyInAllAmountChange?: (amount: number) => void;
+  applyInAllState?: { isApplying: boolean; amount: number | string };
+  onApplyInAllAmountChange?: (amount: number | string) => void;
   onApplyInAllToggle?: () => void;
   mode?: 'refund' | 'adjustment';
 }
@@ -38,7 +38,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   totalRefundInput,
   onCheckboxToggle,
   onExpandToggle,
-  applyInAllState = { isApplying: false, amount: 0 },
+  applyInAllState = { isApplying: false, amount: '' },
   onApplyInAllAmountChange,
   onApplyInAllToggle,
   mode = 'refund',
@@ -122,11 +122,11 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
           <NumericFormatCustom
             size="small"
             value={applyInAllState.amount}
-            onValueChange={(vals) => onApplyInAllAmountChange?.(vals.floatValue ?? 0)}
+            onValueChange={(vals) => onApplyInAllAmountChange?.(vals.value)}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            placeholder="0"
+            placeholder=""
             inputProps={{
-              min: 0,
+              // min: 0,
               style: {
                 textAlign: 'right',
                 fontSize: 13,
@@ -147,7 +147,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
           />
           <Tooltip
             title={
-              applyInAllState.amount > 0
+              applyInAllState.amount !== '' && Number(applyInAllState.amount) >= 0
                 ? `Apply to ${selectedMonths.length} selected month${selectedMonths.length !== 1 ? 's' : ''}`
                 : 'Enter an amount first'
             }
@@ -157,31 +157,26 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
               control={
                 <Switch
                   size="small"
-                  checked={applyInAllState.isApplying && applyInAllState.amount > 0}
+                  checked={
+                    applyInAllState.isApplying &&
+                    applyInAllState.amount !== '' &&
+                    Number(applyInAllState.amount) >= 0
+                  }
                   onChange={(e) => {
                     e.stopPropagation();
                     onApplyInAllToggle?.();
                   }}
-                  disabled={applyInAllState.amount <= 0}
-                  sx={{
-                    p: 0,
-                    mr: 0.5,
-                  }}
+                  disabled={applyInAllState.amount === ''}
                 />
               }
-              label={
-                <Typography variant="caption" fontWeight={500} sx={{ fontSize: 11 }}>
-                  Apply to all
-                </Typography>
-              }
+              label="Apply to all"
               onClick={(e) => e.stopPropagation()}
-              sx={{
-                m: 0,
-
-                '& .MuiTypography-root': {
-                  userSelect: 'none',
-                },
-              }}
+              // sx={{
+              //   m: 0,
+              //   '& .MuiTypography-root': {
+              //     userSelect: 'none',
+              //   },
+              // }}
             />
           </Tooltip>
         </Box>

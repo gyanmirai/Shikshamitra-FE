@@ -13,7 +13,6 @@ export interface IClassWiseFeeItem {
   payableYear?: number;
   isOptional: boolean;
   isRefundable?: boolean;
-  paymentTermId?: string;
 }
 
 export interface IClassWiseFeeData {

@@ -17,11 +17,11 @@ export interface RefundMonthRowProps {
   item: IMonthItem;
   isSelected: boolean;
   isDisabled: boolean;
-  refundValue: number;
+  refundValue: number | string;
   showInputError: boolean;
   onToggle: () => void;
-  /** Receives the parsed float value from react-number-format's onValueChange. */
-  onAmountChange: (value: number) => void;
+  /** Receives the parsed string value from react-number-format's onValueChange. */
+  onAmountChange: (value: number | string) => void;
 }
 
 const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
@@ -127,7 +127,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
           <NumericFormatCustom
             size="small"
             value={refundValue}
-            onValueChange={(vals) => onAmountChange(vals.floatValue ?? 0)}
+            onValueChange={(vals) => onAmountChange(vals.value)}
             onClick={(e) => e.stopPropagation()}
             isAllowed={({ floatValue }) => floatValue === undefined || floatValue <= refundable}
             error={showInputError}
@@ -147,7 +147,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
                 fontVariantNumeric: 'tabular-nums',
               },
             }}
-            placeholder="0"
+            placeholder=""
             sx={{
               width: 114,
               '& .MuiOutlinedInput-root': {

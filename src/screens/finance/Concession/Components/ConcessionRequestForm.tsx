@@ -23,10 +23,6 @@ import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
 import {
-  useUploadDocumentsMutation,
-  useCreateConcessionRequestMutation,
-} from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
-import {
   Box,
   Grid,
   Card,
@@ -36,11 +32,18 @@ import {
   Button,
   Divider,
   Checkbox,
+  Skeleton,
   TextField,
   Typography,
   IconButton,
   Autocomplete,
 } from '@mui/material';
+import {
+  useUploadDocumentsMutation,
+  useGetConcessionRequestByIdQuery,
+  useCreateConcessionRequestMutation,
+  useUpdateConcessionRequestMutation,
+} from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import ConcessionDocumentList from './ConcessionDocumentList';
 import ValueEntryStep from './ConcessionSteps/ValueEntryStep';
@@ -85,24 +88,69 @@ const paperSx = {
   '&:hover': { boxShadow: 4 },
 } as const;
 
-function buildInitialValues(editData: any): FormValues {
+function buildInitialValues(detailData?: any): FormValues {
+  if (detailData) {
+    const typeId = detailData.concessionTypeId;
+    const selectedFeeHeads: Record<string, string[]> = {};
+    const valueEntries: Record<string, Record<string, ValueEntry>> = {};
+
+    selectedFeeHeads[typeId] = [];
+    valueEntries[typeId] = {};
+
+    (detailData.feeHeadConcessions || []).forEach((fh: any) => {
+      selectedFeeHeads[typeId].push(fh.feeHeadId);
+      valueEntries[typeId][fh.feeHeadId] = {
+        basedOn: fh.basedOn,
+        amount: fh.amount,
+        netAmount: fh.netAmount,
+      };
+    });
+
+    const docs =
+      detailData.submittedDocuments?.map((d: any) => ({
+        documentId: d.documentId,
+        url: d.url,
+        status: d.status,
+      })) || [];
+
+    return {
+      boardId: detailData.boardId || '',
+      boardName: detailData.boardName || '',
+      mediumId: detailData.educationMediumId || '',
+      mediumName: detailData.educationMediumName || '',
+      standardId: detailData.standardId || '',
+      standardName: detailData.standardName || '',
+      divisionId: detailData.divisionId || '',
+      divisionName: detailData.divisionName || '',
+      studentId: detailData.studentId || '',
+      studentName: detailData.studentName || '',
+      selectedStudent: null,
+      concessionTypeId: typeId || '',
+      concessionTypeDocuments: [{ concessionTypeId: typeId, documents: docs }],
+      selectedFeeHeads,
+      valueEntries,
+      concessionRequestId: detailData.concessionRequestId || detailData.id || '',
+      remarks: detailData.remarks || '',
+    };
+  }
+
   return {
-    boardId: editData?.board || '',
-    boardName: editData?.boardName || '',
-    mediumId: editData?.medium || '',
-    mediumName: editData?.mediumName || '',
-    standardId: editData?.className || '',
-    standardName: editData?.standardName || '',
-    divisionId: editData?.division || '',
-    divisionName: editData?.divisionName || '',
-    studentId: editData?.studentId || '',
-    studentName: editData?.studentName || '',
+    boardId: '',
+    boardName: '',
+    mediumId: '',
+    mediumName: '',
+    standardId: '',
+    standardName: '',
+    divisionId: '',
+    divisionName: '',
+    studentId: '',
+    studentName: '',
     selectedStudent: null,
-    concessionTypeId: editData?.concessionTypeIds?.[0] || '',
+    concessionTypeId: '',
     concessionTypeDocuments: [],
     selectedFeeHeads: {},
     valueEntries: {},
-    concessionRequestId: editData?.id || '',
+    concessionRequestId: '',
     remarks: '',
   };
 }
@@ -138,6 +186,7 @@ function computeDiscount(
 // ---------------------------------------------------------------------------
 
 const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editData }) => {
+  const isEditMode = !!editData?.id;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const theme = useTheme();
 
@@ -146,6 +195,24 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
   const [allDivisions, setAllDivisions] = useState<any[]>([]);
 
   // -- API queries / mutations -----------------------------------------------
+
+  const {
+    data: concessionData,
+    isLoading: isLoadingConcession,
+    isFetching: isFetchingConcession,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetConcessionRequestByIdQuery,
+    params: {
+      concessionRequestId: editData?.id,
+    },
+    options: { skip: !editData?.id },
+  });
+
+  const [updateConcessionRequest, { isLoading: updateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateConcessionRequestMutation,
+  });
 
   const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -198,7 +265,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
    */
   const feeHeadsRef = useRef<any[]>([]);
 
-  const initialValues = useMemo(() => buildInitialValues(editData), [editData]);
+  const initialValues = useMemo(() => buildInitialValues(concessionData?.data), [concessionData]);
 
   const formik = useFormik<FormValues>({
     initialValues,
@@ -236,16 +303,34 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
           };
         });
 
-        const res: any = await createConcessionRequest({
-          academicYearId: currentYear?.id,
-          studentId: values.studentId,
-          concessionTypeId: typeId,
-          remarks: values.remarks,
-          feeHeadConcessions,
-        }).unwrap();
+        const isEditing = !!(editData?.id && values.concessionRequestId);
+        let res: any;
+
+        if (isEditing) {
+          res = await updateConcessionRequest({
+            concessionRequestId: values.concessionRequestId,
+            academicYearId: currentYear?.id,
+            studentId: values.studentId,
+            concessionTypeId: typeId,
+            remarks: values.remarks,
+            feeHeadConcessions,
+          }).unwrap();
+        } else {
+          res = await createConcessionRequest({
+            academicYearId: currentYear?.id,
+            studentId: values.studentId,
+            concessionTypeId: typeId,
+            remarks: values.remarks,
+            feeHeadConcessions,
+          }).unwrap();
+        }
 
         const reqId =
-          res?.data?.concessionRequestId || res?.concessionRequestId || res?.data?.id || res?.id;
+          res?.data?.concessionRequestId ||
+          res?.concessionRequestId ||
+          res?.data?.id ||
+          res?.id ||
+          values.concessionRequestId;
 
         if (!reqId) throw new Error('Failed to get concession request ID from response');
 
@@ -263,7 +348,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
           await uploadDocuments({ concessionRequestId: reqId, documents: flatDocs }).unwrap();
         }
 
-        shikshaMitraToast.success({ message: 'Concession request created successfully' });
+        shikshaMitraToast.success({
+          message: `Concession request ${isEditing ? 'updated' : 'created'} successfully`,
+        });
         onClose(null, true);
       } catch (err: any) {
         shikshaMitraToast.error({
@@ -380,7 +467,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
     },
     [values.concessionTypeDocuments]
   );
-
+  console.log('formik initial values---', formik.initialValues);
+  console.log('formik values-------------', formik.values);
   // -- Side effects ----------------------------------------------------------
 
   useEffect(() => {
@@ -406,14 +494,92 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
     }
   }, [getStudents, values.divisionId]);
 
-  // Reset fee head selections when concession type changes
+  // Reset fee head selections when concession type changes (skip in edit mode to preserve loaded data)
+  const prevConcessionTypeIdRef = useRef<string>('');
   useEffect(() => {
-    setFieldValue('selectedFeeHeads', {});
-    setFieldValue('valueEntries', {});
+    // In edit mode, the first time concessionTypeId is set from API data, don't clear
+    if (isEditMode && prevConcessionTypeIdRef.current === '') {
+      prevConcessionTypeIdRef.current = values.concessionTypeId;
+      return;
+    }
+    if (prevConcessionTypeIdRef.current !== values.concessionTypeId) {
+      prevConcessionTypeIdRef.current = values.concessionTypeId;
+      if (!isEditMode) {
+        setFieldValue('selectedFeeHeads', {});
+        setFieldValue('valueEntries', {});
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values.concessionTypeId]);
 
   // -- Render ----------------------------------------------------------------
+
+  if (isLoadingConcession || isFetchingConcession) {
+    return (
+      <Box sx={{ p: 1, height: '100%', overflow: 'auto' }}>
+        {/* Student Information skeleton */}
+        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 2 }}>
+          <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+            <Skeleton variant="circular" width={18} height={18} />
+            <Box>
+              <Skeleton variant="text" width={140} height={20} />
+              <Skeleton variant="text" width={220} height={16} />
+            </Box>
+          </Stack>
+          <Divider sx={{ mb: 2 }} />
+          <Grid container spacing={2}>
+            {[...Array(4)].map((_, i) => (
+              <Grid size={{ xs: 6, md: 3 }} key={i}>
+                <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
+              </Grid>
+            ))}
+            <Grid size={{ xs: 12 }}>
+              <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Concession Details skeleton */}
+        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 2 }}>
+          <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+            <Skeleton variant="circular" width={18} height={18} />
+            <Box>
+              <Skeleton variant="text" width={140} height={20} />
+              <Skeleton variant="text" width={200} height={16} />
+            </Box>
+          </Stack>
+          <Divider sx={{ mb: 2 }} />
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Skeleton variant="rounded" height={60} sx={{ borderRadius: 1 }} />
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Fee Head Mapping skeleton */}
+        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 2 }}>
+          <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+            <Skeleton variant="circular" width={18} height={18} />
+            <Box>
+              <Skeleton variant="text" width={130} height={20} />
+              <Skeleton variant="text" width={210} height={16} />
+            </Box>
+          </Stack>
+          <Divider sx={{ mb: 2 }} />
+          <Grid container spacing={1}>
+            {[...Array(8)].map((_, i) => (
+              <Grid size={{ xs: 6, sm: 4, md: 3 }} key={i}>
+                <Skeleton variant="rounded" height={52} sx={{ borderRadius: 1 }} />
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+      </Box>
+    );
+  }
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -450,6 +616,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                             labelKey="name"
                             valueKey="id"
                             value={values.boardId}
+                            disabled={isEditMode}
                             onChange={(val) => {
                               const board = boards.find((b) => b.id === val);
                               setFieldValue('boardId', val);
@@ -474,7 +641,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                         <ShakingTextField error={!!(touched.mediumId && errors.mediumId)}>
                           <CustomSelect
                             label="Medium *"
-                            disabled={!values.boardId}
+                            disabled={isEditMode || !values.boardId}
                             options={mediums}
                             labelKey="name"
                             valueKey="id"
@@ -501,7 +668,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                         <ShakingTextField error={!!(touched.standardId && errors.standardId)}>
                           <CustomSelect
                             label="Class *"
-                            disabled={!values.mediumId}
+                            disabled={isEditMode || !values.mediumId}
                             options={classes || []}
                             isLoading={classLoading}
                             labelKey="name"
@@ -527,7 +694,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                         <ShakingTextField error={!!(touched.divisionId && errors.divisionId)}>
                           <CustomSelect
                             label="Division *"
-                            disabled={!values.standardId}
+                            disabled={isEditMode || !values.standardId}
                             options={allDivisions}
                             labelKey="name"
                             valueKey="id"
@@ -552,7 +719,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                             loading={studentLoading || studentFetching}
                             noOptionsText="No Student Found"
                             fullWidth
-                            disabled={!values.divisionId}
+                            disabled={isEditMode || !values.divisionId}
                             options={studentOptions}
                             value={
                               studentOptions.find((s: any) => s.studentId === values.studentId) ||
@@ -693,12 +860,19 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                               value={
                                 concessionTypesList.find(
                                   (ct: any) => ct.id === values.concessionTypeId
-                                ) || null
+                                ) ||
+                                (isEditMode
+                                  ? {
+                                      id: values.concessionTypeId,
+                                      name: concessionData?.data?.concessionTypeName || '',
+                                    }
+                                  : null)
                               }
                               onChange={(_, newValue: any) => {
                                 setFieldValue('concessionTypeId', newValue?.id || '');
                                 setFieldValue('concessionTypeDocuments', []);
                               }}
+                              disabled={isEditMode}
                               size="small"
                               disableClearable
                               getOptionLabel={(option: any) => option.name || ''}
@@ -790,98 +964,124 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                         <Typography color="text.secondary" textAlign="center" py={2}>
                           Loading fee structure...
                         </Typography>
-                      ) : feeHeads.length === 0 ? (
-                        <Typography color="text.secondary" textAlign="center" py={2}>
-                          No fee heads available for this student.
-                        </Typography>
                       ) : (
-                        <Grid container spacing={1}>
-                          {feeHeads.map((fh: any) => {
-                            const isChecked = (
-                              values.selectedFeeHeads[values.concessionTypeId] || []
-                            ).includes(fh.feeHeadId);
+                        (() => {
+                          // In edit mode, fall back to feeHeadConcessions from API if feeStructureData hasn't loaded yet
+                          const displayFeeHeads =
+                            feeHeads.length > 0
+                              ? feeHeads
+                              : isEditMode
+                                ? (concessionData?.data?.feeHeadConcessions || []).map(
+                                    (fhc: any) => ({
+                                      feeHeadId: fhc.feeHeadId,
+                                      feeHeadName: fhc.feeHeadName,
+                                      amount: fhc.annualBaseAmount ?? fhc.amount ?? 0,
+                                      categoryName: '',
+                                    })
+                                  )
+                                : [];
+
+                          if (displayFeeHeads.length === 0) {
                             return (
-                              <Grid size={{ xs: 6, sm: 4, md: 3 }} key={fh.feeHeadId}>
-                                <Box
-                                  onClick={() =>
-                                    handleFeeHeadToggle(values.concessionTypeId, fh.feeHeadId)
-                                  }
-                                  sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    border: '1.5px solid',
-                                    borderColor: isChecked ? 'primary.main' : 'divider',
-                                    borderRadius: '8px',
-                                    p: '6px 10px',
-                                    cursor: 'pointer',
-                                    bgcolor: isChecked
-                                      ? 'rgba(25,118,210,0.08)'
-                                      : 'background.paper',
-                                    transition: 'all 0.2s ease',
-                                    boxShadow: isChecked
-                                      ? '0 1px 6px rgba(25,118,210,0.14)'
-                                      : 'none',
-                                    '&:hover': {
-                                      borderColor: 'primary.light',
-                                      bgcolor: 'action.hover',
-                                    },
-                                  }}
-                                >
-                                  <Box
-                                    sx={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      minWidth: 0,
-                                      gap: 1,
-                                    }}
-                                  >
-                                    <Checkbox
-                                      size="small"
-                                      checked={isChecked}
-                                      onChange={() =>
+                              <Typography color="text.secondary" textAlign="center" py={2}>
+                                No fee heads available for this student.
+                              </Typography>
+                            );
+                          }
+
+                          return (
+                            <Grid container spacing={1}>
+                              {displayFeeHeads.map((fh: any) => {
+                                const isChecked = (
+                                  values.selectedFeeHeads[values.concessionTypeId] || []
+                                ).includes(fh.feeHeadId);
+                                return (
+                                  <Grid size={{ xs: 6, sm: 4, md: 3 }} key={fh.feeHeadId}>
+                                    <Box
+                                      onClick={() =>
                                         handleFeeHeadToggle(values.concessionTypeId, fh.feeHeadId)
                                       }
-                                      onClick={(e) => e.stopPropagation()}
-                                      sx={{ p: 0.25, flexShrink: 0 }}
-                                    />
-                                    <Box sx={{ minWidth: 0 }}>
+                                      sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        border: '1.5px solid',
+                                        borderColor: isChecked ? 'primary.main' : 'divider',
+                                        borderRadius: '8px',
+                                        p: '6px 10px',
+                                        cursor: 'pointer',
+                                        bgcolor: isChecked
+                                          ? 'rgba(25,118,210,0.08)'
+                                          : 'background.paper',
+                                        transition: 'all 0.2s ease',
+                                        boxShadow: isChecked
+                                          ? '0 1px 6px rgba(25,118,210,0.14)'
+                                          : 'none',
+                                        '&:hover': {
+                                          borderColor: 'primary.light',
+                                          bgcolor: 'action.hover',
+                                        },
+                                      }}
+                                    >
+                                      <Box
+                                        sx={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          minWidth: 0,
+                                          gap: 1,
+                                        }}
+                                      >
+                                        <Checkbox
+                                          size="small"
+                                          checked={isChecked}
+                                          onChange={() =>
+                                            handleFeeHeadToggle(
+                                              values.concessionTypeId,
+                                              fh.feeHeadId
+                                            )
+                                          }
+                                          onClick={(e) => e.stopPropagation()}
+                                          sx={{ p: 0.25, flexShrink: 0 }}
+                                        />
+                                        <Box sx={{ minWidth: 0 }}>
+                                          <Typography
+                                            variant="subtitle2"
+                                            color="text.primary"
+                                            fontWeight={isChecked ? 600 : 400}
+                                            noWrap
+                                          >
+                                            {fh.feeHeadName}
+                                          </Typography>
+                                          {fh.categoryName && (
+                                            <Typography variant="caption" noWrap display="block">
+                                              {fh.categoryName}
+                                            </Typography>
+                                          )}
+                                        </Box>
+                                      </Box>
                                       <Typography
                                         variant="subtitle2"
-                                        color="text.primary"
-                                        fontWeight={isChecked ? 600 : 400}
-                                        noWrap
+                                        color={isChecked ? 'primary.main' : 'text.secondary'}
+                                        sx={{
+                                          fontWeight: 700,
+                                          whiteSpace: 'nowrap',
+                                          ml: 0.5,
+                                          flexShrink: 0,
+                                        }}
                                       >
-                                        {fh.feeHeadName}
+                                        {new Intl.NumberFormat('en-IN', {
+                                          style: 'currency',
+                                          currency: 'INR',
+                                          maximumFractionDigits: 0,
+                                        }).format(fh.amount)}
                                       </Typography>
-                                      {fh.categoryName && (
-                                        <Typography variant="caption" noWrap display="block">
-                                          {fh.categoryName}
-                                        </Typography>
-                                      )}
                                     </Box>
-                                  </Box>
-                                  <Typography
-                                    variant="subtitle2"
-                                    color={isChecked ? 'primary.main' : 'text.secondary'}
-                                    sx={{
-                                      fontWeight: 700,
-                                      whiteSpace: 'nowrap',
-                                      ml: 0.5,
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    {new Intl.NumberFormat('en-IN', {
-                                      style: 'currency',
-                                      currency: 'INR',
-                                      maximumFractionDigits: 0,
-                                    }).format(fh.amount)}
-                                  </Typography>
-                                </Box>
-                              </Grid>
-                            );
-                          })}
-                        </Grid>
+                                  </Grid>
+                                );
+                              })}
+                            </Grid>
+                          );
+                        })()
                       )}
                     </Paper>
                   </Grid>
@@ -1085,12 +1285,14 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                   type="button"
                   variant="contained"
                   size="small"
-                  disabled={createLoading || uploadLoading || isAmountExceedingFees}
+                  disabled={
+                    createLoading || updateLoading || uploadLoading || isAmountExceedingFees
+                  }
                   startIcon={<Iconify icon={GlobalIcons.submit} />}
-                  loading={createLoading || uploadLoading}
+                  loading={createLoading || updateLoading || uploadLoading}
                   onClick={handleSubmit}
                 >
-                  Submit
+                  {editData?.id ? 'Update' : 'Submit'}
                 </LoadingButton>
               </Stack>
             </Box>

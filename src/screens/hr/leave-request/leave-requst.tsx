@@ -363,7 +363,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       }
     },
   });
-
+  console.log('formik valuees---', values);
   useEffect(() => {
     if (!editData) {
       resetForm();
