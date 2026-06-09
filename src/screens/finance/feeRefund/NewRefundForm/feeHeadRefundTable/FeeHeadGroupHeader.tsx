@@ -23,12 +23,12 @@ export interface FeeHeadGroupHeaderProps {
   selectedMonths: string[];
   isOpen: boolean;
   totalRefundInput: number;
+  mode?: 'refund' | 'adjustment';
   onCheckboxToggle: () => void;
   onExpandToggle: () => void;
   applyInAllState?: { isApplying: boolean; amount: number | string };
   onApplyInAllAmountChange?: (amount: number | string) => void;
   onApplyInAllToggle?: () => void;
-  mode?: 'refund' | 'adjustment';
 }
 
 const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
@@ -36,14 +36,15 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   selectedMonths,
   isOpen,
   totalRefundInput,
+  mode = 'refund',
   onCheckboxToggle,
   onExpandToggle,
   applyInAllState = { isApplying: false, amount: '' },
   onApplyInAllAmountChange,
   onApplyInAllToggle,
-  mode = 'refund',
 }): React.ReactElement => {
   const theme = useTheme();
+  const isAdj = mode === 'adjustment';
   const selectableItems = feeHead.items.filter((i) => Math.max(0, i.paid - i.refunded) > 0);
   const selectedCount = selectableItems.filter((i) => selectedMonths.includes(i.month)).length;
   const isAllSelected = selectableItems.length > 0 && selectedCount === selectableItems.length;
@@ -101,7 +102,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
         {feeHead.feeHeadName}
       </Typography>
 
-      {/* Refundable months pill */}
+      {/* Adjustable/Refundable months pill */}
       <Box
         sx={{
           px: 1,
@@ -112,7 +113,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
         }}
       >
         <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: 10 }}>
-          {selectableItems.length} refundable
+          {selectableItems.length} {isAdj ? 'adjustable' : 'refundable'}
         </Typography>
       </Box>
 

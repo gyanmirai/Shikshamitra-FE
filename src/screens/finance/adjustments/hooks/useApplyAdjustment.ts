@@ -1,77 +1,15 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
-  useApplyAdjustmentMutation,
-  useLazyGetAdjustmentPendingFeesQuery,
+  useApplyFeeAdjustmentMutation,
+  useLazyGetAdjustmentApplyContextQuery,
 } from 'src/redux/finance/adjustments/adjustmentApi';
 
 import type { AdjustmentRequest } from '../types/adjustment.types';
 import type {
   AdjustmentApplyItem,
   AdjustmentApplySummary,
-  AdjustmentPendingFeeDto,
-  ApplyAdjustmentRequestInput,
   ApplyAdjustmentDialogSubmitResult,
 } from '../types/adjustmentApply.types';
-
-const mapPendingFeesToItems = (fees: AdjustmentPendingFeeDto[]): AdjustmentApplyItem[] =>
-  fees
-    .map((fee) => ({
-      installmentId: fee.installmentId,
-      dueFeeId: fee.dueFeeId,
-      installmentLabel: fee.installmentLabel,
-      monthOrder: fee.monthOrder,
-      feeHeadId: fee.feeHeadId,
-      feeHeadName: fee.feeHeadName,
-      totalFees: fee.totalFees,
-      paidAmount: fee.paidAmount,
-      pendingAmount: fee.pendingAmount,
-      adjustableAmount: fee.pendingAmount,
-      appliedAmount: 0,
-      finalPendingAmount: fee.pendingAmount,
-      isSelected: false,
-    }))
-    .sort((a, b) => a.monthOrder - b.monthOrder);
-
-const mockPendingFeesFromAdjustment = (
-  adjustment: AdjustmentRequest
-): AdjustmentPendingFeeDto[] => [
-  {
-    installmentId: `${adjustment.id}-inst-1`,
-    dueFeeId: `${adjustment.id}-due-1`,
-    installmentLabel: 'Jul 2025',
-    monthOrder: 1,
-    feeHeadId: 'fee-head-tuition',
-    feeHeadName: 'Tuition Fee',
-    totalFees: 3000,
-    paidAmount: 1000,
-    pendingAmount: 2000,
-    dueAmount: 2000,
-  },
-  {
-    installmentId: `${adjustment.id}-inst-2`,
-    dueFeeId: `${adjustment.id}-due-2`,
-    installmentLabel: 'Aug 2025',
-    monthOrder: 2,
-    feeHeadId: 'fee-head-computer',
-    feeHeadName: 'Computer Fee',
-    totalFees: 1500,
-    paidAmount: 500,
-    pendingAmount: 1000,
-    dueAmount: 1000,
-  },
-  {
-    installmentId: `${adjustment.id}-inst-3`,
-    dueFeeId: `${adjustment.id}-due-3`,
-    installmentLabel: 'Sep 2025',
-    monthOrder: 3,
-    feeHeadId: 'fee-head-lab',
-    feeHeadName: 'Lab Fee',
-    totalFees: 1200,
-    paidAmount: 200,
-    pendingAmount: 1000,
-    dueAmount: 1000,
-  },
-];
 
 interface UseApplyAdjustmentArgs {
   open: boolean;
@@ -79,20 +17,21 @@ interface UseApplyAdjustmentArgs {
   approvedBy: string;
 }
 
-export const useApplyAdjustment = ({ open, adjustment, approvedBy }: UseApplyAdjustmentArgs) => {
-  const approvedAmount = adjustment?.adjustmentAmount ?? 0;
+export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs) => {
+  const approvedAmount =
+    adjustment?.remainingAdjustmentBalance ?? adjustment?.adjustmentAmount ?? 0;
   const [items, setItems] = useState<AdjustmentApplyItem[]>([]);
   const [notes, setNotes] = useState('');
   const [errorText, setErrorText] = useState('');
 
-  const [getPendingFees, pendingFeesResp] = useLazyGetAdjustmentPendingFeesQuery();
-  const [applyAdjustment, applyResp] = useApplyAdjustmentMutation();
+  const [getApplyContext, applyContextResp] = useLazyGetAdjustmentApplyContextQuery();
+  const [applyAdjustment, applyResp] = useApplyFeeAdjustmentMutation();
 
   useEffect(() => {
     let active = true;
 
     const loadPendingFees = async () => {
-      if (!open || !adjustment?.id || !adjustment.studentId) {
+      if (!open || !adjustment?.id) {
         if (active) {
           setItems([]);
           setNotes('');
@@ -102,17 +41,28 @@ export const useApplyAdjustment = ({ open, adjustment, approvedBy }: UseApplyAdj
       }
 
       try {
-        const result = await getPendingFees(
-          { studentId: adjustment.studentId, adjustmentId: adjustment.id },
-          true
-        ).unwrap();
-
+        const result = await getApplyContext(adjustment.id, true).unwrap();
         if (!active) return;
 
-        setItems(mapPendingFeesToItems(result.pendingFees || []));
-      } catch (_e) {
-        if (!active) return;
-        setItems(mapPendingFeesToItems(mockPendingFeesFromAdjustment(adjustment)));
+        setItems(
+          (result.pendingFees || []).map((fee) => ({
+            installmentId: fee.installmentId,
+            dueFeeId: fee.dueFeeId,
+            installmentLabel: fee.installmentLabel,
+            monthOrder: fee.monthOrder,
+            feeHeadId: fee.feeHeadId,
+            feeHeadName: fee.feeHeadName,
+            totalFees: fee.totalFees,
+            paidAmount: fee.paidAmount,
+            pendingAmount: fee.pendingAmount,
+            adjustableAmount: fee.maxApplicableAmount,
+            appliedAmount: 0,
+            finalPendingAmount: fee.pendingAmount,
+            isSelected: false,
+          }))
+        );
+      } catch {
+        if (active) setItems([]);
       }
     };
 
@@ -121,7 +71,7 @@ export const useApplyAdjustment = ({ open, adjustment, approvedBy }: UseApplyAdj
     return () => {
       active = false;
     };
-  }, [adjustment, getPendingFees, open]);
+  }, [adjustment?.id, getApplyContext, open]);
 
   const totalPendingFees = useMemo(
     () => items.reduce((sum, item) => sum + item.pendingAmount, 0),
@@ -174,10 +124,7 @@ export const useApplyAdjustment = ({ open, adjustment, approvedBy }: UseApplyAdj
           };
         }
 
-        return {
-          ...item,
-          isSelected: true,
-        };
+        return { ...item, isSelected: true };
       })
     );
   }, []);
@@ -276,39 +223,39 @@ export const useApplyAdjustment = ({ open, adjustment, approvedBy }: UseApplyAdj
       throw new Error('Select at least one installment and apply amount to continue.');
     }
 
-    const payload: ApplyAdjustmentRequestInput = {
-      adjustmentId: adjustment.id,
-      studentId: adjustment.studentId,
-      approvedBy,
-      approvalNotes: notes || undefined,
-      totalAppliedAmount,
-      remainingAdjustmentBalance,
-      lines: selectedLines,
+    const result = await applyAdjustment({
+      id: adjustment.id,
+      idempotencyKey: crypto.randomUUID(),
+      body: {
+        approvalNotes: notes || undefined,
+        allowPartialApply: true,
+        lines: selectedLines.map((line) => ({
+          dueFeeId: line.dueFeeId!,
+          feeHeadId: line.feeHeadId,
+          installmentLabel: line.installmentLabel,
+          appliedAmount: line.appliedAmount,
+        })),
+      },
+    }).unwrap();
+
+    const mapped: ApplyAdjustmentDialogSubmitResult = {
+      totalAppliedAmount: result.totalAppliedAmount,
+      remainingAdjustmentBalance: result.remainingAmount,
+      selectedInstallmentsCount: result.selectedInstallmentsCount,
+      lines: result.lines.map((line) => ({
+        installmentId: line.dueFeeId,
+        dueFeeId: line.dueFeeId,
+        feeHeadId: line.feeHeadId,
+        feeHeadName: line.feeHeadName,
+        installmentLabel: line.installmentLabel,
+        originalPendingAmount: line.originalPendingAmount,
+        appliedAmount: line.appliedAmount,
+        finalPendingAmount: line.finalPendingAmount,
+      })),
     };
 
-    try {
-      await applyAdjustment(payload).unwrap();
-    } catch (_e) {
-      // API fallback: local flow still proceeds to keep finance workflow operational.
-    }
-
-    const result: ApplyAdjustmentDialogSubmitResult = {
-      totalAppliedAmount,
-      remainingAdjustmentBalance,
-      selectedInstallmentsCount: selectedLines.length,
-      lines: selectedLines,
-    };
-
-    return result;
-  }, [
-    adjustment,
-    approvedBy,
-    notes,
-    totalAppliedAmount,
-    remainingAdjustmentBalance,
-    selectedLines,
-    applyAdjustment,
-  ]);
+    return mapped;
+  }, [adjustment, applyAdjustment, notes, selectedLines]);
 
   return {
     items,
@@ -316,7 +263,7 @@ export const useApplyAdjustment = ({ open, adjustment, approvedBy }: UseApplyAdj
     setNotes,
     errorText,
     summary,
-    isLoadingPendingFees: pendingFeesResp.isLoading || pendingFeesResp.isFetching,
+    isLoadingPendingFees: applyContextResp.isLoading || applyContextResp.isFetching,
     isSubmitting: applyResp.isLoading,
     setSelection,
     setAppliedAmount,

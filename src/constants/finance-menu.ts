@@ -75,7 +75,7 @@ export const financePermissions = {
     refund: `${defaultFinancePermissionName}Fees.Refund`,
     invoicesAndReceipts: `${defaultFinancePermissionName}Fees.InvoiceReceipt`,
     concessions: `${defaultFinancePermissionName}Fees.Concession`,
-    adjustments: `${defaultFinancePermissionName}Fees.Adjustment`,
+    adjustment: `${defaultFinancePermissionName}Fees.Adjustment`,
     settings: {
       root: `${defaultModulePermissionName}${defaultFinancePermissionName}Fees.Settings`,
       feeCategory: `${defaultFinancePermissionName}Settings.FeeCategory`,
@@ -103,7 +103,7 @@ export const financePermissions = {
   reports: `${defaultModulePermissionName}${defaultFinancePermissionName}Reports`,
   notification: `${defaultModulePermissionName}${defaultFinancePermissionName}Notification`,
   auditTrail: `${defaultModulePermissionName}${defaultFinancePermissionName}Auditing`,
-
+  adjustments: `${defaultFinancePermissionName}Fees.Adjustment`,
   // Legacy permissions (kept for backward compatibility)
   invoiceReceipt: `${defaultModulePermissionName}${defaultFinancePermissionName}InvoiceReceipt`,
   settings: {
@@ -202,9 +202,9 @@ const financeModule = {
               title: 'Adjustments',
               path: financePaths.fees.adjustments,
               _action: 'fee-adjustments',
-              shortcutKey: 'Alt+F+J',
-              shortcutKeyName: 'Alt+F+J',
-              permissionName: financePermissions.fees.adjustments,
+              shortcutKey: 'Alt+F+2+J',
+              shortcutKeyName: 'Alt+F+2+J',
+              permissionName: financePermissions.fees.adjustment,
               icon: menuIconView('mdi:tune-variant'),
             },
             {

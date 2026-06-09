@@ -9,14 +9,18 @@ import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import React, { useState, useEffect, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
-import { AdjustmentStatusEnum } from '../enums/adjustment.enum';
-import { ADJUSTMENT_TABS, ADJUSTMENT_STATUS_COLORS } from '../constants/adjustmentOptions';
+import {
+  ADJUSTMENT_TABS,
+  ADJUSTMENT_STATUS_COLORS,
+  formatAdjustmentStatusLabel,
+} from '../constants/adjustmentOptions';
 
+import type { AdjustmentTabEnum } from '../enums/adjustment.enum';
 import type { IAdjustmentTableProps } from '../types/adjustment.types';
 
 const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
@@ -25,6 +29,10 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   setSelectedBoard,
   selectedMedium,
   setSelectedMedium,
+  activeTab,
+  onTabChange,
+  tabCounts,
+  isLoading,
   onCreateAdjustment,
   onView,
 }) => {
@@ -32,7 +40,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const tabs = useTabs(AdjustmentStatusEnum.Pending);
+  const tabs = useTabs(activeTab);
 
   // Reset board + medium whenever the academic year changes
   useEffect(() => {
@@ -52,23 +60,6 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
     const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
     setMediums((board as unknown as Board)?.educationMediums ?? []);
   }, [currentYear?.boards, selectedBoard]);
-
-  const tabCounts = useMemo(
-    () =>
-      ADJUSTMENT_TABS.reduce(
-        (acc, tab) => {
-          acc[tab.value] = (data || []).filter((item) => item.status === tab.value).length;
-          return acc;
-        },
-        {} as Record<AdjustmentStatusEnum, number>
-      ),
-    [data]
-  );
-
-  const filteredData = useMemo(
-    () => (data || []).filter((item) => item.status === tabs.value),
-    [data, tabs.value]
-  );
 
   const renderActions = useCallback(
     (params: { row: any }) => {
@@ -140,7 +131,10 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
 
           <Tabs
             value={tabs.value}
-            onChange={tabs.onChange}
+            onChange={(_e, value) => {
+              tabs.onChange(_e, value);
+              onTabChange(value as AdjustmentTabEnum);
+            }}
             sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
           >
             {ADJUSTMENT_TABS.map((tab) => (
@@ -268,9 +262,13 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             maxWidth: 140,
             sticky: true,
             render: (value: any) => {
-              const statusKey = value as unknown as AdjustmentStatusEnum;
+              const statusKey = value as keyof typeof ADJUSTMENT_STATUS_COLORS;
               const color = (ADJUSTMENT_STATUS_COLORS[statusKey] ?? 'default') as LabelColor;
-              return <Label color={color}>{value}</Label>;
+              return (
+                <Label color={color}>
+                  {typeof value === 'number' ? formatAdjustmentStatusLabel(value) : value}
+                </Label>
+              );
             },
           },
           {
@@ -285,7 +283,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             render: (_v: any, row: any) => renderActions({ row }),
           },
         ]}
-        data={filteredData}
+        data={data}
       />
     </>
   );

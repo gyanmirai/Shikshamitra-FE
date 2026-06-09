@@ -9,6 +9,7 @@ import { Box, Alert, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useGetAdjustmentEligibilityQuery } from 'src/redux/finance/adjustments/adjustmentApi';
 import { useGetRefundEligibilityQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import FeeHeadGroup from './feeHeadRefundTable/FeeHeadGroup';
@@ -58,19 +59,26 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   const { studentId } = formik.values;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const {
-    data: eligibility,
-    isLoading,
-    isFetching,
-    refetch: refetchEligibility,
-  } = useGetRefundEligibilityQuery(
+  const skipEligibility = !studentId || !currentYear?.id;
+
+  const refundEligibility = useGetRefundEligibilityQuery(
     { studentId, academicYearId: currentYear?.id ?? '' },
-    { skip: !studentId || !currentYear?.id }
+    { skip: skipEligibility || isAdj }
   );
+
+  const adjustmentEligibility = useGetAdjustmentEligibilityQuery(
+    { studentId, academicYearId: currentYear?.id ?? '' },
+    { skip: skipEligibility || !isAdj }
+  );
+
+  const eligibility = isAdj ? adjustmentEligibility.data : refundEligibility.data;
+  const isLoading = isAdj ? adjustmentEligibility.isLoading : refundEligibility.isLoading;
+  const isFetching = isAdj ? adjustmentEligibility.isFetching : refundEligibility.isFetching;
+  const refetchEligibility = isAdj ? adjustmentEligibility.refetch : refundEligibility.refetch;
 
   useEffect(() => {
     if (studentId && currentYear?.id) {
-      refetchEligibility(); // Ensure the API is called when studentId or academicYearId changes
+      refetchEligibility();
     }
   }, [studentId, currentYear?.id, refetchEligibility]);
 
@@ -101,25 +109,31 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     return eligibility.feeHeads.map((fh) => ({
       feeHeadId: fh.feeHeadId,
       feeHeadName: fh.feeHeadName,
-      items: fh.months.map(
-        (m): IMonthItem => ({
+      items: fh.months.map((m): IMonthItem => {
+        const monthIndex = typeof m.month === 'number' ? m.month - 1 : 0;
+        const monthLabel = MONTH_NAMES[monthIndex] ?? `Month ${m.month}`;
+        const refunded = isAdj ? ((m as any).adjusted ?? 0) : ((m as any).refunded ?? 0);
+        const refundable = isAdj ? ((m as any).adjustable ?? 0) : ((m as any).refundable ?? 0);
+        const concession = (m as any).concession ?? 0;
+        return {
           dueFeeId: m.dueFeeId,
-          month: MONTH_NAMES[m.month] ?? `Month ${m.month}`,
+          month: monthLabel,
           year: m.year,
           total: m.total,
           paid: m.paid,
-          refunded: m.refunded,
-          refundable: m.refundable,
+          refunded,
+          refundable,
+          concession,
           status:
             m.paid >= m.total
               ? FeeCollectionStatusType.Paid
               : m.paid > 0
                 ? FeeCollectionStatusType.Pending
                 : FeeCollectionStatusType.Pending,
-        })
-      ),
+        };
+      }),
     }));
-  }, [eligibility]);
+  }, [eligibility, isAdj]);
 
   // Reset refund state when student changes
   useEffect(() => {

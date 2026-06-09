@@ -1,8 +1,5 @@
 import type { AdjustmentStatusEnum } from '../enums/adjustment.enum';
 
-/** @deprecated Use AdjustmentStatusEnum instead */
-export type AdjustmentStatus = AdjustmentStatusEnum;
-
 export interface PaidFeeDetail {
   receiptNo: string;
   paymentDate: string;
@@ -42,8 +39,9 @@ export interface AdjustmentRequest {
   adjustmentAmount: number;
   reason: string;
   remarks?: string;
-  status: AdjustmentStatus;
+  status: AdjustmentStatusEnum;
   requestedBy: string;
+  requestedByUserId?: string;
   approvedBy?: string;
   rejectedBy?: string;
   rejectionReason?: string;
@@ -83,6 +81,10 @@ export interface IAdjustmentTableProps {
   setSelectedBoard: (v: string) => void;
   selectedMedium: string;
   setSelectedMedium: (v: string) => void;
+  activeTab: import('../enums/adjustment.enum').AdjustmentTabEnum;
+  onTabChange: (tab: import('../enums/adjustment.enum').AdjustmentTabEnum) => void;
+  tabCounts: Record<import('../enums/adjustment.enum').AdjustmentTabEnum, number>;
+  isLoading?: boolean;
   onCreateAdjustment: (row: AdjustmentRequest) => void;
   onView: (row: AdjustmentRequest) => void;
 }
@@ -97,6 +99,8 @@ export interface IAdjustmentViewProps {
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
+  showApprove?: boolean;
+  showReject?: boolean;
 }
 
 export interface IAdjustmentApproveRejectProps {

@@ -26,7 +26,6 @@ import {
 } from '@mui/material';
 
 import AdjustmentAuditSection from './AdjustmentAuditSection';
-import { AdjustmentStatusEnum } from '../enums/adjustment.enum';
 import { ADJUSTMENT_STATUS_COLORS } from '../constants/adjustmentOptions';
 
 import type { IAdjustmentViewProps } from '../types/adjustment.types';
@@ -122,8 +121,9 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
   onClose,
   onApprove,
   onReject,
+  showApprove = false,
+  showReject = false,
 }) => {
-  const isPending = student.status === AdjustmentStatusEnum.Pending;
   const statusColor = (ADJUSTMENT_STATUS_COLORS[student.status] ?? 'default') as LabelColor;
 
   const infoItems = [
@@ -175,7 +175,7 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
               </Box>
             </Box>
             <Label color={statusColor} sx={{ fontWeight: 700, fontSize: 13 }}>
-              {student.status}
+              {formatAdjustmentStatusLabel(student.status)}
             </Label>
           </Box>
 
@@ -285,6 +285,44 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
           )}
         </Stack>
 
+        {student.applicationLines && student.applicationLines.length > 0 && (
+          <>
+            <Typography variant="subtitle2" fontWeight={700} mb={1}>
+              Applied Allocations
+            </Typography>
+            <Card
+              sx={{
+                mb: 2,
+                borderRadius: 2,
+                overflow: 'hidden',
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <ColHead>Installment</ColHead>
+                    <ColHead>Fee Head</ColHead>
+                    <ColHead align="right">Applied</ColHead>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {student.applicationLines.map((line, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell sx={{ px: 2, py: 1.25 }}>{line.installmentLabel}</TableCell>
+                      <TableCell sx={{ px: 2, py: 1.25 }}>{line.feeHeadName}</TableCell>
+                      <TableCell align="right" sx={{ px: 2, py: 1.25 }}>
+                        {formatCurrency(line.appliedAmount)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </>
+        )}
+
         {/* ── Paid Fee Records Table ─────────────────────────────── */}
         {student.paidFeeDetails && student.paidFeeDetails.length > 0 && (
           <>
@@ -377,26 +415,30 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
 
       {/* ── Actions ───────────────────────────────────────────────── */}
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        {isPending ? (
+        {showApprove || showReject ? (
           <>
-            <Button
-              variant="soft"
-              color="error"
-              size="small"
-              startIcon={<Iconify icon="mdi:close-circle-outline" />}
-              onClick={onReject}
-            >
-              Reject
-            </Button>
-            <Button
-              variant="soft"
-              color="success"
-              size="small"
-              startIcon={<Iconify icon="mdi:check-circle-outline" />}
-              onClick={onApprove}
-            >
-              Approve
-            </Button>
+            {showReject && (
+              <Button
+                variant="soft"
+                color="error"
+                size="small"
+                startIcon={<Iconify icon="mdi:close-circle-outline" />}
+                onClick={onReject}
+              >
+                Reject
+              </Button>
+            )}
+            {showApprove && (
+              <Button
+                variant="soft"
+                color="success"
+                size="small"
+                startIcon={<Iconify icon="mdi:check-circle-outline" />}
+                onClick={onApprove}
+              >
+                Approve & Apply
+              </Button>
+            )}
           </>
         ) : (
           <Button

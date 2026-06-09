@@ -233,6 +233,7 @@ export const financeModuleType = {
   charges: 'Charges',
   studentCharges: 'StudentCharges',
   feeRefund: 'FeeRefund',
+  feeAdjustment: 'FeeAdjustment',
   concession: 'Concession',
   concessionRequest: 'ConcessionRequest',
   incomeCategories: 'IncomeCategories',

@@ -9,6 +9,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -178,43 +179,67 @@ const OnlineGatewayTable = ({
         sticky: true,
         align: 'left',
         render(value, row: any) {
-          if (!canApproveReject) return null;
+          const handleDownloadReceipt = () => {
+            shikshaMitraToast.info({
+              message: 'Downloading receipt...',
+            });
+          };
+
           return (
             <MenuList>
-              <Box sx={{ display: 'flex' }}>
-                {row.status !== PaymentMethodsStatusType.Approved && (
-                  <IconButton
-                    onClick={() => {
-                      setIsClearCheck(false);
-                      setSelectedEntry({ ...row, type: 'approve' });
-                      isDialog.onTrue();
-                    }}
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      p: 0,
-                    }}
-                  >
-                    <Iconify icon="mdi:check-decagram" sx={{ color: 'success.main' }} />
-                  </IconButton>
-                )}
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                {row.status !== PaymentMethodsStatusType.Approved &&
+                  row.status !== PaymentMethodsStatusType.Rejected &&
+                  canApproveReject && (
+                    <>
+                      <CustomTooltip title="Approve Online Payment" arrow>
+                        <IconButton
+                          onClick={() => {
+                            setIsClearCheck(false);
+                            setSelectedEntry({ ...row, type: 'approve' });
+                            isDialog.onTrue();
+                          }}
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            p: 0,
+                          }}
+                        >
+                          <Iconify icon="mdi:check-decagram" sx={{ color: 'success.main' }} />
+                        </IconButton>
+                      </CustomTooltip>
 
-                {row.status !== PaymentMethodsStatusType.Rejected && (
+                      <CustomTooltip title="Reject Online Payment" arrow>
+                        <IconButton
+                          onClick={() => {
+                            setIsClearCheck(true);
+                            setSelectedEntry({ ...row, type: 'reject' });
+                            isDialog.onTrue();
+                          }}
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            p: 0,
+                          }}
+                        >
+                          <Iconify icon="mdi:close-circle" sx={{ color: 'error.main' }} />
+                        </IconButton>
+                      </CustomTooltip>
+                    </>
+                  )}
+
+                <CustomTooltip title="Download Receipt" arrow>
                   <IconButton
-                    onClick={() => {
-                      setIsClearCheck(true);
-                      setSelectedEntry({ ...row, type: 'reject' });
-                      isDialog.onTrue();
-                    }}
+                    onClick={handleDownloadReceipt}
                     sx={{
                       width: 36,
                       height: 36,
                       p: 0,
                     }}
                   >
-                    <Iconify icon="mdi:close-circle" sx={{ color: 'error.main' }} />
+                    <Iconify icon="mdi:download" sx={{ color: 'primary.main' }} />
                   </IconButton>
-                )}
+                </CustomTooltip>
               </Box>
             </MenuList>
           );
