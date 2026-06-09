@@ -49,10 +49,10 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // Get Seating Plan Dashboard Table
     // GET /api/academics/exams/seat-allocation → SeatAllocationDashboardResponseDto
     getSeatAllocationTableData: builder.query({
-      query: ({ standardId, page = 1, pageSize = 10 }) => ({
+      query: ({ standardId, IsRoomAssigned = true }) => ({
         url: `/academics/exams/seat-allocation`,
         method: 'GET',
-        params: { StandardId: standardId, Page: page, PageSize: pageSize },
+        params: { StandardId: standardId, IsRoomAssigned },
       }),
       providesTags: [academicType.seatAllocation],
     }),

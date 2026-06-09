@@ -108,7 +108,7 @@ const getTimelineEndHour = (): number => {
 // Start of the timeline (e.g., 7:00 AM)
 export const TIMELINE_START_HOUR = 7;
 export const TIMELINE_END_HOUR = getTimelineEndHour();
-export const SLOT_HEIGHT_BASE = 50; // px for 30 mins
+export const SLOT_HEIGHT_BASE = 72; // px for 30 mins
 export const MINUTE_HEIGHT_RATIO = SLOT_HEIGHT_BASE / 30;
 
 export const generateTimelineStamps = (

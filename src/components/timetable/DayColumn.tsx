@@ -5,6 +5,7 @@ import { Box, Chip, Menu, Tooltip, MenuItem, IconButton } from '@mui/material';
 import { Iconify } from '../iconify';
 import TimetableSlot from './TimetableSlot';
 import {
+  SLOT_HEIGHT_BASE,
   TIMELINE_END_HOUR,
   TIMELINE_START_HOUR,
   MINUTE_HEIGHT_RATIO as PIXELS_PER_MINUTE,
@@ -204,7 +205,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
         sx={{
           position: 'relative',
           height: dayHeight,
-          backgroundSize: '100% 50px',
+          backgroundSize: `100% ${SLOT_HEIGHT_BASE}px`,
           backgroundColor: theme.vars.palette.background.neutral,
           overflow: 'hidden',
           pointerEvents: isLocked ? 'none' : 'auto',

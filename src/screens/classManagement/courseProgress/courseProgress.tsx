@@ -397,21 +397,25 @@ const CourseProgressComponent = ({
                         filterType: 'date',
                         renderColumn: () => <EndToolTip />,
                         render(value, row) {
-                          const [day, month, year] = value.split('-');
-                          const endDate = new Date(`${year}-${month}-${day}`);
-                          const today = new Date();
-                          endDate.setHours(0, 0, 0, 0);
-                          today.setHours(0, 0, 0, 0);
+                          const isValidDate = value && value !== '-' && dayjs(value).isValid();
 
-                          const diffDays = Math.ceil(
-                            (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-                          );
+                          if (!isValidDate) {
+                            return (
+                              <Typography variant="caption" fontSize="13px">
+                                -
+                              </Typography>
+                            );
+                          }
+
+                          const endDate = dayjs(value).startOf('day');
+                          const today = dayjs().startOf('day');
+                          const diffDays = endDate.diff(today, 'day');
 
                           // If progress is 100%, use normal text color
                           if (row.progress === 100) {
                             return (
                               <Typography variant="caption" fontSize="13px">
-                                {dayjs(value).format('DD-MM-YYYY')}
+                                {endDate.format('DD-MM-YYYY')}
                               </Typography>
                             );
                           }
@@ -425,9 +429,10 @@ const CourseProgressComponent = ({
                           } else {
                             color = 'success.main'; // green
                           }
+
                           return (
                             <Typography variant="caption" fontSize="13px" sx={{ color }}>
-                              {value}
+                              {endDate.format('DD-MM-YYYY')}
                             </Typography>
                           );
                         },
@@ -523,21 +528,25 @@ const CourseProgressComponent = ({
                         filterType: 'date',
                         renderColumn: () => <EndToolTip />,
                         render(value, row) {
-                          const [day, month, year] = value.split('-');
-                          const endDate = new Date(`${year}-${month}-${day}`);
-                          const today = new Date();
-                          endDate.setHours(0, 0, 0, 0);
-                          today.setHours(0, 0, 0, 0);
+                          const isValidDate = value && value !== '-' && dayjs(value).isValid();
 
-                          const diffDays = Math.ceil(
-                            (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-                          );
+                          if (!isValidDate) {
+                            return (
+                              <Typography variant="caption" fontSize="13px">
+                                -
+                              </Typography>
+                            );
+                          }
+
+                          const endDate = dayjs(value).startOf('day');
+                          const today = dayjs().startOf('day');
+                          const diffDays = endDate.diff(today, 'day');
 
                           // If progress is 100%, use normal text color
                           if (row.progress === 100) {
                             return (
                               <Typography variant="caption" fontSize="13px">
-                                {value}
+                                {endDate.format('DD-MM-YYYY')}
                               </Typography>
                             );
                           }
@@ -551,9 +560,10 @@ const CourseProgressComponent = ({
                           } else {
                             color = 'success.main'; // green
                           }
+
                           return (
                             <Typography variant="caption" fontSize="13px" sx={{ color }}>
-                              {value}
+                              {endDate.format('DD-MM-YYYY')}
                             </Typography>
                           );
                         },

@@ -8,10 +8,13 @@ import { Iconify } from 'src/components/iconify';
 import { SubjectType } from 'src/enums/subject-type';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Card, Typography } from '@mui/material';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
+
+import type { ISubjectDetail } from '../type';
 
 interface SubjectSidebarProps {
   subjectAssignmentData: Record<string, any> | null;
@@ -29,10 +32,7 @@ const SubjectSidebar = ({
   classes,
 }: SubjectSidebarProps) => {
   const theme = useTheme();
-  const subjects = (subjectAssignmentData?.data?.subjects ?? []) as Array<{
-    subjectCode: string;
-    subjectName: string;
-  }>;
+  const subjects = (subjectAssignmentData?.data?.subjects ?? []) as ISubjectDetail[];
 
   return (
     <Card
@@ -120,14 +120,13 @@ const SubjectSidebar = ({
                   },
                 }}
               >
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: isSelected ? 'primary.main' : 'text.disabled',
-                    transition: 'background-color 0.2s',
-                  }}
+                <SubjectColorIndicator
+                  color={
+                    (sub as any).color ||
+                    sub.subject?.color ||
+                    (sub as any).subjectColor ||
+                    '#9E9E9E'
+                  }
                 />
                 <Typography
                   variant="subtitle2"

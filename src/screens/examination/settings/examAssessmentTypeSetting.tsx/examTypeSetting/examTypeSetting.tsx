@@ -162,6 +162,7 @@ const ExamTypeSettings = () => {
             isFilter: false,
             align: 'left',
             minWidth: 50,
+            width: 50,
             sticky: true,
             render(value, row) {
               return (

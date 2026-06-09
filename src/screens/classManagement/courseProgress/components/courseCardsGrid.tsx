@@ -129,7 +129,7 @@ export default function CourseCardsGrid({
               overflow: 'hidden',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               backgroundColor: (theme) =>
-                isSelected ? theme.palette.action.hover : theme.palette.background.paper,
+                isSelected ? theme.palette.action.hover : theme.vars.palette.background.paper,
               border: (theme) => `1px solid ${theme.palette.divider}`,
               '&:hover': {
                 backgroundColor: (theme) => theme.palette.action.hover,

@@ -56,6 +56,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
         id: 'action',
         label: 'Actions',
         minWidth: 60,
+        width: 60,
         align: 'left',
         isSort: false,
         sticky: true,

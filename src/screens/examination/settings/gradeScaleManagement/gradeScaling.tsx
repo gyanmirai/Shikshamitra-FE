@@ -151,6 +151,7 @@ const GradingScale = () => {
             isSort: false,
             sticky: true,
             minWidth: 50,
+            width: 50,
             align: 'left',
             isFilter: false,
             render(value, row) {

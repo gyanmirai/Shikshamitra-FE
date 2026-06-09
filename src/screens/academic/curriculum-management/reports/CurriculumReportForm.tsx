@@ -53,6 +53,7 @@ const CurriculumReportFieldsMap: Record<number, string[]> = {
     'classes',
     'divisions',
     'subjects',
+    'chapters',
   ],
   [CurriculumReportTitle.SubjectWiseChapterCoverage]: [
     'organization',
@@ -508,7 +509,7 @@ const CurriculumReportForm = ({
                       helperText={(formik.touched.chapters && formik.errors.chapters) as string}
                       options={chapterOptions}
                       multiple
-                      labelKey="name"
+                      labelKey="chapterName"
                       valueKey="id"
                       formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                       disabled={!classId || !subjectId}

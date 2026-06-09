@@ -452,6 +452,8 @@ const TimeTableGrid = () => {
         filterType: 'enum',
         enumOptions: TimetableStatusOptions,
         align: 'left',
+        width: 10,
+        minWidth: 10,
         render(value, row) {
           const color = TimetableStatusColors[value as TimetableStatusType] as LabelColor;
           return <Label color={color}>{TimetableStatusType[value]}</Label>;
@@ -461,6 +463,7 @@ const TimeTableGrid = () => {
         id: 'action',
         label: 'Action',
         minWidth: 40,
+        width: 40,
         align: 'left',
         sticky: true,
         isSort: false,

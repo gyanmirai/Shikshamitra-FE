@@ -126,7 +126,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               pop.onClose();
             }}
           >
-            <Iconify icon="mdi:comment-check-outline" />
+            <Iconify
+              icon="mdi:comment-check-outline"
+              sx={{ height: '16px', width: '16px', mr: -1 }}
+            />
             Give Feedback
           </MenuItem>
         )}

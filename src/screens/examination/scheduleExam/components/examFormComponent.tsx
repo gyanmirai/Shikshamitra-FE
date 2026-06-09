@@ -1,11 +1,12 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Tooltip } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -67,24 +68,45 @@ const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
   const hasContext = className || examName || subjects.length > 0;
 
   if (!hasContext || step === 0) return null;
-
   return (
     <Box
       sx={{
-        px: 2,
-        py: 1,
+        px: 2.5,
+        py: 1.25,
         display: 'flex',
         flexWrap: 'wrap',
-        gap: 0.75,
+        gap: 1,
         alignItems: 'center',
         borderBottom: '1px solid',
         borderColor: 'divider',
-        bgcolor: 'background.paper',
+        bgcolor: (theme) => varAlpha(theme.vars.palette.background.neutralChannel, 0.4),
+        backdropFilter: 'blur(8px)',
         position: 'sticky',
         top: 0,
         zIndex: 10,
       }}
     >
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={1}
+        sx={{ mr: 1.5, color: 'text.secondary' }}
+      >
+        <Iconify icon="solar:widget-5-bold-duotone" width={18} sx={{ color: 'primary.main' }} />
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            fontSize: '0.68rem',
+            color: 'text.secondary',
+          }}
+        >
+          Exam Details
+        </Typography>
+      </Stack>
+
       {examName && (
         <Tooltip title="Exam Name" arrow>
           <Chip
@@ -92,54 +114,115 @@ const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
             label={examName}
             size="small"
             variant="soft"
-            sx={{ fontWeight: 600, fontSize: '0.7rem', height: 22 }}
+            sx={{
+              fontWeight: 700,
+              fontSize: '0.72rem',
+              height: 24,
+              px: 0.5,
+              borderRadius: '8px',
+              border: '1px solid',
+              borderColor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
+            }}
           />
         </Tooltip>
       )}
-      {className && (
-        <Tooltip title="Class" arrow>
-          <Chip
-            icon={<Iconify icon="mdi:school-outline" width={14} />}
-            label={className}
-            size="small"
-            color="primary"
-            variant="soft"
-            sx={{ fontSize: '0.7rem', height: 22 }}
+
+      {(className || divisions.length > 0) && (
+        <>
+          <Iconify
+            icon="eva:arrow-ios-forward-fill"
+            width={14}
+            sx={{ color: 'text.disabled', mx: 0.25 }}
           />
-        </Tooltip>
+
+          <Stack direction="row" alignItems="center" spacing={0.75}>
+            {className && (
+              <Tooltip title="Class" arrow>
+                <Chip
+                  icon={<Iconify icon="mdi:school-outline" width={14} />}
+                  label={className}
+                  size="small"
+                  color="primary"
+                  variant="soft"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '0.72rem',
+                    height: 24,
+                    px: 0.5,
+                    borderRadius: '8px',
+                  }}
+                />
+              </Tooltip>
+            )}
+
+            {divisions.map((div: any) => (
+              <Tooltip key={div.id} title="Division" arrow>
+                <Chip
+                  label={`Div ${div.name}`}
+                  size="small"
+                  color="info"
+                  variant="soft"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '0.72rem',
+                    height: 24,
+                    px: 0.5,
+                    borderRadius: '8px',
+                  }}
+                />
+              </Tooltip>
+            ))}
+          </Stack>
+        </>
       )}
-      {divisions.map((div: any) => (
-        <Chip
-          key={div.id}
-          label={`Div ${div.name}`}
-          size="small"
-          color="info"
-          variant="soft"
-          sx={{ fontSize: '0.7rem', height: 22 }}
-        />
-      ))}
-      {subjects.slice(0, 5).map((sub: any) => (
-        <Chip
-          key={sub.subjectId}
-          label={sub.subjectName}
-          size="small"
-          variant="soft"
-          sx={{
-            fontSize: '0.7rem',
-            height: 22,
-            bgcolor: sub.subjectColor ? `${sub.subjectColor}22` : undefined,
-            color: sub.subjectColor || 'text.secondary',
-            '& .MuiChip-label': { fontWeight: 600 },
-          }}
-        />
-      ))}
-      {subjects.length > 5 && (
-        <Chip
-          label={`+${subjects.length - 5} more`}
-          size="small"
-          variant="soft"
-          sx={{ fontSize: '0.7rem', height: 22, color: 'text.secondary' }}
-        />
+
+      {subjects.length > 0 && (
+        <>
+          <Iconify
+            icon="eva:arrow-ios-forward-fill"
+            width={14}
+            sx={{ color: 'text.disabled', mx: 0.25 }}
+          />
+
+          <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap" useFlexGap>
+            {subjects.slice(0, 5).map((sub: any) => (
+              <Chip
+                key={sub.subjectId}
+                label={sub.subjectName}
+                size="small"
+                variant="soft"
+                sx={{
+                  fontSize: '0.72rem',
+                  height: 24,
+                  px: 0.5,
+                  borderRadius: '8px',
+                  bgcolor: sub.subjectColor ? `${sub.subjectColor}22` : undefined,
+                  color: sub.subjectColor || 'text.secondary',
+                  border: sub.subjectColor ? `1px solid ${sub.subjectColor}44` : undefined,
+                  '& .MuiChip-label': { fontWeight: 700 },
+                }}
+              />
+            ))}
+
+            {subjects.length > 5 && (
+              <Chip
+                label={`+${subjects.length - 5} more`}
+                size="small"
+                variant="soft"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '0.72rem',
+                  height: 24,
+                  px: 0.5,
+                  borderRadius: '8px',
+                  color: 'text.secondary',
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                }}
+              />
+            )}
+          </Stack>
+        </>
       )}
     </Box>
   );

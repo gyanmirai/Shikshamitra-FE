@@ -75,6 +75,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         id: 'action',
         label: 'Actions',
         minWidth: 60,
+        width: 60,
         isSort: false,
         align: 'left',
         sticky: true,
