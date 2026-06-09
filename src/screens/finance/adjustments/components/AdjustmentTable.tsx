@@ -53,8 +53,9 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({ onCreateAdjustment, 
       boardId: filterPayload.boardId,
       educationMediumId: filterPayload.educationMediumId,
       academicYearId: currentYear.id,
-      standardId: filterPayload.standardId,
-      divisionId: filterPayload.divisionId,
+      standardId: filterPayload.standardId === 'All Classes' ? undefined : filterPayload.standardId,
+      divisionId:
+        filterPayload.divisionId === 'All Divisions' ? undefined : filterPayload.divisionId,
       page: 1,
       pageSize: 100,
     };
@@ -137,35 +138,39 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({ onCreateAdjustment, 
 
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, mb: 1 }}>
-        <Box display="flex" justifyContent="space-between" flexWrap="wrap" gap={1}>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <FinanceAcademicContextFilter
-              boards={boards}
-              mediums={mediums}
-              selectedBoard={selectedBoard}
-              selectedMedium={selectedMedium}
-              onBoardChange={setSelectedBoard}
-              onMediumChange={setSelectedMedium}
-              selectSx={{ minWidth: '248px', width: '100%' }}
-            />
-            <FinanceClassDivisionFilter
-              classOptions={classOptions}
-              divisionOptions={divisionOptions}
-              selectedStandardId={selectedStandardId}
-              selectedDivisionId={selectedDivisionId}
-              isDivisionDisabled={isDivisionDisabled}
-              onClassChange={setSelectedStandardId}
-              onDivisionChange={setSelectedDivisionId}
-              classesLoading={classesLoading}
-              selectSx={{ minWidth: '248px', width: '100%' }}
-            />
-          </Box>
-
+      <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <FinanceAcademicContextFilter
+            boards={boards}
+            mediums={mediums}
+            selectedBoard={selectedBoard}
+            selectedMedium={selectedMedium}
+            onBoardChange={setSelectedBoard}
+            onMediumChange={setSelectedMedium}
+            selectSx={{ maxWidth: '248px', width: '100%' }}
+          />
+          <FinanceClassDivisionFilter
+            classOptions={classOptions}
+            divisionOptions={divisionOptions}
+            selectedStandardId={selectedStandardId}
+            selectedDivisionId={selectedDivisionId}
+            isDivisionDisabled={isDivisionDisabled}
+            onClassChange={setSelectedStandardId}
+            onDivisionChange={setSelectedDivisionId}
+            classesLoading={classesLoading}
+            selectSx={{ maxWidth: '248px', width: '100%' }}
+          />
+        </Box>
+      </Card>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
           <Tabs
             value={tabs.value}
             onChange={tabs.onChange}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
+            sx={{
+              '& .MuiTabs-flexContainer': { gap: 2 },
+              flexGrow: 1,
+            }}
           >
             {ADJUSTMENT_TABS.map((tab) => (
               <Tab

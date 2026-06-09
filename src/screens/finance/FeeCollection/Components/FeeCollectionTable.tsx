@@ -77,8 +77,10 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
       AcademicYearId: currentYear?.id,
       BoardId: filterPayload?.boardId,
       EducationMediumId: filterPayload?.educationMediumId,
-      StandardId: filterPayload?.standardId,
-      DivisionId: filterPayload?.divisionId,
+      StandardId:
+        filterPayload?.standardId === 'All Classes' ? undefined : filterPayload?.standardId,
+      DivisionId:
+        filterPayload?.divisionId === 'All Divisions' ? undefined : filterPayload?.divisionId,
       MaxResultCount: feeCollectionParams.pageSize,
       SkipCount: (feeCollectionParams.page - 1) * feeCollectionParams.pageSize,
       Search: feeCollectionParams.search || undefined,

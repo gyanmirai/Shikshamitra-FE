@@ -82,8 +82,10 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     params: {
       boardId: filterPayload?.boardId,
       educationMediumId: filterPayload?.educationMediumId,
-      standardId: filterPayload?.standardId,
-      divisionId: filterPayload?.divisionId,
+      standardId:
+        filterPayload?.standardId === 'All Classes' ? undefined : filterPayload?.standardId,
+      divisionId:
+        filterPayload?.divisionId === 'All Divisions' ? undefined : filterPayload?.divisionId,
     },
     options: {
       skip: !isReady,
@@ -140,57 +142,56 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, mb: 1 }}>
-        <Box display="flex" justifyContent="space-between">
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <FinanceAcademicContextFilter
-              boards={boards}
-              mediums={mediums}
-              selectedBoard={selectedBoard}
-              selectedMedium={selectedMedium}
-              onBoardChange={setSelectedBoard}
-              onMediumChange={setSelectedMedium}
-              selectSx={{ minWidth: '248px', width: '100%' }}
-            />
-            <FinanceClassDivisionFilter
-              classOptions={classOptions}
-              divisionOptions={divisionOptions}
-              selectedStandardId={selectedStandardId}
-              selectedDivisionId={selectedDivisionId}
-              isDivisionDisabled={isDivisionDisabled}
-              onClassChange={setSelectedStandardId}
-              onDivisionChange={setSelectedDivisionId}
-              classesLoading={classesLoading}
-              selectSx={{ minWidth: '248px', width: '100%' }}
-            />
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Tabs
-              value={tabs.value}
-              onChange={tabs.onChange}
-              sx={{
-                '& .MuiTabs-flexContainer': { gap: 2 },
-                flexGrow: 1,
-              }}
-            >
-              {TABS.map((tab) => (
-                <Tab
-                  key={String(tab.value)}
-                  value={tab.value}
-                  sx={{ fontSize: '12px' }}
-                  label={
-                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                      {tab.label}
-                      <Label color={tab.color as LabelColor}>{tab.count}</Label>
-                    </Box>
-                  }
-                />
-              ))}
-            </Tabs>
-          </Box>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <FinanceAcademicContextFilter
+            boards={boards}
+            mediums={mediums}
+            selectedBoard={selectedBoard}
+            selectedMedium={selectedMedium}
+            onBoardChange={setSelectedBoard}
+            onMediumChange={setSelectedMedium}
+            selectSx={{ maxWidth: '248px', width: '100%' }}
+          />
+          <FinanceClassDivisionFilter
+            classOptions={classOptions}
+            divisionOptions={divisionOptions}
+            selectedStandardId={selectedStandardId}
+            selectedDivisionId={selectedDivisionId}
+            isDivisionDisabled={isDivisionDisabled}
+            onClassChange={setSelectedStandardId}
+            onDivisionChange={setSelectedDivisionId}
+            classesLoading={classesLoading}
+            selectSx={{ maxWidth: '248px', width: '100%' }}
+          />
         </Box>
       </Card>
-
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Tabs
+            value={tabs.value}
+            onChange={tabs.onChange}
+            sx={{
+              '& .MuiTabs-flexContainer': { gap: 2 },
+              flexGrow: 1,
+            }}
+          >
+            {TABS.map((tab) => (
+              <Tab
+                key={String(tab.value)}
+                value={tab.value}
+                sx={{ fontSize: '12px' }}
+                label={
+                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                    {tab.label}
+                    <Label color={tab.color as LabelColor}>{tab.count}</Label>
+                  </Box>
+                }
+              />
+            ))}
+          </Tabs>
+        </Box>
+      </Card>
       <CustomizableTable
         tableId="student-concession-table"
         isLoading={isLoadingConcessionData || isFetchingConcessionData}

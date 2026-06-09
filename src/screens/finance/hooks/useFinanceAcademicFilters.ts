@@ -6,8 +6,8 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 
-export const ALL_CLASS_OPTION = { id: '', name: 'All Classes' };
-export const ALL_DIVISION_OPTION = { id: '', name: 'All Divisions' };
+export const ALL_CLASS_OPTION = { id: 'All Classes', name: 'All Classes' };
+export const ALL_DIVISION_OPTION = { id: 'All Divisions', name: 'All Divisions' };
 
 export interface FinanceAcademicFilterPayload {
   boardId: string;
@@ -37,17 +37,13 @@ export interface UseFinanceAcademicFiltersResult {
   classesLoading: boolean;
 }
 
-function toApiId(value: string): string | undefined {
-  return value || undefined;
-}
-
 export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [selectedBoard, setSelectedBoardState] = useState('');
   const [selectedMedium, setSelectedMediumState] = useState('');
-  const [selectedStandardId, setSelectedStandardIdState] = useState('');
-  const [selectedDivisionId, setSelectedDivisionIdState] = useState('');
+  const [selectedStandardId, setSelectedStandardIdState] = useState('All Classes');
+  const [selectedDivisionId, setSelectedDivisionIdState] = useState('All Divisions');
 
   const boards = useMemo<Board[]>(() => currentYear?.boards ?? [], [currentYear?.boards]);
 
@@ -67,11 +63,11 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
   const isReady = Boolean(selectedBoard && selectedMedium);
 
   const divisions = useMemo(() => {
-    if (!selectedStandardId) return [];
+    if (!selectedStandardId || selectedStandardId === 'All Classes') return [];
     return classes?.find((cls: any) => cls.id === selectedStandardId)?.divisions ?? [];
   }, [classes, selectedStandardId]);
 
-  const isDivisionDisabled = !selectedStandardId;
+  const isDivisionDisabled = !selectedStandardId || selectedStandardId === 'All Classes';
 
   const classOptions = useMemo(() => [ALL_CLASS_OPTION, ...(classes ?? [])], [classes]);
 
@@ -81,8 +77,8 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
   }, [divisions, isDivisionDisabled]);
 
   const resetClassAndDivision = useCallback(() => {
-    setSelectedStandardIdState('');
-    setSelectedDivisionIdState('');
+    setSelectedStandardIdState('All Classes');
+    setSelectedDivisionIdState('All Divisions');
   }, []);
 
   const setSelectedBoard = useCallback(
@@ -106,7 +102,7 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
 
   const setSelectedStandardId = useCallback((standardId: string) => {
     setSelectedStandardIdState(standardId);
-    setSelectedDivisionIdState('');
+    setSelectedDivisionIdState('All Divisions');
   }, []);
 
   const setSelectedDivisionId = useCallback((divisionId: string) => {
@@ -130,12 +126,23 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
 
   const filterPayload = useMemo<FinanceAcademicFilterPayload | null>(() => {
     if (!isReady) return null;
-    return {
+
+    const payload: FinanceAcademicFilterPayload = {
       boardId: selectedBoard,
       educationMediumId: selectedMedium,
-      standardId: toApiId(selectedStandardId),
-      divisionId: toApiId(selectedDivisionId),
     };
+
+    // Only include standardId if not 'All Classes'
+    if (selectedStandardId && selectedStandardId !== 'All Classes') {
+      payload.standardId = selectedStandardId;
+    }
+
+    // Only include divisionId if not 'All Divisions'
+    if (selectedDivisionId && selectedDivisionId !== 'All Divisions') {
+      payload.divisionId = selectedDivisionId;
+    }
+
+    return payload;
   }, [isReady, selectedBoard, selectedMedium, selectedStandardId, selectedDivisionId]);
 
   return {
