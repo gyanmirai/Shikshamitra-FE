@@ -10,7 +10,6 @@ import { Box, Button, Tooltip, MenuItem, MenuList, Typography } from '@mui/mater
 
 import { shikshaMitraToast } from '../toast';
 import { SlotType, ItemTypes } from './types';
-import CustomTooltip from '../custom-tooltip';
 import { calculateSlotPosition } from './utils';
 
 import type { Subject, TimeSlot, DragItem, DayOfWeek } from './types';
@@ -140,10 +139,13 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   };
 
   const getSx = () => {
+    const slotHeight = height - 4;
     const baseSx: any = {
       position: 'absolute',
       top: `${top + 2}px`,
-      height: `${height - 4}px`,
+      height: `${slotHeight}px`,
+      minHeight: `${slotHeight}px`,
+      maxHeight: `${slotHeight}px`,
       width: '94%',
       left: '3%',
       borderRadius: 0.8,
@@ -228,43 +230,151 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     typeof time?.format === 'function' ? time.format('HH:mm') : String(time);
 
   const getTooltipContent = () => {
-    if (isBreak)
-      return `${slot.breakType} Break (${renderTime(slot.startTime)} - ${renderTime(slot.endTime)})`;
-    if (!isFilled) return 'Empty Slot';
+    const accentColor = displaySubjects[0]?.color || theme.palette.primary.main;
+
+    if (isBreak) {
+      return (
+        <Box sx={{ p: '2px 4px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+            <Iconify
+              icon="solar:cup-hot-bold-duotone"
+              width={14}
+              sx={{ color: 'warning.light', flexShrink: 0 }}
+            />
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              sx={{ color: 'common.white', fontSize: '0.75rem' }}
+            >
+              {slot.breakType} Break
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, opacity: 0.75 }}>
+            <Iconify icon="solar:clock-circle-bold" width={12} sx={{ flexShrink: 0 }} />
+            <Typography variant="caption" sx={{ fontSize: '0.68rem' }}>
+              {renderTime(slot.startTime)} – {renderTime(slot.endTime)}
+            </Typography>
+          </Box>
+        </Box>
+      );
+    }
+
+    if (!isFilled) {
+      return (
+        <Box sx={{ p: '2px 4px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Iconify
+              icon="solar:calendar-add-bold-duotone"
+              width={14}
+              sx={{ opacity: 0.6, flexShrink: 0 }}
+            />
+            <Typography variant="caption" sx={{ color: 'common.white', fontSize: '0.72rem' }}>
+              Empty Slot — drop a subject here
+            </Typography>
+          </Box>
+        </Box>
+      );
+    }
 
     const hasAnyTeacher = displaySubjects.some((s) => s.teacherName);
     const hasAnyRoom = displaySubjects.some((s) => s.roomName);
 
     return (
-      <Box>
-        <Typography variant="body2" fontWeight="bold" sx={{ lineHeight: 1.1 }}>
-          {displaySubjects.map((s) => s.name).join(' | ')}
-        </Typography>
-
-        {hasAnyTeacher && (
-          <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
-            {displaySubjects.map((s) => s.teacherName || '-').join(' | ')}
-          </Typography>
-        )}
-
-        {hasAnyRoom && (
-          <Typography variant="caption" display="block">
-            {displaySubjects.map((s) => s.roomName || '-').join(' | ')}
-          </Typography>
-        )}
-
-        <Typography
-          variant="caption"
+      <Box sx={{ p: '2px 4px', minWidth: 160 }}>
+        {/* Colored subject name header */}
+        <Box
           sx={{
-            mt: 1,
-            display: 'block',
-            opacity: 0.7,
-            borderTop: '1px solid rgba(255,255,255,0.2)',
-            pt: 0.5,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 0.75,
+            pb: 0.75,
+            mb: 0.75,
+            borderBottom: '1px solid rgba(255,255,255,0.12)',
           }}
         >
-          {renderTime(slot.startTime)} - {renderTime(slot.endTime)}
-        </Typography>
+          <Box
+            sx={{
+              width: 3,
+              minHeight: 32,
+              borderRadius: 1,
+              bgcolor: accentColor,
+              flexShrink: 0,
+              mt: '2px',
+            }}
+          />
+          <Box>
+            {displaySubjects.map((s) => (
+              <Typography
+                key={s.subjectId}
+                variant="body2"
+                fontWeight={700}
+                sx={{ color: 'common.white', lineHeight: 1.35, fontSize: '0.78rem' }}
+              >
+                {s.name}
+              </Typography>
+            ))}
+          </Box>
+        </Box>
+
+        {/* Teacher */}
+        {hasAnyTeacher && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.4 }}>
+            <Iconify
+              icon="solar:user-bold-duotone"
+              width={13}
+              sx={{ color: 'success.light', flexShrink: 0 }}
+            />
+            <Typography
+              variant="caption"
+              sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.68rem' }}
+              noWrap
+            >
+              {displaySubjects.map((s) => s.teacherName || '—').join(' | ')}
+            </Typography>
+          </Box>
+        )}
+
+        {/* Room */}
+        {hasAnyRoom && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.4 }}>
+            <Iconify
+              icon="solar:home-bold-duotone"
+              width={13}
+              sx={{ color: 'info.light', flexShrink: 0 }}
+            />
+            <Typography
+              variant="caption"
+              sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.68rem' }}
+              noWrap
+            >
+              {displaySubjects.map((s) => s.roomName || '—').join(' | ')}
+            </Typography>
+          </Box>
+        )}
+
+        {/* Time */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.75,
+            mt: 0.75,
+            pt: 0.75,
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <Iconify
+            icon="solar:clock-circle-bold"
+            width={12}
+            sx={{ opacity: 0.55, flexShrink: 0 }}
+          />
+          <Typography
+            variant="caption"
+            sx={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.65rem' }}
+          >
+            {renderTime(slot.startTime)} – {renderTime(slot.endTime)}
+          </Typography>
+        </Box>
       </Box>
     );
   };
@@ -277,27 +387,58 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   const extraCount = displaySubjects.length - 1;
   return (
     <Box ref={attachRef} sx={getSx()}>
-      <CustomTooltip title={getTooltipContent()} arrow placement="top">
+      <Tooltip
+        title={getTooltipContent()}
+        arrow
+        placement="top"
+        enterDelay={400}
+        enterNextDelay={200}
+        componentsProps={{
+          tooltip: {
+            sx: {
+              bgcolor: theme.vars.palette.grey[800],
+              color: theme.vars.palette.common.white,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '10px',
+              p: 1,
+              maxWidth: 260,
+            },
+          },
+          arrow: {
+            sx: {
+              color: theme.vars.palette.grey[800],
+              '&::before': {
+                border: '1px solid rgba(255,255,255,0.08)',
+              },
+            },
+          },
+        }}
+      >
         <Box
           sx={{
             width: '100%',
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            mb: 1,
+            overflow: 'hidden',
           }}
         >
           {(isFilled || isBreak) && (
             <Box
               sx={{
                 display: 'flex',
-                justifyContent: 'center',
                 alignItems: 'center',
+                pl: '4px',
+                pr: '20px',
+                minHeight: '18px',
+                flexShrink: 0,
               }}
             >
               <Typography
                 variant="caption"
-                sx={{ fontSize: '0.65rem', color: 'text.secondary', textAlign: 'center' }}
+                noWrap
+                sx={{ fontSize: '0.65rem', color: 'text.secondary', lineHeight: 1 }}
               >
                 {renderTime(slot.startTime)} - {renderTime(slot.endTime)}
               </Typography>
@@ -322,13 +463,13 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                   <Typography
                     variant="caption"
                     display="block"
-                    sx={{ color: 'text.secondary', lineHeight: 1.2, mt: 0.25 }}
+                    sx={{ color: 'text.secondary', lineHeight: 1.2 }}
                   >
                     Class {displaySubjects[0].className}
                     {displaySubjects[0].division ? `-${displaySubjects[0].division}` : ''}
                   </Typography>
                 )}
-                {!isBreak && (
+                {!isBreak && isFilled && (
                   <Box
                     sx={{
                       mt: 0.5,
@@ -357,45 +498,41 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                     )}
 
                     {/* Divider dot */}
-                    {displaySubjects[0]?.roomName && (
+                    {displaySubjects[0]?.roomName && allTeachersAssigned && (
                       <Box component="span" sx={{ fontSize: '0.65rem', color: 'text.disabled' }}>
                         •
                       </Box>
                     )}
 
                     {/* Teacher status */}
-                    {allTeachersAssigned ? (
+                    {allTeachersAssigned && (
                       <Box
                         sx={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: 0.25,
+                          gap: 0.5,
                           color: 'text.secondary',
                         }}
                       >
-                        <Iconify
-                          icon="solar:user-bold-duotone"
-                          width={11}
-                          sx={{ color: 'success.main' }}
-                        />
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: 'success.lighter',
+                            color: 'success.main',
+                            borderRadius: '50%',
+                            p: 0.3,
+                          }}
+                        >
+                          <Iconify icon="solar:user-bold" width={11} />
+                        </Box>
                         <Typography variant="caption" sx={{ fontSize: '0.65rem', fontWeight: 500 }}>
                           {displaySubjects.length === 1
                             ? displaySubjects[0].teacherName
                             : 'Assigned'}
                         </Typography>
                       </Box>
-                    ) : (
-                      <Tooltip title="No teacher assigned" arrow>
-                        <Box
-                          sx={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            color: 'text.disabled',
-                          }}
-                        >
-                          <Iconify icon="solar:user-bold-duotone" width={11} />
-                        </Box>
-                      </Tooltip>
                     )}
                   </Box>
                 )}
@@ -415,26 +552,23 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                     }}
                   >
                     {isBreak ? slot.breakType : firstSubject}
-                    {!isBreak && !allTeachersAssigned && (
-                      <Tooltip title="No teacher assigned" arrow>
-                        <span>
-                          <Iconify
-                            icon="solar:user-bold-duotone"
-                            width={12}
-                            sx={{ color: 'text.disabled', verticalAlign: 'middle' }}
-                          />
-                        </span>
-                      </Tooltip>
-                    )}
-                    {!isBreak && allTeachersAssigned && (
+                    {!isBreak && isFilled && allTeachersAssigned && (
                       <Tooltip title="Teacher assigned" arrow>
-                        <span>
-                          <Iconify
-                            icon="solar:user-bold-duotone"
-                            width={12}
-                            sx={{ color: 'success.main', verticalAlign: 'middle' }}
-                          />
-                        </span>
+                        <Box
+                          component="span"
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: 'success.lighter',
+                            color: 'success.main',
+                            borderRadius: '50%',
+                            p: 0.25,
+                            verticalAlign: 'middle',
+                          }}
+                        >
+                          <Iconify icon="solar:user-bold" width={11} />
+                        </Box>
                       </Tooltip>
                     )}
                   </Typography>
@@ -456,7 +590,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
             )}
           </Box>
         </Box>
-      </CustomTooltip>
+      </Tooltip>
 
       {isFilled && !isBreak && !readOnly && (
         <Box

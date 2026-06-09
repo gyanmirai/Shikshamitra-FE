@@ -1,11 +1,9 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { alpha } from '@mui/material/styles';
 import { Box, Typography } from '@mui/material';
 
 import AuditCard from './AuditCard';
-import { getFinanceAuditSubModuleColor } from '../constants/subModuleColors';
 
 import type { FinanceAuditLog } from '../types/financeAudit.types';
 
@@ -78,7 +76,6 @@ const AuditTimeline = ({
           {/* ── Timeline entries ─────────────────────────────── */}
           <Box sx={{ pl: { xs: 1, sm: 2 } }}>
             {dateLogs.map((log, idx) => {
-              const dotColor = getFinanceAuditSubModuleColor(log.subModule);
               const cardIndex = globalIdx;
               globalIdx += 1;
 
@@ -102,27 +99,27 @@ const AuditTimeline = ({
                       width: 20,
                     }}
                   >
-                    {/* Glowing node */}
+                    {/* Neutral node */}
                     <Box
                       sx={{
-                        width: 14,
-                        height: 14,
+                        width: 12,
+                        height: 12,
                         borderRadius: '50%',
-                        bgcolor: alpha(dotColor, 0.13),
-                        border: `2.5px solid ${dotColor}`,
-                        boxShadow: `0 0 0 3px ${alpha(dotColor, 0.13)}`,
+                        bgcolor: 'background.paper',
+                        border: '2.5px solid',
+                        borderColor: 'text.disabled',
                         flexShrink: 0,
-                        mt: 1.4,
+                        mt: 1.5,
                         position: 'relative',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         '&::after': {
                           content: '""',
-                          width: 5,
-                          height: 5,
+                          width: 4,
+                          height: 4,
                           borderRadius: '50%',
-                          bgcolor: dotColor,
+                          bgcolor: 'text.disabled',
                         },
                       }}
                     />
@@ -134,7 +131,7 @@ const AuditTimeline = ({
                         width: 2,
                         flexGrow: 1,
                         mt: 0.75,
-                        background: `linear-gradient(to bottom, ${alpha(dotColor, 0.72)} 0%, ${alpha(dotColor, 0.45)} 42%, ${alpha(dotColor, 0.25)} 100%)`,
+                        bgcolor: 'divider',
                         borderRadius: 2,
                       }}
                     />

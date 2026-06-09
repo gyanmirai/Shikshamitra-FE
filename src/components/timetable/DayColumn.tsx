@@ -78,6 +78,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
         display: 'flex',
         flexDirection: 'column',
         minWidth: '140px',
+        minHeight: dayHeight + 40,
         opacity: isLocked ? 0.65 : 1,
         transition: 'opacity 0.2s ease',
       }}
@@ -86,6 +87,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
       <Box
         sx={{
           height: '40px',
+          flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -205,6 +207,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
         sx={{
           position: 'relative',
           height: dayHeight,
+          flexShrink: 0,
           backgroundSize: `100% ${SLOT_HEIGHT_BASE}px`,
           backgroundColor: theme.vars.palette.background.neutral,
           overflow: 'hidden',

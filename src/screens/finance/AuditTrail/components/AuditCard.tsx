@@ -3,7 +3,6 @@
 import type { Variants } from 'framer-motion';
 
 import { useState } from 'react';
-import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,8 +13,6 @@ import {
   formatHrAuditDateTime,
   formatHrAuditRelativeTime,
 } from 'src/utils/hr-audit-format';
-
-import { getFinanceAuditSubModuleColor } from '../constants/subModuleColors';
 
 import type { FinanceAuditLog } from '../types/financeAudit.types';
 
@@ -98,7 +95,6 @@ const AuditCard = ({ log, index = 0, variant = 'default', onFilterByStudent }: A
   const isCompact = variant === 'compact';
   const [expanded, setExpanded] = useState(false);
 
-  const subModuleColor = getFinanceAuditSubModuleColor(log.subModule);
   const actionIcon = ACTION_ICON_MAP[log.action] ?? 'mdi:information-outline';
   const actionColor = ACTION_COLOR_MAP[log.action] ?? 'default';
 
@@ -170,16 +166,6 @@ const AuditCard = ({ log, index = 0, variant = 'default', onFilterByStudent }: A
           transform: 'translateY(-1px)',
         },
         position: 'relative',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 4,
-          bgcolor: subModuleColor,
-          borderRadius: '12px 0 0 12px',
-        },
       }}
     >
       <Box
@@ -198,17 +184,16 @@ const AuditCard = ({ log, index = 0, variant = 'default', onFilterByStudent }: A
               px: 1.25,
               height: 24,
               borderRadius: '6px',
-              bgcolor: subModuleColor,
-              boxShadow: `0 2px 8px ${alpha(subModuleColor, 0.33)}`,
+              bgcolor: 'background.neutral',
+              border: '1px solid',
+              borderColor: 'divider',
             }}
           >
-            <Box
-              sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.7)' }}
-            />
+            <Iconify icon="mdi:folder-outline" width={14} sx={{ color: 'text.secondary' }} />
             <Typography
               sx={{
-                color: '#fff',
-                fontWeight: 800,
+                color: 'text.primary',
+                fontWeight: 700,
                 fontSize: 10,
                 letterSpacing: 0.6,
                 textTransform: 'uppercase',
@@ -239,8 +224,8 @@ const AuditCard = ({ log, index = 0, variant = 'default', onFilterByStudent }: A
                 cursor: 'default',
               }}
             >
-              <Iconify icon="mdi:clock-outline" width={13} sx={{ color: 'text.disabled' }} />
-              <Typography variant="caption" color="text.disabled" sx={{ fontSize: 11 }}>
+              <Iconify icon="mdi:clock-outline" width={13} sx={{ color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
                 {formatHrAuditRelativeTime(log.createdAt)}
               </Typography>
             </Box>

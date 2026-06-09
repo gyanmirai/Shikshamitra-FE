@@ -3,6 +3,7 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -17,19 +18,18 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import { useGetStandardFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
 import {
-  useAssignFeeStructureMutation,
-  useGetStudentFeeStructureQuery,
-} from 'src/redux/student/admission/admission-api';
-import {
+  Box,
   Grid,
   Card,
-  Stack,
-  Checkbox,
   Typography,
   CardContent,
   DialogActions,
-  FormControlLabel,
+  CardActionArea,
 } from '@mui/material';
+import {
+  useAssignFeeStructureMutation,
+  useGetStudentFeeStructureQuery,
+} from 'src/redux/student/admission/admission-api';
 
 import type { IInquiryData } from '../Inquiry/type';
 
@@ -173,9 +173,33 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
 
           {formik.values.feeStructureId && feeHeads?.length > 0 && (
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                Fee Heads
-              </Typography>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="subtitle1">Fee Heads</Typography>
+                <Box textAlign="right">
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Selected Fee Heads:{' '}
+                    {
+                      feeHeads.filter((item: FeeHeadItem) =>
+                        item.isOptional
+                          ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
+                          : true
+                      ).length
+                    }{' '}
+                    of {feeHeads.length}
+                  </Typography>
+                  <Typography variant="subtitle2" color="primary.main">
+                    Total Amount: ₹{' '}
+                    {formatNumber(
+                      feeHeads.reduce((acc: number, item: FeeHeadItem) => {
+                        const isSelected = item.isOptional
+                          ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
+                          : true;
+                        return acc + (isSelected ? item.amount : 0);
+                      }, 0)
+                    )}
+                  </Typography>
+                </Box>
+              </Box>
               <Grid container spacing={2}>
                 {feeHeads?.map((item: FeeHeadItem) => {
                   const isSelected = item.isOptional
@@ -187,38 +211,72 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
                       <Card
                         variant="outlined"
                         sx={{
-                          position: 'relative',
-                          borderColor: isSelected ? 'primary.main' : 'divider',
-                          bgcolor: isSelected ? 'background.neutral' : 'background.paper',
-                          transition: 'all 0.3s',
+                          height: '100%',
+                          borderColor: isSelected ? 'success.main' : 'divider',
+                          bgcolor: isSelected
+                            ? (theme) => varAlpha(theme.palette.success.mainChannel, 0.08)
+                            : 'background.paper',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            boxShadow: 4,
+                            borderColor: isSelected ? 'success.main' : 'primary.main',
+                          },
                         }}
                       >
-                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                          <Stack
-                            direction="row"
-                            justifyContent="space-between"
-                            alignItems="flex-start"
+                        <CardActionArea
+                          onClick={() => {
+                            if (item.isOptional) {
+                              handleToggleFeeHead(item.feeHeadId);
+                            }
+                          }}
+                          sx={{
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'stretch',
+                            justifyContent: 'flex-start',
+                          }}
+                          disableRipple={!item.isOptional}
+                        >
+                          <CardContent
+                            sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}
                           >
-                            <Stack spacing={0.5}>
-                              <Typography variant="subtitle2">{item.feeHeadName}</Typography>
-                              <Typography variant="h6">₹ {formatNumber(item.amount)}</Typography>
-                              <Stack direction="row" spacing={1}>
-                                {item.isOneTime && <Label color="info">One-Time</Label>}
-                              </Stack>
-                            </Stack>
-                            <FormControlLabel
-                              control={
-                                <Checkbox
-                                  checked={!!isSelected}
-                                  disabled={!item.isOptional}
-                                  onChange={() => handleToggleFeeHead(item.feeHeadId)}
+                            <Box display="flex" alignItems="center" gap={1} mb={1}>
+                              {isSelected ? (
+                                <Iconify
+                                  icon="mdi:check-circle"
+                                  sx={{ color: 'success.main', width: 22, height: 22 }}
                                 />
-                              }
-                              label=""
-                              sx={{ mr: 0 }}
-                            />
-                          </Stack>
-                        </CardContent>
+                              ) : (
+                                <Iconify
+                                  icon="mdi:checkbox-blank-circle-outline"
+                                  sx={{ color: 'text.disabled', width: 22, height: 22 }}
+                                />
+                              )}
+                              <Typography variant="subtitle1" fontWeight={700} noWrap>
+                                {item.feeHeadName}
+                              </Typography>
+                            </Box>
+
+                            <Box my={1.5}>
+                              <Typography
+                                variant="h5"
+                                fontWeight={800}
+                                color={isSelected ? 'success.dark' : 'text.primary'}
+                              >
+                                ₹ {formatNumber(item.amount)}
+                              </Typography>
+                            </Box>
+
+                            <Box mt="auto" pt={1}>
+                              {item.isOneTime ? (
+                                <Label color="info">One-Time</Label>
+                              ) : (
+                                <Label color="default">Recurring</Label>
+                              )}
+                            </Box>
+                          </CardContent>
+                        </CardActionArea>
                       </Card>
                     </Grid>
                   );
