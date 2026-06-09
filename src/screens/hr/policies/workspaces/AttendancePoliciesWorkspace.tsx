@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * AttendancePoliciesWorkspace — Dedicated workspace for attendance policies.
+ * AttendancePoliciesWorkspace - Dedicated workspace for attendance policies.
  *
  * Focused on attendance policy management with breadcrumbs and permission display.
  */

@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { Box, Tooltip, IconButton } from '@mui/material';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
@@ -15,6 +17,8 @@ import { navSectionClasses } from '../nav-section/classes';
 // ----------------------------------------------------------------------
 
 const SubLayout = ({ children }: any) => {
+  const muiTheme = useTheme();
+  const compactNav = useMediaQuery(muiTheme.breakpoints.down('md'));
   const session: any = useSession();
   const { data: user } = session;
   const pathname = usePathname();
@@ -50,7 +54,7 @@ const SubLayout = ({ children }: any) => {
     setIsPinned((prev) => !prev);
   }, []);
 
-  const isCollapsed = !isPinned && !isHovered;
+  const isCollapsed = compactNav || (!isPinned && !isHovered);
 
   const NAV_WIDTH = 280;
   const NAV_MINI_WIDTH = 80;
@@ -89,7 +93,7 @@ const SubLayout = ({ children }: any) => {
           <Box
             sx={{
               p: 1,
-              display: 'flex',
+              display: { xs: 'none', md: 'flex' },
               justifyContent: isCollapsed ? 'center' : 'flex-end',
               borderBottom: (theme) =>
                 isCollapsed ? 'none' : `1px solid ${theme.vars.palette.divider}`,

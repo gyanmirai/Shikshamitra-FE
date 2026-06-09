@@ -7,12 +7,13 @@ import type {
   HrPolicyAssignment,
   WorkCalendarPolicy,
   WorkCalendarHoliday,
+  EditablePolicyStatus,
   HrPolicyImpactPreview,
   HrPolicyVersionCompare,
   HrPolicyAssignmentConflict,
 } from 'src/redux/hr/hr-policy-api';
 
-// ─── Navigation ──────────────────────────────────────────────────────────────
+// --- Navigation --------------------------------------------------------------
 
 export type WorkspaceTab =
   | 'calendars'
@@ -23,7 +24,7 @@ export type WorkspaceTab =
   | 'holiday'
   | 'effective';
 
-// ─── Drawer ───────────────────────────────────────────────────────────────────
+// --- Drawer -------------------------------------------------------------------
 
 export type PolicyAssignmentTargetType = 'employee' | 'group';
 export type DrawerKind = 'calendar' | 'payroll' | 'attendance' | 'assignment';
@@ -39,7 +40,7 @@ export type DrawerState = {
   item?: WorkCalendarPolicy | PayrollPolicy | AttendancePolicy | HrPolicyAssignment;
 } | null;
 
-// ─── Operations ───────────────────────────────────────────────────────────────
+// --- Operations ---------------------------------------------------------------
 
 export type PendingImpactAction = {
   label: string;
@@ -53,6 +54,7 @@ export type PolicyOperationKey =
   | 'save-payroll'
   | 'save-attendance'
   | 'save-assignment'
+  | 'delete-assignment'
   | 'archive-policy'
   | 'unarchive-policy'
   | 'set-default'
@@ -65,7 +67,7 @@ export type PolicyOperationState = {
   message: string;
 } | null;
 
-// ─── Audit & Versioning ───────────────────────────────────────────────────────
+// --- Audit & Versioning -------------------------------------------------------
 
 export type AuditTarget = {
   entityType: string;
@@ -89,11 +91,11 @@ export type RestoreVersionState = {
 
 export type VersionDifference = HrPolicyVersionCompare['differences'][number];
 
-// ─── Forms ────────────────────────────────────────────────────────────────────
+// --- Forms --------------------------------------------------------------------
 
 export type WorkCalendarForm = {
   name: string;
-  status: PolicyStatus;
+  status: EditablePolicyStatus;
   effectiveFrom: string;
   effectiveTo: string;
   weeklyOffPattern: string;
@@ -113,7 +115,7 @@ export type HolidayReviewFilter = 'all' | 'included' | 'removed' | 'central_cale
 
 export type PayrollForm = {
   name: string;
-  status: PolicyStatus;
+  status: EditablePolicyStatus;
   workCalendarPolicyId: string;
   isDefault: boolean;
   dayCalculationType: string;
@@ -138,7 +140,7 @@ export type AttendanceAdvancedKey =
 
 export type AttendanceForm = {
   name: string;
-  status: PolicyStatus;
+  status: EditablePolicyStatus;
   workCalendarPolicyId: string;
   isDefault: boolean;
   captureMode: 'manual_status' | 'manual_with_time' | 'integrated';
@@ -185,7 +187,7 @@ export type AssignmentFilters = {
   effectiveTo: string;
 };
 
-// ─── Lookup helpers ───────────────────────────────────────────────────────────
+// --- Lookup helpers -----------------------------------------------------------
 
 export type LookupOption = {
   id?: string;
@@ -228,6 +230,7 @@ export type {
   HrPolicyAssignment,
   WorkCalendarPolicy,
   WorkCalendarHoliday,
+  EditablePolicyStatus,
   HrPolicyImpactPreview,
   HrPolicyAssignmentConflict,
 };

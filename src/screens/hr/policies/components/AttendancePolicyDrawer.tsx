@@ -1,6 +1,6 @@
 'use client';
 
-import type { PolicyStatus } from 'src/redux/hr/hr-policy-api';
+import type { EditablePolicyStatus } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
 import { Box, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
@@ -16,7 +16,7 @@ import {
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
-// ─── helpers (module-level to avoid re-creation on render) ────────────────────
+// --- helpers (module-level to avoid re-creation on render) --------------------
 
 export const ATTENDANCE_MISSING_PUNCH_OPTIONS = [
   { label: 'Requires Review', value: 'requires_review' },
@@ -110,7 +110,7 @@ function applyAttendanceAdvancedDefaults(
   return ADVANCED_KEYS.reduce((current, key) => ({ ...current, [key]: defaults[key] }), form);
 }
 
-// ─── AttendancePolicyDrawer ────────────────────────────────────────────────────
+// --- AttendancePolicyDrawer ----------------------------------------------------
 
 export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -177,13 +177,13 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
             onChange={(event) =>
               setAttendanceForm((current) => ({
                 ...current,
-                status: event.target.value as PolicyStatus,
+                status: event.target.value as EditablePolicyStatus,
+                isDefault: event.target.value === 'active' ? current.isDefault : false,
               }))
             }
           >
             <MenuItem value="draft">Draft</MenuItem>
             <MenuItem value="active">Active</MenuItem>
-            <MenuItem value="archived">Archived</MenuItem>
           </DrawerSelectField>
           <Box sx={{ gridColumn: { sm: 'span 2' } }}>
             <DrawerSelectField
@@ -344,7 +344,7 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               <Stack spacing={0.75}>
                 {buildAttendanceSummary(attendanceForm).map((item) => (
                   <Typography key={item} variant="body2" color="text.primary">
-                    ✓ {item}
+                    - {item}
                   </Typography>
                 ))}
               </Stack>

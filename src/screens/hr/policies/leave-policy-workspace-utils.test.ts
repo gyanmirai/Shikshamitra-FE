@@ -14,7 +14,9 @@ describe('leave policy workspace adapter', () => {
     );
     expect(getLeavePolicyTitle({ title: 'Legacy title' } as any)).toBe('Legacy title');
     expect(
-      getLeavePolicyLeaveTypeName({ leaveType: { id: 'type-1', name: 'Casual' } } as any)
+      getLeavePolicyLeaveTypeName({
+        rules: [{ id: 'rule-1', leaveType: { id: 'type-1', name: 'Casual' }, isActive: true }],
+      } as any)
     ).toBe('Casual');
   });
 
@@ -30,11 +32,17 @@ describe('leave policy workspace adapter', () => {
       {
         id: 'policy-1',
         policyTitle: 'Sick leave',
-        leaveType: { id: 'type-1', name: 'Sick' },
-        leaveCount: 12,
-        encashmentAllowed: true,
-        carryForward: true,
-        requiresApproval: true,
+        rules: [
+          {
+            id: 'rule-1',
+            leaveType: { id: 'type-1', name: 'Sick' },
+            leaveCount: 12,
+            encashmentAllowed: true,
+            carryForward: true,
+            requiresApproval: true,
+            isActive: true,
+          },
+        ],
       } as any,
       'archive'
     );

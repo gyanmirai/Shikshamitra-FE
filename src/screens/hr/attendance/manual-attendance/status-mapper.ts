@@ -47,6 +47,20 @@ export type ManualAttendanceShiftTimeRow = ManualAttendanceSaveRow & {
   shiftEndTime?: string | null;
 };
 
+export type ManualAttendanceTimeValidationIssue<TRow extends ManualAttendanceShiftTimeRow> = {
+  row: TRow;
+  missingShiftTime: boolean;
+  invalidShiftTime: boolean;
+  missingAttendanceTime: boolean;
+};
+
+export type ManualAttendanceBulkStatusDisabledState = {
+  isLocked?: boolean;
+  isHoliday?: boolean;
+  isFutureDate?: boolean;
+  isOutsideAcademicYear?: boolean;
+};
+
 export type ManualAttendanceApiDayResponse = {
   isDayLocked?: boolean;
   isHoliday?: boolean;
@@ -119,7 +133,7 @@ export const applyManualAttendanceShiftTimes = <TRow extends ManualAttendanceShi
 
   const nextRows = rows.map((row) => {
     if (
-      row.captureMode !== 'manual_with_time' ||
+      !isTimeBasedCaptureMode(row.captureMode) ||
       row.status !== MANUAL_ATTENDANCE_UI_STATUS.Present
     ) {
       return row;
@@ -127,7 +141,7 @@ export const applyManualAttendanceShiftTimes = <TRow extends ManualAttendanceShi
 
     const shiftStart = toAttendanceTableTimeValue(row.shiftStartTime);
     const shiftEnd = toAttendanceTableTimeValue(row.shiftEndTime);
-    if (!shiftStart || !shiftEnd) {
+    if (!isValidShiftRange(shiftStart, shiftEnd)) {
       skipped += 1;
       return row;
     }
@@ -138,6 +152,100 @@ export const applyManualAttendanceShiftTimes = <TRow extends ManualAttendanceShi
 
   return { rows: nextRows, updated, skipped };
 };
+
+export const applyManualAttendanceStatusDefaults = <TRow extends ManualAttendanceShiftTimeRow>(
+  row: TRow,
+  status: ManualAttendanceUiStatus
+): TRow => {
+  if (row.captureMode === 'manual_status') {
+    return { ...row, status, timeIn: '', timeOut: '' };
+  }
+
+  if (!isTimeBasedCaptureMode(row.captureMode)) {
+    return { ...row, status };
+  }
+
+  if (status === MANUAL_ATTENDANCE_UI_STATUS.Absent) {
+    return { ...row, status, timeIn: '', timeOut: '' };
+  }
+
+  const shiftStart = toAttendanceTableTimeValue(row.shiftStartTime);
+  const shiftEnd = toAttendanceTableTimeValue(row.shiftEndTime);
+  if (!isValidShiftRange(shiftStart, shiftEnd)) {
+    return { ...row, status, timeIn: '', timeOut: '' };
+  }
+
+  if (status === MANUAL_ATTENDANCE_UI_STATUS.Present) {
+    return { ...row, status, timeIn: shiftStart, timeOut: shiftEnd };
+  }
+
+  if (status === MANUAL_ATTENDANCE_UI_STATUS.HalfDay) {
+    return {
+      ...row,
+      status,
+      timeIn: shiftStart,
+      timeOut: calculateShiftMidpoint(shiftStart, shiftEnd)!,
+    };
+  }
+
+  return { ...row, status };
+};
+
+export const getTimeBasedAttendanceTimeIssues = <TRow extends ManualAttendanceShiftTimeRow>(
+  rows: TRow[]
+): ManualAttendanceTimeValidationIssue<TRow>[] =>
+  rows.flatMap((row) => {
+    const needsTime =
+      isTimeBasedCaptureMode(row.captureMode) &&
+      (row.status === MANUAL_ATTENDANCE_UI_STATUS.Present ||
+        row.status === MANUAL_ATTENDANCE_UI_STATUS.HalfDay);
+
+    if (!needsTime) {
+      return [];
+    }
+
+    const shiftStart = toAttendanceTableTimeValue(row.shiftStartTime);
+    const shiftEnd = toAttendanceTableTimeValue(row.shiftEndTime);
+    const invalidShiftTime = Boolean(
+      shiftStart && shiftEnd && !isValidShiftRange(shiftStart, shiftEnd)
+    );
+    const timeIn = toAttendanceWireTime(row.timeIn);
+    const timeOut = toAttendanceWireTime(row.timeOut);
+    const issue = {
+      row,
+      missingShiftTime: !shiftStart || !shiftEnd,
+      invalidShiftTime,
+      missingAttendanceTime: !timeIn || !timeOut,
+    };
+
+    return issue.missingShiftTime || issue.invalidShiftTime || issue.missingAttendanceTime
+      ? [issue]
+      : [];
+  });
+
+export const isManualAttendanceRowDirty = (
+  row: ManualAttendanceSaveRow,
+  original?: ManualAttendanceSaveRow | null
+) => {
+  if (!original) return true;
+
+  return (
+    row.status !== original.status ||
+    (row.remarks || '') !== (original.remarks || '') ||
+    (row.timeIn || '') !== (original.timeIn || '') ||
+    (row.timeOut || '') !== (original.timeOut || '')
+  );
+};
+
+export const getDirtyManualAttendanceRows = <TRow extends ManualAttendanceSaveRow>(
+  rows: TRow[],
+  originalRows: ManualAttendanceSaveRow[]
+) =>
+  rows.filter((row) => {
+    const rowId = row.employeeId || row.id;
+    const original = originalRows.find((item) => (item.employeeId || item.id) === rowId);
+    return isManualAttendanceRowDirty(row, original);
+  });
 
 export const toAttendanceTableTimeValue = (value?: string | null) => {
   if (!value) return '';
@@ -169,6 +277,34 @@ export const toAttendanceWireTime = (value?: string | null) => {
   return `${parsed[1]}:00`;
 };
 
+const isTimeBasedCaptureMode = (captureMode?: ManualAttendanceSaveRow['captureMode']) =>
+  captureMode === 'manual_with_time' || captureMode === 'integrated';
+
+const calculateShiftMidpoint = (shiftStart: string, shiftEnd: string) => {
+  if (!isValidShiftRange(shiftStart, shiftEnd)) {
+    return null;
+  }
+
+  const startMinutes = toMinutes(shiftStart);
+  const endMinutes = toMinutes(shiftEnd);
+
+  return toTimeValue(Math.floor((startMinutes + endMinutes) / 2));
+};
+
+const isValidShiftRange = (shiftStart: string, shiftEnd: string) =>
+  Boolean(shiftStart && shiftEnd) && toMinutes(shiftEnd) > toMinutes(shiftStart);
+
+const toMinutes = (value: string) => {
+  const [hours, minutes] = value.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+const toTimeValue = (minutesOfDay: number) => {
+  const hours = `${Math.floor(minutesOfDay / 60)}`.padStart(2, '0');
+  const minutes = `${minutesOfDay % 60}`.padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
+
 export const mapTakeAttendanceStatusToUi = (status?: number): ManualAttendanceUiStatus => {
   if (status === TAKE_ATTENDANCE_STATUS.Present) return MANUAL_ATTENDANCE_UI_STATUS.Present;
   if (status === TAKE_ATTENDANCE_STATUS.HalfDay) return MANUAL_ATTENDANCE_UI_STATUS.HalfDay;
@@ -191,7 +327,23 @@ export const applyManualAttendanceBulkStatus = <TRow extends ManualAttendanceSav
   status: ManualAttendanceUiStatus
 ) =>
   rows.map((row) =>
-    row.status === MANUAL_ATTENDANCE_UI_STATUS.OnLeave ? row : { ...row, status }
+    row.status === MANUAL_ATTENDANCE_UI_STATUS.OnLeave
+      ? row
+      : applyManualAttendanceStatusDefaults(row, status)
+  );
+
+export const isManualAttendanceBulkStatusDisabled = (
+  rows: ManualAttendanceSaveRow[],
+  status: ManualAttendanceUiStatus,
+  state: ManualAttendanceBulkStatusDisabledState
+) =>
+  Boolean(
+    state.isLocked ||
+    state.isHoliday ||
+    state.isFutureDate ||
+    state.isOutsideAcademicYear ||
+    rows.length === 0 ||
+    rows.every((row) => row.status === status)
   );
 
 export const applyManualAttendanceRowStatus = <TRow extends ManualAttendanceSaveRow>(
@@ -208,16 +360,18 @@ export const applyManualAttendanceRowStatus = <TRow extends ManualAttendanceSave
     status !== MANUAL_ATTENDANCE_UI_STATUS.Pending
   ) {
     const warnings = row.warnings || [];
-    return {
-      ...row,
-      status,
-      warnings: warnings.includes(APPROVED_LEAVE_OVERRIDE_WARNING)
-        ? warnings
-        : [...warnings, APPROVED_LEAVE_OVERRIDE_WARNING],
-    };
+    return applyManualAttendanceStatusDefaults(
+      {
+        ...row,
+        warnings: warnings.includes(APPROVED_LEAVE_OVERRIDE_WARNING)
+          ? warnings
+          : [...warnings, APPROVED_LEAVE_OVERRIDE_WARNING],
+      },
+      status
+    );
   }
 
-  return { ...row, status };
+  return applyManualAttendanceStatusDefaults(row, status);
 };
 
 export const buildManualAttendanceSaveEntries = (rows: ManualAttendanceSaveRow[]) =>

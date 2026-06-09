@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * AssignmentsWorkspace — Dedicated workspace for policy assignments.
+ * AssignmentsWorkspace - Dedicated workspace for policy assignments.
  *
  * Focused on assignment management with breadcrumbs and permission display.
  */

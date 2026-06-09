@@ -34,6 +34,24 @@ export type LeavePolicyOption = {
   id?: string;
   leaveType?: string | { id?: string | null } | null;
   leaveTypeMasterId?: string | null;
+  rules?: Array<{
+    id?: string | null;
+    leaveType?: { id?: string | null; name?: string | null; color?: string | null } | null;
+    leaveTypeId?: string | null;
+    isActive?: boolean | null;
+    leaveCount?: number | null;
+    minNoticeDays?: number | null;
+    maxDaysPerRequest?: number | null;
+    attachmentRequiredAfterDays?: number | null;
+    allowHalfDay?: boolean | null;
+    allowNegativeBalance?: boolean | null;
+  }> | null;
+};
+
+export type LeaveTypeOption = {
+  id?: string | null;
+  name?: string | null;
+  color?: string | null;
 };
 
 export type LeavePolicyResolution =
@@ -43,7 +61,7 @@ export type LeavePolicyResolution =
 
 export interface LeaveRequestFormValuesForPayload {
   employee: EmployeeOption | null;
-  leavePolicyId: string;
+  leaveTypeMasterId: string;
   startDate: dayjs.Dayjs | null;
   endDate: dayjs.Dayjs | null;
   halfDay: boolean;
@@ -154,6 +172,46 @@ export function resolveLeavePolicyIdForLeaveType(
   };
 }
 
+export function getActiveLeavePolicyRules(policy: LeavePolicyOption | null | undefined) {
+  return (policy?.rules || []).filter((rule) => rule?.isActive !== false);
+}
+
+export function getSelectableLeaveRequestOptions<
+  TLeaveType extends LeaveTypeOption,
+  TLeavePolicy extends LeavePolicyOption,
+>(
+  leaveTypes: TLeaveType[] | null | undefined,
+  leavePolicies: TLeavePolicy[] | null | undefined
+): { leaveTypes: TLeaveType[]; leavePolicies: TLeavePolicy[] } {
+  const catalogById = new Map(
+    (leaveTypes || [])
+      .filter((leaveType) => Boolean(leaveType?.id))
+      .map((leaveType) => [leaveType.id as string, leaveType])
+  );
+  const selectableById = new Map<string, TLeaveType>();
+  const policiesWithRules = (leavePolicies || []).filter((policy) =>
+    getActiveLeavePolicyRules(policy).some((rule) => {
+      const leaveTypeId = rule.leaveType?.id || rule.leaveTypeId || '';
+      return Boolean(leaveTypeId && catalogById.has(leaveTypeId));
+    })
+  );
+
+  policiesWithRules.forEach((policy) => {
+    getActiveLeavePolicyRules(policy).forEach((rule) => {
+      const leaveTypeId = rule.leaveType?.id || rule.leaveTypeId || '';
+      if (!leaveTypeId || !catalogById.has(leaveTypeId) || selectableById.has(leaveTypeId)) {
+        return;
+      }
+      selectableById.set(leaveTypeId, catalogById.get(leaveTypeId)!);
+    });
+  });
+
+  return {
+    leaveTypes: Array.from(selectableById.values()),
+    leavePolicies: policiesWithRules,
+  };
+}
+
 export function buildCreateLeaveRequestFormData(
   values: LeaveRequestFormValuesForPayload
 ): FormData {
@@ -163,7 +221,7 @@ export function buildCreateLeaveRequestFormData(
     formData.append('forEmployeeId', values.employee.id);
   }
 
-  formData.append('leavePolicyId', values.leavePolicyId);
+  formData.append('leaveTypeId', values.leaveTypeMasterId);
   formData.append('startDate', formatLeaveCalendarDateForPayload(values.startDate));
   formData.append('endDate', formatLeaveCalendarDateForPayload(values.endDate));
   formData.append('halfDay', String(values.halfDay));

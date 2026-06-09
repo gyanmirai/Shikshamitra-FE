@@ -8,6 +8,8 @@ const compactParams = (params: Record<string, unknown>) =>
     )
   );
 
+const PERFORMANCE_CACHE_SECONDS = 300;
+
 export enum PerformanceStaffCategory {
   Teacher = 0,
   ClassTeacher = 1,
@@ -176,11 +178,49 @@ export type PerformanceSqaaEvidence = {
   missingEvidence: number;
 };
 
+export type PerformanceSqaaReadinessDomain = PerformanceSqaaEvidence & {
+  readinessPercentage: number;
+  isReady: boolean;
+};
+
+export type PerformanceSqaaMissingEvidence = {
+  reviewId: string;
+  cycleId: string;
+  cycleName: string;
+  employeeId: string;
+  employeeName: string;
+  employeeIdentifier?: string | null;
+  templateId: string;
+  templateName: string;
+  criterionId: string;
+  criterionName: string;
+  domain: PerformanceSqaaDomain;
+};
+
+export type PerformanceSqaaAuditPack = {
+  generatedAt: string;
+  overallReadinessPercentage: number;
+  totalMappedCriteria: number;
+  totalRequiredEvidence: number;
+  totalEvidenceSubmitted: number;
+  totalMissingEvidence: number;
+  domains: PerformanceSqaaReadinessDomain[];
+  missingEvidenceItems: PerformanceSqaaMissingEvidence[];
+};
+
+export type PerformanceSqaaAuditPackExport = {
+  fileName: string;
+  contentType: string;
+  contentBase64: string;
+  generatedAt: string;
+};
+
 export const professionalManagementApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getPerformanceDashboard: builder.query<PerformanceDashboard, void>({
       query: () => '/hr/professional-management/dashboard',
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     getPerformanceTemplates: builder.query<any, any>({
       query: (params = {}) => ({
@@ -189,10 +229,12 @@ export const professionalManagementApi = api.injectEndpoints({
         params: compactParams({ page: 1, pageSize: 50, ...params }),
       }),
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     getDefaultPerformanceTemplates: builder.query<any, void>({
       query: () => '/hr/professional-management/templates/defaults',
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     createPerformanceTemplate: builder.mutation<PerformanceTemplate, any>({
       query: (body) => ({ url: '/hr/professional-management/templates', method: 'POST', body }),
@@ -231,6 +273,7 @@ export const professionalManagementApi = api.injectEndpoints({
         params: compactParams({ page: 1, pageSize: 50, ...params }),
       }),
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     createProfessionalReviewCycle: builder.mutation<any, any>({
       query: (body) => ({ url: '/hr/professional-management/review-cycles', method: 'POST', body }),
@@ -287,6 +330,7 @@ export const professionalManagementApi = api.injectEndpoints({
         params: compactParams({ search }),
       }),
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     getPerformanceReviews: builder.query<any, any>({
       query: (params = {}) => ({
@@ -295,10 +339,12 @@ export const professionalManagementApi = api.injectEndpoints({
         params: compactParams(params),
       }),
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     getPerformanceReview: builder.query<ProfessionalReview, string>({
       query: (id) => `/hr/professional-management/reviews/${id}`,
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     savePerformanceSelfAppraisal: builder.mutation<ProfessionalReview, any>({
       query: ({ id, body }) => ({
@@ -343,6 +389,7 @@ export const professionalManagementApi = api.injectEndpoints({
     getPerformanceObservations: builder.query<any, string>({
       query: (id) => `/hr/professional-management/reviews/${id}/observations`,
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     addPerformanceObservation: builder.mutation<any, any>({
       query: ({ id, body }) => ({
@@ -378,6 +425,7 @@ export const professionalManagementApi = api.injectEndpoints({
     getPerformanceFeedback: builder.query<any, string>({
       query: (id) => `/hr/professional-management/reviews/${id}/feedback`,
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     addPerformanceDevelopmentPlan: builder.mutation<any, any>({
       query: ({ id, body }) => ({
@@ -398,6 +446,7 @@ export const professionalManagementApi = api.injectEndpoints({
     getEmployeeProfessionalReviewHistory: builder.query<any, string>({
       query: (employeeId) => `/hr/professional-management/employees/${employeeId}/review-history`,
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     getPerformanceRatingDistribution: builder.query<any, any>({
       query: (params = {}) => ({
@@ -405,6 +454,7 @@ export const professionalManagementApi = api.injectEndpoints({
         params: compactParams(params),
       }),
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     getPerformancePendingActions: builder.query<any, any>({
       query: (params = {}) => ({
@@ -412,6 +462,7 @@ export const professionalManagementApi = api.injectEndpoints({
         params: compactParams(params),
       }),
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     getPerformanceTrainingNeeds: builder.query<any, any>({
       query: (params = {}) => ({
@@ -419,6 +470,7 @@ export const professionalManagementApi = api.injectEndpoints({
         params: compactParams(params),
       }),
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     getPerformanceIncrementRecommendations: builder.query<any, any>({
       query: (params = {}) => ({
@@ -426,6 +478,7 @@ export const professionalManagementApi = api.injectEndpoints({
         params: compactParams(params),
       }),
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     getPerformanceSqaaEvidence: builder.query<PerformanceSqaaEvidence[], any>({
       query: (params = {}) => ({
@@ -433,6 +486,31 @@ export const professionalManagementApi = api.injectEndpoints({
         params: compactParams(params),
       }),
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
+    }),
+    getPerformanceSqaaReadiness: builder.query<PerformanceSqaaReadinessDomain[], any>({
+      query: (params = {}) => ({
+        url: '/hr/professional-management/reports/sqaaf-readiness',
+        params: compactParams(params),
+      }),
+      providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
+    }),
+    getPerformanceSqaaAuditPack: builder.query<PerformanceSqaaAuditPack, any>({
+      query: (params = {}) => ({
+        url: '/hr/professional-management/reports/sqaaf-audit-pack',
+        params: compactParams(params),
+      }),
+      providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
+    }),
+    getPerformanceSqaaAuditPackExport: builder.query<PerformanceSqaaAuditPackExport, any>({
+      query: (params = {}) => ({
+        url: '/hr/professional-management/reports/sqaaf-audit-pack/export',
+        params: compactParams(params),
+      }),
+      providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     getPerformanceAuditTrail: builder.query<any, any>({
       query: (params = {}) => ({
@@ -440,6 +518,7 @@ export const professionalManagementApi = api.injectEndpoints({
         params: compactParams(params),
       }),
       providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     saveProfessionalReviewDraft: builder.mutation({
       query: ({ id, body }) => ({
@@ -499,6 +578,9 @@ export const {
   useGetPerformanceTrainingNeedsQuery,
   useGetPerformanceIncrementRecommendationsQuery,
   useGetPerformanceSqaaEvidenceQuery,
+  useGetPerformanceSqaaReadinessQuery,
+  useGetPerformanceSqaaAuditPackQuery,
+  useLazyGetPerformanceSqaaAuditPackExportQuery,
   useGetPerformanceAuditTrailQuery,
   useSaveProfessionalReviewDraftMutation,
   useSubmitProfessionalReviewMutation,

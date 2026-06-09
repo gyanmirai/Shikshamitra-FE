@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import {
@@ -122,7 +121,7 @@ export function LeavePolicyImpactDrawer({
               >
                 Cancel
               </Button>
-              <LoadingButton
+              <Button
                 variant="contained"
                 color="warning"
                 disabled={hasBlockingRisk}
@@ -132,7 +131,7 @@ export function LeavePolicyImpactDrawer({
                 size="small"
               >
                 Confirm Archive
-              </LoadingButton>
+              </Button>
             </Stack>
           </>
         ) : null}

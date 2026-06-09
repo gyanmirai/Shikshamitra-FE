@@ -1,18 +1,26 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 import { fDateTime } from './format-time';
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const DATE_TIME_FORMAT = 'DD MMM YYYY, hh:mm A';
+const DATE_ONLY_FORMAT = 'DD MMM YYYY';
+const INSTITUTION_TIME_ZONE = 'Asia/Kolkata';
 const ISO_DATE_TIME_PATTERN = /^\d{4}-\d{2}-\d{2}(T|\s)/;
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const COMPACT_ISO_DATE_TIME_PATTERN = /^\d{8}T\d{2}:\d{2}:\d{2}/;
+const COMPACT_ISO_DATE_PATTERN = /^\d{8}$/;
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const EMBEDDED_GUID_PATTERN = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
 const REFERENCE_KEY_PATTERN = /(^id$|id$|uuid$|guid$)/i;
+const BUSINESS_DATE_KEYS = new Set(['date', 'fromDate', 'toDate', 'effectiveFrom', 'effectiveTo']);
+const BUSINESS_DATE_SEPARATOR_KEY_PATTERN = /(^date$|[_-]date$)/i;
 const COUNT_KEY_PATTERN = /count$/i;
 const AUDIT_VALUE_SEPARATOR = '; ';
 
@@ -83,12 +91,12 @@ export function parseHrAuditContext(contextJson?: string | null): Record<string,
   }
 }
 
-export function formatHrAuditValue(value: unknown, maxLength = 120): string {
-  return formatAuditValue(value, maxLength, 0);
+export function formatHrAuditValue(value: unknown, maxLength = 120, parentKey?: string): string {
+  return formatAuditValue(value, maxLength, 0, parentKey);
 }
 
-export function toHrAuditRenderValue(value: unknown): HrAuditRenderValue {
-  return buildAuditRenderValue(value, 0);
+export function toHrAuditRenderValue(value: unknown, parentKey?: string): HrAuditRenderValue {
+  return buildAuditRenderValue(value, 0, parentKey);
 }
 
 export function formatHrAuditText(value?: string | null, maxLength = 180): string {
@@ -130,6 +138,11 @@ function formatAuditValue(
       } catch {
         return truncate(redactEmbeddedReferences(trimmed), maxLength);
       }
+    }
+
+    const businessDate = parseBusinessDate(trimmed, parentKey);
+    if (businessDate?.isValid()) {
+      return businessDate.format(DATE_ONLY_FORMAT);
     }
 
     const parsedDate = parseDbDateTime(trimmed);
@@ -196,6 +209,11 @@ function buildAuditRenderValue(
       }
     }
 
+    const businessDate = parseBusinessDate(trimmed, parentKey);
+    if (businessDate?.isValid()) {
+      return { kind: 'date', text: businessDate.format(DATE_ONLY_FORMAT) };
+    }
+
     const parsedDate = parseDbDateTime(trimmed);
     if (parsedDate?.isValid()) {
       return { kind: 'date', text: parsedDate.format(DATE_TIME_FORMAT) };
@@ -238,15 +256,41 @@ function isDbDateTime(value: string) {
   return ISO_DATE_TIME_PATTERN.test(value) || COMPACT_ISO_DATE_TIME_PATTERN.test(value);
 }
 
+function isBusinessDateKey(key?: string) {
+  return Boolean(
+    key &&
+    (BUSINESS_DATE_KEYS.has(key) ||
+      key.endsWith('Date') ||
+      BUSINESS_DATE_SEPARATOR_KEY_PATTERN.test(key))
+  );
+}
+
+function isBusinessDateValue(value: string) {
+  return (
+    ISO_DATE_PATTERN.test(value) ||
+    ISO_DATE_TIME_PATTERN.test(value) ||
+    COMPACT_ISO_DATE_PATTERN.test(value) ||
+    COMPACT_ISO_DATE_TIME_PATTERN.test(value)
+  );
+}
+
+function parseBusinessDate(value: string, parentKey?: string) {
+  if (!isBusinessDateKey(parentKey) || !isBusinessDateValue(value)) return null;
+
+  const normalized = normalizeDbDateTime(value);
+  const datePart = normalized.slice(0, 10);
+  return ISO_DATE_PATTERN.test(datePart) ? dayjs(datePart) : null;
+}
+
 function parseDbDateTime(value: string) {
   if (!isDbDateTime(value)) return null;
-  return dayjs.utc(normalizeDbDateTime(value));
+  return dayjs.utc(normalizeDbDateTime(value)).tz(INSTITUTION_TIME_ZONE);
 }
 
 function normalizeDbDateTime(value: string) {
   return value.replace(
-    /^(\d{4})(\d{2})(\d{2})T/,
-    (_match, year, month, day) => `${year}-${month}-${day}T`
+    /^(\d{4})(\d{2})(\d{2})(T|$)/,
+    (_match, year, month, day, separator) => `${year}-${month}-${day}${separator}`
   );
 }
 

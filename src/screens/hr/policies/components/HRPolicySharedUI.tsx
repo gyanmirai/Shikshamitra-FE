@@ -3,7 +3,6 @@
 import type { SelectChangeEvent } from '@mui/material/Select';
 
 import React from 'react';
-import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import {
@@ -35,11 +34,11 @@ import {
 
 import type { PolicyOperationState } from '../types/hr-policy-workspace.types';
 
-// ─── HolidayMetricCard ────────────────────────────────────────────────────────
+// --- HolidayMetricCard --------------------------------------------------------
 
 /**
  * Memoization Justification:
- * Pure display card — receives only primitive props (label: string, value: number,
+ * Pure display card - receives only primitive props (label: string, value: number,
  * color: string). React.memo prevents unnecessary DOM reconciliation when the
  * parent holiday-review section re-renders due to filter state changes that do not
  * affect these metric values.
@@ -66,7 +65,7 @@ export const HolidayMetricCard = React.memo(
   )
 );
 
-// ─── StatusChip ───────────────────────────────────────────────────────────────
+// --- StatusChip ---------------------------------------------------------------
 
 /**
  * Memoization Justification:
@@ -87,7 +86,7 @@ export const StatusChip = React.memo(
   )
 );
 
-// ─── EmptyRows ────────────────────────────────────────────────────────────────
+// --- EmptyRows ----------------------------------------------------------------
 
 export function EmptyRows({ message, colSpan }: { message: string; colSpan: number }) {
   return (
@@ -101,7 +100,7 @@ export function EmptyRows({ message, colSpan }: { message: string; colSpan: numb
   );
 }
 
-// ─── PolicyName ───────────────────────────────────────────────────────────────
+// --- PolicyName ---------------------------------------------------------------
 
 export function PolicyName({
   id,
@@ -114,7 +113,7 @@ export function PolicyName({
   return <>{items.find((item) => item.id === id)?.name || 'Unknown policy'}</>;
 }
 
-// ─── InfoTooltipIcon ──────────────────────────────────────────────────────────
+// --- InfoTooltipIcon ----------------------------------------------------------
 
 export function InfoTooltipIcon({ title }: { title: string }) {
   return (
@@ -130,7 +129,7 @@ export function InfoTooltipIcon({ title }: { title: string }) {
   );
 }
 
-// ─── DrawerHeader ─────────────────────────────────────────────────────────────
+// --- DrawerHeader -------------------------------------------------------------
 
 export function DrawerHeader({
   title,
@@ -183,7 +182,7 @@ export function DrawerHeader({
   );
 }
 
-// ─── PolicyOperationOverlay ───────────────────────────────────────────────────
+// --- PolicyOperationOverlay ---------------------------------------------------
 
 export function PolicyOperationOverlay({ operation }: { operation: PolicyOperationState }) {
   if (!operation) return null;
@@ -226,7 +225,7 @@ export function PolicyOperationOverlay({ operation }: { operation: PolicyOperati
   );
 }
 
-// ─── PolicyDrawerLayout ───────────────────────────────────────────────────────
+// --- PolicyDrawerLayout -------------------------------------------------------
 
 export function PolicyDrawerLayout({
   title,
@@ -300,7 +299,7 @@ export function PolicyDrawerLayout({
         </Button>
         <Tooltip title={disabled && disabledReason ? disabledReason : ''}>
           <span>
-            <LoadingButton
+            <Button
               variant="contained"
               disabled={disabled || Boolean(operation)}
               loading={loading && !operation}
@@ -309,7 +308,7 @@ export function PolicyDrawerLayout({
               size="small"
             >
               {operation ? 'Saving...' : 'Submit'}
-            </LoadingButton>
+            </Button>
           </span>
         </Tooltip>
       </Stack>
@@ -317,7 +316,7 @@ export function PolicyDrawerLayout({
   );
 }
 
-// ─── PolicySection ────────────────────────────────────────────────────────────
+// --- PolicySection ------------------------------------------------------------
 
 export function PolicySection({
   title,
@@ -363,7 +362,7 @@ export function PolicySection({
   );
 }
 
-// ─── DrawerFormGrid ───────────────────────────────────────────────────────────
+// --- DrawerFormGrid -----------------------------------------------------------
 
 export function DrawerFormGrid({
   children,
@@ -394,7 +393,7 @@ export function DrawerFormGrid({
   );
 }
 
-// ─── FieldLabel ───────────────────────────────────────────────────────────────
+// --- FieldLabel ---------------------------------------------------------------
 
 export function FieldLabel({ label, help }: { label: React.ReactNode; help?: string }) {
   return (
@@ -405,7 +404,7 @@ export function FieldLabel({ label, help }: { label: React.ReactNode; help?: str
   );
 }
 
-// ─── DrawerField ──────────────────────────────────────────────────────────────
+// --- DrawerField --------------------------------------------------------------
 
 export function DrawerField({
   label,
@@ -438,7 +437,7 @@ export function DrawerField({
   );
 }
 
-// ─── DrawerSelectField ────────────────────────────────────────────────────────
+// --- DrawerSelectField --------------------------------------------------------
 
 export function DrawerSelectField({
   label,
@@ -466,7 +465,7 @@ export function DrawerSelectField({
   );
 }
 
-// ─── DrawerSwitchField ────────────────────────────────────────────────────────
+// --- DrawerSwitchField --------------------------------------------------------
 
 export function DrawerSwitchField({
   label,
@@ -506,7 +505,7 @@ export function DrawerSwitchField({
   );
 }
 
-// ─── SectionTable ─────────────────────────────────────────────────────────────
+// --- SectionTable -------------------------------------------------------------
 
 export function SectionTable({
   children,
@@ -517,7 +516,10 @@ export function SectionTable({
 }) {
   return (
     <TableContainer
-      sx={{ border: (theme) => `1px solid ${theme.vars.palette.divider}`, borderRadius: 1 }}
+      sx={{
+        border: (theme) => `1px solid ${(theme.vars || theme).palette.divider}`,
+        borderRadius: 1,
+      }}
     >
       <Table size="small">
         <TableHead>
@@ -535,7 +537,7 @@ export function SectionTable({
   );
 }
 
-// ─── DrawerTitle (for dialogs) ─────────────────────────────────────────────────
+// --- DrawerTitle (for dialogs) -------------------------------------------------
 
 export function DrawerDialogTitle({
   children,

@@ -6,10 +6,12 @@ import {
   attendanceNumericRules,
   clampNumericPolicyInput,
   cleanVersionDisplayValue,
+  normalizeEditableDefault,
   getNumericPolicyInputError,
   sanitizeNumericPolicyInput,
   versionMatchesHistorySearch,
   isAttendanceThresholdOrderValid,
+  getAttendanceOvertimeValidationError,
 } from './hr-policy-ui-utils';
 
 const version: HrPolicyVersion = {
@@ -48,6 +50,43 @@ describe('HR policy UI utilities', () => {
     expect(isAttendanceThresholdOrderValid(75, 50, 0)).toBe(true);
     expect(isAttendanceThresholdOrderValid(50, 50, 0)).toBe(false);
     expect(isAttendanceThresholdOrderValid(75, 40, 50)).toBe(false);
+  });
+
+  it('normalizes default flags so only active policies can be default', () => {
+    expect(normalizeEditableDefault('active', true)).toBe(true);
+    expect(normalizeEditableDefault('draft', true)).toBe(false);
+    expect(normalizeEditableDefault('active', false)).toBe(false);
+  });
+
+  it('requires overtime rate and minimum minutes when overtime is enabled', () => {
+    expect(
+      getAttendanceOvertimeValidationError({
+        overtimeEnabled: true,
+        overtimeRate: '',
+        minOvertimeMinutes: '30',
+      })
+    ).toBe('Overtime rate is required when overtime is enabled.');
+    expect(
+      getAttendanceOvertimeValidationError({
+        overtimeEnabled: true,
+        overtimeRate: 'flat',
+        minOvertimeMinutes: '',
+      })
+    ).toBe('Minimum overtime minutes are required when overtime is enabled.');
+    expect(
+      getAttendanceOvertimeValidationError({
+        overtimeEnabled: true,
+        overtimeRate: 'flat',
+        minOvertimeMinutes: '30',
+      })
+    ).toBe('');
+    expect(
+      getAttendanceOvertimeValidationError({
+        overtimeEnabled: false,
+        overtimeRate: '',
+        minOvertimeMinutes: '',
+      })
+    ).toBe('');
   });
 
   it('formats raw ISO timestamp values for version comparison fallback display', () => {

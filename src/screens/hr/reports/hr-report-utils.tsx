@@ -27,6 +27,9 @@ export type HrReportBuilderState = {
   sortDirection: 'asc' | 'desc';
   groups: string[];
   summaryField: string;
+  chartType: 'none' | 'kpi' | 'bar' | 'line' | 'donut';
+  chartCategoryField: string;
+  chartValueField: string;
   visibility: 'private' | 'organization';
 };
 
@@ -51,6 +54,15 @@ export const defaultHrReportOperator = (field?: HrReportField) => field?.operato
 
 export const getHrReportDateFields = (source?: HrReportSource) =>
   (source?.fields ?? []).filter((field) => field.type === 'date');
+
+export const isHrReportChartableField = (field: HrReportField) =>
+  field.chartable ?? (field.groupable || field.summarizable);
+
+export const getHrReportChartCategoryFields = (source?: HrReportSource) =>
+  (source?.fields ?? []).filter((field) => field.groupable && isHrReportChartableField(field));
+
+export const getHrReportChartValueFields = (source?: HrReportSource) =>
+  (source?.fields ?? []).filter((field) => field.summarizable && isHrReportChartableField(field));
 
 export const getDefaultHrReportDateField = (source?: HrReportSource) => {
   const fields = getHrReportDateFields(source);
@@ -95,6 +107,9 @@ export const createHrReportStateFromSource = (source: HrReportSource): HrReportB
   sortDirection: 'asc',
   groups: [],
   summaryField: '',
+  chartType: 'none',
+  chartCategoryField: '',
+  chartValueField: '',
   visibility: 'private',
 });
 
@@ -120,6 +135,15 @@ export const createHrReportStateFromTemplate = (
     sortDirection: definition.sorts?.[0]?.direction === 'desc' ? 'desc' : 'asc',
     groups: definition.groups ?? [],
     summaryField: definition.summaries?.[0]?.field ?? '',
+    chartType:
+      definition.chart?.type === 'kpi' ||
+      definition.chart?.type === 'bar' ||
+      definition.chart?.type === 'line' ||
+      definition.chart?.type === 'donut'
+        ? definition.chart.type
+        : 'none',
+    chartCategoryField: definition.chart?.categoryField ?? definition.groups?.[0] ?? '',
+    chartValueField: definition.chart?.valueField ?? definition.summaries?.[0]?.field ?? '',
     visibility: template.visibility === 'organization' ? 'organization' : 'private',
   };
 };
@@ -139,6 +163,18 @@ export const buildHrReportRequest = (
   columns: state.columns,
   groups: state.groups,
   summaries: state.summaryField ? [{ field: state.summaryField, function: 'sum' }] : [],
+  ...(state.chartType !== 'none'
+    ? {
+        chart: {
+          type: state.chartType,
+          categoryField:
+            state.chartType === 'kpi' ? undefined : state.chartCategoryField || state.groups[0],
+          valueField: state.chartValueField || state.summaryField || undefined,
+          function: state.chartValueField || state.summaryField ? 'sum' : 'count',
+          title: `${state.reportName || source?.label || 'HR Report'} Analytics`,
+        },
+      }
+    : {}),
   sorts: state.sortField ? [{ field: state.sortField, direction: state.sortDirection }] : [],
   filters: {
     dateField: state.dateField || undefined,

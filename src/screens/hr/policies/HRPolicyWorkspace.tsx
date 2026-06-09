@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * HRPolicyWorkspace — Thin orchestrator.
+ * HRPolicyWorkspace - Thin orchestrator.
  *
  * All state, queries, and mutations are encapsulated in `useHRPolicyWorkspace`.
  * Each tab and drawer is a dedicated component importing from this hook's context type.
@@ -125,7 +125,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       <PolicyAuditDrawer ctx={ctx} />
       <PolicyVersionDrawer ctx={ctx} />
 
-      {/* Global operation spinner — excludes impact preview (shown in its own drawer) */}
+      {/* Global operation spinner - excludes impact preview (shown in its own drawer) */}
       <PolicyOperationOverlay
         operation={activePolicyOperation?.key === 'preview-impact' ? null : activePolicyOperation}
       />

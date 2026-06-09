@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import {
   cleanVersionDisplayValue,
@@ -39,7 +38,7 @@ import { EmptyRows, DrawerHeader, SectionTable, InfoTooltipIcon } from './HRPoli
 import type { VersionDifference } from '../types/hr-policy-workspace.types';
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
-// ─── PolicyVersionDrawer ───────────────────────────────────────────────────────
+// --- PolicyVersionDrawer -------------------------------------------------------
 
 export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -252,7 +251,7 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
   );
 }
 
-// ─── RestoreVersionDialog ──────────────────────────────────────────────────────
+// --- RestoreVersionDialog ------------------------------------------------------
 
 function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -264,6 +263,24 @@ function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     setRestoreVersion,
     restoreVersionAsDraft,
   } = ctx;
+  const hasBlockingRestoreWarnings = Boolean(restorePreview?.blockingWarnings?.length);
+  const displayedRestoreWarnings = [
+    ...(restorePreview?.warnings ?? []),
+    ...(restorePreview?.blockingWarnings ?? []).filter(
+      (blockingWarning) =>
+        !(restorePreview?.warnings ?? []).some(
+          (warning) =>
+            warning.code === blockingWarning.code && warning.message === blockingWarning.message
+        )
+    ),
+  ];
+  const restoreSummarySeverity = hasBlockingRestoreWarnings
+    ? 'error'
+    : restorePreview?.requiresConfirmation
+      ? 'warning'
+      : displayedRestoreWarnings.length
+        ? 'info'
+        : 'success';
 
   return (
     <Dialog
@@ -298,17 +315,24 @@ function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
               ) : null}
             </Stack>
           ) : null}
-          {restorePreview?.warnings?.length ? (
+          {displayedRestoreWarnings.length ? (
             <Stack spacing={1}>
-              {restorePreview.warnings.slice(0, 3).map((warning) => (
+              {displayedRestoreWarnings.slice(0, 3).map((warning) => (
                 <Alert
-                  key={warning.code}
+                  key={`${warning.code}-${warning.message}`}
                   severity={warning.severity === 'blocking' ? 'error' : 'warning'}
                 >
                   {warning.message}
                 </Alert>
               ))}
             </Stack>
+          ) : null}
+          {restorePreview?.riskSummary || restorePreview?.recommendedAction ? (
+            <Alert severity={restoreSummarySeverity}>
+              {restorePreview.riskSummary || ''}
+              {restorePreview.riskSummary && restorePreview.recommendedAction ? ' ' : ''}
+              {restorePreview.recommendedAction || ''}
+            </Alert>
           ) : null}
           <TextField
             label="Draft name"
@@ -340,14 +364,20 @@ function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         <Button onClick={() => setRestoreVersion(null)} disabled={isPolicyOperationActive}>
           Cancel
         </Button>
-        <LoadingButton
+        <Button
           variant="contained"
           loading={restoreVersionState.isLoading || isPolicyOperationActive}
-          disabled={!restoreVersion?.name.trim() || !restoreVersion?.reason.trim()}
+          disabled={
+            !restoreVersion?.name.trim() ||
+            !restoreVersion?.reason.trim() ||
+            !restorePreview ||
+            restorePreviewLoading ||
+            hasBlockingRestoreWarnings
+          }
           onClick={() => restoreVersion && restoreVersionAsDraft(restoreVersion.version)}
         >
           Create Draft
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </Dialog>
   );

@@ -277,6 +277,7 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
   deductionComponents: editData?.deductionComponents ?? [],
   policyOverrideEnabled: false,
   policyOverrideWasEnabled: false,
+  policyOverrideAssignmentId: '',
   policyOverridePayrollPolicyId: '',
   policyOverrideAttendancePolicyId: '',
   policyOverrideEffectiveFrom: dayjs().format('YYYY-MM-DD'),
@@ -566,14 +567,14 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     [editData, updateExperienceInfo]
   );
   const requestPolicyImpactConfirmation = useCallback((preview: any) => {
-    if (!preview?.requiresConfirmation) {
-      return Promise.resolve<string | null>(null);
-    }
-
     if (preview?.blockingWarnings?.length) {
       return Promise.reject(
         new Error(preview.blockingWarnings[0]?.message || 'Policy impact is blocking.')
       );
+    }
+
+    if (!preview?.requiresConfirmation) {
+      return Promise.resolve<string | null>(null);
     }
 
     return new Promise<string | null>((resolve, reject) => {
@@ -620,9 +621,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         policyOverrideAction === 'disable'
           ? {
               academicYearId: currentYear?.id,
+              assignmentId: values.policyOverrideAssignmentId || undefined,
               effectiveFrom: policyOverrideDisableEffectiveFrom,
               assignmentReason:
                 values.policyOverrideAssignmentReason || 'Employee payroll step override disabled',
+              ...(confirmationToken ? { confirmationToken } : {}),
             }
           : undefined;
       const res = await updateBankDetails({
@@ -853,7 +856,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           // Sync formik's initialValues with the saved state so dirty becomes false,
           // and clear the initialized flag so fresh API data re-populates on next visit.
           formik.resetForm({ values: { ...formik.values, employeeId: resolvedEmployeeId } });
-          // Don't reset the initialized flag on the last step — we're about to close
+          // Do not reset the initialized flag on the last step; the form is about to close
           // the form and clearing it would cause the useEffect to re-fire with cached
           // API data, producing a double-render / double-save appearance.
           if (!isLastStep || isSaveButton) {
@@ -870,6 +873,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           message:
             (error as any)?.data?.message ||
             (error as any)?.error ||
+            (error as any)?.message ||
             'Failed to save employee details',
         });
         setIsLoading(false);
@@ -1141,7 +1145,7 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef, isSubmitted }
     options: { skip: !(accessControlUserId && currentYear?.id && step === 7) },
   });
 
-  // Full boards tree for the current academic year — needed to expand the
+  // Full boards tree for the current academic year, needed to expand the
   // BE access-control response when it compresses branches via `hasFull*Access`.
   const {
     data: boardsData,

@@ -12,6 +12,10 @@ vi.mock('src/components/custom-tooltip', () => ({
   default: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
+}));
+
 const baseAttendanceForm: AttendanceForm = {
   name: 'Standard Attendance',
   status: 'active',

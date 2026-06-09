@@ -33,6 +33,14 @@ export type HrReportSummary = {
   function: 'count' | 'sum' | 'avg' | string;
 };
 
+export type HrReportChartDefinition = {
+  type: 'none' | 'kpi' | 'bar' | 'line' | 'donut' | string;
+  categoryField?: string;
+  valueField?: string;
+  function?: 'count' | 'sum' | 'avg' | string;
+  title?: string;
+};
+
 export type HrReportRequest = {
   reportType: string;
   dataSource?: string;
@@ -43,6 +51,7 @@ export type HrReportRequest = {
   sorts?: HrReportSort[];
   groups?: string[];
   summaries?: HrReportSummary[];
+  chart?: HrReportChartDefinition;
   filters?: HrReportFilter;
 };
 
@@ -60,6 +69,14 @@ export type HrReportPreview = {
   columns: HrReportColumn[];
   rows: Record<string, string | null>[];
   normalizedFilters: HrReportFilter;
+  queryWarnings?: string[];
+  chart?: HrReportChartPreview;
+};
+
+export type HrReportChartPreview = {
+  type: string;
+  title: string;
+  points: { label: string; value: number }[];
 };
 
 export type HrReportExportJob = {
@@ -69,6 +86,13 @@ export type HrReportExportJob = {
   status: 'Queued' | 'Running' | 'Completed' | 'Failed' | string;
   fileName?: string;
   errorMessage?: string;
+  progressPercent?: number;
+  rowCount?: number;
+  fileSizeBytes?: number;
+  requestedByUserId?: string;
+  generatedAt?: string;
+  isExpired?: boolean;
+  sharedUserIds?: string[];
   creationTime: string;
   startedAt?: string;
   completedAt?: string;
@@ -94,6 +118,7 @@ export type HrReportField = {
   sortable: boolean;
   groupable: boolean;
   summarizable: boolean;
+  chartable?: boolean;
   operators: string[];
   options: HrReportOption[];
 };
@@ -140,6 +165,42 @@ export type HrReportTemplateRequest = {
   visibility: 'private' | 'organization' | string;
   status: 'Draft' | 'Published' | 'Archived' | string;
   definition: HrReportRequest;
+};
+
+export type HrReportSchedule = {
+  id: string;
+  name: string;
+  templateId?: string;
+  frequency: 'daily' | 'weekly' | 'monthly' | string;
+  deliveryMode: 'inApp' | 'inAppAndEmail' | string;
+  status: 'Active' | 'Paused' | string;
+  recipientUserIds: string[];
+  definition: HrReportRequest;
+  nextRunAt: string;
+  lastRunAt?: string;
+  ownerUserId: string;
+  creationTime: string;
+  lastModificationTime?: string;
+};
+
+export type HrReportScheduleList = {
+  items: HrReportSchedule[];
+};
+
+export type HrReportScheduleRequest = {
+  name: string;
+  templateId?: string;
+  frequency: 'daily' | 'weekly' | 'monthly' | string;
+  deliveryMode: 'inApp' | 'inAppAndEmail' | string;
+  recipientUserIds: string[];
+  definition: HrReportRequest;
+  firstRunAt?: string;
+};
+
+export type HrReportScheduleRunResponse = {
+  scheduleId: string;
+  jobId: string;
+  nextRunAt: string;
 };
 
 export const buildHrReportDownloadUrl = (jobId: string) => `/hr/reports/exports/${jobId}/download`;
@@ -232,12 +293,91 @@ export const hrReportsApi = api.injectEndpoints({
         method: 'GET',
       }),
     }),
+    cancelHrReportExport: builder.mutation<HrReportExportJob, string>({
+      query: (jobId) => ({
+        url: `/hr/reports/exports/${jobId}/cancel`,
+        method: 'POST',
+      }),
+    }),
+    retryHrReportExport: builder.mutation<{ jobId: string; status: string }, string>({
+      query: (jobId) => ({
+        url: `/hr/reports/exports/${jobId}/retry`,
+        method: 'POST',
+      }),
+    }),
+    regenerateHrReportExport: builder.mutation<{ jobId: string; status: string }, string>({
+      query: (jobId) => ({
+        url: `/hr/reports/exports/${jobId}/regenerate`,
+        method: 'POST',
+      }),
+    }),
+    shareHrReportExport: builder.mutation<HrReportExportJob, { jobId: string; userIds: string[] }>({
+      query: ({ jobId, userIds }) => ({
+        url: `/hr/reports/exports/${jobId}/share`,
+        method: 'POST',
+        body: { userIds },
+      }),
+    }),
     downloadHrReportExport: builder.mutation<Blob, string>({
       query: (jobId) => ({
         url: buildHrReportDownloadUrl(jobId),
         method: 'GET',
         responseHandler: (response) => response.blob(),
       }),
+    }),
+    getHrReportSchedules: builder.query<HrReportScheduleList, void>({
+      query: () => ({
+        url: '/hr/reports/schedules',
+        method: 'GET',
+      }),
+      providesTags: [employeeType.hrReports],
+    }),
+    createHrReportSchedule: builder.mutation<HrReportSchedule, HrReportScheduleRequest>({
+      query: (body) => ({
+        url: '/hr/reports/schedules',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [employeeType.hrReports],
+    }),
+    updateHrReportSchedule: builder.mutation<
+      HrReportSchedule,
+      { id: string; body: HrReportScheduleRequest }
+    >({
+      query: ({ id, body }) => ({
+        url: `/hr/reports/schedules/${id}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [employeeType.hrReports],
+    }),
+    pauseHrReportSchedule: builder.mutation<HrReportSchedule, string>({
+      query: (id) => ({
+        url: `/hr/reports/schedules/${id}/pause`,
+        method: 'POST',
+      }),
+      invalidatesTags: [employeeType.hrReports],
+    }),
+    resumeHrReportSchedule: builder.mutation<HrReportSchedule, string>({
+      query: (id) => ({
+        url: `/hr/reports/schedules/${id}/resume`,
+        method: 'POST',
+      }),
+      invalidatesTags: [employeeType.hrReports],
+    }),
+    runHrReportScheduleNow: builder.mutation<HrReportScheduleRunResponse, string>({
+      query: (id) => ({
+        url: `/hr/reports/schedules/${id}/run-now`,
+        method: 'POST',
+      }),
+      invalidatesTags: [employeeType.hrReports],
+    }),
+    deleteHrReportSchedule: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/hr/reports/schedules/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [employeeType.hrReports],
     }),
   }),
 });
@@ -254,5 +394,16 @@ export const {
   useCreateHrReportExportMutation,
   useGetHrReportExportsQuery,
   useGetHrReportExportQuery,
+  useCancelHrReportExportMutation,
+  useRetryHrReportExportMutation,
+  useRegenerateHrReportExportMutation,
+  useShareHrReportExportMutation,
   useDownloadHrReportExportMutation,
+  useGetHrReportSchedulesQuery,
+  useCreateHrReportScheduleMutation,
+  useUpdateHrReportScheduleMutation,
+  usePauseHrReportScheduleMutation,
+  useResumeHrReportScheduleMutation,
+  useRunHrReportScheduleNowMutation,
+  useDeleteHrReportScheduleMutation,
 } = hrReportsApi;

@@ -43,4 +43,23 @@ describe('hrReportsApi helpers', () => {
   it('builds export download URLs', () => {
     expect(buildHrReportDownloadUrl('job-123')).toBe('/hr/reports/exports/job-123/download');
   });
+
+  it('preserves chart definitions while normalizing requests', () => {
+    expect(
+      normalizeHrReportRequest({
+        reportType: 'Attendance Summary',
+        chart: {
+          type: 'donut',
+          categoryField: 'status',
+          function: 'count',
+        },
+      })
+    ).toMatchObject({
+      chart: {
+        type: 'donut',
+        categoryField: 'status',
+        function: 'count',
+      },
+    });
+  });
 });

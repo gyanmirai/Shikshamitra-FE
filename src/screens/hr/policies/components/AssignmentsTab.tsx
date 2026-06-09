@@ -35,7 +35,7 @@ import { defaultAssignmentFilters } from '../hr-policy-workspace.constants';
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 import type { AssignmentFilters, AssignmentTableRow } from '../types/hr-policy-workspace.types';
 
-// ─── AssignmentsTab ────────────────────────────────────────────────────────────
+// --- AssignmentsTab ------------------------------------------------------------
 
 export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -58,9 +58,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     openAssignmentDrawer,
     openEntityAudit,
     previewAssignment,
-    previewPolicyRowImpact,
-    archivePolicy,
-    unarchivePolicy,
+    deleteAssignment,
   } = ctx;
 
   const activeFilterCount = [
@@ -81,13 +79,13 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
 
   if (assignmentFilters.targetType !== 'all')
     activeFilterChips.push({
-      label: `Source → ${assignmentFilters.targetType === 'employee' ? 'Employee' : 'Group'}`,
+      label: `Source -> ${assignmentFilters.targetType === 'employee' ? 'Employee' : 'Group'}`,
       key: 'targetType',
       reset: { targetType: 'all' },
     });
   if (assignmentFilters.status !== 'all')
     activeFilterChips.push({
-      label: `Status → ${assignmentFilters.status === 'active' ? 'Active' : 'Inactive'}`,
+      label: `Status -> ${assignmentFilters.status === 'active' ? 'Active' : 'Inactive'}`,
       key: 'status',
       reset: { status: 'all' },
     });
@@ -96,7 +94,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       payroll.find((p) => p.id === assignmentFilters.payrollPolicyId)?.name ||
       assignmentFilters.payrollPolicyId;
     activeFilterChips.push({
-      label: `Payroll → ${name}`,
+      label: `Payroll -> ${name}`,
       key: 'payrollPolicyId',
       reset: { payrollPolicyId: '' },
     });
@@ -106,26 +104,26 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       attendance.find((a) => a.id === assignmentFilters.attendancePolicyId)?.name ||
       assignmentFilters.attendancePolicyId;
     activeFilterChips.push({
-      label: `Attendance → ${name}`,
+      label: `Attendance -> ${name}`,
       key: 'attendancePolicyId',
       reset: { attendancePolicyId: '' },
     });
   }
   if (assignmentFilters.activeOnDate)
     activeFilterChips.push({
-      label: `Active on → ${formatDate(assignmentFilters.activeOnDate)}`,
+      label: `Active on -> ${formatDate(assignmentFilters.activeOnDate)}`,
       key: 'activeOnDate',
       reset: { activeOnDate: '' },
     });
   if (assignmentFilters.effectiveFrom)
     activeFilterChips.push({
-      label: `Effective from → ${formatDate(assignmentFilters.effectiveFrom)}`,
+      label: `Effective from -> ${formatDate(assignmentFilters.effectiveFrom)}`,
       key: 'effectiveFrom',
       reset: { effectiveFrom: '' },
     });
   if (assignmentFilters.effectiveTo)
     activeFilterChips.push({
-      label: `Effective to → ${formatDate(assignmentFilters.effectiveTo)}`,
+      label: `Effective to -> ${formatDate(assignmentFilters.effectiveTo)}`,
       key: 'effectiveTo',
       reset: { effectiveTo: '' },
     });
@@ -220,6 +218,18 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                   >
                     <Iconify icon="mdi:history" />
                     Audit Trail
+                  </MenuItem>
+                )}
+                {canAssignPolicy && item.isActive && (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      deleteAssignment(item);
+                    }}
+                    sx={{ color: 'error.main' }}
+                  >
+                    <Iconify icon="mdi:close-circle-outline" />
+                    Deactivate Assignment
                   </MenuItem>
                 )}
               </MenuList>

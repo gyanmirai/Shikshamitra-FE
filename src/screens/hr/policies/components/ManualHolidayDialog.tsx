@@ -25,7 +25,7 @@ import { FieldLabel, InfoTooltipIcon, DrawerDialogTitle } from './HRPolicyShared
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
-// ─── ManualHolidayDialog ──────────────────────────────────────────────────────
+// --- ManualHolidayDialog ------------------------------------------------------
 
 export function ManualHolidayDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {

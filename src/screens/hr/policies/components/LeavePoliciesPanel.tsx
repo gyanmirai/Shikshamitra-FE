@@ -14,8 +14,8 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { LeavePolicyForm } from 'src/screens/hr/attendance-setting/leave-policy';
-import { Card, Chip, Stack, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import { useGetLeavePoliciesQuery, useDeleteLeavePolicyMutation } from 'src/redux/hr/leaveApi';
+import { Card, Chip, Stack, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { formatDate } from '../hr-policy-workspace-utils';
 import { LeavePolicyImpactDrawer } from './LeavePolicyImpactDrawer';

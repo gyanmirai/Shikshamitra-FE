@@ -1,6 +1,6 @@
 'use client';
 
-import type { PolicyStatus } from 'src/redux/hr/hr-policy-api';
+import type { EditablePolicyStatus } from 'src/redux/hr/hr-policy-api';
 
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -52,7 +52,7 @@ import {
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
-// ─── PayrollPolicyDrawer ──────────────────────────────────────────────────────
+// --- PayrollPolicyDrawer ------------------------------------------------------
 
 export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -195,13 +195,13 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             onChange={(event) =>
               setPayrollForm((current) => ({
                 ...current,
-                status: event.target.value as PolicyStatus,
+                status: event.target.value as EditablePolicyStatus,
+                isDefault: event.target.value === 'active' ? current.isDefault : false,
               }))
             }
           >
             <MenuItem value="draft">Draft</MenuItem>
             <MenuItem value="active">Active</MenuItem>
-            <MenuItem value="archived">Archived</MenuItem>
           </DrawerSelectField>
           <DrawerSelectField
             label="Work Calendar *"
@@ -395,7 +395,7 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
           ) : null}
           <TableContainer
             sx={{
-              border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+              border: (theme) => `1px solid ${(theme.vars || theme).palette.divider}`,
               borderRadius: 1,
               maxHeight: 320,
             }}

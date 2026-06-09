@@ -2,6 +2,7 @@ import { api } from 'src/redux/service';
 import { employeeType } from 'src/redux/tagTypes';
 
 export type PolicyStatus = 'draft' | 'active' | 'archived';
+export type EditablePolicyStatus = Exclude<PolicyStatus, 'archived'>;
 
 export type PagedResult<T> = {
   items: T[];
@@ -136,18 +137,24 @@ export type HrPolicyAssignment = {
 
 export type CreateUpdateWorkCalendarPolicy = Omit<
   Partial<WorkCalendarPolicy>,
-  'id' | 'version' | 'createdAt' | 'lastUpdatedAt'
->;
+  'id' | 'version' | 'createdAt' | 'lastUpdatedAt' | 'status'
+> & {
+  status?: EditablePolicyStatus;
+};
 
 export type CreateUpdatePayrollPolicy = Omit<
   Partial<PayrollPolicy>,
-  'id' | 'version' | 'createdAt' | 'lastUpdatedAt'
->;
+  'id' | 'version' | 'createdAt' | 'lastUpdatedAt' | 'status'
+> & {
+  status?: EditablePolicyStatus;
+};
 
 export type CreateUpdateAttendancePolicy = Omit<
   Partial<AttendancePolicy>,
-  'id' | 'version' | 'createdAt' | 'lastUpdatedAt'
->;
+  'id' | 'version' | 'createdAt' | 'lastUpdatedAt' | 'status'
+> & {
+  status?: EditablePolicyStatus;
+};
 
 export type CreateUpdateHrPolicyAssignment = Omit<
   Partial<HrPolicyAssignment>,
@@ -157,18 +164,22 @@ export type CreateUpdateHrPolicyAssignment = Omit<
 export type EmployeePolicyOverrideRequest = {
   employeeId: string;
   academicYearId: string;
+  assignmentId?: string | null;
   payrollPolicyId: string;
   attendancePolicyId: string;
   effectiveFrom: string;
   effectiveTo?: string | null;
   assignmentReason?: string | null;
+  confirmationToken?: string | null;
 };
 
 export type DisableEmployeePolicyOverrideRequest = {
   employeeId: string;
   academicYearId: string;
+  assignmentId?: string | null;
   effectiveDate: string;
   assignmentReason?: string | null;
+  confirmationToken?: string | null;
 };
 
 export type EffectiveEmployeePolicies = {
@@ -187,6 +198,9 @@ export type EffectiveEmployeePolicies = {
   attendanceWorkCalendarPolicy?: WorkCalendarPolicy | null;
   payrollWorkCalendarPolicy?: WorkCalendarPolicy | null;
   resolutionSteps?: EffectivePolicyResolutionStep[];
+  resolutionSummary?: string | null;
+  riskSummary?: string | null;
+  recommendedAction?: string | null;
 };
 
 export type EffectivePolicyResolutionStep = {
@@ -280,6 +294,9 @@ export type HrPolicyImpactPreview = {
   confirmationToken?: string | null;
   expiresAt?: string | null;
   blockingWarnings?: Array<{ severity: HrPolicyImpactSeverity; code: string; message: string }>;
+  resolutionSummary?: string | null;
+  riskSummary?: string | null;
+  recommendedAction?: string | null;
 };
 
 export type HrPolicyEffectiveAssignmentConflict = {
@@ -602,6 +619,18 @@ export const hrPolicyApi = api.injectEndpoints({
       }),
       invalidatesTags: policyTags,
     }),
+    createPayrollPolicyWithToken: builder.mutation<
+      PayrollPolicy,
+      { body: CreateUpdatePayrollPolicy; token?: string }
+    >({
+      query: ({ body, token }) => ({
+        url: '/hr/payroll/policies',
+        method: 'POST',
+        body,
+        headers: token ? { 'X-HR-Policy-Impact-Token': token } : undefined,
+      }),
+      invalidatesTags: policyTags,
+    }),
     clonePayrollPolicy: builder.mutation<
       PayrollPolicy,
       { id: string; name?: string; effectiveFrom?: string }
@@ -689,6 +718,18 @@ export const hrPolicyApi = api.injectEndpoints({
         url: '/hr/attendance/policies',
         method: 'POST',
         body,
+      }),
+      invalidatesTags: policyTags,
+    }),
+    createAttendancePolicyWithToken: builder.mutation<
+      AttendancePolicy,
+      { body: CreateUpdateAttendancePolicy; token?: string }
+    >({
+      query: ({ body, token }) => ({
+        url: '/hr/attendance/policies',
+        method: 'POST',
+        body,
+        headers: token ? { 'X-HR-Policy-Impact-Token': token } : undefined,
       }),
       invalidatesTags: policyTags,
     }),
@@ -999,6 +1040,7 @@ export const {
   useUnarchiveWorkCalendarPolicyMutation,
   useGetPayrollPoliciesQuery,
   useCreatePayrollPolicyMutation,
+  useCreatePayrollPolicyWithTokenMutation,
   useClonePayrollPolicyMutation,
   useUpdatePayrollPolicyMutation,
   useUpdatePayrollPolicyWithTokenMutation,
@@ -1009,6 +1051,7 @@ export const {
   useSetDefaultPayrollPolicyWithTokenMutation,
   useGetAttendancePoliciesQuery,
   useCreateAttendancePolicyMutation,
+  useCreateAttendancePolicyWithTokenMutation,
   useCloneAttendancePolicyMutation,
   useUpdateAttendancePolicyMutation,
   useUpdateAttendancePolicyWithTokenMutation,

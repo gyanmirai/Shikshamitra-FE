@@ -2,6 +2,8 @@ import type {
   PayrollPolicy,
   AttendancePolicy,
   WorkCalendarPolicy,
+  CreateUpdatePayrollPolicy,
+  CreateUpdateAttendancePolicy,
 } from 'src/redux/hr/hr-policy-api';
 
 import { it, expect, describe } from 'vitest';
@@ -54,6 +56,19 @@ const basePayroll: PayrollPolicy = {
   version: 1,
 };
 
+const basePayrollPayload: CreateUpdatePayrollPolicy = {
+  academicYearId: 'year-1',
+  workCalendarPolicyId: 'calendar-1',
+  name: 'Standard Payroll',
+  status: 'active',
+  isDefault: true,
+  dayCalculationType: 'working-days',
+  manualDays: null,
+  manualMonthDays: [],
+  saturdayWorkPolicy: 'full-day',
+  holidayOverrides: [],
+};
+
 const baseAttendance: AttendancePolicy = {
   id: 'attendance-1',
   academicYearId: 'year-1',
@@ -80,6 +95,32 @@ const baseAttendance: AttendancePolicy = {
   sandwichRuleEnabled: false,
   payrollPreviewEnabled: true,
   version: 1,
+};
+
+const baseAttendancePayload: CreateUpdateAttendancePolicy = {
+  academicYearId: 'year-1',
+  workCalendarPolicyId: 'calendar-1',
+  name: 'Standard Attendance',
+  status: 'active',
+  isDefault: true,
+  captureMode: 'integrated',
+  fullDayThresholdPercentage: 75,
+  halfDayThresholdPercentage: 50,
+  absentThresholdPercentage: 0,
+  missingPunchBehavior: 'requires_review',
+  manualCorrectionAllowed: true,
+  graceTime: 0,
+  maxLateAllowedPerMonth: 0,
+  penaltyType: 'none',
+  penaltyCountThreshold: 0,
+  earlyExitEnabled: false,
+  earlyExitGraceTime: 0,
+  overtimeEnabled: false,
+  overtimeRate: null,
+  minOvertimeMinutes: null,
+  holidayWorkBehavior: 'paid',
+  sandwichRuleEnabled: false,
+  payrollPreviewEnabled: true,
 };
 
 describe('hr policy change utilities', () => {
@@ -123,22 +164,11 @@ describe('hr policy change utilities', () => {
   });
 
   it('detects unchanged payroll payloads', () => {
-    expect(
-      isPayrollPolicyUnchanged(basePayroll, {
-        academicYearId: 'year-1',
-        workCalendarPolicyId: 'calendar-1',
-        name: 'Standard Payroll',
-        status: 'active',
-        isDefault: true,
-        dayCalculationType: 'working-days',
-        manualDays: null,
-        manualMonthDays: [],
-        saturdayWorkPolicy: 'full-day',
-        holidayOverrides: [],
-      })
-    ).toBe(true);
+    expect(isPayrollPolicyUnchanged(basePayroll, basePayrollPayload)).toBe(true);
 
-    expect(isPayrollPolicyUnchanged(basePayroll, { ...basePayroll, isDefault: false })).toBe(false);
+    expect(isPayrollPolicyUnchanged(basePayroll, { ...basePayrollPayload, isDefault: false })).toBe(
+      false
+    );
   });
 
   it('detects unchanged attendance payloads with normalized null values', () => {
@@ -172,14 +202,14 @@ describe('hr policy change utilities', () => {
 
     expect(
       isAttendancePolicyUnchanged(baseAttendance, {
-        ...baseAttendance,
+        ...baseAttendancePayload,
         graceTime: 5,
       })
     ).toBe(false);
 
     expect(
       isAttendancePolicyUnchanged(baseAttendance, {
-        ...baseAttendance,
+        ...baseAttendancePayload,
         captureMode: 'manual_status',
       })
     ).toBe(false);
@@ -201,10 +231,16 @@ describe('hr policy change utilities', () => {
 
     expect(
       isAttendancePolicyUnchanged(advancedAttendance, {
-        ...advancedAttendance,
+        ...baseAttendancePayload,
         penaltyType: 'deduct_half_day',
+        penaltyCountThreshold: 2,
+        earlyExitEnabled: true,
+        earlyExitGraceTime: 5,
+        overtimeEnabled: true,
         overtimeRate: '1.5x',
+        minOvertimeMinutes: 30,
         holidayWorkBehavior: 'ot_payout',
+        sandwichRuleEnabled: true,
       })
     ).toBe(true);
   });
@@ -218,7 +254,8 @@ describe('hr policy change utilities', () => {
 
     expect(
       isAttendancePolicyUnchanged(enabledWithoutRate, {
-        ...enabledWithoutRate,
+        ...baseAttendancePayload,
+        overtimeEnabled: true,
         overtimeRate: 'flat',
       })
     ).toBe(true);

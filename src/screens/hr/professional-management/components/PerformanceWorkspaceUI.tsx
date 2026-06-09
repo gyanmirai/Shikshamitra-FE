@@ -14,6 +14,16 @@ type SurfaceProps = {
   contentSx?: SxProps<Theme>;
 };
 
+type WorkspaceShellProps = {
+  children: React.ReactNode;
+};
+
+type TablePanelProps = {
+  children: React.ReactNode;
+  minHeight?: number | string;
+  sx?: SxProps<Theme>;
+};
+
 const surfaceBorder = (theme: Theme) =>
   theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.12) : theme.palette.divider;
 
@@ -35,10 +45,7 @@ export function PerformanceSurface({
         borderRadius: 1,
         bgcolor: 'background.paper',
         borderColor: surfaceBorder,
-        boxShadow: (theme) =>
-          theme.palette.mode === 'dark'
-            ? `0 10px 24px ${alpha(theme.palette.common.black, 0.22)}`
-            : `0 8px 20px ${alpha(theme.palette.common.black, 0.05)}`,
+        boxShadow: 'none',
         ...sx,
       }}
     >
@@ -47,6 +54,67 @@ export function PerformanceSurface({
       ) : null}
       <Box sx={contentSx}>{children}</Box>
     </Paper>
+  );
+}
+
+export function PerformanceWorkspaceShell({ children }: WorkspaceShellProps) {
+  return (
+    <Box
+      sx={{
+        mt: 2,
+        px: { xs: 1.5, sm: 2 },
+        pb: { xs: 1.5, sm: 2 },
+        minWidth: 0,
+        flex: 1,
+        minHeight: 0,
+        height: { xs: 'auto', md: 'calc(100vh - 220px)' },
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+export function PerformanceScrollableContent({ children }: WorkspaceShellProps) {
+  return (
+    <Box
+      sx={{
+        minWidth: 0,
+        minHeight: 0,
+        flex: 1,
+        overflow: { xs: 'visible', md: 'auto' },
+        pr: { md: 0.5 },
+        pb: 0.5,
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+export function PerformanceTablePanel({ children, minHeight = 360, sx }: TablePanelProps) {
+  return (
+    <Box
+      sx={{
+        minWidth: 0,
+        minHeight,
+        flex: 1,
+        height: { xs: 'auto', md: '100%' },
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        '& > div': {
+          minHeight: 0,
+          flex: 1,
+        },
+        ...sx,
+      }}
+    >
+      {children}
+    </Box>
   );
 }
 
@@ -65,7 +133,7 @@ export function PerformanceSectionHeader({
       alignItems={{ xs: 'stretch', sm: 'flex-start' }}
       justifyContent="space-between"
       spacing={1.5}
-      sx={{ mb: 1.5 }}
+      sx={{ mb: 1.5, minWidth: 0 }}
     >
       <Box sx={{ minWidth: 0 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.35 }}>
@@ -77,7 +145,18 @@ export function PerformanceSectionHeader({
           </Typography>
         ) : null}
       </Box>
-      {action ? <Box sx={{ flexShrink: 0 }}>{action}</Box> : null}
+      {action ? (
+        <Box
+          sx={{
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: 0,
+            flexShrink: { xs: 1, sm: 0 },
+            '& .MuiButton-root': { whiteSpace: 'nowrap' },
+          }}
+        >
+          {action}
+        </Box>
+      ) : null}
     </Stack>
   );
 }
@@ -126,10 +205,7 @@ export function PerformanceMetricCard({
         borderRadius: 1,
         bgcolor: 'background.paper',
         border: `1px solid ${surfaceBorder(theme)}`,
-        boxShadow:
-          theme.palette.mode === 'dark'
-            ? `0 8px 20px ${alpha(theme.palette.common.black, 0.2)}`
-            : `0 8px 18px ${alpha(theme.palette.common.black, 0.05)}`,
+        boxShadow: 'none',
       }}
     >
       <Stack direction="row" alignItems="center" spacing={1.25}>

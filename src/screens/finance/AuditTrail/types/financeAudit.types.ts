@@ -15,6 +15,7 @@ export interface FinanceAuditLog {
   beforeData?: Record<string, any>;
   afterData?: Record<string, any>;
   createdAt: string;
+  createdAtDisplay?: string;
   ipAddress?: string;
   device?: string;
   remarks?: string;

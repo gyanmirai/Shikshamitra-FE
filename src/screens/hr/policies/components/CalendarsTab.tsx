@@ -21,7 +21,7 @@ import {
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
-// ─── ArchiveToggle ─────────────────────────────────────────────────────────────
+// --- ArchiveToggle -------------------------------------------------------------
 
 function ArchiveToggle({
   current,
@@ -46,7 +46,7 @@ function ArchiveToggle({
   );
 }
 
-// ─── CalendarsTab ──────────────────────────────────────────────────────────────
+// --- CalendarsTab --------------------------------------------------------------
 
 export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
@@ -149,7 +149,7 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           <ThreeDotsActions
             showViewIcon={canPreviewImpact}
             handleViewClick={() => previewPolicyRowImpact('work_calendar', item)}
-            showEditIcon={canEditPolicy}
+            showEditIcon={canEditPolicy && item.status !== 'archived'}
             handleEditClick={() => openCalendarDrawer(item)}
             placement="right-center"
             actions={({ popover }) => (
@@ -204,10 +204,10 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                       icon={
                         item.status === 'archived'
                           ? 'mdi:archive-arrow-up-outline'
-                          : 'mdi:trash-can-outline'
+                          : 'mdi:archive-outline'
                       }
                     />
-                    {item.status === 'archived' ? 'Restore' : 'Remove'}
+                    {item.status === 'archived' ? 'Restore' : 'Archive'}
                   </MenuItem>
                 )}
               </MenuList>
@@ -218,7 +218,7 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     },
   ];
 
-  const calendarRows = visibleCalendars.map((item: any) => ({
+  const calendarRows = visibleCalendars.map((item: WorkCalendarPolicy) => ({
     id: item.id,
     calendarItem: item,
     name: item.name,

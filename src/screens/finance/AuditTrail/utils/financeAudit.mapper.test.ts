@@ -21,6 +21,7 @@ describe('financeAudit.mapper', () => {
       summary: 'Fee payment received',
       actorDisplayName: 'Admin',
       occurredAt: '2026-06-03T10:00:00Z',
+      occurredAtDisplay: '03 Jun 2026, 03:30 PM',
       changedFields: [{ field: 'pendingAmount', oldValue: '100', newValue: '0' }],
       studentId: 'stu-1',
       studentNameSnapshot: 'Test Student',
@@ -34,6 +35,7 @@ describe('financeAudit.mapper', () => {
     expect(log.beforeData?.pendingAmount).toBe('100');
     expect(log.afterData?.pendingAmount).toBe('0');
     expect(log.correlationId).toBe('fc-abc');
+    expect(log.createdAtDisplay).toBe('03 Jun 2026, 03:30 PM');
   });
 
   it('maps UI filters to API codes', () => {
