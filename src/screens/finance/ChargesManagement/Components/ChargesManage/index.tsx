@@ -2,8 +2,8 @@
 
 import type { RootState } from 'src/redux/store';
 
+import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
-import React, { useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -37,8 +37,8 @@ const ChargesManagement = () => {
   const [selectedMedium, setSelectedMedium] = useState<string>('');
   const [selectedTab, setSelectedTab] = useState<string | number>(0);
 
-  // Ref to store the refetch function from ChargesTable
-  const chargeRefetchRef = useRef<(() => void) | null>(null);
+  // Trigger refetch when charges are modified (create/edit/delete)
+  const [refetchTrigger, setRefetchTrigger] = useState<number>(0);
 
   const [deleteCharge] = useQueryAndMutation({
     type: 'mutation',
@@ -78,7 +78,7 @@ const ChargesManagement = () => {
       setSelectedChargeData(null);
       addChargeDialog.onFalse();
       if (isSubmit) {
-        chargeRefetchRef.current?.();
+        setRefetchTrigger((prev) => prev + 1); // Trigger refetch of charges table
       }
       resetState();
     } else if (!isChanges) {
@@ -109,7 +109,7 @@ const ChargesManagement = () => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       editChargeDialog.onFalse();
       if (isSubmit) {
-        chargeRefetchRef.current?.();
+        setRefetchTrigger((prev) => prev + 1); // Trigger refetch of charges table
       }
       resetState();
     } else if (!isChanges) {
@@ -278,10 +278,7 @@ const ChargesManagement = () => {
             }}
             selectedTab={selectedTab}
             setSelectedTab={setSelectedTab}
-            onRefetch={(refetchFn) => {
-              // Store refetch function in a ref so it can be called later
-              chargeRefetchRef.current = refetchFn;
-            }}
+            refetchTrigger={refetchTrigger}
           />
         )}
 
@@ -338,9 +335,7 @@ const ChargesManagement = () => {
               approvalReviewDialog.onFalse();
               setSelectedChargeData(null);
               setSelectedMode('');
-              if (chargeRefetchRef.current) {
-                chargeRefetchRef.current();
-              }
+              setRefetchTrigger((prev) => prev + 1); // Trigger refetch of charges table
             }}
           />
         </Card>
@@ -412,9 +407,7 @@ const ChargesManagement = () => {
                     setSelectedChargeData(null);
                   },
                   onUndoRestore: (_dispatch, _deleteIndex) => {
-                    if (chargeRefetchRef.current) {
-                      chargeRefetchRef.current();
-                    }
+                    setRefetchTrigger((prev) => prev + 1); // Trigger refetch of charges table
                   },
                   onCommit: () => deleteCharge(selectedChargeData.chargeId),
                 });

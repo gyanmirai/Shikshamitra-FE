@@ -27,6 +27,8 @@ export interface IChargeData {
   grNumber?: string;
   rollNumber?: number;
   standardName?: string;
+  standardId?: string;
+  divisionId?: string;
   divisionName?: string;
 }
 

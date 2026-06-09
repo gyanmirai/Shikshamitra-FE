@@ -26,13 +26,13 @@ const ChargesTable = ({
   onApprove,
   onReject,
   onRemove,
-  onRefetch,
   selectedBoard,
   setSelectedBoard,
   selectedMedium,
   setSelectedMedium,
   selectedTab,
   setSelectedTab,
+  refetchTrigger,
 }: {
   onView: (data: IChargeData) => void;
   onEdit: (data: IChargeData) => void;
@@ -40,13 +40,13 @@ const ChargesTable = ({
   onApprove: (data: IChargeData) => void;
   onReject: (data: IChargeData) => void;
   onRemove: (data: IChargeData) => void;
-  onRefetch?: (refetchFn: () => void) => void;
   selectedBoard: string;
   setSelectedBoard: (value: string) => void;
   selectedMedium: string;
   setSelectedMedium: (value: string) => void;
   selectedTab: string | number;
   setSelectedTab: (value: string | number) => void;
+  refetchTrigger?: number;
 }) => {
   // Local state to store filtered boards based on academic year
   // const [boards, setBoards] = useState<Board[]>([]);
@@ -68,7 +68,6 @@ const ChargesTable = ({
     data: chargesData,
     isLoading: chargesLoading,
     isFetching: chargesFetching,
-    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargesQuery,
@@ -77,6 +76,7 @@ const ChargesTable = ({
       boardId: selectedBoard,
       educationMediumId: selectedMedium,
       status: tabs.value,
+      _refetchTrigger: refetchTrigger, // Trigger refetch when this changes
     },
     options: {
       skip: !selectedBoard || !selectedMedium || !currentYear?.id,
@@ -102,17 +102,6 @@ const ChargesTable = ({
     setMediums((board as unknown as Board)?.educationMediums ?? []);
   }, [currentYear?.boards, selectedBoard]);
 
-  // Expose refetch function to parent component
-  useEffect(() => {
-    if (onRefetch && refetch) {
-      // Pass the refetch function to parent
-      const refetchHandler = () => {
-        refetch();
-      };
-      onRefetch(refetchHandler);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refetch]);
   // Tab Counts
   const chargeCounts = useMemo(
     () => ({

@@ -7,9 +7,10 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Grid, Alert, Button, TextField, Typography } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Alert, Button, Divider, TextField, Typography } from '@mui/material';
 
 import type { IChargeApprovalConfirmationDialogProps } from './types';
 
@@ -61,6 +62,18 @@ const ChargeApprovalConfirmationDialog: React.FC<IChargeApprovalConfirmationDial
             }}
           />
           <Typography variant="h5">{isRejectMode ? 'Reject Charge' : 'Approve Charge'}</Typography>
+          <CustomTooltip
+            arrow
+            placement="right"
+            sx={{ textAlign: 'justify' }}
+            title={
+              isRejectMode
+                ? 'Review the charge details carefully before rejecting. You can provide a reason for rejection.'
+                : 'Review the charge details carefully before approving. You can add approval notes.'
+            }
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </CustomTooltip>
         </Box>
       }
       handleClose={onCancel}
@@ -151,14 +164,11 @@ const ChargeApprovalConfirmationDialog: React.FC<IChargeApprovalConfirmationDial
             </Grid>
           </Grid>
 
+          {/* Divider */}
+          <Divider sx={{ my: 2 }} />
+
           {/* Action Buttons */}
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="flex-end"
-            gap={1.5}
-            sx={{ mt: 3 }}
-          >
+          <Box display="flex" alignItems="center" justifyContent="flex-end" gap={1.5}>
             <Button
               variant="outlined"
               color="inherit"

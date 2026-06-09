@@ -38,7 +38,7 @@ export interface IChargeApprovalData extends IChargeDetailData {
 export interface IStudentChargeReviewTableProps {
   students: IApprovalReviewStudent[];
   selectedStudentIds: string[];
-  onStudentRemove: (studentId: string) => void;
+  onStudentSelect?: (studentId: string, isChecked: boolean) => void;
   onSearchChange?: (query: string) => void;
   isLoading?: boolean;
 }

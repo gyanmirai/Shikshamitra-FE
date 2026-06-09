@@ -1,7 +1,6 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useCallback } from 'react';
 import {
   Box,
@@ -9,12 +8,12 @@ import {
   Table,
   Paper,
   TableRow,
+  Checkbox,
   TextField,
   TableBody,
   TableCell,
   TableHead,
   Typography,
-  IconButton,
   TableContainer,
   CircularProgress,
 } from '@mui/material';
@@ -23,12 +22,12 @@ import type { IStudentChargeReviewTableProps } from './types';
 
 /**
  * StudentChargeReviewTable Component
- * Displays list of students in charge approval review with remove functionality
+ * Displays list of students in charge approval review with checkbox selection
  */
 const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
   students,
   selectedStudentIds,
-  onStudentRemove,
+  onStudentSelect,
   onSearchChange,
   isLoading = false,
 }) => {
@@ -42,6 +41,15 @@ const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
       }
     },
     [onSearchChange]
+  );
+
+  const handleCheckboxChange = useCallback(
+    (studentId: string, isChecked: boolean) => {
+      if (onStudentSelect) {
+        onStudentSelect(studentId, isChecked);
+      }
+    },
+    [onStudentSelect]
   );
 
   const filteredStudents = useMemo(() => {
@@ -94,6 +102,31 @@ const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
         <Table stickyHeader size="small">
           <TableHead>
             <TableRow sx={{ '& th': { backgroundColor: 'action.hover', fontWeight: 700 } }}>
+              <TableCell align="center" sx={{ minWidth: 50 }}>
+                <Checkbox
+                  indeterminate={
+                    selectedStudentIds.length > 0 && selectedStudentIds.length < students.length
+                  }
+                  checked={students.length > 0 && selectedStudentIds.length === students.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      // Select all
+                      students.forEach((student) => {
+                        if (!selectedStudentIds.includes(student.studentId)) {
+                          handleCheckboxChange(student.studentId, true);
+                        }
+                      });
+                    } else {
+                      // Deselect all
+                      students.forEach((student) => {
+                        if (selectedStudentIds.includes(student.studentId)) {
+                          handleCheckboxChange(student.studentId, false);
+                        }
+                      });
+                    }
+                  }}
+                />
+              </TableCell>
               <TableCell align="left" sx={{ minWidth: 150 }}>
                 Student Name
               </TableCell>
@@ -109,21 +142,18 @@ const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
               <TableCell align="left" sx={{ minWidth: 100 }}>
                 Division
               </TableCell>
-              <TableCell align="center" sx={{ minWidth: 60 }}>
-                Action
-              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                   <CircularProgress size={30} />
                 </TableCell>
               </TableRow>
             ) : filteredStudents.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>
                   <Typography variant="caption">No students found</Typography>
                 </TableCell>
               </TableRow>
@@ -133,6 +163,12 @@ const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
                   key={student.studentId}
                   sx={{ '&:hover': { backgroundColor: 'action.hover' } }}
                 >
+                  <TableCell align="center">
+                    <Checkbox
+                      checked={selectedStudentIds.includes(student.studentId)}
+                      onChange={(e) => handleCheckboxChange(student.studentId, e.target.checked)}
+                    />
+                  </TableCell>
                   <TableCell align="left">
                     <Typography variant="caption" fontSize="13px">
                       {student.studentName || '-'}
@@ -157,23 +193,6 @@ const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
                     <Typography variant="caption" fontSize="13px">
                       {student.divisionName || '-'}
                     </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <CustomTooltip title="Remove student from approval" arrow>
-                      <IconButton
-                        size="small"
-                        onClick={() => onStudentRemove(student.studentId)}
-                        sx={{
-                          color: 'error.main',
-                          '&:hover': { backgroundColor: 'error.lighter' },
-                        }}
-                      >
-                        <Iconify
-                          icon="solar:trash-bin-trash-bold"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
-                      </IconButton>
-                    </CustomTooltip>
                   </TableCell>
                 </TableRow>
               ))
