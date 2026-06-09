@@ -77,28 +77,49 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
 
   // Initialize students when charge data loads
   useEffect(() => {
-    if (chargeData?.id && open) {
+    if (chargeData?.chargeId && open) {
       // Extract students from charge data
-      const chargeStudents: IApprovalReviewStudent[] = chargeData.student
-        ? [
-            {
-              studentId: chargeData.student.studentId || '',
-              studentName: chargeData.student.studentName || '',
-              grNumber: chargeData.student.grNumber,
-              rollNumber: chargeData.student.rollNumber,
-              standardName: chargeData.student.standardName,
-              divisionName: chargeData.student.divisionName,
-            },
-          ]
-        : [];
+      const pendingStudents = (chargeData.students ?? [])
+        .filter((s: any) => s.status === 0)
+        .map(
+          (s: any): IApprovalReviewStudent => ({
+            studentId: s.studentId || '',
+            studentName: s.studentName || '',
+            grNumber: s.grNumber,
+            rollNumber: s.rollNumber,
+            standardName: s.standardName,
+            divisionName: s.divisionName,
+          })
+        );
+
+      const chargeStudents =
+        pendingStudents.length > 0
+          ? pendingStudents
+          : chargeData.student
+            ? [
+                {
+                  studentId: chargeData.student.studentId || '',
+                  studentName: chargeData.student.studentName || '',
+                  grNumber: chargeData.student.grNumber,
+                  rollNumber: chargeData.student.rollNumber,
+                  standardName: chargeData.student.standardName,
+                  divisionName: chargeData.student.divisionName,
+                },
+              ]
+            : [];
 
       setStudents(chargeStudents);
-      setSelectedStudentIds(chargeStudents.map((s) => s.studentId));
+      setSelectedStudentIds(chargeStudents.map((s: IApprovalReviewStudent) => s.studentId));
     }
   }, [chargeData, open]);
 
-  const handleStudentRemove = useCallback((studentId: string) => {
-    setSelectedStudentIds((prev) => prev.filter((id) => id !== studentId));
+  const handleStudentSelect = useCallback((studentId: string, isChecked: boolean) => {
+    setSelectedStudentIds((prev) => {
+      if (isChecked) {
+        return [...prev, studentId];
+      }
+      return prev.filter((id) => id !== studentId);
+    });
   }, []);
 
   const handleApproveClick = useCallback(() => {
@@ -134,13 +155,37 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
 
         if (isRejectMode) {
           const result: any = await rejectCharge(payload);
-          if (result?.error) return;
+          if (result?.error) {
+            shikshaMitraToast.error({
+              message: `Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
+            });
+            return;
+          }
+          if (!result?.data?.success) {
+            shikshaMitraToast.error({
+              message:
+                result?.data?.message || `Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
+            });
+            return;
+          }
           shikshaMitraToast.success({
             message: `Charge rejected successfully for ${selectedStudentIds.length} student${selectedStudentIds.length !== 1 ? 's' : ''}`,
           });
         } else {
           const result: any = await approveCharge(payload);
-          if (result?.error) return;
+          if (result?.error) {
+            shikshaMitraToast.error({
+              message: `Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
+            });
+            return;
+          }
+          if (!result?.data?.success) {
+            shikshaMitraToast.error({
+              message:
+                result?.data?.message || `Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
+            });
+            return;
+          }
           shikshaMitraToast.success({
             message: `Charge approved successfully for ${selectedStudentIds.length} student${selectedStudentIds.length !== 1 ? 's' : ''}`,
           });
@@ -299,6 +344,52 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
                           </Box>
                         </Grid>
                       )}
+
+                      {/* Requested By Information Section */}
+                      {chargeData?.requestor && (
+                        <>
+                          <Grid size={{ xs: 12 }} sx={{ mt: 1 }}>
+                            <Divider />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <Stack direction="row" alignItems="center" gap={1} mb={2}>
+                              <Iconify
+                                icon="solar:user-rounded-bold-duotone"
+                                width={18}
+                                sx={{ color: 'primary.main' }}
+                              />
+                              <Typography variant="subtitle2" fontWeight={700}>
+                                Requested By
+                              </Typography>
+                            </Stack>
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                            <InfoItem
+                              icon={<Iconify icon="solar:user-rounded-bold-duotone" />}
+                              label="Requestor Name"
+                              value={chargeData.requestor.requestorName || 'N/A'}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                            <InfoItem
+                              icon={<Iconify icon="solar:briefcase-bold-duotone" />}
+                              label="Role"
+                              value={chargeData.requestor.requestorRole || 'N/A'}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                            <InfoItem
+                              icon={<CalendarToday />}
+                              label="Requested Date"
+                              value={
+                                chargeData.requestor.requestedOn
+                                  ? dayjs(chargeData.requestor.requestedOn).format('DD-MM-YYYY')
+                                  : 'N/A'
+                              }
+                            />
+                          </Grid>
+                        </>
+                      )}
                     </Grid>
                   </Box>
                 </Paper>
@@ -355,83 +446,12 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
                 </Grid>
               )}
 
-              {/* Requested By Information */}
-              {chargeData?.requestor && (
-                <Grid size={{ xs: 12 }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      transition: 'box-shadow 0.2s ease',
-                      '&:hover': { boxShadow: 4 },
-                    }}
-                  >
-                    <Stack direction="row" alignItems="center" gap={1} mb={2}>
-                      <Iconify
-                        icon="solar:user-rounded-bold-duotone"
-                        width={18}
-                        sx={{ color: 'primary.main' }}
-                      />
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          Requested By
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Information about the requester
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ mb: 2 }} />
-
-                    <Grid container spacing={2}>
-                      {chargeData.requestor.requestorName && (
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <Box>
-                            <Typography variant="caption" color="text.secondary">
-                              Name
-                            </Typography>
-                            <Typography variant="body2" fontWeight={600}>
-                              {chargeData.requestor.requestorName}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      )}
-                      {chargeData.requestor.requestorRole && (
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <Box>
-                            <Typography variant="caption" color="text.secondary">
-                              Role
-                            </Typography>
-                            <Typography variant="body2" fontWeight={600}>
-                              {chargeData.requestor.requestorRole}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      )}
-                      {chargeData.requestor.requestedOn && (
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <Box>
-                            <Typography variant="caption" color="text.secondary">
-                              Requested Date
-                            </Typography>
-                            <Typography variant="body2" fontWeight={600}>
-                              {dayjs(chargeData.requestor.requestedOn).format('DD-MM-YYYY')}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      )}
-                    </Grid>
-                  </Paper>
-                </Grid>
-              )}
-
               {/* Student List Table */}
               <Grid size={{ xs: 12 }}>
                 <StudentChargeReviewTable
                   students={students}
                   selectedStudentIds={selectedStudentIds}
-                  onStudentRemove={handleStudentRemove}
+                  onStudentSelect={handleStudentSelect}
                   isLoading={chargeLoading}
                 />
               </Grid>

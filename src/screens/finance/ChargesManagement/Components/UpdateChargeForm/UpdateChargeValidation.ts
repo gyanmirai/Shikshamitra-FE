@@ -3,16 +3,28 @@ import * as Yup from 'yup';
 
 import type { IUpdateChargeFormValues } from './types';
 
+function getFirstValidationMessage(errors: Record<string, unknown>): string | undefined {
+  return Object.values(errors).reduce<string | undefined>((found, value) => {
+    if (found) {
+      return found;
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (value && typeof value === 'object') {
+      return getFirstValidationMessage(value as Record<string, unknown>);
+    }
+    return undefined;
+  }, undefined);
+}
+
 /**
  * Creates validation schema for Update Charge Form
  * Supports both single class and multi-class scenarios
  */
-export const createUpdateChargeValidationSchema = (
-  currentYear: any,
-  singleClassSelected: boolean
-) =>
+export const createUpdateChargeValidationSchema = (currentYear: any, isEditMode: boolean) =>
   Yup.object({
-    chargeId: Yup.string().required('Charge ID is required'),
+    chargeId: isEditMode ? Yup.string().required('Charge ID is required') : Yup.string().optional(),
 
     // Charge Details
     chargeName: Yup.string()
@@ -21,8 +33,6 @@ export const createUpdateChargeValidationSchema = (
       .max(100, 'Charge Name cannot exceed 100 characters'),
 
     chargeCategoryId: Yup.string().required('Charge Category is required'),
-
-    chargeCategoryName: Yup.string().required('Charge Category Name is required'),
 
     purposeDescription: Yup.string()
       .required('Purpose/Description is required')
@@ -68,14 +78,14 @@ export const createUpdateChargeValidationSchema = (
       .min(1, 'Please select at least one class')
       .required('Class is required'),
 
-    // Division - Required only if single class is selected
+    // Division - Required only if exactly one class is selected
     divisionIds: Yup.array().when('standardId', {
-      is: (standardId: string) => singleClassSelected && !!standardId,
+      is: (standardId: string[]) => Array.isArray(standardId) && standardId.length === 1,
       then: (schema) =>
         schema
           .min(1, 'Please select at least one division')
           .required('Division is required for single class'),
-      otherwise: (schema) => schema.nullable(),
+      otherwise: (schema) => schema,
     }),
 
     // Student Selection - At least one of these must be selected
@@ -93,11 +103,13 @@ export const createUpdateChargeValidationSchema = (
     (values) => {
       const hasStudents = values.studentIds && values.studentIds.length > 0;
       const hasDivisions = values.divisionIds && values.divisionIds.length > 0;
-      const hasClass = values.standardId;
+      const hasClass = Array.isArray(values.standardId) && values.standardId.length > 0;
 
       return !!(hasStudents || hasDivisions || hasClass);
     }
   );
+
+export { getFirstValidationMessage };
 
 /**
  * Simple validator function to check if form has errors

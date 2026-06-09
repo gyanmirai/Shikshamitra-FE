@@ -1,26 +1,35 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-// Flat list item returned by GET /charges (list response)
+// Batch list item returned by GET /charges (inbox)
 export interface IChargeData {
   chargeId: string;
-  chargeCategoryId: string;
+  chargeName?: string;
+  chargeCategoryId?: string;
   categoryName?: string;
-  studentId: string;
-  studentName?: string;
-  grNumber?: string;
-  rollNumber?: number;
-  standardId?: string;
-  standardName?: string;
-  divisionId?: string;
-  divisionName?: string;
-  boardId?: string;
-  educationMediumId?: string;
   amount: number;
-  priority: number;
+  priority?: number;
   dueDate: string;
   status?: number;
   purposeDescription: string;
   additionalNotes?: string;
+  studentCount?: number;
+  pendingCount?: number;
+  approvedCount?: number;
+  rejectedCount?: number;
+  partiallyProcessed?: boolean;
+  boardId?: string;
+  educationMediumId?: string;
+  requestorName?: string;
+  requestedOn?: string;
+  // Legacy per-student fields (charge lines view)
+  studentId?: string;
+  studentName?: string;
+  grNumber?: string;
+  rollNumber?: number;
+  standardName?: string;
+  standardId?: string;
+  divisionId?: string;
+  divisionName?: string;
 }
 
 // Nested detail object returned by GET /charges/{chargeId}
@@ -36,6 +45,30 @@ export interface IChargeDetailData {
   purposeDescription: string;
   additionalNotes?: string;
   appliedOn?: string;
+  chargeName?: string;
+  audience?: {
+    scope?: {
+      boardId?: string;
+      educationMediumId?: string;
+      classIds?: string[];
+      divisionIds?: string[];
+    };
+    selection?: {
+      mode?: string | number;
+      studentIds?: string[];
+    };
+  };
+  students?: Array<{
+    studentId?: string;
+    studentName?: string;
+    grNumber?: string;
+    rollNumber?: number;
+    standardName?: string;
+    divisionName?: string;
+    status?: number;
+  }>;
+  appliedCount?: number;
+  isApprovalRequired?: boolean;
   student?: {
     studentId?: string;
     studentName?: string;

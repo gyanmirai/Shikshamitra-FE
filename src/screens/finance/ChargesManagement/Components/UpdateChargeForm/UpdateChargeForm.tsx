@@ -19,9 +19,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetChargeCategoriesQuery } from 'src/redux/finance/chargeCategory';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { buildAudiencePayload } from 'src/redux/finance/ChargeManagement/chargeMappers';
 import {
   usePostChargeMutation,
   useUpdateChargeMutation,
@@ -39,11 +40,14 @@ import {
   Typography,
 } from '@mui/material';
 
-import { DUMMY_STUDENTS } from './dummyStudents';
+import { useStudentsInScope } from './useStudentsInScope';
 import { SelectedStudentsPanel } from './SelectedStudentsPanel';
 import { StudentSelectionLayout } from './StudentSelectionLayout';
 import { useDirtyState, useChargeDetails } from './useChargeDetails';
-import { createUpdateChargeValidationSchema } from './UpdateChargeValidation';
+import {
+  getFirstValidationMessage,
+  createUpdateChargeValidationSchema,
+} from './UpdateChargeValidation';
 
 import type { IUpdateChargeFormProps, IUpdateChargeFormValues } from './types';
 
@@ -65,21 +69,13 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   const isEditMode = isEdit || !!chargeId;
 
   // Fetch charge details only if in edit mode
-  const {
-    prefillValues,
-    chargeDetail,
-    isLoading: chargeLoading,
-    restrictions,
-    divisionVisibility,
-    isCreateMode,
-  } = useChargeDetails(chargeId);
+  const { prefillValues, isLoading: chargeLoading, restrictions } = useChargeDetails(chargeId);
 
   // State for academic structure
   const [boards, setBoards] = useState<any[]>([]);
   const [mediums, setMediums] = useState<any[]>([]);
   const [allDivision, setAllDivision] = useState<any[]>([]);
   const [studentSearch, setStudentSearch] = useState('');
-  const [filteredStudents, setFilteredStudents] = useState(DUMMY_STUDENTS);
 
   // Query hooks
   const [getClassByMedium, { data: classes, isLoading: classesLoading }] = useQueryAndMutation({
@@ -107,6 +103,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   });
 
   const isSubmitLoading = isEditMode ? updateChargeLoading : postChargeLoading;
+  const candidateStudentIdsRef = useRef<string[]>([]);
 
   // Initialize form with prefilled values
   const initialValues: IUpdateChargeFormValues = useMemo(() => {
@@ -132,12 +129,10 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     };
   }, [prefillValues]);
 
-  // Validation schema with single class condition
-  const validationSchema = useMemo(() => {
-    const singleClassSelected =
-      Array.isArray(initialValues.standardId) && initialValues.standardId.length === 1;
-    return createUpdateChargeValidationSchema(currentYear, singleClassSelected);
-  }, [currentYear, initialValues.standardId]);
+  const validationSchema = useMemo(
+    () => createUpdateChargeValidationSchema(currentYear, isEditMode),
+    [currentYear, isEditMode]
+  );
 
   const formik = useFormik({
     initialValues,
@@ -145,36 +140,36 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     validationSchema,
     onSubmit: async (values) => {
       try {
+        if (!currentYear?.id) {
+          shikshaMitraToast.error({ message: 'Academic year is not selected.' });
+          return;
+        }
+
+        const categoryName =
+          chargeCategories?.items?.find(
+            (item: { id: string }) => item.id === values.chargeCategoryId
+          )?.name ?? values.chargeName;
+
+        const audience = buildAudiencePayload(values, candidateStudentIdsRef.current);
         const payload = {
           chargeName: values.chargeName,
           chargeCategoryId: values.chargeCategoryId,
           purposeDescription: values.purposeDescription,
           amount: parseFloat(String(values.amount)),
-          dueDate: values.dueDate ? dayjs(values.dueDate).toISOString() : null,
+          dueDate: dayjs(values.dueDate).toISOString(),
           additionalNotes: values.additionalNotes,
-          studentIds: values.studentIds.length > 0 ? values.studentIds : undefined,
-          divisionIds: values.divisionIds.length > 0 ? values.divisionIds : undefined,
-          classIds:
-            Array.isArray(values.standardId) && values.standardId.length > 0
-              ? values.standardId
-              : undefined,
+          audience,
         };
 
         if (isEditMode && chargeId) {
-          // Update existing charge
           await updateCharge({ id: chargeId, body: payload }).unwrap();
           shikshaMitraToast.success({
-            message: `Charge updated successfully for ${values.chargeCategoryName}`,
+            message: `Charge updated successfully for ${categoryName}`,
           });
         } else {
-          // Create new charge
-          const createPayload = {
-            ...payload,
-            studentIds: values.studentIds,
-          };
-          await postCharge({ academicYearId: currentYear?.id, body: createPayload }).unwrap();
+          await postCharge({ academicYearId: currentYear.id, body: payload }).unwrap();
           shikshaMitraToast.success({
-            message: `Charge created successfully for ${values.chargeCategoryName}`,
+            message: `Charge created successfully for ${categoryName}`,
           });
         }
         onClose(null, true);
@@ -189,6 +184,30 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
   const isDirty = useDirtyState(initialValues, values);
+
+  const {
+    students: scopeStudents,
+    isLoading: studentsLoading,
+    candidateStudentIds,
+  } = useStudentsInScope(
+    values.boardId,
+    values.educationMediumId,
+    values.standardId,
+    values.divisionIds
+  );
+
+  candidateStudentIdsRef.current = candidateStudentIds;
+
+  const filteredStudents = useMemo(() => {
+    const query = studentSearch.toLowerCase();
+    if (!query) return scopeStudents;
+    return scopeStudents.filter(
+      (student) =>
+        student.label.toLowerCase().includes(query) ||
+        student.grNumber?.toString().includes(query) ||
+        student.rollNumber?.toString().includes(query)
+    );
+  }, [scopeStudents, studentSearch]);
 
   // Handle dialog close with dirty state check
   const handleClose = useCallback(
@@ -232,19 +251,6 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     setAllDivision(selectedClass?.divisions || []);
   }, [values.standardId, classes]);
 
-  // Filter students based on search
-  useEffect(() => {
-    const filtered = DUMMY_STUDENTS.filter((student) => {
-      const query = studentSearch.toLowerCase();
-      return (
-        student.label.toLowerCase().includes(query) ||
-        student.grNumber?.toString().includes(query) ||
-        student.rollNumber?.toString().includes(query)
-      );
-    });
-    setFilteredStudents(filtered);
-  }, [studentSearch]);
-
   // Track dirty state in Redux
   useEffect(() => {
     if (isDirty) {
@@ -252,10 +258,23 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     }
   }, [isDirty, dispatch]);
 
-  const handleSubmit = useCallback(() => {
-    formik.validateForm().then(() => {
-      formik.handleSubmit();
-    });
+  const handleSubmit = useCallback(async () => {
+    const validationErrors = await formik.validateForm();
+    const touchedFields = Object.keys(formik.values).reduce<Record<string, boolean>>((acc, key) => {
+      acc[key] = true;
+      return acc;
+    }, {});
+    formik.setTouched(touchedFields, true);
+
+    if (Object.keys(validationErrors).length > 0) {
+      const message = getFirstValidationMessage(validationErrors);
+      shikshaMitraToast.error({
+        message: message || 'Please fix the highlighted fields before submitting.',
+      });
+      return;
+    }
+
+    await formik.submitForm();
   }, [formik]);
 
   if (chargeLoading) {
@@ -353,7 +372,13 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             labelKey="name"
                             valueKey="id"
                             value={values.chargeCategoryId}
-                            onChange={(value) => setFieldValue('chargeCategoryId', value)}
+                            onChange={(value) => {
+                              setFieldValue('chargeCategoryId', value);
+                              const category = chargeCategories?.items?.find(
+                                (item: { id: string }) => item.id === value
+                              );
+                              setFieldValue('chargeCategoryName', category?.name ?? '');
+                            }}
                             error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
                             helperText={
                               isEditMode
@@ -684,9 +709,10 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                       <StudentSelectionLayout
                         students={filteredStudents}
                         selectedStudentIds={values.studentIds}
+                        isLoading={studentsLoading}
                         onSelectionChange={(selectedIds) => {
                           setFieldValue('studentIds', selectedIds);
-                          const selected = DUMMY_STUDENTS.filter((s) => selectedIds.includes(s.id));
+                          const selected = scopeStudents.filter((s) => selectedIds.includes(s.id));
                           setFieldValue('selectedStudents', selected);
                         }}
                         searchQuery={studentSearch}
@@ -701,7 +727,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                         onRemove={(studentId) => {
                           const newIds = values.studentIds.filter((id) => id !== studentId);
                           setFieldValue('studentIds', newIds);
-                          const selected = DUMMY_STUDENTS.filter((s) => newIds.includes(s.id));
+                          const selected = scopeStudents.filter((s) => newIds.includes(s.id));
                           setFieldValue('selectedStudents', selected);
                         }}
                         onClearAll={() => {
