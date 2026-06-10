@@ -219,47 +219,71 @@ const UpiTable = ({
         isFilter: false,
         sticky: true,
         align: 'left',
-        width: 100,
+        width: 150,
         minWidth: 80,
-        maxWidth: 120,
+        maxWidth: 150,
         render(value, row: any) {
-          if (!canApproveReject) return null;
+          const handleDownloadReceipt = () => {
+            shikshaMitraToast.info({
+              message: 'Downloading receipt...',
+            });
+          };
+
           return (
             <MenuList>
-              <Box sx={{ display: 'flex' }}>
-                {row.status !== PaymentMethodsStatusType.Approved && (
-                  <IconButton
-                    onClick={() => {
-                      setIsClearCheck(false);
-                      setSelectedEntry({ ...row, type: 'approve' });
-                      isDialog.onTrue();
-                    }}
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      p: 0,
-                    }}
-                  >
-                    <Iconify icon="mdi:check-decagram" sx={{ color: 'success.main' }} />
-                  </IconButton>
-                )}
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                {row.status !== PaymentMethodsStatusType.Approved &&
+                  row.status !== PaymentMethodsStatusType.Rejected &&
+                  canApproveReject && (
+                    <>
+                      <CustomTooltip title="Approve UPI Payment" arrow>
+                        <IconButton
+                          onClick={() => {
+                            setIsClearCheck(false);
+                            setSelectedEntry({ ...row, type: 'approve' });
+                            isDialog.onTrue();
+                          }}
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            p: 0,
+                          }}
+                        >
+                          <Iconify icon="mdi:check-decagram" sx={{ color: 'success.main' }} />
+                        </IconButton>
+                      </CustomTooltip>
 
-                {row.status !== PaymentMethodsStatusType.Rejected && (
+                      <CustomTooltip title="Reject UPI Payment" arrow>
+                        <IconButton
+                          onClick={() => {
+                            setIsClearCheck(true);
+                            setSelectedEntry({ ...row, type: 'reject' });
+                            isDialog.onTrue();
+                          }}
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            p: 0,
+                          }}
+                        >
+                          <Iconify icon="mdi:close-circle" sx={{ color: 'error.main' }} />
+                        </IconButton>
+                      </CustomTooltip>
+                    </>
+                  )}
+
+                <CustomTooltip title="Download Receipt" arrow>
                   <IconButton
-                    onClick={() => {
-                      setIsClearCheck(true);
-                      setSelectedEntry({ ...row, type: 'reject' });
-                      isDialog.onTrue();
-                    }}
+                    onClick={handleDownloadReceipt}
                     sx={{
                       width: 36,
                       height: 36,
                       p: 0,
                     }}
                   >
-                    <Iconify icon="mdi:close-circle" sx={{ color: 'error.main' }} />
+                    <Iconify icon="mdi:download" sx={{ color: 'primary.main' }} />
                   </IconButton>
-                )}
+                </CustomTooltip>
               </Box>
             </MenuList>
           );

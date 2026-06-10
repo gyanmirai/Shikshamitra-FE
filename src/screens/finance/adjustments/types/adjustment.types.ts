@@ -1,7 +1,5 @@
 import type { AdjustmentStatusEnum } from '../enums/adjustment.enum';
-
-/** @deprecated Use AdjustmentStatusEnum instead */
-export type AdjustmentStatus = AdjustmentStatusEnum;
+import type { IAdjustmentFullFormValues } from './adjustmentFormValues';
 
 export interface PaidFeeDetail {
   receiptNo: string;
@@ -42,8 +40,9 @@ export interface AdjustmentRequest {
   adjustmentAmount: number;
   reason: string;
   remarks?: string;
-  status: AdjustmentStatus;
+  status: AdjustmentStatusEnum;
   requestedBy: string;
+  requestedByUserId?: string;
   approvedBy?: string;
   rejectedBy?: string;
   rejectionReason?: string;
@@ -78,18 +77,16 @@ export interface AdjustmentFormValues {
 }
 
 export interface IAdjustmentTableProps {
-  data: AdjustmentRequest[];
-  selectedBoard: string;
-  setSelectedBoard: (v: string) => void;
-  selectedMedium: string;
-  setSelectedMedium: (v: string) => void;
-  onCreateAdjustment: (row: AdjustmentRequest) => void;
+  activeTab: import('../enums/adjustment.enum').AdjustmentTabEnum;
+  onTabChange: (tab: import('../enums/adjustment.enum').AdjustmentTabEnum) => void;
+  tabCounts: Record<import('../enums/adjustment.enum').AdjustmentTabEnum, number>;
+  onCreateAdjustment: () => void;
   onView: (row: AdjustmentRequest) => void;
 }
 
 export interface IAdjustmentFormProps {
   onCancel: (e: any, isSubmit?: boolean) => void;
-  onSubmit: (values: AdjustmentFormValues & IAdjustmentGeneralValues) => void;
+  onSubmit: (values: IAdjustmentFullFormValues) => void;
 }
 
 export interface IAdjustmentViewProps {
@@ -97,6 +94,8 @@ export interface IAdjustmentViewProps {
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
+  showApprove?: boolean;
+  showReject?: boolean;
 }
 
 export interface IAdjustmentApproveRejectProps {

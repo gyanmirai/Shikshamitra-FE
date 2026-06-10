@@ -1,217 +1,109 @@
-import { useState, useCallback } from 'react';
+import type { RootState } from 'src/redux/store';
 
-import { AdjustmentStatusEnum } from '../enums/adjustment.enum';
+import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import {
+  useCreateFeeAdjustmentMutation,
+  useRejectFeeAdjustmentMutation,
+  useGetAdjustmentApplicationsQuery,
+} from 'src/redux/finance/adjustments/adjustmentApi';
 
-import type { ApplyAdjustmentDialogSubmitResult } from '../types/adjustmentApply.types';
-import type { AdjustmentRequest, AdjustmentFormValues } from '../types/adjustment.types';
+import { buildAdjustmentApiPayload } from '../types/adjustmentFormValues';
+import { useFinanceAcademicFilters } from '../../hooks/useFinanceAcademicFilters';
+import { AdjustmentTabEnum, AdjustmentStatusEnum } from '../enums/adjustment.enum';
 
-// ---------------------------------------------------------------------------
-// Mock data â€” replace with RTK Query / API calls when backend is ready
-// ---------------------------------------------------------------------------
-const MOCK_ADJUSTMENTS: AdjustmentRequest[] = [
-  {
-    id: '1',
-    studentId: 'STU001',
-    studentName: 'Aarav Shah',
-    studentGrNo: 'GR001',
-    className: '10th',
-    divisionName: 'A',
-    rollNumber: '01',
-    contactNo: '9876543210',
-    adjustmentType: 'Fee Correction',
-    adjustmentAmount: 500,
-    reason: 'Wrong amount collected during April instalment.',
-    remarks: 'Verified by accountant.',
-    status: AdjustmentStatusEnum.Pending,
-    requestedBy: 'Suresh Joshi',
-    createdAt: new Date().toISOString(),
-    totalPaidFees: 12000,
-    paidFeeDetails: [
-      {
-        receiptNo: 'REC-2024-001',
-        paymentDate: '2024-04-10',
-        paidAmount: 6000,
-        feeType: 'Tuition Fee',
-        installment: 'Term 1',
-      },
-      {
-        receiptNo: 'REC-2024-002',
-        paymentDate: '2024-10-05',
-        paidAmount: 6000,
-        feeType: 'Tuition Fee',
-        installment: 'Term 2',
-      },
-    ],
-  },
-  {
-    id: '2',
-    studentId: 'STU002',
-    studentName: 'Priya Mehta',
-    studentGrNo: 'GR002',
-    className: '9th',
-    divisionName: 'B',
-    rollNumber: '12',
-    contactNo: '9876543211',
-    adjustmentType: 'Overpayment Adjustment',
-    adjustmentAmount: 1000,
-    reason: 'Student paid â‚¹1,000 excess in March.',
-    status: AdjustmentStatusEnum.Approved,
-    requestedBy: 'Admin User',
-    approvedBy: 'Principal',
-    createdAt: new Date(Date.now() - 86400_000).toISOString(),
-    approvedAt: new Date(Date.now() - 43200_000).toISOString(),
-    totalPaidFees: 15000,
-    paidFeeDetails: [
-      {
-        receiptNo: 'REC-2024-010',
-        paymentDate: '2024-03-15',
-        paidAmount: 8000,
-        feeType: 'Tuition Fee',
-        installment: 'Term 1',
-      },
-    ],
-  },
-  {
-    id: '3',
-    studentId: 'STU003',
-    studentName: 'Karan Desai',
-    studentGrNo: 'GR003',
-    className: '8th',
-    divisionName: 'A',
-    rollNumber: '05',
-    adjustmentType: 'Discount Adjustment',
-    adjustmentAmount: 300,
-    reason: 'Sibling discount not applied correctly.',
-    status: AdjustmentStatusEnum.Rejected,
-    requestedBy: 'Suresh Joshi',
-    rejectedBy: 'Finance Head',
-    rejectionReason: 'Discount already applied in previous term.',
-    createdAt: new Date(Date.now() - 172800_000).toISOString(),
-    totalPaidFees: 9000,
-    paidFeeDetails: [
-      {
-        receiptNo: 'REC-2024-020',
-        paymentDate: '2024-02-20',
-        paidAmount: 9000,
-        feeType: 'Annual Fee',
-        installment: 'Annual',
-      },
-    ],
-  },
-];
+import type { AdjustmentRequest } from '../types/adjustment.types';
+import type { IAdjustmentFullFormValues } from '../types/adjustmentFormValues';
+import type { FeeAdjustmentApplicationItemDto } from '../types/adjustmentApi.types';
 
-export function useAdjustment() {
-  const [adjustments, setAdjustments] = useState<AdjustmentRequest[]>(MOCK_ADJUSTMENTS);
+const mapItemToAdjustmentRequest = (item: FeeAdjustmentApplicationItemDto): AdjustmentRequest => ({
+  id: item.id,
+  studentId: item.studentId,
+  studentName: item.studentName,
+  studentGrNo: item.grNumber,
+  className: item.standardName,
+  divisionName: item.divisionName,
+  rollNumber: item.rollNo,
+  adjustmentType: item.adjustmentTypeName,
+  adjustmentAmount: item.requestedAmount,
+  reason: '',
+  status: item.status,
+  requestedBy: item.requestedByName ?? '',
+  createdAt: item.createdAt,
+  appliedAmount: item.appliedAmount,
+  remainingAdjustmentBalance: item.remainingAmount,
+});
 
-  const createAdjustment = useCallback(
-    (
-      student: Pick<
-        AdjustmentRequest,
-        | 'studentId'
-        | 'studentName'
-        | 'studentGrNo'
-        | 'className'
-        | 'divisionName'
-        | 'rollNumber'
-        | 'contactNo'
-        | 'totalPaidFees'
-        | 'paidFeeDetails'
-      >,
-      values: AdjustmentFormValues,
-      requestedBy: string
-    ) => {
-      const newAdj: AdjustmentRequest = {
-        id: String(Date.now()),
-        ...student,
-        adjustmentType: values.adjustmentType,
-        adjustmentAmount: Number(values.adjustmentAmount),
-        reason: values.reason,
-        remarks: values.remarks,
-        status: AdjustmentStatusEnum.Pending,
-        requestedBy,
-        createdAt: new Date().toISOString(),
-      };
-      setAdjustments((prev) => [newAdj, ...prev]);
-      return newAdj;
-    },
-    []
+export function useAdjustment(activeTab: AdjustmentTabEnum) {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { filterPayload, isReady } = useFinanceAcademicFilters();
+
+  const queryParams = useMemo(() => {
+    if (!isReady || !filterPayload || !currentYear?.id) return null;
+
+    const base = {
+      boardId: filterPayload.boardId,
+      educationMediumId: filterPayload.educationMediumId,
+      academicYearId: currentYear.id,
+      standardId: filterPayload.standardId,
+      divisionId: filterPayload.divisionId,
+      page: 1,
+      pageSize: 100,
+    };
+
+    if (activeTab === AdjustmentTabEnum.Pending) {
+      return { ...base, status: AdjustmentStatusEnum.Pending };
+    }
+    if (activeTab === AdjustmentTabEnum.Rejected) {
+      return { ...base, status: AdjustmentStatusEnum.Rejected };
+    }
+    return { ...base, completedOnly: true };
+  }, [filterPayload, currentYear?.id, activeTab, isReady]);
+
+  const {
+    data: applications,
+    isLoading,
+    refetch,
+  } = useGetAdjustmentApplicationsQuery(queryParams!, { skip: !queryParams });
+
+  const [createFeeAdjustment, createState] = useCreateFeeAdjustmentMutation();
+  const [rejectFeeAdjustment, rejectState] = useRejectFeeAdjustmentMutation();
+
+  const adjustments: AdjustmentRequest[] = useMemo(
+    () => (applications?.items ?? []).map(mapItemToAdjustmentRequest),
+    [applications?.items]
   );
 
-  const approveAdjustment = useCallback((id: string, approvedBy: string) => {
-    setAdjustments((prev) =>
-      prev.map((a) =>
-        a.id === id
-          ? {
-              ...a,
-              status: AdjustmentStatusEnum.Approved,
-              approvedBy,
-              approvedAt: new Date().toISOString(),
-            }
-          : a
-      )
-    );
-  }, []);
-
-  const applyApprovedAdjustment = useCallback(
-    (id: string, approvedBy: string, result: ApplyAdjustmentDialogSubmitResult) => {
-      setAdjustments((prev) =>
-        prev.map((a) => {
-          if (a.id !== id) return a;
-
-          return {
-            ...a,
-            status: AdjustmentStatusEnum.Approved,
-            approvedBy,
-            approvedAt: new Date().toISOString(),
-            appliedAmount: result.totalAppliedAmount,
-            remainingAdjustmentBalance: result.remainingAdjustmentBalance,
-            selectedInstallmentsCount: result.selectedInstallmentsCount,
-            applicationLines: result.lines,
-            auditTrail: [
-              {
-                action: 'AdjustmentApproved',
-                message: `Adjustment approved by ${approvedBy}.`,
-                actor: approvedBy,
-                createdAt: new Date().toISOString(),
-              },
-              {
-                action: 'AdjustmentApplied',
-                message: `Applied ${result.totalAppliedAmount} across ${result.selectedInstallmentsCount} installment(s).`,
-                actor: approvedBy,
-                createdAt: new Date().toISOString(),
-              },
-              {
-                action: 'PendingFeesUpdated',
-                message: 'Pending fee balances updated after adjustment application.',
-                actor: approvedBy,
-                createdAt: new Date().toISOString(),
-              },
-            ],
-          };
-        })
-      );
-    },
-    []
+  const tabCounts = useMemo(
+    () => ({
+      [AdjustmentTabEnum.Pending]: applications?.pendingCount ?? 0,
+      [AdjustmentTabEnum.Approved]:
+        (applications?.appliedCount ?? 0) + (applications?.partiallyAppliedCount ?? 0),
+      [AdjustmentTabEnum.Rejected]: applications?.rejectedCount ?? 0,
+    }),
+    [applications]
   );
 
-  const rejectAdjustment = useCallback(
-    (id: string, rejectedBy: string, rejectionReason: string) => {
-      setAdjustments((prev) =>
-        prev.map((a) =>
-          a.id === id
-            ? { ...a, status: AdjustmentStatusEnum.Rejected, rejectedBy, rejectionReason }
-            : a
-        )
-      );
-    },
-    []
-  );
+  const createAdjustment = async (values: IAdjustmentFullFormValues) => {
+    if (!currentYear?.id) throw new Error('Academic year is required.');
+    const body = buildAdjustmentApiPayload(values);
+    await createFeeAdjustment({ academicYearId: currentYear.id, body }).unwrap();
+    refetch();
+  };
+
+  const rejectAdjustment = async (id: string, _rejectedBy: string, rejectionReason: string) => {
+    await rejectFeeAdjustment({ id, body: { message: rejectionReason } }).unwrap();
+    refetch();
+  };
 
   return {
     adjustments,
+    tabCounts,
+    isLoading,
+    refetch,
     createAdjustment,
-    approveAdjustment,
-    applyApprovedAdjustment,
     rejectAdjustment,
+    isCreating: createState.isLoading,
+    isRejecting: rejectState.isLoading,
   };
 }

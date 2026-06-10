@@ -26,6 +26,7 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
+import FeeStructureAssignmentForm from 'src/screens/student/enrollment/admission/FeeStructureAssignmentForm';
 import {
   arrayMove,
   useSortable,
@@ -103,7 +104,12 @@ const buildDetailsForMethod = (method: string): Record<string, any> => {
   const details: Record<string, any> = {};
   config.forEach((field) => {
     if (field.name !== 'amount') {
-      details[field.name] = field.type === 'date' ? null : '';
+      if (field.type === 'date') {
+        // Set default to today if isDefaultToday is true, otherwise null
+        details[field.name] = (field as any).isDefaultToday ? dayjs() : null;
+      } else {
+        details[field.name] = '';
+      }
     }
   });
   return details;
@@ -239,11 +245,10 @@ const SortableFeeRow = ({
           cursor: 'grab',
           display: 'flex',
           alignItems: 'center',
-          color: 'text.disabled',
           flexShrink: 0,
         }}
       >
-        <Iconify icon="solar:reorder-bold" width={16} />
+        <Iconify icon="mdi:drag" width={16} />
       </Box>
 
       {/* label + period */}
@@ -1002,79 +1007,80 @@ const FeeCollectComponentForm = ({
       URL.revokeObjectURL(receiptBlobUrl);
       setReceiptBlobUrl(null);
     }
-    onCancel?.(null, true);
+    // Reset form for next fee collection instead of closing
+    formik.resetForm();
   };
 
-  // if (isFeeStructureAssigned === false) {
-  //   return (
-  //     <Box
-  //       sx={{
-  //         display: 'flex',
-  //         flexDirection: 'column',
-  //         alignItems: 'center',
-  //         justifyContent: 'center',
-  //         flex: 1,
-  //         minHeight: 400,
-  //         gap: 2,
-  //         textAlign: 'center',
-  //         px: 3,
-  //       }}
-  //     >
-  //       <Iconify
-  //         icon="solar:document-add-bold-duotone"
-  //         width={72}
-  //         sx={{ color: 'text.disabled', mb: 1 }}
-  //       />
-  //       <Typography variant="h6" color="text.secondary">
-  //         No Fee Structure Assigned
-  //       </Typography>
-  //       <Typography variant="body2" color="text.secondary" maxWidth={400}>
-  //         A fee structure must be assigned to this student before collecting fees. Please assign a
-  //         fee structure first.
-  //       </Typography>
-  //       <Button
-  //         variant="contained"
-  //         startIcon={<Iconify icon="solar:add-circle-bold" />}
-  //         onClick={() => setFeeStructureDialogOpen(true)}
-  //         sx={{ mt: 1 }}
-  //       >
-  //         Assign Fee Structure
-  //       </Button>
+  if (isFeeStructureAssigned === false) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flex: 1,
+          minHeight: 400,
+          gap: 2,
+          textAlign: 'center',
+          px: 3,
+        }}
+      >
+        <Iconify
+          icon="solar:document-add-bold-duotone"
+          width={72}
+          sx={{ color: 'text.disabled', mb: 1 }}
+        />
+        <Typography variant="h6" color="text.secondary">
+          No Fee Structure Assigned
+        </Typography>
+        <Typography variant="body2" color="text.secondary" maxWidth={400}>
+          A fee structure must be assigned to this student before collecting fees. Please assign a
+          fee structure first.
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Iconify icon="solar:add-circle-bold" />}
+          onClick={() => setFeeStructureDialogOpen(true)}
+          sx={{ mt: 1 }}
+        >
+          Assign Fee Structure
+        </Button>
 
-  //       {/* Fee Structure Assignment Dialog */}
-  //       <CustomDialog
-  //         open={feeStructureDialogOpen}
-  //         handleClose={() => setFeeStructureDialogOpen(false)}
-  //         title={
-  //           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-  //             <Typography variant="h5">Assign Fee Structure</Typography>
-  //             <CustomTooltip
-  //               arrow
-  //               placement="right"
-  //               sx={{ textAlign: 'justify' }}
-  //               title="Assign a fee structure to the student based on their selected class for accurate fee management and billing."
-  //             >
-  //               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-  //             </CustomTooltip>
-  //           </Box>
-  //         }
-  //         maxWidth="sm"
-  //       >
-  //         <FeeStructureAssignmentForm
-  //           student={
-  //             formData?.student
-  //               ? ({
-  //                 studentId: formData.student.studentId,
-  //                 standardId: formData.student.standardId,
-  //               } as any)
-  //               : null
-  //           }
-  //           handleClose={handleFeeStructureDialogClose}
-  //         />
-  //       </CustomDialog>
-  //     </Box>
-  //   );
-  // }
+        {/* Fee Structure Assignment Dialog */}
+        <CustomDialog
+          open={feeStructureDialogOpen}
+          handleClose={() => setFeeStructureDialogOpen(false)}
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">Assign Fee Structure</Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                sx={{ textAlign: 'justify' }}
+                title="Assign a fee structure to the student based on their selected class for accurate fee management and billing."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+          }
+          maxWidth="sm"
+        >
+          <FeeStructureAssignmentForm
+            student={
+              formData?.student
+                ? ({
+                    studentId: formData.student.studentId,
+                    standardId: formData.student.standardId,
+                  } as any)
+                : null
+            }
+            handleClose={handleFeeStructureDialogClose}
+          />
+        </CustomDialog>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -1100,8 +1106,9 @@ const FeeCollectComponentForm = ({
           px: { xs: 1, md: 1.5 },
           pt: 1,
           display: 'grid',
-          gap: { xs: 1.5, lg: 0 },
-          gridTemplateColumns: { xs: '1fr', lg: '3fr 2fr' },
+          gap: { xs: 1.5, md: 1.5, lg: 0 },
+          gridTemplateColumns: { xs: '1fr', md: '1fr', lg: '3fr 2fr' },
+          gridTemplateRows: { xs: 'auto 1fr', md: 'auto 1fr', lg: 'auto' },
           alignItems: 'start',
         }}
       >
@@ -1114,6 +1121,8 @@ const FeeCollectComponentForm = ({
             height: '100%',
             pr: { lg: 0.75 },
             borderRight: (t) => ({ lg: `1px solid ${alpha(t.palette.divider, 0.3)}` }),
+            width: '100%',
+            overflow: 'hidden',
           }}
         >
           {/* Student Summary Card */}
@@ -1263,11 +1272,13 @@ const FeeCollectComponentForm = ({
         <Box
           sx={{
             display: 'grid',
-            gridTemplateRows: '1fr 1fr',
-            minHeight: 0,
-            height: '100%',
+            gridTemplateRows: { xs: '1fr 1fr', md: '1fr 1fr', lg: '1fr 1fr' },
+            minHeight: { xs: 'auto', md: 'auto', lg: '100%' },
+            height: { lg: '100%' },
             pl: { lg: 0.75 },
             gap: 1.5,
+            width: '100%',
+            overflow: 'hidden',
           }}
         >
           {/* ── Selected Fees ── */}
@@ -1284,8 +1295,10 @@ const FeeCollectComponentForm = ({
               p: { xs: 1.25, md: 1.5 },
               boxShadow: (t) => `var(--shadows-4)`,
               border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
-              minHeight: 0,
+              minHeight: { xs: 200, md: 200, lg: 0 },
+              maxHeight: { xs: '100%', md: '100%', lg: 'none' },
               overflow: 'hidden',
+              width: '100%',
             }}
           >
             {/* Selected Fees header */}
@@ -1484,9 +1497,12 @@ const FeeCollectComponentForm = ({
               p: { xs: 1.25, md: 1.5 },
               boxShadow: (t) => `var(--shadows-4)`,
               border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
-              flex: 1,
-              minHeight: 0,
-              mb: 1,
+              flex: { xs: 'none', md: 'none', lg: 1 },
+              minHeight: { xs: 'auto', md: 'auto', lg: 0 },
+              maxHeight: { xs: '100%', md: '100%', lg: 'none' },
+              overflow: 'hidden',
+              width: '100%',
+              mb: { xs: 0, md: 0, lg: 1 },
             }}
           >
             {/* Checkout header */}
@@ -1596,7 +1612,7 @@ const FeeCollectComponentForm = ({
                         variant="overline"
                         fontWeight={700}
                         color="text.secondary"
-                        mb={0.75}
+                        mb={2}
                         display="block"
                       >
                         Amount Tendered
@@ -1627,7 +1643,7 @@ const FeeCollectComponentForm = ({
                           }
                         />
                       </ShakingTextField>
-                      <Grid container spacing={2} mt={2}>
+                      <Grid container spacing={3} mt={3}>
                         {/* Extra payment details (cheque, upi, etc.) */}
                         {(
                           paymentMethodsConfig[
@@ -1737,22 +1753,46 @@ const FeeCollectComponentForm = ({
                                   ) : (
                                     <TextField
                                       fullWidth
-                                      type={field.type}
+                                      type={
+                                        field.type === 'text' ||
+                                        field.type === 'numbers' ||
+                                        field.type === 'last4digits'
+                                          ? 'text'
+                                          : field.type
+                                      }
                                       size="small"
                                       label={`${field.label} *`}
                                       name={fieldPath}
                                       value={value || ''}
                                       onChange={(e) => {
-                                        const newValue = e.target.value;
-                                        if (field.pattern) {
-                                          if (newValue === '') {
-                                            formik.setFieldValue(fieldPath, newValue);
-                                            return;
-                                          }
-                                          const allowedChars = 'a-zA-Z0-9 ';
-                                          const typingRegex = new RegExp(`^[${allowedChars}]*$`);
-                                          if (!typingRegex.test(newValue)) return;
+                                        let newValue = e.target.value;
+
+                                        // Handle text-only fields (letters and spaces only)
+                                        if (field.type === 'text') {
+                                          newValue = newValue.replace(/[^a-zA-Z\s]/g, '');
                                         }
+
+                                        // Handle numbers-only fields (digits only)
+                                        if (field.type === 'numbers') {
+                                          newValue = newValue.replace(/\D/g, '');
+                                        }
+
+                                        // Handle last 4 digits field (4 digits max)
+                                        if (field.type === 'last4digits') {
+                                          newValue = newValue.replace(/\D/g, '');
+                                          if (newValue.length > 4) {
+                                            newValue = newValue.slice(0, 4);
+                                          }
+                                        }
+
+                                        // Apply maxLength if specified
+                                        if (
+                                          (field as any).maxLength &&
+                                          newValue.length > (field as any).maxLength
+                                        ) {
+                                          newValue = newValue.slice(0, (field as any).maxLength);
+                                        }
+
                                         formik.setFieldValue(fieldPath, newValue);
                                       }}
                                       onBlur={formik.handleBlur}
@@ -2006,7 +2046,8 @@ const FeeCollectComponentForm = ({
         handleClose={() => {
           setOutcomeDialogOpen(false);
           setLastCollectResponse(null);
-          onCancel?.(null, true);
+          // Reset form for next fee collection instead of closing
+          formik.resetForm();
         }}
         title="Payment summary"
         maxWidth="sm"

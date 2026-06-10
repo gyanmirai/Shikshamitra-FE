@@ -1,73 +1,99 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Board, Medium } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 
 import { useSelector } from 'react-redux';
-import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import React, { useMemo, useCallback } from 'react';
 import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetAdjustmentApplicationsQuery } from 'src/redux/finance/adjustments/adjustmentApi';
 
-import { AdjustmentStatusEnum } from '../enums/adjustment.enum';
-import { ADJUSTMENT_TABS, ADJUSTMENT_STATUS_COLORS } from '../constants/adjustmentOptions';
+import { mapAdjustmentApplicationItem } from '../utils/mapAdjustmentApplication';
+import { useFinanceAcademicFilters } from '../../hooks/useFinanceAcademicFilters';
+import FinanceClassDivisionFilter from '../../components/FinanceClassDivisionFilter';
+import { AdjustmentStatusEnum, type AdjustmentTabEnum } from '../enums/adjustment.enum';
+import FinanceAcademicContextFilter from '../../components/FinanceAcademicContextFilter';
+import {
+  ADJUSTMENT_TABS,
+  ADJUSTMENT_STATUS_COLORS,
+  formatAdjustmentStatusLabel,
+} from '../constants/adjustmentOptions';
 
 import type { IAdjustmentTableProps } from '../types/adjustment.types';
 
 const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
-  data,
-  selectedBoard,
-  setSelectedBoard,
-  selectedMedium,
-  setSelectedMedium,
+  activeTab,
+  onTabChange,
+  tabCounts,
   onCreateAdjustment,
   onView,
 }) => {
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const tabs = useTabs(AdjustmentStatusEnum.Pending);
+  // Use the finance academic filters hook
+  const {
+    boards,
+    mediums,
+    selectedBoard: filterSelectedBoard,
+    selectedMedium: filterSelectedMedium,
+    selectedStandardId,
+    selectedDivisionId,
+    isReady,
+    classOptions,
+    divisionOptions,
+    isDivisionDisabled,
+    filterPayload,
+    setSelectedBoard: setFilterBoard,
+    setSelectedMedium: setFilterMedium,
+    setSelectedStandardId,
+    setSelectedDivisionId,
+    classesLoading,
+  } = useFinanceAcademicFilters();
 
-  // Reset board + medium whenever the academic year changes
-  useEffect(() => {
-    if (!currentYear?.boards?.length) return;
-    const newBoards = currentYear.boards;
-    setBoards(newBoards);
-    const firstBoard = newBoards[0];
-    setSelectedBoard(firstBoard?.id ?? '');
-    setSelectedMedium(firstBoard?.educationMediums?.[0]?.id ?? '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentYear?.id]);
+  const tabs = useTabs(activeTab);
 
-  // Sync mediums list when the selected board changes
-  useEffect(() => {
-    if (!currentYear?.boards) return;
-    setBoards(currentYear.boards);
-    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
-    setMediums((board as unknown as Board)?.educationMediums ?? []);
-  }, [currentYear?.boards, selectedBoard]);
+  const listParams = useMemo(() => {
+    if (!isReady || !filterPayload || !currentYear?.id) return null;
 
-  const tabCounts = useMemo(
-    () =>
-      ADJUSTMENT_TABS.reduce(
-        (acc, tab) => {
-          acc[tab.value] = (data || []).filter((item) => item.status === tab.value).length;
-          return acc;
-        },
-        {} as Record<AdjustmentStatusEnum, number>
-      ),
-    [data]
-  );
+    const base = {
+      boardId: filterPayload.boardId,
+      educationMediumId: filterPayload.educationMediumId,
+      academicYearId: currentYear.id,
+      standardId: filterPayload.standardId,
+      divisionId: filterPayload.divisionId,
+      page: 1,
+      pageSize: 100,
+    };
 
-  const filteredData = useMemo(
-    () => (data || []).filter((item) => item.status === tabs.value),
-    [data, tabs.value]
+    if (tabs.value === AdjustmentStatusEnum.Pending) {
+      return { ...base, status: 0 };
+    }
+    if (tabs.value === AdjustmentStatusEnum.Rejected) {
+      return { ...base, status: 1 };
+    }
+    return { ...base, completedOnly: true };
+  }, [currentYear?.id, filterPayload, isReady, tabs.value]);
+
+  const {
+    data: applicationsData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAdjustmentApplicationsQuery,
+    params: listParams,
+    options: { skip: !listParams },
+  });
+
+  const data = useMemo(
+    () => (applicationsData?.items ?? []).map(mapAdjustmentApplicationItem),
+    [applicationsData?.items]
   );
 
   const renderActions = useCallback(
@@ -94,7 +120,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
                   listStyle: 'none',
                 }}
                 onClick={() => {
-                  onCreateAdjustment(row);
+                  onCreateAdjustment();
                   popover.onClose();
                 }}
               >
@@ -111,36 +137,38 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
 
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, mb: 1 }}>
-        <Box display="flex" justifyContent="space-between" flexWrap="wrap" gap={1}>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <CustomSelect
-              label="Board"
-              options={boards || []}
-              labelKey="name"
-              valueKey="id"
-              value={selectedBoard}
-              onChange={(value) => {
-                setSelectedBoard(value as string);
-                setSelectedMedium('');
-              }}
-              formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
-            />
-            <CustomSelect
-              label="Medium"
-              options={mediums || []}
-              labelKey="name"
-              disabled={!selectedBoard}
-              valueKey="id"
-              value={selectedMedium}
-              onChange={(value) => setSelectedMedium(value as string)}
-              formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
-            />
-          </Box>
-
+      <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <FinanceAcademicContextFilter
+            boards={boards}
+            mediums={mediums}
+            selectedBoard={filterSelectedBoard}
+            selectedMedium={filterSelectedMedium}
+            onBoardChange={setFilterBoard}
+            onMediumChange={setFilterMedium}
+            selectSx={{ maxWidth: '248px', width: '100%' }}
+          />
+          <FinanceClassDivisionFilter
+            classOptions={classOptions}
+            divisionOptions={divisionOptions}
+            selectedStandardId={selectedStandardId}
+            selectedDivisionId={selectedDivisionId}
+            isDivisionDisabled={isDivisionDisabled}
+            onClassChange={setSelectedStandardId}
+            onDivisionChange={setSelectedDivisionId}
+            classesLoading={classesLoading}
+            selectSx={{ maxWidth: '248px', width: '100%' }}
+          />
+        </Box>
+      </Card>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
           <Tabs
             value={tabs.value}
-            onChange={tabs.onChange}
+            onChange={(_e, value) => {
+              tabs.onChange(_e, value);
+              onTabChange(value as AdjustmentTabEnum);
+            }}
             sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
           >
             {ADJUSTMENT_TABS.map((tab) => (
@@ -162,6 +190,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
 
       <CustomizableTable
         tableId="adjustment-table"
+        isLoading={isLoading || isFetching}
         noDataText={<>No adjustment records found.</>}
         columns={[
           {
@@ -181,7 +210,6 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
           {
             id: 'className',
             label: 'Class/Div',
-            isFilter: true,
             align: 'left',
             width: 130,
             minWidth: 80,
@@ -268,9 +296,13 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             maxWidth: 140,
             sticky: true,
             render: (value: any) => {
-              const statusKey = value as unknown as AdjustmentStatusEnum;
+              const statusKey = value as keyof typeof ADJUSTMENT_STATUS_COLORS;
               const color = (ADJUSTMENT_STATUS_COLORS[statusKey] ?? 'default') as LabelColor;
-              return <Label color={color}>{value}</Label>;
+              return (
+                <Label color={color}>
+                  {typeof value === 'number' ? formatAdjustmentStatusLabel(value) : value}
+                </Label>
+              );
             },
           },
           {
@@ -285,7 +317,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             render: (_v: any, row: any) => renderActions({ row }),
           },
         ]}
-        data={filteredData}
+        data={data}
       />
     </>
   );

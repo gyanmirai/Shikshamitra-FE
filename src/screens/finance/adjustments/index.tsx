@@ -13,21 +13,23 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useLazyGetFeeAdjustmentQuery } from 'src/redux/finance/adjustments/adjustmentApi';
 
 import { useAdjustment } from './hooks/useAdjustment';
 import AdjustmentForm from './components/AdjustmentForm';
 import AdjustmentView from './components/AdjustmentView';
 import AdjustmentTable from './components/AdjustmentTable';
 import ApplyAdjustmentDialog from './components/ApplyAdjustmentDialog';
+import { mapDetailToAdjustmentRequest } from './utils/mapAdjustmentDetail';
+import { AdjustmentTabEnum, AdjustmentStatusEnum } from './enums/adjustment.enum';
 import AdjustmentApproveRejectForm from './components/AdjustmentApproveRejectForm';
 
 import type { AdjustmentRequest } from './types/adjustment.types';
+import type { IAdjustmentFullFormValues } from './types/adjustmentFormValues';
 
 const Adjustments = () => {
-  const [selectedBoard, setSelectedBoard] = useState('');
-  const [selectedMedium, setSelectedMedium] = useState('');
+  const [activeTab, setActiveTab] = useState(AdjustmentTabEnum.Pending);
   const [selectedAdjustment, setSelectedAdjustment] = useState<AdjustmentRequest | null>(null);
-  const [selectedMode, setSelectedMode] = useState<'Approve' | 'Reject' | ''>('');
 
   const addDialog = useBoolean();
   const viewDialog = useBoolean();
@@ -35,13 +37,15 @@ const Adjustments = () => {
   const applyDialog = useBoolean();
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
-  const { adjustments, createAdjustment, applyApprovedAdjustment, rejectAdjustment } =
-    useAdjustment();
+  const currentUserId = user?.id ?? '';
+  const currentUserName = user?.name ?? user?.userName ?? 'User';
 
-  // ── Logged-in user (replace with actual auth selector) ──────────────────
-  const currentUser = 'Admin User';
+  const { tabCounts, createAdjustment, rejectAdjustment, refetch } = useAdjustment(activeTab);
+
+  const [fetchDetail] = useLazyGetFeeAdjustmentQuery();
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure to leave this page?'))) {
@@ -56,48 +60,55 @@ const Adjustments = () => {
     }
   };
 
-  const handleConfirmClose = (_e: any, isSubmit?: boolean, notes?: string) => {
+  const handleConfirmClose = async (_e: any, isSubmit?: boolean, notes?: string) => {
     if (isSubmit && selectedAdjustment) {
-      if (selectedMode === 'Reject') {
-        rejectAdjustment(selectedAdjustment.id, currentUser, notes ?? '');
+      try {
+        await rejectAdjustment(selectedAdjustment.id, currentUserName, notes ?? '');
         shikshaMitraToast.success({ message: 'Adjustment request rejected.' });
+        confirmDialog.onFalse();
+        viewDialog.onFalse();
+        setSelectedAdjustment(null);
+        refetch();
+      } catch (err: any) {
+        shikshaMitraToast.error({
+          message: err?.data?.error?.message || 'Failed to reject adjustment.',
+        });
       }
-      confirmDialog.onFalse();
-      setSelectedMode('');
-      viewDialog.onFalse();
-      setSelectedAdjustment(null);
     } else {
       confirmDialog.onFalse();
-      setSelectedMode('');
     }
   };
 
-  const handleFormSubmit = (values: any) => {
-    createAdjustment(
-      {
-        studentId: values.studentId,
-        studentName: values.studentName,
-        studentGrNo: values.grNo,
-        className: values.standardId,
-        divisionName: values.divisionId,
-        rollNumber: '',
-        contactNo: '',
-        totalPaidFees: values.totalPaidFees,
-        paidFeeDetails: values.paidFeeDetails,
-      },
-      {
-        adjustmentType: values.adjustmentType,
-        adjustmentAmount: values.adjustmentAmount,
-        reason: values.reason,
-        remarks: values.remarks,
-      },
-      currentUser
-    );
-    shikshaMitraToast.success({ message: 'Adjustment request submitted successfully.' });
-    handleClose(null, true);
+  const handleFormSubmit = async (values: IAdjustmentFullFormValues) => {
+    try {
+      await createAdjustment(values);
+      shikshaMitraToast.success({ message: 'Adjustment request submitted successfully.' });
+      handleClose(null, true);
+      refetch();
+    } catch (err: any) {
+      shikshaMitraToast.error({
+        message: err?.data?.error?.message || 'Failed to submit adjustment request.',
+      });
+    }
   };
 
-  // ── Breadcrumb section ───────────────────────────────────────────────────
+  const handleView = async (row: AdjustmentRequest) => {
+    try {
+      const detail = await fetchDetail(row.id).unwrap();
+      setSelectedAdjustment(mapDetailToAdjustmentRequest(detail));
+      viewDialog.onTrue();
+    } catch (err: any) {
+      shikshaMitraToast.error({
+        message: err?.data?.error?.message || 'Failed to load adjustment details.',
+      });
+    }
+  };
+
+  const canApprove =
+    (selectedAdjustment?.status === AdjustmentStatusEnum.Pending ||
+      selectedAdjustment?.status === AdjustmentStatusEnum.PartiallyApplied) &&
+    selectedAdjustment.requestedByUserId !== currentUserId;
+
   const renderBreadcrumbs = () => {
     if (addDialog.value) {
       return (
@@ -174,33 +185,22 @@ const Adjustments = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {renderBreadcrumbs()}
 
-      {/* ── Main Table ──────────────────────────────────────────── */}
       {!addDialog.value && !viewDialog.value && (
         <AdjustmentTable
-          data={adjustments}
-          selectedBoard={selectedBoard}
-          setSelectedBoard={setSelectedBoard}
-          selectedMedium={selectedMedium}
-          setSelectedMedium={setSelectedMedium}
-          onCreateAdjustment={(row) => {
-            setSelectedAdjustment(row);
-            addDialog.onTrue();
-          }}
-          onView={(row) => {
-            setSelectedAdjustment(row);
-            viewDialog.onTrue();
-          }}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tabCounts={tabCounts}
+          onCreateAdjustment={() => addDialog.onTrue()}
+          onView={handleView}
         />
       )}
 
-      {/* ── Create Adjustment Form ──────────────────────────────── */}
       {addDialog.value && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AdjustmentForm onCancel={handleClose} onSubmit={handleFormSubmit} />
         </Card>
       )}
 
-      {/* ── View Adjustment ─────────────────────────────────────── */}
       {viewDialog.value && selectedAdjustment && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AdjustmentView
@@ -213,31 +213,29 @@ const Adjustments = () => {
               applyDialog.onTrue();
             }}
             onReject={() => {
-              setSelectedMode('Reject');
               confirmDialog.onTrue();
             }}
+            showApprove={canApprove}
+            showReject={selectedAdjustment.status === AdjustmentStatusEnum.Pending}
           />
         </Card>
       )}
 
       <ApplyAdjustmentDialog
         open={applyDialog.value}
-        approvedBy={currentUser}
+        approvedBy={currentUserName}
         adjustment={selectedAdjustment}
         onClose={() => {
           applyDialog.onFalse();
         }}
-        onApplied={(result) => {
-          if (!selectedAdjustment) return;
-
-          applyApprovedAdjustment(selectedAdjustment.id, currentUser, result);
+        onApplied={async () => {
           applyDialog.onFalse();
           viewDialog.onFalse();
           setSelectedAdjustment(null);
+          refetch();
         }}
       />
 
-      {/* ── Approve / Reject Confirm Dialog ──────────────────────── */}
       <CustomDialog
         open={confirmDialog.value}
         title={
@@ -247,11 +245,7 @@ const Adjustments = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title={
-                selectedMode === 'Approve'
-                  ? 'Approve this adjustment request. Add optional remarks.'
-                  : 'Reject this adjustment request. A rejection reason is required.'
-              }
+              title="Reject this adjustment request. A rejection reason is required."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -259,7 +253,6 @@ const Adjustments = () => {
         }
         handleClose={() => {
           confirmDialog.onFalse();
-          setSelectedMode('');
         }}
         maxWidth="xs"
       >

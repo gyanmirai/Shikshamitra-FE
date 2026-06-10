@@ -8,7 +8,9 @@ const getColumns = (mode: RefundMode) =>
     { key: 'TOTAL', width: 90 },
     { key: 'PAID', width: 90 },
     { key: mode === 'adjustment' ? 'ADJUSTED' : 'REFUNDED', width: 90 },
-    { key: mode === 'adjustment' ? 'ADJUSTABLE' : 'REFUNDABLE', width: 90 },
+    ...(mode === 'adjustment'
+      ? [{ key: 'ADJUSTABLE', width: 90 }]
+      : [{ key: 'REFUNDABLE', width: 90 }]),
     { key: mode === 'adjustment' ? 'ADJUSTMENT AMOUNT' : 'REFUND AMOUNT', width: 124 },
     { key: 'STATUS', width: 76 },
   ] as const;

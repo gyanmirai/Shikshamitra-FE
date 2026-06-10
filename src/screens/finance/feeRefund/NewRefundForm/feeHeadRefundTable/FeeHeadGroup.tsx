@@ -126,12 +126,12 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
         selectedMonths={selectedMonths}
         isOpen={open}
         totalRefundInput={totalRefundInput}
+        mode={mode}
         onCheckboxToggle={onToggleAll}
         onExpandToggle={() => setOpen((o) => !o)}
         applyInAllState={applyInAllState}
         onApplyInAllAmountChange={onApplyInAllAmountChange}
         onApplyInAllToggle={onApplyInAllToggle}
-        mode={mode}
       />
 
       <Collapse in={open} timeout={250}>
@@ -155,6 +155,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
                 isDisabled={refundable === 0}
                 refundValue={refundValue}
                 showInputError={inputError}
+                mode={mode}
                 onToggle={() => onToggleMonth(item.month, (item as any).dueFeeId ?? '')}
                 onAmountChange={(value) => handleAmountChange(item.month, refundable, value)}
               />

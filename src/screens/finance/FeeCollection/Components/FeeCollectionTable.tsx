@@ -1,12 +1,10 @@
 import type { RootState } from 'src/redux/store';
-import type { Board, Medium } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
@@ -15,6 +13,9 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
+import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
+import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
+import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusOptions,
@@ -27,21 +28,29 @@ import type { IFeeData, IFeeTableProps } from './type';
 
 const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onAddFee,
-  selectedBoard,
-  setSelectedBoard,
-  selectedMedium,
-  setSelectedMedium,
   onCollectFee,
   onView,
   onGiveAdjustment,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [boards, setBoards] = useState<Board[]>(() => currentYear?.boards ?? []);
-  const [mediums, setMediums] = useState<Medium[]>(() => {
-    if (!selectedBoard || !currentYear?.boards) return [];
-    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
-    return (board as unknown as Board)?.educationMediums ?? [];
-  });
+  const {
+    boards,
+    mediums,
+    selectedBoard,
+    selectedMedium,
+    selectedStandardId,
+    selectedDivisionId,
+    isReady,
+    classOptions,
+    divisionOptions,
+    isDivisionDisabled,
+    filterPayload,
+    setSelectedBoard,
+    setSelectedMedium,
+    setSelectedStandardId,
+    setSelectedDivisionId,
+    classesLoading,
+  } = useFinanceAcademicFilters();
 
   const [feeCollectionParams, setFeeCollectionParams] = useState({
     page: 1,
@@ -66,35 +75,24 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     currentQueryAndMutation: useGetFeeCollectionListQuery,
     params: {
       AcademicYearId: currentYear?.id,
-      BoardId: selectedBoard,
-      EducationMediumId: selectedMedium,
+      BoardId: filterPayload?.boardId,
+      EducationMediumId: filterPayload?.educationMediumId,
+      StandardId:
+        filterPayload?.standardId === 'All Classes' ? undefined : filterPayload?.standardId,
+      DivisionId:
+        filterPayload?.divisionId === 'All Divisions' ? undefined : filterPayload?.divisionId,
       MaxResultCount: feeCollectionParams.pageSize,
       SkipCount: (feeCollectionParams.page - 1) * feeCollectionParams.pageSize,
       Search: feeCollectionParams.search || undefined,
     },
     options: {
-      skip: !currentYear?.id || !selectedBoard || !selectedMedium,
+      skip: !currentYear?.id || !isReady,
     },
   });
 
-  // Reset board + medium whenever the academic year changes
   useEffect(() => {
-    if (!currentYear?.boards?.length) return;
-    const newBoards = currentYear.boards;
-    setBoards(newBoards);
-    const firstBoard = newBoards[0];
-    setSelectedBoard(firstBoard?.id ?? '');
-    setSelectedMedium(firstBoard?.educationMediums?.[0]?.id ?? '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentYear?.id]);
-
-  // Sync mediums list when the selected board changes
-  useEffect(() => {
-    if (!currentYear?.boards) return;
-    setBoards(currentYear.boards);
-    const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
-    setMediums((board as unknown as Board)?.educationMediums ?? []);
-  }, [currentYear?.boards, selectedBoard]);
+    setFeeCollectionParams((prev) => ({ ...prev, page: 1 }));
+  }, [selectedBoard, selectedMedium, selectedStandardId, selectedDivisionId]);
 
   const tableData = useMemo(
     () =>
@@ -116,27 +114,25 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     <>
       <Card sx={{ p: 1, mb: 1, overflow: 'visible' }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-          <CustomSelect
-            label="Board"
-            options={boards || []}
-            labelKey="name"
-            valueKey="id"
-            value={selectedBoard}
-            onChange={(value) => {
-              setSelectedBoard(value as string);
-              setSelectedMedium('');
-            }}
-            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          <FinanceAcademicContextFilter
+            boards={boards}
+            mediums={mediums}
+            selectedBoard={selectedBoard}
+            selectedMedium={selectedMedium}
+            onBoardChange={setSelectedBoard}
+            onMediumChange={setSelectedMedium}
+            selectSx={{ maxWidth: '248px', width: '100%' }}
           />
-          <CustomSelect
-            label="Medium"
-            options={mediums || []}
-            labelKey="name"
-            disabled={!selectedBoard}
-            valueKey="id"
-            value={selectedMedium}
-            onChange={(value) => setSelectedMedium(value as string)}
-            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          <FinanceClassDivisionFilter
+            classOptions={classOptions}
+            divisionOptions={divisionOptions}
+            selectedStandardId={selectedStandardId}
+            selectedDivisionId={selectedDivisionId}
+            isDivisionDisabled={isDivisionDisabled}
+            onClassChange={setSelectedStandardId}
+            onDivisionChange={setSelectedDivisionId}
+            classesLoading={classesLoading}
+            selectSx={{ maxWidth: '248px', width: '100%' }}
           />
         </Box>
       </Card>
@@ -169,7 +165,6 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             {
               id: 'standardDivision',
               label: 'Class/Div',
-              isFilter: true,
               align: 'left',
               width: 150,
               minWidth: 100,

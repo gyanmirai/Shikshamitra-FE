@@ -2,6 +2,7 @@
 
 import type { FeeRefundRequestDto } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
+import dayjs from 'dayjs';
 import React from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -20,7 +21,12 @@ export const getInitialPaymentDetails = (method?: string) => {
   if (!method || !(method in paymentMethodsConfig)) return {};
   return paymentMethodsConfig[method as keyof typeof paymentMethodsConfig].reduce(
     (acc, field) => {
-      acc[field.name] = ''; // default empty
+      if (field.type === 'date') {
+        // Set default to today if isDefaultToday is true, otherwise empty
+        acc[field.name] = (field as any).isDefaultToday ? dayjs() : '';
+      } else {
+        acc[field.name] = '';
+      }
       return acc;
     },
     {} as Record<string, any>

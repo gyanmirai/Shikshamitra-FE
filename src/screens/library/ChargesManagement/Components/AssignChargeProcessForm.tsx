@@ -420,7 +420,13 @@ const CollectChargesForm: React.FC<ICollectChargesProps> = ({ open, onClose, cha
                       ) : (
                         <TextField
                           fullWidth
-                          type={field.type}
+                          type={
+                            field.type === 'text' ||
+                            field.type === 'numbers' ||
+                            field.type === 'last4digits'
+                              ? 'text'
+                              : field.type
+                          }
                           label={field.label}
                           size="small"
                           name={`paymentDetails.${field.name}`}
@@ -429,7 +435,37 @@ const CollectChargesForm: React.FC<ICollectChargesProps> = ({ open, onClose, cha
                               field.name as keyof typeof formik.values.paymentDetails
                             ] || ''
                           }
-                          onChange={formik.handleChange}
+                          onChange={(e) => {
+                            let newValue = e.target.value;
+
+                            // Handle text-only fields (letters and spaces only)
+                            if (field.type === 'text') {
+                              newValue = newValue.replace(/[^a-zA-Z\s]/g, '');
+                            }
+
+                            // Handle numbers-only fields (digits only)
+                            if (field.type === 'numbers') {
+                              newValue = newValue.replace(/\D/g, '');
+                            }
+
+                            // Handle last 4 digits field (4 digits max)
+                            if (field.type === 'last4digits') {
+                              newValue = newValue.replace(/\D/g, '');
+                              if (newValue.length > 4) {
+                                newValue = newValue.slice(0, 4);
+                              }
+                            }
+
+                            // Apply maxLength if specified
+                            if (
+                              (field as any).maxLength &&
+                              newValue.length > (field as any).maxLength
+                            ) {
+                              newValue = newValue.slice(0, (field as any).maxLength);
+                            }
+
+                            formik.setFieldValue(`paymentDetails.${field.name}`, newValue);
+                          }}
                           error={
                             !!(
                               formik.touched.paymentDetails?.[

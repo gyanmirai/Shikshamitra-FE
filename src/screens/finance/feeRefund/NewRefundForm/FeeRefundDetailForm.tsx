@@ -161,22 +161,46 @@ export default function FeeRefundDetailsForm({
                         ) : (
                           <TextField
                             fullWidth
-                            type={field.type}
+                            type={
+                              field.type === 'text' ||
+                              field.type === 'numbers' ||
+                              field.type === 'last4digits'
+                                ? 'text'
+                                : field.type
+                            }
                             size="small"
                             label={`${field.label}${field.required ? ' *' : ''}`}
                             name={fieldPath}
                             value={value || ''}
                             onChange={(e) => {
-                              const newValue = e.target.value;
-                              if (field.pattern) {
-                                if (newValue === '') {
-                                  formik.setFieldValue(fieldPath, newValue);
-                                  return;
-                                }
-                                const allowedChars = 'a-zA-Z0-9 ';
-                                const typingRegex = new RegExp(`^[${allowedChars}]*$`);
-                                if (!typingRegex.test(newValue)) return;
+                              let newValue = e.target.value;
+
+                              // Handle text-only fields (letters and spaces only)
+                              if (field.type === 'text') {
+                                newValue = newValue.replace(/[^a-zA-Z\s]/g, '');
                               }
+
+                              // Handle numbers-only fields (digits only)
+                              if (field.type === 'numbers') {
+                                newValue = newValue.replace(/\D/g, '');
+                              }
+
+                              // Handle last 4 digits field (4 digits max)
+                              if (field.type === 'last4digits') {
+                                newValue = newValue.replace(/\D/g, '');
+                                if (newValue.length > 4) {
+                                  newValue = newValue.slice(0, 4);
+                                }
+                              }
+
+                              // Apply maxLength if specified
+                              if (
+                                (field as any).maxLength &&
+                                newValue.length > (field as any).maxLength
+                              ) {
+                                newValue = newValue.slice(0, (field as any).maxLength);
+                              }
+
                               formik.setFieldValue(fieldPath, newValue);
                             }}
                             onBlur={formik.handleBlur}

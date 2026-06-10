@@ -1,5 +1,4 @@
 import type { RootState } from 'src/redux/store';
-import type { Board, Medium } from 'src/types/school';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   FeeReceiptListItem,
@@ -11,11 +10,14 @@ import { useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { FeeMonth } from 'src/enums/fee-collection-type';
+import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
+import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
+import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
+import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
   FeeReceiptKind,
   FEE_RECEIPT_KIND_LABELS,
@@ -50,12 +52,25 @@ const getAcademicYearMonthOptions = (data: { month: number; year: number }[] | u
 const ReceiptManagement = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // ── Filter state ──────────────────────────────────────────────────────────
+  const {
+    boards,
+    mediums,
+    selectedBoard,
+    selectedMedium,
+    selectedStandardId,
+    selectedDivisionId,
+    isReady,
+    classOptions,
+    divisionOptions,
+    isDivisionDisabled,
+    filterPayload,
+    setSelectedBoard,
+    setSelectedMedium,
+    setSelectedStandardId,
+    setSelectedDivisionId,
+    classesLoading,
+  } = useFinanceAcademicFilters();
 
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [mediums, setMediums] = useState<Medium[]>([]);
-  const [selectedBoard, setSelectedBoard] = useState<string>('');
-  const [selectedMedium, setSelectedMedium] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>('All');
   const [selectedKind, setSelectedKind] = useState<string>('All');
 
@@ -86,35 +101,50 @@ const ReceiptManagement = () => {
 
   const [previewReceiptId, setPreviewReceiptId] = useState<string | null>(null);
 
-  // ── Board/Medium cascade from global state ────────────────────────────────
-  useEffect(() => {
-    if (currentYear?.boards) {
-      setBoards(currentYear.boards);
-      setSelectedBoard(currentYear.boards[0].id);
-      setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentYear.boards]);
-  // State to store the selected student concession data
-  // null when no student is selected
-  useEffect(() => {
-    // Filter boards based on academic year ID from edit data
-    setBoards(currentYear?.boards);
-
-    const board = boards?.find((item: any) => item.id === selectedBoard);
-    setMediums((board as unknown as Board)?.educationMediums || []);
-  }, [boards, currentYear?.boards, selectedBoard]);
-
   const resetPagination = useCallback(() => setSkipCount(0), []);
+
+  const handleBoardChange = useCallback(
+    (boardId: string) => {
+      setSelectedBoard(boardId);
+      resetPagination();
+    },
+    [resetPagination, setSelectedBoard]
+  );
+
+  const handleMediumChange = useCallback(
+    (mediumId: string) => {
+      setSelectedMedium(mediumId);
+      resetPagination();
+    },
+    [resetPagination, setSelectedMedium]
+  );
+
+  const handleClassChange = useCallback(
+    (standardId: string) => {
+      setSelectedStandardId(standardId);
+      resetPagination();
+    },
+    [resetPagination, setSelectedStandardId]
+  );
+
+  const handleDivisionChange = useCallback(
+    (divisionId: string) => {
+      setSelectedDivisionId(divisionId);
+      resetPagination();
+    },
+    [resetPagination, setSelectedDivisionId]
+  );
 
   // ── RTK Query ─────────────────────────────────────────────────────────────
 
   const queryParams = useMemo<GetFeeReceiptListParams | null>(() => {
-    if (!currentYear?.id || !selectedBoard || !selectedMedium) return null;
+    if (!currentYear?.id || !isReady || !filterPayload) return null;
     return {
       academicYearId: currentYear.id,
-      boardId: selectedBoard,
-      educationMediumId: selectedMedium,
+      boardId: filterPayload.boardId,
+      educationMediumId: filterPayload.educationMediumId,
+      standardId: filterPayload.standardId,
+      divisionId: filterPayload.divisionId,
       month:
         selectedMonth && selectedMonth !== 'All' ? Number(selectedMonth.split('-')[0]) : undefined,
       receiptKind:
@@ -126,8 +156,8 @@ const ReceiptManagement = () => {
     };
   }, [
     currentYear?.id,
-    selectedBoard,
-    selectedMedium,
+    isReady,
+    filterPayload,
     selectedMonth,
     selectedKind,
     skipCount,
@@ -253,30 +283,23 @@ const ReceiptManagement = () => {
           p: 1,
         }}
       >
-        <CustomSelect
-          options={boards}
-          label="Board *"
-          value={selectedBoard}
-          onChange={(val) => {
-            setSelectedBoard(val as string);
-            resetPagination();
-          }}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: 180, width: '100%' } }}
+        <FinanceAcademicContextFilter
+          boards={boards}
+          mediums={mediums}
+          selectedBoard={selectedBoard}
+          selectedMedium={selectedMedium}
+          onBoardChange={handleBoardChange}
+          onMediumChange={handleMediumChange}
         />
-        <CustomSelect
-          options={mediums}
-          label="Medium *"
-          value={selectedMedium}
-          onChange={(val) => {
-            setSelectedMedium(val as string);
-            resetPagination();
-          }}
-          labelKey="name"
-          valueKey="id"
-          disabled={!selectedBoard}
-          formControlProps={{ sx: { maxWidth: 180, width: '100%' } }}
+        <FinanceClassDivisionFilter
+          classOptions={classOptions}
+          divisionOptions={divisionOptions}
+          selectedStandardId={selectedStandardId}
+          selectedDivisionId={selectedDivisionId}
+          isDivisionDisabled={isDivisionDisabled}
+          onClassChange={handleClassChange}
+          onDivisionChange={handleDivisionChange}
+          classesLoading={classesLoading}
         />
         <CustomSelect
           options={monthOptions}
@@ -319,7 +342,7 @@ const ReceiptManagement = () => {
         totalCount={totalCount}
         maxServerRowsPerPage={maxResultCount}
         noDataText={
-          !selectedBoard || !selectedMedium ? (
+          !isReady ? (
             <>Select a Board and Medium to view receipts</>
           ) : (
             <>No receipts found for the selected filters</>
