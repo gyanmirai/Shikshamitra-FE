@@ -429,7 +429,8 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                pl: '4px',
+                justifyContent: 'center',
+                pl: '20px',
                 pr: '20px',
                 minHeight: '18px',
                 flexShrink: 0,
@@ -621,7 +622,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                     popover.onClose();
                   }}
                 >
-                  <Iconify icon="mdi:teacher" sx={{ height: '18px', width: '18px' }} />
+                  <Iconify icon="lucide:user" sx={{ height: '18px', width: '18px' }} />
                   Teacher
                 </MenuItem>
                 <MenuItem
@@ -631,7 +632,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                     popover.onClose();
                   }}
                 >
-                  <Iconify icon="mdi:google-classroom" sx={{ height: '18px', width: '18px' }} />
+                  <Iconify icon="ri:home-2-line" sx={{ height: '18px', width: '18px' }} />
                   Room
                 </MenuItem>
                 <MenuItem
@@ -646,7 +647,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                     sx={{ height: '18px', width: '18px' }}
                     color="red"
                   />
-                  Delete
+                  Remove
                 </MenuItem>
               </MenuList>
             )}

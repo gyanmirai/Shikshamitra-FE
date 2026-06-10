@@ -18,18 +18,26 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import { useGetStandardFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
 import {
-  Box,
-  Grid,
-  Card,
-  Typography,
-  CardContent,
-  DialogActions,
-  CardActionArea,
-} from '@mui/material';
-import {
   useAssignFeeStructureMutation,
   useGetStudentFeeStructureQuery,
 } from 'src/redux/student/admission/admission-api';
+import {
+  Box,
+  Grid,
+  Card,
+  Table,
+  Paper,
+  Stack,
+  TableRow,
+  Checkbox,
+  TableBody,
+  TableCell,
+  TableHead,
+  Typography,
+  CardContent,
+  DialogActions,
+  TableContainer,
+} from '@mui/material';
 
 import type { IInquiryData } from '../Inquiry/type';
 
@@ -145,7 +153,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={3} sx={{ pt: 1 }}>
+        <Grid container spacing={1}>
           <Grid size={{ xs: 12 }}>
             <CustomSelect
               fullWidth
@@ -173,115 +181,108 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
 
           {formik.values.feeStructureId && feeHeads?.length > 0 && (
             <Grid size={{ xs: 12 }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="subtitle1">Fee Heads</Typography>
-                <Box textAlign="right">
-                  <Typography variant="caption" color="text.secondary" display="block">
-                    Selected Fee Heads:{' '}
-                    {
-                      feeHeads.filter((item: FeeHeadItem) =>
-                        item.isOptional
-                          ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
-                          : true
-                      ).length
-                    }{' '}
-                    of {feeHeads.length}
-                  </Typography>
-                  <Typography variant="subtitle2" color="primary.main">
-                    Total Amount: ₹{' '}
-                    {formatNumber(
-                      feeHeads.reduce((acc: number, item: FeeHeadItem) => {
-                        const isSelected = item.isOptional
-                          ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
-                          : true;
-                        return acc + (isSelected ? item.amount : 0);
-                      }, 0)
-                    )}
-                  </Typography>
-                </Box>
-              </Box>
-              <Grid container spacing={2}>
-                {feeHeads?.map((item: FeeHeadItem) => {
-                  const isSelected = item.isOptional
-                    ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
-                    : true;
+              <Card variant="outlined">
+                <CardContent>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="subtitle1">Fee Heads</Typography>
+                    <Box textAlign="right">
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Selected Fee Heads:{' '}
+                        {
+                          feeHeads.filter((item: FeeHeadItem) =>
+                            item.isOptional
+                              ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
+                              : true
+                          ).length
+                        }{' '}
+                        of {feeHeads.length}
+                      </Typography>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="subtitle2">Total Amount: ₹</Typography>
+                        <Typography variant="subtitle2" color="primary.main">
+                          {formatNumber(
+                            feeHeads.reduce((acc: number, item: FeeHeadItem) => {
+                              const isSelected = item.isOptional
+                                ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
+                                : true;
+                              return acc + (isSelected ? item.amount : 0);
+                            }, 0)
+                          )}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  </Box>
+                  <TableContainer component={Paper} variant="outlined" sx={{ mt: 2 }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell padding="checkbox" />
+                          <TableCell>Fee Head</TableCell>
+                          <TableCell>Type</TableCell>
+                          <TableCell align="right">Amount</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {feeHeads?.map((item: FeeHeadItem) => {
+                          const isSelected = item.isOptional
+                            ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
+                            : true;
 
-                  return (
-                    <Grid size={{ xs: 12, md: 6 }} key={item.feeHeadId}>
-                      <Card
-                        variant="outlined"
-                        sx={{
-                          height: '100%',
-                          borderColor: isSelected ? 'success.main' : 'divider',
-                          bgcolor: isSelected
-                            ? (theme) => varAlpha(theme.palette.success.mainChannel, 0.08)
-                            : 'background.paper',
-                          transition: 'all 0.2s',
-                          '&:hover': {
-                            boxShadow: 4,
-                            borderColor: isSelected ? 'success.main' : 'primary.main',
-                          },
-                        }}
-                      >
-                        <CardActionArea
-                          onClick={() => {
-                            if (item.isOptional) {
-                              handleToggleFeeHead(item.feeHeadId);
-                            }
-                          }}
-                          sx={{
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'stretch',
-                            justifyContent: 'flex-start',
-                          }}
-                          disableRipple={!item.isOptional}
-                        >
-                          <CardContent
-                            sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}
-                          >
-                            <Box display="flex" alignItems="center" gap={1} mb={1}>
-                              {isSelected ? (
-                                <Iconify
-                                  icon="mdi:check-circle"
-                                  sx={{ color: 'success.main', width: 22, height: 22 }}
+                          return (
+                            <TableRow
+                              key={item.feeHeadId}
+                              hover
+                              onClick={() => {
+                                if (item.isOptional) {
+                                  handleToggleFeeHead(item.feeHeadId);
+                                }
+                              }}
+                              selected={isSelected}
+                              sx={{
+                                cursor: item.isOptional ? 'pointer' : 'default',
+                                bgcolor: isSelected
+                                  ? (theme) => varAlpha(theme.palette.success.mainChannel, 0.08)
+                                  : 'inherit',
+                              }}
+                            >
+                              <TableCell padding="checkbox">
+                                <Checkbox
+                                  color="success"
+                                  checked={isSelected}
+                                  disabled={!item.isOptional}
+                                  onChange={() => {
+                                    if (item.isOptional) {
+                                      handleToggleFeeHead(item.feeHeadId);
+                                    }
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
                                 />
-                              ) : (
-                                <Iconify
-                                  icon="mdi:checkbox-blank-circle-outline"
-                                  sx={{ color: 'text.disabled', width: 22, height: 22 }}
-                                />
-                              )}
-                              <Typography variant="subtitle1" fontWeight={700} noWrap>
-                                {item.feeHeadName}
-                              </Typography>
-                            </Box>
-
-                            <Box my={1.5}>
-                              <Typography
-                                variant="h5"
-                                fontWeight={800}
-                                color={isSelected ? 'success.dark' : 'text.primary'}
-                              >
-                                ₹ {formatNumber(item.amount)}
-                              </Typography>
-                            </Box>
-
-                            <Box mt="auto" pt={1}>
-                              {item.isOneTime ? (
-                                <Label color="info">One-Time</Label>
-                              ) : (
-                                <Label color="default">Recurring</Label>
-                              )}
-                            </Box>
-                          </CardContent>
-                        </CardActionArea>
-                      </Card>
-                    </Grid>
-                  );
-                })}
-              </Grid>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="subtitle2">{item.feeHeadName}</Typography>
+                              </TableCell>
+                              <TableCell>
+                                {item.isOneTime ? (
+                                  <Label color="info">One-Time</Label>
+                                ) : (
+                                  <Label color="default">Recurring</Label>
+                                )}
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="subtitle2">
+                                  ₹ {formatNumber(item.amount)}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
             </Grid>
           )}
         </Grid>
