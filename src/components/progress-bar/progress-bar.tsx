@@ -6,64 +6,102 @@ import './styles.css';
 import type { RootState } from 'src/redux/store';
 
 import NProgress from 'nprogress';
-import { Suspense, useEffect } from 'react';
+import { useRef, Suspense, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { usePathname, useSearchParams } from 'src/routes/hooks';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useRouter, usePathname, useSearchParams } from 'src/routes/hooks';
 
 // ----------------------------------------------------------------------
 
+type PushStateInput = [data: any, unused: string, url?: string | URL | null | undefined];
+
 export function ProgressBar() {
+  // const [currentPoint, setCurrentPoint] = useState(0);
+  // const [point, setPoint] = useState(0);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+  // const router = useRouter();
 
   useEffect(() => {
     NProgress.configure({ showSpinner: false });
 
-    const handleAnchorClick = (event: MouseEvent): void => {
-      const target = event.target as Element | null;
-      const anchor = target?.closest?.('a[href]') as HTMLAnchorElement | null;
+    // Track registered anchors so cleanup removes the exact same listener reference.
+    const registeredAnchors = new Map<HTMLAnchorElement, EventListener>();
 
-      if (!anchor || anchor.target === '_blank' || anchor.rel === 'noopener') {
-        return;
-      }
+    const handleAnchorClick = (event: MouseEvent) => {
+      const targetUrl = (event.currentTarget as HTMLAnchorElement).href;
 
-      const targetUrl = new URL(anchor.href, window.location.href);
-      const currentUrl = new URL(window.location.href);
-      const isInternalNavigation = targetUrl.origin === currentUrl.origin;
+      const currentUrl = window.location.href;
 
-      if (!isInternalNavigation) {
-        return;
-      }
+      const confirmed = !isChanges
+        ? true
+        : window.confirm('You have unsaved changes. Do you want to leave?');
 
-      if (isChanges && !window.confirm('You have unsaved changes. Do you want to leave?')) {
+      if (!confirmed) {
         event.preventDefault();
         event.stopPropagation();
-        return;
-      }
-
-      if (isChanges) {
+      } else {
         dispatch(setIsChanges(false));
-      }
-
-      if (targetUrl.href !== currentUrl.href) {
-        NProgress.start();
+        if (targetUrl !== currentUrl) {
+          NProgress.start();
+        }
       }
     };
 
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+    const getFilteredAnchors = (): HTMLAnchorElement[] => {
+      const anchorElements: NodeListOf<HTMLAnchorElement> = document.querySelectorAll('a[href]');
+      return Array.from(anchorElements).filter((element) => {
+        const rel = element.getAttribute('rel');
+        const href = element.getAttribute('href');
+        const target = element.getAttribute('target');
+        return href?.startsWith('/') && target !== '_blank' && rel !== 'noopener';
+      });
+    };
+
+    const handleMutation = () => {
+      getFilteredAnchors().forEach((anchor) => {
+        // Only add the listener once per anchor per effect lifecycle.
+        if (!registeredAnchors.has(anchor)) {
+          anchor.addEventListener('click', handleAnchorClick as EventListener);
+          registeredAnchors.set(anchor, handleAnchorClick as EventListener);
+        }
+      });
+    };
+
+    const handelPopup = (event: any) => {
       if (isChanges) {
-        event.preventDefault();
-        event.returnValue = '';
+        // Modern browsers ignore custom messages; any text works.
+        const message = 'You have unsaved changes. Do you want to leave?';
+        event.returnValue = message; // Legacy way for some browsers
+        return message; // Standard way to trigger the dialog
       }
+      return undefined;
     };
 
-    document.addEventListener('click', handleAnchorClick, true);
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    const mutationObserver = new MutationObserver(handleMutation);
+
+    mutationObserver.observe(document, { childList: true, subtree: true });
+
+    // Save the original pushState so we can restore it on cleanup and avoid stacking proxies.
+    const originalPushState = window.history.pushState;
+    window.history.pushState = new Proxy(originalPushState, {
+      apply: (target, thisArg, argArray: PushStateInput) => {
+        NProgress.done();
+        return target.apply(thisArg, argArray);
+      },
+    });
+    window.addEventListener('beforeunload', handelPopup);
 
     return () => {
-      document.removeEventListener('click', handleAnchorClick, true);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      mutationObserver.disconnect();
+      // Remove only the listeners registered during this effect lifecycle.
+      registeredAnchors.forEach((listener, anchor) => {
+        anchor.removeEventListener('click', listener);
+      });
+      registeredAnchors.clear();
+      // Restore the original pushState to prevent proxy stacking across re-renders.
+      window.history.pushState = originalPushState;
+      window.removeEventListener('beforeunload', handelPopup);
     };
   }, [isChanges, dispatch]);
 
@@ -84,7 +122,44 @@ export function ProgressBar() {
 function NProgressDone() {
   const pathname = usePathname();
 
+  const router = useRouter();
+
   const searchParams = useSearchParams();
+
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const changes = useRef(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    changes.current = isChanges;
+  }, [isChanges]);
+
+  useEffect(() => {
+    // Add a custom entry to the history stack
+    window.history.pushState(null, document.title, window.location.href);
+
+    // Handle the back button click by pushing the same state again
+    const handlePopState = () => {
+      // Show a custom alert or perform an action when trying to navigate back
+      if (
+        changes.current &&
+        window.confirm('Are you sure you want to leave this page? Unsaved changes will be lost.')
+      ) {
+        router.back(); // Navigate back if confirmed
+        dispatch(setIsChanges(false));
+      } else {
+        // Push a new state to override the back button
+        window.history.pushState(null, document.title, window.location.href);
+      }
+    };
+
+    // Listen for the popstate event
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [dispatch, router]);
 
   useEffect(() => {
     NProgress.done();

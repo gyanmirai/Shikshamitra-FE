@@ -6,8 +6,7 @@
   "private": true,
   "homepage": "/dashboard",
   "scripts": {
-    "dev": "node --max-http-header-size=65536 ./node_modules/next/dist/bin/next dev --webpack",
-    "dev:turbo": "node --max-http-header-size=65536 ./node_modules/next/dist/bin/next dev --turbopack",
+    "dev": "npm install && next dev --turbopack",
     "start": "next start",
     "build": "next build --webpack",
     "build:window": "build-and-copy.bat",
@@ -37,7 +36,8 @@
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
       "eslint --fix",
-      "prettier --write"
+      "prettier --write",
+      "git add"
     ]
   },
   "dependencies": {
