@@ -10,6 +10,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import {
+  useGetElectiveGroupsQuery,
   useAddElectiveGroupMutation,
   useUpdateElectiveGroupMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
@@ -44,11 +45,25 @@ export const useElectiveSubjectForm = ({
     },
   });
 
+  const { data: electiveGroupsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetElectiveGroupsQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id,
+    },
+  });
+
+  const existingNames = useMemo(
+    () => new Set<string>((electiveGroupsData ?? []).map((t: any) => t.name.trim().toLowerCase())),
+    [electiveGroupsData]
+  );
+
   const initialValues = useMemo(() => getElectiveSubjectInitialValues(editData), [editData]);
 
   const formik = useFormik({
     initialValues,
-    validationSchema: electiveSubjectValidationSchema,
+    validationSchema: electiveSubjectValidationSchema(existingNames, editData),
     onSubmit: async (values) => {
       try {
         if (editData) {

@@ -160,7 +160,7 @@ export const RenderComponents = ({
     applicableMonth: c?.applicableMonth,
   }));
 
-  const componentAccentColor = 'primary';
+  const componentAccentColor = type === 'earning' ? 'primary' : 'error';
   const addActionLabel = emptyActionLabel || (type === 'earning' ? 'Add Earning' : 'Add Deduction');
 
   return (
@@ -181,7 +181,7 @@ export const RenderComponents = ({
         sx={{
           height: '4px',
           background: (theme) =>
-            type === 'earning' ? theme.vars.palette.text.disabled : theme.vars.palette.divider,
+            type === 'earning' ? theme.vars.palette.primary.main : theme.vars.palette.error.main,
         }}
       />
 

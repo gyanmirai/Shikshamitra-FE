@@ -1043,7 +1043,7 @@ const ManualAttendanceScreen = () => {
                   <Box
                     sx={{
                       display: 'flex',
-                      width: '220px',
+                      width: '230px',
                       height: '32px',
                       bgcolor: (t) => t.vars.palette.background.neutral,
                       borderRadius: '6px',

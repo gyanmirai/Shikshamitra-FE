@@ -1585,34 +1585,30 @@ const RunPayroll = () => {
                                   >
                                     {severity}
                                   </Label>
-                                  <Typography
-                                    variant="caption"
-                                    sx={{ color: `${color}.main`, fontWeight: 700 }}
+                                  <Label
+                                    color={color}
+                                    variant="soft"
+                                    sx={{ fontWeight: 700, fontSize: '0.72rem' }}
                                   >
                                     {codes.length} {codes.length === 1 ? 'Notice' : 'Notices'}
-                                  </Typography>
+                                  </Label>
                                 </Stack>
                                 <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                                   {codes.map((code) => (
-                                    <Chip
+                                    <Label
                                       key={code}
-                                      size="small"
-                                      variant="filled"
+                                      color={color}
+                                      variant="soft"
                                       sx={{
-                                        bgcolor: (theme) =>
-                                          `rgba(${theme.vars?.palette?.[color]?.mainChannel || '255 171 0'} / 0.12)`,
-                                        color: `${color}.main`,
                                         fontWeight: 700,
                                         fontSize: '0.75rem',
-                                        border: 'none',
                                         maxWidth: '100%',
-                                        '& .MuiChip-label': {
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis',
-                                        },
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
                                       }}
-                                      label={ISSUE_LABELS[code]?.label || code}
-                                    />
+                                    >
+                                      {ISSUE_LABELS[code]?.label || code}
+                                    </Label>
                                   ))}
                                 </Stack>
                               </Box>

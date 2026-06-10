@@ -79,10 +79,10 @@ export const getPersonalInformationValidationSchema = (
     maritalStatus: Yup.string().required('Marital Status is required'),
     bloodGroup: Yup.string().nullable(),
     adharNo: Yup.string()
-      .required('Aadhaar number is required')
+      .required('Aadhaar No. is required')
       .matches(/^\d{12}$/, 'Aadhaar number must be 12 digits'),
     panNo: Yup.string()
-      .required('PAN number is required')
+      .required('PAN No. is required')
       .test(
         'pan-format',
         'PAN must be in format: AAAAA9999A (5 letters, 4 digits, 1 letter)',

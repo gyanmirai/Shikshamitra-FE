@@ -70,7 +70,11 @@ export const assignmentValidationSchema = (currentYear: any) =>
         if (!value || value.length === 0) return true; // Let .min(1) handle empty case
         return value.every((div) => div.publishDate && div.dueDate);
       }),
-    totalMarks: Yup.number().required('Total Marks is required'),
+    totalMarks: Yup.number()
+      .required('Total Marks is required')
+      .min(1, 'Total Marks must be at least 1')
+      .max(999, 'Total Marks cannot exceed 999')
+      .integer('Total Marks must be a whole number'),
     subjectId: Yup.string().required('Subject is required'),
     description: Yup.string().required('Description is required'),
     submissionType: Yup.string().required('Submission type is required'),

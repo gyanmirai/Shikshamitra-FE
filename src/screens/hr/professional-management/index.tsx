@@ -98,12 +98,16 @@ const tablePanelProps = {
     sx: {
       height: '100%',
       minHeight: 0,
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      overflow: 'hidden',
     },
   },
   tableContainerProps: {
     sx: {
       minHeight: 0,
-      overflow: 'auto',
+      flex: 1,
     },
   },
 };
@@ -201,6 +205,7 @@ function SectionPanel({
       title={title}
       description={description}
       action={action}
+      sx={{ flex: 1, width: '100%' }}
       contentSx={{ minWidth: 0, overflow: 'hidden' }}
     >
       {children}
@@ -269,10 +274,10 @@ function SetupReadinessWorkspace() {
   return (
     <PerformanceScrollableContent>
       <Grid container spacing={2} alignItems="stretch">
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid size={{ xs: 12, md: 2 }}>
           <PerformanceWorkflowStepper steps={setupSteps} activeStep={0} />
         </Grid>
-        <Grid size={{ xs: 12, md: 9 }}>
+        <Grid size={{ xs: 12, md: 10 }}>
           <GuidedSetupTab />
         </Grid>
       </Grid>
@@ -473,7 +478,7 @@ function OutcomesWorkspace() {
 
   return (
     <Grid container spacing={2} alignItems="stretch" sx={{ minHeight: 0, flex: 1, height: '100%' }}>
-      <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', minHeight: 0 }}>
+      <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', minHeight: 0 }}>
         <PerformanceWorkflowStepper
           steps={[
             { label: 'Review', description: 'Complete self and reviewer stages.' },
@@ -485,7 +490,7 @@ function OutcomesWorkspace() {
         />
       </Grid>
       <Grid
-        size={{ xs: 12, md: 9 }}
+        size={{ xs: 12, md: 10 }}
         sx={{ minHeight: 0, display: 'flex', flexDirection: 'column', height: '100%' }}
       >
         <PerformanceSurface
@@ -508,7 +513,15 @@ function OutcomesWorkspace() {
               </ToggleButtonGroup>
             }
           />
-          <Box sx={{ minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Box
+            sx={{
+              minHeight: 0,
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
             {view === 'calibration' && <CalibrationTab />}
             {view === 'outcomes' && <OutcomesTab />}
             {view === 'plans' && <DevelopmentPlansTab />}
@@ -866,8 +879,8 @@ function OverviewWorkspace() {
           </Grid>
         </Grid>
 
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, lg: 7 }}>
+        <Grid container spacing={2} alignItems="stretch">
+          <Grid size={{ xs: 12, lg: 7 }} sx={{ display: 'flex' }}>
             <SectionPanel
               title="Next best actions"
               description="Start from the most common school-admin workflows without hunting through tabs."
@@ -902,7 +915,7 @@ function OverviewWorkspace() {
               </Grid>
             </SectionPanel>
           </Grid>
-          <Grid size={{ xs: 12, lg: 5 }}>
+          <Grid size={{ xs: 12, lg: 5 }} sx={{ display: 'flex' }}>
             <SectionPanel title="Pending Actions">
               <Stack spacing={1}>
                 {(pendingActions || []).slice(0, 5).map((item: any) => (
@@ -926,8 +939,86 @@ function OverviewWorkspace() {
           </Grid>
         </Grid>
 
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 4 }}>
+        <SectionPanel
+          title="Recommendations"
+          description="Performance cycle outcomes and suggested actions."
+        >
+          <Grid container spacing={1.5}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  borderRadius: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'info.lighter',
+                    color: 'info.main',
+                  }}
+                >
+                  <Iconify icon="mdi:school-outline" width={24} />
+                </Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="h4" sx={{ lineHeight: 1.2 }}>
+                    {data?.trainingRecommendations ?? 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Training Recommendations
+                  </Typography>
+                </Box>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  borderRadius: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'success.lighter',
+                    color: 'success.main',
+                  }}
+                >
+                  <Iconify icon="mdi:cash-plus" width={24} />
+                </Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="h4" sx={{ lineHeight: 1.2 }}>
+                    {data?.incrementRecommendations ?? 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Increment Recommendations
+                  </Typography>
+                </Box>
+              </Paper>
+            </Grid>
+          </Grid>
+        </SectionPanel>
+
+        <Grid container spacing={2} alignItems="stretch">
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
             <SectionPanel
               title="SQAAF readiness"
               description="Principal/admin snapshot for CBSE/GSEB evidence review."
@@ -955,35 +1046,35 @@ function OverviewWorkspace() {
             >
               <Stack spacing={1.5}>
                 <Grid container spacing={1.5}>
-                  <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                  <Grid size={{ xs: 6 }}>
                     <MetricCard
-                      label="Overall Readiness"
+                      label="Readiness"
                       value={sqaaSummary.overallReadinessPercentage}
                       icon="mdi:shield-check-outline"
                       tone={missingEvidence > 0 ? 'warning' : 'success'}
                       helper="% ready"
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                  <Grid size={{ xs: 6 }}>
                     <MetricCard
-                      label="Evidence Gaps"
+                      label="Gaps"
                       value={missingEvidence}
                       icon="mdi:file-alert-outline"
                       tone={missingEvidence > 0 ? 'warning' : 'success'}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                  <Grid size={{ xs: 6 }}>
                     <MetricCard
-                      label="Domains Ready"
+                      label="Domains"
                       value={sqaaSummary.readyDomainCount}
                       icon="mdi:domain"
                       tone="info"
                       helper={`${sqaaSummary.totalDomainCount} tracked`}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 12 }}>
+                  <Grid size={{ xs: 6 }}>
                     <MetricCard
-                      label="Published Templates"
+                      label="Templates"
                       value={publishedTemplates}
                       icon="mdi:clipboard-check-outline"
                       tone="info"
@@ -1013,27 +1104,7 @@ function OverviewWorkspace() {
               </Stack>
             </SectionPanel>
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Grid container spacing={1.5}>
-              <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-                <MetricCard
-                  label="Training Recommendations"
-                  value={data?.trainingRecommendations}
-                  icon="mdi:school-outline"
-                  tone="info"
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-                <MetricCard
-                  label="Increment Recommendations"
-                  value={data?.incrementRecommendations}
-                  icon="mdi:cash-plus"
-                  tone="success"
-                />
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
             <SectionPanel title="Live Review Queue">
               <ReviewTable rows={rows.slice(0, 5)} />
             </SectionPanel>
@@ -1776,15 +1847,25 @@ function CalibrationTab() {
   const rows = (data?.items || []).filter((row: ProfessionalReview) => row.status !== 3);
 
   return (
-    <Stack spacing={2} sx={{ minHeight: 0, flex: 1, height: '100%' }}>
+    <Stack spacing={2} sx={{ minHeight: 0, flex: 1, height: '100%', overflow: 'hidden' }}>
       {isLoading && <LinearProgress />}
-      <Grid container spacing={2} sx={{ minHeight: 0, flex: 1, height: '100%' }}>
-        <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', minHeight: 0 }}>
+      <Grid
+        container
+        spacing={2}
+        sx={{ minHeight: 0, flex: 1, height: '100%', overflow: 'hidden' }}
+      >
+        <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', minHeight: 0, overflow: 'hidden' }}>
           <RatingDistributionPanel distribution={distribution || []} />
         </Grid>
         <Grid
-          size={{ xs: 12, md: 8 }}
-          sx={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}
+          size={{ xs: 12, md: 9 }}
+          sx={{
+            minHeight: 0,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
         >
           <ReviewTable
             rows={rows}
@@ -2395,13 +2476,13 @@ function ReviewWorkspace({
       open={Boolean(reviewId)}
       handleClose={onClose}
       title="Performance review workspace"
+      maxWidth="sm"
     >
       <Stack
         spacing={2}
         sx={{
           p: 2,
           bgcolor: 'background.default',
-          width: { xs: 'min(92vw, 100%)', md: 760 },
           maxWidth: '100%',
           maxHeight: 'calc(100vh - 160px)',
           overflow: 'auto',

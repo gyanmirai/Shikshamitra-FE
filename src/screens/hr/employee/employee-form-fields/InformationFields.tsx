@@ -61,8 +61,8 @@ const OtpSlot: React.FC<{
 }> = ({ char, isActive, hasFakeCaret, error = false, disabled = false }) => (
   <Box
     sx={{
-      width: 25,
-      height: 30,
+      width: 22,
+      height: 28,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -786,10 +786,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           )
         }
       >
-        <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6.5 }}>
           <ShakingTextField error={formik.touched.adharNo && Boolean(formik.errors.adharNo)}>
             <OtpInputField
-              label="Aadhaar No."
+              label="Aadhaar No. *"
               maxLength={12}
               pattern={REGEXP_ONLY_DIGITS}
               groupBy={4}
@@ -806,10 +806,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+        <Grid size={{ xs: 12, md: 5.5 }}>
           <ShakingTextField error={formik.touched.panNo && Boolean(formik.errors.panNo)}>
             <OtpInputField
-              label="PAN No."
+              label="PAN No.*"
               maxLength={10}
               pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
               groupBy={5}
@@ -947,7 +947,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           <RenderRole formik={formik} disabled={!isProfessionalDetailsEditable.value} />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4.5 }}>
           <RenderShift formik={formik} disabled={!isProfessionalDetailsEditable.value} />
         </Grid>
       </SectionCard>
@@ -1051,6 +1051,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   ...(value || {}),
                   name: value?.name,
                   isoCode: value?.isoCode,
+                  countryCode: formik.values.country?.isoCode,
                 });
                 formik.setFieldValue('city', { name: '' });
               }}

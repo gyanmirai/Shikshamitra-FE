@@ -127,7 +127,7 @@ export const TABS = [
   {
     value: 'attendance',
     label: 'Attendance',
-    icon: <Icon icon="solar:calendar-check-outline" width={18} height={18} />,
+    icon: <Icon icon="mdi:calendar-clock-outline" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <EmployeeAttendanceHistory employeeId={props.employee?.id} />
     ),
