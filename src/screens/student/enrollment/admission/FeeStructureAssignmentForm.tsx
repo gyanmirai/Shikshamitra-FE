@@ -3,6 +3,7 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -21,14 +22,21 @@ import {
   useGetStudentFeeStructureQuery,
 } from 'src/redux/student/admission/admission-api';
 import {
+  Box,
   Grid,
   Card,
+  Table,
+  Paper,
   Stack,
+  TableRow,
   Checkbox,
+  TableBody,
+  TableCell,
+  TableHead,
   Typography,
   CardContent,
   DialogActions,
-  FormControlLabel,
+  TableContainer,
 } from '@mui/material';
 
 import type { IInquiryData } from '../Inquiry/type';
@@ -145,7 +153,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={3} sx={{ pt: 1 }}>
+        <Grid container spacing={1}>
           <Grid size={{ xs: 12 }}>
             <CustomSelect
               fullWidth
@@ -173,57 +181,108 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
 
           {formik.values.feeStructureId && feeHeads?.length > 0 && (
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                Fee Heads
-              </Typography>
-              <Grid container spacing={2}>
-                {feeHeads?.map((item: FeeHeadItem) => {
-                  const isSelected = item.isOptional
-                    ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
-                    : true;
+              <Card variant="outlined">
+                <CardContent>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="subtitle1">Fee Heads</Typography>
+                    <Box textAlign="right">
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Selected Fee Heads:{' '}
+                        {
+                          feeHeads.filter((item: FeeHeadItem) =>
+                            item.isOptional
+                              ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
+                              : true
+                          ).length
+                        }{' '}
+                        of {feeHeads.length}
+                      </Typography>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="subtitle2">Total Amount: ₹</Typography>
+                        <Typography variant="subtitle2" color="primary.main">
+                          {formatNumber(
+                            feeHeads.reduce((acc: number, item: FeeHeadItem) => {
+                              const isSelected = item.isOptional
+                                ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
+                                : true;
+                              return acc + (isSelected ? item.amount : 0);
+                            }, 0)
+                          )}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  </Box>
+                  <TableContainer component={Paper} variant="outlined" sx={{ mt: 2 }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell padding="checkbox" />
+                          <TableCell>Fee Head</TableCell>
+                          <TableCell>Type</TableCell>
+                          <TableCell align="right">Amount</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {feeHeads?.map((item: FeeHeadItem) => {
+                          const isSelected = item.isOptional
+                            ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
+                            : true;
 
-                  return (
-                    <Grid size={{ xs: 12, md: 6 }} key={item.feeHeadId}>
-                      <Card
-                        variant="outlined"
-                        sx={{
-                          position: 'relative',
-                          borderColor: isSelected ? 'primary.main' : 'divider',
-                          bgcolor: isSelected ? 'background.neutral' : 'background.paper',
-                          transition: 'all 0.3s',
-                        }}
-                      >
-                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                          <Stack
-                            direction="row"
-                            justifyContent="space-between"
-                            alignItems="flex-start"
-                          >
-                            <Stack spacing={0.5}>
-                              <Typography variant="subtitle2">{item.feeHeadName}</Typography>
-                              <Typography variant="h6">₹ {formatNumber(item.amount)}</Typography>
-                              <Stack direction="row" spacing={1}>
-                                {item.isOneTime && <Label color="info">One-Time</Label>}
-                              </Stack>
-                            </Stack>
-                            <FormControlLabel
-                              control={
+                          return (
+                            <TableRow
+                              key={item.feeHeadId}
+                              hover
+                              onClick={() => {
+                                if (item.isOptional) {
+                                  handleToggleFeeHead(item.feeHeadId);
+                                }
+                              }}
+                              selected={isSelected}
+                              sx={{
+                                cursor: item.isOptional ? 'pointer' : 'default',
+                                bgcolor: isSelected
+                                  ? (theme) => varAlpha(theme.palette.success.mainChannel, 0.08)
+                                  : 'inherit',
+                              }}
+                            >
+                              <TableCell padding="checkbox">
                                 <Checkbox
-                                  checked={!!isSelected}
+                                  color="success"
+                                  checked={isSelected}
                                   disabled={!item.isOptional}
-                                  onChange={() => handleToggleFeeHead(item.feeHeadId)}
+                                  onChange={() => {
+                                    if (item.isOptional) {
+                                      handleToggleFeeHead(item.feeHeadId);
+                                    }
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
                                 />
-                              }
-                              label=""
-                              sx={{ mr: 0 }}
-                            />
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  );
-                })}
-              </Grid>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="subtitle2">{item.feeHeadName}</Typography>
+                              </TableCell>
+                              <TableCell>
+                                {item.isOneTime ? (
+                                  <Label color="info">One-Time</Label>
+                                ) : (
+                                  <Label color="default">Recurring</Label>
+                                )}
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="subtitle2">
+                                  ₹ {formatNumber(item.amount)}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
             </Grid>
           )}
         </Grid>

@@ -112,10 +112,10 @@ const AuditFilter = ({
             fullWidth
             size="small"
             label="Search activity"
-            placeholder="Receipt, actor, or activity summary…"
             value={localSearchValue}
             onChange={handleSearchChange}
             InputProps={{
+              sx: { height: 38 },
               startAdornment: (
                 <InputAdornment position="start">
                   <Iconify icon="mdi:magnify" width={18} sx={{ color: 'text.disabled' }} />
@@ -149,6 +149,7 @@ const AuditFilter = ({
                 fullWidth: true,
                 error: !!startDateError,
                 helperText: startDateError,
+                sx: { '& .MuiInputBase-root': { height: 38 } },
               },
             }}
           />
@@ -168,6 +169,7 @@ const AuditFilter = ({
                 fullWidth: true,
                 error: !!endDateError,
                 helperText: endDateError,
+                sx: { '& .MuiInputBase-root': { height: 38 } },
               },
             }}
           />

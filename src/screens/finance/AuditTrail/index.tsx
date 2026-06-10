@@ -141,7 +141,7 @@ const AuditTrail = () => {
                   boxShadow: `0 0 0 2px ${color}30`,
                 }}
               />
-              <Typography variant="caption" color="text.disabled" sx={{ fontSize: 11 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
                 {label}
               </Typography>
             </Box>

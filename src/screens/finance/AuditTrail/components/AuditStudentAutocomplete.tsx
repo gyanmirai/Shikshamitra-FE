@@ -89,16 +89,14 @@ const AuditStudentAutocomplete = ({
       getOptionLabel={(option) => option.label}
       isOptionEqualToValue={(option, value) => option.studentId === value.studentId}
       loading={isFetching}
-      noOptionsText={
-        inputValue.trim().length < MIN_SEARCH_LENGTH
-          ? 'Type at least 2 characters (name, GR, or roll)'
-          : 'No students found — check spelling or try GR number'
-      }
       renderInput={(params) => (
         <TextField
           {...params}
           label="Student"
-          placeholder="Search by name, GR, or roll"
+          helperText={
+            inputValue.trim().length < MIN_SEARCH_LENGTH ? 'Type at least 2 characters' : ''
+          }
+          sx={{ '& .MuiInputBase-root': { height: 38 } }}
           InputProps={{
             ...params.InputProps,
             endAdornment: (
