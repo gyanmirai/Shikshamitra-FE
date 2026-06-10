@@ -130,36 +130,33 @@ export const ConsolidatedFeeDetails = ({
                   </TableHead>
 
                   <TableBody>
-                    {feeHeadList.map((head, index) => {
-                      const status = getStatus(head.paid, head.total);
-                      return (
-                        <TableRow
-                          key={index}
-                          hover
-                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                        >
-                          <TableCell sx={{ fontWeight: 500 }}>{head.name}</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600 }}>
-                            ₹ {formatNumber(head.total)}
-                          </TableCell>
-                          <TableCell align="right" sx={{ color: 'success.dark', fontWeight: 600 }}>
-                            ₹ {formatNumber(head.paid)}
-                          </TableCell>
-                          <TableCell align="right" sx={{ color: 'warning.dark', fontWeight: 600 }}>
-                            ₹ {formatNumber(head.pending)}
-                          </TableCell>
-                          <TableCell align="center">
-                            <Label
-                              variant="soft"
-                              color={FeeCollectionStatusTypeColors[status] as LabelColor}
-                              sx={{ fontSize: 11, height: 20 }}
-                            >
-                              {FeeCollectionStatusType[status]}
-                            </Label>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {feeHeadList.map((head, index) => (
+                      <TableRow
+                        key={index}
+                        hover
+                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                      >
+                        <TableCell sx={{ fontWeight: 500 }}>{head.name}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>
+                          ₹ {formatNumber(head.total)}
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: 'success.dark', fontWeight: 600 }}>
+                          ₹ {formatNumber(head.paid)}
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: 'warning.dark', fontWeight: 600 }}>
+                          ₹ {formatNumber(head.pending)}
+                        </TableCell>
+                        <TableCell align="center">
+                          <Label
+                            variant="soft"
+                            color={FeeCollectionStatusTypeColors[head.status] as LabelColor}
+                            sx={{ fontSize: 11, height: 20 }}
+                          >
+                            {FeeCollectionStatusType[head.status]}
+                          </Label>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </TableContainer>

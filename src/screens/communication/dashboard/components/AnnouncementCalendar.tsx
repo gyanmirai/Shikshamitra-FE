@@ -1,8 +1,7 @@
 import React from 'react';
 import CommonCalender from 'src/components/calender';
 import CalendarViewDialog from 'src/screens/calendar/CalendarView/Components/ViewDialog';
-
-import communicationData from '../../../../../communicationData.json';
+import communicationData from 'src/json/communication/dummy-data/communicationData.json';
 
 const AnnouncementCalendar = () => (
   <>

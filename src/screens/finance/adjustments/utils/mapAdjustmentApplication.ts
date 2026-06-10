@@ -1,8 +1,7 @@
-import type { FeeAdjustmentApplicationItemDto } from 'src/redux/finance/adjustments/adjustmentApi';
-
 import { AdjustmentStatusEnum } from '../enums/adjustment.enum';
 
 import type { AdjustmentRequest } from '../types/adjustment.types';
+import type { FeeAdjustmentApplicationItemDto } from '../types/adjustmentApi.types';
 
 function mapStatus(status: number, statusName: string): AdjustmentStatusEnum {
   if (status === 0) return AdjustmentStatusEnum.Pending;

@@ -12,13 +12,12 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { Box, MenuList, MenuItem, Typography, IconButton } from '@mui/material';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import communicationData from 'src/json/communication/dummy-data/communicationData.json';
 import {
   AnnouncementStatus,
   AnnouncementStatusColor,
   AnnouncementStatusOptions,
 } from 'src/enums/communication_announcement_status_type';
-
-import communicationData from '../../../../../communicationData.json';
 
 import type { ISchoolWiseAnnouncement } from '../type';
 

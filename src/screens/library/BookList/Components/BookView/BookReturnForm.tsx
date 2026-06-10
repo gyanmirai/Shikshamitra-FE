@@ -18,6 +18,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import libraryDummyData from 'src/json/library/libraryData.json';
 import { DialogScrollContent } from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -39,8 +40,6 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-
-import libraryDummyData from '../../../../../../libraryData.json';
 
 interface ReturnBookFormProps {
   onClose: (e: any, isSubmit: boolean) => void;
