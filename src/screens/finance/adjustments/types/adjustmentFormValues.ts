@@ -9,7 +9,7 @@ export interface IAdjustmentFullFormValues {
   mediumId: string;
   standardId: string;
   divisionId: string;
-  studentId: string;
+  studentId: string | number;
   studentName: string;
   feeHeadRefunds: IFeeHeadRefundItem[];
   adjustmentType: AdjustmentType | '';

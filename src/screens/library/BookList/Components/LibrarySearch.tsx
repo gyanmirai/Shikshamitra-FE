@@ -1,5 +1,6 @@
 import { Scrollbar } from 'src/components/scrollbar';
 import { GridExpandMoreIcon } from '@mui/x-data-grid';
+import libraryDummyData from 'src/json/library/libraryData.json';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -16,7 +17,6 @@ import {
 
 import GroupedBookList from './GroupedBookList';
 import BasicBookTable from './BookView/BasicBookTable';
-import libraryDummyData from '../../../../../libraryData.json';
 
 import type { IBook } from '../../BookManagement/Components/type';
 

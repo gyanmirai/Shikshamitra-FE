@@ -5,8 +5,8 @@ import type { INotification } from 'src/screens/communication/NotificationHistor
 import { Box } from '@mui/material';
 import React, { useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
+import communicationData from 'src/json/communication/dummy-data/communicationData.json';
 
-import communicationData from '../../../../../../communicationData.json';
 import ViewNotificationDialog from './Components/ViewNotificationDialog';
 import { useSentNotificationTable } from './hooks/useSentNotificationTable';
 import { useSentNotificationTableColumns } from './Components/SentNotificationTableColumns';

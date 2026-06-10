@@ -1,4 +1,4 @@
-import type { FeeMonth } from 'src/enums/fee-collection-type';
+import type { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 
 import { financeModuleType } from 'src/redux/tagTypes';
 
@@ -141,7 +141,7 @@ export interface FeeHeadSummary {
   paidAmount: number;
   pendingAmount?: number;
   description: string;
-  status: 'Pending' | 'Paid';
+  status: FeeCollectionStatusType;
 }
 
 export interface FeeChargeDetail {
@@ -150,7 +150,7 @@ export interface FeeChargeDetail {
   amount: number;
   paidAmount: number;
   pendingAmount: number;
-  status: 'Pending' | 'Paid';
+  status: FeeCollectionStatusType;
 }
 
 export interface PaymentHistoryItem {

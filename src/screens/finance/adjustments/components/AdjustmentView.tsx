@@ -26,7 +26,10 @@ import {
 } from '@mui/material';
 
 import AdjustmentAuditSection from './AdjustmentAuditSection';
-import { ADJUSTMENT_STATUS_COLORS } from '../constants/adjustmentOptions';
+import {
+  ADJUSTMENT_STATUS_COLORS,
+  formatAdjustmentStatusLabel,
+} from '../constants/adjustmentOptions';
 
 import type { IAdjustmentViewProps } from '../types/adjustment.types';
 

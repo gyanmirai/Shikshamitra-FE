@@ -19,7 +19,7 @@ export interface CreateFeeAdjustmentSourceLineDto {
 }
 
 export interface CreateFeeAdjustmentDto {
-  studentId: string;
+  studentId: string | number;
   adjustmentType: number;
   reason: string;
   remarks?: string;
