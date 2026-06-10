@@ -303,6 +303,11 @@ const GlobalAcademicSearch = () => {
       return;
     }
 
+    if (currentYear?.id) {
+      autoSelectedAccessTokenRef.current = accessToken;
+      return;
+    }
+
     const academicYear = findCurrentAcademicYear<AcademicYear>(years.items);
     if (!academicYear) {
       autoSelectedAccessTokenRef.current = accessToken;
@@ -330,6 +335,7 @@ const GlobalAcademicSearch = () => {
     options,
     yearOptions,
     years?.items,
+    currentYear?.id,
   ]);
 
   // Effect to update selected division when current selections change

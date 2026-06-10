@@ -2,11 +2,14 @@
 
 import { useSession } from 'next-auth/react';
 import { memo, useRef, useEffect } from 'react';
-import { Provider, useDispatch } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 
 import store, { persistor } from './store';
 import { loadUser, clearUser, getEmployee } from './auth/authSlice';
+import { setCurrentYear, setCurrentBoard, setCurrentMedium } from './globalState/globalSlice';
+
+import type { RootState } from './store';
 
 const getSessionRoles = (sessionData: any): string[] => {
   const roleClaim = sessionData?.profile?.role;
@@ -58,6 +61,7 @@ export default ReduxProvider;
 
 const LoadUser = memo(() => {
   const dispatch = useDispatch();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const session: any = useSession();
   const { data: sessionData, status } = session;
 
@@ -80,11 +84,16 @@ const LoadUser = memo(() => {
       return;
     }
 
-    if (status === 'unauthenticated' && loadedUserId.current) {
+    if (status === 'unauthenticated') {
       dispatch(clearUser());
+      if (currentYear?.id) {
+        dispatch(setCurrentYear({}));
+        dispatch(setCurrentBoard({}));
+        dispatch(setCurrentMedium({}));
+      }
       loadedUserId.current = null;
     }
-  }, [dispatch, sessionData, status]);
+  }, [dispatch, sessionData, status, currentYear?.id]);
 
   return null;
 });
