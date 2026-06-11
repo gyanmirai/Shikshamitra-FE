@@ -1,30 +1,23 @@
 import type { CardProps } from '@mui/material';
-import type { IExamFormValues } from 'src/screens/examination/scheduleExam/type';
 
 import { useTheme } from '@mui/material/styles';
 import { Card, CardHeader } from '@mui/material';
-import examTableData from 'src/json/examination/examTableData.json';
 import ScheduledExamTable from 'src/screens/examination/scheduleExam/components/scheduleExamTable';
 
 import { Chart, useChart, ChartSelect, ChartLegends } from '../chart';
 
 import type { ChartOptions } from '../chart';
 
-const ProfileExamination = () => {
-  // State to store all exam data, initialized with data from JSON
-  const examData = examTableData as unknown as IExamFormValues[];
-
-  return (
-    <ScheduledExamTable
-      isScheduleExamButton={false}
-      isAction={false}
-      onDelete={(data) => {}}
-      data={examData}
-      onViewTimetable={(data) => {}}
-      getExams={() => {}}
-    />
-  );
-};
+const ProfileExamination = () => (
+  <ScheduledExamTable
+    isScheduleExamButton={false}
+    isAction={false}
+    onDelete={(data) => {}}
+    data={[]}
+    onViewTimetable={(data) => {}}
+    getExams={() => {}}
+  />
+);
 
 export default ProfileExamination;
 

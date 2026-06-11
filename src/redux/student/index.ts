@@ -59,8 +59,47 @@ export const StudentApi = api.injectEndpoints({
       providesTags: [studentType.student],
     }),
     getStudentsByDivision: builder.query({
-      query: (divisionId: string) => ({
-        url: `/students/records/list/${divisionId}`,
+      query: (
+        args:
+          | string
+          | { divisionId: string; skipCount?: number; maxResultCount?: number; searchTerm?: string }
+      ) => {
+        const params = typeof args === 'string' ? { divisionId: args } : args;
+        const queryParams = new URLSearchParams();
+
+        if (params.skipCount !== undefined) queryParams.set('skipCount', String(params.skipCount));
+        if (params.maxResultCount !== undefined) {
+          queryParams.set('maxResultCount', String(params.maxResultCount));
+        }
+        if (params.searchTerm) queryParams.set('searchTerm', params.searchTerm);
+
+        const queryString = queryParams.toString();
+
+        return {
+          url: `/students/records/list/${params.divisionId}${queryString ? `?${queryString}` : ''}`,
+          method: 'GET',
+        };
+      },
+      providesTags: [studentType.student],
+    }),
+    uploadStudentPhoto: builder.mutation({
+      query: ({ studentId, body }) => ({
+        url: `/students/records/${studentId}/photo`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [studentType.student],
+    }),
+    getStudentDashboardSummary: builder.query({
+      query: () => ({
+        url: '/students/records/dashboard-summary',
+        method: 'GET',
+      }),
+      providesTags: [studentType.student],
+    }),
+    getStudentAttendanceDashboardSummary: builder.query({
+      query: () => ({
+        url: '/students/records/attendance-dashboard-summary',
         method: 'GET',
       }),
       providesTags: [studentType.student],
@@ -76,4 +115,7 @@ export const {
   useGetStudentByIdQuery,
   useGetStudentsByDivisionQuery,
   useLazyGetStudentsByDivisionQuery,
+  useUploadStudentPhotoMutation,
+  useGetStudentDashboardSummaryQuery,
+  useGetStudentAttendanceDashboardSummaryQuery,
 } = StudentApi;

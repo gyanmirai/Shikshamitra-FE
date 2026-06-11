@@ -1,18 +1,15 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { DashboardCard } from 'src/components/dashboard-card';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
 import {
@@ -26,74 +23,12 @@ import {
   Typography,
   LinearProgress,
 } from '@mui/material';
-import {
-  useGetLeaveRequestsQuery,
-  useGetMyLeaveBalanceQuery,
-  useGetMyLeaveRequestsQuery,
-  useGetSelfLeaveBalanceQuery,
-} from 'src/redux/hr/leaveApi';
 
-import {
-  parseApiProblemDetail,
-  LEAVE_EMPLOYEE_NOT_FOUND,
-} from '../leave-request/leave-request.utils';
-import {
-  getLeaveStatusColor,
-  getLeaveStatusLabel,
-  normalizeLeaveStatus,
-} from '../leave-request/leave-status.utils';
+import { useLeaveOverview } from '../leave-request/use-leave-overview';
+import { LEAVE_OVERVIEW_CARDS } from '../leave-request/leave-overview.utils';
+import { getLeaveStatusColor, getLeaveStatusLabel } from '../leave-request/leave-status.utils';
 
 // -----------------------------------------------------------------------
-
-interface LeaveTypeBreakdown {
-  leaveTypeId: string;
-  leaveTypeName: string;
-  total: number;
-  used: number;
-  pending: number;
-  remaining: number;
-}
-
-interface LeaveBalanceData {
-  totalLeaves: number;
-  usedLeaves: number;
-  remainingLeaves: number;
-  pendingLeaves: number;
-  leaveTypeBreakdown: LeaveTypeBreakdown[];
-}
-
-// -----------------------------------------------------------------------
-
-const SUMMARY_CARDS = (data?: LeaveBalanceData) => [
-  {
-    title: 'Total Leaves',
-    value: data?.totalLeaves ?? 0,
-    icon: 'solar:calendar-bold-duotone',
-    color: 'primary.main',
-    bgColor: 'primary.lighter',
-  },
-  {
-    title: 'Used Leaves',
-    value: data?.usedLeaves ?? 0,
-    icon: 'solar:check-circle-bold-duotone',
-    color: 'warning.main',
-    bgColor: 'warning.lighter',
-  },
-  {
-    title: 'Remaining Leaves',
-    value: data?.remainingLeaves ?? 0,
-    icon: 'solar:calendar-add-bold-duotone',
-    color: 'success.main',
-    bgColor: 'success.lighter',
-  },
-  {
-    title: 'Pending Requests',
-    value: data?.pendingLeaves ?? 0,
-    icon: 'solar:clock-circle-bold-duotone',
-    color: 'info.main',
-    bgColor: 'info.lighter',
-  },
-];
 
 // -----------------------------------------------------------------------
 
@@ -214,117 +149,35 @@ const BREAKDOWN_COLUMNS: IColumn[] = [
 type LeaveBalanceProps = {
   mode?: 'hr' | 'self';
   showBreadcrumbs?: boolean;
+  showSummaryCards?: boolean;
+  showSelfAccessError?: boolean;
+  overviewState?: ReturnType<typeof useLeaveOverview>;
   /** When provided, displays leave data for this specific employee instead of the logged-in user. */
   employeeId?: string;
 };
 
-const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: LeaveBalanceProps) => {
+const LeaveBalance = ({
+  mode = 'hr',
+  showBreadcrumbs = true,
+  showSummaryCards = true,
+  showSelfAccessError = true,
+  overviewState,
+  employeeId,
+}: LeaveBalanceProps) => {
   const isSelfMode = mode === 'self';
   const isEmployeeProfileMode = Boolean(employeeId);
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { employee } = useSelector((state: any) => state.auth);
-
-  // When viewing a specific employee's profile, always use HR endpoints with the given employeeId.
-  // Fall back to the authenticated employee's ID for the standard HR global view.
-  const resolvedEmployeeId = isEmployeeProfileMode ? employeeId : employee?.id;
-
-  const {
-    data: balanceDataForHr,
-    isLoading: isBalanceLoadingForHr,
-    isFetching: isBalanceFetchingForHr,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetMyLeaveBalanceQuery,
-    params: { academicYearId: currentYear?.id, employeeId: resolvedEmployeeId },
-    options: { skip: !currentYear?.id || isSelfMode },
+  const internalOverviewState = useLeaveOverview({
+    mode,
+    employeeId,
+    enabled: !overviewState,
   });
-  const {
-    data: balanceDataForSelf,
-    error: balanceErrorForSelf,
-    isLoading: isBalanceLoadingForSelf,
-    isFetching: isBalanceFetchingForSelf,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSelfLeaveBalanceQuery,
-    params: { academicYearId: currentYear?.id },
-    options: { skip: !currentYear?.id || !isSelfMode },
-    popupConfig: { error: false },
-  });
+  const leaveOverviewState = overviewState ?? internalOverviewState;
+  const { historyData, overview, isLoadingBalance, isLoadingHistory, selfAccessError } =
+    leaveOverviewState;
 
-  const {
-    data: historyDataForHr,
-    isLoading: isHistoryLoadingForHr,
-    isFetching: isHistoryFetchingForHr,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLeaveRequestsQuery,
-    params: {
-      academicYearId: currentYear?.id,
-      page: 1,
-      pageSize: 100,
-      ...(isEmployeeProfileMode ? { employeeId } : {}),
-    },
-    options: { skip: !currentYear?.id || isSelfMode || (isEmployeeProfileMode && !employeeId) },
-  });
-  const {
-    data: historyDataForSelf,
-    error: historyErrorForSelf,
-    isLoading: isHistoryLoadingForSelf,
-    isFetching: isHistoryFetchingForSelf,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetMyLeaveRequestsQuery,
-    params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
-    options: { skip: !currentYear?.id || !isSelfMode },
-    popupConfig: { error: false },
-  });
-  const balanceData = isSelfMode ? balanceDataForSelf : balanceDataForHr;
-  const historyData = isSelfMode ? historyDataForSelf : historyDataForHr;
-  const isHistoryLoading = isSelfMode ? isHistoryLoadingForSelf : isHistoryLoadingForHr;
-  const isHistoryFetching = isSelfMode ? isHistoryFetchingForSelf : isHistoryFetchingForHr;
+  const summaryCards = useMemo(() => LEAVE_OVERVIEW_CARDS(overview), [overview]);
 
-  const mergedBalance: LeaveBalanceData = useMemo(() => {
-    if (!balanceData?.items?.length) {
-      return {
-        totalLeaves: 0,
-        usedLeaves: 0,
-        remainingLeaves: 0,
-        pendingLeaves: 0,
-        leaveTypeBreakdown: [],
-      };
-    }
-    const { items } = balanceData;
-    const totalLeaves = items.reduce((sum: number, i: any) => sum + (i.entitledDays ?? 0), 0);
-    const usedLeaves = items.reduce((sum: number, i: any) => sum + (i.usedDays ?? 0), 0);
-    const remainingLeaves = items.reduce((sum: number, i: any) => sum + (i.remainingDays ?? 0), 0);
-    const pendingLeaves = (historyData?.items ?? []).filter(
-      (item: any) => normalizeLeaveStatus(item?.status) === 'PENDING'
-    ).length;
-    return {
-      totalLeaves,
-      usedLeaves,
-      remainingLeaves,
-      pendingLeaves,
-      leaveTypeBreakdown: items.map((i: any) => ({
-        leaveTypeId: i.leaveTypeMasterId,
-        leaveTypeName: i.leaveTypeName ?? i.policyName ?? '-',
-        total: i.entitledDays ?? 0,
-        used: i.usedDays ?? 0,
-        pending: (historyData?.items ?? []).filter((item: any) => {
-          const matchesLeaveType = String(item?.leaveType ?? '') === String(i?.leaveTypeName ?? '');
-          return matchesLeaveType && normalizeLeaveStatus(item?.status) === 'PENDING';
-        }).length,
-        remaining: i.remainingDays ?? 0,
-      })),
-    };
-  }, [balanceData, historyData?.items]);
-
-  const summaryCards = useMemo(() => SUMMARY_CARDS(mergedBalance), [mergedBalance]);
-
-  const breakdownRows: LeaveTypeBreakdown[] = useMemo(
-    () => mergedBalance.leaveTypeBreakdown,
-    [mergedBalance]
-  );
+  const breakdownRows = useMemo(() => overview.leaveTypeBreakdown, [overview.leaveTypeBreakdown]);
 
   const historyColumns: IColumn[] = useMemo(
     () => [
@@ -421,15 +274,6 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
     [historyData]
   );
 
-  const isLoadingBalance = isSelfMode
-    ? isBalanceLoadingForSelf || isBalanceFetchingForSelf
-    : isBalanceLoadingForHr || isBalanceFetchingForHr;
-  const selfAccessError =
-    isSelfMode &&
-    [balanceErrorForSelf, historyErrorForSelf].some(
-      (queryError) => parseApiProblemDetail(queryError).errorCode === LEAVE_EMPLOYEE_NOT_FOUND
-    );
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       {/* Breadcrumbs */}
@@ -449,7 +293,7 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
         />
       )}
 
-      {selfAccessError && (
+      {showSelfAccessError && selfAccessError && (
         <Card sx={{ mt: 1, p: 2 }}>
           <Alert severity="warning">
             Your user is not linked to an employee profile. Contact admin/HR.
@@ -458,7 +302,7 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
       )}
 
       {/* ── Section A: Summary Stat Cards ── */}
-      {!selfAccessError && (
+      {showSummaryCards && !selfAccessError && (
         <Grid container spacing={1}>
           {summaryCards.map((card) =>
             isLoadingBalance ? (
@@ -545,7 +389,7 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
             tableId="leave-balance-history"
             columns={historyColumns}
             data={historyRows}
-            isLoading={isHistoryLoading || isHistoryFetching}
+            isLoading={isLoadingHistory}
             tableTitle="Leave History"
             noDataText={
               <Box sx={{ py: 4, textAlign: 'center' }}>

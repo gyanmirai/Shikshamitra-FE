@@ -87,6 +87,11 @@ const StudentReportsScreen = () => {
               id: 'Demographics',
               icon: 'mdi:account-group-outline',
             },
+            {
+              name: 'Compliance',
+              id: 'Compliance',
+              icon: 'mdi:file-check-outline',
+            },
           ]}
           subCategories={[
             // Student Lists
@@ -271,6 +276,39 @@ const StudentReportsScreen = () => {
               render: () => <ReligionWiseReport />,
               description: 'Student distribution by religion',
               categoryId: 'Demographics',
+            },
+            {
+              name: 'Generic UDISE+ Student Export',
+              id: 'generic-udise-student-export',
+              icon: '',
+              render: () => <VerifyStudentData />,
+              description:
+                'Export UDISE+ baseline columns with masked identity compliance statuses',
+              categoryId: 'Compliance',
+            },
+            {
+              name: 'Gujarat/GSEB Student Compliance Report',
+              id: 'gujarat-gseb-student-compliance-report',
+              icon: '',
+              render: () => <VerifyStudentData />,
+              description: 'Review Gujarat state-board compliance fields for reconciliation',
+              categoryId: 'Compliance',
+            },
+            {
+              name: 'Aadhaar/APAAR Exception Report',
+              id: 'aadhaar-apaar-exception-report',
+              icon: '',
+              render: () => <VerifyStudentData />,
+              description: 'Track consent refused, mismatch, pending, and missing identity cases',
+              categoryId: 'Compliance',
+            },
+            {
+              name: 'RTE/Scholarship/Caste Certificate Tracking Report',
+              id: 'rte-scholarship-caste-certificate-tracking-report',
+              icon: '',
+              render: () => <AdmissionCategorywiseList />,
+              description: 'Track RTE, scholarship, and caste certificate follow-up status',
+              categoryId: 'Compliance',
             },
           ]}
         />

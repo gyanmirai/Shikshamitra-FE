@@ -36,7 +36,7 @@ export type HRPolicyWorkspaceProps = {
 
 export type DrawerState = {
   kind: DrawerKind;
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   item?: WorkCalendarPolicy | PayrollPolicy | AttendancePolicy | HrPolicyAssignment;
 } | null;
 

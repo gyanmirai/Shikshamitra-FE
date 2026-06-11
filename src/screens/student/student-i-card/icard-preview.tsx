@@ -3,7 +3,7 @@ import { Box, Paper } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { DraggableField } from 'src/components/icard-creation';
 
-const studentData = [{ name: 'John Doe', class: '10th-A', rollNumber: '123' }];
+const studentData = [{ name: 'Student Name', class: 'Class-Division', rollNumber: 'Roll No.' }];
 
 const IcardPreview = ({
   cardDimensions,

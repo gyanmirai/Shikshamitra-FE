@@ -4,6 +4,8 @@ import {
   AttendanceImportRunSource,
   AttendanceImportRowStatusCode,
   buildSaveAttendanceImportRowsQuery,
+  buildAttendanceImportFileDownloadUrl,
+  buildAttendanceImportErrorReportDownloadUrl,
 } from 'src/redux/hr/attendanceImportApi';
 
 describe('attendance import enums', () => {
@@ -53,5 +55,14 @@ describe('attendance import enums', () => {
         ],
       },
     });
+  });
+
+  it('builds import download URLs', () => {
+    expect(buildAttendanceImportFileDownloadUrl('import-1')).toBe(
+      '/hr/attendance/automated-runs/import-1/download-file'
+    );
+    expect(buildAttendanceImportErrorReportDownloadUrl('import-1')).toBe(
+      '/hr/attendance/automated-runs/import-1/download-error-report'
+    );
   });
 });

@@ -15,142 +15,23 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Grid, Paper, Avatar, Button, Typography } from '@mui/material';
 import {
+  useGetStudentsByDivisionQuery,
+  useGetStudentAttendanceDashboardSummaryQuery,
+} from 'src/redux/student';
+import {
   AttendanceStatusType,
   AttendanceStatusOptions,
   AttendanceStatusTypeColors,
 } from 'src/enums/attendance-type';
 
-const classDummyData = [
-  {
-    name: '1',
-    percentage: 35,
-    divisions: [
-      { name: 'A', percentage: 90 },
-      { name: 'B', percentage: 60 },
-      { name: 'C', percentage: 30 },
-      { name: 'D', percentage: 40 },
-    ],
-  },
-  {
-    name: '2',
-    percentage: 45,
-    divisions: [
-      { name: 'A', percentage: 10 },
-      { name: 'B', percentage: 60 },
-      { name: 'C', percentage: 20 },
-      { name: 'D', percentage: 40 },
-    ],
-  },
-
-  {
-    name: '3',
-    percentage: 78,
-    divisions: [
-      { name: 'A', percentage: 85 },
-      { name: 'B', percentage: 70 },
-      { name: 'C', percentage: 75 },
-      { name: 'D', percentage: 82 },
-    ],
-  },
-  {
-    name: '4',
-    percentage: 82,
-    divisions: [
-      { name: 'A', percentage: 88 },
-      { name: 'B', percentage: 79 },
-      { name: 'C', percentage: 81 },
-      { name: 'D', percentage: 80 },
-    ],
-  },
-  {
-    name: '5',
-    percentage: 76,
-    divisions: [
-      { name: 'A', percentage: 80 },
-      { name: 'B', percentage: 75 },
-      { name: 'C', percentage: 72 },
-      { name: 'D', percentage: 77 },
-    ],
-  },
-  {
-    name: '6',
-    percentage: 79,
-    divisions: [
-      { name: 'A', percentage: 82 },
-      { name: 'B', percentage: 78 },
-      { name: 'C', percentage: 76 },
-      { name: 'D', percentage: 80 },
-    ],
-  },
-  {
-    name: '7',
-    percentage: 81,
-    divisions: [
-      { name: 'A', percentage: 84 },
-      { name: 'B', percentage: 80 },
-      { name: 'C', percentage: 79 },
-      { name: 'D', percentage: 81 },
-    ],
-  },
-  {
-    name: '8',
-    percentage: 77,
-    divisions: [
-      { name: 'A', percentage: 80 },
-      { name: 'B', percentage: 75 },
-      { name: 'C', percentage: 76 },
-      { name: 'D', percentage: 77 },
-    ],
-  },
-  {
-    name: '9',
-    percentage: 83,
-    divisions: [
-      { name: 'A', percentage: 86 },
-      { name: 'B', percentage: 82 },
-      { name: 'C', percentage: 81 },
-      { name: 'D', percentage: 83 },
-    ],
-  },
-  {
-    name: '10',
-    percentage: 80,
-    divisions: [
-      { name: 'A', percentage: 83 },
-      { name: 'B', percentage: 79 },
-      { name: 'C', percentage: 78 },
-      { name: 'D', percentage: 80 },
-    ],
-  },
-  {
-    name: '11',
-    percentage: 75,
-    divisions: [
-      { name: 'A', percentage: 78 },
-      { name: 'B', percentage: 74 },
-      { name: 'C', percentage: 73 },
-      { name: 'D', percentage: 75 },
-    ],
-  },
-  {
-    name: '12',
-    percentage: 78,
-    divisions: [
-      { name: 'A', percentage: 81 },
-      { name: 'B', percentage: 77 },
-      { name: 'C', percentage: 76 },
-      { name: 'D', percentage: 78 },
-    ],
-  },
-];
 const StudentAttendanceDashboardScreen = () => {
-  // State to track overall school attendance percentage
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [schoolAttendance, setschoolAttendance] = useState(40);
   // State to track selected division for detailed view
   const [selectedDivision, setSelectedDivision] = useState(null);
   // State to track selected month for attendance data
   const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(dayjs());
+  const { data: attendanceSummary } = useGetStudentAttendanceDashboardSummaryQuery({});
+  const attendanceClassSummary = attendanceSummary?.classes || [];
+  const schoolAttendance = attendanceSummary?.schoolAttendancePercentage || 0;
   return (
     <Box height="100%">
       {!selectedDivision ? (
@@ -184,8 +65,17 @@ const StudentAttendanceDashboardScreen = () => {
             </Label>
           </Box>{' '}
           <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
-            {classDummyData.map((classData) => (
-              <ClassCard classItem={classData} setSelectedDivision={setSelectedDivision} />
+            {attendanceClassSummary.length === 0 && (
+              <Typography variant="body2" color="text.secondary">
+                No attendance summary found.
+              </Typography>
+            )}
+            {attendanceClassSummary.map((classData: any) => (
+              <ClassCard
+                key={classData.standardId || classData.name}
+                classItem={classData}
+                setSelectedDivision={setSelectedDivision}
+              />
             ))}
           </Box>
         </>
@@ -275,6 +165,17 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
   const [startDate, setStartDate] = useState<null | Dayjs>(dayjs().startOf('month'));
   // State to track the end date of attendance period, defaults to end of current month
   const [endDate, setEndDate] = useState<null | Dayjs>(dayjs().endOf('month'));
+  const { data: students, isLoading: studentsLoading } = useGetStudentsByDivisionQuery(
+    { divisionId: selectedDivision?.divisionId, skipCount: 0, maxResultCount: 25 },
+    { skip: !selectedDivision?.divisionId }
+  );
+  const studentRows =
+    students?.items?.map((student: any) => ({
+      ...student,
+      name:
+        student.studentName ||
+        [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' '),
+    })) || [];
 
   // Get the current theme instance
   const theme = useTheme();
@@ -310,7 +211,17 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
 
           <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
             <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
-              {[1, 2, 3].map((student, index) => (
+              {studentsLoading && (
+                <Typography variant="body2" color="text.secondary">
+                  Loading students...
+                </Typography>
+              )}
+              {!studentsLoading && studentRows.length === 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  No students found.
+                </Typography>
+              )}
+              {studentRows.map((student: any, index: number) => (
                 <Paper
                   key={index}
                   sx={{
@@ -328,9 +239,12 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
                   elevation={6}
                   onClick={() => setSelectedStudent(student)}
                 >
-                  <UserHoverProfile user={{ name: 'John Doe' }} avatarComp={<Avatar>JD</Avatar>} />
-                  <Typography variant="h6">John Doe</Typography>
-                  <Label color="success">85%</Label>
+                  <UserHoverProfile
+                    user={{ name: student.name }}
+                    avatarComp={<Avatar>{student.name?.[0] || 'S'}</Avatar>}
+                  />
+                  <Typography variant="h6">{student.name}</Typography>
+                  <Label color="default">-</Label>
                 </Paper>
               ))}
             </Box>

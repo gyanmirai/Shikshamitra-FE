@@ -930,14 +930,26 @@ const DocumentsSections = ({ editData }: any) => {
     () =>
       documents?.items?.map((item: any) => ({
         ...item,
-        statusVal: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
+        statusVal: employeeDocuments?.find(
+          (doc: any) =>
+            doc.isUploaded &&
+            (doc.documentTypeId === item.id || doc.documentTypeName === item.documentName)
+        )
           ? 'Uploaded'
           : 'Not Uploaded',
         docType: item.documentTypes.map((ite: number) => DocumentType[ite]).join(', '),
-        statusColor: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
+        statusColor: employeeDocuments?.find(
+          (doc: any) =>
+            doc.isUploaded &&
+            (doc.documentTypeId === item.id || doc.documentTypeName === item.documentName)
+        )
           ? 'success'
           : 'warning',
-        uploadDocument: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName),
+        uploadDocument: employeeDocuments?.find(
+          (doc: any) =>
+            doc.isUploaded &&
+            (doc.documentTypeId === item.id || doc.documentTypeName === item.documentName)
+        ),
       })) || [],
     [documents?.items, employeeDocuments]
   );
@@ -982,7 +994,7 @@ const DocumentsSections = ({ editData }: any) => {
                     <Iconify
                       icon="ri:eye-line"
                       onClick={() => {
-                        setDocId(item.uploadDocument.id);
+                        setDocId(item.uploadDocument.uploadedDocumentId || item.uploadDocument.id);
                         viewDialog.onTrue();
                       }}
                     />

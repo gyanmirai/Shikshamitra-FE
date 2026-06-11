@@ -1,6 +1,11 @@
+'use client';
+
+import type { RootState } from 'src/redux/store';
 import type { BoxProps, CardProps } from '@mui/material';
 
+import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
 import { orderBy } from 'src/utils/helper';
 import { varAlpha } from 'src/theme/styles';
@@ -15,6 +20,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import { fNumber, fShortenNumber } from 'src/utils/format-number';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
+import { useGetEntranceExamQuery } from 'src/redux/student/entrance-exam/entrance-exam-api';
 import {
   Box,
   Grid,
@@ -24,6 +30,7 @@ import {
   MenuList,
   MenuItem,
   TextField,
+  Typography,
   CardHeader,
   DialogActions,
 } from '@mui/material';
@@ -60,58 +67,33 @@ const EntranceExamDashboard = () => {
   const dialog = useBoolean();
   const resultDialog = useBoolean();
   const confirm = useBoolean(false);
-  const dummyData = [
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { data: entranceExamData, isLoading } = useGetEntranceExamQuery(
     {
-      id: 1,
-      name: 'John Doe',
-      class: '10th',
-      medium: 'English',
-      date: '2023-06-01',
-      totalMarks: 100,
-      obtainedMarks: 85,
-      status: 'Pass',
+      startDate: dayjs().startOf('day').toISOString(),
+      endDate: dayjs().add(30, 'day').endOf('day').toISOString(),
+      educationMediumId: currentMedium?.id,
     },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      class: '11th',
-      medium: 'Spanish',
-      date: '2023-06-02',
-      totalMarks: 100,
-      obtainedMarks: 92,
-      status: 'Pass',
-    },
-    {
-      id: 3,
-      name: 'Bob Johnson',
-      class: '9th',
-      medium: 'French',
-      date: '2023-06-03',
-      totalMarks: 100,
-      obtainedMarks: '-',
-      status: 'Pending',
-    },
-    {
-      id: 4,
-      name: 'Alice Williams',
-      class: '12th',
-      medium: 'German',
-      date: '2023-06-04',
-      totalMarks: 100,
-      obtainedMarks: 95,
-      status: 'Pass',
-    },
-    {
-      id: 5,
-      name: 'Charlie Brown',
-      class: '8th',
-      medium: 'Mandarin',
-      date: '2023-06-05',
-      totalMarks: 100,
-      obtainedMarks: 68,
-      status: 'Fail',
-    },
-  ];
+    { skip: !currentMedium?.id }
+  );
+  const scheduledExamRows =
+    entranceExamData?.data?.items?.map((item: any) => ({
+      ...item,
+      id: item.id || item.studentId,
+      name: item.name || item.studentName,
+      class: item.class || item.standard,
+      medium: item.medium || item.educationMedium,
+      date: item.examDate ? dayjs(item.examDate).format('DD-MM-YYYY') : '-',
+      totalMarks: item.totalMarks || item.passingMarks || 0,
+      obtainedMarks: item.marksObtained ?? '-',
+      status: item.examStatus || 'Pending',
+    })) || [];
+  const passedCount = scheduledExamRows.filter(
+    (row: any) => row.status === 'Pass' || row.status === 1
+  ).length;
+  const failedCount = scheduledExamRows.filter(
+    (row: any) => row.status === 'Fail' || row.status === 2
+  ).length;
   const actions = useCallback(
     ({ popover }: any) => (
       <MenuList>
@@ -178,28 +160,21 @@ const EntranceExamDashboard = () => {
                   },
                 }}
               >
-                {[
-                  'GSEB - English - 10th May',
-                  'CBSE - Hindi - 15th May',
-                  'GSEB - Gujarati - 10th May',
-                ].map((exam, index) => (
-                  <Box component="li" key={index} sx={{ mb: 1 }}>
-                    <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                      {exam}
-                    </Button>
+                {scheduledExamRows.length === 0 ? (
+                  <Box component="li" sx={{ mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No upcoming exams found.
+                    </Typography>
                   </Box>
-                ))}
-                {[
-                  'GSEB - English - 10th May',
-                  'CBSE - Hindi - 15th May',
-                  'GSEB - Gujarati - 10th May',
-                ].map((exam, index) => (
-                  <Box component="li" key={`duplicate-${index}`} sx={{ mb: 1 }}>
-                    <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                      {exam}
-                    </Button>
-                  </Box>
-                ))}
+                ) : (
+                  scheduledExamRows.slice(0, 5).map((exam: any) => (
+                    <Box component="li" key={exam.id} sx={{ mb: 1 }}>
+                      <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
+                        {exam.medium || '-'} - {exam.class || '-'} - {exam.date}
+                      </Button>
+                    </Box>
+                  ))
+                )}
               </Box>
             </Scrollbar>
           </Box>
@@ -217,7 +192,7 @@ const EntranceExamDashboard = () => {
           <Box sx={{ flexGrow: 1 }}>
             <Box sx={{ typography: 'subtitle2' }}>Total Candidates</Box>
             <Box sx={{ mt: 1.5, mb: 1, typography: 'h3', color: 'primary.main' }}>
-              {fNumber(10000)}
+              {fNumber(scheduledExamRows.length)}
             </Box>
           </Box>
         </Card>
@@ -234,10 +209,11 @@ const EntranceExamDashboard = () => {
           <Box sx={{ flexGrow: 1 }}>
             <Box sx={{ typography: 'subtitle2' }}>Exam Status</Box>
             <Box sx={{ mt: 1.5, mb: 1, typography: 'h4', color: 'primary.main' }}>
-              {fNumber(2)} Ongoing
+              {fNumber(scheduledExamRows.filter((row: any) => row.status === 'Ongoing').length)}{' '}
+              Ongoing
             </Box>
             <Box sx={{ mt: 1.5, mb: 1, typography: 'h4', color: 'info.main' }}>
-              {fNumber(5)} Upcoming
+              {fNumber(scheduledExamRows.length)} Upcoming
             </Box>
           </Box>
         </Card>
@@ -247,20 +223,14 @@ const EntranceExamDashboard = () => {
         <TopPerformer
           title="Top Performer"
           sx={{ height: '100%' }}
-          list={[
-            {
-              id: '1',
-              name: 'John Doe',
-              avatarUrl: '/static/images/avatars/avatar_1.png',
-              totalMarks: 65,
-            },
-            {
-              id: '2',
-              name: 'Herbert Clark',
-              avatarUrl: '/static/images/avatars/avatar_2.png',
-              totalMarks: 89,
-            },
-          ]}
+          list={scheduledExamRows
+            .filter((row: any) => typeof row.obtainedMarks === 'number')
+            .map((row: any) => ({
+              id: row.id,
+              name: row.name || '-',
+              avatarUrl: '',
+              totalMarks: row.obtainedMarks,
+            }))}
         />
       </Grid>
 
@@ -270,8 +240,8 @@ const EntranceExamDashboard = () => {
           subheader="Number of students passed vs failed"
           chart={{
             series: [
-              { label: 'Passed', value: 15 },
-              { label: 'Failed', value: 2 },
+              { label: 'Passed', value: passedCount },
+              { label: 'Failed', value: failedCount },
             ],
           }}
         />
@@ -358,7 +328,9 @@ const EntranceExamDashboard = () => {
                 render: () => <ThreeDotsActions placement="right-top" actions={actions} />,
               },
             ]}
-            data={dummyData}
+            data={scheduledExamRows}
+            isLoading={isLoading}
+            noDataText={<>No scheduled exams found.</>}
           />
         </Box>
       </CustomDialog>

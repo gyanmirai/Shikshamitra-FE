@@ -74,29 +74,8 @@ const EnrollmentStatusTrackingScreen = () => (
           },
         },
       ]}
-      data={[
-        {
-          name: 'John Doe',
-          organization: 'Primary',
-          medium: 'English',
-          class: '10th',
-          progress: 75,
-        },
-        {
-          name: 'Jane Smith',
-          organization: 'H-Primary',
-          medium: 'Spanish',
-          class: '8th',
-          progress: 50,
-        },
-        {
-          name: 'Mike Johnson',
-          organization: 'Primary',
-          medium: 'French',
-          class: '12th',
-          progress: 90,
-        },
-      ]}
+      data={[]}
+      noDataText={<>No enrollment records available.</>}
     />{' '}
   </Box>
 );

@@ -1,18 +1,23 @@
 'use client';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { UploadAvatar } from 'src/components/upload';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useGetStudentsByDivisionQuery, useUploadStudentPhotoMutation } from 'src/redux/student';
 import {
   Box,
   Grid,
+  Alert,
   Select,
+  Button,
   Divider,
   MenuItem,
   InputLabel,
@@ -29,24 +34,44 @@ const UploadStudentPhotoScreen = () => {
   const [divisions, setDivisions] = useState([]);
   const [classValue, setClassValue] = React.useState('');
   const [division, setDivision] = React.useState('');
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [tableParams, setTableParams] = useState({ page: 1, rowsPerPage: 10, searchTerm: '' });
+  const {
+    data: students,
+    isLoading: studentsLoading,
+    isError,
+  } = useGetStudentsByDivisionQuery(
+    {
+      divisionId: division,
+      skipCount: (tableParams.page - 1) * tableParams.rowsPerPage,
+      maxResultCount: tableParams.rowsPerPage,
+      searchTerm: tableParams.searchTerm,
+    },
+    { skip: !division }
+  );
+
+  const tableData =
+    students?.items?.map((student: any) => ({
+      ...student,
+      id: student.studentId,
+      fullName:
+        student.studentName ||
+        [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' '),
+      upload: student.photoUrl ? 'Uploaded' : 'No photo on file',
+    })) || [];
 
   const handleClassChange = (event: any) => {
     setClassValue(event.target.value);
-    setDivisions(classes.items.find((item: any) => item.id === event.target.value).divisions);
+    setDivision('');
+    setDivisions(
+      classes?.items?.find((item: any) => item.id === event.target.value)?.divisions || []
+    );
   };
 
   const handleDivisionChange = (event: any) => {
     setDivision(event.target.value);
+    setTableParams({ page: 1, rowsPerPage: 10, searchTerm: '' });
   };
-
-  // Dummy data for the table
-  const dummyData = [
-    { id: 1, fullName: 'John Doe', upload: 'Not uploaded' },
-    { id: 2, fullName: 'Jane Smith', upload: 'Uploaded' },
-    { id: 3, fullName: 'Mike Johnson', upload: 'Not uploaded' },
-    { id: 4, fullName: 'Emily Brown', upload: 'Uploaded' },
-    { id: 5, fullName: 'David Wilson', upload: 'Not uploaded' },
-  ];
 
   return (
     <Box>
@@ -113,28 +138,68 @@ const UploadStudentPhotoScreen = () => {
       </Grid>
 
       {division && (
-        <CustomizableTable
-          tableId="upload-student-photo"
-          columns={[
-            { id: 'fullName', label: 'Full Name' },
-            {
-              id: 'upload',
-              label: 'Upload Photo',
-              render(value, row) {
-                return (
-                  <IconButton onClick={dialog.onTrue}>
-                    <Iconify icon="heroicons-outline:upload" />
-                  </IconButton>
-                );
+        <>
+          {isError && (
+            <Alert severity="error" sx={{ my: 2 }}>
+              Unable to load students for the selected division.
+            </Alert>
+          )}
+          <CustomizableTable
+            tableId="upload-student-photo"
+            columns={[
+              { id: 'fullName', label: 'Full Name' },
+              { id: 'upload', label: 'Photo Status' },
+              {
+                id: 'action',
+                label: 'Upload Photo',
+                isFilter: false,
+                render(value, row) {
+                  return (
+                    <IconButton
+                      onClick={() => {
+                        setSelectedStudent(row);
+                        dialog.onTrue();
+                      }}
+                    >
+                      <Iconify icon="heroicons-outline:upload" />
+                    </IconButton>
+                  );
+                },
               },
-            },
-          ]}
-          data={dummyData}
-        />
+            ]}
+            data={tableData}
+            isLoading={studentsLoading}
+            serverSidePagination
+            serverSideSearch
+            totalCount={students?.totalCount || 0}
+            onServerPagination={(page, rowsPerPage) =>
+              setTableParams((prev) => ({ ...prev, page, rowsPerPage }))
+            }
+            onServerSearch={(searchTerm) =>
+              setTableParams((prev) => ({ ...prev, page: 1, searchTerm }))
+            }
+            noDataText={<>No students found for the selected division.</>}
+          />
+        </>
       )}
 
-      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Upload Photo">
-        <UploadPhotoFlow />
+      <CustomDialog
+        open={dialog.value}
+        handleClose={() => {
+          dialog.onFalse();
+          setSelectedStudent(null);
+        }}
+        title={`Upload Photo${selectedStudent?.fullName ? ` - ${selectedStudent.fullName}` : ''}`}
+      >
+        {selectedStudent && (
+          <UploadPhotoFlow
+            student={selectedStudent}
+            onClose={() => {
+              dialog.onFalse();
+              setSelectedStudent(null);
+            }}
+          />
+        )}
       </CustomDialog>
     </Box>
   );
@@ -142,8 +207,22 @@ const UploadStudentPhotoScreen = () => {
 
 export default UploadStudentPhotoScreen;
 
-const UploadPhotoFlow = () => {
+const UploadPhotoFlow = ({ student, onClose }: { student: any; onClose: () => void }) => {
   const [file, setFile] = useState<null | File>(null);
+  const [uploadPhoto, { isLoading }] = useUploadStudentPhotoMutation();
+
+  const handleSave = async () => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      await uploadPhoto({ studentId: student.studentId, body: formData }).unwrap();
+      shikshaMitraToast.success({ message: 'Student photo uploaded successfully.' });
+      onClose();
+    } catch {
+      shikshaMitraToast.error({ message: 'Unable to upload student photo. Please try again.' });
+    }
+  };
 
   return (
     <Box p={2}>
@@ -156,6 +235,19 @@ const UploadPhotoFlow = () => {
         }}
         value={file}
       />
+      <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+        <Button variant="outlined" onClick={onClose}>
+          Cancel
+        </Button>
+        <LoadingButton
+          variant="contained"
+          loading={isLoading}
+          disabled={!file}
+          onClick={handleSave}
+        >
+          Save
+        </LoadingButton>
+      </Box>
     </Box>
   );
 };

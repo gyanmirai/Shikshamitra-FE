@@ -38,9 +38,17 @@ export interface IGeneralInformationResponse {
   email: string;
 
   adharNo: string;
+  aadhaarMasked?: string;
+  aadhaarVerificationStatus?: string | number;
   apparId: 'string';
+  apaarConsentStatus?: string | number;
+  apaarVerificationStatus?: string | number;
   panNo: 'string';
   pennNo: 'string';
+  udiseStudentCode?: string;
+  udiseSyncStatus?: string | number;
+  rteStatus?: boolean | null;
+  scholarshipStatus?: string | number;
   religion: 0;
   familyCast: 'string';
   castCategory: 0;
