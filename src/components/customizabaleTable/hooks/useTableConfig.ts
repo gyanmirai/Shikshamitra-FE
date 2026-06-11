@@ -5,13 +5,18 @@ import type { IParams, IColumn } from '../types';
 interface UseTableConfigProps {
   columns: IColumn[];
   defaultRowsPerPage?: number;
+  defaultSearchTerm?: string;
 }
 
-export const useTableConfig = ({ columns, defaultRowsPerPage = 10 }: UseTableConfigProps) => {
+export const useTableConfig = ({
+  columns,
+  defaultRowsPerPage = 10,
+  defaultSearchTerm = '',
+}: UseTableConfigProps) => {
   const [tableConfig, setTableConfig] = useState<IParams>({
     page: 0,
     rowsPerPage: defaultRowsPerPage,
-    searchTerm: '',
+    searchTerm: defaultSearchTerm,
     filterColumn: '',
     filterType: 'contains',
     dense: true,

@@ -3,8 +3,10 @@
 import type { HrAuditRenderValue } from 'src/utils/hr-audit-format';
 
 import React from 'react';
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { toHrAuditRenderValue } from 'src/utils/hr-audit-format';
+import { Box, Chip, Stack, Paper, Typography } from '@mui/material';
 
 type HrAuditValueViewProps = {
   value: unknown;
@@ -14,6 +16,170 @@ type HrAuditValueViewProps = {
   renderValue?: HrAuditRenderValue;
   sourceKey?: string;
 };
+
+interface CleanHoliday {
+  id?: string;
+  holidayName?: string;
+  date?: string;
+  fromDate?: string;
+  toDate?: string;
+  dayCount?: number | string;
+  isIncluded?: boolean;
+  source?: string;
+  notes?: string;
+}
+
+function extractHolidays(value: HrAuditRenderValue): CleanHoliday[] {
+  const list: CleanHoliday[] = [];
+
+  function traverse(node: HrAuditRenderValue) {
+    if (node.kind === 'list') {
+      node.items.forEach(traverse);
+    } else if (node.kind === 'object') {
+      const holiday: CleanHoliday = {};
+      node.entries.forEach((entry) => {
+        const { key } = entry;
+        const valText = entry.value.text;
+
+        if (key === 'id') holiday.id = valText;
+        else if (key === 'holidayName') holiday.holidayName = valText;
+        else if (key === 'date') holiday.date = valText;
+        else if (key === 'fromDate') holiday.fromDate = valText;
+        else if (key === 'toDate') holiday.toDate = valText;
+        else if (key === 'dayCount') holiday.dayCount = valText;
+        else if (key === 'isIncluded') {
+          holiday.isIncluded = valText === 'true' || valText === 'Yes' || valText === 'Included';
+        } else if (key === 'source') holiday.source = valText;
+        else if (key === 'notes') holiday.notes = valText;
+      });
+
+      if (holiday.holidayName) {
+        list.push(holiday);
+      }
+    }
+  }
+
+  traverse(value);
+  return list;
+}
+
+function HolidayListRenderer({
+  value,
+  dense,
+  isTruncated,
+}: {
+  value: HrAuditRenderValue;
+  dense: boolean;
+  isTruncated: boolean;
+}) {
+  const holidays = extractHolidays(value);
+
+  if (holidays.length === 0) {
+    return (
+      <Typography variant="body2" color="text.secondary">
+        No holidays configured
+      </Typography>
+    );
+  }
+
+  return (
+    <Stack spacing={1} sx={{ mt: 0.5, width: '100%' }}>
+      {holidays.map((holiday, idx) => {
+        const dateStr = holiday.date || holiday.fromDate || 'Unknown date';
+
+        return (
+          <Paper
+            key={idx}
+            variant="outlined"
+            sx={{
+              p: dense ? 1 : 1.25,
+              borderColor: 'divider',
+              bgcolor: 'background.neutral',
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+              borderRadius: 1,
+            }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
+              <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, wordBreak: 'break-word' }}>
+                  {holiday.holidayName}
+                </Typography>
+
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                  >
+                    <Iconify icon="solar:calendar-date-bold-duotone" width={14} height={14} />
+                    {dateStr}
+                  </Typography>
+                  {holiday.dayCount && Number(holiday.dayCount) !== 1 ? (
+                    <Chip
+                      size="small"
+                      variant="soft"
+                      color="info"
+                      label={`${holiday.dayCount} days`}
+                      sx={{ height: 18, fontSize: '0.65rem' }}
+                    />
+                  ) : null}
+                  {holiday.source ? (
+                    <Chip
+                      size="small"
+                      variant="soft"
+                      color="default"
+                      label={holiday.source === 'manual' ? 'Manual' : 'Central'}
+                      sx={{ height: 18, fontSize: '0.65rem', textTransform: 'capitalize' }}
+                    />
+                  ) : null}
+                </Stack>
+
+                {holiday.notes && holiday.notes !== '-' ? (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontStyle: 'italic', mt: 0.25 }}
+                  >
+                    Note: {holiday.notes}
+                  </Typography>
+                ) : null}
+
+                {holiday.id && holiday.id !== '-' ? (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: '0.65rem', display: 'block', mt: 0.25 }}
+                  >
+                    Ref: <span>{holiday.id}</span>
+                  </Typography>
+                ) : null}
+              </Stack>
+
+              <Chip
+                size="small"
+                variant="outlined"
+                color={holiday.isIncluded !== false ? 'success' : 'error'}
+                label={holiday.isIncluded !== false ? 'Included' : 'Excluded'}
+                sx={{ flexShrink: 0 }}
+              />
+            </Stack>
+          </Paper>
+        );
+      })}
+      {isTruncated ? (
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ textAlign: 'center', display: 'block', mt: 0.5, fontStyle: 'italic' }}
+        >
+          ... and more truncated holidays
+        </Typography>
+      ) : null}
+    </Stack>
+  );
+}
 
 export function HrAuditValueView({
   value,
@@ -25,6 +191,14 @@ export function HrAuditValueView({
 }: HrAuditValueViewProps) {
   const auditValue = renderValue || toHrAuditRenderValue(value, sourceKey);
 
+  const isHolidayList =
+    (sourceKey === 'holidays' || sourceKey === 'holidaySummary') &&
+    (auditValue.kind === 'list' || auditValue.kind === 'object') &&
+    extractHolidays(auditValue).length > 0;
+
+  const isTruncated =
+    typeof value === 'string' && (value.endsWith('...') || !value.trim().endsWith(']'));
+
   return (
     <Stack spacing={dense ? 0.5 : 0.75} sx={{ minWidth: 0 }} data-testid="hr-audit-value">
       {label ? (
@@ -32,7 +206,11 @@ export function HrAuditValueView({
           {label}
         </Typography>
       ) : null}
-      <AuditValueNode value={auditValue} dense={dense} depth={0} maxDepth={maxDepth} />
+      {isHolidayList ? (
+        <HolidayListRenderer value={auditValue} dense={dense} isTruncated={isTruncated} />
+      ) : (
+        <AuditValueNode value={auditValue} dense={dense} depth={0} maxDepth={maxDepth} />
+      )}
     </Stack>
   );
 }
@@ -82,13 +260,16 @@ function AuditValueNode({
     return (
       <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
         {value.items.map((item) => (
-          <Chip
+          <Label
             key={`${item.label}-${item.value}`}
-            size="small"
             variant="outlined"
-            label={`${item.label} ${item.value}`}
-            sx={{ maxWidth: '100%' }}
-          />
+            sx={{
+              maxWidth: '100%',
+              borderWidth: 1,
+            }}
+          >
+            {item.label} {item.value}
+          </Label>
         ))}
       </Stack>
     );

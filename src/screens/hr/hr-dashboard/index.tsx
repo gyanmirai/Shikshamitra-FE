@@ -764,8 +764,16 @@ const AttendanceTrendCard = ({ data }: { data: HRDashboardSummary }) => {
       labels: { formatter: (value: number) => `${Math.round(value)}%` },
     },
     tooltip: { y: { formatter: (value: number) => `${value}%` } },
-    legend: { position: 'top', horizontalAlign: 'right' },
+    legend: { show: true, position: 'top', horizontalAlign: 'right' },
     grid: { padding: { top: 0, right: 8, bottom: 0, left: 0 } },
+    highcharts: {
+      xAxis: {
+        labels: {
+          enabled: true,
+          reserveSpace: true,
+        },
+      },
+    },
   });
 
   return (
@@ -773,7 +781,7 @@ const AttendanceTrendCard = ({ data }: { data: HRDashboardSummary }) => {
       title="Attendance Trend"
       subheader={`${data.range}-Day Attendance Overview`}
       height="100%"
-      minHeight={{ xs: 280, md: 290, lg: 300 }}
+      minHeight={{ xs: 340, md: 360, lg: 380 }}
       action={
         <Button
           component={Link}
@@ -805,7 +813,7 @@ const AttendanceTrendCard = ({ data }: { data: HRDashboardSummary }) => {
               },
             ]}
             options={chartOptions}
-            sx={{ height: { xs: 170, md: 180, lg: 190 } }}
+            sx={{ height: { xs: 210, md: 230, lg: 250 } }}
           />
         ) : (
           <Alert severity="info">No attendance trend data is available for this range.</Alert>
@@ -1148,47 +1156,55 @@ const LeaveActionCenter = ({ requests }: { requests: HRDashboardLeaveRequest[] }
                 key={request.id}
                 sx={{ p: 1.25, borderRadius: 1, bgcolor: 'background.neutral' }}
               >
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  spacing={1}
-                >
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
-                    <Avatar sx={{ width: 36, height: 36 }}>{request.employeeName.charAt(0)}</Avatar>
-                    <Box sx={{ minWidth: 0 }}>
+                <Stack spacing={0.75}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    spacing={1}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+                      <Avatar sx={{ width: 32, height: 32 }}>
+                        {request.employeeName.charAt(0)}
+                      </Avatar>
                       <Typography variant="subtitle2" noWrap>
                         {request.employeeName}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" noWrap>
-                        {request.leaveType} • {request.totalDays} day(s) •{' '}
-                        {dayjs(request.startDate).format('DD MMM')} -{' '}
-                        {dayjs(request.endDate).format('DD MMM')}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                  {canApprove ? (
-                    <Stack direction="row" spacing={0.5}>
-                      <LoadingButton
-                        size="small"
-                        color="success"
-                        variant="outlined"
-                        loading={busyId === `approve-${request.id}`}
-                        onClick={() => openReviewAction(request, 'approve')}
-                      >
-                        Approve
-                      </LoadingButton>
-                      <LoadingButton
-                        size="small"
-                        color="error"
-                        variant="outlined"
-                        loading={busyId === `reject-${request.id}`}
-                        onClick={() => openReviewAction(request, 'reject')}
-                      >
-                        Reject
-                      </LoadingButton>
                     </Stack>
-                  ) : null}
+                    {canApprove ? (
+                      <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
+                        <LoadingButton
+                          size="small"
+                          color="success"
+                          variant="outlined"
+                          loading={busyId === `approve-${request.id}`}
+                          onClick={() => openReviewAction(request, 'approve')}
+                          sx={{ height: 26, fontSize: '0.75rem', px: 1 }}
+                        >
+                          Approve
+                        </LoadingButton>
+                        <LoadingButton
+                          size="small"
+                          color="error"
+                          variant="outlined"
+                          loading={busyId === `reject-${request.id}`}
+                          onClick={() => openReviewAction(request, 'reject')}
+                          sx={{ height: 26, fontSize: '0.75rem', px: 1 }}
+                        >
+                          Reject
+                        </LoadingButton>
+                      </Stack>
+                    ) : null}
+                  </Stack>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ pl: '40px', display: 'block' }}
+                  >
+                    {request.leaveType} • {request.totalDays} day(s) •{' '}
+                    {dayjs(request.startDate).format('DD MMM')} -{' '}
+                    {dayjs(request.endDate).format('DD MMM')}
+                  </Typography>
                 </Stack>
               </Box>
             ))}
