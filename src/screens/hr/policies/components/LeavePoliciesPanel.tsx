@@ -17,6 +17,7 @@ import { LeavePolicyForm } from 'src/screens/hr/attendance-setting/leave-policy'
 import { useGetLeavePoliciesQuery, useDeleteLeavePolicyMutation } from 'src/redux/hr/leaveApi';
 import { Card, Chip, Stack, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
+import { InfoTooltipIcon } from './HRPolicySharedUI';
 import { formatDate } from '../hr-policy-workspace-utils';
 import { LeavePolicyImpactDrawer } from './LeavePolicyImpactDrawer';
 import {
@@ -262,7 +263,24 @@ export function LeavePoliciesPanel() {
 
       <CustomDialog
         maxWidth="md"
-        title={editData ? 'Update Leave Policy' : 'Add Leave Policy'}
+        title={
+          <Stack
+            component="span"
+            direction="row"
+            spacing={0.75}
+            alignItems="center"
+            display="inline-flex"
+          >
+            <span>{editData ? 'Update Leave Policy' : 'Add Leave Policy'}</span>
+            <InfoTooltipIcon
+              title={
+                editData
+                  ? 'Update the rules for leave entitlement, accrual type, carry forward options, and approval workflows.'
+                  : 'Define new rules for leave entitlement, accrual type, carry forward options, and approval workflows.'
+              }
+            />
+          </Stack>
+        }
         open={dialogOpen}
         handleClose={() => closeDialog()}
       >
