@@ -6,19 +6,25 @@ import type { Medium, Division, Standards, Organization } from 'src/types/school
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Card, Button } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { TimetableReportTitle } from 'src/enums/timetable-reports';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import {
+  TimetableReportTitle,
+  TimetableReportApiTypeMap,
+  TimetableReportTitleOptions,
+} from 'src/enums/timetable-reports';
 
+import TimetableReportPreviewDrawer from './TimetableReportPreviewDrawer';
 import { getTimetableValidationSchema } from './timetableReportValidation';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -104,17 +110,39 @@ const TimetableReportRequiredFieldsMap: Record<number, string[]> = {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
+const TimetableReportForm = ({
+  report,
+  onSuccess,
+}: {
+  report: TimetableReportTitle;
+  onSuccess?: () => void;
+}) => {
   // ── Redux state ──
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
 
   // ── Org / Class / Division derived from medium ──
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
+  // ── Drawer & request state ──
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [reportRequest, setReportRequest] = useState<any>(null);
+  const [submitType, setSubmitType] = useState<'preview' | 'export'>('preview');
+
   // ── Dynamic validation ──
   const [dynamicSchema, setDynamicSchema] = useState(getTimetableValidationSchema([], []));
+
+  // ── Export mutation ──
+  const [createExport, { isLoading: isExportCreating }] = useQueryAndMutation<
+    typeof useCreateAcademicReportExportMutation
+  >({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateAcademicReportExportMutation,
+    popupConfig: { error: true, errorMessage: 'Failed to initiate export' },
+  });
 
   // ── Formik ──────────────────────────────────────────────────────────────────
   const formik = useFormik({
@@ -124,8 +152,43 @@ const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
     },
     enableReinitialize: true,
     validationSchema: dynamicSchema,
-    onSubmit: (val, { setSubmitting }) => {
-      window.alert('submitted...');
+    onSubmit: async (values, { setSubmitting }) => {
+      const classIds = values.classes.includes('all')
+        ? allClass.filter((c) => c.id !== 'all').map((c) => c.id)
+        : values.classes;
+
+      const divisionIds = values.divisions.includes('all')
+        ? allDivision.filter((d) => d.id !== 'all').map((d) => d.id)
+        : values.divisions;
+
+      const requestPayload = {
+        reportType: TimetableReportApiTypeMap[report],
+        filters: {
+          academicYearId: currentYear?.id || null,
+          classIds: classIds.length > 0 ? classIds : null,
+          divisionIds: divisionIds.length > 0 ? divisionIds : null,
+          teacherIds: values.teacher ? [values.teacher] : null,
+          roomIds: values.roomNo ? [values.roomNo] : null,
+          subjectIds: values.subject ? [values.subject] : null,
+        },
+      };
+
+      if (submitType === 'preview') {
+        setReportRequest(requestPayload);
+        setPreviewOpen(true);
+      } else if (submitType === 'export') {
+        try {
+          const res = await createExport({ ...requestPayload, format: 'pdf' }).unwrap();
+          shikshaMitraToast.success({
+            message: `Export job queued successfully! Status: ${res.status || 'Queued'}`,
+          });
+          if (onSuccess) {
+            onSuccess();
+          }
+        } catch {
+          // Error is handled by popupConfig
+        }
+      }
       setSubmitting(false);
     },
   });
@@ -480,20 +543,37 @@ const TimetableReportForm = ({ report }: { report: TimetableReportTitle }) => {
               )}
 
               {/* Submit */}
-              <Grid size={12} justifyContent="flex-end" display="flex">
+              <Grid size={12} justifyContent="flex-end" display="flex" gap={1.5}>
                 <Button
-                  startIcon={<Iconify icon={GlobalIcons.generateReport} />}
+                  startIcon={<Iconify icon="mdi:eye-outline" />}
+                  type="submit"
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setSubmitType('preview')}
+                >
+                  Preview
+                </Button>
+                <Button
+                  startIcon={<Iconify icon="mdi:tray-arrow-down" />}
                   type="submit"
                   variant="contained"
                   size="small"
+                  loading={isExportCreating}
+                  onClick={() => setSubmitType('export')}
                 >
-                  Generate Report
+                  Queue Export
                 </Button>
               </Grid>
             </Grid>
           </Box>
         </form>
       </Card>
+      <TimetableReportPreviewDrawer
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        reportRequest={reportRequest}
+        reportTitle={TimetableReportTitleOptions.find((opt) => opt.name === report)?.label || ''}
+      />
     </Box>
   );
 };

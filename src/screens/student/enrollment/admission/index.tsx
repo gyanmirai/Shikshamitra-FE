@@ -581,7 +581,7 @@ const AdmissionScreen = () => {
             </CustomTooltip>
           </Box>
         }
-        maxWidth="sm"
+        maxWidth="md"
       >
         <FeeStructureAssignmentForm student={editData} handleClose={handleClose} />
       </CustomDialog>
