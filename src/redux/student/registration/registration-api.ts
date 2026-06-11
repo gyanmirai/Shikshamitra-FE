@@ -1,5 +1,8 @@
 import { api } from 'src/redux/service';
-import { studentRegistrationType } from 'src/redux/tagTypes';
+import { studentType, studentRegistrationType } from 'src/redux/tagTypes';
+
+const unwrapResultData = (response: any) =>
+  response && Object.prototype.hasOwnProperty.call(response, 'data') ? response.data : response;
 
 export const StudentRegistrationApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -61,6 +64,41 @@ export const StudentRegistrationApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
+      invalidatesTags: [studentRegistrationType.studentRegistration],
+    }),
+    getStudentIdentityCompliance: builder.query({
+      query: ({ studentId }) => ({
+        url: `/student/${studentId}/identity-compliance`,
+        method: 'GET',
+      }),
+      transformResponse: unwrapResultData,
+      providesTags: [studentRegistrationType.studentRegistration],
+    }),
+    updateStudentIdentityCompliance: builder.mutation({
+      query: ({ studentId, body }) => ({
+        url: `/student/${studentId}/identity-compliance`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: unwrapResultData,
+      invalidatesTags: [studentRegistrationType.studentRegistration],
+    }),
+    updateAadhaarVerificationStatus: builder.mutation({
+      query: ({ studentId, body }) => ({
+        url: `/student/${studentId}/identity-compliance/aadhaar-verification-status`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: unwrapResultData,
+      invalidatesTags: [studentRegistrationType.studentRegistration],
+    }),
+    updateApaarConsent: builder.mutation({
+      query: ({ studentId, body }) => ({
+        url: `/student/${studentId}/identity-compliance/apaar-consent`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: unwrapResultData,
       invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
     getFamilyDetails: builder.query({
@@ -157,11 +195,12 @@ export const StudentRegistrationApi = api.injectEndpoints({
     // document
     uploadStudentDocuments: builder.mutation({
       query: ({ studentId, body }) => ({
-        url: `/app/student-document/upload-document/${studentId}`,
+        url: `/student/enrollment/registrations/${studentId}/documents`,
         method: 'POST',
         body,
       }),
-      invalidatesTags: [studentRegistrationType.studentDocument],
+      transformResponse: unwrapResultData,
+      invalidatesTags: [studentRegistrationType.studentDocument, studentType.student],
     }),
     studentUpdateDocument: builder.mutation({
       query: ({ studentId, documentId, body }) => ({
@@ -176,19 +215,28 @@ export const StudentRegistrationApi = api.injectEndpoints({
     }),
     getStudentDocuments: builder.query({
       query: ({ studentId }) => ({
-        url: `/app/student-document/required-documents-status/${studentId}`,
+        url: `/student/enrollment/registrations/${studentId}/documents/required-status`,
       }),
+      transformResponse: unwrapResultData,
       providesTags: [studentRegistrationType.studentDocument],
     }),
     getStudentDocumentList: builder.query({
       query: ({ studentId }) => ({
-        url: `/app/student-document/document-list/${studentId}`,
+        url: `/student/enrollment/registrations/${studentId}/documents`,
       }),
+      transformResponse: unwrapResultData,
       providesTags: [studentRegistrationType.studentDocument],
     }),
     getStudentDocumentById: builder.query({
       query: ({ studentId, documentId }) => ({
         url: `/app/student-document/document?studentId=${studentId}&documentId=${documentId}`,
+      }),
+      providesTags: [studentRegistrationType.studentDocument],
+    }),
+    downloadStudentDocument: builder.query({
+      query: ({ studentId, documentId }) => ({
+        url: `/student/enrollment/registrations/${studentId}/documents/${documentId}`,
+        responseHandler: (response) => response.blob(),
       }),
       providesTags: [studentRegistrationType.studentDocument],
     }),
@@ -210,6 +258,10 @@ export const {
   useMoveToRegistrationMutation,
   useMoveToAdmissionMutation,
   useUpdateBasicDetailsMutation,
+  useGetStudentIdentityComplianceQuery,
+  useUpdateStudentIdentityComplianceMutation,
+  useUpdateAadhaarVerificationStatusMutation,
+  useUpdateApaarConsentMutation,
   useUpdateFamilyDetailsMutation,
   useUpdateParentBankDetailsMutation,
   useUpdatePreviousSchoolDetailsMutation,
@@ -223,6 +275,8 @@ export const {
   useGetStudentDocumentListQuery,
   useGetStudentDocumentByIdQuery,
   useLazyGetStudentDocumentByIdQuery,
+  useDownloadStudentDocumentQuery,
+  useLazyDownloadStudentDocumentQuery,
 
   useGetBasicDetailsQuery,
   useGetFamilyDetailsQuery,

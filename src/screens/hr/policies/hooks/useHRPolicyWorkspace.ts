@@ -1019,7 +1019,7 @@ export function useHRPolicyWorkspace({
   );
 
   const openAssignmentDrawer = useCallback(
-    (item?: HrPolicyAssignment) => {
+    (item?: HrPolicyAssignment, mode: 'edit' | 'view' = 'edit') => {
       setFormError('');
       setAssignmentDateError('');
       setAssignmentConflict(null);
@@ -1043,7 +1043,7 @@ export function useHRPolicyWorkspace({
               attendancePolicyId: defaultAttendancePolicy?.id || '',
             }
       );
-      setDrawer({ kind: 'assignment', mode: item ? 'edit' : 'create', item });
+      setDrawer({ kind: 'assignment', mode: item ? mode : 'create', item });
     },
     [currentYear, defaultAttendancePolicy?.id, defaultPayroll?.id]
   );

@@ -1,12 +1,12 @@
 import type { IStudentDetails } from './transport-profile-data-interface';
 
 export const studentDetails: IStudentDetails = {
-  name: 'Alice Johnson',
+  name: 'Current Student',
   grade: 'Grade 5',
   transport: {
     vehicleNumber: 'MH12-AB-1234',
     driver: {
-      name: 'John Doe',
+      name: 'Assigned Driver',
       contact: '+91 9876543210',
     },
     stop: {

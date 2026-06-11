@@ -45,6 +45,7 @@ import {
 import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
 import { buildWorkExperiencePayload } from './work-experience-payload';
+import { applyEmployeeCreateResponseToFormValues } from './employee-form-state';
 import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
 import {
   validations,
@@ -293,6 +294,10 @@ export const getEmployeeUserId = (values: any, editData?: any) =>
   values?.userId || editData?.userId || null;
 const getSavedEmployeeId = (values: any, editData?: any) =>
   values?.employeeId || editData?.id || '';
+const getResolvedEmployeeIdentity = (values: any, editData?: any) => ({
+  employeeId: getSavedEmployeeId(values, editData),
+  userId: getEmployeeUserId(values, editData),
+});
 
 export const assignReportingManagerInitialValues = (editData?: IReportingInformationResponse) => ({
   reportingManager: editData?.reportingManager?.id ?? '',
@@ -463,12 +468,14 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         }
 
         const resp = await addEmployee({ body: formData }).unwrap();
-        formik.setFieldValue('employeeId', resp.id);
-        return resp.id;
+        const nextValues = applyEmployeeCreateResponseToFormValues(formik.values, resp);
+        formik.setFieldValue('employeeId', nextValues.employeeId);
+        formik.setFieldValue('userId', nextValues.userId);
+        return getResolvedEmployeeIdentity(nextValues, editData);
       }
-      return values.employeeId;
+      return getResolvedEmployeeIdentity(values, editData);
     },
-    [addEmployee]
+    [addEmployee, editData]
   );
 
   const handleFamilyInformation = useCallback(
@@ -772,6 +779,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     ) => {
       let saveSucceeded = false;
       let resolvedEmployeeId = values.employeeId;
+      let resolvedUserId = getEmployeeUserId(values, editData);
 
       try {
         setIsLoading(true);
@@ -788,8 +796,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
               shikshaMitraToast.success({ message: 'Employee details updated successfully' });
             }
           } else {
-            const newId = await handleBasicInformation(values, formik);
-            resolvedEmployeeId = newId;
+            const identity = await handleBasicInformation(values, formik);
+            resolvedEmployeeId = identity.employeeId;
+            resolvedUserId = identity.userId;
             if (isSaveButton) {
               shikshaMitraToast.success({ message: 'Employee added successfully' });
             }
@@ -855,7 +864,13 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           }
           // Sync formik's initialValues with the saved state so dirty becomes false,
           // and clear the initialized flag so fresh API data re-populates on next visit.
-          formik.resetForm({ values: { ...formik.values, employeeId: resolvedEmployeeId } });
+          formik.resetForm({
+            values: {
+              ...formik.values,
+              employeeId: resolvedEmployeeId,
+              userId: resolvedUserId || formik.values.userId,
+            },
+          });
           // Do not reset the initialized flag on the last step; the form is about to close
           // the form and clearing it would cause the useEffect to re-fire with cached
           // API data, producing a double-render / double-save appearance.

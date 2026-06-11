@@ -26,7 +26,9 @@ export const generalFieldsInitialValues = (editData?: IGeneralInformationRespons
   dob: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
   age: editData?.dateOfBirth ? calculateAge(dayjs(editData.dateOfBirth).format()) : '',
   gender: editData?.gender as GenderType,
-  adharNo: editData?.adharNo || '',
+  adharNo: editData?.adharNo?.includes('X') ? '' : editData?.adharNo || '',
+  aadhaarMasked: editData?.aadhaarMasked || '',
+  aadhaarVerificationStatus: editData?.aadhaarVerificationStatus ?? '',
   religion: editData?.religion ?? ReligionType.Hinduism,
   familyCast: editData ? editData?.familyCast : '',
   castCategory: editData ? editData?.castCategory : null,
@@ -61,8 +63,14 @@ export const generalFieldsInitialValues = (editData?: IGeneralInformationRespons
   pinCode: editData?.pincode || '',
   inquiryPreference: editData?.inquiryPreferenceId || null,
   apparId: editData?.apparId || '',
+  apaarConsentStatus: editData?.apaarConsentStatus ?? '',
+  apaarVerificationStatus: editData?.apaarVerificationStatus ?? '',
   panNo: editData?.panNo || '',
   pennNo: editData?.pennNo || '',
+  udiseStudentCode: editData?.udiseStudentCode || '',
+  udiseSyncStatus: editData?.udiseSyncStatus ?? '',
+  rteStatus: editData?.rteStatus ?? null,
+  scholarshipStatus: editData?.scholarshipStatus ?? '',
 });
 
 export const documentFieldsInitialValues = () => ({

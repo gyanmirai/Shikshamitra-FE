@@ -1,8 +1,6 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
-import enrollmentActivities from 'src/json/student/enrollementDashboard/enrollmentActivities.json'; // Or replace with <ArrowForwardIos />
-import EnrollmentActivityCard from './enrollmentActivityCard';
 
 const EnrollmentActivities = () => (
   <Card sx={{ p: 3, borderRadius: 3 }}>
@@ -17,9 +15,9 @@ const EnrollmentActivities = () => (
     </Typography>
 
     <Stack spacing={1}>
-      {enrollmentActivities.map((activity, index) => (
-        <EnrollmentActivityCard key={index} {...activity} />
-      ))}
+      <Typography variant="body2" color="text.secondary">
+        No recent enrollment activities found.
+      </Typography>
     </Stack>
   </Card>
 );

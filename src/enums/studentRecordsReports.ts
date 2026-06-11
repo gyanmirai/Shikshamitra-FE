@@ -22,6 +22,10 @@ export enum StudentReportTitle {
   ReligionWiseReport,
   // FeesCategorywiseSummary,
   GenderwiseSummary,
+  GenericUdiseStudentExport,
+  GujaratGsebStudentComplianceReport,
+  AadhaarApaarExceptionReport,
+  RteScholarshipCasteCertificateTrackingReport,
 }
 export const StudentReportTitleOptions = [
   { name: StudentReportTitle.AddressLabelReport, label: 'Address Label Report' },
@@ -62,4 +66,17 @@ export const StudentReportTitleOptions = [
   { name: StudentReportTitle.ReligionWiseReport, label: 'Religion Wise Report' },
   // { name: StudentReportTitle.FeesCategorywiseSummary, label: 'Fees Categorywise Summary' },
   { name: StudentReportTitle.GenderwiseSummary, label: 'Genderwise Summary' },
+  { name: StudentReportTitle.GenericUdiseStudentExport, label: 'Generic UDISE+ Student Export' },
+  {
+    name: StudentReportTitle.GujaratGsebStudentComplianceReport,
+    label: 'Gujarat/GSEB Student Compliance Report',
+  },
+  {
+    name: StudentReportTitle.AadhaarApaarExceptionReport,
+    label: 'Aadhaar/APAAR Exception Report',
+  },
+  {
+    name: StudentReportTitle.RteScholarshipCasteCertificateTrackingReport,
+    label: 'RTE/Scholarship/Caste Certificate Tracking Report',
+  },
 ];

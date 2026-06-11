@@ -68,6 +68,11 @@ const EnrollmentReportScreen = () => {
               id: 'Verification',
               icon: 'mdi:check-decagram-outline',
             },
+            {
+              name: 'Compliance',
+              id: 'Compliance',
+              icon: 'mdi:file-check-outline',
+            },
           ]}
           subCategories={[
             // Student List
@@ -180,6 +185,39 @@ const EnrollmentReportScreen = () => {
               render: () => <ContactInformationReport />,
               description: 'View student contact information',
               categoryId: 'Verification',
+            },
+            {
+              name: 'Generic UDISE+ Student Export',
+              id: 'generic-udise-student-export',
+              icon: '',
+              render: () => <AadharVerificationReport />,
+              description:
+                'Export UDISE+ baseline columns with masked identity compliance statuses',
+              categoryId: 'Compliance',
+            },
+            {
+              name: 'Gujarat/GSEB Student Compliance Report',
+              id: 'gujarat-gseb-student-compliance-report',
+              icon: '',
+              render: () => <AadharVerificationReport />,
+              description: 'Review Gujarat state-board compliance fields for reconciliation',
+              categoryId: 'Compliance',
+            },
+            {
+              name: 'Aadhaar/APAAR Exception Report',
+              id: 'aadhaar-apaar-exception-report',
+              icon: '',
+              render: () => <AadharVerificationReport />,
+              description: 'Track consent refused, mismatch, pending, and missing identity cases',
+              categoryId: 'Compliance',
+            },
+            {
+              name: 'RTE/Scholarship/Caste Certificate Tracking Report',
+              id: 'rte-scholarship-caste-certificate-tracking-report',
+              icon: '',
+              render: () => <CasteCategoryWiseReport />,
+              description: 'Track RTE, scholarship, and caste certificate follow-up status',
+              categoryId: 'Compliance',
             },
           ]}
         />
