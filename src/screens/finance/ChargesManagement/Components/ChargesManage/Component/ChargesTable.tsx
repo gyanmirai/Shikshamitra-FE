@@ -5,18 +5,22 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import { Box, Tab, Tabs, Card, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { ChargesPaymentStatus } from 'src/enums/fee-charges-status';
 import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
+import { Box, Tab, Tabs, Card, Chip, Typography, IconButton } from '@mui/material';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 
 import type { IChargeData } from './type';
+
+/** Tab value 0 = Pending, 1 = Processed */
+const PENDING = 0;
+const PROCESSED = 1;
 
 const ChargesTable = ({
   onView,
@@ -73,7 +77,7 @@ const ChargesTable = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabs.value]);
 
-  // Fetch charge data using custom query hook
+  // Fetch charge data — now passes standardId and divisionId to the backend
   const {
     data: chargesData,
     isLoading: chargesLoading,
@@ -87,38 +91,18 @@ const ChargesTable = ({
       standardId: filterPayload?.standardId,
       divisionId: filterPayload?.divisionId,
       status: tabs.value,
-      _refetchTrigger: refetchTrigger, // Trigger refetch when this changes
+      _refetchTrigger: refetchTrigger,
     },
     options: {
       skip: !filterSelectedBoard || !filterSelectedMedium || !isReady,
     },
   });
 
-  // Reset board + medium whenever the academic year changes
-  // useEffect(() => {
-  //   if (!currentYear?.boards?.length) return;
-  //   const newBoards = currentYear.boards;
-  //   setBoards(newBoards);
-  //   const firstBoard = newBoards[0];
-  //   setSelectedBoard(firstBoard?.id ?? '');
-  //   setSelectedMedium(firstBoard?.educationMediums?.[0]?.id ?? '');
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [currentYear?.id]);
-
-  // Sync mediums list when the selected board changes
-  // useEffect(() => {
-  //   if (!currentYear?.boards) return;
-  //   setBoards(currentYear.boards);
-  //   const board = currentYear.boards.find((b: any) => b.id === selectedBoard);
-  //   setMediums((board as unknown as Board)?.educationMediums ?? []);
-  // }, [currentYear?.boards, selectedBoard]);
-
-  // Tab Counts
+  // Tab counts from the API (scope-aware — already filtered by board/medium/class/division)
   const chargeCounts = useMemo(
     () => ({
-      pending: chargesData?.pendingCount || 0,
-      approved: chargesData?.approvedCount || 0,
-      rejected: chargesData?.rejectedCount || 0,
+      pending: chargesData?.pendingCount ?? 0,
+      processed: chargesData?.processedCount ?? 0,
     }),
     [chargesData]
   );
@@ -127,41 +111,33 @@ const ChargesTable = ({
     () => [
       {
         label: 'Pending',
-        value: ChargesPaymentStatus.Pending,
+        value: PENDING,
         count: chargeCounts.pending,
-        color: 'warning',
+        color: 'warning' as LabelColor,
       },
       {
-        label: 'Approved',
-        value: ChargesPaymentStatus.Approved,
-        count: chargeCounts.approved,
-        color: 'success',
-      },
-      {
-        label: 'Rejected',
-        value: ChargesPaymentStatus.Rejected,
-        count: chargeCounts.rejected,
-        color: 'error',
+        label: 'Processed',
+        value: PROCESSED,
+        count: chargeCounts.processed,
+        color: 'success' as LabelColor,
       },
     ],
     [chargeCounts]
   );
 
-  // Filter Table Data by Selected Tab
+  // Table data — backend already filters by status; no client-side status filter needed
   const tableData = useMemo(
     () =>
-      chargesData?.items
-        ?.filter((i: IChargeData) => i.status === tabs.value)
-        ?.map((item: IChargeData) => ({
-          ...item,
-          amount:
-            item.amount !== undefined && item.amount !== null
-              ? parseFloat(String(item.amount).replace(/,/g, ''))
-              : 0,
-          description: item.purposeDescription || '-',
-          dueDate: item.dueDate ? dayjs(item.dueDate).format('DD-MM-YYYY') : '-',
-        })),
-    [chargesData?.items, tabs.value]
+      chargesData?.items?.map((item: IChargeData) => ({
+        ...item,
+        amount:
+          item.amount !== undefined && item.amount !== null
+            ? parseFloat(String(item.amount).replace(/,/g, ''))
+            : 0,
+        description: item.purposeDescription || '-',
+        dueDate: item.dueDate ? dayjs(item.dueDate).format('DD-MM-YYYY') : '-',
+      })),
+    [chargesData?.items]
   );
 
   return (
@@ -208,7 +184,7 @@ const ChargesTable = ({
                 label={
                   <Box display="flex" justifyContent="center" gap={1} alignItems="center">
                     {tab.label}
-                    <Label color={tab.color as LabelColor}>{tab.count}</Label>
+                    <Label color={tab.color}>{tab.count}</Label>
                   </Box>
                 }
               />
@@ -256,16 +232,23 @@ const ChargesTable = ({
             id: 'studentCount',
             label: 'Students',
             align: 'left',
-            width: 100,
-            minWidth: 90,
-            maxWidth: 120,
-            filterType: 'number',
-            isFilter: true,
-            render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value ?? 0}
-              </Typography>
-            ),
+            width: 140,
+            minWidth: 120,
+            maxWidth: 180,
+            render: (_value, row: any) => {
+              const total: number = row.studentCount ?? 0;
+              const processed: number = row.processedCount ?? 0;
+              const isPending = row.displayStatus === PENDING;
+              return (
+                <Chip
+                  label={`${processed}/${total} processed`}
+                  size="small"
+                  color={isPending ? 'warning' : 'success'}
+                  variant="outlined"
+                  sx={{ fontSize: '11px', height: 22 }}
+                />
+              );
+            },
           },
           {
             id: 'categoryName',
@@ -318,11 +301,6 @@ const ChargesTable = ({
             width: 120,
             minWidth: 100,
             maxWidth: 150,
-            // render: (value) => (
-            //   <Typography fontSize="13px">
-            //     {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
-            //   </Typography>
-            // ),
           },
           {
             id: 'actions',
@@ -333,8 +311,8 @@ const ChargesTable = ({
             width: 150,
             minWidth: 120,
             sticky: true,
-            render(value, row) {
-              const isPending = row.status === 0;
+            render(_value, row: any) {
+              const isPending = row.displayStatus === PENDING;
               return (
                 <Box display="flex" gap={1} alignItems="center">
                   <ThreeDotsActions
@@ -349,48 +327,28 @@ const ChargesTable = ({
                   />
                   {isPending && (
                     <>
-                      <Typography
-                        component="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onApprove(row as IChargeData);
-                        }}
+                      <IconButton
+                        size="small"
+                        onClick={() => onApprove(row as IChargeData)}
                         sx={{
-                          p: '4px 8px',
-                          borderRadius: '4px',
-                          backgroundColor: 'success.lighter',
                           color: 'success.main',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          '&:hover': { backgroundColor: 'success.light' },
-                          minWidth: '50px',
+                          '&:hover': { backgroundColor: 'success.lighter' },
                         }}
+                        title="Approve"
                       >
-                        Approve
-                      </Typography>
-                      <Typography
-                        component="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onReject(row as IChargeData);
-                        }}
+                        <Iconify icon="mdi:approve" width={20} height={20} />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => onReject(row as IChargeData)}
                         sx={{
-                          p: '4px 8px',
-                          borderRadius: '4px',
-                          backgroundColor: 'error.lighter',
                           color: 'error.main',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          '&:hover': { backgroundColor: 'error.light' },
-                          minWidth: '50px',
+                          '&:hover': { backgroundColor: 'error.lighter' },
                         }}
+                        title="Reject"
                       >
-                        Reject
-                      </Typography>
+                        <Iconify icon="entypo:cross" width={20} height={20} />
+                      </IconButton>
                     </>
                   )}
                 </Box>

@@ -80,6 +80,7 @@ export interface IConcessionMonthItem {
   concessionAmount: number;
   status: FeeCollectionStatusType;
   isSelectable?: boolean;
+  year: number;
 }
 
 export interface IConcessionFeeHeadWiseGroup {

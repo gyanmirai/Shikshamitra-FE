@@ -104,8 +104,43 @@ export const StudentApi = api.injectEndpoints({
       }),
       providesTags: [studentType.student],
     }),
+    getStudentsByScope: builder.query<
+      StudentLookupItem[],
+      {
+        academicYearId: string;
+        boardId: string;
+        educationMediumId: string;
+        classIds: string[];
+        divisionIds?: string[];
+      }
+    >({
+      query: ({ academicYearId, boardId, educationMediumId, classIds, divisionIds }) => {
+        const params = new URLSearchParams();
+        params.append('academicYearId', academicYearId);
+        params.append('boardId', boardId);
+        params.append('educationMediumId', educationMediumId);
+        classIds.forEach((id) => params.append('classIds', id));
+        divisionIds?.forEach((id) => params.append('divisionIds', id));
+        return {
+          url: `/students/records/list/by-scope?${params.toString()}`,
+          method: 'GET',
+        };
+      },
+      providesTags: [studentType.student],
+    }),
   }),
 });
+
+export type StudentLookupItem = {
+  studentId: string;
+  studentName: string;
+  grNo?: number;
+  rollNo?: number;
+  standardId?: string;
+  standardName?: string;
+  divisionId?: string;
+  divisionName?: string;
+};
 
 export const {
   useGetFilterStudentsQuery,
@@ -118,4 +153,6 @@ export const {
   useUploadStudentPhotoMutation,
   useGetStudentDashboardSummaryQuery,
   useGetStudentAttendanceDashboardSummaryQuery,
+  useGetStudentsByScopeQuery,
+  useLazyGetStudentsByScopeQuery,
 } = StudentApi;

@@ -8,7 +8,7 @@ import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetConcessionTypeByIdQuery } from 'src/redux/finance/concessionType';
-import { useUploadDocumentsMutation } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
+import { useUploadConcessionDocumentsMutation } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 import {
   Box,
   Stack,
@@ -61,7 +61,7 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
 
   const [saveDocuments, { isLoading: isSaving }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUploadDocumentsMutation,
+    currentQueryAndMutation: useUploadConcessionDocumentsMutation,
   });
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -176,7 +176,11 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
     <CustomDialog
       open={open}
       handleClose={onClose}
-      title={`Documents - ${concessionName}`}
+      title={
+        <Box display="flex" alignItems="center" gap={1}>
+          {concessionName} - Documents
+        </Box>
+      }
       maxWidth="sm"
     >
       <input
