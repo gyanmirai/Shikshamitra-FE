@@ -94,6 +94,12 @@ export interface AttendanceImportRowsSaveResponse {
   upsertedCount: number;
 }
 
+export const buildAttendanceImportFileDownloadUrl = (importId: string) =>
+  `/hr/attendance/automated-runs/${importId}/download-file`;
+
+export const buildAttendanceImportErrorReportDownloadUrl = (importId: string) =>
+  `/hr/attendance/automated-runs/${importId}/download-error-report`;
+
 export const buildSaveAttendanceImportRowsQuery = ({
   importId,
   entries,
@@ -178,6 +184,22 @@ export const attendanceImportApi = api.injectEndpoints({
         employeeType.runPayroll,
       ],
     }),
+
+    downloadAttendanceImportFile: builder.mutation<Blob, { importId: string }>({
+      query: ({ importId }) => ({
+        url: buildAttendanceImportFileDownloadUrl(importId),
+        method: 'GET',
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+
+    downloadAttendanceImportErrorReport: builder.mutation<Blob, { importId: string }>({
+      query: ({ importId }) => ({
+        url: buildAttendanceImportErrorReportDownloadUrl(importId),
+        method: 'GET',
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
   }),
 });
 
@@ -188,4 +210,6 @@ export const {
   useLockAttendanceImportBatchMutation,
   useUnlockAttendanceImportBatchMutation,
   useSaveAttendanceImportRowsMutation,
+  useDownloadAttendanceImportFileMutation,
+  useDownloadAttendanceImportErrorReportMutation,
 } = attendanceImportApi;
