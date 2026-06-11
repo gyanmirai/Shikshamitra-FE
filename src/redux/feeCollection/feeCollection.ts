@@ -6,6 +6,13 @@ import { financeModuleApi } from '../finance/financeModuleApi';
 
 export const FEE_COLLECTION_V2_BASE_URL = '/fee-collections';
 export const FEE_RECEIPT_BASE_URL = '/v1/fee-receipts';
+export const CHARGE_RECEIPT_BASE_URL = '/v1/charge-receipts';
+
+// ─── Generic Receipt PDF download helper ──────────────────────────────────
+export const downloadReceiptPdfConfig = {
+  fee: { baseUrl: FEE_RECEIPT_BASE_URL, label: 'Fee Receipt' },
+  charge: { baseUrl: CHARGE_RECEIPT_BASE_URL, label: 'Charge Receipt' },
+} as const;
 
 type StudentIdArg = string | { studentId: string };
 
@@ -234,7 +241,10 @@ export interface CollectFeeOutput {
   receiptNumber: string;
   feeReceiptNumber?: string;
   feeReceiptId?: string;
+  chargeReceiptNumber?: string;
+  chargeReceiptId?: string;
   studentId: string;
+  studentName: string;
   academicYearId: string;
   totalAmount: number;
   status: number;
@@ -248,6 +258,50 @@ export interface CollectFeeOutput {
   paidDueFees: { dueFeeId: string; feeHeadId: string; amountPaid: number }[];
   correlationId?: string;
   auditEventIds?: string[];
+  auditSummary?: FinanceAuditSummary;
+}
+
+// ─── Receipt Detail Types ────────────────────────────────────────────────────
+
+export interface FeeReceiptDetail {
+  id: string;
+  receiptNumber: string;
+  studentId: string;
+  studentName: string;
+  academicYearId: string;
+  totalAmount: number;
+  collectedAt: string;
+  collectedBy: string;
+  paidFeeHeads: Array<{
+    feeHeadId: string;
+    feeHeadName: string;
+    amountPaid: number;
+  }>;
+  allocationDetails?: Array<{
+    feeHeadId: string;
+    feeHeadName: string;
+    installmentLabel: string;
+    pendingBefore: number;
+    amountPaid: number;
+    pendingAfter: number;
+  }>;
+  auditSummary?: FinanceAuditSummary;
+}
+
+export interface ChargeReceiptDetail {
+  id: string;
+  receiptNumber: string;
+  studentId: string;
+  studentName: string;
+  academicYearId: string;
+  totalAmount: number;
+  collectedAt: string;
+  collectedBy: string;
+  paidCharges: Array<{
+    chargeId: string;
+    chargeName: string;
+    amountPaid: number;
+  }>;
   auditSummary?: FinanceAuditSummary;
 }
 
@@ -321,11 +375,12 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
     }),
 
     /**
-     * GET /v1/fee-receipts/{id}/pdf
+     * Generic receipt PDF download for both fee and charge receipts
+     * GET /v1/fee-receipts/{id}/pdf or /v1/charge-receipts/{id}/pdf
      * Returns receipt PDF as Blob for authenticated preview/download.
      */
-    downloadFeeReceiptPdf: builder.mutation<Blob, string>({
-      query: (receiptId) => ({
+    downloadReceiptPdf: builder.mutation<Blob, { receiptId: string }>({
+      query: ({ receiptId }) => ({
         url: `${FEE_RECEIPT_BASE_URL}/${receiptId}/pdf`,
         method: 'GET',
         responseHandler: (response) => response.blob(),
@@ -340,5 +395,5 @@ export const {
   useGetCollectFormQuery,
   useGetStudentFeeDetailsQuery,
   useCollectFeeMutation,
-  useDownloadFeeReceiptPdfMutation,
+  useDownloadReceiptPdfMutation,
 } = feeCollectionApi;

@@ -60,6 +60,15 @@ export const ReconciliationApi = api.injectEndpoints({
       }),
       invalidatesTags: [reconciliationType.reconciliation],
     }),
+
+    /** Download receipt PDF for reconciliation item */
+    downloadReconciliationReceiptPdf: builder.mutation<Blob, { receiptId: string }>({
+      query: ({ receiptId }) => ({
+        url: `/v1/finance/receipts/${receiptId}/pdf`,
+        method: 'GET',
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
   }),
 });
 
@@ -68,4 +77,5 @@ export const {
   useGetReconciliationTabCountsQuery,
   useApproveReconciliationMutation,
   useRejectReconciliationMutation,
+  useDownloadReconciliationReceiptPdfMutation,
 } = ReconciliationApi;

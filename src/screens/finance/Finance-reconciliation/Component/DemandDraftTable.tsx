@@ -30,7 +30,10 @@ import {
   useGetReconciliationListQuery,
   useRejectReconciliationMutation,
   useApproveReconciliationMutation,
+  useDownloadReconciliationReceiptPdfMutation,
 } from 'src/redux/finance/reconciliation';
+
+import ReconciliationReceiptDialog from './ReconciliationReceiptDialog';
 
 const DemandDraftTable = ({
   queryParams,
@@ -39,6 +42,10 @@ const DemandDraftTable = ({
 }) => {
   const [isClearCheck, setIsClearCheck] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+  const [receiptBlobUrl, setReceiptBlobUrl] = useState<string | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
 
   const isDialog = useBoolean(false);
 
@@ -57,6 +64,17 @@ const DemandDraftTable = ({
     currentQueryAndMutation: useGetReconciliationListQuery,
     params: queryParams,
   });
+
+  const [downloadReceiptPdf] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDownloadReconciliationReceiptPdfMutation,
+    popupConfig: {
+      error: true,
+      errorMessage: 'Unable to load receipt',
+      success: false,
+    },
+  });
+
   const data = useMemo(
     () =>
       (listResponse?.items ?? []).map((item: any) => ({
@@ -231,10 +249,23 @@ const DemandDraftTable = ({
         minWidth: 80,
         maxWidth: 150,
         render(value, row: any) {
-          const handleDownloadReceipt = () => {
-            shikshaMitraToast.info({
-              message: 'Downloading receipt...',
-            });
+          const handleDownloadReceipt = async () => {
+            setSelectedReceipt(row);
+            setReceiptLoading(true);
+            setReceiptBlobUrl(null);
+            setReceiptDialogOpen(true);
+
+            try {
+              const blob = await downloadReceiptPdf({
+                receiptId: row.id,
+              }).unwrap();
+              const objectUrl = URL.createObjectURL(blob);
+              setReceiptBlobUrl(objectUrl);
+            } catch {
+              setReceiptBlobUrl(null);
+            } finally {
+              setReceiptLoading(false);
+            }
           };
 
           return (
@@ -299,8 +330,41 @@ const DemandDraftTable = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canApproveReject]
+    [canApproveReject, downloadReceiptPdf]
   );
+
+  // Cleanup blob URLs on unmount
+  useEffect(
+    () => () => {
+      if (receiptBlobUrl) URL.revokeObjectURL(receiptBlobUrl);
+    },
+    [receiptBlobUrl]
+  );
+
+  const handleDownloadReceiptFile = () => {
+    if (!selectedReceipt || !receiptBlobUrl) return;
+    const anchor = document.createElement('a');
+    anchor.href = receiptBlobUrl;
+    anchor.download = `receipt-${selectedReceipt.receiptNumber || selectedReceipt.id}.pdf`;
+    anchor.target = '_blank';
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+  };
+
+  const handleOpenReceiptInNewTab = () => {
+    if (!receiptBlobUrl) return;
+    window.open(receiptBlobUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleReceiptDialogClose = () => {
+    setReceiptDialogOpen(false);
+    if (receiptBlobUrl) {
+      URL.revokeObjectURL(receiptBlobUrl);
+      setReceiptBlobUrl(null);
+    }
+    setSelectedReceipt(null);
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -336,6 +400,16 @@ const DemandDraftTable = ({
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
+
+      <ReconciliationReceiptDialog
+        open={receiptDialogOpen}
+        onClose={handleReceiptDialogClose}
+        receiptData={selectedReceipt}
+        receiptBlobUrl={receiptBlobUrl}
+        isLoading={receiptLoading}
+        onDownload={handleDownloadReceiptFile}
+        onOpenInNewTab={handleOpenReceiptInNewTab}
+      />
     </Box>
   );
 };
