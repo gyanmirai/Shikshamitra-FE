@@ -136,6 +136,10 @@ function formatAuditValue(
       try {
         return formatAuditValue(JSON.parse(trimmed), maxLength, depth, parentKey);
       } catch {
+        const parsed = tryParseTruncatedJson(trimmed);
+        if (parsed) {
+          return formatAuditValue(parsed, maxLength, depth, parentKey);
+        }
         return truncate(redactEmbeddedReferences(trimmed), maxLength);
       }
     }
@@ -181,6 +185,72 @@ function formatAuditValue(
   return truncate(String(value), maxLength);
 }
 
+export function tryParseTruncatedJson(str: string): unknown {
+  const trimmed = str.trim();
+  if (!trimmed.startsWith('[') && !trimmed.startsWith('{')) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(trimmed);
+  } catch (e) {
+    if (trimmed.startsWith('[')) {
+      const objects: unknown[] = [];
+      let depth = 0;
+      let startIdx = -1;
+      let insideString = false;
+      let escapeNext = false;
+
+      for (let i = 0; i < trimmed.length; i += 1) {
+        const char = trimmed[i];
+
+        if (escapeNext) {
+          escapeNext = false;
+          // eslint-disable-next-line no-continue
+          continue;
+        }
+
+        if (char === '\\') {
+          escapeNext = true;
+          // eslint-disable-next-line no-continue
+          continue;
+        }
+
+        if (char === '"') {
+          insideString = !insideString;
+          // eslint-disable-next-line no-continue
+          continue;
+        }
+
+        if (!insideString) {
+          if (char === '{') {
+            if (depth === 0) {
+              startIdx = i;
+            }
+            depth += 1;
+          } else if (char === '}') {
+            depth -= 1;
+            if (depth === 0 && startIdx !== -1) {
+              const objStr = trimmed.slice(startIdx, i + 1);
+              try {
+                objects.push(JSON.parse(objStr));
+              } catch {
+                // Ignore invalid JSON chunks
+              }
+              startIdx = -1;
+            }
+          }
+        }
+      }
+
+      if (objects.length > 0) {
+        return objects;
+      }
+    }
+  }
+  return null;
+}
+
 function buildAuditRenderValue(
   value: unknown,
   depth: number,
@@ -205,6 +275,10 @@ function buildAuditRenderValue(
       try {
         return buildAuditRenderValue(JSON.parse(trimmed), depth, parentKey);
       } catch {
+        const parsed = tryParseTruncatedJson(trimmed);
+        if (parsed) {
+          return buildAuditRenderValue(parsed, depth, parentKey);
+        }
         return { kind: 'scalar', text: redactEmbeddedReferences(trimmed) };
       }
     }

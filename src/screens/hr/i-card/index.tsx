@@ -13,6 +13,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
@@ -35,9 +36,7 @@ import {
   Paper,
   Stack,
   Button,
-  MenuList,
   Checkbox,
-  MenuItem,
   TextField,
   Typography,
   ToggleButton,
@@ -530,23 +529,12 @@ const EmployeeIcardScreen = () => {
                       showViewIcon
                       showEditIcon={canEdit}
                       showDeleteIcon={canDelete}
+                      showThreeDots={false}
                       handleEditClick={() => handleEdit(row as unknown as EmployeeICardTemplate)}
                       handleViewClick={() => handlePreview(row as unknown as EmployeeICardTemplate)}
                       handleDeleteClick={() =>
                         handleDelete(row as unknown as EmployeeICardTemplate)
                       }
-                      actions={() => (
-                        <MenuList>
-                          {canEdit && (
-                            <MenuItem
-                              onClick={() => handleEdit(row as unknown as EmployeeICardTemplate)}
-                            >
-                              <Iconify icon="solar:pen-bold" />
-                              Edit Template
-                            </MenuItem>
-                          )}
-                        </MenuList>
-                      )}
                     />
                   );
                 },
@@ -558,10 +546,27 @@ const EmployeeIcardScreen = () => {
         </>
       )}
       <CustomDialog
-        maxWidth="md"
-        title="Employee I-Card Preview"
+        maxWidth="sm"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Employee I-Card Preview</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Preview how the employee ID card will look when printed using a sample employee profile."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={previewDialog.value}
         handleClose={previewDialog.onFalse}
+        paperProps={{
+          sx: {
+            width: selectedTemplate?.orientation === 'Vertical' ? '340px' : '480px',
+          },
+        }}
       >
         <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
           <CardPreview

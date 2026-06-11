@@ -12,6 +12,10 @@ export enum StudentEnrollmentReportTitle {
   GenderWiseStudentDistributionReport,
   MonthlyAdmissionTrendReport,
   AcademicYearComparisonReport,
+  GenericUdiseStudentExport,
+  GujaratGsebStudentComplianceReport,
+  AadhaarApaarExceptionReport,
+  RteScholarshipCasteCertificateTrackingReport,
 }
 
 export const StudentEnrollmentReportTitleOptions = [
@@ -54,5 +58,21 @@ export const StudentEnrollmentReportTitleOptions = [
   {
     name: StudentEnrollmentReportTitle.AcademicYearComparisonReport,
     label: 'Academic Year Comparison eport',
+  },
+  {
+    name: StudentEnrollmentReportTitle.GenericUdiseStudentExport,
+    label: 'Generic UDISE+ Student Export',
+  },
+  {
+    name: StudentEnrollmentReportTitle.GujaratGsebStudentComplianceReport,
+    label: 'Gujarat/GSEB Student Compliance Report',
+  },
+  {
+    name: StudentEnrollmentReportTitle.AadhaarApaarExceptionReport,
+    label: 'Aadhaar/APAAR Exception Report',
+  },
+  {
+    name: StudentEnrollmentReportTitle.RteScholarshipCasteCertificateTrackingReport,
+    label: 'RTE/Scholarship/Caste Certificate Tracking Report',
   },
 ];

@@ -161,7 +161,13 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
 
 // --- AssignmentTargetPicker ----------------------------------------------------
 
-function AssignmentTargetPicker({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
+function AssignmentTargetPicker({
+  ctx,
+  disabled = false,
+}: {
+  ctx: HRPolicyWorkspaceContext;
+  disabled?: boolean;
+}) {
   const { assignmentForm, setAssignmentForm, employeeOptions, groupOptions } = ctx;
 
   const setTarget = (key: string, displayName?: string) => {
@@ -180,6 +186,7 @@ function AssignmentTargetPicker({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           getOptionLabel={optionLabel}
           value={employeeOptions.find((item) => item.id === assignmentForm.targetKey) || null}
           onChange={(_, value) => setTarget(value?.id || '', optionLabel(value))}
+          disabled={disabled}
           renderInput={(params) => <TextField {...params} size="small" />}
         />
       </DrawerField>
@@ -193,6 +200,7 @@ function AssignmentTargetPicker({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         getOptionLabel={optionLabel}
         value={groupOptions.find((item) => item.id === assignmentForm.targetKey) || null}
         onChange={(_, value) => setTarget(value?.id || '', optionLabel(value))}
+        disabled={disabled}
         renderOption={(props, option) => (
           <li {...props} key={option.id}>
             <Stack spacing={0} sx={{ minWidth: 0 }}>
@@ -237,6 +245,11 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
   } = ctx;
 
   if (!drawer || drawer.kind !== 'assignment') return null;
+  const isViewMode = drawer.mode === 'view';
+  const title =
+    drawer.mode === 'view'
+      ? 'View Assignment'
+      : `${drawer.mode === 'edit' ? 'Edit' : 'New'} Assignment`;
 
   const handleConflictPreview = () => {
     if (!assignmentConflict) return;
@@ -267,7 +280,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
       }}
     >
       <DrawerHeader
-        title={`${drawer.mode === 'edit' ? 'Edit' : 'New'} Assignment`}
+        title={title}
         helpText="Assign payroll and attendance policies to an employee or group. Groups cover role, department, employment type, and mixed dynamic targeting."
         onClose={closeDrawer}
         closeDisabled={isPolicyOperationActive}
@@ -284,6 +297,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
             <DrawerSelectField
               label="Target Type"
               value={assignmentForm.targetType}
+              disabled={isViewMode}
               onChange={(event) =>
                 setAssignmentForm((current) => ({
                   ...current,
@@ -296,10 +310,11 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               <MenuItem value="employee">Employee</MenuItem>
               <MenuItem value="group">Group</MenuItem>
             </DrawerSelectField>
-            <AssignmentTargetPicker ctx={ctx} />
+            <AssignmentTargetPicker ctx={ctx} disabled={isViewMode} />
             <DrawerSelectField
               label="Payroll Policy *"
               value={assignmentForm.payrollPolicyId}
+              disabled={isViewMode}
               onChange={(event) =>
                 setAssignmentForm((current) => ({
                   ...current,
@@ -316,6 +331,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
             <DrawerSelectField
               label="Attendance Policy *"
               value={assignmentForm.attendancePolicyId}
+              disabled={isViewMode}
               onChange={(event) =>
                 setAssignmentForm((current) => ({
                   ...current,
@@ -346,6 +362,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                       size: 'small',
                       fullWidth: true,
                       error: Boolean(assignmentDateError),
+                      disabled: isViewMode,
                     },
                   }}
                 />
@@ -370,6 +387,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                       fullWidth: true,
                       placeholder: 'No end date',
                       error: Boolean(assignmentDateError),
+                      disabled: isViewMode,
                     },
                   }}
                 />
@@ -406,6 +424,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                 type="number"
                 size="small"
                 value={assignmentForm.priority}
+                disabled={isViewMode}
                 onChange={(event) =>
                   setAssignmentForm((current) => ({
                     ...current,
@@ -421,6 +440,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                 multiline
                 minRows={2}
                 value={assignmentForm.assignmentReason}
+                disabled={isViewMode}
                 onChange={(event) =>
                   setAssignmentForm((current) => ({
                     ...current,
@@ -439,6 +459,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                   control={
                     <Switch
                       checked={assignmentForm.isActive}
+                      disabled={isViewMode}
                       onChange={(event) =>
                         setAssignmentForm((current) => ({
                           ...current,
@@ -478,7 +499,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
           size="small"
           disabled={isPolicyOperationActive}
         >
-          Cancel
+          {isViewMode ? 'Close' : 'Cancel'}
         </Button>
         <Button
           variant="outlined"
@@ -492,20 +513,22 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
         >
           Preview impact
         </Button>
-        <Button
-          variant="contained"
-          disabled={!canAssignPolicy || isPolicyOperationActive}
-          loading={
-            createAssignmentState.isLoading ||
-            updateAssignmentState.isLoading ||
-            activePolicyOperation?.key === 'save-assignment'
-          }
-          size="small"
-          startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
-          onClick={saveAssignment}
-        >
-          {activePolicyOperation?.key === 'save-assignment' ? 'Saving...' : 'Submit'}
-        </Button>
+        {!isViewMode ? (
+          <Button
+            variant="contained"
+            disabled={!canAssignPolicy || isPolicyOperationActive}
+            loading={
+              createAssignmentState.isLoading ||
+              updateAssignmentState.isLoading ||
+              activePolicyOperation?.key === 'save-assignment'
+            }
+            size="small"
+            startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
+            onClick={saveAssignment}
+          >
+            {activePolicyOperation?.key === 'save-assignment' ? 'Saving...' : 'Submit'}
+          </Button>
+        ) : null}
       </Stack>
     </Box>
   );

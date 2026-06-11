@@ -65,6 +65,8 @@ import {
   useSaveAttendanceImportRowsMutation,
   useLockAttendanceImportBatchMutation,
   useUnlockAttendanceImportBatchMutation,
+  useDownloadAttendanceImportFileMutation,
+  useDownloadAttendanceImportErrorReportMutation,
 } from 'src/redux/hr/attendanceImportApi';
 
 import {
@@ -72,10 +74,16 @@ import {
   hasDuplicateAttendanceImportFileName,
 } from './attendance-import-upload-utils';
 import {
+  downloadAttendanceImportBlob,
+  buildAttendanceImportDownloadFileName,
+  buildAttendanceImportErrorReportFileName,
+} from './attendance-import-download-utils';
+import {
   IMPORT_ROW_STATUS,
   mapImportRowStatusToUi,
   type ImportRowStatusType,
   buildAttendanceImportRowsSaveEntries,
+  promotePendingImportRowToPresentWhenTimesComplete,
 } from './attendance-import-row-save-utils';
 
 // ─── Inner-table (row-level) attendance status ─────────────────────────────────
@@ -259,8 +267,6 @@ const AttendanceImportHistoryScreen = () => {
   const viewImportDialog = useBoolean();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const downloadDialog = useBoolean();
-  const errorReportDialog = useBoolean();
   const reprocessDialog = useBoolean();
   const isDownLoadingTemplate = useBoolean();
   const isUploadingFile = useBoolean();
@@ -280,6 +286,15 @@ const AttendanceImportHistoryScreen = () => {
     type: 'mutation',
     currentQueryAndMutation: useDownloadAttendanceTemplateMutation,
   });
+  const [downloadAttendanceImportFile] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDownloadAttendanceImportFileMutation,
+  });
+  const [downloadAttendanceImportErrorReport] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDownloadAttendanceImportErrorReportMutation,
+  });
+  const [downloadingRows, setDownloadingRows] = useState<Record<string, 'file' | 'error'>>({});
   // Build payrollMonth param: "YYYY-MM" from the dayjs picker value
   const payrollMonthParam = selectedMonth
     ? (dayjs(selectedMonth).format('YYYY-MM') as string)
@@ -303,6 +318,60 @@ const AttendanceImportHistoryScreen = () => {
   // ── Counts per status for tab labels ──────────────────────────────────────
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  const handleDownloadImportFile = useCallback(
+    async (row: AttendanceImportItem) => {
+      if (downloadingRows[row.id]) return;
+
+      setDownloadingRows((current) => ({ ...current, [row.id]: 'file' }));
+      try {
+        await downloadAttendanceImportBlob({
+          row,
+          download: async (downloadRow) =>
+            downloadAttendanceImportFile({ importId: downloadRow.id }).unwrap(),
+          getFileName: buildAttendanceImportDownloadFileName,
+          onError: () =>
+            shikshaMitraToast.error({
+              message: 'Failed to download attendance import file. Please try again.',
+            }),
+        });
+      } finally {
+        setDownloadingRows((current) => {
+          const next = { ...current };
+          delete next[row.id];
+          return next;
+        });
+      }
+    },
+    [downloadAttendanceImportFile, downloadingRows]
+  );
+
+  const handleDownloadErrorReport = useCallback(
+    async (row: AttendanceImportItem) => {
+      if (downloadingRows[row.id]) return;
+
+      setDownloadingRows((current) => ({ ...current, [row.id]: 'error' }));
+      try {
+        await downloadAttendanceImportBlob({
+          row,
+          download: async (downloadRow) =>
+            downloadAttendanceImportErrorReport({ importId: downloadRow.id }).unwrap(),
+          getFileName: buildAttendanceImportErrorReportFileName,
+          onError: () =>
+            shikshaMitraToast.error({
+              message: 'Failed to download attendance error report. Please try again.',
+            }),
+        });
+      } finally {
+        setDownloadingRows((current) => {
+          const next = { ...current };
+          delete next[row.id];
+          return next;
+        });
+      }
+    },
+    [downloadAttendanceImportErrorReport, downloadingRows]
+  );
+
   // ── Popover actions ───────────────────────────────────────────────────────
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
@@ -322,9 +391,10 @@ const AttendanceImportHistoryScreen = () => {
 
           <MenuItem
             onClick={() => {
-              downloadDialog.onTrue();
               pop.onClose();
+              handleDownloadImportFile(row as AttendanceImportItem);
             }}
+            disabled={!!downloadingRows[(row as AttendanceImportItem).id]}
           >
             <Iconify icon="mdi:download-outline" sx={{ height: '16px', width: '16px' }} />
             Download File
@@ -347,9 +417,10 @@ const AttendanceImportHistoryScreen = () => {
           {(row as AttendanceImportItem).invalidRows > 0 && (
             <MenuItem
               onClick={() => {
-                errorReportDialog.onTrue();
                 pop.onClose();
+                handleDownloadErrorReport(row as AttendanceImportItem);
               }}
+              disabled={!!downloadingRows[(row as AttendanceImportItem).id]}
               sx={{ color: 'error.main' }}
             >
               <Iconify icon="mdi:file-alert-outline" sx={{ height: '16px', width: '16px' }} />
@@ -373,7 +444,7 @@ const AttendanceImportHistoryScreen = () => {
       </>
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [downloadDialog.onTrue, errorReportDialog.onTrue, reprocessDialog.onTrue]
+    [downloadingRows, handleDownloadErrorReport, handleDownloadImportFile, reprocessDialog.onTrue]
   );
 
   const handleDownloadTemplate = async () => {
@@ -1020,8 +1091,37 @@ const ImportDetailDialog = ({
     setRowsData2((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }, []);
 
+  const applyTimeEditToRows = React.useCallback(
+    (rows: any[], cell: EditingCell) =>
+      rows.map((row) => {
+        if (!cell || row.id !== cell.rowId) return row;
+
+        const formatted = cell.value?.isValid() ? cell.value.format('HH:mm') : null;
+        return promotePendingImportRowToPresentWhenTimesComplete({
+          ...row,
+          [cell.field]: formatted,
+        });
+      }),
+    []
+  );
+
+  const commitTimeEdit = React.useCallback(
+    (cell: EditingCell) => {
+      if (!cell) return;
+      setRowsData2((prev) => applyTimeEditToRows(prev, cell));
+      setEditingCell(null);
+    },
+    [applyTimeEditToRows]
+  );
+
   const handleSubmitAttendance = async () => {
-    const nonPendingRows = rowsData2.filter(
+    const rowsForSubmit = applyTimeEditToRows(rowsData2, editingCell);
+    if (editingCell) {
+      setRowsData2(rowsForSubmit);
+      setEditingCell(null);
+    }
+
+    const nonPendingRows = rowsForSubmit.filter(
       (r) => r.attendanceStatus !== IMPORT_ROW_STATUS.Pending
     );
     const submitReadyRows = nonPendingRows.filter((r) => !!r.employeeId);
@@ -1252,11 +1352,7 @@ const ImportDetailDialog = ({
                   size="small"
                   color="primary"
                   onClick={() => {
-                    const formatted = editingCell.value?.isValid()
-                      ? editingCell.value.format('HH:mm')
-                      : null;
-                    updateRow(row.id, { [field]: formatted });
-                    setEditingCell(null);
+                    commitTimeEdit(editingCell);
                   }}
                   sx={{ p: 0.4 }}
                 >
@@ -1305,7 +1401,7 @@ const ImportDetailDialog = ({
         );
       },
     }),
-    [editingCell, isPayrollLocked, updateRow]
+    [commitTimeEdit, editingCell, isPayrollLocked]
   );
 
   const editableTimeColumns = useMemo(

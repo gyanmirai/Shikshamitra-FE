@@ -6,6 +6,7 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -168,7 +169,19 @@ const EmployeeSalaryStructureScreen = () => {
             maxWidth="lg"
             open={editDialogOpen}
             handleClose={handleCloseEdit}
-            title="Edit Salary Structure"
+            title={
+              <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+                <Typography variant="h5">Edit Salary Structure</Typography>
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  sx={{ textAlign: 'justify' }}
+                  title="Define the employee's salary structure by assigning fixed or temporary earning and deduction components."
+                >
+                  <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                </CustomTooltip>
+              </Box>
+            }
             paperProps={{ sx: { maxHeight: '70vh' } }}
           >
             {editDialogOpen && (

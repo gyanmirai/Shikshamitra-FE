@@ -574,6 +574,7 @@ const HrEmployee = () => {
             onServerSearch={handleServerSearch}
             columns={columns}
             data={tableData || []}
+            defaultSearchTerm={employeeParams.search}
           />
           <CustomDialog
             data-testid="hr-employee-status-dialog"
@@ -609,8 +610,18 @@ const HrEmployee = () => {
             open={payrollDialog.value}
             handleClose={handleClosePayroll}
             title={
-              <Box>
-                <Typography variant="h5">Salary Structure</Typography>
+              <Box display="flex" flexDirection="column" gap={0.5}>
+                <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+                  <Typography variant="h5">Salary Structure</Typography>
+                  <CustomTooltip
+                    arrow
+                    placement="right"
+                    sx={{ textAlign: 'justify' }}
+                    title="Define the employee's salary structure by assigning fixed or temporary earning and deduction components."
+                  >
+                    <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                  </CustomTooltip>
+                </Box>
                 {editData?.fullName && (
                   <Typography variant="caption" color="text.secondary">
                     {editData.fullName}

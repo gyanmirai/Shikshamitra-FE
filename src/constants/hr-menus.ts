@@ -580,15 +580,6 @@ const hrModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:calendar-text-outline'),
             },
             {
-              title: 'Payroll Policies',
-              path: hrPaths.policies.payroll,
-              _action: 'hr-policies-payroll',
-              shortcutKey: 'Alt+H+Y+3',
-              shortcutKeyName: 'Alt+H+Y+3',
-              permissionName: hrPermissions.policies.payroll,
-              icon: menuIconView('mdi:cash-sync'),
-            },
-            {
               title: 'Attendance Policies',
               path: hrPaths.policies.attendance,
               _action: 'hr-policies-attendance',
@@ -596,6 +587,15 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+H+Y+4',
               permissionName: hrPermissions.policies.attendance,
               icon: menuIconView('mdi:account-clock-outline'),
+            },
+            {
+              title: 'Payroll Policies',
+              path: hrPaths.policies.payroll,
+              _action: 'hr-policies-payroll',
+              shortcutKey: 'Alt+H+Y+3',
+              shortcutKeyName: 'Alt+H+Y+3',
+              permissionName: hrPermissions.policies.payroll,
+              icon: menuIconView('mdi:cash-sync'),
             },
             {
               title: 'Policy Assignments',

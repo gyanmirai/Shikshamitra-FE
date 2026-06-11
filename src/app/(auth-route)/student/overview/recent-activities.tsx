@@ -16,9 +16,15 @@ const RecentActivities = ({ activities }: any) => (
       </Button>
     </Box>
 
-    {activities.slice(0, 4).map((activity: any, index: any) => (
-      <ActivityItem key={index} {...activity} />
-    ))}
+    {activities.length > 0 ? (
+      activities
+        .slice(0, 4)
+        .map((activity: any, index: any) => <ActivityItem key={index} {...activity} />)
+    ) : (
+      <Typography variant="body2" color="text.secondary">
+        No recent activities found.
+      </Typography>
+    )}
   </Card>
 );
 

@@ -1,14 +1,13 @@
 import type { RootState } from 'src/redux/store';
 
-import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useMemo, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import UploadButton from 'src/components/upload-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { convertBase64Format } from 'src/utils/base64Formate';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { DocumentStatusOptions } from 'src/enums/document-statusType';
@@ -16,9 +15,9 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Tooltip, Skeleton, IconButton, Typography } from '@mui/material';
 import {
   useGetStudentDocumentsQuery,
-  useGetStudentDocumentByIdQuery,
+  useDownloadStudentDocumentQuery,
   useUploadStudentDocumentsMutation,
-  useLazyGetStudentDocumentByIdQuery,
+  useLazyDownloadStudentDocumentQuery,
 } from 'src/redux/student/registration/registration-api';
 
 import { DocumentForm } from '../setting/document-type';
@@ -42,7 +41,7 @@ export const RenderDocuments = (props: any) => {
     currentQueryAndMutation: useUploadStudentDocumentsMutation,
   });
 
-  const [fetchDocument] = useLazyGetStudentDocumentByIdQuery();
+  const [downloadDocument] = useLazyDownloadStudentDocumentQuery();
 
   // Query hook to fetch student's uploaded documents using student ID
   const { data: studentsDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
@@ -128,44 +127,30 @@ export const RenderDocuments = (props: any) => {
                     const file = e.target.files[0];
                     if (!file) return;
                     setUploadingDocId(row.documentTypeId);
-                    // Convert file to base64
-                    const reader = new FileReader();
-                    reader.onloadend = async () => {
-                      const base64Content = reader.result as string;
-                      // Remove the data URL prefix (e.g., "data:image/png;base64,")
-                      const base64String = base64Content.split(',')[1];
+                    const formData = new FormData();
+                    formData.append('documentTypeId', row.documentTypeId);
+                    formData.append('file', file);
 
-                      const requestBody = {
-                        documenttypeId: row.documentTypeId,
-                        filename: file.name,
-                        contenttype: file.type,
-                        size: file.size,
-                        content: base64String,
-                      };
-
-                      try {
-                        await uploadDocument({ studentId: id, body: requestBody }).unwrap();
-                        shikshaMitraToast.success({
-                          message: `${row.documentTypeName} uploaded successfully`,
+                    try {
+                      await uploadDocument({ studentId: id, body: formData }).unwrap();
+                      shikshaMitraToast.success({
+                        message: `${row.documentTypeName} uploaded successfully`,
+                      });
+                    } catch (error: any) {
+                      const errorData = error?.data?.error;
+                      if (errorData?.code === 'Document:InvalidFormat') {
+                        shikshaMitraToast.error({
+                          message: `Invalid format. Accepted formats are: ${errorData?.data?.AcceptedFormats}`,
                         });
-                      } catch (error: any) {
-                        const errorData = error?.data?.error;
-                        if (errorData?.code === 'Document:InvalidFormat') {
-                          shikshaMitraToast.error({
-                            message: `Invalid format. Accepted formats are: ${errorData?.data?.AcceptedFormats}`,
-                          });
-                        } else {
-                          shikshaMitraToast.error({
-                            message:
-                              errorData?.message || `Failed to upload ${row.documentTypeName}`,
-                          });
-                        }
-                      } finally {
-                        setUploadingDocId(null);
-                        e.target.value = '';
+                      } else {
+                        shikshaMitraToast.error({
+                          message: errorData?.message || `Failed to upload ${row.documentTypeName}`,
+                        });
                       }
-                    };
-                    reader.readAsDataURL(file);
+                    } finally {
+                      setUploadingDocId(null);
+                      e.target.value = '';
+                    }
                   }}
                 >
                   <Iconify icon="ci:file-upload" />
@@ -222,18 +207,19 @@ export const RenderDocuments = (props: any) => {
                   disabled={!row.isUploaded}
                   onClick={async () => {
                     try {
-                      // Fetch the actual document object instead of reading metadata list
-                      const docRes = await fetchDocument({
+                      const blob = await downloadDocument({
                         studentId: id,
                         documentId: row.uploadedDocumentId,
                       }).unwrap();
 
                       const link = document.createElement('a');
-                      link.href = convertBase64Format(docRes.content);
-                      link.download = docRes.filename || `${row.documentTypeName}.pdf`;
+                      const objectUrl = URL.createObjectURL(blob);
+                      link.href = objectUrl;
+                      link.download = row.fileName || `${row.documentTypeName}`;
                       document.body.appendChild(link);
                       link.click();
                       document.body.removeChild(link);
+                      setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
                     } catch (err) {
                       shikshaMitraToast.error({ message: 'Failed to download document' });
                     }
@@ -295,12 +281,26 @@ export const RenderDocuments = (props: any) => {
 export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
   // Fetch student document data using the provided student ID and document ID
   // Returns document content and loading state for rendering
-  const { data: documents, isLoading } = useQueryAndMutation({
+  const { data: documentBlob, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetStudentDocumentByIdQuery,
+    currentQueryAndMutation: useDownloadStudentDocumentQuery,
     params: { studentId: id, documentId: docId },
     options: { skip: !id || !docId },
   });
+  const documentUrl = useMemo(
+    () => (documentBlob ? URL.createObjectURL(documentBlob) : ''),
+    [documentBlob]
+  );
+  const isPdf = documentBlob?.type === 'application/pdf';
+
+  useEffect(
+    () => () => {
+      if (documentUrl) {
+        URL.revokeObjectURL(documentUrl);
+      }
+    },
+    [documentUrl]
+  );
 
   return (
     <Box
@@ -314,10 +314,10 @@ export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null 
     >
       {isLoading ? (
         <Skeleton variant="rectangular" height="100%" width="100%" />
-      ) : documents?.contentType === 'application/pdf' ? (
+      ) : isPdf ? (
         <Box
           component="iframe"
-          src={convertBase64Format(documents.content)}
+          src={documentUrl}
           sx={{
             width: '100%',
             minWidth: { sm: '600px', md: '800px' },
@@ -329,7 +329,7 @@ export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null 
       ) : (
         <Box
           component="img"
-          src={convertBase64Format(documents.content)}
+          src={documentUrl}
           sx={{ height: '100%', maxWidth: '100%', border: 'none', objectFit: 'contain' }}
           title="Student Document"
         />

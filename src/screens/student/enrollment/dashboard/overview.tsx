@@ -226,7 +226,6 @@ const Overview = () => {
     //   href: '/student/enrollment/entrance-exam',
     //   labels: [
     //     { name: 'Herbert Clark', color: 'success' },
-    //     { name: 'John Doe', color: 'error' },
     //     { name: 'John Loe', color: 'warning' },
     //   ],
     //   width: 4,

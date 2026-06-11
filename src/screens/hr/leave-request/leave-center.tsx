@@ -5,17 +5,20 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { useMemo, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Box, Tab, Paper } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { DashboardCard } from 'src/components/dashboard-card';
 import { useRouter, useSearchParams } from 'src/routes/hooks';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import LeaveBalance from 'src/screens/hr/leave-balance/leave-balance';
+import { Box, Tab, Grid, Paper, Alert, Skeleton } from '@mui/material';
 import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
 
 import ApplyLeave from './apply-leave';
 import LeaveApprovals from './leave-approvals';
+import { useLeaveOverview } from './use-leave-overview';
+import { LEAVE_OVERVIEW_CARDS } from './leave-overview.utils';
 import {
   isAdminFromProfile,
   type LeaveCenterTab,
@@ -81,6 +84,14 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
   }, [initialTab, isSelfContext, searchParams]);
 
   const activeTab = resolveLeaveCenterTab(requestedTab, visibleTabs, initialTab);
+  const leaveOverviewState = useLeaveOverview({
+    mode: isSelfContext ? 'self' : 'hr',
+    enabled: !isSelfLeaveBlocked,
+  });
+  const overviewCards = useMemo(
+    () => LEAVE_OVERVIEW_CARDS(leaveOverviewState.overview),
+    [leaveOverviewState.overview]
+  );
 
   const handleTabChange = (_event: React.SyntheticEvent, nextTab: LeaveCenterTab) => {
     if (!visibleTabs.includes(nextTab)) {
@@ -153,6 +164,34 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
         description="Apply leave, track requests, review approvals, and monitor leave balance."
       />
 
+      {leaveOverviewState.selfAccessError && (
+        <Alert severity="warning">
+          Your user is not linked to an employee profile. Contact admin/HR.
+        </Alert>
+      )}
+
+      {!leaveOverviewState.selfAccessError && (
+        <Grid container spacing={1}>
+          {overviewCards.map((card) =>
+            leaveOverviewState.isLoadingBalance ? (
+              <Grid size={{ xs: 6, sm: 3 }} key={card.title}>
+                <Skeleton variant="rounded" height={82} sx={{ borderRadius: 2 }} />
+              </Grid>
+            ) : (
+              <Grid size={{ xs: 6, sm: 3 }} key={card.title}>
+                <DashboardCard
+                  title={card.title}
+                  value={card.value}
+                  icon={card.icon}
+                  color={card.color}
+                  bgColor={card.bgColor}
+                />
+              </Grid>
+            )
+          )}
+        </Grid>
+      )}
+
       <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
@@ -194,7 +233,13 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
         )}
         {activeTab === 'approvals' && canReviewLeaves && <LeaveApprovals showBreadcrumbs={false} />}
         {activeTab === 'balance' && (
-          <LeaveBalance mode={isSelfContext ? 'self' : 'hr'} showBreadcrumbs={false} />
+          <LeaveBalance
+            mode={isSelfContext ? 'self' : 'hr'}
+            showBreadcrumbs={false}
+            showSummaryCards={false}
+            showSelfAccessError={false}
+            overviewState={leaveOverviewState}
+          />
         )}
       </Box>
     </Box>

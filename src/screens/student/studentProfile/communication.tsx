@@ -219,7 +219,7 @@ const Communication = (props: StudentTabsComponentType) => {
       message:
         'We are excited to announce that the school annual day will be held on 25th December. There will be various cultural programs and activities. All students are encouraged to participate and make this event memorable.\n\nEvents include:\n• Dance performances\n• Drama\n• Music concert',
       signature: 'Principal',
-      createdBy: 'John Doe',
+      createdBy: 'School Office',
       createdOn: '10/12/2023',
       isRead: false,
     },
@@ -230,7 +230,7 @@ const Communication = (props: StudentTabsComponentType) => {
       message:
         'Please find the attached schedule for the mathematics mid-term examinations. Students are requested to report to the examination hall 30 minutes prior to the start time.',
       signature: 'Exam Department',
-      createdBy: 'Sarah Smith',
+      createdBy: 'Exam Department',
       createdOn: '11/12/2023',
       isRead: true,
     },

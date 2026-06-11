@@ -56,6 +56,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   isShowedDense = true,
   rowProps = () => ({}),
   tableId,
+  defaultSearchTerm = '',
   showCheckbox = false,
   onSendNotification = () => {},
   searchFieldProps = {},
@@ -80,6 +81,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
   const { tableConfig, handleChangeParams, handleSort } = useTableConfig({
     columns: memoizedColumns,
+    defaultSearchTerm,
   });
 
   const { page, rowsPerPage, searchTerm, filters, sorts, columnVisibility, dense } = tableConfig;

@@ -66,6 +66,7 @@ export interface ICustomizableTableProps {
   isShowedDense?: boolean;
   rowProps?: (row: IData, index: number) => TableRowProps;
   tableId: string;
+  defaultSearchTerm?: string;
   showCheckbox?: boolean;
   onSendNotification?: (data: any) => void;
   searchFieldProps?: TextFieldProps;

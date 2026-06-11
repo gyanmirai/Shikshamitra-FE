@@ -62,7 +62,7 @@ const Libraray = (props: StudentTabsComponentType) => {
     currentQueryAndMutation: useGetFinesChargesQuery,
   });
 
-  const { data: mockIssuedBooks, isLoading: mockIssuedLoading } = useQueryAndMutation({
+  const { data: issuedBooksHistory, isLoading: issuedHistoryLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIssuedBooksQuery,
   });
@@ -163,7 +163,7 @@ const Libraray = (props: StudentTabsComponentType) => {
             <CustomizableTable
               tableId="issued-books-table"
               noDataText="No Borrowed History Data Found"
-              isLoading={mockIssuedLoading}
+              isLoading={issuedHistoryLoading}
               columns={[
                 { id: 'bookTitle', label: 'Book Title', align: 'left' },
                 { id: 'bookId', label: 'Book Category', align: 'left' },
@@ -171,7 +171,7 @@ const Libraray = (props: StudentTabsComponentType) => {
                 { id: 'issueDate', label: 'Issued on', align: 'left' },
                 { id: 'dueDate', label: 'Due on', align: 'left' },
               ]}
-              data={mockIssuedBooks || []}
+              data={issuedBooksHistory || []}
             />
           </Box>
         );

@@ -4,8 +4,8 @@ import CustomSelect from 'src/components/custom-select';
 import { MotherTongueTypeArray } from 'src/enums/mother-tongue';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { toNumericWithMax, toLettersTitleCase } from 'src/utils/input-format';
-import { Box, Grid, TextField, FormLabel, FormHelperText } from '@mui/material';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
+import { Box, Chip, Grid, TextField, FormLabel, FormHelperText } from '@mui/material';
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
 import {
   SectionCard,
@@ -71,6 +71,24 @@ const Slot: React.FC<{
 const Sep = () => (
   <Box sx={{ width: 8, height: 1, bgcolor: 'text.disabled', flexShrink: 0, alignSelf: 'center' }} />
 );
+
+const StatusChip = ({ label, value }: { label: string; value?: unknown }) => {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  return (
+    <Chip
+      size="small"
+      variant="outlined"
+      label={`${label}: ${String(value)}`}
+      sx={{
+        maxWidth: '100%',
+        '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' },
+      }}
+    />
+  );
+};
 
 // ── OtpInputField: label + boxes + helper text ────────────────────────────────
 const OtpInputField: React.FC<{
@@ -182,6 +200,13 @@ const IdentificationSection: React.FC<SectionProps> = ({
     </Grid>
 
     <Grid size={{ xs: 12, md: 5.5 }}>
+      <Box display="flex" flexWrap="wrap" gap={1}>
+        <StatusChip label="Aadhaar" value={(formik.values as any).aadhaarVerificationStatus} />
+        <StatusChip label="Masked" value={(formik.values as any).aadhaarMasked} />
+      </Box>
+    </Grid>
+
+    <Grid size={{ xs: 12, md: 5.5 }}>
       <ShakingTextField
         error={(formik.touched as any).panNo && Boolean((formik.errors as any).panNo)}
       >
@@ -228,6 +253,17 @@ const IdentificationSection: React.FC<SectionProps> = ({
           pasteTransformer={(s) => s.replace(/\D/g, '').slice(0, 12)}
         />
       </ShakingTextField>
+    </Grid>
+
+    <Grid size={{ xs: 12 }}>
+      <Box display="flex" flexWrap="wrap" gap={1}>
+        <StatusChip label="APAAR consent" value={(formik.values as any).apaarConsentStatus} />
+        <StatusChip label="APAAR" value={(formik.values as any).apaarVerificationStatus} />
+        <StatusChip label="UDISE" value={(formik.values as any).udiseSyncStatus} />
+        <StatusChip label="UDISE code" value={(formik.values as any).udiseStudentCode} />
+        <StatusChip label="RTE" value={(formik.values as any).rteStatus} />
+        <StatusChip label="Scholarship" value={(formik.values as any).scholarshipStatus} />
+      </Box>
     </Grid>
 
     <Grid size={{ xs: 12, md: 3 }}>

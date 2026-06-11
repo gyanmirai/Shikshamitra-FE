@@ -57,7 +57,6 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     canViewAudit,
     openAssignmentDrawer,
     openEntityAudit,
-    previewAssignment,
     deleteAssignment,
   } = ctx;
 
@@ -200,7 +199,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         return (
           <ThreeDotsActions
             showViewIcon
-            handleViewClick={() => previewAssignment(item)}
+            handleViewClick={() => openAssignmentDrawer(item, 'view')}
             showEditIcon={canAssignPolicy}
             handleEditClick={() => openAssignmentDrawer(item)}
             actions={({ popover }) => (

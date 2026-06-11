@@ -23,48 +23,7 @@ interface Data {
   division: string;
 }
 
-const data: Data[] = [
-  {
-    tempGR: 'TG001',
-    name: 'John Doe',
-    class: '10th',
-    batch: '2023-24',
-    enrollmentDate: '2023-08-15',
-    status: 'Active',
-    action: 'Edit',
-    division: 'A',
-  },
-  {
-    tempGR: 'TG004',
-    name: 'John Doe1',
-    class: '10th',
-    batch: '2023-24',
-    enrollmentDate: '2023-08-15',
-    status: 'Active',
-    action: 'Edit',
-    division: '-',
-  },
-  {
-    tempGR: 'TG002',
-    name: 'Jane Smith',
-    class: '9th',
-    batch: '2023-24',
-    enrollmentDate: '2023-08-14',
-    status: 'Pending',
-    action: 'Edit',
-    division: '-',
-  },
-  {
-    tempGR: 'TG003',
-    name: 'Mike Johnson',
-    class: '11th',
-    batch: '2023-24',
-    enrollmentDate: '2023-08-16',
-    status: 'Active',
-    action: 'Edit',
-    division: 'B',
-  },
-];
+const data: Data[] = [];
 
 const EnrollScreen = () => {
   const dialog = useBoolean();
@@ -203,6 +162,7 @@ const EnrollScreen = () => {
           },
         ]}
         data={data}
+        noDataText={<>No students are ready for enrollment.</>}
       />{' '}
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Assign Division">
         <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
