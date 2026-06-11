@@ -5,12 +5,13 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Tab, Tabs, Card, Chip, Typography } from '@mui/material';
 import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
+import { Box, Tab, Tabs, Card, Chip, Typography, IconButton } from '@mui/material';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
@@ -326,48 +327,28 @@ const ChargesTable = ({
                   />
                   {isPending && (
                     <>
-                      <Typography
-                        component="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onApprove(row as IChargeData);
-                        }}
+                      <IconButton
+                        size="small"
+                        onClick={() => onApprove(row as IChargeData)}
                         sx={{
-                          p: '4px 8px',
-                          borderRadius: '4px',
-                          backgroundColor: 'success.lighter',
                           color: 'success.main',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          '&:hover': { backgroundColor: 'success.light' },
-                          minWidth: '50px',
+                          '&:hover': { backgroundColor: 'success.lighter' },
                         }}
+                        title="Approve"
                       >
-                        Approve
-                      </Typography>
-                      <Typography
-                        component="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onReject(row as IChargeData);
-                        }}
+                        <Iconify icon="mdi:approve" width={20} height={20} />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => onReject(row as IChargeData)}
                         sx={{
-                          p: '4px 8px',
-                          borderRadius: '4px',
-                          backgroundColor: 'error.lighter',
                           color: 'error.main',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          '&:hover': { backgroundColor: 'error.light' },
-                          minWidth: '50px',
+                          '&:hover': { backgroundColor: 'error.lighter' },
                         }}
+                        title="Reject"
                       >
-                        Reject
-                      </Typography>
+                        <Iconify icon="entypo:cross" width={20} height={20} />
+                      </IconButton>
                     </>
                   )}
                 </Box>
