@@ -11,4 +11,5 @@ export const getInitialIncomeData = (editData: IIncomeRecord | null): IIncomeFor
   paymentMethod: editData?.paymentMethod ?? '',
   paymentDate: editData?.paymentDate ? dayjs(editData.paymentDate) : null,
   notes: editData?.notes ?? '',
+  document: null,
 });

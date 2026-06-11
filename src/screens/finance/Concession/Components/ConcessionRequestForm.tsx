@@ -354,7 +354,12 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
         onClose(null, true);
       } catch (err: any) {
         shikshaMitraToast.error({
-          message: err?.data?.message || err?.message || 'Something went wrong',
+          message:
+            err?.data?.title ||
+            err?.data?.detail ||
+            err?.data?.message ||
+            err?.message ||
+            'Something went wrong',
         });
       }
     },
@@ -368,14 +373,27 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
 
   // -- Fee structure ---------------------------------------------------------
 
-  const { data: feeStructureData, isLoading: feeStructureLoading } = useQueryAndMutation({
+  const {
+    data: feeStructureData,
+    isLoading: feeStructureLoading,
+    isError: feeStructureIsError,
+    error: feeStructureError,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeStructureQuery,
     params: { studentId: values.studentId },
     options: { skip: !values.studentId },
-  }) as { data: any; isLoading: boolean };
+    // Suppress automatic toast — we handle this error inline
+    popupConfig: { error: false },
+  }) as { data: any; isLoading: boolean; isError: boolean; error: any };
 
   const feeHeads: any[] = useMemo(() => feeStructureData?.feeHeads || [], [feeStructureData]);
+
+  // Detect the "no fee structure assigned" business-rule error
+  const noFeeStructureError: boolean =
+    feeStructureIsError &&
+    (feeStructureError?.data?.errorCode === 'No fee structure has been assigned to this student.' ||
+      feeStructureError?.data?.status === 400);
 
   const totalFees = useMemo(
     () => feeHeads.reduce((sum: number, fh: any) => sum + (fh.amount || 0), 0),
@@ -753,6 +771,62 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                     </Grid>
                   </Paper>
                 </Grid>
+                {/* Fee structure loading skeleton */}
+                {values.studentId && feeStructureLoading && (
+                  <Grid size={{ xs: 12 }}>
+                    <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 2 }}>
+                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                        <Skeleton variant="circular" width={18} height={18} />
+                        <Box>
+                          <Skeleton variant="text" width={160} height={20} />
+                          <Skeleton variant="text" width={220} height={16} />
+                        </Box>
+                      </Stack>
+                      <Divider sx={{ mb: 2 }} />
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                          <Skeleton variant="rounded" height={60} sx={{ borderRadius: 1 }} />
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  </Grid>
+                )}
+
+                {/* No Fee Structure assigned alert */}
+                {values.studentId && !feeStructureLoading && noFeeStructureError && (
+                  <Grid size={{ xs: 12 }}>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 2,
+                        mb: 1.5,
+                        borderRadius: 2,
+                        border: '1.5px solid',
+                        borderColor: 'warning.main',
+                        bgcolor: 'warning.lighter',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 1.5,
+                      }}
+                    >
+                      <Iconify
+                        icon="solar:danger-triangle-bold-duotone"
+                        width={24}
+                        sx={{ color: 'warning.dark', flexShrink: 0, mt: 0.25 }}
+                      />
+                      <Box>
+                        <Typography variant="body2" color="text.secondary" mt={0.25}>
+                          {feeStructureError?.data?.errorCode ||
+                            'No fee structure has been assigned to this student. Please assign a fee structure before creating a concession request.'}
+                        </Typography>
+                      </Box>
+                    </Paper>
+                  </Grid>
+                )}
+
                 {/* 3. Fee Summary */}
                 {values.studentId && totalFees > 0 && (
                   <Grid size={{ xs: 12 }} pb={1}>
@@ -831,7 +905,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                   </Grid>
                 )}
                 {/* 2. Concession Details */}
-                {values.studentId && (
+                {values.studentId && !feeStructureLoading && !noFeeStructureError && (
                   <Grid size={{ xs: 12 }}>
                     <Paper variant="outlined" sx={paperSx}>
                       <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
@@ -871,10 +945,11 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                               onChange={(_, newValue: any) => {
                                 setFieldValue('concessionTypeId', newValue?.id || '');
                                 setFieldValue('concessionTypeDocuments', []);
+                                setFieldValue('selectedFeeHeads', {});
+                                setFieldValue('valueEntries', {});
                               }}
                               disabled={isEditMode}
                               size="small"
-                              disableClearable
                               getOptionLabel={(option: any) => option.name || ''}
                               renderOption={(props, option: any) => (
                                 <Box
@@ -937,7 +1012,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                 )}
 
                 {/* 4. Fee Head Mapping */}
-                {values.studentId && (
+                {values.studentId && !feeStructureLoading && !noFeeStructureError && (
                   <Grid size={{ xs: 12 }}>
                     <Paper variant="outlined" sx={paperSx}>
                       <Stack direction="row" alignItems="center" gap={1} mb={1.5}>

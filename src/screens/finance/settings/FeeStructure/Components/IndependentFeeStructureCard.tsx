@@ -156,12 +156,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       align: 'center',
       desc: 'This is an optional fee head, it may or may not be applicable to all students. Select applicable students accordingly when you assign fee structures.',
     },
-    {
-      label: 'Refundable',
-      size: 1.5,
-      align: 'center',
-      desc: 'This fees can be refunded under certain conditions.',
-    },
     { label: '', size: 0.5, align: 'left' },
   ];
 
@@ -662,7 +656,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               sx={{
                 maxHeight: 320,
                 overflowY: 'auto',
-                overscrollBehavior: 'contain',
                 px: 2,
                 pt: 1,
                 pb: 1,

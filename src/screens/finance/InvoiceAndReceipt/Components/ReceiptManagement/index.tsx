@@ -324,7 +324,7 @@ const ReceiptManagement = () => {
           }}
           labelKey="label"
           valueKey="value"
-          formControlProps={{ sx: { maxWidth: 200, width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: 160, width: '100%' } }}
         />
       </Box>
 

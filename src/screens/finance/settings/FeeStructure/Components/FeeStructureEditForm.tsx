@@ -21,7 +21,10 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
   const [pendingClassId, setPendingClassId] = useState<string | null>(null);
   const isDirtyRef = useRef(false);
 
-  const [getClassByMedium, { data: classes }] = useQueryAndMutation({
+  const [
+    getClassByMedium,
+    { data: classes, isLoading: isLoadingClasses, isFetching: isFetchingClasses },
+  ] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
@@ -181,7 +184,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
           )}
 
           {/* ── Fee Structures for selected class ────────────────────── */}
-          {classList.length === 0 ? (
+          {isLoadingClasses || isFetchingClasses ? (
             <Box
               display="flex"
               alignItems="center"
@@ -190,6 +193,15 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
             >
               <Iconify icon="svg-spinners:3-dots-fade" width={20} />
               <Typography variant="body2">Loading classes…</Typography>
+            </Box>
+          ) : classes.length === 0 ? (
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={1}
+              sx={{ color: 'text.disabled', py: 4, justifyContent: 'center' }}
+            >
+              <Typography variant="body2">No classes available.</Typography>
             </Box>
           ) : (
             selectedClassId && (

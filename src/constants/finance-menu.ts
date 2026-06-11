@@ -16,6 +16,7 @@ export const financePaths = {
     invoicesAndReceipts: '/finance/invoice-receipt',
     concessions: '/finance/concession',
     adjustments: '/finance/adjustments',
+    structureAssign: '/finance/fee-structure-assign',
     settings: {
       root: '',
       feeCategory: '/finance/settings/fee-category',
@@ -76,6 +77,7 @@ export const financePermissions = {
     invoicesAndReceipts: `${defaultFinancePermissionName}Fees.InvoiceReceipt`,
     concessions: `${defaultFinancePermissionName}Fees.Concession`,
     adjustment: `${defaultFinancePermissionName}Fees.Adjustment`,
+    structureAssign: `${defaultFinancePermissionName}Fees.StructureAssign`,
     settings: {
       root: `${defaultModulePermissionName}${defaultFinancePermissionName}Fees.Settings`,
       feeCategory: `${defaultFinancePermissionName}Settings.FeeCategory`,
@@ -206,6 +208,15 @@ const financeModule = {
               shortcutKeyName: 'Alt+F+2+J',
               permissionName: financePermissions.fees.adjustment,
               icon: menuIconView('mdi:tune-variant'),
+            },
+            {
+              title: 'Fee Structure Assign',
+              path: financePaths.fees.structureAssign,
+              _action: 'fee-structure-assign',
+              shortcutKey: 'Alt+F+2+SA',
+              shortcutKeyName: 'Alt+F+2+SA',
+              permissionName: financePermissions.fees.structureAssign,
+              icon: menuIconView('mdi:file-document-outline'),
             },
             {
               title: 'Settings',
