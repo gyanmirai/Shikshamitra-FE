@@ -550,6 +550,13 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       onKeyDown={(e) => {
                         if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
                       }}
+                      inputProps={{ min: 1, max: 999, maxLength: 3 }}
+                      onInput={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        if (target.value.length > 3) {
+                          target.value = target.value.slice(0, 3);
+                        }
+                      }}
                     />
                   </ShakingTextField>
                 </Grid>

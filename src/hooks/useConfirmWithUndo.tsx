@@ -38,22 +38,19 @@ export function useConfirmWithUndo<T>() {
     }, duration);
 
     const id = shikshaMitraToast.info({
-      message: '',
-      alertProps: (t) => ({
-        action: (
-          <UndoToast
-            id={t}
-            duration={duration}
-            message={message}
-            onUndo={() => {
-              if (timerRef.current) clearTimeout(timerRef.current);
-              onUndoRestore(dispatch, deleteIndex);
-              setDeleteIndex(-1);
-              toast.dismiss(t);
-            }}
-          />
-        ),
-      }),
+      message: (t) => (
+        <UndoToast
+          id={t}
+          duration={duration}
+          message={message}
+          onUndo={() => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            onUndoRestore(dispatch, deleteIndex);
+            setDeleteIndex(-1);
+            toast.dismiss(t);
+          }}
+        />
+      ),
     });
   };
 

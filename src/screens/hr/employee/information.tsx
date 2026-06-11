@@ -675,7 +675,7 @@ const ViewInformationScreen = ({
         transition={{ duration: 0.25 }}
         style={{ height: '100%' }}
       >
-        <Box sx={{ p: 2, height: '100%' }}>
+        <Box sx={{ height: '100%' }}>
           {basicDetailsLoading ||
           familyDetailsLoading ||
           additionalDetailsLoading ||

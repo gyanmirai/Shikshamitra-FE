@@ -135,19 +135,19 @@ export function LeavePoliciesPanel() {
       { id: 'accrualPolicyType', label: 'Accrual', minWidth: 120 },
       { id: 'leaveCount', label: 'Entitlement', minWidth: 120 },
       {
-        id: 'carryForward',
+        id: 'rules.0.carryForward',
         label: 'Carry Forward',
         minWidth: 130,
         render: (value) => (value ? 'Yes' : 'No'),
       },
       {
-        id: 'encashmentAllowed',
+        id: 'rules.0.encashmentAllowed',
         label: 'Encashable',
         minWidth: 120,
         render: (value) => (value ? 'Yes' : 'No'),
       },
       {
-        id: 'requiresApproval',
+        id: 'rules.0.requiresApproval',
         label: 'Approval',
         minWidth: 120,
         render: (value) => (value ? 'Required' : 'Not required'),

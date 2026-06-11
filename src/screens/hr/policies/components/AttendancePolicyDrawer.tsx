@@ -338,12 +338,12 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                 borderRadius: 1,
               }}
             >
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1, color: 'primary.darker' }}>
                 Attendance Policy Summary
               </Typography>
               <Stack spacing={0.75}>
                 {buildAttendanceSummary(attendanceForm).map((item) => (
-                  <Typography key={item} variant="body2" color="text.primary">
+                  <Typography key={item} variant="body2" color="primary.darker">
                     - {item}
                   </Typography>
                 ))}

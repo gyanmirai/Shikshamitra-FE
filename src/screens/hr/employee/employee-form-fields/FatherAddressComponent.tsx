@@ -28,7 +28,12 @@ export const FatherAddressComponent = ({ formik, disabled }: FatherAddressCompon
         value={formik.values.fatherState}
         countryValue={formik.values.fatherCountry}
         onChange={(_e: any, value: any) => {
-          formik.setFieldValue('fatherState', value);
+          formik.setFieldValue('fatherState', {
+            ...(value || {}),
+            name: value?.name,
+            isoCode: value?.isoCode,
+            countryCode: formik.values.fatherCountry?.isoCode,
+          });
           formik.setFieldValue('fatherCity', null);
         }}
         error={formik.touched.fatherState && Boolean(formik.errors.fatherState)}

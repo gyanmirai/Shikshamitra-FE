@@ -56,6 +56,24 @@ export const validationSchema = [
               }
             )
             .test(
+              'not-in-past-for-today',
+              'Start time cannot be in the past for today',
+              // eslint-disable-next-line func-names
+              function (value) {
+                const { examDate, electiveGroupId, schedulingMode } = this.parent;
+                if (electiveGroupId && schedulingMode === 'separate') return true;
+                if (!value || !examDate) return true;
+
+                const isToday = dayjs(examDate as any).isSame(dayjs(), 'day');
+                if (!isToday) return true;
+
+                const startDateTime = dayjs(examDate as any)
+                  .hour(dayjs(value as any).hour())
+                  .minute(dayjs(value as any).minute());
+                return !startDateTime.isBefore(dayjs());
+              }
+            )
+            .test(
               'no-time-conflict',
               'Time conflicts with another subject on the same date',
               // eslint-disable-next-line func-names

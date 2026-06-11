@@ -73,10 +73,11 @@ export const shikshaMitraToast = {
     message,
     alertProps,
   }: {
-    message: React.ReactNode;
+    message: React.ReactNode | ((t: string | number) => React.ReactNode);
     alertProps?: AlertProps | ((t: string | number) => AlertProps);
   }) =>
     toast.custom((t) => {
+      const resolvedMessage = typeof message === 'function' ? message(t) : message;
       if (typeof alertProps === 'function') {
         alertProps = alertProps(t);
       }
@@ -97,7 +98,7 @@ export const shikshaMitraToast = {
           }}
           {...alertProps}
         >
-          {message}
+          {resolvedMessage}
         </Alert>
       );
     }),

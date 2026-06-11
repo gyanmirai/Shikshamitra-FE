@@ -31,9 +31,9 @@ function FatherAddressComponent(props: any) {
     formik?.values?.addressLine1 === formik?.values?.fatherAddress1 &&
     formik?.values?.addressLine2 === formik?.values?.fatherAddress2 &&
     formik?.values?.addressLine3 === formik?.values?.fatherAddress3 &&
-    formik?.values?.country.name === formik?.values?.fatherCountry.name &&
-    formik?.values?.state.name === formik?.values?.fatherState.name &&
-    formik?.values?.city.name === formik?.values?.fatherCity.name &&
+    formik?.values?.country?.name === formik?.values?.fatherCountry?.name &&
+    formik?.values?.state?.name === formik?.values?.fatherState?.name &&
+    formik?.values?.city?.name === formik?.values?.fatherCity?.name &&
     formik?.values?.pincode === formik?.values?.fatherPinCode;
   return (
     <Grid container spacing={3}>
@@ -146,7 +146,12 @@ function FatherAddressComponent(props: any) {
           value={formik.values.fatherState}
           countryValue={formik.values.fatherCountry}
           onChange={(_e, value) => {
-            formik.setFieldValue('fatherState', value);
+            formik.setFieldValue('fatherState', {
+              ...(value || {}),
+              name: value?.name,
+              isoCode: value?.isoCode,
+              countryCode: formik.values.fatherCountry?.isoCode,
+            });
             formik.setFieldValue('fatherCity', null);
           }}
           disabled={!!disabled}
@@ -204,9 +209,9 @@ function MotherAddressComponent(props: any) {
     formik?.values?.addressLine1 === formik?.values?.motherAddress1 &&
     formik?.values?.addressLine2 === formik?.values?.motherAddress2 &&
     formik?.values?.addressLine3 === formik?.values?.motherAddress3 &&
-    formik?.values?.country.name === formik?.values?.motherCountry.name &&
-    formik?.values?.state.name === formik?.values?.motherState.name &&
-    formik?.values?.city.name === formik?.values?.motherCity.name &&
+    formik?.values?.country?.name === formik?.values?.motherCountry?.name &&
+    formik?.values?.state?.name === formik?.values?.motherState?.name &&
+    formik?.values?.city?.name === formik?.values?.motherCity?.name &&
     formik?.values?.pincode === formik?.values?.motherPinCode;
   return (
     <Grid container spacing={3}>
@@ -316,7 +321,12 @@ function MotherAddressComponent(props: any) {
       <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
         <StateComponent
           onChange={(_e, value) => {
-            formik.setFieldValue('motherState', value);
+            formik.setFieldValue('motherState', {
+              ...(value || {}),
+              name: value?.name,
+              isoCode: value?.isoCode,
+              countryCode: formik.values.motherCountry?.isoCode,
+            });
             formik.setFieldValue('motherCity', null);
           }}
           disabled={!!disabled}
@@ -372,9 +382,9 @@ function SpouseAddressComponent(props: any) {
     formik?.values?.addressLine1 === formik?.values?.spouseAddress1 &&
     formik?.values?.addressLine2 === formik?.values?.spouseAddress2 &&
     formik?.values?.addressLine3 === formik?.values?.spouseAddress3 &&
-    formik?.values?.country.name === formik?.values?.spouseCountry.name &&
-    formik?.values?.state.name === formik?.values?.spouseState.name &&
-    formik?.values?.city.name === formik?.values?.spouseCity.name &&
+    formik?.values?.country?.name === formik?.values?.spouseCountry?.name &&
+    formik?.values?.state?.name === formik?.values?.spouseState?.name &&
+    formik?.values?.city?.name === formik?.values?.spouseCity?.name &&
     formik?.values?.pincode === formik?.values?.spousePinCode;
   return (
     <Grid container spacing={3}>
@@ -484,7 +494,12 @@ function SpouseAddressComponent(props: any) {
       <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
         <StateComponent
           onChange={(_e, value) => {
-            formik.setFieldValue('spouseState', value);
+            formik.setFieldValue('spouseState', {
+              ...(value || {}),
+              name: value?.name,
+              isoCode: value?.isoCode,
+              countryCode: formik.values.spouseCountry?.isoCode,
+            });
             formik.setFieldValue('spouseCity', null);
           }}
           disabled={!!disabled}

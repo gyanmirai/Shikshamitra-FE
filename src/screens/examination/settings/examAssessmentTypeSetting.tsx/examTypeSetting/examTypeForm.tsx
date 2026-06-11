@@ -1,8 +1,8 @@
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import { useFormik } from 'formik';
+import React, { useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -14,6 +14,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
+  useGetExaminationTypesQuery,
   useAddExaminationTypeMutation,
   useUpdateExaminationTypeMutation,
 } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
@@ -30,6 +31,22 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
   isEdit = false,
 }) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  const { data: examTypeData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExaminationTypesQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id,
+    },
+  });
+
+  const existingNames = useMemo(
+    () =>
+      new Set<string>((examTypeData?.items ?? []).map((t: any) => t.examType.trim().toLowerCase())),
+    [examTypeData]
+  );
+
   const [addExaminationType, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddExaminationTypeMutation,
@@ -45,7 +62,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
     initialValues: getExamTypeInitialValues(data),
 
     // Apply validation schema for form fields
-    validationSchema: examTypeValidationSchema,
+    validationSchema: examTypeValidationSchema(existingNames, data),
 
     // Handle form submission
     onSubmit: async (values, formikHelpers) => {

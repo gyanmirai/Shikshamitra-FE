@@ -581,6 +581,17 @@ function validateSepSubject(sub: any): Record<string, string> {
 
   if (!sub?.startTime || !dayjs(sub.startTime).isValid()) {
     errs.startTime = 'Start time is required';
+  } else if (sub?.examDate && dayjs(sub.examDate).isValid()) {
+    // Check if exam is scheduled for today and start time is in the past
+    const isToday = dayjs(sub.examDate).isSame(dayjs(), 'day');
+    if (isToday) {
+      const startDateTime = dayjs(sub.examDate)
+        .hour(dayjs(sub.startTime).hour())
+        .minute(dayjs(sub.startTime).minute());
+      if (startDateTime.isBefore(dayjs())) {
+        errs.startTime = 'Start time cannot be in the past for today';
+      }
+    }
   }
 
   if (!sub?.endTime || !dayjs(sub.endTime).isValid()) {

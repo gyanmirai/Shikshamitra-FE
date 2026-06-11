@@ -641,8 +641,8 @@ export const BoardScreenStep = ({
                       />
                     }
                     sx={{
-                      py: 1,
-                      px: 1,
+                      py: 1.5,
+                      px: 2,
                       bgcolor: (theme) => theme.vars.palette.background.neutral,
                       borderBottom: '1px solid',
                       borderColor: 'divider',

@@ -550,6 +550,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
 
       <CustomDialog
         open={addLeaveRequestDialog?.value}
+        maxWidth="sm"
         handleClose={() => {
           addLeaveRequestDialog?.onFalse?.();
           setEditData(null);

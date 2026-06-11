@@ -124,7 +124,11 @@ export const personalInformationInitialValues = (
     : { name: 'India', isoCode: 'IN' },
 
   state: editData?.state?.name
-    ? { name: editData.state.name, isoCode: editData.state.isoCode }
+    ? {
+        name: editData.state.name,
+        isoCode: editData.state.isoCode,
+        countryCode: editData.country?.isoCode,
+      }
     : { name: '', isoCode: '' },
 
   city: editData?.city ? { name: editData.city } : { name: '' },
@@ -163,6 +167,7 @@ export const familyInformationInitialValues = (editData?: IFamilyInformationResp
     ? {
         name: editData?.fatherDetails?.state.name,
         isoCode: editData?.fatherDetails?.state.isoCode,
+        countryCode: editData?.fatherDetails?.country?.isoCode,
       }
     : { name: '', isoCode: '' },
 
@@ -189,6 +194,7 @@ export const familyInformationInitialValues = (editData?: IFamilyInformationResp
     ? {
         name: editData?.motherDetails?.state.name,
         isoCode: editData?.motherDetails?.state.isoCode,
+        countryCode: editData?.motherDetails?.country?.isoCode,
       }
     : { name: '', isoCode: '' },
 
@@ -215,6 +221,7 @@ export const familyInformationInitialValues = (editData?: IFamilyInformationResp
     ? {
         name: editData?.spouseDetails?.state.name,
         isoCode: editData?.spouseDetails?.state.isoCode,
+        countryCode: editData?.spouseDetails?.country?.isoCode,
       }
     : { name: '', isoCode: '' },
 

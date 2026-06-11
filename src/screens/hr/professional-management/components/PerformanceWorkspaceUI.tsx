@@ -46,13 +46,14 @@ export function PerformanceSurface({
         bgcolor: 'background.paper',
         borderColor: surfaceBorder,
         boxShadow: 'none',
+        overflow: 'hidden',
         ...sx,
       }}
     >
       {title || action ? (
         <PerformanceSectionHeader title={title || ''} description={description} action={action} />
       ) : null}
-      <Box sx={contentSx}>{children}</Box>
+      <Box sx={{ overflow: 'hidden', ...contentSx }}>{children}</Box>
     </Paper>
   );
 }
@@ -102,13 +103,14 @@ export function PerformanceTablePanel({ children, minHeight = 360, sx }: TablePa
         minWidth: 0,
         minHeight,
         flex: 1,
-        height: { xs: 'auto', md: '100%' },
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         '& > div': {
           minHeight: 0,
           flex: 1,
+          height: '100%',
         },
         ...sx,
       }}
