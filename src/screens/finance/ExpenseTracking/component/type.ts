@@ -28,6 +28,7 @@ export interface IExpenseFormValues {
   paymentMethod: number | '';
   paymentDate: Dayjs | null;
   notes: string;
+  document?: string | null;
 }
 
 export interface IExpenseFormProps {

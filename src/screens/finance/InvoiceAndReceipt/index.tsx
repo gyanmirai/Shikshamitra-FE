@@ -10,27 +10,26 @@ import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
-import InvoiceManagement from './Components/InvoiceManagement';
 import ReceiptManagement from './Components/ReceiptManagement';
 
 const TABS = [
-  {
-    value: 'invoice',
-    label: 'Invoices',
-    icon: <Iconify icon="mdi:file-document-outline" width={20} />,
-    component: (props: any) => <InvoiceManagement {...props} />,
-  },
   {
     value: 'receipt',
     label: 'Receipts',
     icon: <Iconify icon="mdi:receipt" width={20} />,
     component: (props: any) => <ReceiptManagement {...props} />,
   },
+  // {
+  //   value: 'invoice',
+  //   label: 'Invoices',
+  //   icon: <Iconify icon="mdi:file-document-outline" width={20} />,
+  //   component: (props: any) => <InvoiceManagement {...props} />,
+  // }
 ];
 
 const InvoiceAndReceipt = () => {
   const { getParam, setParam } = useCustomSearchParams();
-  const activeTab = getParam('tab') || 'invoice';
+  const activeTab = getParam('tab') || 'receipt';
   const addInvoiceDialog = useBoolean(false);
   const [isBackClick, setIsBackClick] = useState(false);
 

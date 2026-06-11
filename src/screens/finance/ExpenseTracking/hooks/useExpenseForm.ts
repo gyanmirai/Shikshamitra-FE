@@ -10,6 +10,7 @@ import {
   usePutExpenseDetailsMutation,
   usePostExpenseDetailsMutation,
 } from 'src/redux/finance/expenseApi/expenseDetailedApi';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { getInitialExpenseData } from '../component/ExpenseInitialValues';
 import { getExpenseFormSchema } from '../component/ExpenseValidationSchema';
@@ -38,11 +39,33 @@ export const useExpenseForm = ({
     currentQueryAndMutation: usePutExpenseDetailsMutation,
   });
 
+  const [uploadCurriculumFile, { isLoading: uploadLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
+
   const { data: categoryOptions, isLoading: categoryOptionsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseCategoryQuery,
     params: { academicYearId: currentYear?.id },
   });
+
+  // File upload handler
+  const handleFileUpload = async (files: (File | string)[]) => {
+    try {
+      const formData = new FormData();
+      formData.append('FileName', (files[0] as File)?.name);
+      formData.append('File', files[0] as File);
+      const response = await uploadCurriculumFile(formData).unwrap();
+      return response.data;
+    } catch (error) {
+      console.error('File upload failed:', error);
+      shikshaMitraToast.error({
+        message: 'Failed to upload document',
+      });
+      throw error;
+    }
+  };
 
   // Form Submission Handler - payload matches API contract exactly
   const handleSubmit = async (values: IExpenseFormValues) => {
@@ -55,6 +78,7 @@ export const useExpenseForm = ({
         paymentMethod: values.paymentMethod, // integer enum
         paymentDate: values.paymentDate?.toISOString(),
         notes: values.notes || null,
+        ...(values.document && { document: values.document }),
       };
 
       if (editData?.id) {
@@ -98,9 +122,11 @@ export const useExpenseForm = ({
     formik,
     addLoading,
     updateLoading,
+    uploadLoading,
     categoryOptions,
     paymentMethodOptions,
     currentYear,
+    handleFileUpload,
     categoryOptionsLoading,
   };
 };

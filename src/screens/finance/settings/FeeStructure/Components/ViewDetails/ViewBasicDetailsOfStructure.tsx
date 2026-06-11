@@ -1,6 +1,5 @@
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
 import {
@@ -37,9 +36,6 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
           </Typography>
         </Box>
       </Stack>
-      <Label variant="soft" color={feeStructure?.status === 1 ? 'success' : 'error'}>
-        {feeStructure?.status === 1 ? 'Active' : 'Inactive'}
-      </Label>
     </Stack>
     <Divider sx={{ mb: 2 }} />
 

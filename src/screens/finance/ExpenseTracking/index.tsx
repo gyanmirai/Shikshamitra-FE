@@ -2,7 +2,10 @@
 
 import React from 'react';
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -31,55 +34,28 @@ const FinanceExpenseTracking = ({ embedded = false }: FinanceExpenseTrackingProp
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {!embedded &&
-        (addExpenseDialog.value ? (
-          <CustomBreadcrumbs
-            heading={selectedExpense ? 'Update Expense Tracking' : 'Add Expense Tracking'}
-            description={
-              selectedExpense
-                ? 'Update expense record details such as category, date, amount, and payment method to maintain accurate expense tracking.'
-                : 'This screen allows users to fill in all required fields and add a new expense entry.'
-            }
-            isBack
-            onBack={() => handleClose(null, false)}
-            links={[
-              { name: 'Finance', href: '/finance/dashboard' },
-              { name: 'Accounts', href: '/finance/expenseTracking' },
-              {
-                name: 'Expense Tracking',
-                href: '/finance/expenseTracking',
-                onClick: () => {
-                  addExpenseDialog.onFalse();
-                  setSelectedExpense(null);
-                },
-              },
-              {
-                name: selectedExpense ? 'Update Expense Tracking' : 'Add Expense Tracking',
-              },
-            ]}
-          />
-        ) : (
-          <CustomBreadcrumbs
-            heading="Expense Tracking"
-            description="This screen displays all expense categories with the option to view detailed entries under each category and add new expense records."
-            links={[
-              { name: 'Finance', href: '/finance/dashboard' },
-              { name: 'Accounts', href: '/finance/expenseTracking' },
-              { name: 'Expense Tracking' },
-            ]}
-            action={
-              <Button
-                onClick={() => addExpenseDialog.onTrue()}
-                size="small"
-                startIcon={<Add />}
-                variant="contained"
-                sx={{ px: '32px' }}
-              >
-                Expense
-              </Button>
-            }
-          />
-        ))}
+      {!embedded && (
+        <CustomBreadcrumbs
+          heading="Expense Tracking"
+          description="This screen displays all expense categories with the option to view detailed entries under each category and add new expense records."
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Accounts', href: '/finance/expenseTracking' },
+            { name: 'Expense Tracking' },
+          ]}
+          action={
+            <Button
+              onClick={() => addExpenseDialog.onTrue()}
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              sx={{ px: '32px' }}
+            >
+              Expense
+            </Button>
+          }
+        />
+      )}
 
       {embedded && !addExpenseDialog.value && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
@@ -95,28 +71,51 @@ const FinanceExpenseTracking = ({ embedded = false }: FinanceExpenseTrackingProp
         </Box>
       )}
 
-      <>
-        {/* Form for add/edit expense */}
-        {addExpenseDialog.value ? (
-          <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-            <ExpenseCategoryForm
-              open={addExpenseDialog}
-              onClose={handleClose}
-              editData={selectedExpense}
-            />
-          </Card>
-        ) : (
-          <ExpenseCategoryTable
-            data={expenseDetailedData?.items || []}
-            addExpenseCategory={addExpenseDialog}
-            setEditData={setSelectedExpense}
-            isLoading={isFetchingDetails || isLoadingDetails}
-            onEdit={handleEdit}
-            onDelete={handleDeleteClick}
-            // onView={handleViewClick}
-          />
-        )}
-      </>
+      <ExpenseCategoryTable
+        data={expenseDetailedData?.items || []}
+        addExpenseCategory={addExpenseDialog}
+        setEditData={setSelectedExpense}
+        isLoading={isFetchingDetails || isLoadingDetails}
+        onEdit={handleEdit}
+        onDelete={handleDeleteClick}
+        // onView={handleViewClick}
+      />
+
+      <CustomDialog
+        open={addExpenseDialog.value}
+        handleClose={() => {
+          addExpenseDialog.onFalse();
+          setTimeout(() => {
+            setSelectedExpense(null);
+          }, 200);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedExpense ? 'Update Expense Tracking' : 'Add Expense Tracking'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                selectedExpense
+                  ? 'Update expense record details such as category, date, amount, and payment method to maintain accurate expense tracking.'
+                  : 'This screen allows users to fill in all required fields and add a new expense entry.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        maxWidth="sm"
+      >
+        <ExpenseCategoryForm
+          open={addExpenseDialog}
+          onClose={handleClose}
+          editData={selectedExpense}
+        />
+      </CustomDialog>
 
       {/* Delete confirmation dialog */}
       <ConfirmDialog

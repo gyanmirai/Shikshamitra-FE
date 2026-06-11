@@ -1,0 +1,26 @@
+export interface IFeeStructureData {
+  id: string;
+  studentId: string;
+  studentName?: string;
+  grNumber?: string;
+  rollNumber?: string;
+  standardDivision?: string;
+  boardName?: string;
+  mediumName?: string;
+  className?: string;
+  divisionName?: string;
+  totalFees?: number;
+  paidFees?: number;
+  pendingFees?: number;
+  overdueFees?: number;
+  totalCharges?: number;
+  pendingCharges?: number;
+  status?: string;
+  name?: string;
+}
+
+export interface IFeeStructureTableProps {
+  onAssignStructure: (row: IFeeStructureData) => void;
+  onEdit?: (row: IFeeStructureData) => void;
+  onBulkAssign?: (rows: IFeeStructureData[]) => void;
+}
