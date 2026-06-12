@@ -13,6 +13,8 @@ export const testIds = {
   editAction: 'table-action-edit',
   moreAction: 'table-action-more',
   statusDialog: 'hr-employee-status-dialog',
+  managerDeactivationWarningDialog: 'hr-employee-manager-deactivation-warning-dialog',
+  statusUpdateButton: 'hr-employee-status-update-button',
   salaryDialog: 'hr-employee-salary-dialog',
 };
 

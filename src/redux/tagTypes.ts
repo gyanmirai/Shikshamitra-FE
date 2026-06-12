@@ -168,6 +168,7 @@ export const earningComponentType = {
 // ===== Employee API (reducerPath: employeeApi) =====
 export const employeeType = {
   employee: 'Employee',
+  employeeApplication: 'Employee-Application',
   hrDashboard: 'HR-Dashboard',
   employeeDocument: 'EmployeeDocument',
   employeeType: 'Employee-Type',

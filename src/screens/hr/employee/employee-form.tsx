@@ -12,6 +12,7 @@ import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -22,6 +23,8 @@ import { Box, Grid, Slide, Button, TextField, Typography } from '@mui/material';
 import {
   hrPolicyApi,
   policyInvalidationTags,
+  useGetPayrollPoliciesQuery,
+  useGetAttendancePoliciesQuery,
   usePreviewPolicyAssignmentImpactMutation,
 } from 'src/redux/hr/hr-policy-api';
 import {
@@ -57,6 +60,11 @@ import {
   buildEmployeePolicyOverrideAction,
   buildEmployeePolicyOverridePreviewRequest,
 } from './employee-policy-override-utils';
+import {
+  getEmployeeCreationDefaultPolicyMessage,
+  EMPLOYEE_CREATION_DEFAULT_POLICY_LOADING_MESSAGE,
+  EMPLOYEE_CREATION_DEFAULT_POLICY_MULTIPLE_MESSAGE,
+} from './employee-default-policy-utils';
 
 import type {
   IPayrollInformation,
@@ -288,6 +296,7 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
   policyOverrideAssignmentId: '',
   policyOverridePayrollPolicyId: '',
   policyOverrideAttendancePolicyId: '',
+  policyOverrideLeavePolicyId: '',
   policyOverrideEffectiveFrom: dayjs().format('YYYY-MM-DD'),
   policyOverrideAssignmentReason: '',
 });
@@ -305,6 +314,20 @@ const getResolvedEmployeeIdentity = (values: any, editData?: any) => ({
   employeeId: getSavedEmployeeId(values, editData),
   userId: getEmployeeUserId(values, editData),
 });
+
+const isActivePolicy = (item: any) => String(item?.status || '').toLowerCase() === 'active';
+const isActiveLeavePolicy = (item: any) => isActivePolicy(item) || item?.isActive === true;
+const getActiveDefaultPolicies = (
+  items: any[] = [],
+  isActive: (item: any) => boolean = isActivePolicy
+) => items.filter((item: any) => isActive(item) && item.isDefault);
+const selectSingleActiveDefaultPolicy = (
+  items: any[] = [],
+  isActive: (item: any) => boolean = isActivePolicy
+) => {
+  const defaults = getActiveDefaultPolicies(items, isActive);
+  return defaults.length === 1 ? defaults[0] : undefined;
+};
 
 export const assignReportingManagerInitialValues = (editData?: IReportingInformationResponse) => ({
   reportingManager: editData?.reportingManager?.id ?? '',
@@ -383,6 +406,79 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     isThrowError: true,
   });
   const [previewPolicyAssignmentImpact] = usePreviewPolicyAssignmentImpactMutation();
+  const {
+    data: defaultPayrollPolicies,
+    isLoading: defaultPayrollPoliciesLoading,
+    isFetching: defaultPayrollPoliciesFetching,
+  } = useGetPayrollPoliciesQuery(
+    { academicYearId: currentYear?.id, maxResultCount: 100 },
+    { skip: !currentYear?.id || Boolean(editData?.id) }
+  );
+  const {
+    data: defaultAttendancePolicies,
+    isLoading: defaultAttendancePoliciesLoading,
+    isFetching: defaultAttendancePoliciesFetching,
+  } = useGetAttendancePoliciesQuery(
+    { academicYearId: currentYear?.id, maxResultCount: 100 },
+    { skip: !currentYear?.id || Boolean(editData?.id) }
+  );
+  const {
+    data: defaultLeavePolicies,
+    isLoading: defaultLeavePoliciesLoading,
+    isFetching: defaultLeavePoliciesFetching,
+  } = useGetLeavePoliciesQuery(
+    { academicYearId: currentYear?.id, page: 1, pageSize: 500 },
+    { skip: !currentYear?.id || Boolean(editData?.id) }
+  );
+
+  const defaultPayrollPolicy = useMemo(
+    () => selectSingleActiveDefaultPolicy(defaultPayrollPolicies?.items || []),
+    [defaultPayrollPolicies?.items]
+  );
+  const defaultAttendancePolicy = useMemo(
+    () => selectSingleActiveDefaultPolicy(defaultAttendancePolicies?.items || []),
+    [defaultAttendancePolicies?.items]
+  );
+  const defaultLeavePolicy = useMemo(() => {
+    const items = defaultLeavePolicies?.items || [];
+    return selectSingleActiveDefaultPolicy(items, isActiveLeavePolicy);
+  }, [defaultLeavePolicies?.items]);
+  const defaultPolicyLookupLoading =
+    !editData?.id &&
+    Boolean(currentYear?.id) &&
+    (defaultPayrollPoliciesLoading ||
+      defaultPayrollPoliciesFetching ||
+      defaultAttendancePoliciesLoading ||
+      defaultAttendancePoliciesFetching ||
+      defaultLeavePoliciesLoading ||
+      defaultLeavePoliciesFetching);
+  const hasMultipleDefaultPolicies =
+    getActiveDefaultPolicies(defaultPayrollPolicies?.items || []).length > 1 ||
+    getActiveDefaultPolicies(defaultAttendancePolicies?.items || []).length > 1 ||
+    getActiveDefaultPolicies(defaultLeavePolicies?.items || [], isActiveLeavePolicy).length > 1;
+  const defaultPolicyAssignment = useMemo(
+    () => ({
+      payrollPolicy: defaultPayrollPolicy,
+      attendancePolicy: defaultAttendancePolicy,
+      leavePolicy: defaultLeavePolicy,
+      missingMessage: getEmployeeCreationDefaultPolicyMessage({
+        currentYearId: currentYear?.id,
+        isLoading: defaultPolicyLookupLoading,
+        hasMultipleDefaults: hasMultipleDefaultPolicies,
+        payrollPolicyId: defaultPayrollPolicy?.id,
+        attendancePolicyId: defaultAttendancePolicy?.id,
+        leavePolicyId: defaultLeavePolicy?.id,
+      }),
+    }),
+    [
+      currentYear?.id,
+      defaultAttendancePolicy,
+      defaultLeavePolicy,
+      defaultPolicyLookupLoading,
+      defaultPayrollPolicy,
+      hasMultipleDefaultPolicies,
+    ]
+  );
 
   const [updateEmployee] = useQueryAndMutation({
     type: 'mutation',
@@ -432,6 +528,24 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
       if (!values.employeeId) {
+        if (!currentYear?.id) {
+          throw new Error('Current academic year is required before creating an employee.');
+        }
+        if (defaultPolicyLookupLoading) {
+          throw new Error(EMPLOYEE_CREATION_DEFAULT_POLICY_LOADING_MESSAGE);
+        }
+        if (hasMultipleDefaultPolicies) {
+          throw new Error(EMPLOYEE_CREATION_DEFAULT_POLICY_MULTIPLE_MESSAGE);
+        }
+        if (!defaultPayrollPolicy?.id || !defaultAttendancePolicy?.id || !defaultLeavePolicy?.id) {
+          throw new Error(
+            'Default payroll, attendance, and leave policies are required before creating an employee.'
+          );
+        }
+
+        const policyEffectiveFrom = values.dateOfJoining
+          ? dayjs(values.dateOfJoining).format('YYYY-MM-DD')
+          : dayjs().format('YYYY-MM-DD');
         const body: Record<string, any> = {
           lastName: values.lastName,
           firstName: values.firstName,
@@ -459,6 +573,14 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           shiftId: values.shift,
           adharNo: values.adharNo || '',
           panNo: (values.panNo || '').toUpperCase(),
+          policyOverride: {
+            academicYearId: currentYear.id,
+            payrollPolicyId: defaultPayrollPolicy.id,
+            attendancePolicyId: defaultAttendancePolicy.id,
+            leavePolicyId: defaultLeavePolicy.id,
+            effectiveFrom: policyEffectiveFrom,
+            assignmentReason: 'Employee creation policy assignment',
+          },
         };
 
         if (values.secondaryMobileNo) {
@@ -482,7 +604,16 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       }
       return getResolvedEmployeeIdentity(values, editData);
     },
-    [addEmployee, editData]
+    [
+      addEmployee,
+      currentYear?.id,
+      defaultAttendancePolicy?.id,
+      defaultLeavePolicy?.id,
+      defaultPayrollPolicy?.id,
+      defaultPolicyLookupLoading,
+      editData,
+      hasMultipleDefaultPolicies,
+    ]
   );
 
   const handleFamilyInformation = useCallback(
@@ -988,6 +1119,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
                   step={step}
                   formik={formik}
                   editData={editData}
+                  defaultPolicyAssignment={defaultPolicyAssignment}
                   resetCurrentStepRef={resetCurrentStepRef}
                   isSubmitted={isSubmitted}
                 />
@@ -1079,7 +1211,14 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
 export default EmployeeFrom;
 
-const FormSlider = ({ step, formik, editData, resetCurrentStepRef, isSubmitted }: any) => {
+const FormSlider = ({
+  step,
+  formik,
+  editData,
+  defaultPolicyAssignment,
+  resetCurrentStepRef,
+  isSubmitted,
+}: any) => {
   const containerRef = React.useRef<HTMLElement>(null);
   const initialAccessControlUserId = getEmployeeUserId(formik.values, editData);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -1340,6 +1479,8 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef, isSubmitted }
                                   formik,
                                   field,
                                   isMainForm: true,
+                                  editData,
+                                  defaultPolicyAssignment,
                                   isLoading:
                                     step === 7 && (accessControlFetching || boardsFetching),
                                 })

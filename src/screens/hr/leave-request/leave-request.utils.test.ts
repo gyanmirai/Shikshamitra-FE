@@ -20,6 +20,7 @@ import {
   getAcademicYearStartMonth,
   getLeaveCenterVisibleTabs,
   buildEmployeeSelectOptions,
+  isSelectedLeaveTypeVisible,
   getLeaveNoticePeriodMessage,
   isLeaveNoticePeriodSatisfied,
   APPLY_LEAVE_ROW_ACTION_LABELS,
@@ -31,7 +32,10 @@ import {
   formatLeaveCalendarDateForDisplay,
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
+  resolveLeavePolicyPreviewEmployeeId,
   shouldDisableMonthBeforeAcademicYearStart,
+  getVisibleLeaveTypeOptionsForEffectivePolicy,
+  isLeavePolicyPreviewEmployeeResolutionBlocked,
 } from 'src/screens/hr/leave-request/leave-request.utils';
 
 describe('leave request payload mapping', () => {
@@ -114,6 +118,88 @@ describe('leave request payload mapping', () => {
   it('formats API leave dates without applying browser timezone offsets', () => {
     expect(formatLeaveCalendarDateForPayload(dayjs('2026-07-06'))).toBe('2026-07-06');
     expect(formatLeaveCalendarDateForDisplay('2026-07-06T00:00:00.000Z')).toBe('06-07-2026');
+  });
+});
+
+describe('leave request effective policy filtering', () => {
+  const leaveTypes = [
+    { id: 'sick', name: 'Sick Leave' },
+    { id: 'casual', name: 'Casual Leave' },
+    { id: 'earned', name: 'Earned Leave' },
+  ];
+
+  it('uses the selected employee id for HR-created non-self leave', () => {
+    expect(
+      resolveLeavePolicyPreviewEmployeeId(
+        { id: 'employee-1', label: 'Employee One' },
+        'auth-employee',
+        'hr'
+      )
+    ).toBe('employee-1');
+  });
+
+  it('uses authenticated employee id for self leave preview', () => {
+    expect(resolveLeavePolicyPreviewEmployeeId(SELF_OPTION, 'auth-employee', 'hr')).toBe(
+      'auth-employee'
+    );
+    expect(resolveLeavePolicyPreviewEmployeeId(null, 'auth-employee', 'self')).toBe(
+      'auth-employee'
+    );
+  });
+
+  it('blocks self leave preview while authenticated employee id is unresolved', () => {
+    expect(isLeavePolicyPreviewEmployeeResolutionBlocked(null, undefined, 'self')).toBe(true);
+    expect(isLeavePolicyPreviewEmployeeResolutionBlocked(SELF_OPTION, null, 'hr')).toBe(true);
+    expect(isLeavePolicyPreviewEmployeeResolutionBlocked(null, 'auth-employee', 'self')).toBe(
+      false
+    );
+  });
+
+  it('does not block HR preview while no employee has been selected yet', () => {
+    expect(isLeavePolicyPreviewEmployeeResolutionBlocked(null, undefined, 'hr')).toBe(false);
+  });
+
+  it('filters catalog leave types by effective policy allowed ids', () => {
+    expect(
+      getVisibleLeaveTypeOptionsForEffectivePolicy(
+        leaveTypes,
+        { id: 'policy-1', allowedLeaveTypeIds: ['casual', 'earned'] },
+        true
+      ).map((item) => item.id)
+    ).toEqual(['casual', 'earned']);
+  });
+
+  it('checks whether the selected leave type remains visible after policy filtering', () => {
+    expect(isSelectedLeaveTypeVisible('casual', leaveTypes)).toBe(true);
+    expect(isSelectedLeaveTypeVisible('vacation', leaveTypes)).toBe(false);
+    expect(isSelectedLeaveTypeVisible('', leaveTypes)).toBe(true);
+  });
+
+  it('does not fail open when preview is missing, loading, or errored', () => {
+    expect(getVisibleLeaveTypeOptionsForEffectivePolicy(leaveTypes, null, true)).toEqual([]);
+    expect(
+      getVisibleLeaveTypeOptionsForEffectivePolicy(
+        leaveTypes,
+        { id: 'policy-1', allowedLeaveTypeIds: ['sick'] },
+        true,
+        true
+      )
+    ).toEqual([]);
+    expect(
+      getVisibleLeaveTypeOptionsForEffectivePolicy(
+        leaveTypes,
+        { id: 'policy-1', allowedLeaveTypeIds: ['sick'] },
+        true,
+        false,
+        true
+      )
+    ).toEqual([]);
+  });
+
+  it('keeps full catalog only while no employee/date preview target is resolved', () => {
+    expect(getVisibleLeaveTypeOptionsForEffectivePolicy(leaveTypes, null, false)).toEqual(
+      leaveTypes
+    );
   });
 });
 

@@ -1,9 +1,8 @@
 import type { Board, Medium, AcademicYear } from 'src/types/school';
+import type { GlobalAcademicSearchOption as SharedGlobalAcademicSearchOption } from 'src/utils/academicHierarchyUtils';
 
-export interface GlobalAcademicSearchOption {
-  label: string;
-  value: string;
-  academicYear: AcademicYear;
-  board: Board;
-  medium: Medium;
-}
+export type GlobalAcademicSearchOption = SharedGlobalAcademicSearchOption<
+  AcademicYear,
+  Board,
+  Medium
+>;

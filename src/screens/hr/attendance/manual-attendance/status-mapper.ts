@@ -125,34 +125,6 @@ export const mapManualAttendanceDayResponseToRows = (
     status: mapTakeAttendanceStatusToUi(item.status),
   }));
 
-export const applyManualAttendanceShiftTimes = <TRow extends ManualAttendanceShiftTimeRow>(
-  rows: TRow[]
-) => {
-  let updated = 0;
-  let skipped = 0;
-
-  const nextRows = rows.map((row) => {
-    if (
-      !isTimeBasedCaptureMode(row.captureMode) ||
-      row.status !== MANUAL_ATTENDANCE_UI_STATUS.Present
-    ) {
-      return row;
-    }
-
-    const shiftStart = toAttendanceTableTimeValue(row.shiftStartTime);
-    const shiftEnd = toAttendanceTableTimeValue(row.shiftEndTime);
-    if (!isValidShiftRange(shiftStart, shiftEnd)) {
-      skipped += 1;
-      return row;
-    }
-
-    updated += 1;
-    return { ...row, timeIn: shiftStart, timeOut: shiftEnd };
-  });
-
-  return { rows: nextRows, updated, skipped };
-};
-
 export const applyManualAttendanceStatusDefaults = <TRow extends ManualAttendanceShiftTimeRow>(
   row: TRow,
   status: ManualAttendanceUiStatus
@@ -165,8 +137,12 @@ export const applyManualAttendanceStatusDefaults = <TRow extends ManualAttendanc
     return { ...row, status };
   }
 
-  if (status === MANUAL_ATTENDANCE_UI_STATUS.Absent) {
+  if (status === MANUAL_ATTENDANCE_UI_STATUS.Pending) {
     return { ...row, status, timeIn: '', timeOut: '' };
+  }
+
+  if (status === MANUAL_ATTENDANCE_UI_STATUS.Absent) {
+    return { ...row, status, timeIn: '00:00', timeOut: '00:00' };
   }
 
   const shiftStart = toAttendanceTableTimeValue(row.shiftStartTime);
@@ -190,6 +166,31 @@ export const applyManualAttendanceStatusDefaults = <TRow extends ManualAttendanc
 
   return { ...row, status };
 };
+
+export const normalizeManualAttendanceRowsForSave = <TRow extends ManualAttendanceShiftTimeRow>(
+  rows: TRow[]
+): TRow[] =>
+  rows.map((row) => {
+    if (row.status === MANUAL_ATTENDANCE_UI_STATUS.Absent) {
+      return applyManualAttendanceStatusDefaults(row, row.status);
+    }
+
+    if (
+      (row.status === MANUAL_ATTENDANCE_UI_STATUS.Present ||
+        row.status === MANUAL_ATTENDANCE_UI_STATUS.HalfDay) &&
+      (!toAttendanceWireTime(row.timeIn) || !toAttendanceWireTime(row.timeOut))
+    ) {
+      const defaulted = applyManualAttendanceStatusDefaults(row, row.status);
+
+      return {
+        ...defaulted,
+        timeIn: toAttendanceWireTime(row.timeIn) ? row.timeIn : defaulted.timeIn,
+        timeOut: toAttendanceWireTime(row.timeOut) ? row.timeOut : defaulted.timeOut,
+      };
+    }
+
+    return row;
+  });
 
 export const getTimeBasedAttendanceTimeIssues = <TRow extends ManualAttendanceShiftTimeRow>(
   rows: TRow[]
@@ -253,12 +254,11 @@ export const toAttendanceTableTimeValue = (value?: string | null) => {
   // Preserve API clock time and avoid timezone shifts on ISO values.
   const isoTimeMatch = value.match(/T(\d{2}:\d{2}:\d{2})/);
   if (isoTimeMatch?.[1]) {
-    const [hours, minutes] = isoTimeMatch[1].split(':');
-    return `${hours}:${minutes}`;
+    return toClockTimeValue(isoTimeMatch[1]);
   }
 
-  const hhmmssMatch = value.match(/^(\d{2}:\d{2})(?::\d{2})?$/);
-  if (hhmmssMatch?.[1]) return hhmmssMatch[1];
+  const clockTime = toClockTimeValue(value);
+  if (clockTime) return clockTime;
 
   const fallbackDate = new Date(value);
   if (!Number.isNaN(fallbackDate.getTime())) {
@@ -272,9 +272,8 @@ export const toAttendanceTableTimeValue = (value?: string | null) => {
 
 export const toAttendanceWireTime = (value?: string | null) => {
   if (!value) return null;
-  const parsed = value.match(/^(\d{2}:\d{2})(?::\d{2})?$/);
-  if (!parsed?.[1]) return null;
-  return `${parsed[1]}:00`;
+  const clockTime = toClockTimeValue(value);
+  return clockTime ? `${clockTime}:00` : null;
 };
 
 const isTimeBasedCaptureMode = (captureMode?: ManualAttendanceSaveRow['captureMode']) =>
@@ -292,10 +291,16 @@ const calculateShiftMidpoint = (shiftStart: string, shiftEnd: string) => {
 };
 
 const isValidShiftRange = (shiftStart: string, shiftEnd: string) =>
-  Boolean(shiftStart && shiftEnd) && toMinutes(shiftEnd) > toMinutes(shiftStart);
+  Boolean(shiftStart && shiftEnd) &&
+  Number.isFinite(toMinutes(shiftStart)) &&
+  Number.isFinite(toMinutes(shiftEnd)) &&
+  toMinutes(shiftEnd) > toMinutes(shiftStart);
 
 const toMinutes = (value: string) => {
-  const [hours, minutes] = value.split(':').map(Number);
+  const clockTime = toClockTimeValue(value);
+  if (!clockTime) return Number.NaN;
+
+  const [hours, minutes] = clockTime.split(':').map(Number);
   return hours * 60 + minutes;
 };
 
@@ -303,6 +308,20 @@ const toTimeValue = (minutesOfDay: number) => {
   const hours = `${Math.floor(minutesOfDay / 60)}`.padStart(2, '0');
   const minutes = `${minutesOfDay % 60}`.padStart(2, '0');
   return `${hours}:${minutes}`;
+};
+
+const toClockTimeValue = (value: string) => {
+  const parsed = value.match(/^(\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (!parsed) return '';
+
+  const [, hoursText, minutesText, secondsText = '00'] = parsed;
+  const hours = Number(hoursText);
+  const minutes = Number(minutesText);
+  const seconds = Number(secondsText);
+
+  if (hours > 23 || minutes > 59 || seconds > 59) return '';
+
+  return `${hoursText}:${minutesText}`;
 };
 
 export const mapTakeAttendanceStatusToUi = (status?: number): ManualAttendanceUiStatus => {

@@ -134,6 +134,7 @@ export interface IPayrollInformation {
   policyOverrideAssignmentId?: string;
   policyOverridePayrollPolicyId?: string;
   policyOverrideAttendancePolicyId?: string;
+  policyOverrideLeavePolicyId?: string;
   policyOverrideEffectiveFrom?: string;
   policyOverrideAssignmentReason?: string;
 }

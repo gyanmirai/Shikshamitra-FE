@@ -99,6 +99,22 @@ export type AccessSelection = {
   divisions: string[];
 };
 
+export type GlobalAcademicSearchOption<TAcademicYear = any, TBoard = any, TMedium = any> = {
+  label: string;
+  value: string;
+  academicYear: TAcademicYear;
+  board: TBoard;
+  medium: TMedium;
+};
+
+export type GlobalAcademicSelection<TAcademicYear = any, TBoard = any, TMedium = any> = {
+  academicYear: TAcademicYear;
+  board: TBoard;
+  medium: TMedium;
+  selectedOption: GlobalAcademicSearchOption<TAcademicYear, TBoard, TMedium> | null;
+  clearYear: boolean;
+};
+
 const emptySelection = (): AccessSelection => ({
   boards: [],
   mediums: [],
@@ -225,4 +241,282 @@ export const expandAccessibleHierarchy = (
   });
 
   return out;
+};
+
+const hasNodeAccess = (node: any, fullAccessKey?: string) =>
+  !!node?.hasAccess || (fullAccessKey ? !!node?.[fullAccessKey] : false);
+
+const hasAccessibleStandard = (standardScope: any) =>
+  hasNodeAccess(standardScope, 'hasFullDivisionAccess') ||
+  standardScope?.divisions?.some((divisionScope: any) => divisionScope?.hasAccess);
+
+const hasAccessibleMediumStage = (mediumStageScope: any) =>
+  hasNodeAccess(mediumStageScope, 'hasFullStandardAccess') ||
+  mediumStageScope?.standards?.some(hasAccessibleStandard);
+
+const hasAccessibleMedium = (mediumScope: any) =>
+  hasNodeAccess(mediumScope, 'hasFullMediumStageAccess') ||
+  mediumScope?.mediumStages?.some(hasAccessibleMediumStage);
+
+const hasAccessibleBoard = (boardScope: any) =>
+  hasNodeAccess(boardScope, 'hasFullMediumAccess') ||
+  boardScope?.mediums?.some(hasAccessibleMedium);
+
+const pruneStandardByScope = <TStandard extends { id: string; divisions?: any[] }>(
+  standard: TStandard,
+  standardScope: any
+): TStandard | null => {
+  if (!hasAccessibleStandard(standardScope)) return null;
+
+  if (standardScope.hasFullDivisionAccess) {
+    return standard;
+  }
+
+  const divisions = (standard.divisions || []).filter((division: any) =>
+    standardScope.divisions?.some(
+      (divisionScope: any) => divisionScope?.divisionId === division.id && divisionScope?.hasAccess
+    )
+  );
+
+  if (!hasNodeAccess(standardScope) && divisions.length === 0) {
+    return null;
+  }
+
+  return { ...standard, divisions };
+};
+
+const pruneMediumStageByScope = <
+  TMediumStage extends { id: string; standards?: Array<TStandard> },
+  TStandard extends { id: string; divisions?: any[] },
+>(
+  stage: TMediumStage,
+  stageScope: any
+): TMediumStage | null => {
+  if (!hasAccessibleMediumStage(stageScope)) return null;
+
+  if (stageScope.hasFullStandardAccess) {
+    return stage;
+  }
+
+  const standards = (stage.standards || [])
+    .map((standard) => {
+      const standardScope = stageScope.standards?.find(
+        (item: any) => item.standardId === standard.id
+      );
+      return pruneStandardByScope(standard, standardScope);
+    })
+    .filter(Boolean) as TStandard[];
+
+  if (!hasNodeAccess(stageScope) && standards.length === 0) {
+    return null;
+  }
+
+  return { ...stage, standards };
+};
+
+const pruneMediumByScope = <
+  TMedium extends { id: string; educationMediumStages?: Array<TMediumStage> },
+  TMediumStage extends { id: string; standards?: Array<TStandard> },
+  TStandard extends { id: string; divisions?: any[] },
+>(
+  medium: TMedium,
+  mediumScope: any
+): TMedium | null => {
+  if (!hasAccessibleMedium(mediumScope)) return null;
+
+  if (mediumScope.hasFullMediumStageAccess) {
+    return medium;
+  }
+
+  const educationMediumStages = (medium.educationMediumStages || [])
+    .map((stage) => {
+      const stageScope = mediumScope.mediumStages?.find(
+        (item: any) => item.mediumStageId === stage.id
+      );
+      return pruneMediumStageByScope(stage, stageScope);
+    })
+    .filter(Boolean) as TMediumStage[];
+
+  if (!hasNodeAccess(mediumScope) && educationMediumStages.length === 0) {
+    return null;
+  }
+
+  return { ...medium, educationMediumStages };
+};
+
+export const getScopedAcademicData = <
+  TAcademicYear extends { id: string; boards: Array<TBoard> },
+  TBoard extends { id: string; educationMediums?: Array<TMedium> },
+  TMedium extends { id: string; educationMediumStages?: Array<TMediumStage> },
+  TMediumStage extends { id: string; standards?: Array<TStandard> },
+  TStandard extends { id: string; divisions?: any[] },
+>(
+  academicData: TAcademicYear[],
+  accessControl: any
+): TAcademicYear[] => {
+  if (!academicData.length) return [];
+  if (accessControl?.isAdmin) return academicData;
+
+  const hierarchy = accessControl?.accessibleHierarchy;
+  if (!Array.isArray(hierarchy)) return [];
+
+  return academicData
+    .map((year) => {
+      const yearScope = hierarchy.find((item: any) => item.academicYearId === year.id);
+      if (!yearScope) return null;
+
+      if (yearScope.hasFullBoardAccess) {
+        return year;
+      }
+
+      const boards = year.boards
+        .map((board) => {
+          const boardScope = yearScope.boards?.find((item: any) => item.boardId === board.id);
+          if (!hasAccessibleBoard(boardScope)) return null;
+
+          if (boardScope.hasFullMediumAccess) {
+            return board;
+          }
+
+          const educationMediums = (board.educationMediums || [])
+            .map((medium) => {
+              const mediumScope = boardScope.mediums?.find(
+                (item: any) => item.mediumId === medium.id
+              );
+              return pruneMediumByScope(medium, mediumScope);
+            })
+            .filter(Boolean) as TMedium[];
+
+          return educationMediums.length ? { ...board, educationMediums } : null;
+        })
+        .filter(Boolean) as TBoard[];
+
+      return boards.length ? { ...year, boards } : null;
+    })
+    .filter(Boolean) as TAcademicYear[];
+};
+
+export const getScopedAcademicYears = <TAcademicYear extends { id: string }>(
+  academicData: TAcademicYear[],
+  accessControl: any
+): TAcademicYear[] => {
+  if (!academicData.length) return [];
+  if (accessControl?.isAdmin) return academicData;
+
+  const hierarchy = accessControl?.accessibleHierarchy;
+  if (!Array.isArray(hierarchy)) return [];
+
+  const scopedYearIds = new Set(hierarchy.map((item: any) => item?.academicYearId).filter(Boolean));
+
+  return academicData.filter((year) => scopedYearIds.has(year.id));
+};
+
+export const getGlobalAcademicSearchOptions = <
+  TAcademicYear extends { id: string; name: string; boards: Array<TBoard> },
+  TBoard extends { id: string; name: string; educationMediums?: Array<TMedium> },
+  TMedium extends { id: string; name: string },
+>(
+  scopedData: TAcademicYear[]
+): Array<GlobalAcademicSearchOption<TAcademicYear, TBoard, TMedium>> => {
+  const options: Array<GlobalAcademicSearchOption<TAcademicYear, TBoard, TMedium>> = [];
+
+  scopedData.forEach((year) => {
+    year.boards.forEach((board) => {
+      (board.educationMediums || []).forEach((medium) => {
+        options.push({
+          label: `${year.name} / ${board.name} / ${medium.name}`,
+          value: `${year.id}-${board.id}-${medium.id}`,
+          academicYear: year,
+          board,
+          medium,
+        });
+      });
+    });
+  });
+
+  return options;
+};
+
+export const getValidGlobalAcademicSelection = <
+  TAcademicYear extends { id: string },
+  TBoard extends { id?: string },
+  TMedium extends { id?: string },
+>(
+  currentYear: { id?: string } | undefined,
+  currentBoard: { id?: string } | undefined,
+  currentMedium: { id?: string } | undefined,
+  scopedYears: TAcademicYear[],
+  options: Array<GlobalAcademicSearchOption<TAcademicYear, TBoard, TMedium>>
+): GlobalAcademicSelection<TAcademicYear, TBoard, TMedium> | null => {
+  if (!currentYear?.id) return null;
+
+  const scopedYear = scopedYears.find((year) => year.id === currentYear.id);
+  if (!scopedYear) {
+    return {
+      academicYear: {} as TAcademicYear,
+      board: {} as TBoard,
+      medium: {} as TMedium,
+      selectedOption: null,
+      clearYear: true,
+    };
+  }
+
+  if (!currentBoard?.id && !currentMedium?.id) {
+    return {
+      academicYear: scopedYear,
+      board: {} as TBoard,
+      medium: {} as TMedium,
+      selectedOption: null,
+      clearYear: false,
+    };
+  }
+
+  const selectedOption = options.find(
+    (option) =>
+      option.academicYear.id === currentYear.id &&
+      option.board.id === currentBoard?.id &&
+      option.medium.id === currentMedium?.id
+  );
+
+  if (!selectedOption) {
+    return {
+      academicYear: scopedYear,
+      board: {} as TBoard,
+      medium: {} as TMedium,
+      selectedOption: null,
+      clearYear: false,
+    };
+  }
+
+  return {
+    academicYear: selectedOption.academicYear,
+    board: selectedOption.board,
+    medium: selectedOption.medium,
+    selectedOption,
+    clearYear: false,
+  };
+};
+
+export const getScopedSelectedAcademicOption = <
+  TAcademicYear extends { id: string },
+  TBoard extends { id?: string },
+  TMedium extends { id?: string },
+>(
+  currentYear: { id?: string } | undefined,
+  currentBoard: { id?: string } | undefined,
+  currentMedium: { id?: string } | undefined,
+  options: Array<GlobalAcademicSearchOption<TAcademicYear, TBoard, TMedium>>
+): GlobalAcademicSearchOption<TAcademicYear, TBoard, TMedium> | null => {
+  if (!currentYear?.id || !currentBoard?.id || !currentMedium?.id) {
+    return null;
+  }
+
+  return (
+    options.find(
+      (option) =>
+        option.academicYear.id === currentYear.id &&
+        option.board.id === currentBoard.id &&
+        option.medium.id === currentMedium.id
+    ) ?? null
+  );
 };

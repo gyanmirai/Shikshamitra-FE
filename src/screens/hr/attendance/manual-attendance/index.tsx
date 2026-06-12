@@ -33,10 +33,10 @@ import {
   isManualAttendanceRowDirty,
   getDirtyManualAttendanceRows,
   applyManualAttendanceRowStatus,
-  applyManualAttendanceShiftTimes,
   applyManualAttendanceBulkStatus,
   buildManualAttendanceSaveEntries,
   getTimeBasedAttendanceTimeIssues,
+  normalizeManualAttendanceRowsForSave,
   isManualAttendanceBulkStatusDisabled,
   mapManualAttendanceDayResponseToRows,
   MANUAL_ATTENDANCE_UI_STATUS as STATUS,
@@ -260,32 +260,6 @@ const ManualAttendanceScreen = () => {
     [employeeData]
   );
 
-  const canApplyShiftTime = useMemo(
-    () =>
-      employeeData.some(
-        (emp) => emp.captureMode === 'manual_with_time' || emp.captureMode === 'integrated'
-      ),
-    [employeeData]
-  );
-
-  const applyShiftTime = useCallback(() => {
-    if (isLocked || isHoliday || isFutureDate || isOutsideAcademicYear) return;
-
-    const result = applyManualAttendanceShiftTimes(employeeData);
-    setEmployeeData(result.rows);
-
-    if (result.updated > 0) {
-      shikshaMitraToast.success({
-        message: `Applied shift time to ${result.updated} present ${result.updated === 1 ? 'employee' : 'employees'}.`,
-      });
-    }
-    if (result.skipped > 0) {
-      shikshaMitraToast.warning({
-        message: `${result.skipped} present ${result.skipped === 1 ? 'employee was' : 'employees were'} skipped because shift time is missing.`,
-      });
-    }
-  }, [employeeData, isFutureDate, isHoliday, isLocked, isOutsideAcademicYear]);
-
   // -------------------------------------------------------------------------
   // Save handler
   // -------------------------------------------------------------------------
@@ -312,7 +286,9 @@ const ManualAttendanceScreen = () => {
     }
 
     try {
-      const dirtyRows = getDirtyManualAttendanceRows(employeeData, originalDataRef.current);
+      const dirtyRows = normalizeManualAttendanceRowsForSave(
+        getDirtyManualAttendanceRows(employeeData, originalDataRef.current)
+      );
       const timeIssues = getTimeBasedAttendanceTimeIssues(dirtyRows);
       if (timeIssues.length > 0) {
         const hasShiftIssue = timeIssues.some(
@@ -938,6 +914,11 @@ const ManualAttendanceScreen = () => {
                     {/* Mark all Present */}
                     <CustomTooltip title="Mark all as Present" arrow placement="top">
                       <Box
+                        component="button"
+                        type="button"
+                        aria-label="Mark all as Present"
+                        data-testid="manual-attendance-mark-all-present"
+                        aria-disabled={isBulkStatusDisabled(STATUS.Present)}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isBulkStatusDisabled(STATUS.Present)) return;
@@ -947,6 +928,8 @@ const ManualAttendanceScreen = () => {
                           ...segmentBtnBase,
                           cursor: isBulkStatusDisabled(STATUS.Present) ? 'not-allowed' : 'pointer',
                           opacity: isBulkStatusDisabled(STATUS.Present) ? 0.5 : 1,
+                          border: 0,
+                          font: 'inherit',
                           bgcolor: (t) =>
                             presentCount > 0 ? t.vars.palette.success.main : 'transparent',
                           color: (t) =>
@@ -965,6 +948,11 @@ const ManualAttendanceScreen = () => {
                     {/* Mark all Half Day */}
                     <CustomTooltip title="Mark all as Half Day" arrow placement="top">
                       <Box
+                        component="button"
+                        type="button"
+                        aria-label="Mark all as Half Day"
+                        data-testid="manual-attendance-mark-all-half-day"
+                        aria-disabled={isBulkStatusDisabled(STATUS.HalfDay)}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isBulkStatusDisabled(STATUS.HalfDay)) return;
@@ -974,6 +962,8 @@ const ManualAttendanceScreen = () => {
                           ...segmentBtnBase,
                           cursor: isBulkStatusDisabled(STATUS.HalfDay) ? 'not-allowed' : 'pointer',
                           opacity: isBulkStatusDisabled(STATUS.HalfDay) ? 0.5 : 1,
+                          border: 0,
+                          font: 'inherit',
                           bgcolor: (t) =>
                             halfDayCount > 0 ? t.vars.palette.info.main : 'transparent',
                           color: (t) =>
@@ -1008,6 +998,11 @@ const ManualAttendanceScreen = () => {
                     {/* Mark all Absent */}
                     <CustomTooltip title="Mark all as Absent" arrow placement="top">
                       <Box
+                        component="button"
+                        type="button"
+                        aria-label="Mark all as Absent"
+                        data-testid="manual-attendance-mark-all-absent"
+                        aria-disabled={isBulkStatusDisabled(STATUS.Absent)}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isBulkStatusDisabled(STATUS.Absent)) return;
@@ -1017,6 +1012,8 @@ const ManualAttendanceScreen = () => {
                           ...segmentBtnBase,
                           cursor: isBulkStatusDisabled(STATUS.Absent) ? 'not-allowed' : 'pointer',
                           opacity: isBulkStatusDisabled(STATUS.Absent) ? 0.5 : 1,
+                          border: 0,
+                          font: 'inherit',
                           bgcolor: (t) =>
                             absentCount > 0 ? t.vars.palette.error.main : 'transparent',
                           color: (t) =>
@@ -1054,11 +1051,17 @@ const ManualAttendanceScreen = () => {
                     {/* Present */}
                     <CustomTooltip title="Present" arrow placement="top">
                       <Box
+                        component="button"
+                        type="button"
+                        aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Present`}
+                        data-testid={`manual-attendance-${row.id}-present`}
                         onClick={() => setRowStatus(row.id, STATUS.Present)}
                         sx={{
                           ...segmentBtnBase,
                           cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
                           opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
+                          border: 0,
+                          font: 'inherit',
                           bgcolor:
                             value === STATUS.Present
                               ? (t) => t.vars.palette.success.main
@@ -1082,11 +1085,17 @@ const ManualAttendanceScreen = () => {
                     {/* Half Day */}
                     <CustomTooltip title="Half Day" arrow placement="top">
                       <Box
+                        component="button"
+                        type="button"
+                        aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Half Day`}
+                        data-testid={`manual-attendance-${row.id}-half-day`}
                         onClick={() => setRowStatus(row.id, STATUS.HalfDay)}
                         sx={{
                           ...segmentBtnBase,
                           cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
                           opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
+                          border: 0,
+                          font: 'inherit',
                           bgcolor:
                             value === STATUS.HalfDay
                               ? (t) => t.vars.palette.info.main
@@ -1110,11 +1119,17 @@ const ManualAttendanceScreen = () => {
                     {/* Pending */}
                     <CustomTooltip title="Pending" arrow placement="top">
                       <Box
+                        component="button"
+                        type="button"
+                        aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Pending`}
+                        data-testid={`manual-attendance-${row.id}-pending`}
                         onClick={() => setRowStatus(row.id, STATUS.Pending)}
                         sx={{
                           ...segmentBtnBase,
                           cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
                           opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
+                          border: 0,
+                          font: 'inherit',
                           bgcolor:
                             value === STATUS.Pending
                               ? (t) => t.vars.palette.warning.main
@@ -1138,11 +1153,17 @@ const ManualAttendanceScreen = () => {
                     {/* Absent */}
                     <CustomTooltip title="Absent" arrow placement="top">
                       <Box
+                        component="button"
+                        type="button"
+                        aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Absent`}
+                        data-testid={`manual-attendance-${row.id}-absent`}
                         onClick={() => setRowStatus(row.id, STATUS.Absent)}
                         sx={{
                           ...segmentBtnBase,
                           cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
                           opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
+                          border: 0,
+                          font: 'inherit',
                           bgcolor:
                             value === STATUS.Absent
                               ? (t) => t.vars.palette.error.main
@@ -1264,31 +1285,6 @@ const ManualAttendanceScreen = () => {
 
         {/* Reset */}
         {isHoliday && <Label color="default">{holidayReason || 'Holiday'}</Label>}
-
-        {canApplyShiftTime &&
-          !isLocked &&
-          !isHoliday &&
-          !isFutureDate &&
-          !isOutsideAcademicYear && (
-            <Button
-              size="small"
-              variant="outlined"
-              color="inherit"
-              startIcon={<Iconify icon="mdi:clock-check-outline" sx={{ fontSize: '16px' }} />}
-              disabled={
-                employeeData.length === 0 ||
-                !employeeData.some(
-                  (e) =>
-                    (e.captureMode === 'manual_with_time' || e.captureMode === 'integrated') &&
-                    e.status === STATUS.Present
-                )
-              }
-              onClick={applyShiftTime}
-              sx={{ minWidth: '140px', fontWeight: 500, fontSize: '0.875rem' }}
-            >
-              Apply Shift Time
-            </Button>
-          )}
 
         {!isLocked && !isHoliday && !isFutureDate && !isOutsideAcademicYear && (
           <Button

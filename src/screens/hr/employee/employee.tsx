@@ -111,6 +111,16 @@ const HrEmployee = () => {
     reportingManagerStatus: searchParams.reportingManagerStatus || '',
   });
 
+  useEffect(() => {
+    if (
+      employeeParams.mediumStageId !== 'All' &&
+      !organizationOptionsLoading &&
+      !organizationOptions.some((option) => option.id === employeeParams.mediumStageId)
+    ) {
+      setEmployeeParams((pre) => ({ ...pre, page: 1, mediumStageId: 'All' }));
+    }
+  }, [employeeParams.mediumStageId, organizationOptions, organizationOptionsLoading]);
+
   const payrollDialog = useBoolean();
 
   const actions = useCallback(

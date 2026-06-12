@@ -31,6 +31,7 @@ export const hrPaths = {
   employee: {
     root: '',
     list: '/hr/employee',
+    onboarding: '/hr/employee/onboarding',
     iCard: '/hr/i-card',
     setting: {
       root: '/hr/setting',
@@ -120,6 +121,7 @@ export const hrPermissions = {
   employee: {
     root: `${defaultModulePermissionName}${defaultHrPermissionName}Employee`,
     list: `${defaultHrPermissionName}Employee.EmployeeList`,
+    onboarding: `${defaultHrPermissionName}Employee.EmployeeOnboarding`,
     iCard: `${defaultHrPermissionName}Employee.ICard.View`,
     setting: {
       root: `${defaultModulePermissionName}${defaultHrPermissionName}Employee`,
@@ -226,11 +228,20 @@ const hrModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:format-list-bulleted'),
             },
             {
+              title: 'Employee Onboarding',
+              path: hrPaths.employee.onboarding,
+              _action: 'employee-onboarding',
+              shortcutKey: 'Alt+H+E+2',
+              shortcutKeyName: 'Alt+H+E+2',
+              permissionName: hrPermissions.employee.onboarding,
+              icon: menuIconView('mdi:account-plus-outline'),
+            },
+            {
               title: 'I-card',
               path: hrPaths.employee.iCard,
               _action: 'i-card',
-              shortcutKey: 'Alt+H+E+2',
-              shortcutKeyName: 'Alt+H+E+2',
+              shortcutKey: 'Alt+H+E+3',
+              shortcutKeyName: 'Alt+H+E+3',
               permissionName: hrPermissions.employee.iCard,
               icon: menuIconView('mdi:card-account-details-outline'),
             },

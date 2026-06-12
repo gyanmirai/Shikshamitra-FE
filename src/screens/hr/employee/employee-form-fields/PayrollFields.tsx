@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatCurrency } from 'src/utils/cureencyFormater';
+import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -52,6 +53,10 @@ const getComponentAmount = (item: any) =>
 
 const getComponentTotal = (items: any[] = []) =>
   items.reduce((total, item) => total + getComponentAmount(item), 0);
+
+const getLeavePolicyName = (item: any) => item?.policyTitle || item?.name || item?.title || '-';
+const isActiveLeavePolicy = (item: any) =>
+  String(item?.status || '').toLowerCase() === 'active' || item?.isActive === true;
 
 const FieldGroupHeader = ({ title }: { title: string }) => (
   <Grid size={{ xs: 12 }}>
@@ -472,12 +477,17 @@ const RenderPayrollFields = (props: any) => {
     { academicYearId: currentYear?.id, maxResultCount: 100 },
     { skip: !currentYear?.id }
   );
+  const { data: leavePolicies } = useGetLeavePoliciesQuery(
+    { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
+    { skip: !currentYear?.id }
+  );
   const activePayrollPolicies = (payrollPolicies?.items || []).filter(
     (item) => item.status === 'active'
   );
   const activeAttendancePolicies = (attendancePolicies?.items || []).filter(
     (item) => item.status === 'active'
   );
+  const activeLeavePolicies = (leavePolicies?.items || []).filter(isActiveLeavePolicy);
   const grossEarnings = getComponentTotal(values.earningComponents || []);
   const totalDeductions = getComponentTotal(values.deductionComponents || []);
   const netSalary = grossEarnings - totalDeductions;
@@ -510,6 +520,11 @@ const RenderPayrollFields = (props: any) => {
     },
     {
       icon: <Today fontSize="small" />,
+      label: 'Leave Policy',
+      value: getLeavePolicyName(policyPreview?.leavePolicy),
+    },
+    {
+      icon: <Today fontSize="small" />,
       label: 'Payroll Calendar',
       value: policyPreview?.payrollWorkCalendarPolicy?.name,
     },
@@ -523,6 +538,7 @@ const RenderPayrollFields = (props: any) => {
   const overrideTouchedFields = [
     'policyOverridePayrollPolicyId',
     'policyOverrideAttendancePolicyId',
+    'policyOverrideLeavePolicyId',
     'policyOverrideEffectiveFrom',
     'policyOverrideAssignmentReason',
   ];
@@ -560,6 +576,7 @@ const RenderPayrollFields = (props: any) => {
           'policyOverrideAssignmentId',
           'policyOverridePayrollPolicyId',
           'policyOverrideAttendancePolicyId',
+          'policyOverrideLeavePolicyId',
           'policyOverrideEffectiveFrom',
         ] as const;
         retainedFields.forEach((field) => {
@@ -718,7 +735,7 @@ const RenderPayrollFields = (props: any) => {
                 <Typography variant="caption" color="text.secondary">
                   {organizationPolicyEnabled
                     ? 'Using the resolved organization policy chain.'
-                    : 'Select employee-specific payroll and attendance policies.'}
+                    : 'Select employee-specific payroll, attendance, and leave policies.'}
                 </Typography>
               </Box>
               <FormControlLabel
@@ -818,6 +835,42 @@ const RenderPayrollFields = (props: any) => {
                         <FormHelperText>
                           No active attendance policies are available.
                         </FormHelperText>
+                      ) : null}
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Leave Policy *</InputLabel>
+                      <Select
+                        label="Leave Policy *"
+                        value={values.policyOverrideLeavePolicyId || ''}
+                        disabled={!isEditable.value || activeLeavePolicies.length === 0}
+                        onChange={(event) =>
+                          formik.setFieldValue('policyOverrideLeavePolicyId', event.target.value)
+                        }
+                        error={
+                          Boolean(formik.touched.policyOverrideLeavePolicyId) &&
+                          Boolean(formik.errors.policyOverrideLeavePolicyId)
+                        }
+                      >
+                        {activeLeavePolicies.length === 0 ? (
+                          <MenuItem value="" disabled>
+                            No active leave policies
+                          </MenuItem>
+                        ) : null}
+                        {activeLeavePolicies.map((item: any) => (
+                          <MenuItem key={item.id} value={item.id}>
+                            {getLeavePolicyName(item)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {formik.touched.policyOverrideLeavePolicyId &&
+                      formik.errors.policyOverrideLeavePolicyId ? (
+                        <FormHelperText error>
+                          {formik.errors.policyOverrideLeavePolicyId}
+                        </FormHelperText>
+                      ) : activeLeavePolicies.length === 0 ? (
+                        <FormHelperText>No active leave policies are available.</FormHelperText>
                       ) : null}
                     </FormControl>
                   </Grid>
