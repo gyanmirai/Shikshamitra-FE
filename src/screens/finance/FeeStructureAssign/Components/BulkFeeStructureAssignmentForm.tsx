@@ -20,7 +20,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
-import { useAssignFeeStructureMutation } from 'src/redux/student/admission/admission-api';
+import { useBulkAssignFeeStructureMutation } from 'src/redux/student/admission/admission-api';
 import {
   useGetAcademicYearMonthsQuery,
   useGetStandardFeeStructureQuery,
@@ -97,9 +97,9 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
     [academicYearMonthsData]
   );
 
-  const [assignFeeStructures, { isLoading: isSubmitting }] = useQueryAndMutation({
+  const [bulkAssignFeeStructures, { isLoading: isSubmitting }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAssignFeeStructureMutation,
+    currentQueryAndMutation: useBulkAssignFeeStructureMutation,
   });
 
   const formik = useFormik({
@@ -141,60 +141,70 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
           return;
         }
 
-        // Submit assignment for all selected students
-        const assignmentPromises = students.map((student) => {
-          const selectedFeeHeadsPayload = feeHeads
-            .filter((fh) => formik.values.selectedFeeHeads.includes(fh.feeHeadId))
-            .map((fh) => {
-              const basePayload: any = { feeHeadId: fh.feeHeadId };
+        // Build the shared fee heads payload once for all students
+        const selectedFeeHeadsPayload = feeHeads
+          .filter((fh) => formik.values.selectedFeeHeads.includes(fh.feeHeadId))
+          .map((fh) => {
+            const basePayload: any = { feeHeadId: fh.feeHeadId };
 
-              if (fh.isOptional) {
-                // Add custom amount for optional fees
-                if (fh.selectedAmount && fh.selectedAmount > 0) {
-                  basePayload.amount = fh.selectedAmount;
-                }
-
-                // Add month(s) for optional fees
-                if (fh.isOneTime && fh.payableMonth) {
-                  const [month, year] = fh.payableMonth.split('-');
-                  basePayload.payableMonth = Number(month);
-                  basePayload.payableYear = Number(year);
-                } else if (!fh.isOneTime && fh.startPayableMonth && fh.endPayableMonth) {
-                  const [startMonth, startYear] = fh.startPayableMonth.split('-');
-                  const [endMonth, endYear] = fh.endPayableMonth.split('-');
-                  basePayload.startPayableMonth = Number(startMonth);
-                  basePayload.startPayableYear = Number(startYear);
-                  basePayload.endPayableMonth = Number(endMonth);
-                  basePayload.endPayableYear = Number(endYear);
-                }
-              } else {
-                // Non-optional fees use amounts and months from fee structure (API)
-                basePayload.amount = fh.amount;
-
-                if (fh.isOneTime && fh.payableMonth !== null && fh.payableMonth !== undefined) {
-                  basePayload.payableMonth = fh.payableMonth;
-                  basePayload.payableYear = fh.payableYear;
-                } else if (!fh.isOneTime) {
-                  // Recurring non-optional fees don't have specific months
-                }
+            if (fh.isOptional) {
+              // Add custom amount for optional fees
+              if (fh.selectedAmount && fh.selectedAmount > 0) {
+                basePayload.amount = fh.selectedAmount;
               }
 
-              return basePayload;
-            });
+              // Add month(s) for optional fees
+              if (fh.isOneTime && fh.payableMonth) {
+                const [month, year] = fh.payableMonth.split('-');
+                basePayload.payableMonth = Number(month);
+                basePayload.payableYear = Number(year);
+              } else if (!fh.isOneTime && fh.startPayableMonth && fh.endPayableMonth) {
+                const [startMonth, startYear] = fh.startPayableMonth.split('-');
+                const [endMonth, endYear] = fh.endPayableMonth.split('-');
+                basePayload.startPayableMonth = Number(startMonth);
+                basePayload.startPayableYear = Number(startYear);
+                basePayload.endPayableMonth = Number(endMonth);
+                basePayload.endPayableYear = Number(endYear);
+              }
+            } else {
+              // Non-optional fees use amounts and months from fee structure (API)
+              basePayload.amount = fh.amount;
 
-          const body = {
-            studentId: student.studentId || student.id,
-            standardFeeStructureId: values.feeStructureId,
-            selectedOptionalFeeHeadIds: formik.values.selectedFeeHeads,
-            feeHeadDetails: selectedFeeHeadsPayload,
-          };
-          return assignFeeStructures({ body }).unwrap();
-        });
+              if (fh.isOneTime && fh.payableMonth !== null && fh.payableMonth !== undefined) {
+                basePayload.payableMonth = fh.payableMonth;
+                basePayload.payableYear = fh.payableYear;
+              } else if (!fh.isOneTime) {
+                // Recurring non-optional fees don't have specific months
+              }
+            }
 
-        await Promise.all(assignmentPromises);
-        shikshaMitraToast.success({
-          message: `Fee structure assigned successfully to ${students.length} student(s)`,
-        });
+            return basePayload;
+          });
+
+        // Single bulk API call for all selected students
+        const body = {
+          studentIds: students.map((s) => s.studentId || s.id),
+          standardFeeStructureId: values.feeStructureId,
+          selectedOptionalFeeHeadIds: formik.values.selectedFeeHeads,
+          feeHeadDetails: selectedFeeHeadsPayload,
+        };
+
+        const result = await bulkAssignFeeStructures({ body }).unwrap();
+
+        if (result.successCount > 0 && result.skippedCount === 0) {
+          shikshaMitraToast.success({
+            message: `Fee structure assigned successfully to ${result.successCount} student(s)`,
+          });
+        } else if (result.successCount > 0 && result.skippedCount > 0) {
+          shikshaMitraToast.success({
+            message: `Fee structure assigned to ${result.successCount} student(s). ${result.skippedCount} skipped (already assigned).`,
+          });
+        } else {
+          shikshaMitraToast.error({
+            message: `No students were assigned. ${result.skippedCount} skipped (fee structure already assigned).`,
+          });
+        }
+
         handleClose(null, true);
       } catch (error) {
         console.error(error);

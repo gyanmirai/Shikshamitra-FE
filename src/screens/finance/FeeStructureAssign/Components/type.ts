@@ -17,6 +17,7 @@ export interface IFeeStructureData {
   pendingCharges?: number;
   status?: string;
   name?: string;
+  isFeeStructureAssigned?: boolean;
 }
 
 export interface IFeeStructureTableProps {

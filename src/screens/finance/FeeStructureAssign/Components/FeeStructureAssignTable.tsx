@@ -15,15 +15,15 @@ import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollect
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
-  ALL_CLASS_OPTION,
-  ALL_DIVISION_OPTION,
-  useFinanceAcademicFilters,
-} from 'src/screens/finance/hooks/useFinanceAcademicFilters';
-import {
   FeeCollectionStatusType,
   FeeCollectionStatusOptions,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
+import {
+  ALL_CLASS_OPTION,
+  ALL_DIVISION_OPTION,
+  useFinanceAcademicFilters,
+} from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import type { IFeeStructureData, IFeeStructureTableProps } from './type';
 
@@ -126,8 +126,15 @@ const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
         overdueFees: item.overdueFees ?? 0,
         totalCharges: item.totalCharges ?? 0,
         pendingCharges: item.pendingCharges ?? 0,
+        isFeeStructureAssigned: item.isFeeStructureAssigned ?? false,
       })),
     [feeStructureData?.items]
+  );
+
+  // Students on the current page who can still be bulk-assigned
+  const assignableRows = useMemo(
+    () => (tableData || []).filter((r: any) => !r.isFeeStructureAssigned),
+    [tableData]
   );
 
   const isReadyToDisplay =
@@ -197,33 +204,67 @@ const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
               isFilter: false,
               label: '',
               renderColumn() {
+                const allAssignable = assignableRows.length > 0;
+                const allAssignableSelected =
+                  allAssignable &&
+                  assignableRows.every((r: any) =>
+                    selectedStudents.some((s: any) => s.id === r.id)
+                  );
                 return (
-                  <Checkbox
-                    checked={
-                      tableData?.length > 0 && selectedStudents?.length === tableData?.length
+                  <CustomTooltip
+                    title={
+                      !allAssignable
+                        ? 'All students on this page already have a fee structure assigned'
+                        : ''
                     }
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudents((tableData as IFeeStructureData[]) || []);
-                      } else {
-                        setSelectedStudents([]);
-                      }
-                    }}
-                  />
+                  >
+                    <span>
+                      <Checkbox
+                        disabled={!allAssignable}
+                        checked={allAssignableSelected}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            // Add all assignable rows that aren't already selected
+                            const newSelections = assignableRows.filter(
+                              (r: any) => !selectedStudents.some((s: any) => s.id === r.id)
+                            );
+                            setSelectedStudents([
+                              ...selectedStudents,
+                              ...(newSelections as IFeeStructureData[]),
+                            ]);
+                          } else {
+                            // Remove only the assignable rows from selection
+                            const assignableIds = new Set(assignableRows.map((r: any) => r.id));
+                            setSelectedStudents(
+                              selectedStudents.filter((s: any) => !assignableIds.has(s.id))
+                            );
+                          }
+                        }}
+                      />
+                    </span>
+                  </CustomTooltip>
                 );
               },
               render(value, row) {
+                const isAssigned = (row as IFeeStructureData).isFeeStructureAssigned;
                 return (
-                  <Checkbox
-                    checked={selectedStudents.some((i: any) => i.id === row.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudents([...selectedStudents, row as IFeeStructureData]);
-                      } else {
-                        setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                      }
-                    }}
-                  />
+                  <CustomTooltip title={isAssigned ? 'Fee structure already assigned' : ''}>
+                    <span>
+                      <Checkbox
+                        disabled={isAssigned}
+                        checked={selectedStudents.some((i: any) => i.id === row.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedStudents([...selectedStudents, row as IFeeStructureData]);
+                          } else {
+                            setSelectedStudents(
+                              selectedStudents.filter((i: any) => i.id !== row.id)
+                            );
+                          }
+                        }}
+                      />
+                    </span>
+                  </CustomTooltip>
                 );
               },
             },

@@ -42,6 +42,7 @@ export interface FeeCollectionSummaryItem {
   paidFees: number;
   pendingFees: number;
   overdueFees: number;
+  isFeeStructureAssigned: boolean;
   status: 'Pending' | 'Paid' | 'Overdue';
 }
 

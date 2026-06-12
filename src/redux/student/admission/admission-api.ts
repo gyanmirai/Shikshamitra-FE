@@ -56,6 +56,14 @@ export const StudentAdmissionApi = api.injectEndpoints({
       }),
       invalidatesTags: [studentAdmissionType.studentAdmission],
     }),
+    bulkAssignFeeStructure: builder.mutation({
+      query: ({ body }) => ({
+        url: `/student-fee-structure/assign-bulk`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionType.studentAdmission],
+    }),
   }),
 });
 
@@ -66,4 +74,5 @@ export const {
   useGetDivisionForStandardQuery,
   useAssignFeeStructureMutation,
   useGetStudentFeeStructureQuery,
+  useBulkAssignFeeStructureMutation,
 } = StudentAdmissionApi;
