@@ -9,13 +9,13 @@ export enum CurriculumReportTitle {
 }
 
 export const CurriculumReportApiTypeMap: Record<CurriculumReportTitle, string> = {
-  [CurriculumReportTitle.ChapterProgressReport]: 'ChapterProgressReport',
-  [CurriculumReportTitle.SubjectWiseChapterCoverage]: 'SubjectWiseChapterCoverage',
-  [CurriculumReportTitle.ChapterDescriptionSummary]: 'ChapterDescriptionSummary',
-  [CurriculumReportTitle.TimelineReport]: 'TimelineReport',
-  [CurriculumReportTitle.ClassWiseChapterAssignmentReport]: 'ClassWiseChapterAssignment',
-  [CurriculumReportTitle.CurriculumCompletionReport]: 'CurriculumCompletionReport',
-  [CurriculumReportTitle.ChapterRevisionAndRevisitTracker]: 'ChapterRevisionTracker',
+  [CurriculumReportTitle.ChapterProgressReport]: 'Chapter Progress Report',
+  [CurriculumReportTitle.SubjectWiseChapterCoverage]: 'Subject-wise Chapter Coverage',
+  [CurriculumReportTitle.ChapterDescriptionSummary]: 'Chapter Description Summary',
+  [CurriculumReportTitle.TimelineReport]: 'Timeline Report',
+  [CurriculumReportTitle.ClassWiseChapterAssignmentReport]: 'Class-wise Chapter Assignment Report',
+  [CurriculumReportTitle.CurriculumCompletionReport]: 'Curriculum Completion Report',
+  [CurriculumReportTitle.ChapterRevisionAndRevisitTracker]: 'Chapter Revision Tracker',
 };
 
 export const CurriculumReportTitleOptions = [

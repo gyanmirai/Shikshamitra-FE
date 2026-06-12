@@ -6,6 +6,22 @@ export enum HomeworkAssignmentAnalyticReportTitle {
   ClasswiseOverallHomeworkAssignmentReport,
 }
 
+export const HomeworkAssignmentAnalyticReportApiTypeMap: Record<
+  HomeworkAssignmentAnalyticReportTitle,
+  string
+> = {
+  [HomeworkAssignmentAnalyticReportTitle.HomeworkLoadAnalysisReport]:
+    'Homework Load Analysis Report',
+  [HomeworkAssignmentAnalyticReportTitle.AssignmentLoadAnalysisReport]:
+    'Assignment Load Analysis Report',
+  [HomeworkAssignmentAnalyticReportTitle.TeacherPerformanceInHomeworkEvaluationReport]:
+    'Teacher Performance in Homework Evaluation Report',
+  [HomeworkAssignmentAnalyticReportTitle.StudentPerformanceTrendReport]:
+    'Student Performance Trend Report',
+  [HomeworkAssignmentAnalyticReportTitle.ClasswiseOverallHomeworkAssignmentReport]:
+    'Class-wise Overall Homework & Assignment Report',
+};
+
 export const HomeworkAssignmentAnalyticReportTitleOptions = [
   {
     name: HomeworkAssignmentAnalyticReportTitle.HomeworkLoadAnalysisReport,

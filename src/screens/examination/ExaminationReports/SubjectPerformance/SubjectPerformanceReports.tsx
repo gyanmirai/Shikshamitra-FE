@@ -6,24 +6,27 @@ import type { Medium, Division, Standards, Organization } from 'src/types/school
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Card, Button } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
+import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
-import {
-  ExamReportTitle,
-  SubjectPerformanceAnalysisReportMap,
-} from 'src/enums/examination-reports';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import {
+  ExamReportTitle,
+  ExamReportApiTypeMap,
+  SubjectPerformanceAnalysisReportMap,
+} from 'src/enums/examination-reports';
 
 import { getExamValidationSchema } from '../getExamReportValidationSchema';
+import ExaminationReportPreviewDrawer from '../ExaminationReportPreviewDrawer';
 
 const resolveMultiSelectValues = (
   selectedValues: string[],
@@ -55,6 +58,14 @@ const resolveMultiSelectValues = (
   }
 
   return selectedRealIds;
+};
+
+// Helper to get display values for UI - shows only 'all' chip when all items selected
+const getDisplayValues = (values: string[]): string[] => {
+  if (values.includes('all')) {
+    return ['all'];
+  }
+  return values;
 };
 
 const getApiItems = (response: any): any[] => {
@@ -223,7 +234,13 @@ const examReportInitialValues = {
   grade: [] as string[],
 };
 
-const SubjectPerformanceReports = ({ report }: { report: string }) => {
+const SubjectPerformanceReports = ({
+  report,
+  onSuccess,
+}: {
+  report: string;
+  onSuccess?: () => void;
+}) => {
   const mappedReport = SubjectPerformanceAnalysisReportMap.find((opt) => opt.label === report)
     ?.name as ExamReportTitle;
 
@@ -232,6 +249,10 @@ const SubjectPerformanceReports = ({ report }: { report: string }) => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [reportRequest, setReportRequest] = useState<any>(null);
+  const [submitType, setSubmitType] = useState<'preview' | 'export'>('preview');
 
   const currentFields = useMemo(
     () => SubjectPerformanceReportFieldsMap[mappedReport] || [],
@@ -250,6 +271,14 @@ const SubjectPerformanceReports = ({ report }: { report: string }) => {
     getExamValidationSchema(currentFields, currentRequiredFields)
   );
 
+  const [createExport, { isLoading: isExportCreating }] = useQueryAndMutation<
+    typeof useCreateAcademicReportExportMutation
+  >({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateAcademicReportExportMutation,
+    popupConfig: { error: true, errorMessage: 'Failed to initiate export' },
+  });
+
   const formik = useFormik({
     initialValues: {
       ...examReportInitialValues,
@@ -257,8 +286,37 @@ const SubjectPerformanceReports = ({ report }: { report: string }) => {
     },
     enableReinitialize: true,
     validationSchema: dynamicSchema,
-    onSubmit: (_values, { setSubmitting }) => {
-      window.alert('Report Generated Successfully!');
+    onSubmit: async (values, { setSubmitting }) => {
+      const requestPayload = {
+        reportType: ExamReportApiTypeMap[mappedReport],
+        filters: {
+          classIds: values.standards.filter((id) => id !== 'all'),
+          divisionIds: values.divisions.filter((id) => id !== 'all'),
+          examId: values.exam || null,
+          subjectIds:
+            values.subjects.filter((id) => id !== 'all').length > 0
+              ? values.subjects.filter((id) => id !== 'all')
+              : values.subject
+                ? [values.subject]
+                : null,
+          grade: values.grade.length > 0 ? values.grade[0] : null,
+        },
+      };
+
+      if (submitType === 'preview') {
+        setReportRequest(requestPayload);
+        setPreviewOpen(true);
+      } else if (submitType === 'export') {
+        try {
+          const res = await createExport({ ...requestPayload, format: 'pdf' }).unwrap();
+          shikshaMitraToast.success({
+            message: `Export job queued successfully! Status: ${res.status || 'Queued'}`,
+          });
+          if (onSuccess) onSuccess();
+        } catch {
+          // Error is handled by popupConfig
+        }
+      }
       setSubmitting(false);
     },
   });
@@ -426,8 +484,13 @@ const SubjectPerformanceReports = ({ report }: { report: string }) => {
       const divisionIds = divisions.map((item: any) => item.id);
       formik.setFieldValue('divisions', divisionIds.length > 0 ? ['all', ...divisionIds] : []);
     } else {
-      setAllDivision([]);
-      formik.setFieldValue('divisions', ['all']);
+      const allDivisions = allClass
+        .filter((item: any) => selectedClassIds.includes(item.id))
+        .flatMap((item: any) => (Array.isArray(item.divisions) ? item.divisions : []));
+      const uniqueDivisions = Array.from(new Map(allDivisions.map((d: any) => [d.id, d])).values());
+      setAllDivision(uniqueDivisions as Division[]);
+      const divisionIds = uniqueDivisions.map((d: any) => d.id);
+      formik.setFieldValue('divisions', divisionIds.length > 0 ? ['all', ...divisionIds] : []);
     }
 
     formik.setFieldValue('subjects', []);
@@ -483,7 +546,7 @@ const SubjectPerformanceReports = ({ report }: { report: string }) => {
                         { id: 'all', name: 'All' },
                         ...allOrganization.filter((organization) => organization.id !== 'all'),
                       ]}
-                      value={formik.values.organizations}
+                      value={getDisplayValues(formik.values.organizations)}
                       getOptionLabel={(option: any) => option?.name}
                       getOptionValue={(option: any) => option?.id}
                       onChange={(selectedValues) => {
@@ -517,7 +580,7 @@ const SubjectPerformanceReports = ({ report }: { report: string }) => {
                     <ResponsiveMultiSelect
                       label={`Class${isRequired('standards') ? ' *' : ''}`}
                       options={[{ id: 'all', name: 'All' }, ...allClass]}
-                      value={formik.values.standards}
+                      value={getDisplayValues(formik.values.standards)}
                       getOptionLabel={(option: any) => option?.name}
                       getOptionValue={(option: any) => option?.id}
                       disabled={formik.values.organizations.length === 0}
@@ -545,20 +608,11 @@ const SubjectPerformanceReports = ({ report }: { report: string }) => {
                     <ResponsiveMultiSelect
                       label={`Division${isRequired('divisions') ? ' *' : ''}`}
                       options={[{ id: 'all', name: 'All' }, ...allDivision]}
-                      value={formik.values.divisions}
+                      value={getDisplayValues(formik.values.divisions)}
                       getOptionLabel={(option: any) => option?.name}
                       getOptionValue={(option: any) => option?.id}
                       disabled={formik.values.standards.length === 0}
                       onChange={(selectedValues) => {
-                        const selectedClasses = formik.values.standards.filter(
-                          (id) => id !== 'all'
-                        );
-
-                        if (selectedClasses.length > 1 || formik.values.standards.includes('all')) {
-                          formik.setFieldValue('divisions', ['all']);
-                          return;
-                        }
-
                         const allRealIds = allDivision.map((item) => item.id);
 
                         const nextValues = resolveMultiSelectValues(
@@ -660,20 +714,37 @@ const SubjectPerformanceReports = ({ report }: { report: string }) => {
                 </Grid>
               )}
 
-              <Grid size={12} display="flex" justifyContent="flex-end">
+              <Grid size={12} display="flex" justifyContent="flex-end" gap={1.5}>
                 <Button
+                  startIcon={<Iconify icon="mdi:eye-outline" />}
+                  variant="outlined"
+                  size="small"
+                  type="submit"
+                  onClick={() => setSubmitType('preview')}
+                >
+                  Preview
+                </Button>
+                <Button
+                  startIcon={<Iconify icon="mdi:tray-arrow-down" />}
                   variant="contained"
                   size="small"
                   type="submit"
-                  startIcon={<Iconify icon={GlobalIcons.report} />}
+                  loading={isExportCreating}
+                  onClick={() => setSubmitType('export')}
                 >
-                  Generate Report
+                  Queue Export
                 </Button>
               </Grid>
             </Grid>
           </Box>
         </form>
       </Card>
+      <ExaminationReportPreviewDrawer
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        reportRequest={reportRequest}
+        reportTitle={report || ''}
+      />
     </Box>
   );
 };

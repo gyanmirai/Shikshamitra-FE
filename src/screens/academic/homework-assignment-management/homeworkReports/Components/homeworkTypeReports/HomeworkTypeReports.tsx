@@ -7,11 +7,11 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Card, Button } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -19,9 +19,15 @@ import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
-import { HomeworkReportTitle, HomeworkReportTitleOptions } from 'src/enums/homework-wise-reports';
+import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import {
+  HomeworkReportTitle,
+  HomeworkReportApiTypeMap,
+  HomeworkReportTitleOptions,
+} from 'src/enums/homework-wise-reports';
 
+import HomeworkReportPreviewDrawer from '../HomeworkReportPreviewDrawer';
 import { getHomeworkValidationSchema } from './HomeworkTypeReportValidation';
 
 type EmployeeOption = { id: string; label: string };
@@ -177,7 +183,13 @@ const HomeworkReportRequiredFieldsMap: Record<HomeworkReportTitle, string[]> = {
   [HomeworkReportTitle.HomeworkAcknowledgementReport]: ['organization', 'fromDate', 'toDate'],
 };
 
-const HomeworkManagementReports = ({ report }: { report: string }) => {
+const HomeworkManagementReports = ({
+  report,
+  onSuccess,
+}: {
+  report: string;
+  onSuccess?: () => void;
+}) => {
   const mappedReport = HomeworkReportTitleOptions.find((opt) => opt.label === report)?.name;
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -187,9 +199,23 @@ const HomeworkManagementReports = ({ report }: { report: string }) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
+  // ── Drawer & request state ──
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [reportRequest, setReportRequest] = useState<any>(null);
+  const [submitType, setSubmitType] = useState<'preview' | 'export'>('preview');
+
   const [dynamicSchema, setDynamicSchema] = useState(
     getHomeworkValidationSchema([], [], currentYear)
   );
+
+  // ── Export mutation ──
+  const [createExport, { isLoading: isExportCreating }] = useQueryAndMutation<
+    typeof useCreateAcademicReportExportMutation
+  >({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateAcademicReportExportMutation,
+    popupConfig: { error: true, errorMessage: 'Failed to initiate export' },
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -198,8 +224,37 @@ const HomeworkManagementReports = ({ report }: { report: string }) => {
     },
     enableReinitialize: true,
     validationSchema: dynamicSchema,
-    onSubmit: (val, { setSubmitting }) => {
-      window.alert('Homework report submitted...');
+    onSubmit: async (values, { setSubmitting }) => {
+      const requestPayload = {
+        reportType: HomeworkReportApiTypeMap[mappedReport as HomeworkReportTitle],
+        filters: {
+          academicYearId: currentYear?.id || null,
+          classIds: values.class ? [values.class] : null,
+          divisionIds: values.divisions.length > 0 ? values.divisions : null,
+          subjectIds: values.subjects.length > 0 ? values.subjects : null,
+          teacherIds: values.teachers.length > 0 ? values.teachers : null,
+          studentIds: values.students.length > 0 ? values.students : null,
+          fromDate: values.fromDate ? dayjs(values.fromDate).format('YYYY-MM-DD') : null,
+          toDate: values.toDate ? dayjs(values.toDate).format('YYYY-MM-DD') : null,
+        },
+      };
+
+      if (submitType === 'preview') {
+        setReportRequest(requestPayload);
+        setPreviewOpen(true);
+      } else if (submitType === 'export') {
+        try {
+          const res = await createExport({ ...requestPayload, format: 'pdf' }).unwrap();
+          shikshaMitraToast.success({
+            message: `Export job queued successfully! Status: ${res.status || 'Queued'}`,
+          });
+          if (onSuccess) {
+            onSuccess();
+          }
+        } catch {
+          // Error is handled by popupConfig
+        }
+      }
       setSubmitting(false);
     },
   });
@@ -557,20 +612,37 @@ const HomeworkManagementReports = ({ report }: { report: string }) => {
                 </Grid>
               )}
 
-              <Grid size={12} display="flex" justifyContent="flex-end">
+              <Grid size={12} display="flex" justifyContent="flex-end" gap={1.5}>
                 <Button
-                  startIcon={<Iconify icon={GlobalIcons.generateReport} />}
+                  startIcon={<Iconify icon="mdi:eye-outline" />}
+                  type="submit"
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setSubmitType('preview')}
+                >
+                  Preview
+                </Button>
+                <Button
+                  startIcon={<Iconify icon="mdi:tray-arrow-down" />}
                   type="submit"
                   variant="contained"
                   size="small"
+                  loading={isExportCreating}
+                  onClick={() => setSubmitType('export')}
                 >
-                  Generate Report
+                  Queue Export
                 </Button>
               </Grid>
             </Grid>
           </Box>
         </form>
       </Card>
+      <HomeworkReportPreviewDrawer
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        reportRequest={reportRequest}
+        reportTitle={report || ''}
+      />
     </Box>
   );
 };

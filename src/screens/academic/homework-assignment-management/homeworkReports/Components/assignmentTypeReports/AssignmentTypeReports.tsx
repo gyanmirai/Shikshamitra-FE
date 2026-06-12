@@ -8,25 +8,28 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Card, Button } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import {
-  AssignmentReportTitle,
-  AssignmentReportTitleOptions,
-} from 'src/enums/assignment-wise-report';
+import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import {
+  AssignmentReportTitle,
+  AssignmentReportApiTypeMap,
+  AssignmentReportTitleOptions,
+} from 'src/enums/assignment-wise-report';
 import { useTeacherSelection } from 'src/screens/academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/hooks/useTeacherSelection';
 
+import HomeworkReportPreviewDrawer from '../HomeworkReportPreviewDrawer';
 import { getAssignmentValidationSchema } from './AssignmentTypeReportValidation';
 
 type EmployeeOption = { id: string; label: string };
@@ -171,7 +174,13 @@ const normalizeArray = (input: any): any[] =>
 
 const removeAllToken = (values: string[]) => values.filter((id) => id !== 'all');
 
-const AssignmentManagementReports = ({ report }: { report: string }) => {
+const AssignmentManagementReports = ({
+  report,
+  onSuccess,
+}: {
+  report: string;
+  onSuccess?: () => void;
+}) => {
   const mappedReport = AssignmentReportTitleOptions.find((opt) => opt.label === report)?.name;
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -181,9 +190,23 @@ const AssignmentManagementReports = ({ report }: { report: string }) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
+  // ── Drawer & request state ──
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [reportRequest, setReportRequest] = useState<any>(null);
+  const [submitType, setSubmitType] = useState<'preview' | 'export'>('preview');
+
   const [dynamicSchema, setDynamicSchema] = useState(
     getAssignmentValidationSchema([], [], currentYear)
   );
+
+  // ── Export mutation ──
+  const [createExport, { isLoading: isExportCreating }] = useQueryAndMutation<
+    typeof useCreateAcademicReportExportMutation
+  >({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateAcademicReportExportMutation,
+    popupConfig: { error: true, errorMessage: 'Failed to initiate export' },
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -192,31 +215,45 @@ const AssignmentManagementReports = ({ report }: { report: string }) => {
     },
     enableReinitialize: true,
     validationSchema: dynamicSchema,
-    onSubmit: (values, { setSubmitting }) => {
-      const payload = {
-        report: values.report,
-        ...(currentFields.includes('organization') && { organizationId: values.organization }),
-        ...(currentFields.includes('class') && { classId: values.class || null }),
-        ...(currentFields.includes('divisions') && {
-          divisionIds: removeAllToken(values.divisions),
-        }),
-        ...(currentFields.includes('subjects') && { subjectIds: removeAllToken(values.subjects) }),
-        ...(currentFields.includes('teachers') && { teacherIds: removeAllToken(values.teachers) }),
-        ...(currentFields.includes('students') && { studentIds: removeAllToken(values.students) }),
-        ...(currentFields.includes('assignments') && {
-          assignmentIds: removeAllToken(values.assignments),
-        }),
-        ...(currentFields.includes('fromDate') && {
+    onSubmit: async (values, { setSubmitting }) => {
+      const requestPayload = {
+        reportType: AssignmentReportApiTypeMap[mappedReport as AssignmentReportTitle],
+        filters: {
+          academicYearId: currentYear?.id || null,
+          classIds: values.class ? [values.class] : null,
+          divisionIds:
+            removeAllToken(values.divisions).length > 0 ? removeAllToken(values.divisions) : null,
+          subjectIds:
+            removeAllToken(values.subjects).length > 0 ? removeAllToken(values.subjects) : null,
+          teacherIds:
+            removeAllToken(values.teachers).length > 0 ? removeAllToken(values.teachers) : null,
+          studentIds:
+            removeAllToken(values.students).length > 0 ? removeAllToken(values.students) : null,
+          assignmentIds:
+            removeAllToken(values.assignments).length > 0
+              ? removeAllToken(values.assignments)
+              : null,
           fromDate: values.fromDate ? dayjs(values.fromDate).format('YYYY-MM-DD') : null,
-        }),
-        ...(currentFields.includes('toDate') && {
           toDate: values.toDate ? dayjs(values.toDate).format('YYYY-MM-DD') : null,
-        }),
+        },
       };
 
-      // Keep existing report workflow behavior while providing config-aligned payload generation.
-      // eslint-disable-next-line no-console
-      window.alert('Assignment report generated...');
+      if (submitType === 'preview') {
+        setReportRequest(requestPayload);
+        setPreviewOpen(true);
+      } else if (submitType === 'export') {
+        try {
+          const res = await createExport({ ...requestPayload, format: 'pdf' }).unwrap();
+          shikshaMitraToast.success({
+            message: `Export job queued successfully! Status: ${res.status || 'Queued'}`,
+          });
+          if (onSuccess) {
+            onSuccess();
+          }
+        } catch {
+          // Error is handled by popupConfig
+        }
+      }
       setSubmitting(false);
     },
   });
@@ -672,9 +709,18 @@ const AssignmentManagementReports = ({ report }: { report: string }) => {
                 </Grid>
               )}
 
-              <Grid size={12} display="flex" justifyContent="flex-end">
+              <Grid size={12} display="flex" justifyContent="flex-end" gap={1.5}>
                 <Button
-                  startIcon={<Iconify icon={GlobalIcons.generateReport} />}
+                  startIcon={<Iconify icon="mdi:eye-outline" />}
+                  type="submit"
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setSubmitType('preview')}
+                >
+                  Preview
+                </Button>
+                <Button
+                  startIcon={<Iconify icon="mdi:tray-arrow-down" />}
                   type="submit"
                   variant="contained"
                   disabled={
@@ -683,14 +729,22 @@ const AssignmentManagementReports = ({ report }: { report: string }) => {
                     formik.values.report === undefined
                   }
                   size="small"
+                  loading={isExportCreating}
+                  onClick={() => setSubmitType('export')}
                 >
-                  Generate Report
+                  Queue Export
                 </Button>
               </Grid>
             </Grid>
           </Box>
         </form>
       </Card>
+      <HomeworkReportPreviewDrawer
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        reportRequest={reportRequest}
+        reportTitle={report || ''}
+      />
     </Box>
   );
 };
