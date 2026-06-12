@@ -184,9 +184,9 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                 loading={isLoading}
                 noOptionsText="No Student Found"
                 fullWidth
-                value={formik.values.student}
+                value={formik.values.student || null}
                 onChange={(e, value: any) => {
-                  formik.setFieldValue('student', value);
+                  formik.setFieldValue('student', value || null);
                 }}
                 renderTags={(tagValue, getTagProps) =>
                   tagValue.map((option, index) => (

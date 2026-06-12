@@ -146,7 +146,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const COLUMNS = [
     { label: '#', size: 0.5, align: 'left' },
-    { label: 'Fee Head', size: 2.0, align: 'left' },
+    { label: 'Fee Head', size: 3.5, align: 'left' },
     { label: 'Amount', size: 1.8, align: 'left' },
     { label: 'One Time', size: 1.5, align: 'center' },
     { label: 'Payable Month', size: 2.5, align: 'left' },
@@ -724,7 +724,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         </Typography>
                       </Grid>
 
-                      <Grid size={2.0} sx={{ pr: 1, pt: 0.75 }}>
+                      <Grid size={3.5} sx={{ pr: 1, pt: 0.75 }}>
                         <Typography variant="body2" noWrap>
                           {item.feeHeadName}
                         </Typography>

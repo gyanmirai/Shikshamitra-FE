@@ -33,8 +33,8 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
-import FeeStructureAssignmentForm from 'src/screens/student/enrollment/admission/FeeStructureAssignmentForm';
 import { useSensor, DndContext, useSensors, closestCenter, PointerSensor } from '@dnd-kit/core';
+import FeeStructureAssignmentForm from 'src/screens/student/enrollment/admission/FeeStructureAssignmentForm';
 import {
   arrayMove,
   useSortable,
@@ -64,9 +64,9 @@ import {
 import FeeLedgerList from './FeeLedgerList';
 import { toPeriod } from './FeeLedgerShared';
 import UnifiedReceiptDisplay from './UnifiedReceiptDisplay';
+import { allocatePayment } from './preview/paymentAllocationUtils';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import FeeCollectionOutcomePanel from './FeeCollectionOutcomePanel';
-import { allocatePayment } from './preview/paymentAllocationUtils';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
 import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
 import { StudentFeeSummaryCard } from '../Components/StudentFeesSummaryCard';
@@ -1142,7 +1142,7 @@ const FeeCollectComponentForm = ({
               </CustomTooltip>
             </Box>
           }
-          maxWidth="sm"
+          maxWidth="md"
         >
           <FeeStructureAssignmentForm
             student={

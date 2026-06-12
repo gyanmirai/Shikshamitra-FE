@@ -55,7 +55,6 @@ const AddFeeHeadToCardDialog: React.FC<Props> = ({ existingFeeHeadIds, onAdd, on
         amount: 0,
         isOneTime: false,
         isOptional: false,
-        isRefundable: false,
       }));
 
     onAdd(newItems);
