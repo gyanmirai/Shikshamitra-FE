@@ -15,9 +15,12 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import { Box, Tab, Card, Tabs, Button, Typography } from '@mui/material';
-import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
+import {
+  useFinanceAcademicFilters,
+  type UseFinanceAcademicFiltersResult,
+} from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import {
   concessionManagementApi,
   useGetConcessionApplicationsQuery,
@@ -36,7 +39,11 @@ interface ICombinedProps {
   onViewAllConcession?: (student: IStudentInfo) => void;
 }
 
-const StudentConcessionTable: React.FC<ICombinedProps> = ({
+interface StudentConcessionTableProps extends ICombinedProps {
+  academicFilters?: UseFinanceAcademicFiltersResult;
+}
+
+const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
   onApprove,
   onReject,
   onAddConcession,
@@ -44,7 +51,10 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   onViewConcession,
   onEditConcession,
   onViewAllConcession,
+  academicFilters,
 }) => {
+  const localFilters = useFinanceAcademicFilters();
+  const filters = academicFilters || localFilters;
   const {
     boards,
     mediums,
@@ -62,7 +72,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     setSelectedStandardId,
     setSelectedDivisionId,
     classesLoading,
-  } = useFinanceAcademicFilters();
+  } = filters;
   const tabs = useTabs(ConcessionStatusType.Pending);
   const [selectedConcession, setSelectedConcession] = React.useState<IStudentInfo | null>(null);
   const removeConcessionDialog = useBoolean();

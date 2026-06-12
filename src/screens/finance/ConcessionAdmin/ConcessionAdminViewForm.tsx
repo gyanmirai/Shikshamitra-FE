@@ -7,10 +7,10 @@ import { LoadingButton } from '@mui/lab';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -426,13 +426,18 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           size="small"
           variant="soft"
           color="warning"
-          disabled={isApproved || isRejected || isCancelled}
+          disabled={!isApproved}
           startIcon={<Iconify icon="mdi:cancel" width={16} />}
           onClick={() => onCancel(item)}
         >
           Cancel
         </LoadingButton>
-        <IconButton onClick={() => onDelete(item)} color="error" sx={{ mt: -0.5 }}>
+        <IconButton
+          onClick={() => onDelete(item)}
+          color="error"
+          disabled={item.status !== ConcessionStatusType.Pending}
+          sx={{ mt: -0.5 }}
+        >
           <Iconify icon={GlobalIcons.delete} />
         </IconButton>
       </Box>
@@ -602,6 +607,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
               sx={{
                 '& .MuiTabs-flexContainer': { gap: 2 },
                 flexGrow: 1,
+                pl: 1,
               }}
             >
               {[
@@ -739,7 +745,6 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
         sx={{
           flexShrink: 0,
           borderTop: `1px solid ${theme.palette.divider}`,
-          bgcolor: alpha(theme.palette.background.paper, 0.92),
           backdropFilter: 'blur(12px)',
           px: { xs: 2, md: 3 },
           py: 1.5,

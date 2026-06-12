@@ -89,6 +89,10 @@ export interface IConcessionFormProps {
   onClose: (data?: any, refresh?: boolean) => void;
   student: IStudentInfo;
   editData?: IConcession;
+  defaultBoardId?: string;
+  defaultMediumId?: string;
+  defaultStandardId?: string;
+  defaultDivisionId?: string;
 }
 
 export interface IStudentTableProps {

@@ -86,6 +86,10 @@ export interface IUpdateChargeFormProps {
   open: UseBooleanReturn;
   onClose: (event?: any, isSubmit?: boolean) => void;
   isEdit?: boolean; // Optional flag for explicit mode control (for backward compatibility)
+  defaultBoardId?: string;
+  defaultMediumId?: string;
+  defaultStandardId?: string;
+  defaultDivisionId?: string;
 }
 
 /**

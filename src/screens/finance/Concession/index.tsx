@@ -13,6 +13,7 @@ import { financePaths } from 'src/constants/finance-menu';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import ConcessionRequestForm from './Components/ConcessionRequestForm';
 import ReasonApprovalForm from './Components/ConcessionRequestApprove';
@@ -30,6 +31,7 @@ const Concession = () => {
   const addConcessionRequest = useBoolean();
   const viewConcessionRequest = useBoolean();
   const onViewAllConcession = useBoolean();
+  const academicFilters = useFinanceAcademicFilters();
 
   const [selectedConcession, setSelectedConcession] = useState<IStudentInfo | null>(null);
 
@@ -53,7 +55,7 @@ const Concession = () => {
     }
   };
 
-  // State to store th  e selected student concession data
+  // State to store the selected student concession data
   // null when no student is selected
   const [selectedConcessionForView, setSelectedConcessionForView] = useState<IStudentInfo | null>(
     null
@@ -161,6 +163,7 @@ const Concession = () => {
             setSelectedConcession(data);
             addConcessionRequest.onTrue();
           }}
+          academicFilters={academicFilters}
         />
       )}
 
@@ -172,6 +175,18 @@ const Concession = () => {
             onClose={handleClose}
             student={selectedConcession as IStudentInfo}
             editData={selectedConcession as any}
+            defaultBoardId={academicFilters.selectedBoard}
+            defaultMediumId={academicFilters.selectedMedium}
+            defaultStandardId={
+              academicFilters.selectedStandardId !== 'All Classes'
+                ? academicFilters.selectedStandardId
+                : ''
+            }
+            defaultDivisionId={
+              academicFilters.selectedDivisionId !== 'All Divisions'
+                ? academicFilters.selectedDivisionId
+                : ''
+            }
           />
         </Card>
       )}

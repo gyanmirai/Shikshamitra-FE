@@ -11,13 +11,16 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
 import { Box, Tab, Card, Tabs, MenuList, MenuItem, Typography } from '@mui/material';
-import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
   useGetFeeRefundsQuery,
   type FeeRefundRequestDto,
 } from 'src/redux/finance/RefundManagement/feeRefundManage';
+import {
+  useFinanceAcademicFilters,
+  type UseFinanceAcademicFiltersResult,
+} from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import type { IStudentFeeData, IStudentFeeTableProps } from '../type';
 
@@ -55,7 +58,17 @@ function mapRefundItem(item: FeeRefundRequestDto, idx: number): IStudentFeeData 
   } as IStudentFeeData;
 }
 
-const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({ onRequestRefund, onView }) => {
+interface StudentFeeRefundTableProps extends IStudentFeeTableProps {
+  academicFilters?: UseFinanceAcademicFiltersResult;
+}
+
+const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
+  onRequestRefund,
+  onView,
+  academicFilters,
+}) => {
+  const localFilters = useFinanceAcademicFilters();
+  const filters = academicFilters || localFilters;
   const {
     boards,
     mediums,
@@ -73,7 +86,7 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({ onRequestRefun
     setSelectedStandardId,
     setSelectedDivisionId,
     classesLoading,
-  } = useFinanceAcademicFilters();
+  } = filters;
 
   const tabs = useTabs(FeeRefundStatusType.Pending);
 

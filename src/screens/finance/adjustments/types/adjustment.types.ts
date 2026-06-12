@@ -82,11 +82,16 @@ export interface IAdjustmentTableProps {
   tabCounts: Record<import('../enums/adjustment.enum').AdjustmentTabEnum, number>;
   onCreateAdjustment: () => void;
   onView: (row: AdjustmentRequest) => void;
+  academicFilters?: import('src/screens/finance/hooks/useFinanceAcademicFilters').UseFinanceAcademicFiltersResult;
 }
 
 export interface IAdjustmentFormProps {
   onCancel: (e: any, isSubmit?: boolean) => void;
   onSubmit: (values: IAdjustmentFullFormValues) => void;
+  defaultBoardId?: string;
+  defaultMediumId?: string;
+  defaultStandardId?: string;
+  defaultDivisionId?: string;
 }
 
 export interface IAdjustmentViewProps {
