@@ -1064,7 +1064,7 @@ const FeeCollectComponentForm = ({
               </CustomTooltip>
             </Box>
           }
-          maxWidth="sm"
+          maxWidth="md"
         >
           <FeeStructureAssignmentForm
             student={
