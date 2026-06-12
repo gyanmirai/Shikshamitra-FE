@@ -18,12 +18,12 @@ import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import { useGetExamMarksQuery } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
+import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import {
   ExamReportTitle,
   ExamReportApiTypeMap,
   StandardResultListReportMap,
 } from 'src/enums/examination-reports';
-import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import { getExamValidationSchema } from '../getExamReportValidationSchema';
 import ExaminationReportPreviewDrawer from '../ExaminationReportPreviewDrawer';

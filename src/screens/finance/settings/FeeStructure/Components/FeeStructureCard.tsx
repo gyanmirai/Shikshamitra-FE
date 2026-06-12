@@ -4,7 +4,6 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -197,51 +196,6 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                     Optional
                   </Typography>
                 </Box>
-              </Grid>
-
-              <Grid size={1.7} display="flex" justifyContent="center">
-                <CustomTooltip title="Refundable" arrow placement="top">
-                  <Box
-                    component="div"
-                    onClick={() => {
-                      formik.setFieldValue(
-                        `feeStructureClasses.${className}[${structureIndex}].feeHeads[${index}].isRefundable`,
-                        !item.isRefundable
-                      );
-                    }}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.5,
-                      cursor: 'pointer',
-                      color: item.isRefundable ? 'success.main' : 'text.disabled',
-                      bgcolor: item.isRefundable
-                        ? (theme) => varAlpha(theme.palette.success.mainChannel, 0.08)
-                        : 'transparent',
-                      px: 1,
-                      py: 0.5,
-                      borderRadius: 1,
-                      border: '1px solid',
-                      borderColor: item.isRefundable
-                        ? (theme) => varAlpha(theme.palette.success.mainChannel, 0.2)
-                        : 'transparent',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        bgcolor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.12),
-                      },
-                    }}
-                  >
-                    <Iconify
-                      icon={
-                        item.isRefundable ? 'solar:check-circle-bold' : 'solar:check-circle-outline'
-                      }
-                      width={16}
-                    />
-                    <Typography variant="caption" fontWeight={600}>
-                      Refundable
-                    </Typography>
-                  </Box>
-                </CustomTooltip>
               </Grid>
 
               <Grid size={0.3} display="flex" justifyContent="flex-end">

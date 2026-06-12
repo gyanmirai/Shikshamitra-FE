@@ -4,17 +4,20 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuList, Typography, IconButton } from '@mui/material';
-import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
+import {
+  useGetReconciliationListQuery,
+  useDownloadReconciliationReceiptPdfMutation,
+} from 'src/redux/finance/reconciliation';
 import {
   PamentMethodsStatusColor,
   PaymentMethodsStatusType,
@@ -22,6 +25,7 @@ import {
 } from 'src/enums/finance-reconcilition-status';
 
 import { ApproveRejectForm } from './DemandDraftTable';
+import ReconciliationReceiptDialog from './ReconciliationReceiptDialog';
 
 const WalletTable = ({
   queryParams,
@@ -30,6 +34,11 @@ const WalletTable = ({
 }) => {
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [isClearCheck, setIsClearCheck] = useState(false);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+  const [receiptBlobUrl, setReceiptBlobUrl] = useState<string | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
+
   const isDialog = useBoolean(false);
 
   const { permissions } = useSelector((state: RootState) => state.auth);
@@ -42,6 +51,17 @@ const WalletTable = ({
     currentQueryAndMutation: useGetReconciliationListQuery,
     params: queryParams,
   });
+
+  const [downloadReceiptPdf] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDownloadReconciliationReceiptPdfMutation,
+    popupConfig: {
+      error: true,
+      errorMessage: 'Unable to load receipt',
+      success: false,
+    },
+  });
+
   const data = listResponse?.items ?? [];
 
   const columns: IColumn[] = useMemo(
@@ -151,11 +171,29 @@ const WalletTable = ({
         sticky: true,
         align: 'left',
         render(value, row: any) {
-          if (!canApproveReject) return null;
+          const handleDownloadReceipt = async () => {
+            setSelectedReceipt(row);
+            setReceiptLoading(true);
+            setReceiptBlobUrl(null);
+            setReceiptDialogOpen(true);
+
+            try {
+              const blob = await downloadReceiptPdf({
+                receiptId: row.id,
+              }).unwrap();
+              const objectUrl = URL.createObjectURL(blob);
+              setReceiptBlobUrl(objectUrl);
+            } catch {
+              setReceiptBlobUrl(null);
+            } finally {
+              setReceiptLoading(false);
+            }
+          };
+
           return (
             <MenuList>
-              <Box sx={{ display: 'flex' }}>
-                {row.status !== PaymentMethodsStatusType.Approved && (
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                {row.status !== PaymentMethodsStatusType.Approved && canApproveReject && (
                   <IconButton
                     onClick={() => {
                       setIsClearCheck(false);
@@ -172,7 +210,7 @@ const WalletTable = ({
                   </IconButton>
                 )}
 
-                {row.status !== PaymentMethodsStatusType.Rejected && (
+                {row.status !== PaymentMethodsStatusType.Rejected && canApproveReject && (
                   <IconButton
                     onClick={() => {
                       setIsClearCheck(true);
@@ -188,6 +226,19 @@ const WalletTable = ({
                     <Iconify icon="mdi:close-circle" sx={{ color: 'error.main' }} />
                   </IconButton>
                 )}
+
+                <CustomTooltip title="Download Receipt" arrow>
+                  <IconButton
+                    onClick={handleDownloadReceipt}
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      p: 0,
+                    }}
+                  >
+                    <Iconify icon="mdi:download" sx={{ color: 'primary.main' }} />
+                  </IconButton>
+                </CustomTooltip>
               </Box>
             </MenuList>
           );
@@ -195,8 +246,41 @@ const WalletTable = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canApproveReject]
+    [canApproveReject, downloadReceiptPdf]
   );
+
+  // Cleanup blob URLs on unmount
+  useEffect(
+    () => () => {
+      if (receiptBlobUrl) URL.revokeObjectURL(receiptBlobUrl);
+    },
+    [receiptBlobUrl]
+  );
+
+  const handleDownloadReceiptFile = () => {
+    if (!selectedReceipt || !receiptBlobUrl) return;
+    const anchor = document.createElement('a');
+    anchor.href = receiptBlobUrl;
+    anchor.download = `receipt-${selectedReceipt.receiptNumber || selectedReceipt.id}.pdf`;
+    anchor.target = '_blank';
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+  };
+
+  const handleOpenReceiptInNewTab = () => {
+    if (!receiptBlobUrl) return;
+    window.open(receiptBlobUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleReceiptDialogClose = () => {
+    setReceiptDialogOpen(false);
+    if (receiptBlobUrl) {
+      URL.revokeObjectURL(receiptBlobUrl);
+      setReceiptBlobUrl(null);
+    }
+    setSelectedReceipt(null);
+  };
 
   return (
     <>
@@ -232,6 +316,16 @@ const WalletTable = ({
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
+
+      <ReconciliationReceiptDialog
+        open={receiptDialogOpen}
+        onClose={handleReceiptDialogClose}
+        receiptData={selectedReceipt}
+        receiptBlobUrl={receiptBlobUrl}
+        isLoading={receiptLoading}
+        onDownload={handleDownloadReceiptFile}
+        onOpenInNewTab={handleOpenReceiptInNewTab}
+      />
     </>
   );
 };

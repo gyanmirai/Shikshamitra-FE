@@ -12,7 +12,6 @@ export interface IClassWiseFeeItem {
   paybleMonth?: FeeMonth; // for monthly fee heads
   payableYear?: number;
   isOptional: boolean;
-  isRefundable?: boolean;
 }
 
 export interface IClassWiseFeeData {

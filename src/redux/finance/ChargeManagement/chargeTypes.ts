@@ -25,12 +25,11 @@ export interface IChargeBatchListItem {
   amount: number;
   dueDate: string;
   purposeDescription: string;
-  status?: number;
+  /** 0 = Pending (at least one line still pending), 1 = Processed (all lines actioned) */
+  displayStatus: number;
   studentCount: number;
-  pendingCount?: number;
-  approvedCount?: number;
-  rejectedCount?: number;
-  partiallyProcessed?: boolean;
+  /** Lines no longer pending (approved + rejected) */
+  processedCount: number;
   boardId?: string;
   educationMediumId?: string;
   requestorName?: string;
