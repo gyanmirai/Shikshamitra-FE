@@ -133,7 +133,6 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, 
                       </Label>
                     ),
                 },
-
                 {
                   id: 'payableMonth',
                   label: 'Payble Month',

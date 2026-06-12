@@ -14,6 +14,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Cancel, ArrowBack, CheckCircle } from '@mui/icons-material';
 import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import {
+  calculatePerLineConcession,
+  distributeConcessionAcrossDueFees,
+} from 'src/utils/distributeConcession';
+import {
   Box,
   Chip,
   Stack,
@@ -54,18 +58,12 @@ interface ConcessionApprovalFormValues {
 // ─── Distribution Utility ─────────────────────────────────────────────────────
 
 /**
- * Distributes a fee head's total concession amount equally across the currently
- * selected months. When a month is deselected its share is automatically spread
- * over the remaining selected months.
- *
- * @param totalConcession  - Total concession amount for the fee head
- * @param selectedMonthCount - Number of currently selected months
- * @returns Per-month concession amount (0 when no months are selected)
+ * Legacy utility for calculating per-line concession for display.
+ * For actual distribution with proper integer allocation, use distributeConcessionAcrossDueFees.
+ * @deprecated Use calculatePerLineConcession from distributeConcession.ts
  */
-const distributeMonthConcession = (totalConcession: number, selectedMonthCount: number): number => {
-  if (selectedMonthCount === 0) return 0;
-  return totalConcession / selectedMonthCount;
-};
+const distributeMonthConcession = (totalConcession: number, selectedMonthCount: number): number =>
+  calculatePerLineConcession(totalConcession, selectedMonthCount);
 
 const mapApprovalContextToGroups = (ctx: any): IConcessionFeeHeadWiseGroup[] => {
   if (!ctx?.feeHeadGroups?.length) return [];
@@ -80,6 +78,7 @@ const mapApprovalContextToGroups = (ctx: any): IConcessionFeeHeadWiseGroup[] => 
     items: (g.dueFeeLines ?? []).map((l: any) => ({
       dueFeeId: l.dueFeeId,
       month: l.monthLabel || String(l.month),
+      year: Number(l.year),
       total: Number(l.originalAmount),
       paid: Number(l.paidAmount),
       due: Number(l.outstandingAmount),
@@ -173,7 +172,7 @@ const ConcessionFeeRow: React.FC<ConcessionFeeRowProps> = ({
       />
       <Box display="flex" alignItems="center" gap={1} flex={1} minWidth={0}>
         <Typography variant="body2" noWrap fontWeight={500}>
-          {item.month}
+          {item.month}-{item.year}
         </Typography>
       </Box>
       <Typography variant="body2" sx={{ width: 80, textAlign: 'right' }}>
@@ -433,7 +432,7 @@ const ApprovalSkeleton = () => (
 // ─── Validation Schema ─────────────────────────────────────────────────────────
 
 const validationSchema = Yup.object({
-  description: Yup.string().trim().required('Description / reason is required'),
+  description: Yup.string().trim().required('Description / Reason is required'),
   feeHeads: Yup.array()
     .of(
       Yup.object({
@@ -500,17 +499,18 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
         if (isApprove) {
           const feeHeadApprovals = selectedFeeHeads.map((fh) => {
             const group = groups.find((g) => g.feeHeadId === fh.feeHeadId)!;
-            const perLine = distributeMonthConcession(
-              group.concessionAmount,
-              fh.selectedDueFeeIds.length
+
+            // Distribute the approved concession amount across selected due fees
+            // ensuring the sum equals exactly the approvedConcessionAmount with no decimals
+            const allocations = distributeConcessionAcrossDueFees(
+              fh.selectedDueFeeIds,
+              group.concessionAmount
             );
+
             return {
               feeHeadId: fh.feeHeadId,
               approvedConcessionAmount: group.concessionAmount,
-              dueFeeAllocations: fh.selectedDueFeeIds.map((dueFeeId) => ({
-                dueFeeId,
-                concessionAmount: perLine,
-              })),
+              dueFeeAllocations: allocations,
             };
           });
 
@@ -636,7 +636,7 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
             multiline
             rows={2}
             size="small"
-            label={`${isApprove ? 'Approval' : 'Cancellation'} Reason / Description *`}
+            label="Description / Reason*"
             value={formik.values.description}
             onChange={(e) => formik.setFieldValue('description', e.target.value)}
             onBlur={formik.handleBlur}

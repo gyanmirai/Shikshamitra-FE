@@ -55,6 +55,10 @@ export function overlapsDateRange(item: HrPolicyAssignment, from: string, to: st
 }
 
 export function getAssignmentFormValidationError(form: AssignmentForm): string {
+  if (!form.payrollPolicyId || !form.attendancePolicyId || !form.leavePolicyId) {
+    return 'Payroll, attendance, and leave policies are required.';
+  }
+
   const effectiveFrom = form.effectiveFrom ? dayjs(form.effectiveFrom) : null;
   if (!effectiveFrom?.isValid()) {
     return 'Effective from must be a valid date.';
@@ -80,8 +84,28 @@ export function getAssignmentFormValidationError(form: AssignmentForm): string {
 export function selectSingleActiveDefaultPolicy<T extends { status?: string; isDefault?: boolean }>(
   policies: T[]
 ): T | undefined {
-  const activeDefaults = policies.filter((item) => item.status === 'active' && item.isDefault);
+  const activeDefaults = policies.filter(
+    (item) => String(item.status || '').toLowerCase() === 'active' && item.isDefault
+  );
   return activeDefaults.length === 1 ? activeDefaults[0] : undefined;
+}
+
+export function getEffectiveAssignmentLeavePolicyId(
+  assignment: { leavePolicyId?: string | null },
+  defaultLeavePolicyId?: string | null
+): string {
+  return assignment.leavePolicyId || defaultLeavePolicyId || '';
+}
+
+export function assignmentMatchesLeavePolicyFilter(
+  assignment: { leavePolicyId?: string | null },
+  leavePolicyFilterId: string | null | undefined,
+  defaultLeavePolicyId?: string | null
+): boolean {
+  if (!leavePolicyFilterId) return true;
+  return (
+    getEffectiveAssignmentLeavePolicyId(assignment, defaultLeavePolicyId) === leavePolicyFilterId
+  );
 }
 
 export function isDateInsideRange(date: string, from?: string, to?: string): boolean {

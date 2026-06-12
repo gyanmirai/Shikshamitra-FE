@@ -39,10 +39,10 @@ import {
   Autocomplete,
 } from '@mui/material';
 import {
-  useUploadDocumentsMutation,
   useGetConcessionRequestByIdQuery,
   useCreateConcessionRequestMutation,
   useUpdateConcessionRequestMutation,
+  useUploadConcessionDocumentsMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import ConcessionDocumentList from './ConcessionDocumentList';
@@ -241,7 +241,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
 
   const [uploadDocuments, { isLoading: uploadLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUploadDocumentsMutation,
+    currentQueryAndMutation: useUploadConcessionDocumentsMutation,
   });
 
   // -- Derived lists ---------------------------------------------------------

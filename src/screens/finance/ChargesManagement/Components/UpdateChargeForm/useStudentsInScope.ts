@@ -5,22 +5,18 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useLazyGetFilterStudentsQuery,
-  useLazyGetStudentsByDivisionQuery,
-} from 'src/redux/student';
+import { useLazyGetStudentsByScopeQuery } from 'src/redux/student';
 
 import type { IStudentOption } from './types';
 
 function mapStudent(item: any): IStudentOption {
-  const name = [item.firstName, item.middleName, item.lastName].filter(Boolean).join(' ').trim();
   return {
-    id: item.id ?? item.studentId,
-    studentId: item.id ?? item.studentId,
-    label: name || item.name || 'Student',
-    name: name || item.name || 'Student',
-    rollNumber: item.rollNo ?? item.rollNumber,
-    grNumber: item.grNo?.toString() ?? item.grNumber?.toString(),
+    id: item.studentId,
+    studentId: item.studentId,
+    label: item.studentName || 'Student',
+    name: item.studentName || 'Student',
+    rollNumber: item.rollNo,
+    grNumber: item.grNo?.toString(),
     standardName: item.standardName,
     divisionName: item.divisionName,
   };
@@ -36,14 +32,9 @@ export function useStudentsInScope(
   const [students, setStudents] = useState<IStudentOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [getFilterStudents] = useQueryAndMutation({
+  const [getStudentsByScope] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
-  });
-
-  const [getStudentsByDivision] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
+    currentQueryAndMutation: useLazyGetStudentsByScopeQuery,
   });
 
   const scopeKey = useMemo(
@@ -52,7 +43,8 @@ export function useStudentsInScope(
         boardId,
         educationMediumId,
         standardIds,
-        divisionIds,
+        // Only include divisionIds in the key when a single class is selected
+        divisionIds: standardIds.length === 1 ? divisionIds : [],
         yearId: currentYear?.id,
       }),
     [boardId, educationMediumId, standardIds, divisionIds, currentYear?.id]
@@ -69,36 +61,32 @@ export function useStudentsInScope(
 
       setIsLoading(true);
       try {
-        const collected: IStudentOption[] = [];
+        const params: {
+          academicYearId: string;
+          boardId: string;
+          educationMediumId: string;
+          classIds: string[];
+          divisionIds?: string[];
+        } = {
+          academicYearId: currentYear.id,
+          boardId,
+          educationMediumId,
+          classIds: standardIds,
+        };
 
+        // Only send divisionIds to the API when exactly one class is selected
         if (standardIds.length === 1 && divisionIds.length > 0) {
-          const divisionResults = await Promise.all(
-            divisionIds.map((divisionId) => getStudentsByDivision(divisionId))
-          );
-          divisionResults.forEach((result: any) => {
-            const items = Array.isArray(result?.data) ? result.data : (result?.data?.items ?? []);
-            items.forEach((item: any) => collected.push(mapStudent(item)));
-          });
-        } else {
-          const standardResults = await Promise.all(
-            standardIds.map((standardId) =>
-              getFilterStudents({
-                academicYearId: currentYear.id,
-                academicMediumId: educationMediumId,
-                standardId,
-              })
-            )
-          );
-          standardResults.forEach((result: any) => {
-            const items = result?.data?.items ?? [];
-            items.forEach((item: any) => collected.push(mapStudent(item)));
-          });
+          params.divisionIds = divisionIds;
         }
+
+        const result: any = await getStudentsByScope(params);
+        const items: any[] = Array.isArray(result?.data) ? result.data : [];
 
         if (!cancelled) {
           const unique = new Map<string, IStudentOption>();
-          collected.forEach((s) => {
-            if (s.id) unique.set(s.id, s);
+          items.forEach((item) => {
+            const mapped = mapStudent(item);
+            if (mapped.id) unique.set(mapped.id, mapped);
           });
           setStudents(Array.from(unique.values()));
         }

@@ -194,7 +194,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
               <Iconify icon="svg-spinners:3-dots-fade" width={20} />
               <Typography variant="body2">Loading classes…</Typography>
             </Box>
-          ) : !classes || classes.length === 0 ? (
+          ) : classes?.length === 0 ? (
             <Box
               display="flex"
               alignItems="center"

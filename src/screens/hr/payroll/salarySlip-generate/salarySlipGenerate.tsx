@@ -125,9 +125,7 @@ const PaySlipGenerationScreen = () => {
   const hasData = !!employee?.id && !employeeSalarySlipLoading && !!employeeSalarySlip;
 
   return (
-    <Box
-      sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', gap: 1 }}
-    >
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <CustomBreadcrumbs
         heading="Payslips"
         links={[
@@ -461,7 +459,7 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
   ];
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1}>
       <Card
         sx={{
           p: { xs: 1.5, md: 2 },
@@ -520,7 +518,7 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
         </Stack>
       </Card>
 
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 4 }}>
           <DashboardMetricCard
             label="Total Earnings"
@@ -548,7 +546,7 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
         </Grid>
       </Grid>
 
-      <Grid container spacing={1.5} alignItems="stretch">
+      <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, lg: 8 }}>
           <DashboardPanel
             title="Pay Basis"
@@ -574,7 +572,7 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
         </Grid>
       </Grid>
 
-      <Grid container spacing={1.5} alignItems="stretch">
+      <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, md: 6 }}>
           <DashboardBreakdownCard
             title="Earnings"
@@ -593,7 +591,7 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
         </Grid>
       </Grid>
 
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: slip?.remarks ? 8 : 12 }}>
           <DashboardPanel title="Net Pay in Words">
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -622,15 +620,16 @@ const StatusBadge = ({ status }: { status: string }) => {
     <Box
       component="span"
       sx={(theme) => {
+        const isDark = theme.palette.mode === 'dark';
         let bgColor = theme.palette.background.neutral;
         let borderColor = theme.palette.divider;
         let textColor = theme.palette.text.primary;
 
         if (tone !== 'default') {
           const palette = theme.palette[tone];
-          bgColor = alpha(palette.lighter, 0.42);
-          borderColor = alpha(palette.main, 0.28);
-          textColor = palette.dark;
+          bgColor = isDark ? alpha(palette.main, 0.2) : alpha(palette.lighter, 0.42);
+          borderColor = alpha(palette.main, isDark ? 0.5 : 0.28);
+          textColor = palette.main;
         }
 
         return {
@@ -683,15 +682,15 @@ const DashboardMetricCard = ({
       <Avatar
         variant="rounded"
         sx={(theme) => {
-          let bgColor = theme.palette.background.neutral;
+          const isDark = theme.palette.mode === 'dark';
+          const bgColor = theme.palette.background.neutral;
           let textColor = theme.palette.text.primary;
           let borderColor = theme.palette.divider;
 
           if (tone !== 'default') {
             const palette = theme.palette[tone];
-            bgColor = alpha(palette.lighter, 0.45);
-            textColor = palette.dark;
-            borderColor = alpha(palette.main, 0.18);
+            textColor = palette.main;
+            borderColor = alpha(palette.main, isDark ? 0.4 : 0.18);
           }
 
           return {

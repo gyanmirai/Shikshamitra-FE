@@ -54,6 +54,11 @@ export type LeaveTypeOption = {
   color?: string | null;
 };
 
+export type EffectiveLeavePolicyPreview = {
+  id?: string | null;
+  allowedLeaveTypeIds?: Array<string | null | undefined> | null;
+} | null;
+
 export type LeavePolicyResolution =
   | { status: 'resolved'; policyId: string }
   | { status: 'missing'; policyId: ''; message: string }
@@ -210,6 +215,61 @@ export function getSelectableLeaveRequestOptions<
     leaveTypes: Array.from(selectableById.values()),
     leavePolicies: policiesWithRules,
   };
+}
+
+export function resolveLeavePolicyPreviewEmployeeId(
+  employee: EmployeeOption | null | undefined,
+  authEmployeeId: string | null | undefined,
+  mode: LeaveRequestMode
+): string | undefined {
+  if (mode === 'self' || employee?.id === SELF_EMPLOYEE_ID) {
+    return authEmployeeId || undefined;
+  }
+
+  return employee?.id || undefined;
+}
+
+export function isLeavePolicyPreviewEmployeeResolutionBlocked(
+  employee: EmployeeOption | null | undefined,
+  authEmployeeId: string | null | undefined,
+  mode: LeaveRequestMode
+): boolean {
+  return (mode === 'self' || employee?.id === SELF_EMPLOYEE_ID) && !authEmployeeId;
+}
+
+export function getVisibleLeaveTypeOptionsForEffectivePolicy<TLeaveType extends LeaveTypeOption>(
+  leaveTypes: TLeaveType[] | null | undefined,
+  leavePolicy: EffectiveLeavePolicyPreview,
+  hasResolvedEmployee: boolean,
+  isPreviewLoading = false,
+  hasPreviewError = false
+): TLeaveType[] {
+  const catalog = leaveTypes || [];
+  if (!hasResolvedEmployee) {
+    return catalog;
+  }
+
+  if (isPreviewLoading || hasPreviewError || !leavePolicy?.id) {
+    return [];
+  }
+
+  const allowedLeaveTypeIds = new Set((leavePolicy.allowedLeaveTypeIds || []).filter(Boolean));
+  if (allowedLeaveTypeIds.size === 0) {
+    return [];
+  }
+
+  return catalog.filter((item) => Boolean(item?.id && allowedLeaveTypeIds.has(item.id)));
+}
+
+export function isSelectedLeaveTypeVisible<TLeaveType extends LeaveTypeOption>(
+  leaveTypeMasterId: string | null | undefined,
+  visibleLeaveTypes: TLeaveType[] | null | undefined
+): boolean {
+  if (!leaveTypeMasterId) {
+    return true;
+  }
+
+  return (visibleLeaveTypes || []).some((item) => item?.id === leaveTypeMasterId);
 }
 
 export function buildCreateLeaveRequestFormData(

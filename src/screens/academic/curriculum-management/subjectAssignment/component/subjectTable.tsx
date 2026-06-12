@@ -38,6 +38,7 @@ const SubjectTable = ({
       subjectTableData?.map((item) => ({
         ...item,
         subjectTypeValue: SubjectType[item.subjectType] || 'Core',
+        subjectsName: item?.subjects?.map((sub) => sub.subjectName).join(', '),
         subjectName: (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
             {item?.subjects?.map(
@@ -92,11 +93,12 @@ const SubjectTable = ({
         // render: (value) => <Typography variant="body2">{value}</Typography>,
       },
       {
-        id: 'subjectName',
+        id: 'subjectsName',
         label: 'Subject Name',
         align: 'left',
         isFilter: false,
         isSort: false,
+        render: (value, row) => row.subjectName,
       },
       {
         id: 'statusValue',

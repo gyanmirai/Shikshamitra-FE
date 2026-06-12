@@ -1,16 +1,18 @@
 import { it, expect, describe } from 'vitest';
 import {
+  toAttendanceWireTime,
   TAKE_ATTENDANCE_STATUS,
+  toAttendanceTableTimeValue,
   MANUAL_ATTENDANCE_UI_STATUS,
   mapTakeAttendanceStatusToUi,
   getDirtyManualAttendanceRows,
   applyManualAttendanceRowStatus,
   mapManualAttendanceStatusToWire,
-  applyManualAttendanceShiftTimes,
   applyManualAttendanceBulkStatus,
   APPROVED_LEAVE_OVERRIDE_WARNING,
   getTimeBasedAttendanceTimeIssues,
   buildManualAttendanceSaveEntries,
+  normalizeManualAttendanceRowsForSave,
   isManualAttendanceBulkStatusDisabled,
   mapManualAttendanceDayResponseToRows,
   MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS,
@@ -189,6 +191,29 @@ describe('manual attendance status mapper', () => {
     });
   });
 
+  it('clears stale time values when time-based rows move to pending', () => {
+    const row = applyManualAttendanceRowStatus(
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        captureMode: 'manual_with_time',
+        shiftStartTime: '09:00:00',
+        shiftEndTime: '17:00:00',
+        timeIn: '09:00',
+        timeOut: '17:00',
+      },
+      MANUAL_ATTENDANCE_UI_STATUS.Pending
+    );
+
+    expect(row).toEqual(
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+        timeIn: '',
+        timeOut: '',
+      })
+    );
+  });
+
   it('fills full shift times when applying present to time-based rows', () => {
     const rows = applyManualAttendanceBulkStatus(
       [
@@ -306,7 +331,7 @@ describe('manual attendance status mapper', () => {
     ]);
   });
 
-  it('applies single-row status defaults and clears absent times', () => {
+  it('applies single-row status defaults and fills zero times for absent', () => {
     const present = applyManualAttendanceRowStatus(
       {
         employeeId: 'employee-1',
@@ -328,9 +353,126 @@ describe('manual attendance status mapper', () => {
     expect(present).toMatchObject({ timeIn: '09:00', timeOut: '17:00' });
     expect(absent).toMatchObject({
       status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
-      timeIn: '',
-      timeOut: '',
+      timeIn: '00:00',
+      timeOut: '00:00',
     });
+  });
+
+  it('sends zero attendance times for absent time-based rows', () => {
+    const entries = buildManualAttendanceSaveEntries([
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
+        captureMode: 'manual_with_time',
+        timeIn: '00:00',
+        timeOut: '00:00',
+      },
+    ]);
+
+    expect(entries).toEqual([
+      {
+        employeeId: 'employee-1',
+        statusWire: 'ABSENT',
+        inTime: '00:00:00',
+        outTime: '00:00:00',
+        remarks: '',
+      },
+    ]);
+  });
+
+  it('normalizes dirty rows before save so valid shift times are present', () => {
+    const rows = normalizeManualAttendanceRowsForSave([
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        captureMode: 'manual_with_time' as const,
+        shiftStartTime: '09:00:00',
+        shiftEndTime: '17:00:00',
+        timeIn: '',
+        timeOut: '',
+      },
+      {
+        employeeId: 'employee-2',
+        status: MANUAL_ATTENDANCE_UI_STATUS.HalfDay,
+        captureMode: 'integrated' as const,
+        shiftStartTime: '08:30:00',
+        shiftEndTime: '16:30:00',
+        timeIn: '',
+        timeOut: '',
+      },
+      {
+        employeeId: 'employee-3',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
+        captureMode: 'manual_with_time' as const,
+        shiftStartTime: '09:00:00',
+        shiftEndTime: '17:00:00',
+        timeIn: '',
+        timeOut: '',
+      },
+    ]);
+
+    expect(rows).toEqual([
+      expect.objectContaining({ timeIn: '09:00', timeOut: '17:00' }),
+      expect.objectContaining({ timeIn: '08:30', timeOut: '12:30' }),
+      expect.objectContaining({ timeIn: '00:00', timeOut: '00:00' }),
+    ]);
+    expect(getTimeBasedAttendanceTimeIssues(rows)).toEqual([]);
+  });
+
+  it('preserves manually edited present and half-day times during save normalization', () => {
+    const rows = normalizeManualAttendanceRowsForSave([
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        captureMode: 'manual_with_time' as const,
+        shiftStartTime: '09:00:00',
+        shiftEndTime: '17:00:00',
+        timeIn: '09:15',
+        timeOut: '16:45',
+      },
+      {
+        employeeId: 'employee-2',
+        status: MANUAL_ATTENDANCE_UI_STATUS.HalfDay,
+        captureMode: 'integrated' as const,
+        shiftStartTime: '08:30:00',
+        shiftEndTime: '16:30:00',
+        timeIn: '10:00',
+        timeOut: '13:00',
+      },
+    ]);
+
+    expect(rows).toEqual([
+      expect.objectContaining({ timeIn: '09:15', timeOut: '16:45' }),
+      expect.objectContaining({ timeIn: '10:00', timeOut: '13:00' }),
+    ]);
+  });
+
+  it('fills only the missing side when save-normalizing partial manual time edits', () => {
+    const rows = normalizeManualAttendanceRowsForSave([
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        captureMode: 'manual_with_time' as const,
+        shiftStartTime: '09:00:00',
+        shiftEndTime: '17:00:00',
+        timeIn: '09:20',
+        timeOut: '',
+      },
+      {
+        employeeId: 'employee-2',
+        status: MANUAL_ATTENDANCE_UI_STATUS.HalfDay,
+        captureMode: 'integrated' as const,
+        shiftStartTime: '08:30:00',
+        shiftEndTime: '16:30:00',
+        timeIn: '',
+        timeOut: '13:15',
+      },
+    ]);
+
+    expect(rows).toEqual([
+      expect.objectContaining({ timeIn: '09:20', timeOut: '17:00' }),
+      expect.objectContaining({ timeIn: '08:30', timeOut: '13:15' }),
+    ]);
   });
 
   it('adds one approved-leave override warning for manual statuses', () => {
@@ -382,54 +524,6 @@ describe('manual attendance status mapper', () => {
         remarks: '',
       },
     ]);
-  });
-
-  it('applies shift time only to time-based present rows', () => {
-    const result = applyManualAttendanceShiftTimes([
-      {
-        employeeId: 'employee-1',
-        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
-        captureMode: 'manual_with_time',
-        shiftStartTime: '09:00:00',
-        shiftEndTime: '17:00:00',
-      },
-      {
-        employeeId: 'employee-2',
-        status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
-        captureMode: 'manual_with_time',
-        shiftStartTime: '09:00:00',
-        shiftEndTime: '17:00:00',
-      },
-      {
-        employeeId: 'employee-3',
-        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
-        captureMode: 'manual_status',
-        shiftStartTime: '09:00:00',
-        shiftEndTime: '17:00:00',
-      },
-      {
-        employeeId: 'employee-4',
-        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
-        captureMode: 'integrated',
-        shiftStartTime: '09:00:00',
-        shiftEndTime: '17:00:00',
-      },
-      {
-        employeeId: 'employee-5',
-        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
-        captureMode: 'manual_with_time',
-        shiftStartTime: null,
-        shiftEndTime: '17:00:00',
-      },
-    ]);
-
-    expect(result.updated).toBe(2);
-    expect(result.skipped).toBe(1);
-    expect(result.rows[0]).toMatchObject({ timeIn: '09:00', timeOut: '17:00' });
-    expect(result.rows[1]).not.toHaveProperty('timeIn');
-    expect(result.rows[2]).not.toHaveProperty('timeIn');
-    expect(result.rows[3]).toMatchObject({ timeIn: '09:00', timeOut: '17:00' });
-    expect(result.rows[4]).not.toHaveProperty('timeIn');
   });
 
   it('reports time-based present and half-day rows missing shift or attendance times', () => {
@@ -484,6 +578,42 @@ describe('manual attendance status mapper', () => {
       invalidShiftTime: true,
       missingAttendanceTime: true,
     });
+  });
+
+  it('rejects impossible clock values from shift and attendance time inputs', () => {
+    expect(toAttendanceTableTimeValue('25:00:00')).toBe('');
+    expect(toAttendanceTableTimeValue('09:99:00')).toBe('');
+    expect(toAttendanceWireTime('17:60')).toBeNull();
+    expect(toAttendanceWireTime('24:00:00')).toBeNull();
+    expect(toAttendanceWireTime('23:59:59')).toBe('23:59:00');
+  });
+
+  it('does not auto-fill present times when shift clock values are impossible', () => {
+    const row = applyManualAttendanceRowStatus(
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+        captureMode: 'manual_with_time',
+        shiftStartTime: '25:00:00',
+        shiftEndTime: '26:00:00',
+      },
+      MANUAL_ATTENDANCE_UI_STATUS.Present
+    );
+
+    expect(row).toEqual(
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        timeIn: '',
+        timeOut: '',
+      })
+    );
+    expect(getTimeBasedAttendanceTimeIssues([row])).toEqual([
+      expect.objectContaining({
+        missingShiftTime: true,
+        invalidShiftTime: false,
+        missingAttendanceTime: true,
+      }),
+    ]);
   });
 
   it('returns only dirty manual attendance rows before saving', () => {

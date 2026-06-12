@@ -7,6 +7,15 @@ export enum TimetableReportTitle {
   TimetableChangeLogReport,
 }
 
+export const TimetableReportApiTypeMap: Record<TimetableReportTitle, string> = {
+  [TimetableReportTitle.ClassWiseTimetableReport]: 'Class-wise Timetable Report',
+  [TimetableReportTitle.TeacherWiseTimetableReport]: 'Teacher-wise Timetable Report',
+  [TimetableReportTitle.RoomUtilizationReport]: 'Room Utilization Report',
+  [TimetableReportTitle.SubjectWiseTimetableDistribution]: 'Subject-wise Timetable Distribution',
+  [TimetableReportTitle.FreePeriodsReport]: 'Free Periods Report',
+  [TimetableReportTitle.TimetableChangeLogReport]: 'Timetable Change Log Report',
+};
+
 export const TimetableReportTitleOptions = [
   {
     name: TimetableReportTitle.ClassWiseTimetableReport,

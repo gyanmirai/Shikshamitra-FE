@@ -113,6 +113,17 @@ export type AttendancePolicy = {
   lastUpdatedAt?: string | null;
 };
 
+export type LeavePolicySummary = {
+  id: string;
+  academicYearId?: string;
+  name?: string;
+  policyTitle?: string;
+  title?: string;
+  status?: PolicyStatus | string;
+  isDefault?: boolean;
+  allowedLeaveTypeIds?: string[];
+};
+
 export type HrPolicyAssignment = {
   id: string;
   academicYearId: string;
@@ -122,6 +133,7 @@ export type HrPolicyAssignment = {
   targetOrganizationNames?: string[] | null;
   attendancePolicyId: string;
   payrollPolicyId: string;
+  leavePolicyId?: string | null;
   effectiveFrom: string;
   effectiveTo?: string | null;
   isActive: boolean;
@@ -167,6 +179,7 @@ export type EmployeePolicyOverrideRequest = {
   assignmentId?: string | null;
   payrollPolicyId: string;
   attendancePolicyId: string;
+  leavePolicyId: string;
   effectiveFrom: string;
   effectiveTo?: string | null;
   assignmentReason?: string | null;
@@ -195,6 +208,7 @@ export type EffectiveEmployeePolicies = {
   matchedPriority?: number | null;
   attendancePolicy: AttendancePolicy;
   payrollPolicy: PayrollPolicy;
+  leavePolicy?: LeavePolicySummary | null;
   attendanceWorkCalendarPolicy?: WorkCalendarPolicy | null;
   payrollWorkCalendarPolicy?: WorkCalendarPolicy | null;
   resolutionSteps?: EffectivePolicyResolutionStep[];
@@ -214,6 +228,7 @@ export type EffectivePolicyResolutionStep = {
   skipReason: string;
   payrollPolicyId?: string | null;
   attendancePolicyId?: string | null;
+  leavePolicyId?: string | null;
 };
 
 export type PolicyHolidayImpactPreview = {
@@ -317,6 +332,8 @@ export type HrPolicyEffectiveAssignmentCandidate = {
   payrollPolicyName: string;
   attendancePolicyId: string;
   attendancePolicyName: string;
+  leavePolicyId?: string | null;
+  leavePolicyName?: string | null;
   effectiveFrom: string;
   effectiveTo?: string | null;
   priority: number;
@@ -333,6 +350,8 @@ export type HrPolicyAssignmentConflict = {
   payrollPolicyName: string;
   attendancePolicyId: string;
   attendancePolicyName: string;
+  leavePolicyId?: string | null;
+  leavePolicyName?: string | null;
   effectiveFrom: string;
   effectiveTo?: string | null;
   priority: number;

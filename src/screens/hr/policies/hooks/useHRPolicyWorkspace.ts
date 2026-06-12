@@ -23,6 +23,7 @@ import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   useGetGroupsQuery,
@@ -123,7 +124,9 @@ import {
   formatHolidayOverlapMessage,
   selectSingleActiveDefaultPolicy,
   getAssignmentFormValidationError,
+  assignmentMatchesLeavePolicyFilter,
   normalizePayrollDayCalculationType,
+  getEffectiveAssignmentLeavePolicyId,
 } from '../hr-policy-workspace-utils';
 
 import type { AttendanceNumericField } from '../hr-policy-ui-utils';
@@ -196,6 +199,14 @@ function hasCustomAttendanceAdvancedSettings(form: AttendanceForm): boolean {
 
 function toEditablePolicyStatus(status?: string): EditablePolicyStatus {
   return status === 'active' ? 'active' : 'draft';
+}
+
+function getLeavePolicyName(item: any): string {
+  return item?.policyTitle || item?.name || item?.title || item?.id || '-';
+}
+
+function isActiveLeavePolicy(item: any): boolean {
+  return String(item?.status || '').toLowerCase() === 'active' || item?.isActive === true;
 }
 
 // --- Hook ---------------------------------------------------------------------
@@ -330,6 +341,14 @@ export function useHRPolicyWorkspace({
     isFetching: attendanceLoading,
     error: attendanceError,
   } = useGetAttendancePoliciesQuery(listArgs, { skip: !academicYearId });
+  const {
+    data: leavePolicyData,
+    isFetching: leavePoliciesLoading,
+    error: leavePoliciesError,
+  } = useGetLeavePoliciesQuery(
+    { academicYearId, page: 1, pageSize: 500 },
+    { skip: !academicYearId }
+  );
   const {
     data: assignments,
     isFetching: assignmentsLoading,
@@ -531,6 +550,7 @@ export function useHRPolicyWorkspace({
    * re-renders of the attendance table and derived default policy lookup.
    */
   const attendance = useMemo(() => attendancePolicies?.items || [], [attendancePolicies?.items]);
+  const leavePolicies = useMemo(() => getItems<any>(leavePolicyData), [leavePolicyData]);
 
   const visibleCalendars = filterPoliciesByArchiveView(calendars, policyArchiveView.calendar);
   const visiblePayroll = filterPoliciesByArchiveView(payroll, policyArchiveView.payroll);
@@ -541,6 +561,7 @@ export function useHRPolicyWorkspace({
   const activeCalendars = calendars.filter((item) => item.status === 'active');
   const activePayroll = payroll.filter((item) => item.status === 'active');
   const activeAttendance = attendance.filter((item) => item.status === 'active');
+  const activeLeavePolicies = leavePolicies.filter(isActiveLeavePolicy);
 
   const isPolicyOperationActive = Boolean(activePolicyOperation);
 
@@ -561,6 +582,7 @@ export function useHRPolicyWorkspace({
 
   const defaultPayroll = selectSingleActiveDefaultPolicy(activePayroll);
   const defaultAttendancePolicy = selectSingleActiveDefaultPolicy(activeAttendance);
+  const defaultLeavePolicy = selectSingleActiveDefaultPolicy(activeLeavePolicies);
 
   const employeeOptions = getItems<LookupOption>(employees);
   const groupOptions = getItems<LookupOption>(groups);
@@ -575,6 +597,7 @@ export function useHRPolicyWorkspace({
   const assignmentRows = useMemo<AssignmentTableRow[]>(() => {
     const payrollNameById = new Map(payroll.map((item) => [item.id, item.name]));
     const attendanceNameById = new Map(attendance.map((item) => [item.id, item.name]));
+    const leaveNameById = new Map(leavePolicies.map((item) => [item.id, getLeavePolicyName(item)]));
     const employeeById = new Map(employeeOptions.map((item) => [item.id, item]));
     const search = assignmentFilters.search.trim().toLowerCase();
 
@@ -611,6 +634,14 @@ export function useHRPolicyWorkspace({
         )
           return false;
         if (
+          !assignmentMatchesLeavePolicyFilter(
+            item,
+            assignmentFilters.leavePolicyId,
+            defaultLeavePolicy?.id
+          )
+        )
+          return false;
+        if (
           assignmentFilters.activeOnDate &&
           !isDateWithinRange(assignmentFilters.activeOnDate, item.effectiveFrom, item.effectiveTo)
         )
@@ -631,6 +662,9 @@ export function useHRPolicyWorkspace({
           item.assignmentReason,
           payrollNameById.get(item.payrollPolicyId),
           attendanceNameById.get(item.attendancePolicyId),
+          getEffectiveAssignmentLeavePolicyId(item, defaultLeavePolicy?.id)
+            ? leaveNameById.get(getEffectiveAssignmentLeavePolicyId(item, defaultLeavePolicy?.id))
+            : undefined,
         ]
           .filter(Boolean)
           .join(' ')
@@ -661,13 +695,26 @@ export function useHRPolicyWorkspace({
           payrollPolicyName: payrollNameById.get(item.payrollPolicyId) || item.payrollPolicyId,
           attendancePolicyName:
             attendanceNameById.get(item.attendancePolicyId) || item.attendancePolicyId,
+          leavePolicyName: item.leavePolicyId
+            ? leaveNameById.get(item.leavePolicyId) || item.leavePolicyId
+            : defaultLeavePolicy
+              ? `${getLeavePolicyName(defaultLeavePolicy)} (default)`
+              : 'Default leave policy unavailable',
           effective: formatRange(item.effectiveFrom, item.effectiveTo),
           priority: item.priority,
           status: item.isActive ? 'Active' : 'Inactive',
           reason: item.assignmentReason || '-',
         };
       });
-  }, [assignments?.items, assignmentFilters, attendance, employeeOptions, payroll]);
+  }, [
+    assignments?.items,
+    assignmentFilters,
+    attendance,
+    defaultLeavePolicy,
+    employeeOptions,
+    leavePolicies,
+    payroll,
+  ]);
 
   /**
    * Memoization Justification:
@@ -1031,6 +1078,7 @@ export function useHRPolicyWorkspace({
               targetDisplayName: item.targetDisplayName || '',
               payrollPolicyId: item.payrollPolicyId,
               attendancePolicyId: item.attendancePolicyId,
+              leavePolicyId: item.leavePolicyId || '',
               effectiveFrom: toDateInput(item.effectiveFrom),
               effectiveTo: toDateInput(item.effectiveTo),
               priority: String(item.priority ?? 0),
@@ -1041,11 +1089,12 @@ export function useHRPolicyWorkspace({
               ...defaultAssignmentForm(currentYear?.startDate),
               payrollPolicyId: defaultPayroll?.id || '',
               attendancePolicyId: defaultAttendancePolicy?.id || '',
+              leavePolicyId: defaultLeavePolicy?.id || '',
             }
       );
       setDrawer({ kind: 'assignment', mode: item ? mode : 'create', item });
     },
-    [currentYear, defaultAttendancePolicy?.id, defaultPayroll?.id]
+    [currentYear, defaultAttendancePolicy?.id, defaultLeavePolicy?.id, defaultPayroll?.id]
   );
 
   // --- Impact drawer --------------------------------------------------------
@@ -1570,6 +1619,7 @@ export function useHRPolicyWorkspace({
       !assignmentForm.targetKey.trim() ||
       !assignmentForm.payrollPolicyId ||
       !assignmentForm.attendancePolicyId ||
+      !assignmentForm.leavePolicyId ||
       !assignmentForm.effectiveFrom
     ) {
       setFormError('Target, policies, and effective from are required.');
@@ -1592,6 +1642,7 @@ export function useHRPolicyWorkspace({
       targetDisplayName: assignmentForm.targetDisplayName || null,
       payrollPolicyId: assignmentForm.payrollPolicyId,
       attendancePolicyId: assignmentForm.attendancePolicyId,
+      leavePolicyId: assignmentForm.leavePolicyId,
       effectiveFrom: assignmentForm.effectiveFrom,
       effectiveTo: assignmentForm.effectiveTo || null,
       priority,
@@ -1717,6 +1768,17 @@ export function useHRPolicyWorkspace({
         },
         async () => {
           try {
+            const effectiveLeavePolicyId = getEffectiveAssignmentLeavePolicyId(
+              item,
+              defaultLeavePolicy?.id
+            );
+            if (!effectiveLeavePolicyId) {
+              setFormError(
+                'A single default leave policy is required before previewing impact for this legacy assignment.'
+              );
+              return;
+            }
+
             const preview = await previewPolicyAssignmentImpact({
               action: 'delete',
               assignmentId: item.id,
@@ -1727,6 +1789,7 @@ export function useHRPolicyWorkspace({
                 targetDisplayName: item.targetDisplayName || null,
                 payrollPolicyId: item.payrollPolicyId,
                 attendancePolicyId: item.attendancePolicyId,
+                leavePolicyId: effectiveLeavePolicyId,
                 effectiveFrom: item.effectiveFrom,
                 effectiveTo: item.effectiveTo || null,
                 priority: item.priority,
@@ -1750,6 +1813,7 @@ export function useHRPolicyWorkspace({
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
+      defaultLeavePolicy?.id,
       deleteHrPolicyAssignmentWithToken,
       openImpactDrawerLoading,
       previewPolicyAssignmentImpact,
@@ -1831,6 +1895,7 @@ export function useHRPolicyWorkspace({
       !assignmentForm.targetKey.trim() ||
       !assignmentForm.payrollPolicyId ||
       !assignmentForm.attendancePolicyId ||
+      !assignmentForm.leavePolicyId ||
       !assignmentForm.effectiveFrom
     ) {
       setFormError('Target, policies, and effective from are required before impact preview.');
@@ -1864,6 +1929,7 @@ export function useHRPolicyWorkspace({
               targetDisplayName: assignmentForm.targetDisplayName || null,
               payrollPolicyId: assignmentForm.payrollPolicyId,
               attendancePolicyId: assignmentForm.attendancePolicyId,
+              leavePolicyId: assignmentForm.leavePolicyId,
               effectiveFrom: assignmentForm.effectiveFrom,
               effectiveTo: assignmentForm.effectiveTo || null,
               priority: Number(assignmentForm.priority || 0),
@@ -2138,6 +2204,7 @@ export function useHRPolicyWorkspace({
     calendars,
     payroll,
     attendance,
+    leavePolicies,
     visibleCalendars,
     visiblePayroll,
     visibleAttendance,
@@ -2147,6 +2214,7 @@ export function useHRPolicyWorkspace({
     activeCalendars,
     activePayroll,
     activeAttendance,
+    activeLeavePolicies,
     assignments,
     assignmentRows,
     employeeOptions,
@@ -2155,6 +2223,7 @@ export function useHRPolicyWorkspace({
     // Derived
     defaultPayroll,
     defaultAttendancePolicy,
+    defaultLeavePolicy,
 
     // Permissions
     canCreatePolicy,
@@ -2171,17 +2240,20 @@ export function useHRPolicyWorkspace({
       calendarsLoading ||
       payrollLoading ||
       attendanceLoading ||
+      leavePoliciesLoading ||
       assignmentsLoading ||
       employeesLoading ||
       groupsLoading,
     calendarsLoading,
     payrollLoading,
     attendanceLoading,
+    leavePoliciesLoading,
     assignmentsLoading,
     // Errors
     calendarsError,
     payrollError,
     attendanceError,
+    leavePoliciesError,
     assignmentsError,
 
     // Archive view

@@ -32,7 +32,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       providesTags: [financeModuleType.concessionRequest],
     }),
 
-    uploadDocuments: builder.mutation({
+    uploadConcessionDocuments: builder.mutation({
       query: ({ concessionRequestId, documents }) => ({
         url: `/concession-request/${concessionRequestId}/documents`,
         method: 'PUT',
@@ -107,7 +107,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 export const {
   useCreateConcessionRequestMutation,
   useUpdateConcessionRequestMutation,
-  useUploadDocumentsMutation,
+  useUploadConcessionDocumentsMutation,
   useGetStudentConcessionDetailsQuery,
   useGetConcessionApprovalContextQuery,
   useApproveConcessionRequestMutation,

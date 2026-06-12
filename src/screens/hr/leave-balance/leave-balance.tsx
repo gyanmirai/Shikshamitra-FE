@@ -6,9 +6,7 @@ import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { hrPaths } from 'src/constants/hr-menus';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { DashboardCard } from 'src/components/dashboard-card';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
@@ -17,6 +15,7 @@ import {
   Card,
   Grid,
   Chip,
+  Stack,
   Alert,
   Tooltip,
   Skeleton,
@@ -25,126 +24,238 @@ import {
 } from '@mui/material';
 
 import { useLeaveOverview } from '../leave-request/use-leave-overview';
-import { LEAVE_OVERVIEW_CARDS } from '../leave-request/leave-overview.utils';
 import { getLeaveStatusColor, getLeaveStatusLabel } from '../leave-request/leave-status.utils';
 
-// -----------------------------------------------------------------------
+import type { LeaveOverviewData, LeaveTypeBreakdown } from '../leave-request/leave-overview.utils';
 
 // -----------------------------------------------------------------------
 
-const BREAKDOWN_COLUMNS: IColumn[] = [
-  {
-    id: 'leaveTypeName',
-    label: 'Leave Type',
-    align: 'left',
-    sticky: true,
-    minWidth: '160px',
-    render(value, row) {
-      return (
-        <Tooltip title={`${value} – ${row.total} days allocated this year`} arrow placement="top">
-          <Chip
-            label={value}
-            size="small"
-            variant="outlined"
-            sx={{ fontWeight: 600, cursor: 'help' }}
-          />
-        </Tooltip>
-      );
-    },
-  },
-  {
-    id: 'total',
-    label: 'Total',
-    filterType: 'number',
-    minWidth: '80px',
-  },
-  {
-    id: 'used',
-    label: 'Used',
-    filterType: 'number',
-    minWidth: '80px',
-    render(value) {
-      return (
-        <Typography variant="body2" sx={{ color: 'warning.main', fontWeight: 600 }}>
-          {value}
-        </Typography>
-      );
-    },
-  },
-  {
-    id: 'pending',
-    label: 'Pending',
-    filterType: 'number',
-    minWidth: '80px',
-    render(value) {
-      return (
-        <Typography variant="body2" sx={{ color: 'info.main', fontWeight: 600 }}>
-          {value}
-        </Typography>
-      );
-    },
-  },
-  {
-    id: 'remaining',
-    label: 'Remaining',
-    filterType: 'number',
-    minWidth: '100px',
-    render(value, row) {
-      const isLow = value <= 2 && row.total > 0;
-      return (
-        <Tooltip
-          title={isLow ? 'Low balance! Only a few days left.' : ''}
-          arrow
-          placement="top"
-          disableHoverListener={!isLow}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: 700, color: isLow ? 'error.main' : 'success.main' }}
+const formatLeaveDays = (value: number) => `${value} ${value === 1 ? 'day' : 'days'}`;
+
+const BalanceSummaryStrip = ({
+  overview,
+  isLoading,
+}: {
+  overview: LeaveOverviewData;
+  isLoading: boolean;
+}) => {
+  const usagePct =
+    overview.totalLeaves > 0
+      ? Math.min(100, Math.round((overview.usedLeaves / overview.totalLeaves) * 100))
+      : 0;
+
+  return (
+    <Card
+      variant="outlined"
+      sx={{
+        p: { xs: 1.5, md: 2 },
+        borderRadius: 2,
+        boxShadow: 'none',
+        bgcolor: 'background.paper',
+      }}
+    >
+      {isLoading ? (
+        <Stack spacing={1.5}>
+          <Skeleton width="28%" height={22} />
+          <Skeleton variant="rounded" height={72} sx={{ borderRadius: 2 }} />
+        </Stack>
+      ) : (
+        <Stack spacing={1.5}>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={1.5}
+            justifyContent="space-between"
+          >
+            <Stack direction="row" spacing={1.25} alignItems="center">
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'success.main',
+                  bgcolor: 'success.lighter',
+                }}
+              >
+                <Iconify icon="solar:calendar-add-bold-duotone" width={24} />
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                  Available balance
+                </Typography>
+                <Stack direction="row" alignItems="baseline" spacing={0.75}>
+                  <Typography variant="h3" sx={{ fontWeight: 800, lineHeight: 1 }}>
+                    {overview.remainingLeaves}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+                    / {formatLeaveDays(overview.totalLeaves)}
+                  </Typography>
+                </Stack>
+              </Box>
+            </Stack>
+
+            <Stack
+              direction="row"
+              spacing={1}
+              flexWrap="wrap"
+              useFlexGap
+              sx={{ alignItems: 'center' }}
             >
-              {value}
-            </Typography>
-            {isLow && (
-              <Iconify
-                icon="solar:danger-bold"
-                sx={{ color: 'error.main', width: 14, height: 14 }}
+              <Chip
+                size="small"
+                color="warning"
+                variant="soft"
+                label={`${formatLeaveDays(overview.usedLeaves)} used`}
+                sx={{ fontWeight: 700 }}
               />
-            )}
-          </Box>
-        </Tooltip>
-      );
-    },
-  },
-  {
-    id: 'progress',
-    label: 'Usage',
-    isFilter: false,
-    isSort: false,
-    minWidth: '140px',
-    render(_value, row) {
-      const pct = row.total > 0 ? Math.round((row.used / row.total) * 100) : 0;
-      const color = pct >= 80 ? 'error' : pct >= 50 ? 'warning' : 'success';
-      return (
-        <Box sx={{ width: '100%', minWidth: 100 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-            <Typography variant="caption" color="text.secondary">
-              {pct}%
-            </Typography>
-          </Box>
+              <Chip
+                size="small"
+                color="info"
+                variant="soft"
+                label={`${overview.pendingLeaves} pending`}
+                sx={{ fontWeight: 700 }}
+              />
+              <Chip
+                size="small"
+                color="primary"
+                variant="soft"
+                label={`${usagePct}% utilized`}
+                sx={{ fontWeight: 700 }}
+              />
+            </Stack>
+          </Stack>
+
           <LinearProgress
             variant="determinate"
-            value={pct}
-            color={color}
-            sx={{ height: 6, borderRadius: 3 }}
+            value={usagePct}
+            color={usagePct >= 80 ? 'error' : usagePct >= 50 ? 'warning' : 'success'}
+            sx={{ height: 8, borderRadius: 999, bgcolor: 'background.neutral' }}
+          />
+        </Stack>
+      )}
+    </Card>
+  );
+};
+
+const LeaveTypeSummaryCard = ({ row }: { row: LeaveTypeBreakdown }) => {
+  const usagePct = row.total > 0 ? Math.min(100, Math.round((row.used / row.total) * 100)) : 0;
+  const progressColor: 'success' | 'warning' | 'error' =
+    usagePct >= 80 ? 'error' : usagePct >= 50 ? 'warning' : 'success';
+  const isLowBalance = row.remaining <= 2 && row.total > 0;
+
+  return (
+    <Card
+      variant="outlined"
+      sx={{
+        p: 2,
+        height: 1,
+        borderRadius: 2,
+        borderColor: isLowBalance ? 'error.light' : 'divider',
+        bgcolor: isLowBalance ? 'error.lighter' : 'background.paper',
+      }}
+    >
+      <Stack spacing={1.75} sx={{ height: 1 }}>
+        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1.5}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                flexShrink: 0,
+                borderRadius: 1.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: isLowBalance ? 'error.main' : 'primary.main',
+                bgcolor: isLowBalance ? 'error.light' : 'primary.lighter',
+              }}
+            >
+              <Iconify icon="solar:calendar-mark-bold-duotone" width={20} />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography
+                variant="subtitle2"
+                title={row.leaveTypeName}
+                sx={{
+                  fontWeight: 700,
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {row.leaveTypeName}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {usagePct}% used
+              </Typography>
+            </Box>
+          </Stack>
+
+          {isLowBalance && (
+            <Chip
+              size="small"
+              color="error"
+              variant="soft"
+              icon={<Iconify icon="solar:danger-triangle-bold" width={14} />}
+              label="Low"
+              sx={{ fontWeight: 700 }}
+            />
+          )}
+        </Stack>
+
+        <Box>
+          <Stack direction="row" alignItems="baseline" spacing={0.75}>
+            <Typography variant="h4" sx={{ lineHeight: 1, fontWeight: 800 }}>
+              {row.remaining}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+              / {formatLeaveDays(row.total)}
+            </Typography>
+          </Stack>
+          <Typography variant="caption" color="text.secondary">
+            remaining balance
+          </Typography>
+        </Box>
+
+        <Box>
+          <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
+            <Typography variant="caption" color="text.secondary">
+              Usage
+            </Typography>
+            <Typography variant="caption" sx={{ fontWeight: 700 }}>
+              {usagePct}%
+            </Typography>
+          </Stack>
+          <LinearProgress
+            variant="determinate"
+            value={usagePct}
+            color={progressColor}
+            sx={{ height: 8, borderRadius: 999 }}
           />
         </Box>
-      );
-    },
-  },
-];
 
-// -----------------------------------------------------------------------
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1, mt: 'auto' }}>
+          <Chip
+            size="small"
+            color="warning"
+            variant="soft"
+            label={`${formatLeaveDays(row.used)} used`}
+            sx={{ fontWeight: 700 }}
+          />
+          <Chip
+            size="small"
+            color="info"
+            variant="soft"
+            label={`${row.pending} pending`}
+            sx={{ fontWeight: 700 }}
+          />
+        </Stack>
+      </Stack>
+    </Card>
+  );
+};
 
 type LeaveBalanceProps = {
   mode?: 'hr' | 'self';
@@ -174,8 +285,6 @@ const LeaveBalance = ({
   const leaveOverviewState = overviewState ?? internalOverviewState;
   const { historyData, overview, isLoadingBalance, isLoadingHistory, selfAccessError } =
     leaveOverviewState;
-
-  const summaryCards = useMemo(() => LEAVE_OVERVIEW_CARDS(overview), [overview]);
 
   const breakdownRows = useMemo(() => overview.leaveTypeBreakdown, [overview.leaveTypeBreakdown]);
 
@@ -285,7 +394,7 @@ const LeaveBalance = ({
               ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave Balance' }]
               : [
                   { name: 'HR/Staff', href: '/hr/dashboard/' },
-                  { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
+                  { name: 'Leave Management', href: '/hr/leave-center/' },
                   { name: 'Leave Balance' },
                 ]
           }
@@ -303,87 +412,133 @@ const LeaveBalance = ({
 
       {/* ── Section A: Summary Stat Cards ── */}
       {showSummaryCards && !selfAccessError && (
-        <Grid container spacing={1}>
-          {summaryCards.map((card) =>
-            isLoadingBalance ? (
-              <Grid size={{ xs: 6, sm: 3 }} key={card.title}>
-                <Skeleton variant="rounded" height={82} sx={{ borderRadius: 2 }} />
-              </Grid>
-            ) : (
-              <Grid size={{ xs: 6, sm: 3 }} key={card.title}>
-                <DashboardCard
-                  title={card.title}
-                  value={card.value}
-                  icon={card.icon}
-                  color={card.color}
-                  bgColor={card.bgColor}
-                />
-              </Grid>
-            )
-          )}
-        </Grid>
+        <BalanceSummaryStrip overview={overview} isLoading={isLoadingBalance} />
       )}
 
       {/* ── Section B: Leave Type Breakdown ── */}
       {!selfAccessError && (
-        <Card sx={{ mt: 1, p: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-            <Iconify
-              icon="solar:pie-chart-2-bold-duotone"
-              sx={{ color: 'primary.main', width: 22, height: 22 }}
-            />
-            <Typography variant="h6">Leave Type Breakdown</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="Shows allocation and usage per leave type. Red remaining balance means you are running low."
-            >
+        <Stack spacing={1.5} sx={{ mt: 2 }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            justifyContent="space-between"
+          >
+            <Stack direction="row" alignItems="center" gap={1}>
               <Iconify
-                icon="lucide:info"
-                sx={{ cursor: 'pointer', ml: 0.5 }}
-                fontSize={15}
-                color="info.main"
+                icon="solar:pie-chart-2-bold-duotone"
+                sx={{ color: 'primary.main', width: 22, height: 22 }}
               />
-            </CustomTooltip>
-          </Box>
+              <Box>
+                <Stack direction="row" alignItems="center" gap={0.75}>
+                  <Typography variant="h6">Leave Type Breakdown</Typography>
+                  <CustomTooltip
+                    arrow
+                    placement="right"
+                    title="Shows allocation and usage per leave type. Red remaining balance means you are running low."
+                  >
+                    <Iconify
+                      icon="lucide:info"
+                      sx={{ cursor: 'pointer' }}
+                      fontSize={15}
+                      color="info.main"
+                    />
+                  </CustomTooltip>
+                </Stack>
+                <Typography variant="body2" color="text.secondary">
+                  Allocation and usage by leave type.
+                </Typography>
+              </Box>
+            </Stack>
 
-          <CustomizableTable
-            tableId="leave-balance-breakdown"
-            columns={BREAKDOWN_COLUMNS}
-            data={breakdownRows}
-            isLoading={isLoadingBalance}
-            isPagination={false}
-            isSearch={false}
-            isFilter={false}
-            tableTitle="Leave Type Breakdown"
-            noDataText={
-              <Box sx={{ py: 4, textAlign: 'center' }}>
+            <Chip
+              size="small"
+              variant="soft"
+              color="primary"
+              label={`${breakdownRows.length} leave type${breakdownRows.length === 1 ? '' : 's'}`}
+              sx={{ fontWeight: 700 }}
+            />
+          </Stack>
+
+          {isLoadingBalance ? (
+            <Grid container spacing={1.5}>
+              {[1, 2, 3].map((item) => (
+                <Grid key={item} size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}>
+                  <Skeleton variant="rounded" height={190} sx={{ borderRadius: 2 }} />
+                </Grid>
+              ))}
+            </Grid>
+          ) : breakdownRows.length ? (
+            <Grid container spacing={1.5}>
+              {breakdownRows.map((row) => (
+                <Grid
+                  key={row.leaveTypeId || row.leaveTypeName}
+                  size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}
+                >
+                  <LeaveTypeSummaryCard row={row} />
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <Card
+              variant="outlined"
+              sx={{
+                p: 4,
+                minHeight: 180,
+                borderRadius: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                bgcolor: 'background.paper',
+              }}
+            >
+              <Stack spacing={1} alignItems="center">
                 <Iconify
                   icon="solar:calendar-minimalistic-bold-duotone"
-                  sx={{ width: 48, height: 48, color: 'text.disabled', mb: 1 }}
+                  sx={{ width: 48, height: 48, color: 'text.disabled' }}
                 />
                 <Typography color="text.secondary">
                   No leave type allocation found for this year.
                 </Typography>
-              </Box>
-            }
-            wrapperProps={{ sx: { mt: 0 } }}
-          />
-        </Card>
+              </Stack>
+            </Card>
+          )}
+        </Stack>
       )}
 
       {/* ── Section C: My Leave History ── */}
       {!selfAccessError && (
-        <Card sx={{ mt: 1, p: 2, mb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-            <Iconify
-              icon="solar:history-bold-duotone"
-              sx={{ color: 'primary.main', width: 22, height: 22 }}
+        <Card variant="outlined" sx={{ mt: 2, p: 1.5, mb: 1, borderRadius: 2, boxShadow: 'none' }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            justifyContent="space-between"
+            sx={{ mb: 1.5 }}
+          >
+            <Stack direction="row" alignItems="center" gap={1}>
+              <Iconify
+                icon="solar:history-bold-duotone"
+                sx={{ color: 'primary.main', width: 22, height: 22 }}
+              />
+              <Box>
+                <Typography variant="h6">
+                  {isEmployeeProfileMode ? 'Employee Leave History' : 'My Leave History'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Search, review, and export leave request records.
+                </Typography>
+              </Box>
+            </Stack>
+            <Chip
+              size="small"
+              variant="soft"
+              color="info"
+              label={`${historyRows.length} shown`}
+              sx={{ fontWeight: 700 }}
             />
-            <Typography variant="h6">
-              {isEmployeeProfileMode ? 'Employee Leave History' : 'My Leave History'}
-            </Typography>
-          </Box>
+          </Stack>
 
           <CustomizableTable
             tableId="leave-balance-history"

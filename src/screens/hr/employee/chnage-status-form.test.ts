@@ -2,7 +2,11 @@ import dayjs from 'dayjs';
 import { it, expect, describe } from 'vitest';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 
-import { getEmployeeStatusOptions, changeStatusValidationSchema } from './change-status-utils';
+import {
+  getEmployeeStatusOptions,
+  isNonActiveEmployeeStatus,
+  changeStatusValidationSchema,
+} from './change-status-utils';
 
 describe('employee change status form', () => {
   it('requires remarks for Left or Retired status', async () => {
@@ -40,5 +44,12 @@ describe('employee change status form', () => {
     expect(getEmployeeStatusOptions(EmployeeStatusType.Retired)).toEqual(
       expect.arrayContaining([expect.objectContaining({ value: EmployeeStatusType.Retired })])
     );
+  });
+
+  it('identifies non-active statuses', () => {
+    expect(isNonActiveEmployeeStatus(EmployeeStatusType.Active)).toBe(false);
+    expect(isNonActiveEmployeeStatus(EmployeeStatusType.Inactive)).toBe(true);
+    expect(isNonActiveEmployeeStatus(EmployeeStatusType.Left)).toBe(true);
+    expect(isNonActiveEmployeeStatus(EmployeeStatusType.Retired)).toBe(true);
   });
 });

@@ -4,6 +4,7 @@ export type EmployeePolicyOverrideValues = {
   policyOverrideAssignmentId?: string | null;
   policyOverridePayrollPolicyId?: string | null;
   policyOverrideAttendancePolicyId?: string | null;
+  policyOverrideLeavePolicyId?: string | null;
   policyOverrideEffectiveFrom?: string | null;
   policyOverrideAssignmentReason?: string | null;
 };
@@ -17,6 +18,7 @@ export function clearEmployeePolicyOverrideValues(values: EmployeePolicyOverride
     policyOverrideAssignmentId: values.policyOverrideAssignmentId || '',
     policyOverridePayrollPolicyId: values.policyOverridePayrollPolicyId || '',
     policyOverrideAttendancePolicyId: values.policyOverrideAttendancePolicyId || '',
+    policyOverrideLeavePolicyId: values.policyOverrideLeavePolicyId || '',
     policyOverrideEffectiveFrom: values.policyOverrideEffectiveFrom || '',
     policyOverrideAssignmentReason: '',
   };
@@ -32,6 +34,7 @@ export function buildEmployeePolicyOverride(
     !academicYearId ||
     !values.policyOverridePayrollPolicyId ||
     !values.policyOverrideAttendancePolicyId ||
+    !values.policyOverrideLeavePolicyId ||
     !values.policyOverrideEffectiveFrom
   ) {
     return undefined;
@@ -44,6 +47,7 @@ export function buildEmployeePolicyOverride(
       : {}),
     payrollPolicyId: values.policyOverridePayrollPolicyId,
     attendancePolicyId: values.policyOverrideAttendancePolicyId,
+    leavePolicyId: values.policyOverrideLeavePolicyId,
     effectiveFrom: values.policyOverrideEffectiveFrom,
     assignmentReason:
       values.policyOverrideAssignmentReason || DEFAULT_EMPLOYEE_POLICY_OVERRIDE_REASON,
@@ -84,6 +88,7 @@ export function hydrateEmployeePolicyOverrideFromPreview(
       policyOverrideAssignmentId: '',
       policyOverridePayrollPolicyId: '',
       policyOverrideAttendancePolicyId: '',
+      policyOverrideLeavePolicyId: '',
       policyOverrideEffectiveFrom: fallbackEffectiveFrom,
       policyOverrideAssignmentReason: '',
     };
@@ -96,6 +101,7 @@ export function hydrateEmployeePolicyOverrideFromPreview(
     policyOverridePayrollPolicyId: assignment.payrollPolicyId || preview?.payrollPolicy?.id || '',
     policyOverrideAttendancePolicyId:
       assignment.attendancePolicyId || preview?.attendancePolicy?.id || '',
+    policyOverrideLeavePolicyId: assignment.leavePolicyId || preview?.leavePolicy?.id || '',
     policyOverrideEffectiveFrom: (assignment.effectiveFrom || fallbackEffectiveFrom).slice(0, 10),
     policyOverrideAssignmentReason: assignment.assignmentReason || '',
   };
@@ -121,6 +127,7 @@ export function buildEmployeePolicyOverridePreviewRequest(
     employeeId &&
     values.policyOverridePayrollPolicyId &&
     values.policyOverrideAttendancePolicyId &&
+    values.policyOverrideLeavePolicyId &&
     values.policyOverrideEffectiveFrom
   ) {
     return {
@@ -135,6 +142,7 @@ export function buildEmployeePolicyOverridePreviewRequest(
         targetDisplayName: employeeId,
         payrollPolicyId: values.policyOverridePayrollPolicyId,
         attendancePolicyId: values.policyOverrideAttendancePolicyId,
+        leavePolicyId: values.policyOverrideLeavePolicyId,
         effectiveFrom: values.policyOverrideEffectiveFrom,
         effectiveTo: null,
         priority: 100,
@@ -165,6 +173,7 @@ export function buildEmployeePolicyOverridePreviewRequest(
       targetDisplayName: employeeId,
       payrollPolicyId: policyOverride.payrollPolicyId,
       attendancePolicyId: policyOverride.attendancePolicyId,
+      leavePolicyId: policyOverride.leavePolicyId,
       effectiveFrom: policyOverride.effectiveFrom,
       effectiveTo: null,
       priority: 100,

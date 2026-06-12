@@ -2,6 +2,13 @@
 
 import type React from 'react';
 import type { RootState } from 'src/redux/store';
+import type { DragEndEvent } from '@dnd-kit/core';
+import type {
+  ChargeDetail,
+  FeeLedgerLine,
+  FeeLedgerMonth,
+  CollectFeeOutput,
+} from 'src/redux/feeCollection/feeCollection';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -15,8 +22,8 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import { alpha, useTheme } from '@mui/material/styles';
+import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -26,6 +33,7 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
+import { useSensor, DndContext, useSensors, closestCenter, PointerSensor } from '@dnd-kit/core';
 import FeeStructureAssignmentForm from 'src/screens/student/enrollment/admission/FeeStructureAssignmentForm';
 import {
   arrayMove,
@@ -34,13 +42,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import {
-  useSensor,
-  DndContext,
-  useSensors,
-  closestCenter,
-  PointerSensor,
-  type DragEndEvent,
-} from '@dnd-kit/core';
+  useCollectFeeMutation,
+  useGetCollectFormQuery,
+  useDownloadReceiptPdfMutation,
+} from 'src/redux/feeCollection/feeCollection';
 import {
   Box,
   Card,
@@ -48,26 +53,18 @@ import {
   Button,
   Divider,
   Tooltip,
-  MenuItem,
   Checkbox,
+  MenuItem,
   TextField,
   IconButton,
   Typography,
   DialogActions,
-  CircularProgress,
 } from '@mui/material';
-import {
-  type ChargeDetail,
-  type FeeLedgerLine,
-  type FeeLedgerMonth,
-  type CollectFeeOutput,
-  useCollectFeeMutation,
-  useGetCollectFormQuery,
-  useDownloadFeeReceiptPdfMutation,
-} from 'src/redux/feeCollection/feeCollection';
 
 import FeeLedgerList from './FeeLedgerList';
 import { toPeriod } from './FeeLedgerShared';
+import UnifiedReceiptDisplay from './UnifiedReceiptDisplay';
+import { allocatePayment } from './preview/paymentAllocationUtils';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import FeeCollectionOutcomePanel from './FeeCollectionOutcomePanel';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
@@ -75,13 +72,9 @@ import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
 import { StudentFeeSummaryCard } from '../Components/StudentFeesSummaryCard';
 import FeeCollectionPreviewDialog from './preview/FeeCollectionPreviewDialog';
 import FeeLedgerFilterBar, { FEE_LEDGER_INITIAL_FILTERS } from './FeeLedgerFilterBar';
-import {
-  allocatePayment,
-  type AllocatedFeeRow,
-  type AllocatedChargeRow,
-} from './preview/paymentAllocationUtils';
 
 import type { FeeLedgerFilters } from './FeeLedgerFilterBar';
+import type { AllocatedFeeRow, AllocatedChargeRow } from './preview/paymentAllocationUtils';
 import type {
   IFeeCharge,
   IStudentFee,
@@ -95,6 +88,11 @@ import type {
 type GeneratedReceipt = {
   id: string;
   receiptNumber?: string;
+};
+
+type ReceiptPreviewState = {
+  feeReceipt: GeneratedReceipt | null;
+  chargeReceipt: GeneratedReceipt | null;
 };
 
 const toPaise = (amount: number): number => Math.round((amount + Number.EPSILON) * 100);
@@ -334,8 +332,12 @@ const FeeCollectComponentForm = ({
   const [finalReviewOpen, setFinalReviewOpen] = useState(false);
   const [feeStructureDialogOpen, setFeeStructureDialogOpen] = useState(false);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
-  const [generatedReceipt, setGeneratedReceipt] = useState<GeneratedReceipt | null>(null);
-  const [receiptBlobUrl, setReceiptBlobUrl] = useState<string | null>(null);
+  const [receiptPreviewState, setReceiptPreviewState] = useState<ReceiptPreviewState>({
+    feeReceipt: null,
+    chargeReceipt: null,
+  });
+  const [feeReceiptBlobUrl, setFeeReceiptBlobUrl] = useState<string | null>(null);
+  const [chargeReceiptBlobUrl, setChargeReceiptBlobUrl] = useState<string | null>(null);
   const [lastCollectResponse, setLastCollectResponse] = useState<CollectFeeOutput | null>(null);
   const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -372,15 +374,51 @@ const FeeCollectComponentForm = ({
     currentQueryAndMutation: useCollectFeeMutation,
   });
 
-  const [downloadFeeReceiptPdf, { isLoading: receiptPdfLoading }] = useQueryAndMutation({
+  const [downloadReceiptPdf] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDownloadFeeReceiptPdfMutation,
+    currentQueryAndMutation: useDownloadReceiptPdfMutation,
     popupConfig: {
       error: true,
       errorMessage: 'Unable to load receipt preview',
       success: false,
     },
   });
+
+  // Build receipt data from CollectFeeOutput response
+  const feeReceiptData =
+    lastCollectResponse && receiptPreviewState.feeReceipt
+      ? {
+          id: lastCollectResponse.feeReceiptId ?? receiptPreviewState.feeReceipt.id,
+          receiptNumber: lastCollectResponse.feeReceiptNumber ?? '',
+          studentId: lastCollectResponse.studentId,
+          studentName: lastCollectResponse.studentId,
+          academicYearId: lastCollectResponse.academicYearId,
+          totalAmount: lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0),
+          collectedAt: lastCollectResponse.collectedAt,
+          collectedBy: lastCollectResponse.collectedBy,
+          paidFeeHeads: lastCollectResponse.paidFeeHeads,
+          auditSummary: lastCollectResponse.auditSummary,
+        }
+      : undefined;
+
+  const chargeReceiptData =
+    lastCollectResponse && receiptPreviewState.chargeReceipt
+      ? {
+          id: lastCollectResponse.chargeReceiptId ?? receiptPreviewState.chargeReceipt.id,
+          receiptNumber: lastCollectResponse.chargeReceiptNumber ?? '',
+          studentId: lastCollectResponse.studentId,
+          studentName: lastCollectResponse.studentId,
+          academicYearId: lastCollectResponse.academicYearId,
+          totalAmount: (lastCollectResponse.paidCharges ?? []).reduce(
+            (sum, c) => sum + c.amountPaid,
+            0
+          ),
+          collectedAt: lastCollectResponse.collectedAt,
+          collectedBy: lastCollectResponse.collectedBy,
+          paidCharges: lastCollectResponse.paidCharges ?? [],
+          auditSummary: lastCollectResponse.auditSummary,
+        }
+      : undefined;
 
   const formData = collectFormData;
 
@@ -651,12 +689,6 @@ const FeeCollectComponentForm = ({
   const updatePayment = (field: keyof FeeCollectionPayment, value: any) =>
     formik.setFieldValue('payment', { ...formik.values.payment, [field]: value });
 
-  const updatePaymentDetail = (detailKey: string, value: any) =>
-    formik.setFieldValue('payment', {
-      ...formik.values.payment,
-      details: { ...formik.values.payment.details, [detailKey]: value },
-    });
-
   const buildPaymentPayload = (paymentMethodNum: number, receivedAmount: number) => [
     {
       paymentMethod: paymentMethodNum,
@@ -669,16 +701,33 @@ const FeeCollectComponentForm = ({
     },
   ];
 
-  const loadReceiptPdf = async (receiptId: string) => {
+  const loadFeeReceiptPdf = async (receiptId: string) => {
     try {
-      const blob = await downloadFeeReceiptPdf(receiptId).unwrap();
+      const blob = await downloadReceiptPdf({
+        receiptId,
+      }).unwrap();
       const objectUrl = URL.createObjectURL(blob);
-      setReceiptBlobUrl((prev) => {
+      setFeeReceiptBlobUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
         return objectUrl;
       });
     } catch {
-      setReceiptBlobUrl(null);
+      setFeeReceiptBlobUrl(null);
+    }
+  };
+
+  const loadChargeReceiptPdf = async (receiptId: string) => {
+    try {
+      const blob = await downloadReceiptPdf({
+        receiptId,
+      }).unwrap();
+      const objectUrl = URL.createObjectURL(blob);
+      setChargeReceiptBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return objectUrl;
+      });
+    } catch {
+      setChargeReceiptBlobUrl(null);
     }
   };
 
@@ -742,6 +791,7 @@ const FeeCollectComponentForm = ({
 
       const collectResponse = await collectFee({
         studentId: String(student?.id ?? ''),
+        studentName: student?.name ?? '',
         academicYearId: currentYear?.id ?? '',
         notes: formik.values.remarks ?? undefined,
         paymentConfirmed: isCashierDecided ? true : undefined,
@@ -948,9 +998,10 @@ const FeeCollectComponentForm = ({
 
   useEffect(
     () => () => {
-      if (receiptBlobUrl) URL.revokeObjectURL(receiptBlobUrl);
+      if (feeReceiptBlobUrl) URL.revokeObjectURL(feeReceiptBlobUrl);
+      if (chargeReceiptBlobUrl) URL.revokeObjectURL(chargeReceiptBlobUrl);
     },
-    [receiptBlobUrl]
+    [feeReceiptBlobUrl, chargeReceiptBlobUrl]
   );
 
   // ── Show skeleton while loading ─────────────────────────────────────────────
@@ -970,29 +1021,52 @@ const FeeCollectComponentForm = ({
 
   const showGeneratedReceiptDialog = async (collectResponse: CollectFeeOutput) => {
     setLastCollectResponse(collectResponse);
-    const receiptId = collectResponse.feeReceiptId ?? collectResponse.id;
-    if (!receiptId) return false;
+    const hasFeeReceipt = collectResponse.feeReceiptId;
+    const hasChargeReceipt = collectResponse.chargeReceiptId;
 
-    setGeneratedReceipt({
-      id: receiptId,
-      receiptNumber: collectResponse.feeReceiptNumber ?? collectResponse.receiptNumber,
+    if (!hasFeeReceipt && !hasChargeReceipt) return false;
+
+    // Set receipt preview state with fee and/or charge receipts
+    setReceiptPreviewState({
+      feeReceipt: hasFeeReceipt
+        ? {
+            id: collectResponse.feeReceiptId!,
+            receiptNumber: collectResponse.feeReceiptNumber,
+          }
+        : null,
+      chargeReceipt: hasChargeReceipt
+        ? {
+            id: collectResponse.chargeReceiptId!,
+            receiptNumber: collectResponse.chargeReceiptNumber,
+          }
+        : null,
     });
-    setReceiptBlobUrl(null);
+
+    setFeeReceiptBlobUrl(null);
+    setChargeReceiptBlobUrl(null);
     setReceiptDialogOpen(true);
-    await loadReceiptPdf(receiptId);
+
+    // Load PDFs for both receipts (if they exist)
+    if (hasFeeReceipt) {
+      await loadFeeReceiptPdf(collectResponse.feeReceiptId!);
+    }
+    if (hasChargeReceipt) {
+      await loadChargeReceiptPdf(collectResponse.chargeReceiptId!);
+    }
+
     return true;
   };
 
-  const handleOpenReceiptInNewTab = () => {
-    if (!receiptBlobUrl) return;
-    window.open(receiptBlobUrl, '_blank', 'noopener,noreferrer');
+  const handleOpenReceiptInNewTab = (blobUrl: string | null) => {
+    if (!blobUrl) return;
+    window.open(blobUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const handleDownloadReceipt = () => {
-    if (!generatedReceipt || !receiptBlobUrl) return;
+  const handleDownloadReceipt = (receipt: GeneratedReceipt | null, blobUrl: string | null) => {
+    if (!receipt || !blobUrl) return;
     const anchor = document.createElement('a');
-    anchor.href = receiptBlobUrl;
-    anchor.download = `receipt-${generatedReceipt.receiptNumber ?? generatedReceipt.id}.pdf`;
+    anchor.href = blobUrl;
+    anchor.download = `receipt-${receipt.receiptNumber ?? receipt.id}.pdf`;
     anchor.target = '_blank';
     document.body.appendChild(anchor);
     anchor.click();
@@ -1001,11 +1075,15 @@ const FeeCollectComponentForm = ({
 
   const handleReceiptDialogClose = () => {
     setReceiptDialogOpen(false);
-    setGeneratedReceipt(null);
+    setReceiptPreviewState({ feeReceipt: null, chargeReceipt: null });
     setLastCollectResponse(null);
-    if (receiptBlobUrl) {
-      URL.revokeObjectURL(receiptBlobUrl);
-      setReceiptBlobUrl(null);
+    if (feeReceiptBlobUrl) {
+      URL.revokeObjectURL(feeReceiptBlobUrl);
+      setFeeReceiptBlobUrl(null);
+    }
+    if (chargeReceiptBlobUrl) {
+      URL.revokeObjectURL(chargeReceiptBlobUrl);
+      setChargeReceiptBlobUrl(null);
     }
     // Reset form for next fee collection instead of closing
     formik.resetForm();
@@ -1934,102 +2012,79 @@ const FeeCollectComponentForm = ({
         open={receiptDialogOpen}
         handleClose={handleReceiptDialogClose}
         title={
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            gap={1}
-            width="100%"
-          >
-            <Box display="flex" alignItems="center" gap={0.5}>
-              <Typography variant="h6">
-                Receipt Preview
-                {generatedReceipt?.receiptNumber ? ` (${generatedReceipt.receiptNumber})` : ''}
-              </Typography>
-              <CustomTooltip
-                arrow
-                placement="right"
-                sx={{ textAlign: 'justify' }}
-                title="You can update the subject details including name and color."
-              >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-            <Box display="flex" alignItems="center" gap={0.5}>
-              <IconButton
-                size="small"
-                onClick={handleOpenReceiptInNewTab}
-                disabled={!receiptBlobUrl}
-              >
-                <Iconify icon="solar:open-in-new-window-bold" width={18} />
-              </IconButton>
-              <IconButton size="small" onClick={handleDownloadReceipt} disabled={!receiptBlobUrl}>
-                <Iconify icon="solar:download-minimalistic-bold" width={18} />
-              </IconButton>
-            </Box>
+          <Box display="flex" alignItems="center" gap={0.5}>
+            <Typography variant="h6" fontWeight={700}>
+              Payment Receipts
+            </Typography>
+            <CustomTooltip title="View or download the fee and charge receipts generated for this payment collection.">
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
           </Box>
         }
         maxWidth="md"
         hasForm={false}
       >
         <Scrollbar sx={{ maxHeight: 'calc(100dvh - 260px)', p: 2 }}>
-          <Box sx={{ p: 0, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
-            <Box sx={{ p: 0, flex: 1, minHeight: 0, overflow: 'hidden' }}>
-              {receiptPdfLoading ? (
-                <Box
-                  sx={{
-                    width: '100%',
-                    height: { xs: '65vh', md: '70vh' },
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'column',
-                    gap: 1,
-                  }}
-                >
-                  <CircularProgress size={28} />
-                  <Typography variant="body2" color="text.secondary">
-                    Loading receipt preview...
-                  </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* Payment Summary Header */}
+            {lastCollectResponse && (
+              <Card sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.08) }}>
+                <Box display="flex" justifyContent="space-between" alignItems="start">
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={700} mb={0.5}>
+                      Payment Summary
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Student : <strong>{lastCollectResponse.studentName}</strong>
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Collected at :{' '}
+                      <strong>
+                        {new Date(lastCollectResponse.collectedAt).toLocaleString('en-IN')}
+                      </strong>
+                    </Typography>
+                  </Box>
+                  <Box textAlign="right">
+                    <Typography
+                      variant="h6"
+                      fontWeight={700}
+                      sx={{ fontVariantNumeric: 'tabular-nums' }}
+                    >
+                      ₹{formatNumber(lastCollectResponse.totalAmount)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
+                      Total Received
+                    </Typography>
+                  </Box>
                 </Box>
-              ) : receiptBlobUrl ? (
-                <Box sx={{ width: '100%', height: { xs: '65vh', md: '70vh' } }}>
-                  <iframe
-                    title="Fee Receipt PDF"
-                    src={receiptBlobUrl}
-                    style={{ border: 'none', width: '100%', height: '100%' }}
-                  />
-                </Box>
-              ) : (
-                <Box p={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    Receipt preview is not available right now. Please retry loading.
-                  </Typography>
-                  {generatedReceipt?.id && (
-                    <Button sx={{ mt: 1.5 }} onClick={() => loadReceiptPdf(generatedReceipt.id)}>
-                      Retry loading
-                    </Button>
-                  )}
-                </Box>
-              )}
-            </Box>
+              </Card>
+            )}
+
+            {/* Unified Receipt Display */}
+            <UnifiedReceiptDisplay
+              feeReceipt={feeReceiptData}
+              chargeReceipt={chargeReceiptData}
+              feeIsLoading={false}
+              chargeIsLoading={false}
+              feeBlobUrl={feeReceiptBlobUrl}
+              chargeBlobUrl={chargeReceiptBlobUrl}
+              onOpenFeeInNewTab={() => handleOpenReceiptInNewTab(feeReceiptBlobUrl)}
+              onDownloadFee={() =>
+                handleDownloadReceipt(receiptPreviewState.feeReceipt, feeReceiptBlobUrl)
+              }
+              onOpenChargeInNewTab={() => handleOpenReceiptInNewTab(chargeReceiptBlobUrl)}
+              onDownloadCharge={() =>
+                handleDownloadReceipt(receiptPreviewState.chargeReceipt, chargeReceiptBlobUrl)
+              }
+            />
+
+            {/* Outcome Panel (if available) */}
             {lastCollectResponse?.auditSummary && (
-              <Box sx={{ pb: 1 }}>
-                <FeeCollectionOutcomePanel collectResponse={lastCollectResponse} />
-              </Box>
+              <FeeCollectionOutcomePanel collectResponse={lastCollectResponse} />
             )}
           </Box>
         </Scrollbar>
         <DialogActions sx={{ borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.45)}` }}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon={GlobalIcons.download} />}
-            onClick={handleDownloadReceipt}
-            disabled={!receiptBlobUrl}
-          >
-            Download
-          </Button>
           <Button
             variant="contained"
             size="small"

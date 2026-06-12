@@ -330,6 +330,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         }}
       >
         <AccordionSummary
+          component="div"
           expandIcon={<ExpandMoreIcon />}
           sx={{
             px: 2,

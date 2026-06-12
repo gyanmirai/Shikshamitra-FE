@@ -21,11 +21,14 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { useGetPolicyAssignmentPreviewQuery } from 'src/redux/hr/hr-policy-api';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
   Grid,
+  Chip,
   Stack,
+  Alert,
   Switch,
   Button,
   Backdrop,
@@ -37,7 +40,6 @@ import {
 } from '@mui/material';
 import {
   useLazyGetLeaveTypesQuery,
-  useLazyGetLeavePoliciesQuery,
   useCreateLeaveRequestMutation,
   useRejectLeaveRequestMutation,
   useApproveLeaveRequestMutation,
@@ -60,16 +62,19 @@ import {
   isDateWithinAcademicYear,
   LEAVE_INSUFFICIENT_BALANCE,
   buildEmployeeSelectOptions,
+  isSelectedLeaveTypeVisible,
   getLeaveNoticePeriodMessage,
   isLeaveNoticePeriodSatisfied,
   shouldEnforceLeaveNoticePeriod,
   LEAVE_TARGET_EMPLOYEE_REQUIRED,
   LEAVE_NO_BUSINESS_DAYS_IN_RANGE,
   buildCreateLeaveRequestFormData,
-  getSelectableLeaveRequestOptions,
   LEAVE_DATES_OUTSIDE_ACADEMIC_YEAR,
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
+  resolveLeavePolicyPreviewEmployeeId,
+  getVisibleLeaveTypeOptionsForEffectivePolicy,
+  isLeavePolicyPreviewEmployeeResolutionBlocked,
 } from './leave-request.utils';
 
 // ----------------------------------------------------------------------
@@ -103,7 +108,6 @@ interface FormValues {
 }
 
 const leaveTypeOptionsCacheByAcademicYear: Record<string, any[]> = {};
-const leavePolicyOptionsCacheByAcademicYear: Record<string, any[]> = {};
 
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
@@ -133,6 +137,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const authEmployeeId = useSelector((state: any) => state.auth?.employee?.id);
   const {
     data: yearsData,
     isLoading: isYearsLoading,
@@ -147,16 +152,11 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   const shouldUseAdminSelectionRules = isAdminUser && !isSelfMode;
 
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<any[]>([]);
-  const [leavePolicyOptions, setLeavePolicyOptions] = useState<any[]>([]);
   const minimumLeaveStartDate = getMinimumLeaveStartDate();
   const leaveNoticePeriodMessage = getLeaveNoticePeriodMessage();
 
   const [triggerLeaveTypes, { isLoading: isLeaveTypeLoading, isFetching: isLeaveTypeFetching }] =
     useLazyGetLeaveTypesQuery();
-  const [
-    triggerLeavePolicies,
-    { isLoading: isLeavePolicyLoading, isFetching: isLeavePolicyFetching },
-  ] = useLazyGetLeavePoliciesQuery();
 
   const {
     initialValues,
@@ -291,6 +291,38 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             setFieldError('startDate', 'Unable to resolve academic year for selected start date.');
             return;
           }
+          if (isEffectivePreviewEmployeeResolutionBlocked) {
+            setFieldError(
+              'leaveTypeMasterId',
+              'Resolving employee profile for leave policy preview. Please wait.'
+            );
+            return;
+          }
+          if (hasBlockingEffectivePolicyState) {
+            setFieldError(
+              'leaveTypeMasterId',
+              'No effective leave policy is assigned to this employee for the selected date.'
+            );
+            return;
+          }
+          if (isEffectivePolicyFetching || effectivePolicyError || hasNoAllowedLeaveTypes) {
+            setFieldError(
+              'leaveTypeMasterId',
+              isEffectivePolicyFetching
+                ? 'Resolving effective leave policy. Please wait.'
+                : effectivePolicyError
+                  ? 'Resolve the effective leave policy before submitting.'
+                  : 'No active leave types are available from the effective leave policy.'
+            );
+            return;
+          }
+          if (!isSelectedLeaveTypeVisible(formValues.leaveTypeMasterId, visibleLeaveTypeOptions)) {
+            setFieldError(
+              'leaveTypeMasterId',
+              'Selected leave type is not available for the effective leave policy.'
+            );
+            return;
+          }
 
           // --- Create flow: build multipart/form-data body as per API contract ---
           const formData = buildCreateLeaveRequestFormData({
@@ -352,7 +384,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       }
     },
   });
-  console.log('formik valuees---', values);
   useEffect(() => {
     if (!editData) {
       resetForm();
@@ -377,6 +408,68 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     return resolvedAcademicYearId || currentYear.id;
   }, [currentYear, editData, values.startDate, yearsData?.items]);
 
+  const effectivePreviewEmployeeId = resolveLeavePolicyPreviewEmployeeId(
+    values.employee,
+    authEmployeeId,
+    mode
+  );
+  const isEffectivePreviewEmployeeResolutionBlocked = isLeavePolicyPreviewEmployeeResolutionBlocked(
+    values.employee,
+    authEmployeeId,
+    mode
+  );
+  const effectivePreviewDate =
+    values.startDate?.isValid?.() && values.startDate
+      ? values.startDate.format('YYYY-MM-DD')
+      : dayjs().format('YYYY-MM-DD');
+  const {
+    data: effectivePolicyPreview,
+    isFetching: isEffectivePolicyFetching,
+    error: effectivePolicyError,
+  } = useGetPolicyAssignmentPreviewQuery(
+    {
+      academicYearId: catalogAcademicYearId,
+      date: effectivePreviewDate,
+      employeeId: effectivePreviewEmployeeId,
+    },
+    {
+      skip: !catalogAcademicYearId || !effectivePreviewEmployeeId || Boolean(editData),
+    }
+  );
+
+  const hasResolvedEffectivePreviewEmployee =
+    Boolean(effectivePreviewEmployeeId) || isEffectivePreviewEmployeeResolutionBlocked;
+  const visibleLeaveTypeOptions = useMemo(
+    () =>
+      getVisibleLeaveTypeOptionsForEffectivePolicy(
+        leaveTypeOptions,
+        effectivePolicyPreview?.leavePolicy || null,
+        hasResolvedEffectivePreviewEmployee,
+        isEffectivePolicyFetching,
+        Boolean(effectivePolicyError)
+      ),
+    [
+      effectivePolicyError,
+      effectivePolicyPreview?.leavePolicy,
+      hasResolvedEffectivePreviewEmployee,
+      isEffectivePolicyFetching,
+      leaveTypeOptions,
+    ]
+  );
+  const hasBlockingEffectivePolicyState =
+    hasResolvedEffectivePreviewEmployee &&
+    !isEffectivePreviewEmployeeResolutionBlocked &&
+    !isEffectivePolicyFetching &&
+    !effectivePolicyError &&
+    !effectivePolicyPreview?.leavePolicy;
+  const hasNoAllowedLeaveTypes =
+    hasResolvedEffectivePreviewEmployee &&
+    !isEffectivePreviewEmployeeResolutionBlocked &&
+    !isEffectivePolicyFetching &&
+    !effectivePolicyError &&
+    Boolean(effectivePolicyPreview?.leavePolicy) &&
+    visibleLeaveTypeOptions.length === 0;
+
   useEffect(() => {
     if (editData) {
       return;
@@ -384,65 +477,59 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
     if (!catalogAcademicYearId) {
       setLeaveTypeOptions([]);
-      setLeavePolicyOptions([]);
       return;
     }
 
     const cacheYearKey = String(catalogAcademicYearId);
     const cachedLeaveTypes = leaveTypeOptionsCacheByAcademicYear[cacheYearKey];
-    const cachedLeavePolicies = leavePolicyOptionsCacheByAcademicYear[cacheYearKey];
 
-    if (cachedLeaveTypes?.length || cachedLeavePolicies?.length) {
-      const selectableOptions = getSelectableLeaveRequestOptions(
-        cachedLeaveTypes || [],
-        cachedLeavePolicies || []
-      );
-      setLeaveTypeOptions(selectableOptions.leaveTypes);
-      setLeavePolicyOptions(selectableOptions.leavePolicies);
+    if (cachedLeaveTypes?.length) {
+      setLeaveTypeOptions(cachedLeaveTypes);
     } else {
       setLeaveTypeOptions([]);
-      setLeavePolicyOptions([]);
     }
 
     const loadDropdownsInBackground = async () => {
       try {
-        const [typesRes, policiesRes] = await Promise.all([
-          triggerLeaveTypes({ academicYearId: catalogAcademicYearId }).unwrap(),
-          triggerLeavePolicies({ academicYearId: catalogAcademicYearId }).unwrap(),
-        ]);
+        const typesRes = await triggerLeaveTypes({
+          academicYearId: catalogAcademicYearId,
+          pageSize: 500,
+        }).unwrap();
+        const nextLeaveTypes = typesRes?.items || [];
 
-        const selectableOptions = getSelectableLeaveRequestOptions(
-          typesRes?.items || [],
-          policiesRes?.items || []
-        );
-
-        leaveTypeOptionsCacheByAcademicYear[cacheYearKey] = selectableOptions.leaveTypes;
-        leavePolicyOptionsCacheByAcademicYear[cacheYearKey] = selectableOptions.leavePolicies;
-
-        setLeaveTypeOptions(selectableOptions.leaveTypes);
-        setLeavePolicyOptions(selectableOptions.leavePolicies);
+        leaveTypeOptionsCacheByAcademicYear[cacheYearKey] = nextLeaveTypes;
+        setLeaveTypeOptions(nextLeaveTypes);
       } catch (loadError) {
         console.error(loadError);
       }
     };
 
     loadDropdownsInBackground();
-  }, [catalogAcademicYearId, editData, triggerLeavePolicies, triggerLeaveTypes]);
+  }, [catalogAcademicYearId, editData, triggerLeaveTypes]);
 
   useEffect(() => {
     if (editData) return;
     if (!values.leaveTypeMasterId) return;
-    const existsInCatalog = leaveTypeOptions.some(
+    if (isEffectivePreviewEmployeeResolutionBlocked || isEffectivePolicyFetching) return;
+    const existsInCatalog = visibleLeaveTypeOptions.some(
       (item: any) => item?.id === values.leaveTypeMasterId
     );
     if (!existsInCatalog) {
       setFieldValue('leaveTypeMasterId', '');
       setFieldError(
         'leaveTypeMasterId',
-        'Selected leave policy is no longer available. Please choose another leave type.'
+        'Selected leave type is no longer available. Please choose another leave type.'
       );
     }
-  }, [editData, leaveTypeOptions, setFieldError, setFieldValue, values.leaveTypeMasterId]);
+  }, [
+    editData,
+    isEffectivePolicyFetching,
+    isEffectivePreviewEmployeeResolutionBlocked,
+    setFieldError,
+    setFieldValue,
+    values.leaveTypeMasterId,
+    visibleLeaveTypeOptions,
+  ]);
 
   useEffect(() => {
     if (!values.halfDay || !values.startDate) {
@@ -530,22 +617,72 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </Grid>
             )}
 
+            {!editData &&
+            (effectivePreviewEmployeeId || isEffectivePreviewEmployeeResolutionBlocked) ? (
+              <Grid size={{ xs: 12 }}>
+                <Stack spacing={1}>
+                  {isEffectivePreviewEmployeeResolutionBlocked ? (
+                    <Alert severity="warning">
+                      Resolving employee profile for leave policy preview. Please wait.
+                    </Alert>
+                  ) : null}
+                  {effectivePolicyPreview?.leavePolicy ? (
+                    <Chip
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                      sx={{ alignSelf: 'flex-start' }}
+                      label={`Effective leave policy: ${
+                        effectivePolicyPreview.leavePolicy.name ||
+                        effectivePolicyPreview.leavePolicy.policyTitle ||
+                        effectivePolicyPreview.leavePolicy.title ||
+                        '-'
+                      }`}
+                    />
+                  ) : null}
+                  {hasBlockingEffectivePolicyState ? (
+                    <Alert severity="warning">
+                      No effective leave policy is assigned to this employee for the selected date.
+                    </Alert>
+                  ) : null}
+                  {effectivePolicyError ? (
+                    <Alert severity="warning">
+                      Could not resolve the employee leave policy. Resolve the effective leave
+                      policy before submitting.
+                    </Alert>
+                  ) : null}
+                  {hasNoAllowedLeaveTypes ? (
+                    <Alert severity="warning">
+                      The effective leave policy has no active leave types for the selected date.
+                    </Alert>
+                  ) : null}
+                </Stack>
+              </Grid>
+            ) : null}
+
             <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!touched.leaveTypeMasterId && !!errors.leaveTypeMasterId}>
                 <CustomSelect
                   isLoading={
                     isLeaveTypeLoading ||
                     isLeaveTypeFetching ||
-                    isLeavePolicyLoading ||
-                    isLeavePolicyFetching ||
+                    isEffectivePreviewEmployeeResolutionBlocked ||
+                    isEffectivePolicyFetching ||
                     (!catalogAcademicYearId && (isYearsLoading || isYearsFetching))
                   }
-                  options={leaveTypeOptions}
+                  options={visibleLeaveTypeOptions}
                   label="Leave Type *"
                   value={values.leaveTypeMasterId}
                   name="leaveTypeMasterId"
                   valueKey="id"
-                  disabled={!!editData}
+                  disabled={
+                    !!editData ||
+                    isEffectivePreviewEmployeeResolutionBlocked ||
+                    isEffectivePolicyFetching ||
+                    Boolean(effectivePolicyError) ||
+                    hasBlockingEffectivePolicyState ||
+                    hasNoAllowedLeaveTypes
+                  }
                   labelKey="name"
                   error={!!touched.leaveTypeMasterId && !!errors.leaveTypeMasterId}
                   helperText={(touched.leaveTypeMasterId && errors.leaveTypeMasterId) || ''}

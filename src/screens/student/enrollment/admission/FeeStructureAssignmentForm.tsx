@@ -446,9 +446,9 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
                                   </Typography>
                                 )}
                               </TableCell>
-                              <TableCell>
+                              <TableCell sx={{ minWidth: 180 }}>
                                 {isSelected ? (
-                                  <Stack spacing={0.5}>
+                                  <Stack spacing={2.5} sx={{ width: '100%' }}>
                                     {item.isOptional && item.isOneTime ? (
                                       <CustomSelect
                                         label="Month *"
@@ -467,7 +467,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
                                             : ''
                                         }
                                         formControlProps={{
-                                          sx: { width: '100%', minWidth: 140 },
+                                          sx: { width: '100%', minWidth: 160 },
                                         }}
                                       />
                                     ) : item.isOptional && !item.isOneTime ? (
@@ -493,7 +493,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
                                               : ''
                                           }
                                           formControlProps={{
-                                            sx: { width: '100%', minWidth: 140 },
+                                            sx: { width: '100%', minWidth: 160 },
                                           }}
                                         />
                                         <CustomSelect
@@ -517,7 +517,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
                                               : ''
                                           }
                                           formControlProps={{
-                                            sx: { width: '100%', minWidth: 140 },
+                                            sx: { width: '100%', minWidth: 160 },
                                           }}
                                         />
                                       </>

@@ -35,6 +35,10 @@ import { defaultAssignmentFilters } from '../hr-policy-workspace.constants';
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 import type { AssignmentFilters, AssignmentTableRow } from '../types/hr-policy-workspace.types';
 
+function getLeavePolicyName(item: any): string {
+  return item?.policyTitle || item?.name || item?.title || item?.id || '-';
+}
+
 // --- AssignmentsTab ------------------------------------------------------------
 
 export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
@@ -51,8 +55,10 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     assignmentsError,
     activePayroll,
     activeAttendance,
+    activeLeavePolicies,
     payroll,
     attendance,
+    leavePolicies,
     canAssignPolicy,
     canViewAudit,
     openAssignmentDrawer,
@@ -65,6 +71,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     assignmentFilters.status !== 'all',
     Boolean(assignmentFilters.payrollPolicyId),
     Boolean(assignmentFilters.attendancePolicyId),
+    Boolean(assignmentFilters.leavePolicyId),
     Boolean(assignmentFilters.activeOnDate),
     Boolean(assignmentFilters.effectiveFrom),
     Boolean(assignmentFilters.effectiveTo),
@@ -106,6 +113,17 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       label: `Attendance -> ${name}`,
       key: 'attendancePolicyId',
       reset: { attendancePolicyId: '' },
+    });
+  }
+  if (assignmentFilters.leavePolicyId) {
+    const name =
+      getLeavePolicyName(
+        leavePolicies.find((item: any) => item.id === assignmentFilters.leavePolicyId)
+      ) || assignmentFilters.leavePolicyId;
+    activeFilterChips.push({
+      label: `Leave -> ${name}`,
+      key: 'leavePolicyId',
+      reset: { leavePolicyId: '' },
     });
   }
   if (assignmentFilters.activeOnDate)
@@ -170,6 +188,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     },
     { id: 'payrollPolicyName', label: 'Payroll Policy', minWidth: 180 },
     { id: 'attendancePolicyName', label: 'Attendance Policy', minWidth: 180 },
+    { id: 'leavePolicyName', label: 'Leave Policy', minWidth: 180 },
     { id: 'effective', label: 'Effective', minWidth: 180 },
     { id: 'priority', label: 'Priority', filterType: 'number', align: 'right', width: 110 },
     { id: 'reason', label: 'Reason', minWidth: 220, defaultHidden: true },
@@ -274,6 +293,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
               !academicYearId ||
               activePayroll.length === 0 ||
               activeAttendance.length === 0 ||
+              activeLeavePolicies.length === 0 ||
               !canAssignPolicy
             }
           >
@@ -314,8 +334,12 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         ) : null}
       </Card>
 
-      {activePayroll.length === 0 || activeAttendance.length === 0 ? (
-        <Alert severity="warning">Active payroll and attendance policies are required.</Alert>
+      {activePayroll.length === 0 ||
+      activeAttendance.length === 0 ||
+      activeLeavePolicies.length === 0 ? (
+        <Alert severity="warning">
+          Active payroll, attendance, and leave policies are required.
+        </Alert>
       ) : null}
       {assignmentsError ? (
         <Alert severity="error">
@@ -424,6 +448,32 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                 {attendance.map((item) => (
                   <MenuItem key={item.id} value={item.id}>
                     {item.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size="small" fullWidth>
+              <InputLabel shrink>Leave Policy</InputLabel>
+              <Select
+                label="Leave Policy"
+                displayEmpty
+                value={draftAssignmentFilters.leavePolicyId}
+                renderValue={(selected) => {
+                  const value = selected as string;
+                  if (!value) return 'All';
+                  return getLeavePolicyName(leavePolicies.find((item: any) => item.id === value));
+                }}
+                onChange={(e) =>
+                  setDraftAssignmentFilters((cur) => ({
+                    ...cur,
+                    leavePolicyId: e.target.value,
+                  }))
+                }
+              >
+                <MenuItem value="">All</MenuItem>
+                {leavePolicies.map((item: any) => (
+                  <MenuItem key={item.id} value={item.id}>
+                    {getLeavePolicyName(item)}
                   </MenuItem>
                 ))}
               </Select>

@@ -29,24 +29,6 @@ import ChequeDetailsForm from './Component/ChequeDetailsTable';
 // Map enum to label and component
 const reconciliationTabConfig = [
   {
-    label: 'UPI',
-    value: ReconciliationtatusType.UPI,
-    color: 'error' as LabelColor,
-    component: (props: any) => <UpiTable {...props} />,
-  },
-  {
-    label: 'Credit Card',
-    value: ReconciliationtatusType.CreditCard,
-    color: 'warning' as LabelColor,
-    component: (props: any) => <CreditCardTable {...props} />,
-  },
-  {
-    label: 'Debit Card',
-    value: ReconciliationtatusType.DebitCard,
-    color: 'warning' as LabelColor,
-    component: (props: any) => <DebitCardTable {...props} />,
-  },
-  {
     label: 'Cheque',
     value: ReconciliationtatusType.Cheque,
     color: 'info' as LabelColor,
@@ -64,21 +46,37 @@ const reconciliationTabConfig = [
     color: 'success' as LabelColor,
     component: (props: any) => <BankTransferTable {...props} />,
   },
+  {
+    label: 'Credit Card',
+    value: ReconciliationtatusType.CreditCard,
+    color: 'warning' as LabelColor,
+    component: (props: any) => <CreditCardTable {...props} />,
+  },
+  {
+    label: 'Debit Card',
+    value: ReconciliationtatusType.DebitCard,
+    color: 'warning' as LabelColor,
+    component: (props: any) => <DebitCardTable {...props} />,
+  },
+  {
+    label: 'UPI',
+    value: ReconciliationtatusType.UPI,
+    color: 'error' as LabelColor,
+    component: (props: any) => <UpiTable {...props} />,
+  },
 ];
 
 const FinanceReconciliation = () => {
   // Tab state
   const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
-  const [activeTab, setActiveTab] = useState<string>(
-    searchParams?.tab || ReconciliationtatusType.UPI
-  );
+  const [activeTab, setActiveTab] = useState(ReconciliationtatusType.Cheque);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
   // Sync activeTab with URL params on initial load and when searchParams change
   React.useEffect(() => {
     if (searchParams?.tab) {
-      setActiveTab(searchParams.tab);
+      setActiveTab(Number(searchParams.tab));
     }
   }, [searchParams?.tab]);
 
@@ -104,8 +102,8 @@ const FinanceReconciliation = () => {
   // Map tab counts to per-tab stats (pending, approved, rejected, total)
   const tabStats = useMemo(
     () => ({
-      [ReconciliationtatusType.All]: {
-        pending: tabCounts?.totalPending ?? 0,
+      [ReconciliationtatusType.Cash]: {
+        pending: 0,
         approved: 0,
         rejected: 0,
       },
@@ -138,16 +136,6 @@ const FinanceReconciliation = () => {
         pending: tabCounts?.upiPending ?? 0,
         approved: tabCounts?.upiApproved ?? 0,
         rejected: tabCounts?.upiRejected ?? 0,
-      },
-      [ReconciliationtatusType.OnlineGateway]: {
-        pending: tabCounts?.onlineGatewayPending ?? 0,
-        approved: tabCounts?.onlineGatewayApproved ?? 0,
-        rejected: tabCounts?.onlineGatewayRejected ?? 0,
-      },
-      [ReconciliationtatusType.Wallet]: {
-        pending: tabCounts?.walletPending ?? 0,
-        approved: tabCounts?.walletApproved ?? 0,
-        rejected: tabCounts?.walletRejected ?? 0,
       },
     }),
     [tabCounts]
@@ -215,11 +203,11 @@ const FinanceReconciliation = () => {
   // Tab change handler
   const handleTabChange = useCallback(
     (event: React.SyntheticEvent, newValue: string | number) => {
-      const newTabValue = String(newValue);
+      const newTabValue = Number(newValue);
       const newIndex = TABS.findIndex((tab) => tab.value === newTabValue);
       setIsBack(currentIndex > newIndex);
       setActiveTab(newTabValue);
-      setSearchParams({ tab: newTabValue });
+      setSearchParams({ tab: String(newTabValue) });
     },
     [TABS, currentIndex, setSearchParams]
   );

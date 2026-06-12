@@ -448,6 +448,7 @@ export const LeavePolicyForm = ({
       encashmentAllowed: firstRule?.encashmentAllowed ?? editData?.encashmentAllowed ?? false,
       encashmentTiming: firstRule?.encashmentTiming || editData?.encashmentTiming || 'next_payroll',
       requiresApproval: firstRule?.requiresApproval ?? editData?.requiresApproval ?? true,
+      isDefault: editData?.isDefault ?? false,
       description: editData?.description || '',
     },
     enableReinitialize: true,
@@ -461,6 +462,7 @@ export const LeavePolicyForm = ({
             editData?.effectiveFrom ||
             currentYear?.startDate ||
             new Date().toISOString().slice(0, 10),
+          isDefault: values.isDefault,
           description: values.description || undefined,
           rules: [
             {
@@ -626,6 +628,18 @@ export const LeavePolicyForm = ({
                 {...formik.getFieldProps('leaveCount')}
               />
             </ShakingTextField>
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="isDefault"
+                  checked={Boolean(formik.values.isDefault)}
+                  onChange={formik.handleChange}
+                />
+              }
+              label="Default leave policy"
+            />
           </Grid>
 
           <Grid size={{ xs: 12 }}>

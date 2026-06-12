@@ -1,5 +1,6 @@
 import type { RootState } from 'src/redux/store';
 import type { Division } from 'src/types/school';
+import type { StudentLookupItem } from 'src/redux/student';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -16,7 +17,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
+import { useLazyGetStudentsByScopeQuery } from 'src/redux/student';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -28,14 +29,16 @@ import {
 } from 'src/redux/finance/ChargeManagement/chargeApi';
 import {
   Box,
+  Chip,
   Grid,
   Paper,
   Stack,
   Button,
   Divider,
+  Checkbox,
   TextField,
   Typography,
-  Autocomplete,
+  FormHelperText,
 } from '@mui/material';
 
 import type { IChargeFormProps } from './type';
@@ -49,28 +52,26 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   const [mediums, setMediums] = useState<any[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
+  // New scope-based student query
+  const [
+    getStudentsByScope,
+    { data: scopeStudentsData, isLoading: studentLoading, isFetching: studentFetching },
+  ] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetStudentsByScopeQuery,
+  });
+
   // Queries
   const [getClassByMedium, { data: classes, isLoading: classesLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
 
-  const [
-    getStudents,
-    { data: studentsData, isLoading: studentLoading, isFetching: studentFetching },
-  ] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
-  });
-
-  const studentOptions = useMemo(
-    () =>
-      studentsData?.items?.map((item: any) => ({
-        ...item,
-        name: `${item.firstName}${item.middleName ? ` ${item.middleName}` : ''} ${item.lastName}`,
-      })) || [],
-    [studentsData?.items]
+  const studentOptions: StudentLookupItem[] = useMemo(
+    () => (scopeStudentsData as StudentLookupItem[] | undefined) ?? [],
+    [scopeStudentsData]
   );
+
   // Get charge categories data
   const { data: chargeCategories, isLoading: chargeCategoriesLoading } = useQueryAndMutation({
     type: 'query',
@@ -100,13 +101,12 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         priority: editData.priority?.toString() || '',
         boardId: editData.boardId || '',
         educationMediumId: editData.educationMediumId || '',
-        standardId: editData.standardId || '',
-        divisionId: editData.divisionId || '',
-        studentId: editData.studentId || null,
-        selectedStudent:
-          editData.studentId && editData.studentName
-            ? { id: editData.studentId, label: editData.studentName }
-            : null,
+        // Multiple class IDs (array)
+        classIds: [] as string[],
+        // Optional division IDs (only when single class selected)
+        divisionIds: [] as string[],
+        // Selected students (multiple, from scope lookup)
+        selectedStudentIds: [] as string[],
         additionalNotes: editData.additionalNotes || '',
       };
     }
@@ -119,13 +119,14 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       priority: '',
       boardId: '',
       educationMediumId: '',
-      standardId: '',
-      divisionId: '',
-      studentId: null,
-      selectedStudent: null,
+      classIds: [] as string[],
+      divisionIds: [] as string[],
+      selectedStudentIds: [] as string[],
       additionalNotes: '',
     };
   }, [isEdit, editData]);
+
+  const isSingleClass = (classIds: string[]) => classIds.length === 1;
 
   const formik = useFormik({
     initialValues,
@@ -165,9 +166,14 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       priority: Yup.string().required('Priority is required'),
       boardId: Yup.string().required('Board is required'),
       educationMediumId: Yup.string().required('Medium is required'),
-      standardId: Yup.string().required('Class is required'),
-      divisionId: Yup.string().required('Division is required'),
-      studentId: Yup.string().nullable().required('Student is required'),
+      classIds: Yup.array()
+        .of(Yup.string().required())
+        .min(1, 'At least one Class is required')
+        .required('Class is required'),
+      selectedStudentIds: Yup.array()
+        .of(Yup.string().required())
+        .min(1, 'At least one Student must be selected')
+        .required('Student is required'),
     }),
     onSubmit: async (values) => {
       try {
@@ -183,16 +189,38 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         if (isEdit && editData) {
           await updateCharge({ id: editData.chargeId, body: payload }).unwrap();
           shikshaMitraToast.success({
-            message: `Charge updated successfully for ${values.chargeCategoryName} and assigned to ${values.selectedStudent?.label}`,
+            message: `Charge updated successfully for ${values.chargeCategoryName}`,
           });
         } else {
+          // Build the audience payload as expected by backend CreateChargeRequest
+          const isAllInScope =
+            values.selectedStudentIds.length === studentOptions.length && studentOptions.length > 0;
           const createPayload = {
             ...payload,
-            studentId: values.studentId,
+            chargeName:
+              chargeCategories?.items?.find((c: any) => c.id === values.chargeCategoryId)?.name ??
+              '',
+            audience: {
+              scope: {
+                boardId: values.boardId,
+                educationMediumId: values.educationMediumId,
+                classIds: values.classIds,
+                // Only send divisionIds when a single class is selected and divisions were chosen
+                divisionIds:
+                  isSingleClass(values.classIds) && values.divisionIds.length > 0
+                    ? values.divisionIds
+                    : undefined,
+              },
+              selection: {
+                // 0 = AllInScope, 1 = Explicit
+                mode: isAllInScope ? 0 : 1,
+                studentIds: isAllInScope ? undefined : values.selectedStudentIds,
+              },
+            },
           };
           await postCharge({ academicYearId: currentYear?.id, body: createPayload }).unwrap();
           shikshaMitraToast.success({
-            message: `Charge added successfully for ${values.chargeCategoryName} and assigned to ${values.selectedStudent?.label}`,
+            message: `Charge added successfully for ${values.chargeCategoryName} — ${values.selectedStudentIds.length} student(s)`,
           });
         }
         onClose(null, true);
@@ -205,7 +233,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
 
   const handleSubmit = useCallback(() => {
-    formik.validateForm().then((validationErrors) => {
+    formik.validateForm().then(() => {
       formik.handleSubmit();
     });
   }, [formik]);
@@ -218,25 +246,84 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   }, [currentYear]);
 
   // Load mediums when board changes
-  // Load mediums when board changes
   useEffect(() => {
     const selectedBoard = boards.find((b: any) => b.id === values.boardId);
     setMediums(selectedBoard?.educationMediums || []);
-
-    // Fetch classes if medium is already selected (e.g. edit mode) or re-selected
     if (values.educationMediumId) {
       getClassByMedium(values.educationMediumId);
     }
   }, [values.boardId, values.educationMediumId, boards, getClassByMedium]);
 
-  // Load divisions when class changes
+  // Load divisions when a single class is selected
   useEffect(() => {
-    setAllDivision(classes?.find((cls: any) => cls.id === values.standardId)?.divisions || []);
-  }, [values.standardId, classes]);
+    if (isSingleClass(values.classIds)) {
+      setAllDivision(classes?.find((cls: any) => cls.id === values.classIds[0])?.divisions || []);
+    } else {
+      setAllDivision([]);
+      setFieldValue('divisionIds', []);
+    }
+  }, [values.classIds, classes, setFieldValue]);
 
+  // Fetch students from scope API when board, medium, classes, or divisions change
   useEffect(() => {
-    if (values.divisionId) getStudents(values.divisionId);
-  }, [values.divisionId, getStudents]);
+    if (
+      values.boardId &&
+      values.educationMediumId &&
+      values.classIds.length > 0 &&
+      currentYear?.id
+    ) {
+      const params: any = {
+        academicYearId: currentYear.id,
+        boardId: values.boardId,
+        educationMediumId: values.educationMediumId,
+        classIds: values.classIds,
+      };
+      if (isSingleClass(values.classIds) && values.divisionIds.length > 0) {
+        params.divisionIds = values.divisionIds;
+      }
+      getStudentsByScope(params);
+      // Clear selected students when scope changes
+      setFieldValue('selectedStudentIds', []);
+    }
+  }, [
+    values.boardId,
+    values.educationMediumId,
+    values.classIds,
+    values.divisionIds,
+    currentYear?.id,
+    getStudentsByScope,
+    setFieldValue,
+  ]);
+
+  const handleToggleStudent = (studentId: string) => {
+    const current = values.selectedStudentIds;
+    if (current.includes(studentId)) {
+      setFieldValue(
+        'selectedStudentIds',
+        current.filter((id) => id !== studentId)
+      );
+    } else {
+      setFieldValue('selectedStudentIds', [...current, studentId]);
+    }
+  };
+
+  const handleSelectAllStudents = () => {
+    if (values.selectedStudentIds.length === studentOptions.length) {
+      setFieldValue('selectedStudentIds', []);
+    } else {
+      setFieldValue(
+        'selectedStudentIds',
+        studentOptions.map((s) => s.studentId)
+      );
+    }
+  };
+
+  const isStudentSelected = (studentId: string) => values.selectedStudentIds.includes(studentId);
+  const allSelected =
+    studentOptions.length > 0 && values.selectedStudentIds.length === studentOptions.length;
+  const someSelected =
+    values.selectedStudentIds.length > 0 &&
+    values.selectedStudentIds.length < studentOptions.length;
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -430,10 +517,10 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                       />
                       <Box>
                         <Typography variant="subtitle2" fontWeight={700}>
-                          Student Information
+                          Student Selection
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Select board, class, and student to proceed
+                          Select board, medium, one or more classes, then choose students
                         </Typography>
                       </Box>
                     </Stack>
@@ -453,10 +540,9 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                               setFieldValue('boardId', val);
                               setFieldTouched('boardId', false);
                               setFieldValue('educationMediumId', '');
-                              setFieldValue('standardId', '');
-                              setFieldValue('divisionId', '');
-                              setFieldValue('studentId', null);
-                              setFieldValue('selectedStudent', null);
+                              setFieldValue('classIds', []);
+                              setFieldValue('divisionIds', []);
+                              setFieldValue('selectedStudentIds', []);
                             }}
                             error={!!errors.boardId && touched.boardId}
                             helperText={(touched.boardId && errors.boardId) as string}
@@ -478,10 +564,9 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                             onChange={(val) => {
                               setFieldValue('educationMediumId', val);
                               setFieldTouched('educationMediumId', false);
-                              setFieldValue('standardId', '');
-                              setFieldValue('divisionId', '');
-                              setFieldValue('studentId', null);
-                              setFieldValue('selectedStudent', null);
+                              setFieldValue('classIds', []);
+                              setFieldValue('divisionIds', []);
+                              setFieldValue('selectedStudentIds', []);
                             }}
                             error={!!errors.educationMediumId && touched.educationMediumId}
                             helperText={
@@ -490,108 +575,172 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                           />
                         </ShakingTextField>
                       </Grid>
-                      {/* Class */}
+                      {/* Class — multi-select */}
                       <Grid size={{ xs: 6, md: 3 }}>
-                        <ShakingTextField
-                          error={!!(touched.standardId && errors.standardId) || false}
-                        >
+                        <ShakingTextField error={!!(touched.classIds && errors.classIds) || false}>
                           <CustomSelect
-                            name="standardId"
+                            name="classIds"
                             label="Class *"
                             options={classes || []}
                             labelKey="name"
                             valueKey="id"
                             isLoading={classesLoading}
-                            value={values.standardId}
+                            value={values.classIds}
                             disabled={!values.educationMediumId || isEdit}
                             onChange={(value) => {
-                              setFieldValue('standardId', value);
-                              setFieldTouched('standardId', false);
-                              setFieldValue('divisionId', '');
-                              setFieldValue('studentId', null);
-                              setFieldValue('selectedStudent', null);
+                              setFieldValue('classIds', value);
+                              setFieldTouched('classIds', false);
+                              setFieldValue('divisionIds', []);
+                              setFieldValue('selectedStudentIds', []);
                             }}
-                            error={!!(touched.standardId && errors.standardId) || false}
-                            helperText={(touched.standardId && errors.standardId) || ''}
+                            error={!!(touched.classIds && errors.classIds) || false}
+                            helperText={(touched.classIds && (errors.classIds as string)) || ''}
                             formControlProps={{ sx: { width: '100%' } }}
-                            multiple={false}
+                            multiple
                           />
                         </ShakingTextField>
                       </Grid>
-                      {/* Division */}
-                      <Grid size={{ xs: 6, md: 3 }}>
-                        <ShakingTextField
-                          error={!!(touched.divisionId && errors.divisionId) || false}
+                      {/* Division — only shown when exactly one class is selected */}
+                      {isSingleClass(values.classIds) && (
+                        <Grid size={{ xs: 6, md: 3 }}>
+                          <ShakingTextField
+                            error={!!(touched.divisionIds && errors.divisionIds) || false}
+                          >
+                            <CustomSelect
+                              name="divisionIds"
+                              label="Division (optional)"
+                              labelKey="name"
+                              valueKey="id"
+                              disabled={isEdit}
+                              options={allDivision}
+                              value={values.divisionIds}
+                              onChange={(value) => {
+                                setFieldValue('divisionIds', value);
+                                setFieldTouched('divisionIds', false);
+                                setFieldValue('selectedStudentIds', []);
+                              }}
+                              formControlProps={{ sx: { width: '100%' } }}
+                              error={!!(touched.divisionIds && errors.divisionIds)}
+                              helperText={(touched.divisionIds && errors.divisionIds) as string}
+                              multiple
+                            />
+                          </ShakingTextField>
+                        </Grid>
+                      )}
+                    </Grid>
+
+                    {/* Student list with multi-select checkboxes */}
+                    {values.classIds.length > 0 && (
+                      <Box mt={2}>
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          justifyContent="space-between"
+                          mb={1}
                         >
-                          <CustomSelect
-                            name="divisionId"
-                            label="Division *"
-                            labelKey="name"
-                            valueKey="id"
-                            disabled={!values.standardId || isEdit}
-                            options={allDivision}
-                            value={values.divisionId}
-                            onChange={(value) => {
-                              setFieldValue('divisionId', value);
-                              setFieldTouched('divisionId', false);
-                              setFieldValue('studentId', null);
-                              setFieldValue('selectedStudent', null);
-                            }}
-                            formControlProps={{ sx: { width: '100%' } }}
-                            error={!!(touched.divisionId && errors.divisionId)}
-                            helperText={(touched.divisionId && errors.divisionId) as string}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                      {/* Student */}
-                      <Grid size={{ xs: 12 }}>
-                        <ShakingTextField
-                          error={!!(touched.studentId && errors.studentId) || false}
+                          <Typography variant="subtitle2" color="text.secondary">
+                            {studentLoading || studentFetching
+                              ? 'Loading students…'
+                              : `${studentOptions.length} student(s) in scope — ${values.selectedStudentIds.length} selected`}
+                          </Typography>
+                          {studentOptions.length > 0 && (
+                            <Button
+                              size="small"
+                              variant="text"
+                              onClick={handleSelectAllStudents}
+                              disabled={isEdit}
+                            >
+                              {allSelected ? 'Deselect All' : 'Select All'}
+                            </Button>
+                          )}
+                        </Stack>
+
+                        {studentOptions.length === 0 && !studentLoading && !studentFetching && (
+                          <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+                            No enrolled students found in the selected scope.
+                          </Typography>
+                        )}
+
+                        <Box
+                          sx={{
+                            maxHeight: 260,
+                            overflowY: 'auto',
+                            border: `1px solid ${theme.palette.divider}`,
+                            borderRadius: 1,
+                          }}
                         >
-                          <Autocomplete
-                            loading={studentLoading || studentFetching}
-                            noOptionsText={
-                              values.divisionId ? 'No Student Found' : 'Select a division first'
-                            }
-                            fullWidth
-                            disabled={!values.divisionId || isEdit}
-                            options={studentOptions}
-                            value={
-                              studentOptions.find((s: any) => s.studentId === values.studentId) ||
-                              (values.studentId && values.selectedStudent
-                                ? {
-                                    name: values.selectedStudent.label,
-                                    studentId: values.studentId,
-                                  }
-                                : null)
-                            }
-                            onChange={(_e, value: any) => {
-                              setFieldValue(
-                                'studentId',
-                                value ? { label: value.name, id: value.studentId } : null
-                              );
-                              setFieldValue('studentId', value?.studentId || null);
-                            }}
-                            getOptionLabel={(option: any) => option.name || ''}
-                            renderOption={(props, option: any) => (
-                              <li {...props} key={option.studentId}>
-                                {option.name}
-                              </li>
-                            )}
-                            renderInput={(params) => (
-                              <TextField
-                                {...params}
+                          {studentOptions.map((student) => (
+                            <Stack
+                              key={student.studentId}
+                              direction="row"
+                              alignItems="center"
+                              spacing={1}
+                              sx={{
+                                px: 1.5,
+                                py: 0.75,
+                                cursor: isEdit ? 'default' : 'pointer',
+                                '&:hover': { bgcolor: isEdit ? 'inherit' : 'action.hover' },
+                                borderBottom: `1px solid ${theme.palette.divider}`,
+                                '&:last-child': { borderBottom: 'none' },
+                              }}
+                              onClick={() => !isEdit && handleToggleStudent(student.studentId)}
+                            >
+                              <Checkbox
                                 size="small"
-                                label="Student *"
-                                fullWidth
-                                error={!!(touched.studentId && errors.studentId)}
-                                helperText={(touched.studentId && errors.studentId) as string}
+                                checked={isStudentSelected(student.studentId)}
+                                disabled={isEdit}
+                                onChange={() => !isEdit && handleToggleStudent(student.studentId)}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <Box flex={1}>
+                                <Typography variant="body2" fontWeight={500}>
+                                  {student.studentName}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {[
+                                    student.standardName,
+                                    student.divisionName,
+                                    student.grNo != null ? `GR: ${student.grNo}` : null,
+                                    student.rollNo != null ? `Roll: ${student.rollNo}` : null,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          ))}
+                        </Box>
+
+                        {touched.selectedStudentIds && errors.selectedStudentIds && (
+                          <FormHelperText error sx={{ mt: 0.5, ml: 1 }}>
+                            {errors.selectedStudentIds as string}
+                          </FormHelperText>
+                        )}
+
+                        {values.selectedStudentIds.length > 0 && (
+                          <Box mt={1} display="flex" flexWrap="wrap" gap={0.5}>
+                            {values.selectedStudentIds.slice(0, 5).map((id) => {
+                              const s = studentOptions.find((o) => o.studentId === id);
+                              return s ? (
+                                <Chip
+                                  key={id}
+                                  label={s.studentName}
+                                  size="small"
+                                  onDelete={isEdit ? undefined : () => handleToggleStudent(id)}
+                                />
+                              ) : null;
+                            })}
+                            {values.selectedStudentIds.length > 5 && (
+                              <Chip
+                                label={`+${values.selectedStudentIds.length - 5} more`}
+                                size="small"
+                                variant="outlined"
                               />
                             )}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                    </Grid>
+                          </Box>
+                        )}
+                      </Box>
+                    )}
                   </Paper>
                 </Grid>
                 {/* Additional Notes */}

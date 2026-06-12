@@ -6,16 +6,20 @@ import type { ILeavePolicy } from 'src/screens/hr/attendance-setting/leave-type'
 
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { LeavePolicyForm } from 'src/screens/hr/attendance-setting/leave-policy';
-import { useGetLeavePoliciesQuery, useDeleteLeavePolicyMutation } from 'src/redux/hr/leaveApi';
 import { Card, Chip, Stack, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import {
+  useGetLeavePoliciesQuery,
+  useDeleteLeavePolicyMutation,
+  useSetDefaultLeavePolicyMutation,
+} from 'src/redux/hr/leaveApi';
 
 import { InfoTooltipIcon } from './HRPolicySharedUI';
 import { formatDate } from '../hr-policy-workspace-utils';
@@ -52,6 +56,11 @@ export function LeavePoliciesPanel() {
     currentQueryAndMutation: useDeleteLeavePolicyMutation,
   });
 
+  const [setDefaultLeavePolicy, defaultState] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSetDefaultLeavePolicyMutation,
+  });
+
   const tableData = useMemo<ILeavePolicy[]>(
     () =>
       (leavePolicyData?.items || []).filter(
@@ -86,10 +95,36 @@ export function LeavePoliciesPanel() {
   };
 
   const previewArchive = (policy: ILeavePolicy) => {
+    if (policy.isDefault) {
+      shikshaMitraToast.error({
+        message: 'Set another active leave policy as default before archiving this one.',
+      });
+      return;
+    }
     setEditData(policy);
     setImpactReview(buildLeavePolicyImpactReview(policy, 'archive'));
     setImpactOpen(true);
   };
+
+  const confirmSetDefault = useCallback(
+    async (policy: ILeavePolicy) => {
+      if (!policy.id || policy.isDefault) {
+        return;
+      }
+
+      try {
+        await setDefaultLeavePolicy(policy.id).unwrap();
+        shikshaMitraToast.success({
+          message: `${getLeavePolicyTitle(policy)} is now the default leave policy`,
+        });
+        refetch();
+      } catch (defaultError) {
+        console.error('Failed to set default leave policy:', defaultError);
+        shikshaMitraToast.error({ message: 'Failed to set default leave policy' });
+      }
+    },
+    [refetch, setDefaultLeavePolicy]
+  );
 
   const closeImpact = () => {
     if (archiveState.isLoading) {
@@ -160,6 +195,9 @@ export function LeavePoliciesPanel() {
         render: (_value, row) => (
           <Stack direction="row" spacing={0.75} alignItems="center">
             <Chip size="small" label="Active" color="success" />
+            {row.policyItem?.isDefault ? (
+              <Chip size="small" label="Default" color="primary" variant="outlined" />
+            ) : null}
             {row.encashmentAllowed ? (
               <Chip size="small" label="Payroll impact" color="warning" variant="outlined" />
             ) : null}
@@ -189,7 +227,20 @@ export function LeavePoliciesPanel() {
               handleEditClick={() => openEditDialog(policy)}
               actions={({ popover }) => (
                 <MenuList>
+                  {!policy.isDefault ? (
+                    <MenuItem
+                      disabled={defaultState.isLoading}
+                      onClick={() => {
+                        popover.onClose();
+                        confirmSetDefault(policy);
+                      }}
+                    >
+                      <Iconify icon="mdi:star-outline" />
+                      Set as default
+                    </MenuItem>
+                  ) : null}
                   <MenuItem
+                    disabled={policy.isDefault}
                     onClick={() => {
                       popover.onClose();
                       previewArchive(policy);
@@ -205,7 +256,7 @@ export function LeavePoliciesPanel() {
         },
       },
     ],
-    []
+    [confirmSetDefault, defaultState.isLoading]
   );
 
   const rows = tableData.map((policy) => ({
