@@ -124,9 +124,27 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
         formik.setFieldValue('feeStructureId', assignedId);
 
         const heads: FeeHeadAssignment[] = (assignedStructureData?.feeHeads || []).map(
-          (fh: any) => ({
-            ...fh,
-          })
+          (fh: any) => {
+            const mapped: FeeHeadAssignment = {
+              ...fh,
+              selectedAmount: fh.selectedAmount ?? fh.amount,
+            };
+
+            if (fh.isOptional) {
+              if (fh.isOneTime && fh.payableMonth !== null && fh.payableMonth !== undefined) {
+                mapped.payableMonth = `${fh.payableMonth}-${fh.payableYear}`;
+              } else if (
+                !fh.isOneTime &&
+                fh.startPayableMonth !== null &&
+                fh.startPayableMonth !== undefined
+              ) {
+                mapped.startPayableMonth = `${fh.startPayableMonth}-${fh.startPayableYear}`;
+                mapped.endPayableMonth = `${fh.endPayableMonth}-${fh.endPayableYear}`;
+              }
+            }
+
+            return mapped;
+          }
         );
         setFeeHeads(heads);
 

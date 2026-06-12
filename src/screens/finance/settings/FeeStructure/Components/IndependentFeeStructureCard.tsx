@@ -146,7 +146,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const COLUMNS = [
     { label: '#', size: 0.5, align: 'left' },
-    { label: 'Fee Head', size: 2.0, align: 'left' },
+    { label: 'Fee Head', size: 3.5, align: 'left' },
     { label: 'Amount', size: 1.8, align: 'left' },
     { label: 'One Time', size: 1.5, align: 'center' },
     { label: 'Payable Month', size: 2.5, align: 'left' },
@@ -222,7 +222,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         amount: fh.amount,
         isOneTime: fh.isOneTime,
         isOptional: fh.isOptional,
-        isRefundable: fh.isRefundable,
         ...(fh.isOneTime && fh.paybleMonth !== undefined && fh.payableYear !== undefined
           ? { payableMonth: Number(fh.paybleMonth), payableYear: Number(fh.payableYear) }
           : {}),
@@ -724,7 +723,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         </Typography>
                       </Grid>
 
-                      <Grid size={2.0} sx={{ pr: 1, pt: 0.75 }}>
+                      <Grid size={3.5} sx={{ pr: 1, pt: 0.75 }}>
                         <Typography variant="body2" noWrap>
                           {item.feeHeadName}
                         </Typography>
@@ -865,49 +864,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                             Optional
                           </Typography>
                         </Box>
-                      </Grid>
-
-                      <Grid size={1.5} display="flex" justifyContent="center" sx={{ pt: 0.5 }}>
-                        <CustomTooltip title="Refundable" arrow placement="top">
-                          <Box
-                            component="div"
-                            onClick={() =>
-                              isEditing &&
-                              !isLocked &&
-                              updateFeeHead(idx, 'isRefundable', !item.isRefundable)
-                            }
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 0.5,
-                              cursor: isEditing && !isLocked ? 'pointer' : 'default',
-                              color: item.isRefundable ? 'success.main' : 'text.disabled',
-                              bgcolor: item.isRefundable
-                                ? varAlpha(theme.palette.success.mainChannel, 0.08)
-                                : 'transparent',
-                              px: 1,
-                              py: 0.5,
-                              borderRadius: 1,
-                              border: '1px solid',
-                              borderColor: item.isRefundable
-                                ? varAlpha(theme.palette.success.mainChannel, 0.2)
-                                : 'transparent',
-                              transition: 'all 0.2s',
-                            }}
-                          >
-                            <Iconify
-                              icon={
-                                item.isRefundable
-                                  ? 'solar:check-circle-bold'
-                                  : 'solar:check-circle-outline'
-                              }
-                              width={16}
-                            />
-                            <Typography variant="caption" fontWeight={600}>
-                              Refundable
-                            </Typography>
-                          </Box>
-                        </CustomTooltip>
                       </Grid>
 
                       <Grid size={0.5} display="flex" justifyContent="flex-end" sx={{ pt: 0.25 }}>

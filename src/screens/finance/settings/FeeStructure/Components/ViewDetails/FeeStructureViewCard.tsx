@@ -8,7 +8,6 @@ import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FeePaymentTypeOptions } from 'src/enums/fee-payment-type';
 import { FeeOptionalTypeOptions } from 'src/enums/fee-optional-type';
-import { FeeRefundableTypeOptions } from 'src/enums/feeRefundableOptionalType';
 import {
   Box,
   Chip,
@@ -134,23 +133,7 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, 
                       </Label>
                     ),
                 },
-                {
-                  id: 'isRefundable',
-                  label: 'Refundable',
-                  align: 'left',
-                  filterType: 'enum',
-                  enumOptions: FeeRefundableTypeOptions,
-                  render: (value) =>
-                    value ? (
-                      <Label color="success" variant="soft">
-                        Refundable
-                      </Label>
-                    ) : (
-                      <Label color="default" variant="soft">
-                        Non-Refundable
-                      </Label>
-                    ),
-                },
+
                 {
                   id: 'payableMonth',
                   label: 'Payble Month',
