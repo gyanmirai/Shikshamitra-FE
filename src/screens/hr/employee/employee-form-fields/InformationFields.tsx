@@ -27,6 +27,8 @@ import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'inpu
 import {
   Box,
   Grid,
+  Chip,
+  Alert,
   Radio,
   Paper,
   Select,
@@ -333,7 +335,14 @@ export const CardActions = ({
   );
 };
 
-const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
+const getPolicyName = (item: any) => item?.name || item?.policyTitle || item?.title || '-';
+
+const InformationAllFields = ({
+  formik,
+  isMainForm,
+  editData = null,
+  defaultPolicyAssignment,
+}: any) => {
   const isBasicDetailsEditable = useBoolean(!!isMainForm);
   const isContactDetailsEditable = useBoolean(!!isMainForm);
   const isIdentificationEditable = useBoolean(!!isMainForm);
@@ -951,6 +960,49 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           <RenderShift formik={formik} disabled={!isProfessionalDetailsEditable.value} />
         </Grid>
       </SectionCard>
+
+      {!editData?.id ? (
+        <SectionCard title="Leave Policy Assignment">
+          <Grid size={{ xs: 12 }}>
+            {defaultPolicyAssignment?.missingMessage ? (
+              <Alert severity="warning">{defaultPolicyAssignment.missingMessage}</Alert>
+            ) : (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1,
+                  border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                  bgcolor: (theme) => theme.vars.palette.background.neutral,
+                }}
+              >
+                <Typography variant="body2" fontWeight={700} sx={{ mb: 1 }}>
+                  Employee creation policy assignment
+                </Typography>
+                <Box display="flex" flexWrap="wrap" gap={1}>
+                  <Chip
+                    size="small"
+                    label={`Payroll: ${getPolicyName(defaultPolicyAssignment?.payrollPolicy)}`}
+                    variant="outlined"
+                  />
+                  <Chip
+                    size="small"
+                    label={`Attendance: ${getPolicyName(defaultPolicyAssignment?.attendancePolicy)}`}
+                    variant="outlined"
+                    color="success"
+                  />
+                  <Chip
+                    size="small"
+                    label={`Leave: ${getPolicyName(defaultPolicyAssignment?.leavePolicy)}`}
+                    variant="outlined"
+                    color="primary"
+                  />
+                </Box>
+              </Paper>
+            )}
+          </Grid>
+        </SectionCard>
+      ) : null}
 
       <SectionCard
         title="Address Details"

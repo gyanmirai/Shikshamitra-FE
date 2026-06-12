@@ -88,6 +88,18 @@ export const leaveApi = api.injectEndpoints({
         employeeType.runPayroll,
       ],
     }),
+    setDefaultLeavePolicy: builder.mutation({
+      query: (id) => ({
+        url: `/leave-policies/${id}/set-default`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: [
+        employeeType.employeeLeavePolicy,
+        employeeType.employee,
+        employeeType.hrDashboard,
+        employeeType.runPayroll,
+      ],
+    }),
     deleteLeavePolicy: builder.mutation({
       query: (id) => ({
         url: `/leave-policies/${id}`,
@@ -279,6 +291,7 @@ export const {
   useCreateLeavePolicyMutation,
   useGetLeavePolicyByIdQuery,
   useUpdateLeavePolicyMutation,
+  useSetDefaultLeavePolicyMutation,
   useDeleteLeavePolicyMutation,
   useGetLeaveRequestsQuery,
   useGetMyLeaveRequestsQuery,

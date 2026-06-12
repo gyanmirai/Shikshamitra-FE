@@ -169,6 +169,7 @@ export type AssignmentForm = {
   targetDisplayName: string;
   payrollPolicyId: string;
   attendancePolicyId: string;
+  leavePolicyId: string;
   effectiveFrom: string;
   effectiveTo: string;
   priority: string;
@@ -182,6 +183,7 @@ export type AssignmentFilters = {
   status: 'all' | 'active' | 'inactive';
   payrollPolicyId: string;
   attendancePolicyId: string;
+  leavePolicyId: string;
   activeOnDate: string;
   effectiveFrom: string;
   effectiveTo: string;
@@ -214,6 +216,7 @@ export type AssignmentTableRow = {
   sourceType: string;
   payrollPolicyName: string;
   attendancePolicyName: string;
+  leavePolicyName: string;
   effective: string;
   priority: number;
   status: string;

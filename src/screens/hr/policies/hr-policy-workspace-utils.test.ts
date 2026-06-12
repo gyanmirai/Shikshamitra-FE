@@ -10,6 +10,8 @@ import {
   buildPayrollBasisPreviewRows,
   selectSingleActiveDefaultPolicy,
   getAssignmentFormValidationError,
+  assignmentMatchesLeavePolicyFilter,
+  getEffectiveAssignmentLeavePolicyId,
 } from './hr-policy-workspace-utils';
 
 describe('HR policy workspace date-only academic year handling', () => {
@@ -172,6 +174,7 @@ describe('HR policy workspace date-only academic year handling', () => {
       targetDisplayName: 'Employee One',
       payrollPolicyId: 'payroll-1',
       attendancePolicyId: 'attendance-1',
+      leavePolicyId: 'leave-1',
       effectiveFrom: '2026-06-01',
       effectiveTo: '2026-06-30',
       priority: '100',
@@ -225,5 +228,29 @@ describe('HR policy workspace date-only academic year handling', () => {
         { id: 'second-default', status: 'active', isDefault: true },
       ])
     ).toBeUndefined();
+    expect(
+      selectSingleActiveDefaultPolicy([
+        { id: 'uppercase-default', status: 'Active', isDefault: true },
+      ])?.id
+    ).toBe('uppercase-default');
+  });
+
+  it('matches legacy null leave assignments through a single default policy for filters', () => {
+    const legacyAssignment = { leavePolicyId: null };
+    const explicitAssignment = { leavePolicyId: 'leave-explicit' };
+
+    expect(getEffectiveAssignmentLeavePolicyId(legacyAssignment, 'leave-default')).toBe(
+      'leave-default'
+    );
+    expect(
+      assignmentMatchesLeavePolicyFilter(legacyAssignment, 'leave-default', 'leave-default')
+    ).toBe(true);
+    expect(
+      assignmentMatchesLeavePolicyFilter(legacyAssignment, 'leave-other', 'leave-default')
+    ).toBe(false);
+    expect(
+      assignmentMatchesLeavePolicyFilter(explicitAssignment, 'leave-explicit', 'leave-default')
+    ).toBe(true);
+    expect(assignmentMatchesLeavePolicyFilter(legacyAssignment, 'leave-default')).toBe(false);
   });
 });

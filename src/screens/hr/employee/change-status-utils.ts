@@ -16,6 +16,11 @@ export const getEmployeeStatusOptions = (currentStatus: EmployeeStatusType) => {
   })).filter((option) => !(isTerminal && option.value === EmployeeStatusType.Active));
 };
 
+export const isNonActiveEmployeeStatus = (status?: EmployeeStatusType | number | null) =>
+  status === EmployeeStatusType.Inactive ||
+  status === EmployeeStatusType.Left ||
+  status === EmployeeStatusType.Retired;
+
 export const changeStatusValidationSchema = Yup.object({
   status: Yup.object({
     value: Yup.number().required('Status is required'),

@@ -205,3 +205,14 @@ export async function updateEmployeeStatus(
 
   return response;
 }
+
+export async function assignReportingManager(
+  page: Page,
+  employeeId: string,
+  reportingManagerId: string
+) {
+  return employeeApiRequest(page, `/employees/${employeeId}/reporting-manager`, {
+    method: 'PUT',
+    body: JSON.stringify({ reportingManagerId }),
+  });
+}

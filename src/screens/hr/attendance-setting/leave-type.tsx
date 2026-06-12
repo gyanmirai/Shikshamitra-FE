@@ -84,6 +84,7 @@ export interface ILeavePolicy {
   requiresApproval?: boolean;
   description: string;
   isActive?: boolean;
+  isDefault?: boolean;
 }
 
 const LeaveType = () => {

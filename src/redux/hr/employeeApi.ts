@@ -205,6 +205,13 @@ export const employeeApi = api.injectEndpoints({
       }),
       invalidatesTags: [employeeType.employee],
     }),
+    getEmployeeStatusDeactivationCheck: builder.query({
+      query: (id) => ({
+        url: `/employees/${id}/status-deactivation-check`,
+        method: 'GET',
+      }),
+      providesTags: [employeeType.employee],
+    }),
 
     // Document Management
     uploadDocuments: builder.mutation({
@@ -369,6 +376,7 @@ export const {
   useLazyGetEmployeeDocumentByIdQuery,
   useEmployeeUpdateDocumentMutation,
   useUpdateEmployeeStatusMutation,
+  useGetEmployeeStatusDeactivationCheckQuery,
   useGetReportingManagerByEmployeeIdQuery,
   useUpdateReportingManagerByEmployeeIdMutation,
   useGetEmployeesUnderManagerQuery,

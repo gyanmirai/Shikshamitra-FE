@@ -79,10 +79,10 @@ export const getPersonalInformationValidationSchema = (
     maritalStatus: Yup.string().required('Marital Status is required'),
     bloodGroup: Yup.string().nullable(),
     adharNo: Yup.string()
-      .required('Aadhaar No. is required')
+      .required('Aadhaar number is required')
       .matches(/^\d{12}$/, 'Aadhaar number must be 12 digits'),
     panNo: Yup.string()
-      .required('PAN No. is required')
+      .required('PAN number is required')
       .test(
         'pan-format',
         'PAN must be in format: AAAAA9999A (5 letters, 4 digits, 1 letter)',
@@ -342,6 +342,11 @@ export const payrollValidationSchema = Yup.object({
   policyOverrideAttendancePolicyId: Yup.string().when('policyOverrideEnabled', {
     is: true,
     then: (schema) => schema.required('Attendance policy is required'),
+    otherwise: (schema) => schema.nullable(),
+  }),
+  policyOverrideLeavePolicyId: Yup.string().when('policyOverrideEnabled', {
+    is: true,
+    then: (schema) => schema.required('Leave policy is required'),
     otherwise: (schema) => schema.nullable(),
   }),
   policyOverrideEffectiveFrom: Yup.string().when('policyOverrideEnabled', {

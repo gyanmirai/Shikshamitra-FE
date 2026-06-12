@@ -42,6 +42,10 @@ import {
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 import type { PolicyAssignmentTargetType } from '../types/hr-policy-workspace.types';
 
+function getLeavePolicyName(item: any): string {
+  return item?.policyTitle || item?.name || item?.title || item?.id || '-';
+}
+
 // --- AssignmentPreviewPanel ----------------------------------------------------
 
 function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
@@ -52,6 +56,7 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     assignmentPreviewError,
     payroll,
     attendance,
+    leavePolicies,
   } = ctx;
 
   return (
@@ -103,6 +108,16 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
               attendance.find((item) => item.id === assignmentForm.attendancePolicyId)?.name || '-'
             }`}
             color="success"
+            variant="outlined"
+          />
+          <Chip
+            size="small"
+            label={`Leave: ${
+              getLeavePolicyName(
+                leavePolicies.find((item: any) => item.id === assignmentForm.leavePolicyId)
+              ) || '-'
+            }`}
+            color="info"
             variant="outlined"
           />
         </Stack>
@@ -230,6 +245,8 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
     setAssignmentDateError,
     activePayroll,
     activeAttendance,
+    activeLeavePolicies,
+    defaultLeavePolicy,
     academicYearId,
     activePolicyOperation,
     isPolicyOperationActive,
@@ -261,6 +278,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
       targetDisplayName: assignmentConflict.targetDisplayName,
       payrollPolicyId: assignmentConflict.payrollPolicyId,
       attendancePolicyId: assignmentConflict.attendancePolicyId,
+      leavePolicyId: assignmentConflict.leavePolicyId || '',
       effectiveFrom: assignmentConflict.effectiveFrom,
       effectiveTo: assignmentConflict.effectiveTo,
       priority: assignmentConflict.priority,
@@ -281,7 +299,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
     >
       <DrawerHeader
         title={title}
-        helpText="Assign payroll and attendance policies to an employee or group. Groups cover role, department, employment type, and mixed dynamic targeting."
+        helpText="Assign payroll, attendance, and leave policies to an employee or group. Groups cover role, department, employment type, and mixed dynamic targeting."
         onClose={closeDrawer}
         closeDisabled={isPolicyOperationActive}
       />
@@ -311,6 +329,12 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               <MenuItem value="group">Group</MenuItem>
             </DrawerSelectField>
             <AssignmentTargetPicker ctx={ctx} disabled={isViewMode} />
+            {!isViewMode && !defaultLeavePolicy ? (
+              <Alert severity="warning">
+                Exactly one active default leave policy is required before new assignments can be
+                prefilled.
+              </Alert>
+            ) : null}
             <DrawerSelectField
               label="Payroll Policy *"
               value={assignmentForm.payrollPolicyId}
@@ -342,6 +366,23 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               {activeAttendance.map((item) => (
                 <MenuItem key={item.id} value={item.id}>
                   {item.name}
+                </MenuItem>
+              ))}
+            </DrawerSelectField>
+            <DrawerSelectField
+              label="Leave Policy *"
+              value={assignmentForm.leavePolicyId}
+              disabled={isViewMode}
+              onChange={(event) =>
+                setAssignmentForm((current) => ({
+                  ...current,
+                  leavePolicyId: event.target.value,
+                }))
+              }
+            >
+              {activeLeavePolicies.map((item: any) => (
+                <MenuItem key={item.id} value={item.id}>
+                  {getLeavePolicyName(item)}
                 </MenuItem>
               ))}
             </DrawerSelectField>
@@ -413,7 +454,8 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                   </Typography>
                   <Typography variant="caption">
                     Payroll: {assignmentConflict.payrollPolicyName} - Attendance:{' '}
-                    {assignmentConflict.attendancePolicyName}
+                    {assignmentConflict.attendancePolicyName} - Leave:{' '}
+                    {assignmentConflict.leavePolicyName || assignmentConflict.leavePolicyId || '-'}
                   </Typography>
                 </Stack>
               </Alert>

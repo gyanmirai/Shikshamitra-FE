@@ -27,6 +27,7 @@ describe('employee payroll policy override validation', () => {
         policyOverrideEnabled: false,
         policyOverridePayrollPolicyId: '',
         policyOverrideAttendancePolicyId: '',
+        policyOverrideLeavePolicyId: '',
         policyOverrideEffectiveFrom: '',
       })
     ).resolves.toBeTruthy();
@@ -40,6 +41,7 @@ describe('employee payroll policy override validation', () => {
           policyOverrideEnabled: true,
           policyOverridePayrollPolicyId: '',
           policyOverrideAttendancePolicyId: '',
+          policyOverrideLeavePolicyId: '',
           policyOverrideEffectiveFrom: '',
         },
         { abortEarly: false }
@@ -48,6 +50,7 @@ describe('employee payroll policy override validation', () => {
       errors: expect.arrayContaining([
         'Payroll policy is required',
         'Attendance policy is required',
+        'Leave policy is required',
         'Effective from date is required',
       ]),
     });
