@@ -17,6 +17,7 @@ import TextField from '@mui/material/TextField';
 import { useTheme } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import { RouterLink } from 'src/routes/components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { shikshaMitraToast } from 'src/components/toast';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -764,10 +765,9 @@ export default function LoginPage() {
                               }
                             />
                             <Link
-                              component="button"
+                              component={RouterLink}
+                              href="/forgot-password"
                               variant="body2"
-                              type="button"
-                              onClick={toggleView}
                               underline="none"
                               sx={{
                                 color: BRAND_GREEN,

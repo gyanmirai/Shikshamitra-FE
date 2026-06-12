@@ -4,12 +4,12 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
