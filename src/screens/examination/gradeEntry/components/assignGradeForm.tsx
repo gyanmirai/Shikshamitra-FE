@@ -3,6 +3,7 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useRef, useState } from 'react';
 import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -12,32 +13,69 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useUpdateStudentMarksMutation } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
 import {
+  AttendanceStatus,
+  AttendanceStatusColor,
+  AttendanceStatusLabel,
+  AttendanceStatusOptions,
+} from 'src/enums/grade-entry-status';
+import {
   Box,
   Card,
   Chip,
   Grid,
   Menu,
   Stack,
+  Alert,
   Avatar,
   Button,
+  Select,
   Divider,
   MenuItem,
   TextField,
+  InputLabel,
   Typography,
+  FormControl,
   DialogActions,
   InputAdornment,
 } from '@mui/material';
 
 import type { IAssignGradeProps } from '../type';
 
+/** Returns the CBSE-style letter grade for a given percentage */
+function calculateAutoGrade(obtained: number, total: number): string {
+  if (total <= 0) return '';
+  const pct = (obtained / total) * 100;
+  if (pct >= 91) return 'A1';
+  if (pct >= 81) return 'A2';
+  if (pct >= 71) return 'B1';
+  if (pct >= 61) return 'B2';
+  if (pct >= 51) return 'C1';
+  if (pct >= 41) return 'C2';
+  if (pct >= 33) return 'D';
+  return 'F';
+}
+
+const GRADE_COLOR_MAP: Record<string, 'success' | 'info' | 'warning' | 'error' | 'default'> = {
+  A1: 'success',
+  A2: 'success',
+  B1: 'info',
+  B2: 'info',
+  C1: 'warning',
+  C2: 'warning',
+  D: 'warning',
+  F: 'error',
+};
+
 const FEEDBACK_MAX_LENGTH = 500;
 
 const QUICK_TEMPLATES = [
-  'Well done! Keep up the great work.',
-  'Good effort! Review the highlighted areas for improvement.',
-  'Excellent work! Very detailed and well-organized.',
-  'Needs improvement. Please revisit the core concepts.',
-  'Great start! Focus on structuring your answers better.',
+  'Excellent Performance! Outstanding achievement in this examination.',
+  'Outstanding work! Demonstrates exceptional understanding of the subject.',
+  'Very Good performance. Shows strong command over the concepts.',
+  'Good effort! Keep practicing to reach even higher.',
+  'Satisfactory performance. Regular revision will help improve further.',
+  'Needs Improvement. Please revisit the core concepts and practice regularly.',
+  'Can Do Better. With focused preparation and consistent effort, improvement is expected.',
 ];
 
 const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGradeProps) => {
@@ -56,13 +94,21 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
       marks: typeof data?.obtainedMarks === 'number' ? data.obtainedMarks : '',
       totalMarks: typeof data?.totalMarks === 'number' ? data.totalMarks : '',
       feedback: data?.feedback || '',
+      attendanceStatus:
+        data?.attendanceStatus != null ? data.attendanceStatus : AttendanceStatus.Present,
     },
     validationSchema: Yup.object({
       marks: Yup.number()
         .typeError('Obtained Marks must be a number')
-        .required('Obtained Marks is required')
-        .min(0, 'Marks cannot be negative')
-        .max(Yup.ref('totalMarks'), 'Obtained Marks cannot exceed Total Marks'),
+        .when('attendanceStatus', {
+          is: (val: number) => val === AttendanceStatus.Present,
+          then: (schema) =>
+            schema
+              .required('Obtained Marks is required')
+              .min(0, 'Marks cannot be negative')
+              .max(Yup.ref('totalMarks'), 'Obtained Marks cannot exceed Total Marks'),
+          otherwise: (schema) => schema.nullable().optional(),
+        }),
     }),
     async onSubmit(values) {
       const examId = data?.examId;
@@ -76,6 +122,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
 
       const isUpdate = typeof data?.marks === 'number';
       const studentName = data?.studentName || 'Student';
+      const isPresent = values.attendanceStatus === AttendanceStatus.Present;
 
       try {
         await updateStudentMarks({
@@ -83,25 +130,36 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
           studentId,
           subjectId,
           body: {
-            marks: Number(values.marks),
+            marks: isPresent ? Number(values.marks) : null,
             totalMarks: Number(values.totalMarks),
-            feedback: values.feedback,
+            feedback: isPresent ? values.feedback : undefined,
+            attendanceStatus: values.attendanceStatus,
           },
         }).unwrap();
 
         onClose?.(null, true);
         shikshaMitraToast.success({
-          message: isUpdate
-            ? `Marks updated successfully for ${studentName}`
-            : `Marks assigned successfully for ${studentName}`,
+          message: isPresent
+            ? isUpdate
+              ? `Marks updated successfully for ${studentName}`
+              : `Marks assigned successfully for ${studentName}`
+            : `Attendance saved successfully for ${studentName}`,
         });
       } catch (error: any) {
-        console.error('[AssignGrade] Failed to update marks:', error);
+        console.error('[AssignGrade] Failed to save:', error);
       }
     },
   });
 
   const totalMarks = Number(formik.values.totalMarks) || 0;
+  const marksValue = Number(formik.values.marks);
+  const autoGrade =
+    formik.values.attendanceStatus === AttendanceStatus.Present &&
+    formik.values.marks !== '' &&
+    !Number.isNaN(marksValue)
+      ? calculateAutoGrade(marksValue, totalMarks)
+      : null;
+  const isAbsent = formik.values.attendanceStatus !== AttendanceStatus.Present;
 
   const quickScores = [
     { label: `Full Marks (${totalMarks})`, key: 'full', value: totalMarks },
@@ -181,6 +239,82 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                 </Card>
               </Grid>
 
+              {/* Attendance Status */}
+              <Grid size={{ xs: 12 }}>
+                <Card
+                  sx={{
+                    p: 0,
+                    overflow: 'hidden',
+                    boxShadow: 'none',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.25,
+                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        color: 'text.secondary',
+                        letterSpacing: 0.8,
+                      }}
+                    >
+                      <Iconify
+                        icon="solar:user-check-bold"
+                        width={16}
+                        sx={{ color: 'info.main' }}
+                      />
+                      Attendance Status
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 2 }}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Attendance</InputLabel>
+                      <Select
+                        name="attendanceStatus"
+                        label="Attendance"
+                        value={formik.values.attendanceStatus}
+                        onChange={formik.handleChange}
+                      >
+                        {AttendanceStatusOptions.map((opt) => (
+                          <MenuItem key={opt.value} value={opt.value}>
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <Label
+                                color={AttendanceStatusColor[opt.value as AttendanceStatus] as any}
+                                sx={{ minWidth: 90 }}
+                              >
+                                {opt.label}
+                              </Label>
+                            </Stack>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    {isAbsent && (
+                      <Alert severity="info" sx={{ mt: 1.5, py: 0.5 }}>
+                        Marks entry is disabled for{' '}
+                        <strong>
+                          {
+                            AttendanceStatusLabel[
+                              formik.values.attendanceStatus as AttendanceStatus
+                            ]
+                          }
+                        </strong>{' '}
+                        students.
+                      </Alert>
+                    )}
+                  </Box>
+                </Card>
+              </Grid>
+
               {/* Marks Entry */}
               <Grid size={{ xs: 12 }}>
                 <Card
@@ -214,7 +348,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                     </Typography>
                   </Box>
 
-                  <Box sx={{ p: 2 }}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      opacity: isAbsent ? 0.5 : 1,
+                      pointerEvents: isAbsent ? 'none' : 'auto',
+                    }}
+                  >
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
@@ -323,6 +463,25 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                           ))}
                         </Stack>
                       </Grid>
+
+                      {/* Auto Grade Preview */}
+                      {autoGrade && (
+                        <Grid size={{ xs: 12 }}>
+                          <Stack direction="row" alignItems="center" spacing={1}>
+                            <Typography variant="caption" color="text.secondary">
+                              Computed Grade:
+                            </Typography>
+                            <Label color={GRADE_COLOR_MAP[autoGrade] ?? 'default'}>
+                              {autoGrade}
+                            </Label>
+                            {totalMarks > 0 && formik.values.marks !== '' && (
+                              <Typography variant="caption" color="text.secondary">
+                                ({((Number(formik.values.marks) / totalMarks) * 100).toFixed(1)}%)
+                              </Typography>
+                            )}
+                          </Stack>
+                        </Grid>
+                      )}
                     </Grid>
                   </Box>
                 </Card>
