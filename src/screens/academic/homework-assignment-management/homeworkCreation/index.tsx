@@ -1,11 +1,16 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Tab, Box, Paper, Button } from '@mui/material';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
@@ -34,6 +39,18 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
   });
   const searchParams = getAllParams();
 
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAddHomework = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.learningTasks}.Add`
+  );
+  const canAddAssignment = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.learningTasks}.Add`
+  );
+
   // Dialog state for each tab
   const addHomeworkDialog = useBoolean(false);
   const addAssignmentDialog = useBoolean(false);
@@ -41,7 +58,7 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
   // Render corresponding add button based on selected tab
   const renderButton = useMemo(
     () => ({
-      homeworkCreation: (
+      homeworkCreation: canAddHomework ? (
         <Button
           sx={{ width: '160px' }}
           startIcon={<Add />}
@@ -51,8 +68,8 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
         >
           Homework
         </Button>
-      ),
-      assignmentCreation: (
+      ) : null,
+      assignmentCreation: canAddAssignment ? (
         <Button
           sx={{ width: '160px' }}
           startIcon={<Add />}
@@ -62,9 +79,9 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
         >
           Assignment
         </Button>
-      ),
+      ) : null,
     }),
-    [addHomeworkDialog.onTrue, addAssignmentDialog.onTrue]
+    [addHomeworkDialog.onTrue, addAssignmentDialog.onTrue, canAddHomework, canAddAssignment]
   );
 
   const currentActiveComponent = useMemo(

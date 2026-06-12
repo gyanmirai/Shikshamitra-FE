@@ -103,6 +103,9 @@ export interface IHomeworkTableProps {
   onDeleteDetails: (row: IHomework) => void;
   onViewSubmission: (row: IHomeworkDetail) => void;
   selectedDivision: string;
+  canAdd?: boolean;
+  canView?: boolean;
+  canDelete?: boolean;
 }
 
 export interface TStudentGrade {

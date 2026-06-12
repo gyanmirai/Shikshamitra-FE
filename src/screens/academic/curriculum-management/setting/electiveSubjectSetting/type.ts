@@ -28,4 +28,7 @@ export interface IElectiveSubjectTableProps {
   open: boolean;
   onDelete: (row: IElectiveSubject) => void;
   onEdit: (row: IElectiveSubject) => void;
+  canAdd?: boolean;
+  canView?: boolean;
+  canDelete?: boolean;
 }

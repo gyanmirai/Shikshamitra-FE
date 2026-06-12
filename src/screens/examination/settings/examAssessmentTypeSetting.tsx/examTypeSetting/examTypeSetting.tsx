@@ -11,8 +11,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -36,6 +38,17 @@ const ExamTypeSettings = () => {
   const [examTypeTable, setExamTypeTable] = useState<IExamType[]>(examTypeTableData);
   const addExamTypeDialog = useBoolean(false);
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.settings.examTypes}.Add`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.settings.examTypes}.Delete`
+  );
+
   const {
     data: examTypeData,
     isLoading,
@@ -117,15 +130,17 @@ const ExamTypeSettings = () => {
           { name: 'Exam Types' },
         ]}
         action={
-          <Button
-            sx={{ width: '160px' }}
-            startIcon={<Iconify icon="mdi:plus" />}
-            onClick={addExamTypeDialog.onTrue}
-            variant="contained"
-            size="small"
-          >
-            Exam Types
-          </Button>
+          canAdd ? (
+            <Button
+              sx={{ width: '160px' }}
+              startIcon={<Iconify icon="mdi:plus" />}
+              onClick={addExamTypeDialog.onTrue}
+              variant="contained"
+              size="small"
+            >
+              Exam Types
+            </Button>
+          ) : null
         }
       />
       <CustomizableTable
@@ -170,8 +185,8 @@ const ExamTypeSettings = () => {
                   // actions={(prop) => actions({ ...prop, row })}
                   placement="right-top"
                   showThreeDots={false}
-                  showEditIcon
-                  showDeleteIcon
+                  showEditIcon={canAdd}
+                  showDeleteIcon={canDelete}
                   handleDeleteClick={() => {
                     confirmDeleteDialog.onTrue();
                     setSelectedExamType(row as IExamType);

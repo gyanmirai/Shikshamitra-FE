@@ -12,8 +12,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -43,6 +45,20 @@ const GradingScale = () => {
   const { confirmWithUndo } = useConfirmWithUndo();
 
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.settings.gradeScaling}.Add`
+  );
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.settings.gradeScaling}.View`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.settings.gradeScaling}.Delete`
+  );
 
   const addGradeScalingDialog = useBoolean(false);
   const [deleteGradeScaling, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -106,15 +122,17 @@ const GradingScale = () => {
           { name: 'Grade Scaling' },
         ]}
         action={
-          <Button
-            sx={{ width: '160px' }}
-            startIcon={<Iconify icon="mdi:plus" />}
-            variant="contained"
-            onClick={addGradeScalingDialog.onTrue}
-            size="small"
-          >
-            Grade Scale
-          </Button>
+          canAdd ? (
+            <Button
+              sx={{ width: '160px' }}
+              startIcon={<Iconify icon="mdi:plus" />}
+              variant="contained"
+              onClick={addGradeScalingDialog.onTrue}
+              size="small"
+            >
+              Grade Scale
+            </Button>
+          ) : null
         }
       />
 
@@ -159,13 +177,13 @@ const GradingScale = () => {
                 <ThreeDotsActions
                   showThreeDots={false}
                   placement="right-top"
-                  showViewIcon
+                  showViewIcon={canView}
                   handleViewClick={() => {
                     viewDialog.onTrue();
                     setSelectedGrade(row as any);
                   }}
-                  showEditIcon
-                  showDeleteIcon
+                  showEditIcon={canAdd}
+                  showDeleteIcon={canDelete}
                   handleDeleteClick={() => {
                     setSelectedGrade(row as any);
                     deleteConfirmDialog.onTrue();

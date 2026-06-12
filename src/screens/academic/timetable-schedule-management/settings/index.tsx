@@ -1,6 +1,9 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -8,6 +11,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
@@ -41,6 +46,22 @@ const TimetableSettingScreen = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'weeklyLectures' });
   const [isEdit, setIsEdit] = useState(false);
 
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAddWeeklyLecture = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.timetable.settings.weeklyLectures}.Add`
+  );
+  const canAddLectureSlot = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.timetable.settings.lectureSlots}.Add`
+  );
+  const canAddRoom = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.timetable.settings.weeklyLectures}.Add`
+  );
+
   // Dialog visibility states for adding different types of entries
   const addWeeklyLectureDialog = useBoolean(false);
   const addLectureSlotDialog = useBoolean(false);
@@ -58,7 +79,7 @@ const TimetableSettingScreen = () => {
 
   const renderButton = useMemo(
     () => ({
-      weeklyLectures: (
+      weeklyLectures: canAddWeeklyLecture ? (
         <Button
           sx={{ width: '160px' }}
           startIcon={<Add />}
@@ -71,8 +92,8 @@ const TimetableSettingScreen = () => {
         >
           Weekly Lecture
         </Button>
-      ),
-      lectureSlots: (
+      ) : null,
+      lectureSlots: canAddLectureSlot ? (
         <Button
           sx={{ width: '160px' }}
           startIcon={<Add />}
@@ -85,8 +106,8 @@ const TimetableSettingScreen = () => {
         >
           Lecture Slot
         </Button>
-      ),
-      roomDetails: (
+      ) : null,
+      roomDetails: canAddRoom ? (
         <Button
           sx={{ width: '160px' }}
           startIcon={<Add />}
@@ -96,9 +117,16 @@ const TimetableSettingScreen = () => {
         >
           Room
         </Button>
-      ),
+      ) : null,
     }),
-    [addRoomDialog.onTrue, addWeeklyLectureDialog, addLectureSlotDialog]
+    [
+      addRoomDialog.onTrue,
+      addWeeklyLectureDialog,
+      addLectureSlotDialog,
+      canAddWeeklyLecture,
+      canAddLectureSlot,
+      canAddRoom,
+    ]
   );
 
   const currentActiveTab = useMemo(

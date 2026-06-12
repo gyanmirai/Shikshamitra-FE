@@ -51,6 +51,9 @@ export interface IAssignmentTableProps {
   onDelete: (row: IAssignment) => void;
   onView: (row: IAssignment) => void;
   onViewSubmission: (row: IAssignment) => void;
+  canAdd?: boolean;
+  canView?: boolean;
+  canDelete?: boolean;
 }
 
 export interface IStudentSubmissionsProps {

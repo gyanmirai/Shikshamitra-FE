@@ -15,4 +15,6 @@ export interface IHomeworkTypeTableProps {
   data: IHomeworkType[];
   onEdit: (data: IHomeworkType) => void;
   onDelete: (data: IHomeworkType) => void;
+  canAdd?: boolean;
+  canDelete?: boolean;
 }

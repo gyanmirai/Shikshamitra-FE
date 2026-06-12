@@ -1,6 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { Box, Card } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { academicPermissions } from 'src/constants/academic-menu';
 
 import SubjectTable from './component/subjectTable';
 import SubjectActionBar from './component/SubjectActionBar';
@@ -42,17 +47,33 @@ const Subject = () => {
     setQuery,
   } = useSubjectAssignment();
 
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.subjectsAssignment}.Add`
+  );
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.subjectsAssignment}.View`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.subjectsAssignment}.Delete`
+  );
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <SubjectBreadcrumbs
-        isFormOpen={addSubjectDialog.value}
-        isViewOpen={showSubjectDialog.value}
+        isFormOpen={addSubjectDialog.value && canAdd}
+        isViewOpen={showSubjectDialog.value && canView}
         selectedSubject={selectedSubject}
         onBackFromForm={() => handleClose(null, false)}
         onBackFromView={handleBackFromView}
       />
 
-      {addSubjectDialog.value ? (
+      {addSubjectDialog.value && canAdd ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <SubjectAssignmentForm
             onClose={handleClose}
@@ -94,24 +115,28 @@ const Subject = () => {
         </>
       )}
 
-      <SubjectDeleteDialog
-        open={deleteConfirmDialog.value}
-        isLoading={isDeleteLoading}
-        selectedSubject={selectedSubject}
-        className={classes}
-        onClose={handleCloseDialog}
-        onConfirm={handleConfirmDelete}
-      />
+      {deleteConfirmDialog.value && canDelete && (
+        <SubjectDeleteDialog
+          open={deleteConfirmDialog.value}
+          isLoading={isDeleteLoading}
+          selectedSubject={selectedSubject}
+          className={classes}
+          onClose={handleCloseDialog}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
 
-      <SubjectPublishDialog
-        open={confirmPublishDialog.value}
-        isLoading={isPublishLoading}
-        selectedSubject={selectedSubject}
-        onClose={handleCloseDialog}
-        onConfirm={handleConfirmPublish}
-      />
+      {confirmPublishDialog.value && canAdd && (
+        <SubjectPublishDialog
+          open={confirmPublishDialog.value}
+          isLoading={isPublishLoading}
+          selectedSubject={selectedSubject}
+          onClose={handleCloseDialog}
+          onConfirm={handleConfirmPublish}
+        />
+      )}
 
-      {showSubjectDialog.value && (
+      {showSubjectDialog.value && canView && (
         <Box sx={{ height: '100%' }}>
           <ViewSubject subject={selectedSubject} classId={classId} classes={classes} />
         </Box>

@@ -10,8 +10,10 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
@@ -38,6 +40,20 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 }) => {
   const publishExamDialog = useBoolean();
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.schedule}.Add`
+  );
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.schedule}.View`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.schedule}.Delete`
+  );
 
   const [publishExam] = useQueryAndMutation({
     type: 'mutation',
@@ -109,38 +125,39 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   // Renders menu items for printing and publishing timetables
   // Uses useCallback to memoize the component for performance
   const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          {/* Menu item for printing the timetable */}
-          <MenuItem
-            onClick={() => {
-              pop.onClose();
-            }}
-          >
-            <Iconify icon="solar:printer-outline" />
-            Print Timetable
-          </MenuItem>
-
-          {/* Menu item for publishing the timetable 
-              Sets the selected timetable name and shows confirmation dialog */}
-          {row.status === examScheduledStatus.Pending && (
+    ({ popover: pop, row }: any) =>
+      canAdd ? (
+        <>
+          {' '}
+          <MenuList>
+            {/* Menu item for printing the timetable */}
             <MenuItem
               onClick={() => {
-                publishExamDialog.onTrue();
-                setSelectedTimetable(row);
                 pop.onClose();
               }}
             >
-              <Iconify icon="solar:cloud-upload-outline" />
-              Publish Exam
+              <Iconify icon="solar:printer-outline" />
+              Print Timetable
             </MenuItem>
-          )}
-        </MenuList>
-      </>
-    ),
-    [publishExamDialog]
+
+            {/* Menu item for publishing the timetable 
+              Sets the selected timetable name and shows confirmation dialog */}
+            {row.status === examScheduledStatus.Pending && (
+              <MenuItem
+                onClick={() => {
+                  publishExamDialog.onTrue();
+                  setSelectedTimetable(row);
+                  pop.onClose();
+                }}
+              >
+                <Iconify icon="solar:cloud-upload-outline" />
+                Publish Exam
+              </MenuItem>
+            )}
+          </MenuList>
+        </>
+      ) : null,
+    [publishExamDialog, canAdd]
   );
 
   return (
@@ -168,7 +185,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             />
           ))}
         </Tabs>
-        {isScheduleExamButton && (
+        {isScheduleExamButton && canAdd && (
           <Button
             size="small"
             startIcon={<Add />}
@@ -234,9 +251,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                   <ThreeDotsActions
                     actions={(prop) => actions({ ...prop, row })}
                     placement="right-top"
-                    showViewIcon
-                    showDeleteIcon={tabs.value === examScheduledStatus.Pending}
-                    showEditIcon={tabs.value === examScheduledStatus.Pending}
+                    showViewIcon={canView}
+                    showDeleteIcon={tabs.value === examScheduledStatus.Pending && canDelete}
+                    showEditIcon={tabs.value === examScheduledStatus.Pending && canAdd}
                     handleViewClick={() => onViewTimetable?.(row as IExamFormValues)}
                     handleDeleteClick={() => {
                       onDelete?.(row as IExamFormValues);

@@ -11,6 +11,7 @@ import type { ISubjectFormValues } from '../type';
 interface UseWeeklyLectureColumnsArgs {
   onView: (row: ISubjectFormValues) => void;
   onEdit: (row: ISubjectFormValues) => void;
+  canAdd?: boolean;
 }
 
 /**
@@ -24,6 +25,7 @@ interface UseWeeklyLectureColumnsArgs {
 export function useWeeklyLectureColumns({
   onView,
   onEdit,
+  canAdd = true,
 }: UseWeeklyLectureColumnsArgs): IColumn[] {
   return useMemo<IColumn[]>(
     () => [
@@ -70,7 +72,7 @@ export function useWeeklyLectureColumns({
           <ThreeDotsActions
             // showViewIcon
             // handleViewClick={() => onView(row as ISubjectFormValues)}
-            showEditIcon
+            showEditIcon={canAdd}
             showThreeDots={false}
             handleEditClick={() => onEdit(row as ISubjectFormValues)}
             placement="right-top"
@@ -78,6 +80,6 @@ export function useWeeklyLectureColumns({
         ),
       },
     ],
-    [onEdit]
+    [onEdit, canAdd]
   );
 }

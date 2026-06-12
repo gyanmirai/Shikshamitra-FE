@@ -9,7 +9,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -46,7 +48,14 @@ const RoomDetails = ({ addRoomDialog }: any) => {
   // State to track whether we are in edit mode
   const [isEdit, setIsEdit] = useState(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { permissions } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.timetable.settings.weeklyLectures}.Add`
+  );
   // State to store all room data entries
   const [roomData, setRoomData] = useState(tableData);
 
@@ -137,22 +146,24 @@ const RoomDetails = ({ addRoomDialog }: any) => {
         noDataText={
           <>
             No Rooms Data Found{' '}
-            <Box
-              onClick={() => {
-                addRoomDialog.onTrue();
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Add Room
-            </Box>
+            {canAdd && (
+              <Box
+                onClick={() => {
+                  addRoomDialog.onTrue();
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Room
+              </Box>
+            )}
           </>
         }
         columns={[
@@ -172,7 +183,7 @@ const RoomDetails = ({ addRoomDialog }: any) => {
               return (
                 <ThreeDotsActions
                   // actions={(prop) => actions({ ...prop, row })}
-                  showEditIcon
+                  showEditIcon={canAdd}
                   showThreeDots={false}
                   handleEditClick={() => {
                     setIsEdit(true);

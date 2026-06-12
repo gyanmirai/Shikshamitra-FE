@@ -11,8 +11,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -39,6 +41,18 @@ const AssignmentTypeCreation = () => {
 
   // Get current medium from global state
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.settings.assignmentTypes}.Add`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.settings.assignmentTypes}.Delete`
+  );
 
   // Selected assignment type data for edit/delete operations
   const [selectedData, setSelectedData] = useState<IAssignmentType | null>(null);
@@ -99,21 +113,25 @@ const AssignmentTypeCreation = () => {
         heading="Assignment Type"
         description="Create and manage assignment types for homework and assignments. Add, edit, or delete assignment types as needed."
         action={
-          <Button
-            startIcon={<Iconify icon="eva:plus-fill" />}
-            variant="contained"
-            onClick={addAssignmentTypeDialog.onTrue}
-            size="small"
-            sx={{ px: '32px' }}
-          >
-            Assignment Type
-          </Button>
+          canAdd ? (
+            <Button
+              startIcon={<Iconify icon="eva:plus-fill" />}
+              variant="contained"
+              onClick={addAssignmentTypeDialog.onTrue}
+              size="small"
+              sx={{ px: '32px' }}
+            >
+              Assignment Type
+            </Button>
+          ) : null
         }
       />
 
       <AssignmentTypeTable
         isLoading={isFetching}
         data={assignmentTypeData?.data || []}
+        canAdd={canAdd}
+        canDelete={canDelete}
         onEdit={(data) => {
           setSelectedData(data);
           addAssignmentTypeDialog.onTrue();

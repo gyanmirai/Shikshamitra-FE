@@ -66,4 +66,7 @@ export interface IChapterTableProps {
   onViewDocuments: (chapter: IChapter) => void;
   subjectId?: string;
   standardId?: string;
+  canAdd?: boolean;
+  canView?: boolean;
+  canDelete?: boolean;
 }

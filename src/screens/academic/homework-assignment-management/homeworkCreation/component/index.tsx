@@ -15,8 +15,10 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -45,6 +47,22 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   const viewHomeworkDetailDialog = useBoolean();
   // Dialog state for viewing homework submissions from students
   const viewHomeworkSubmissionDialog = useBoolean();
+
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.learningTasks}.Add`
+  );
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.learningTasks}.View`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.learningTasks}.Delete`
+  );
   // State to store all organizations/stages from the selected medium
   // const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [subject, setSubject] = useState('');
@@ -330,6 +348,9 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         selectedDivision={division}
         setOpen={setOpen}
         dialog={addHomeworkDialog}
+        canAdd={canAdd}
+        canView={canView}
+        canDelete={canDelete}
         handleSwitchChange={(row) => {
           setSelectedHomework(row);
           publishHomeworkDialog.onTrue();

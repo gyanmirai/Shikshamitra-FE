@@ -1,9 +1,14 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -26,6 +31,10 @@ const MOCK_DATA = [
 
 const HomeworkReportsList = () => {
   const addReportDialog = useBoolean(false);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  const canAdd = hasGrantedPermission(permissions, `${academicPermissions.homework.reports}.Add`);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {!addReportDialog.value && (
@@ -37,15 +46,17 @@ const HomeworkReportsList = () => {
             { name: 'Reports' },
           ]}
           action={
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Add />}
-              onClick={addReportDialog.onTrue}
-              sx={{ px: '32px' }}
-            >
-              Add Report
-            </Button>
+            canAdd ? (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<Add />}
+                onClick={addReportDialog.onTrue}
+                sx={{ px: '32px' }}
+              >
+                Add Report
+              </Button>
+            ) : null
           }
         />
       )}
