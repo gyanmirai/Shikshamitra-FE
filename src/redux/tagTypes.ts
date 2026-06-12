@@ -28,6 +28,7 @@ export const academicType = {
   timetableManagement: 'TimetableManagement',
   academicReport: 'AcademicReport',
   academicReportExport: 'AcademicReportExport',
+  examResult: 'ExamResult',
 } as const;
 
 // ===== Quiz Management API (reducerPath: quizManagementApi) =====

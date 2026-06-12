@@ -45,6 +45,7 @@ export const academicPaths = {
     schedule: '/academic/scheduleExam',
     seatAllocation: '/academic/seatallocation',
     recordMarks: '/academic/gradeEntry',
+    resultCreation: '/academic/resultCreation',
     quizManagement: '/academic/quizManagement',
     reports: '/academic/examinationReports',
     settings: {
@@ -119,6 +120,7 @@ export const academicPermissions = {
     schedule: `${defaultAcademicPermissionName}Examination.ScheduleExam`,
     seatAllocation: `${defaultAcademicPermissionName}Examination.SeatAllocation`,
     recordMarks: `${defaultAcademicPermissionName}Examination.RecordMarks`,
+    resultCreation: `${defaultAcademicPermissionName}Examination.RecordMarks`,
     quizManagement: `${defaultAcademicPermissionName}Examination.QuizManagement`,
     reports: `${defaultAcademicPermissionName}Examination.Reports`,
     settings: {
@@ -445,6 +447,15 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+E+1+4',
               permissionName: academicPermissions.examination.recordMarks,
               icon: menuIconView('mdi:format-list-numbered'),
+            },
+            {
+              title: 'Result Creation',
+              path: academicPaths.examination.resultCreation,
+              _action: 'academic-resultCreation',
+              shortcutKey: 'Alt+E+1+5',
+              shortcutKeyName: 'Alt+E+1+5',
+              permissionName: academicPermissions.examination.resultCreation,
+              icon: menuIconView('mdi:trophy-outline'),
             },
             // {
             //   title: 'Quiz Management',
