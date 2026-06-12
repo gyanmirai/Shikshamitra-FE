@@ -69,9 +69,10 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
       const isDifferent = JSON.stringify(mergedDocs) !== JSON.stringify(localDocs);
       if (isDifferent) {
         setLocalDocs(mergedDocs);
-        // Sync back to parent if we added defaults or if it was empty
-        if (!submittedDocuments || submittedDocuments.length < mergedDocs.length) {
-          onSave(mergedDocs);
+        // Only pass uploaded documents (with URLs) to parent
+        const uploadedDocs = mergedDocs.filter((doc) => doc.url && doc.url.trim() !== '');
+        if (uploadedDocs.length > 0) {
+          onSave(uploadedDocs);
         }
       }
     } else if (!isLoadingDetails && documents.length === 0) {
@@ -97,7 +98,7 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
 
     try {
       const response = await uploadCurriculumFile(formData).unwrap();
-      const uploadedUrl = response.data;
+      const uploadedUrl = response.data || null;
 
       const updatedDocs = [...localDocs];
       const existingIndex = updatedDocs.findIndex((d) => d.documentId === uploadingDocId);
@@ -118,7 +119,9 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
       }
 
       setLocalDocs(updatedDocs);
-      onSave(updatedDocs);
+      // Only pass uploaded documents (with URLs) to parent
+      const uploadedDocs = updatedDocs.filter((doc) => doc.url && doc.url.trim() !== '');
+      onSave(uploadedDocs);
       shikshaMitraToast.success({
         message: `Document "${newDoc.documentName}" uploaded successfully.`,
       });
@@ -196,8 +199,12 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
                         {submitted?.url && (
                           <IconButton
                             size="small"
-                            onClick={() => {
-                              window.open(submitted.url, '_blank');
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(
+                                `${process.env.NEXT_PUBLIC_API_URL}${submitted.url}`,
+                                '_blank'
+                              );
                             }}
                           >
                             <Iconify icon="carbon:view-filled" />

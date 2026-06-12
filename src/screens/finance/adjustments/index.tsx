@@ -14,6 +14,7 @@ import { Box, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useLazyGetFeeAdjustmentQuery } from 'src/redux/finance/adjustments/adjustmentApi';
+import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import { useAdjustment } from './hooks/useAdjustment';
 import AdjustmentForm from './components/AdjustmentForm';
@@ -28,6 +29,7 @@ import type { AdjustmentRequest } from './types/adjustment.types';
 import type { IAdjustmentFullFormValues } from './types/adjustmentFormValues';
 
 const Adjustments = () => {
+  const academicFilters = useFinanceAcademicFilters();
   const [activeTab, setActiveTab] = useState(AdjustmentTabEnum.Pending);
   const [selectedAdjustment, setSelectedAdjustment] = useState<AdjustmentRequest | null>(null);
 
@@ -192,12 +194,28 @@ const Adjustments = () => {
           tabCounts={tabCounts}
           onCreateAdjustment={() => addDialog.onTrue()}
           onView={handleView}
+          academicFilters={academicFilters}
         />
       )}
 
       {addDialog.value && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <AdjustmentForm onCancel={handleClose} onSubmit={handleFormSubmit} />
+          <AdjustmentForm
+            onCancel={handleClose}
+            onSubmit={handleFormSubmit}
+            defaultBoardId={academicFilters.selectedBoard}
+            defaultMediumId={academicFilters.selectedMedium}
+            defaultStandardId={
+              academicFilters.selectedStandardId !== 'All Classes'
+                ? academicFilters.selectedStandardId
+                : ''
+            }
+            defaultDivisionId={
+              academicFilters.selectedDivisionId !== 'All Divisions'
+                ? academicFilters.selectedDivisionId
+                : ''
+            }
+          />
         </Card>
       )}
 

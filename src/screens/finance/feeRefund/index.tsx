@@ -14,6 +14,7 @@ import { Box, Card, Button, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import { useUpdateFeeRefundStatusMutation } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import RefundRemarksForm from './Components/RefundRemarksForm';
@@ -30,6 +31,7 @@ const FeeRefund = () => {
   const [selectedMode, setSelectedMode] = useState('');
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+  const academicFilters = useFinanceAcademicFilters();
 
   const [updateStatus] = useQueryAndMutation({
     type: 'mutation',
@@ -143,12 +145,27 @@ const FeeRefund = () => {
             setSelectedFeeRefund(data);
             viewRefundRequest.onTrue();
           }}
+          academicFilters={academicFilters}
         />
       )}
 
       {addRefundRequest.value && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <FeeRefundFormComponent onCancel={handleClose} />
+          <FeeRefundFormComponent
+            onCancel={handleClose}
+            defaultBoardId={academicFilters.selectedBoard}
+            defaultMediumId={academicFilters.selectedMedium}
+            defaultStandardId={
+              academicFilters.selectedStandardId !== 'All Classes'
+                ? academicFilters.selectedStandardId
+                : ''
+            }
+            defaultDivisionId={
+              academicFilters.selectedDivisionId !== 'All Divisions'
+                ? academicFilters.selectedDivisionId
+                : ''
+            }
+          />
         </Card>
       )}
 

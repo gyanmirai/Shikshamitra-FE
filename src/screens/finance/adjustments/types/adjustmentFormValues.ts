@@ -17,25 +17,27 @@ export interface IAdjustmentFullFormValues {
   remarks?: string;
 }
 
-export const buildAdjustmentInitialValues = (): IAdjustmentFullFormValues => ({
-  boardId: '',
-  mediumId: '',
-  standardId: '',
-  divisionId: '',
-  studentId: '',
-  studentName: '',
-  feeHeadRefunds: [],
-  adjustmentType: '',
-  reason: '',
-  remarks: '',
+export const buildAdjustmentInitialValues = (
+  initials?: Partial<IAdjustmentFullFormValues>
+): IAdjustmentFullFormValues => ({
+  boardId: initials?.boardId || '',
+  mediumId: initials?.mediumId || '',
+  standardId: initials?.standardId || '',
+  divisionId: initials?.divisionId || '',
+  studentId: initials?.studentId || '',
+  studentName: initials?.studentName || '',
+  feeHeadRefunds: initials?.feeHeadRefunds || [],
+  adjustmentType: initials?.adjustmentType || '',
+  reason: initials?.reason || '',
+  remarks: initials?.remarks || '',
 });
 
-export const buildAdjustmentValidationSchema = () =>
+export const buildAdjustmentValidationSchema = (hideStudentInfoForm = false) =>
   Yup.object({
-    boardId: Yup.string().required('Board is required'),
-    mediumId: Yup.string().required('Medium is required'),
-    standardId: Yup.string().required('Standard is required'),
-    divisionId: Yup.string().required('Division is required'),
+    boardId: hideStudentInfoForm ? Yup.string() : Yup.string().required('Board is required'),
+    mediumId: hideStudentInfoForm ? Yup.string() : Yup.string().required('Medium is required'),
+    standardId: hideStudentInfoForm ? Yup.string() : Yup.string().required('Standard is required'),
+    divisionId: hideStudentInfoForm ? Yup.string() : Yup.string().required('Division is required'),
     studentId: Yup.string().required('Student is required'),
     adjustmentType: Yup.number().required('Adjustment type is required'),
     reason: Yup.string()

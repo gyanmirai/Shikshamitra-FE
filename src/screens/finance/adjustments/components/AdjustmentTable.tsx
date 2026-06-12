@@ -33,8 +33,12 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   tabCounts,
   onCreateAdjustment,
   onView,
+  academicFilters,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const localFilters = useFinanceAcademicFilters();
+  const filters = academicFilters || localFilters;
 
   // Use the finance academic filters hook
   const {
@@ -54,7 +58,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
     setSelectedStandardId,
     setSelectedDivisionId,
     classesLoading,
-  } = useFinanceAcademicFilters();
+  } = filters;
 
   const tabs = useTabs(activeTab);
 

@@ -60,6 +60,10 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   open,
   onClose,
   isEdit,
+  defaultBoardId = '',
+  defaultMediumId = '',
+  defaultStandardId = '',
+  defaultDivisionId = '',
 }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -119,15 +123,15 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
       amount: '',
       dueDate: null,
       additionalNotes: '',
-      boardId: '',
-      educationMediumId: '',
-      standardId: [],
-      divisionIds: [],
+      boardId: defaultBoardId,
+      educationMediumId: defaultMediumId,
+      standardId: defaultStandardId ? [defaultStandardId] : [],
+      divisionIds: defaultDivisionId ? [defaultDivisionId] : [],
       studentIds: [],
       selectedStudents: [],
       selectionMode: 'students',
     };
-  }, [prefillValues]);
+  }, [prefillValues, defaultBoardId, defaultMediumId, defaultStandardId, defaultDivisionId]);
 
   const validationSchema = useMemo(
     () => createUpdateChargeValidationSchema(currentYear, isEditMode),
@@ -230,8 +234,21 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
 
   // Load boards on component mount
   useEffect(() => {
-    setBoards(currentYear?.boards || []);
-  }, [currentYear]);
+    const yearBoards = currentYear?.boards || [];
+    setBoards(yearBoards);
+    if (yearBoards.length > 0) {
+      if (!values.boardId) {
+        const firstBoard = yearBoards[0];
+        setFieldValue('boardId', firstBoard.id);
+        const firstMedium = firstBoard?.educationMediums?.[0]?.id ?? '';
+        setFieldValue('educationMediumId', firstMedium);
+      } else if (!values.educationMediumId) {
+        const board = yearBoards.find((b: any) => b.id === values.boardId);
+        const firstMedium = board?.educationMediums?.[0]?.id ?? '';
+        setFieldValue('educationMediumId', firstMedium);
+      }
+    }
+  }, [currentYear, values.boardId, values.educationMediumId, setFieldValue]);
 
   // Load mediums when board changes
   useEffect(() => {

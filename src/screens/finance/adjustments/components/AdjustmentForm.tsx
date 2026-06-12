@@ -28,16 +28,29 @@ import type { IAdjustmentFullFormValues } from '../types/adjustmentFormValues';
 
 const AdjustmentForm: React.FC<
   IAdjustmentFormProps & { hideStudentInfoForm?: boolean; initialData?: any }
-> = ({ onCancel, onSubmit, hideStudentInfoForm = false, initialData }) => {
+> = ({
+  onCancel,
+  onSubmit,
+  hideStudentInfoForm = false,
+  initialData,
+  defaultBoardId = '',
+  defaultMediumId = '',
+  defaultStandardId = '',
+  defaultDivisionId = '',
+}) => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik<IAdjustmentFullFormValues>({
-    initialValues: {
-      ...buildAdjustmentInitialValues(),
+    initialValues: buildAdjustmentInitialValues({
+      boardId: defaultBoardId,
+      mediumId: defaultMediumId,
+      standardId: defaultStandardId,
+      divisionId: defaultDivisionId,
       ...initialData, // Pre-fill form with student fee structure details
-    },
-    validationSchema: buildAdjustmentValidationSchema(),
+    }),
+    validationSchema: buildAdjustmentValidationSchema(hideStudentInfoForm),
+    enableReinitialize: true,
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values, helpers) => {

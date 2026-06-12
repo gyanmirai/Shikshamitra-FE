@@ -29,11 +29,19 @@ import type { IFeeHeadRefundItem } from './initialValuesAndValidation';
 interface FeeRefundFormProps {
   onCancel?: (e: React.MouseEvent, isSubmit: boolean) => void;
   loading?: boolean;
+  defaultBoardId?: string;
+  defaultMediumId?: string;
+  defaultStandardId?: string;
+  defaultDivisionId?: string;
 }
 
 const FeeRefundFormComponent = ({
   onCancel,
   loading = false,
+  defaultBoardId = '',
+  defaultMediumId = '',
+  defaultStandardId = '',
+  defaultDivisionId = '',
 }: FeeRefundFormProps): React.ReactElement => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const theme = useTheme();
@@ -43,8 +51,14 @@ const FeeRefundFormComponent = ({
   });
 
   const formik = useFormik({
-    initialValues: buildRefundInitialValues(),
+    initialValues: buildRefundInitialValues({
+      boardId: defaultBoardId,
+      mediumId: defaultMediumId,
+      standardId: defaultStandardId,
+      divisionId: defaultDivisionId,
+    }),
     validationSchema: buildRefundValidationSchema(currentYear),
+    enableReinitialize: true,
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values, helpers) => {

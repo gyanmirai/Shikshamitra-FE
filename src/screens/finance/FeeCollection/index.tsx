@@ -11,6 +11,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useCreateFeeAdjustmentMutation } from 'src/redux/finance/adjustments/adjustmentApi';
+import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import ViewFeeDetails from './Components/ViewFeeDetails';
 import FeeCollectionTable from './Components/FeeCollectionTable';
@@ -22,6 +23,7 @@ import type { IStudentFee } from './Components/type';
 import type { IAdjustmentFullFormValues } from '../adjustments/types/adjustmentFormValues';
 
 const FeeCollection = () => {
+  const academicFilters = useFinanceAcademicFilters();
   const studentDialog = useBoolean();
   const viewDialog = useBoolean();
   const adjustmentDialog = useBoolean();
@@ -139,6 +141,7 @@ const FeeCollection = () => {
             adjustmentDialog.onTrue();
             setSelectedStudent(row as any);
           }}
+          academicFilters={academicFilters}
         />
       )}
       <CustomDialog

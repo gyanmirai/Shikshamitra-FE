@@ -5,12 +5,12 @@ import type { RootState } from 'src/redux/store';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import CancelButton from 'src/components/cancel-button';
 import CustomSelect from 'src/components/custom-select';
@@ -25,6 +25,12 @@ import {
   useGetAcademicYearMonthsQuery,
   useGetStandardFeeStructureQuery,
 } from 'src/redux/finance/financeFeeStructure';
+import {
+  calculateTotalFees,
+  parseMonthYearValue,
+  getDefaultMonthlyAmount,
+  hasInvalidRecurringRange,
+} from 'src/utils/fee-structure-assignment-calculations';
 import {
   Box,
   Card,
@@ -49,18 +55,26 @@ interface FeeHeadItem {
   amount: number;
   isOneTime: boolean;
   isOptional: boolean;
+  isRefundable?: boolean;
   categoryName: string;
+  payableMonth?: number | string | null;
+  payableYear?: number | null;
 }
 
 interface FeeHeadAssignment extends FeeHeadItem {
   selectedAmount?: number;
-  payableMonth?: string;
-  payableYear?: number;
-  startPayableMonth?: string;
+  startPayableMonth?: number | string;
   startPayableYear?: number;
-  endPayableMonth?: string;
+  endPayableMonth?: number | string;
   endPayableYear?: number;
 }
+
+interface MonthOption {
+  label: string;
+  value: string;
+}
+
+type SelectValue = string | number | string[] | number[];
 
 interface Props {
   students: IFeeStructureData[];
@@ -70,6 +84,7 @@ interface Props {
 const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
   const [feeHeads, setFeeHeads] = useState<FeeHeadAssignment[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const feeMonthLookup = FeeMonth as unknown as Record<number, string>;
 
   // Get available fee structures for the standard (use first student's standardId)
   const standardId = students?.[0]?.id ? students[0]?.standardDivision?.split('/')?.[0] : null;
@@ -88,7 +103,7 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
   const { data: academicYearMonthsData, isLoading: isMonthsLoading } =
     useGetAcademicYearMonthsQuery({ academicYearId: currentYear?.id }, { skip: !currentYear?.id });
 
-  const monthOptions = useMemo(
+  const monthOptions = useMemo<MonthOption[]>(
     () =>
       academicYearMonthsData?.map((item: { month: number; year: number }) => ({
         label: `${FeeMonth[item.month]}-${item.year}`,
@@ -96,6 +111,36 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
       })) || [],
     [academicYearMonthsData]
   );
+
+  const defaultRecurringStartMonthYear = monthOptions[0]?.value;
+  const defaultRecurringEndMonthYear = monthOptions[monthOptions.length - 1]?.value;
+
+  useEffect(() => {
+    if (!defaultRecurringStartMonthYear || !defaultRecurringEndMonthYear) {
+      return;
+    }
+
+    setFeeHeads((prev) =>
+      prev.map((fh) => {
+        if (fh.isOneTime) {
+          return fh;
+        }
+
+        const nextStart = fh.startPayableMonth || defaultRecurringStartMonthYear;
+        const nextEnd = fh.endPayableMonth || defaultRecurringEndMonthYear;
+
+        if (nextStart === fh.startPayableMonth && nextEnd === fh.endPayableMonth) {
+          return fh;
+        }
+
+        return {
+          ...fh,
+          startPayableMonth: nextStart,
+          endPayableMonth: nextEnd,
+        };
+      })
+    );
+  }, [defaultRecurringStartMonthYear, defaultRecurringEndMonthYear]);
 
   const [assignFeeStructures, { isLoading: isSubmitting }] = useQueryAndMutation({
     type: 'mutation',
@@ -127,7 +172,16 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
             if (fh.isOneTime) {
               return !fh.payableMonth;
             }
-            return !fh.startPayableMonth || !fh.endPayableMonth;
+            return (
+              !fh.startPayableMonth ||
+              !fh.endPayableMonth ||
+              hasInvalidRecurringRange(
+                fh.startPayableMonth,
+                fh.endPayableMonth,
+                fh.startPayableYear,
+                fh.endPayableYear
+              )
+            );
           }
 
           return false;
@@ -136,7 +190,7 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
         if (invalidFeeHeads.length > 0) {
           shikshaMitraToast.error({
             message:
-              'Please provide all required payable month/year information for selected fee heads',
+              'Please provide valid amount and payable month/year information for selected fee heads',
           });
           return;
         }
@@ -156,16 +210,23 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
 
                 // Add month(s) for optional fees
                 if (fh.isOneTime && fh.payableMonth) {
-                  const [month, year] = fh.payableMonth.split('-');
-                  basePayload.payableMonth = Number(month);
-                  basePayload.payableYear = Number(year);
+                  const payableMonthYear = parseMonthYearValue(fh.payableMonth, fh.payableYear);
+                  if (payableMonthYear) {
+                    basePayload.payableMonth = payableMonthYear.month;
+                    basePayload.payableYear = payableMonthYear.year;
+                  }
                 } else if (!fh.isOneTime && fh.startPayableMonth && fh.endPayableMonth) {
-                  const [startMonth, startYear] = fh.startPayableMonth.split('-');
-                  const [endMonth, endYear] = fh.endPayableMonth.split('-');
-                  basePayload.startPayableMonth = Number(startMonth);
-                  basePayload.startPayableYear = Number(startYear);
-                  basePayload.endPayableMonth = Number(endMonth);
-                  basePayload.endPayableYear = Number(endYear);
+                  const startMonthYear = parseMonthYearValue(
+                    fh.startPayableMonth,
+                    fh.startPayableYear
+                  );
+                  const endMonthYear = parseMonthYearValue(fh.endPayableMonth, fh.endPayableYear);
+                  if (startMonthYear && endMonthYear) {
+                    basePayload.startPayableMonth = startMonthYear.month;
+                    basePayload.startPayableYear = startMonthYear.year;
+                    basePayload.endPayableMonth = endMonthYear.month;
+                    basePayload.endPayableYear = endMonthYear.year;
+                  }
                 }
               } else {
                 // Non-optional fees use amounts and months from fee structure (API)
@@ -231,6 +292,27 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
     [financeFeeStructures]
   );
 
+  const formatMonthYearDisplay = (value?: number | string | null, year?: number | null) => {
+    const parsed = parseMonthYearValue(value, year);
+    if (!parsed) {
+      return 'Fixed by Structure';
+    }
+
+    return `${feeMonthLookup[parsed.month]}-${parsed.year}`;
+  };
+
+  const getMonthOptionIndex = (value?: number | string | null, year?: number | null) => {
+    const parsed = parseMonthYearValue(value, year);
+    if (!parsed) {
+      return null;
+    }
+
+    return parsed.year * 12 + parsed.month;
+  };
+
+  const normalizeSelectValue = (value: SelectValue): string | number =>
+    Array.isArray(value) ? (value[0] ?? '') : value;
+
   return (
     <>
       <DialogScrollContent>
@@ -257,17 +339,40 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
                 );
                 const heads: FeeHeadAssignment[] = (selectedStructure?.feeHeads || []).map(
                   (fh: any) => {
-                    const initialized: FeeHeadAssignment = {
-                      ...fh,
+                    const mapped: FeeHeadAssignment = {
+                      feeHeadId: fh.feeHeadId,
+                      feeHeadName: fh.feeHeadName,
+                      amount: fh.amount,
+                      isOneTime: fh.isOneTime,
+                      isOptional: fh.isOptional,
+                      isRefundable: fh.isRefundable,
+                      categoryName: fh.categoryName,
+                      payableMonth:
+                        fh.payableMonth !== null &&
+                        fh.payableMonth !== undefined &&
+                        fh.payableYear !== null &&
+                        fh.payableYear !== undefined
+                          ? `${fh.payableMonth}-${fh.payableYear}`
+                          : fh.payableMonth,
+                      payableYear: fh.payableYear,
+                      selectedAmount: getDefaultMonthlyAmount(
+                        fh.amount ?? 0,
+                        Boolean(fh.isOneTime)
+                      ),
                     };
 
-                    // Initialize payableMonth as string format from API response
-                    if (fh.isOneTime && fh.payableMonth !== null && fh.payableMonth !== undefined) {
-                      initialized.payableMonth = `${fh.payableMonth}-${fh.payableYear}`;
-                      initialized.payableYear = fh.payableYear;
+                    if (!fh.isOneTime) {
+                      mapped.startPayableMonth =
+                        fh.startPayableMonth !== null && fh.startPayableMonth !== undefined
+                          ? `${fh.startPayableMonth}-${fh.startPayableYear}`
+                          : defaultRecurringStartMonthYear;
+                      mapped.endPayableMonth =
+                        fh.endPayableMonth !== null && fh.endPayableMonth !== undefined
+                          ? `${fh.endPayableMonth}-${fh.endPayableYear}`
+                          : defaultRecurringEndMonthYear;
                     }
 
-                    return initialized;
+                    return mapped;
                   }
                 );
                 setFeeHeads(heads);
@@ -303,6 +408,7 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
                           <TableCell>Fee Head</TableCell>
                           <TableCell>Type</TableCell>
                           <TableCell align="right">Monthly Amount</TableCell>
+                          <TableCell align="right">Total Fees</TableCell>
                           <TableCell>Payable Month-Year</TableCell>
                         </TableRow>
                       </TableHead>
@@ -312,22 +418,90 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
                             ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
                             : true;
 
+                          const monthlyAmount =
+                            item.selectedAmount ??
+                            getDefaultMonthlyAmount(item.amount ?? 0, Boolean(item.isOneTime));
+
+                          const isOptionalInputEditable = item.isOptional ? isSelected : false;
+
+                          const startMonthIndex = getMonthOptionIndex(
+                            item.startPayableMonth,
+                            item.startPayableYear
+                          );
+                          const endMonthIndex = getMonthOptionIndex(
+                            item.endPayableMonth,
+                            item.endPayableYear
+                          );
+
+                          const startMonthOptions =
+                            endMonthIndex === null
+                              ? monthOptions
+                              : monthOptions.filter(
+                                  (option: MonthOption) =>
+                                    (getMonthOptionIndex(option.value as string) ?? -Infinity) <=
+                                    endMonthIndex
+                                );
+
+                          const endMonthOptions =
+                            startMonthIndex === null
+                              ? monthOptions
+                              : monthOptions.filter(
+                                  (option: MonthOption) =>
+                                    (getMonthOptionIndex(option.value as string) ?? Infinity) >=
+                                    startMonthIndex
+                                );
+
+                          const isInvalidRecurringDateRange =
+                            item.isOptional &&
+                            !item.isOneTime &&
+                            hasInvalidRecurringRange(
+                              item.startPayableMonth,
+                              item.endPayableMonth,
+                              item.startPayableYear,
+                              item.endPayableYear
+                            );
+
+                          const totalFees = calculateTotalFees({
+                            isOneTime: item.isOneTime,
+                            monthlyAmount,
+                            startPayableMonth: item.startPayableMonth,
+                            endPayableMonth: item.endPayableMonth,
+                            startPayableYear: item.startPayableYear,
+                            endPayableYear: item.endPayableYear,
+                            fallbackTotal: item.isOptional ? undefined : item.amount,
+                          });
+
+                          const payableMonthNumber =
+                            typeof item.payableMonth === 'number' ? item.payableMonth : null;
+
+                          const oneTimeMonthValue =
+                            typeof item.payableMonth === 'string'
+                              ? item.payableMonth
+                              : payableMonthNumber !== null && item.payableYear !== null
+                                ? `${payableMonthNumber}-${item.payableYear}`
+                                : '';
+
+                          const fixedPayableMonthLabel =
+                            payableMonthNumber !== null
+                              ? `${feeMonthLookup[payableMonthNumber as number]}-${item.payableYear}`
+                              : 'Fixed by Structure';
+
+                          const startMonthLabel =
+                            typeof item.startPayableMonth === 'string'
+                              ? formatMonthYearDisplay(item.startPayableMonth)
+                              : 'Fixed by Structure';
+                          const endMonthLabel =
+                            typeof item.endPayableMonth === 'string'
+                              ? formatMonthYearDisplay(item.endPayableMonth)
+                              : 'Fixed by Structure';
+                          const oneTimeMonthLabel = oneTimeMonthValue
+                            ? formatMonthYearDisplay(oneTimeMonthValue)
+                            : fixedPayableMonthLabel;
+
                           const getAmountError = () => {
                             if (!isSelected) return '';
                             if (!item.selectedAmount || item.selectedAmount <= 0) {
                               return 'Amount is required';
-                            }
-                            return '';
-                          };
-
-                          const getMonthError = () => {
-                            if (!isSelected) return '';
-                            if (item.isOptional && item.isOneTime && !item.payableMonth) {
-                              return 'Month is required';
-                            }
-                            if (item.isOptional && !item.isOneTime) {
-                              if (!item.startPayableMonth) return 'Start month is required';
-                              if (!item.endPayableMonth) return 'End month is required';
                             }
                             return '';
                           };
@@ -369,13 +543,13 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                {item.isOptional ? (
+                                {item.isOptional && isSelected ? (
                                   <NumericFormatCustom
                                     size="small"
                                     fullWidth
                                     label="Monthly Amount"
                                     placeholder="0.00"
-                                    value={item.selectedAmount || ''}
+                                    value={item.selectedAmount ?? ''}
                                     disabled={!isSelected}
                                     onValueChange={(values) => {
                                       updateFeeHeadDetail(
@@ -386,37 +560,50 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
                                     }}
                                     error={Boolean(getAmountError())}
                                     helperText={getAmountError()}
+                                    decimalScale={2}
+                                    fixedDecimalScale={false}
                                     sx={{
                                       '& .MuiInputBase-root': { height: 36 },
-                                      '& .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: 'transparent',
-                                      },
                                       width: 120,
                                     }}
                                   />
                                 ) : (
                                   <Typography variant="subtitle2">
-                                    {formatNumber(item.amount)}
+                                    {formatNumber(monthlyAmount)}
+                                  </Typography>
+                                )}
+                              </TableCell>
+                              <TableCell align="right">
+                                {totalFees !== null ? (
+                                  <Typography variant="subtitle2">
+                                    {formatNumber(totalFees)}
+                                  </Typography>
+                                ) : (
+                                  <Typography variant="caption" color="text.secondary">
+                                    -
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell>
-                                {isSelected ? (
-                                  <Stack spacing={0.5}>
-                                    {item.isOptional && item.isOneTime ? (
+                                <Stack spacing={0.5}>
+                                  {item.isOneTime ? (
+                                    item.isOptional && isOptionalInputEditable ? (
                                       <CustomSelect
                                         label="Month *"
                                         options={monthOptions}
-                                        value={item.payableMonth || ''}
+                                        value={oneTimeMonthValue}
                                         onChange={(value) =>
                                           updateFeeHeadDetail(item.feeHeadId, 'payableMonth', value)
                                         }
                                         labelKey="label"
                                         valueKey="value"
                                         size="small"
-                                        error={Boolean(!item.payableMonth && isSelected)}
+                                        disabled={!isOptionalInputEditable}
+                                        error={Boolean(
+                                          !item.payableMonth && isOptionalInputEditable
+                                        )}
                                         helperText={
-                                          !item.payableMonth && isSelected
+                                          !item.payableMonth && isOptionalInputEditable
                                             ? 'Month is required'
                                             : ''
                                         }
@@ -424,72 +611,92 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
                                           sx: { width: '100%', minWidth: 140 },
                                         }}
                                       />
-                                    ) : item.isOptional && !item.isOneTime ? (
-                                      <>
-                                        <CustomSelect
-                                          label="Start Month *"
-                                          options={monthOptions}
-                                          value={item.startPayableMonth || ''}
-                                          onChange={(value) =>
-                                            updateFeeHeadDetail(
-                                              item.feeHeadId,
-                                              'startPayableMonth',
-                                              value
+                                    ) : (
+                                      <Typography variant="caption" color="text.secondary">
+                                        {oneTimeMonthLabel}
+                                      </Typography>
+                                    )
+                                  ) : item.isOptional && isOptionalInputEditable ? (
+                                    <>
+                                      <CustomSelect
+                                        label="Start Month *"
+                                        options={startMonthOptions}
+                                        value={item.startPayableMonth || ''}
+                                        onChange={(value) => {
+                                          const normalizedValue = normalizeSelectValue(value);
+                                          updateFeeHeadDetail(
+                                            item.feeHeadId,
+                                            'startPayableMonth',
+                                            normalizedValue
+                                          );
+
+                                          if (
+                                            item.endPayableMonth &&
+                                            hasInvalidRecurringRange(
+                                              normalizedValue,
+                                              item.endPayableMonth,
+                                              item.startPayableYear,
+                                              item.endPayableYear
                                             )
-                                          }
-                                          labelKey="label"
-                                          valueKey="value"
-                                          size="small"
-                                          error={Boolean(!item.startPayableMonth && isSelected)}
-                                          helperText={
-                                            !item.startPayableMonth && isSelected
-                                              ? 'Start month is required'
-                                              : ''
-                                          }
-                                          formControlProps={{
-                                            sx: { width: '100%', minWidth: 140 },
-                                          }}
-                                        />
-                                        <CustomSelect
-                                          label="End Month *"
-                                          options={monthOptions}
-                                          value={item.endPayableMonth || ''}
-                                          onChange={(value) =>
+                                          ) {
                                             updateFeeHeadDetail(
                                               item.feeHeadId,
                                               'endPayableMonth',
-                                              value
-                                            )
+                                              ''
+                                            );
                                           }
-                                          labelKey="label"
-                                          valueKey="value"
-                                          size="small"
-                                          error={Boolean(!item.endPayableMonth && isSelected)}
-                                          helperText={
-                                            !item.endPayableMonth && isSelected
-                                              ? 'End month is required'
+                                        }}
+                                        labelKey="label"
+                                        valueKey="value"
+                                        size="small"
+                                        error={Boolean(!item.startPayableMonth)}
+                                        helperText={
+                                          !item.startPayableMonth ? 'Start month is required' : ''
+                                        }
+                                        formControlProps={{
+                                          sx: { width: '100%', minWidth: 140 },
+                                        }}
+                                      />
+                                      <CustomSelect
+                                        label="End Month *"
+                                        options={endMonthOptions}
+                                        value={item.endPayableMonth || ''}
+                                        onChange={(value) =>
+                                          updateFeeHeadDetail(
+                                            item.feeHeadId,
+                                            'endPayableMonth',
+                                            value
+                                          )
+                                        }
+                                        labelKey="label"
+                                        valueKey="value"
+                                        size="small"
+                                        error={Boolean(
+                                          !item.endPayableMonth || isInvalidRecurringDateRange
+                                        )}
+                                        helperText={
+                                          !item.endPayableMonth
+                                            ? 'End month is required'
+                                            : isInvalidRecurringDateRange
+                                              ? 'End month must be same or after start month'
                                               : ''
-                                          }
-                                          formControlProps={{
-                                            sx: { width: '100%', minWidth: 140 },
-                                          }}
-                                        />
-                                      </>
-                                    ) : (
+                                        }
+                                        formControlProps={{
+                                          sx: { width: '100%', minWidth: 140 },
+                                        }}
+                                      />
+                                    </>
+                                  ) : (
+                                    <Stack spacing={0.5}>
                                       <Typography variant="caption" color="text.secondary">
-                                        Fixed by Structure
+                                        Start: {startMonthLabel}
                                       </Typography>
-                                    )}
-                                  </Stack>
-                                ) : item.isOptional ? (
-                                  <Typography variant="caption" color="text.secondary">
-                                    -
-                                  </Typography>
-                                ) : (
-                                  <Typography variant="caption" color="text.secondary">
-                                    Fixed by Structure
-                                  </Typography>
-                                )}
+                                      <Typography variant="caption" color="text.secondary">
+                                        End: {endMonthLabel}
+                                      </Typography>
+                                    </Stack>
+                                  )}
+                                </Stack>
                               </TableCell>
                             </TableRow>
                           );

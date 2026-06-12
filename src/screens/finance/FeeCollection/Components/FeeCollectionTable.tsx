@@ -31,8 +31,11 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onCollectFee,
   onView,
   onGiveAdjustment,
+  academicFilters,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const localFilters = useFinanceAcademicFilters();
+  const filters = academicFilters || localFilters;
   const {
     boards,
     mediums,
@@ -50,7 +53,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     setSelectedStandardId,
     setSelectedDivisionId,
     classesLoading,
-  } = useFinanceAcademicFilters();
+  } = filters;
 
   const [feeCollectionParams, setFeeCollectionParams] = useState({
     page: 1,
