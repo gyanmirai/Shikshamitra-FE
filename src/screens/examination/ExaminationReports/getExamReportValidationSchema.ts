@@ -54,11 +54,11 @@ export const getExamValidationSchema = (showField: string[], requiredFields: str
   }
 
   // Single Exam
-  if (showField.includes('exam')) {
-    shape.exam = isRequired('exam', true)
-      ? Yup.string().required('Exam is required')
-      : Yup.string().nullable();
-  }
+  // if (showField.includes('exam')) {
+  //   shape.exam = isRequired('exam', true)
+  //     ? Yup.string().required('Exam is required')
+  //     : Yup.string().nullable();
+  // }
 
   // Multi Exam (Weak Student Analysis, Consolidate Verify)
   if (showField.includes('exams')) {
@@ -101,11 +101,11 @@ export const getExamValidationSchema = (showField: string[], requiredFields: str
   }
 
   // Multi Grade (Bright student)
-  if (showField.includes('grade')) {
-    shape.grade = isRequired('grade', true)
-      ? Yup.array().min(1, 'Select at least one grade').required('Grade is required')
-      : Yup.array();
-  }
+  // if (showField.includes('grade')) {
+  //   shape.grade = isRequired('grade', true)
+  //     ? Yup.array().min(1, 'Select at least one grade').required('Grade is required')
+  //     : Yup.array();
+  // }
 
   // Students (Required Multi)
   if (showField.includes('students')) {

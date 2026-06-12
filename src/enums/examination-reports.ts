@@ -34,8 +34,46 @@ export enum ExamReportTitle {
   WeakStudentAnalysisSubjectWise,
 }
 
+export const ExamReportApiTypeMap: Record<ExamReportTitle, string> = {
+  [ExamReportTitle.AverageSubjectMarkAnalysis]: 'Average Subject Mark Analysis',
+  [ExamReportTitle.BrightStudentAnalysis]: 'Bright Student Analysis',
+  [ExamReportTitle.BrightStudentListSubjectWise]: 'Bright Student List Subject Wise',
+  [ExamReportTitle.GenderWiseGradeAnalysis]: 'Gender Wise Grade Analysis',
+  [ExamReportTitle.MarkListWithAllSubject]: 'Mark List With All Subject',
+  [ExamReportTitle.ResultList]: 'Result List',
+  [ExamReportTitle.SubjectAverageClassMarkAnalysisDivisionWise]:
+    'Subject Average Class Mark Analysis Division Wise',
+  [ExamReportTitle.ResultListConsolidateVerify]: 'Result List Consolidate Verify',
+  [ExamReportTitle.ResultListConsolidateWithMarkGrade]: 'Result List Consolidate With Mark Grade',
+  [ExamReportTitle.ResultListConsolidateWithMarks]: 'Result List Consolidate With Marks',
+  [ExamReportTitle.ResultListConsolidateWithMarksSiddhiKrupa]:
+    'Result List Consolidate With Marks - Siddhi Krupa',
+  [ExamReportTitle.ResultListOneGrade]: 'Result List One Grade',
+  [ExamReportTitle.ResultListOneMark]: 'Result List One Mark',
+  [ExamReportTitle.ResultListTwoMark]: 'Result List Two Mark',
+  [ExamReportTitle.ResultListWithSubject]: 'Result List With Subject',
+  [ExamReportTitle.ResultListWithSubjectFailedDetails]: 'Result List With Subject Failed Details',
+  [ExamReportTitle.ResultListWithSubjectGrade]: 'Result List With Subject Grade',
+  [ExamReportTitle.ResultListWithSubjectSmall]: 'Result List With Subject Small',
+  [ExamReportTitle.ResultListWithSubjectWithGrace]: 'Result List With Subject With Grace',
+  [ExamReportTitle.ResultOverAllSynopsis]: 'Result Over All Synopsis',
+  [ExamReportTitle.ResultStatisticsReport]: 'Result Statistics Report',
+  [ExamReportTitle.ResultWithAllSubjectList]: 'Result With All Subject List',
+  [ExamReportTitle.ResultListOverallGradeAnalysis]: 'Result List Overall Grade Analysis',
+  [ExamReportTitle.ResultListPassFailAnalysisSubjectWise]:
+    'Result List Pass-Fail Analysis Subject Wise',
+  [ExamReportTitle.ResultListPassFailOverAllAnalysis]: 'Result List Pass-Fail Overall Analysis',
+  [ExamReportTitle.ResultListSubjectGradeAnalysis]: 'Result List Subject Grade Analysis',
+  [ExamReportTitle.StudentAllBatchResult]: 'Student All Batch Result',
+  [ExamReportTitle.StudentAllExamResult]: 'Student All Exam Result',
+  [ExamReportTitle.StudentGradeAnalysis]: 'Student Grade Analysis',
+  [ExamReportTitle.StudentGradeAnalysisSubjectWise]: 'Student Grade Analysis Subject Wise',
+  [ExamReportTitle.SubjectWiseGradeList]: 'Subject Wise Grade List',
+  [ExamReportTitle.WeakStudentAnalysis]: 'Weak Student Analysis',
+  [ExamReportTitle.WeakStudentAnalysisSubjectWise]: 'Weak Student Analysis Subject Wise',
+};
+
 export const ExamReportTitleOptions = [
-  { name: ExamReportTitle.AverageSubjectMarkAnalysis, label: 'Average Subject Mark Analysis' },
   { name: ExamReportTitle.BrightStudentAnalysis, label: 'Bright Student Analysis' },
   { name: ExamReportTitle.BrightStudentListSubjectWise, label: 'Bright Student List Subject Wise' },
   { name: ExamReportTitle.GenderWiseGradeAnalysis, label: 'Gender Wise Grade Analysis' },

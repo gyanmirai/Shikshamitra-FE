@@ -12,6 +12,20 @@ export enum HomeworkReportTitle {
   HomeworkAcknowledgementReport,
 }
 
+export const HomeworkReportApiTypeMap: Record<HomeworkReportTitle, string> = {
+  [HomeworkReportTitle.DailyHomeworkReport]: 'Daily Homework Report',
+  [HomeworkReportTitle.ClassWiseHomeworkReport]: 'Class-wise Homework Report',
+  [HomeworkReportTitle.SubjectWiseHomeworkReport]: 'Subject-wise Homework Report',
+  [HomeworkReportTitle.TeacherWiseHomeworkReport]: 'Teacher-wise Homework Report',
+  [HomeworkReportTitle.StudentWiseHomeworkSummaryReport]: 'Student-wise Homework Summary Report',
+  [HomeworkReportTitle.HomeworkCompletionStatusReport]: 'Homework Completion Status Report',
+  [HomeworkReportTitle.PendingHomeworkReport]: 'Pending Homework Report',
+  [HomeworkReportTitle.OverdueHomeworkReport]: 'Overdue Homework Report',
+  [HomeworkReportTitle.HomeworkSubmissionHistoryReport]: 'Homework Submission History Report',
+  [HomeworkReportTitle.HomeworkWithAttachmentsReport]: 'Homework with Attachments Report',
+  [HomeworkReportTitle.HomeworkAcknowledgementReport]: 'Homework Acknowledgement Report',
+};
+
 export const HomeworkReportTitleOptions = [
   {
     name: HomeworkReportTitle.DailyHomeworkReport,

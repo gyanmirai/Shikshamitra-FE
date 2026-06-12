@@ -6,23 +6,26 @@ import type { Medium, Division, Standards, Organization } from 'src/types/school
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Card, Button } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { useTeacherSelection } from 'src/screens/academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/hooks/useTeacherSelection';
 import {
   HomeworkAssignmentAnalyticReportTitle,
+  HomeworkAssignmentAnalyticReportApiTypeMap,
   HomeworkAssignmentAnalyticReportTitleOptions,
 } from 'src/enums/homeworkAssignmentAnalytic-report';
-import { useTeacherSelection } from 'src/screens/academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/hooks/useTeacherSelection';
 
+import HomeworkReportPreviewDrawer from '../HomeworkReportPreviewDrawer';
 import { getHomeworkAssignmentAnalyticsValidationSchema } from './AnalyticsReportsValidation';
 
 type EmployeeOption = { id: string; label: string };
@@ -114,10 +117,12 @@ const removeAllToken = (values: string[]) => values.filter((id) => id !== 'all')
 
 type HomeworkAssignmentAnalyticsReportsProps = {
   report: string;
+  onSuccess?: () => void;
 };
 
 const HomeworkAssignmentAnalyticsReports = ({
   report,
+  onSuccess,
 }: HomeworkAssignmentAnalyticsReportsProps) => {
   const mappedReport = HomeworkAssignmentAnalyticReportTitleOptions.find(
     (opt) => opt.label === report
@@ -131,9 +136,23 @@ const HomeworkAssignmentAnalyticsReports = ({
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
+  // ── Drawer & request state ──
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [reportRequest, setReportRequest] = useState<any>(null);
+  const [submitType, setSubmitType] = useState<'preview' | 'export'>('preview');
+
   const [dynamicSchema, setDynamicSchema] = useState(
     getHomeworkAssignmentAnalyticsValidationSchema([], [])
   );
+
+  // ── Export mutation ──
+  const [createExport, { isLoading: isExportCreating }] = useQueryAndMutation<
+    typeof useCreateAcademicReportExportMutation
+  >({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateAcademicReportExportMutation,
+    popupConfig: { error: true, errorMessage: 'Failed to initiate export' },
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -142,22 +161,42 @@ const HomeworkAssignmentAnalyticsReports = ({
     },
     enableReinitialize: true,
     validationSchema: dynamicSchema,
-    onSubmit: (values, { setSubmitting }) => {
-      const payload = {
-        report: values.report,
-        academicYearId: currentYear?.id,
-        ...(currentFields.includes('organization') && { organizationId: values.organization }),
-        ...(currentFields.includes('class') && { classId: values.class || null }),
-        ...(currentFields.includes('divisions') && {
-          divisionIds: removeAllToken(values.divisions),
-        }),
-        ...(currentFields.includes('subjects') && { subjectIds: removeAllToken(values.subjects) }),
-        ...(currentFields.includes('teacher') && { teacherIds: removeAllToken(values.teachers) }),
-        ...(currentFields.includes('students') && { studentIds: removeAllToken(values.students) }),
+    onSubmit: async (values, { setSubmitting }) => {
+      const requestPayload = {
+        reportType:
+          HomeworkAssignmentAnalyticReportApiTypeMap[
+            mappedReport as HomeworkAssignmentAnalyticReportTitle
+          ],
+        filters: {
+          academicYearId: currentYear?.id || null,
+          classId: values.class || null,
+          divisionIds:
+            removeAllToken(values.divisions).length > 0 ? removeAllToken(values.divisions) : null,
+          subjectIds:
+            removeAllToken(values.subjects).length > 0 ? removeAllToken(values.subjects) : null,
+          teacherIds:
+            removeAllToken(values.teachers).length > 0 ? removeAllToken(values.teachers) : null,
+          studentIds:
+            removeAllToken(values.students).length > 0 ? removeAllToken(values.students) : null,
+        },
       };
 
-      // eslint-disable-next-line no-console
-      window.alert('Homework/Assignment Analytics Report Generated');
+      if (submitType === 'preview') {
+        setReportRequest(requestPayload);
+        setPreviewOpen(true);
+      } else if (submitType === 'export') {
+        try {
+          const res = await createExport({ ...requestPayload, format: 'pdf' }).unwrap();
+          shikshaMitraToast.success({
+            message: `Export job queued successfully! Status: ${res.status || 'Queued'}`,
+          });
+          if (onSuccess) {
+            onSuccess();
+          }
+        } catch {
+          // Error is handled by popupConfig
+        }
+      }
       setSubmitting(false);
     },
   });
@@ -454,20 +493,37 @@ const HomeworkAssignmentAnalyticsReports = ({
                 </Grid>
               )}
 
-              <Grid size={12} display="flex" justifyContent="flex-end">
+              <Grid size={12} display="flex" justifyContent="flex-end" gap={1.5}>
                 <Button
-                  startIcon={<Iconify icon={GlobalIcons.generateReport} />}
+                  startIcon={<Iconify icon="mdi:eye-outline" />}
+                  type="submit"
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setSubmitType('preview')}
+                >
+                  Preview
+                </Button>
+                <Button
+                  startIcon={<Iconify icon="mdi:tray-arrow-down" />}
                   variant="contained"
                   size="small"
                   type="submit"
+                  loading={isExportCreating}
+                  onClick={() => setSubmitType('export')}
                 >
-                  Generate Report
+                  Queue Export
                 </Button>
               </Grid>
             </Grid>
           </Box>
         </form>
       </Card>
+      <HomeworkReportPreviewDrawer
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        reportRequest={reportRequest}
+        reportTitle={report || ''}
+      />
     </Box>
   );
 };

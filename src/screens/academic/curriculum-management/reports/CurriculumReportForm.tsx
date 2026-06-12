@@ -186,6 +186,7 @@ const CurriculumReportForm = ({
           classIds: classIds.length > 0 ? classIds : null,
           divisionIds: divisionIds.length > 0 ? divisionIds : null,
           subjectIds: subjectIds.length > 0 ? subjectIds : null,
+          chapterIds: values.chapters.length > 0 ? values.chapters : null,
           revisionRequired:
             report === CurriculumReportTitle.ChapterRevisionAndRevisitTracker ? true : null,
         },
