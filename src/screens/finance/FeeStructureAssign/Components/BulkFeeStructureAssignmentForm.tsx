@@ -20,7 +20,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
-import { useAssignFeeStructureMutation } from 'src/redux/student/admission/admission-api';
+import { useAssignBulkFeeStructureMutation } from 'src/redux/student/admission/admission-api';
 import {
   useGetAcademicYearMonthsQuery,
   useGetStandardFeeStructureQuery,
@@ -78,17 +78,15 @@ type SelectValue = string | number | string[] | number[];
 
 interface Props {
   students: IFeeStructureData[];
+  standardId: string;
   handleClose: (e: any, isSubmit: boolean) => void;
 }
 
-const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
+const BulkFeeStructureAssignmentForm = ({ students, standardId, handleClose }: Props) => {
   const [feeHeads, setFeeHeads] = useState<FeeHeadAssignment[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const feeMonthLookup = FeeMonth as unknown as Record<number, string>;
   const feeStructureSettingsPath = '/finance/settings/create-fee-structure';
-
-  // Get available fee structures for the standard (use first student's standardId)
-  const standardId = students?.[0]?.id ? students[0]?.standardDivision?.split('/')?.[0] : null;
 
   const {
     data: financeFeeStructures,
@@ -97,7 +95,7 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStandardFeeStructureQuery,
-    params: { standardId },
+    params: { standardId: standardId || '' },
     options: { skip: !standardId },
   });
 
@@ -143,9 +141,9 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
     );
   }, [defaultRecurringStartMonthYear, defaultRecurringEndMonthYear]);
 
-  const [assignFeeStructures, { isLoading: isSubmitting }] = useQueryAndMutation({
+  const [assignBulkFeeStructure, { isLoading: isSubmitting }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAssignFeeStructureMutation,
+    currentQueryAndMutation: useAssignBulkFeeStructureMutation,
   });
 
   const formik = useFormik({
@@ -196,64 +194,54 @@ const BulkFeeStructureAssignmentForm = ({ students, handleClose }: Props) => {
           return;
         }
 
-        // Submit assignment for all selected students
-        const assignmentPromises = students.map((student) => {
-          const selectedFeeHeadsPayload = feeHeads
-            .filter((fh) => formik.values.selectedFeeHeads.includes(fh.feeHeadId))
-            .map((fh) => {
-              const basePayload: any = { feeHeadId: fh.feeHeadId };
+        // Build fee head details payload
+        const feeHeadDetails = feeHeads
+          .filter((fh) => formik.values.selectedFeeHeads.includes(fh.feeHeadId))
+          .map((fh) => {
+            const basePayload: any = { feeHeadId: fh.feeHeadId };
 
-              if (fh.isOptional) {
-                // Add custom amount for optional fees
-                if (fh.selectedAmount && fh.selectedAmount > 0) {
-                  basePayload.amount = fh.selectedAmount;
+            if (fh.isOptional) {
+              if (fh.selectedAmount && fh.selectedAmount > 0) {
+                basePayload.amount = fh.selectedAmount;
+              }
+              if (fh.isOneTime && fh.payableMonth) {
+                const payableMonthYear = parseMonthYearValue(fh.payableMonth, fh.payableYear);
+                if (payableMonthYear) {
+                  basePayload.payableMonth = payableMonthYear.month;
+                  basePayload.payableYear = payableMonthYear.year;
                 }
-
-                // Add month(s) for optional fees
-                if (fh.isOneTime && fh.payableMonth) {
-                  const payableMonthYear = parseMonthYearValue(fh.payableMonth, fh.payableYear);
-                  if (payableMonthYear) {
-                    basePayload.payableMonth = payableMonthYear.month;
-                    basePayload.payableYear = payableMonthYear.year;
-                  }
-                } else if (!fh.isOneTime && fh.startPayableMonth && fh.endPayableMonth) {
-                  const startMonthYear = parseMonthYearValue(
-                    fh.startPayableMonth,
-                    fh.startPayableYear
-                  );
-                  const endMonthYear = parseMonthYearValue(fh.endPayableMonth, fh.endPayableYear);
-                  if (startMonthYear && endMonthYear) {
-                    basePayload.startPayableMonth = startMonthYear.month;
-                    basePayload.startPayableYear = startMonthYear.year;
-                    basePayload.endPayableMonth = endMonthYear.month;
-                    basePayload.endPayableYear = endMonthYear.year;
-                  }
-                }
-              } else {
-                // Non-optional fees use amounts and months from fee structure (API)
-                basePayload.amount = fh.amount;
-
-                if (fh.isOneTime && fh.payableMonth !== null && fh.payableMonth !== undefined) {
-                  basePayload.payableMonth = fh.payableMonth;
-                  basePayload.payableYear = fh.payableYear;
-                } else if (!fh.isOneTime) {
-                  // Recurring non-optional fees don't have specific months
+              } else if (!fh.isOneTime && fh.startPayableMonth && fh.endPayableMonth) {
+                const startMonthYear = parseMonthYearValue(
+                  fh.startPayableMonth,
+                  fh.startPayableYear
+                );
+                const endMonthYear = parseMonthYearValue(fh.endPayableMonth, fh.endPayableYear);
+                if (startMonthYear && endMonthYear) {
+                  basePayload.startPayableMonth = startMonthYear.month;
+                  basePayload.startPayableYear = startMonthYear.year;
+                  basePayload.endPayableMonth = endMonthYear.month;
+                  basePayload.endPayableYear = endMonthYear.year;
                 }
               }
+            } else {
+              basePayload.amount = fh.amount;
+              if (fh.isOneTime && fh.payableMonth !== null && fh.payableMonth !== undefined) {
+                basePayload.payableMonth = fh.payableMonth;
+                basePayload.payableYear = fh.payableYear;
+              }
+            }
 
-              return basePayload;
-            });
+            return basePayload;
+          });
 
-          const body = {
-            studentId: student.studentId || student.id,
-            standardFeeStructureId: values.feeStructureId,
-            selectedOptionalFeeHeadIds: formik.values.selectedFeeHeads,
-            feeHeadDetails: selectedFeeHeadsPayload,
-          };
-          return assignFeeStructures({ body }).unwrap();
-        });
+        const body = {
+          studentIds: students.map((s) => s.studentId || s.id),
+          standardFeeStructureId: values.feeStructureId,
+          selectedOptionalFeeHeadIds: formik.values.selectedFeeHeads,
+          feeHeadDetails,
+        };
 
-        await Promise.all(assignmentPromises);
+        await assignBulkFeeStructure({ body }).unwrap();
         shikshaMitraToast.success({
           message: `Fee structure assigned successfully to ${students.length} student(s)`,
         });

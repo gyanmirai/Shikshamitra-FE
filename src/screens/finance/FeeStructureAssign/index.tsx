@@ -19,6 +19,7 @@ const FeeStructureAssign = () => {
   const bulkAssignDialog = useBoolean();
   const [selectedStudent, setSelectedStudent] = useState<IFeeStructureData | null>(null);
   const [selectedStudents, setSelectedStudents] = useState<IFeeStructureData[]>([]);
+  const [bulkStandardId, setBulkStandardId] = useState('');
 
   const handleAssignClose = () => {
     assignDialog.onFalse();
@@ -28,6 +29,7 @@ const FeeStructureAssign = () => {
   const handleBulkAssignClose = () => {
     bulkAssignDialog.onFalse();
     setSelectedStudents([]);
+    setBulkStandardId('');
   };
 
   return (
@@ -47,9 +49,10 @@ const FeeStructureAssign = () => {
           assignDialog.onTrue();
           setSelectedStudent(row);
         }}
-        onBulkAssign={(rows) => {
+        onBulkAssign={(rows, standardId) => {
           bulkAssignDialog.onTrue();
           setSelectedStudents(rows);
+          setBulkStandardId(standardId);
         }}
       />
 
@@ -68,7 +71,7 @@ const FeeStructureAssign = () => {
             </CustomTooltip>
           </Box>
         }
-        maxWidth="sm"
+        maxWidth="md"
         transitionDuration={{ enter: 0, exit: 0 }}
         handleClose={() => {
           handleAssignClose();
@@ -99,7 +102,7 @@ const FeeStructureAssign = () => {
             </CustomTooltip>
           </Box>
         }
-        maxWidth="sm"
+        maxWidth="md"
         transitionDuration={{ enter: 0, exit: 0 }}
         handleClose={() => {
           handleBulkAssignClose();
@@ -108,6 +111,7 @@ const FeeStructureAssign = () => {
         {selectedStudents.length > 0 && (
           <BulkFeeStructureAssignmentForm
             students={selectedStudents}
+            standardId={bulkStandardId}
             handleClose={handleBulkAssignClose}
           />
         )}
