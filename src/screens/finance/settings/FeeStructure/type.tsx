@@ -7,6 +7,7 @@ export interface IClassWiseFeeItem {
   id?: string;
   feeHeadId: string;
   feeHeadName?: string; // for UI display
+  feeCategoryName?: string; // for UI display only
   amount: number;
   isOneTime: boolean;
   paybleMonth?: FeeMonth; // for monthly fee heads

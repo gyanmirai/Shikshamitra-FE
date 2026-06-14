@@ -325,7 +325,7 @@ const ChargesTable = ({
                     handleEditClick={() => onEdit(row as IChargeData)}
                   />
                   {isPending && (
-                    <>
+                    <Box sx={{ display: 'flex' }}>
                       <IconButton
                         size="small"
                         onClick={() => onApprove(row as IChargeData)}
@@ -348,7 +348,7 @@ const ChargesTable = ({
                       >
                         <Iconify icon="entypo:cross" width={20} height={20} />
                       </IconButton>
-                    </>
+                    </Box>
                   )}
                 </Box>
               );

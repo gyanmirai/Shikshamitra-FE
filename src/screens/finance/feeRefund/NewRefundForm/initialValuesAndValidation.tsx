@@ -3,8 +3,10 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-import { getInitialPaymentDetails } from '../Components/RefundProcessForm';
-import { paymentMethodsConfig } from '../../FeeCollection/Components/paymentConfigMethods';
+import {
+  refundPaymentMethodsConfig,
+  getInitialRefundPaymentDetails,
+} from './refundPaymentDetailsConfig';
 
 import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 
@@ -120,7 +122,7 @@ export const buildRefundInitialValues = (
   refundMethod: editData?.refundMethod || '',
   notes: editData?.notes || '',
   paymentDetails: {
-    ...getInitialPaymentDetails(editData?.refundMethod),
+    ...getInitialRefundPaymentDetails(editData?.refundMethod),
     ...(editData?.paymentDetails || {}),
   },
   // Array of { feeHeadId, months: { month, amount }[] } — populated when student is selected
@@ -148,12 +150,15 @@ export const buildRefundValidationSchema = (currentYear: ICurrentYear) =>
       }
     ),
     paymentDetails: Yup.object().when(['refundMethod'], ([refundMethod], schema, context) => {
-      if (!refundMethod || !paymentMethodsConfig[refundMethod as keyof typeof paymentMethodsConfig])
+      if (
+        !refundMethod ||
+        !refundPaymentMethodsConfig[refundMethod as keyof typeof refundPaymentMethodsConfig]
+      )
         return schema;
 
       return Yup.object(
         Object.fromEntries(
-          paymentMethodsConfig[refundMethod as keyof typeof paymentMethodsConfig]
+          refundPaymentMethodsConfig[refundMethod as keyof typeof refundPaymentMethodsConfig]
             // 'amount' is filtered from the refund UI (captured via the fee-head table instead),
             // so skip its validation here to avoid an invisible required-field blocker.
             .filter((field) => field.name !== 'amount')

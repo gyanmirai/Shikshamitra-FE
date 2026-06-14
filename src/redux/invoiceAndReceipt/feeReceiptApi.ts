@@ -6,21 +6,21 @@ export const FEE_RECEIPT_BASE_URL = '/v1/fee-receipts';
 // ─── Enum mirrors (match backend values) ─────────────────────────────────────
 
 export enum FeeReceiptKind {
-  FinalFee = 1,
-  ProvisionalFee = 2,
-  ProvisionalCharge = 3,
+  FinalFee,
+  ProvisionalFee,
+  ProvisionalCharge,
 }
 
 export enum FeeReceiptVerificationStatus {
-  NotApplicable = 0,
-  PendingVerification = 1,
-  Verified = 2,
-  Rejected = 3,
+  NotApplicable,
+  PendingVerification,
+  Verified,
+  Rejected,
 }
 
 export enum FeeReceiptScope {
-  Fee = 1,
-  Charge = 2,
+  Fee,
+  Charge,
 }
 
 // ─── Label helpers ────────────────────────────────────────────────────────────
@@ -122,12 +122,12 @@ export const feeReceiptApi = financeModuleApi.injectEndpoints({
      * GET /v1/fee-receipts/{id}
      * Full receipt detail with sibling correlation and kachi↔final linkage.
      */
-    getFeeReceiptDetail: builder.query<FeeReceiptDetail, string>({
-      query: (id) => ({
+    getFeeReceiptDetail: builder.query<FeeReceiptDetail, { id: string }>({
+      query: ({ id }) => ({
         url: `${FEE_RECEIPT_BASE_URL}/${id}`,
         method: 'GET',
       }),
-      providesTags: (_result, _error, id) => [{ type: receiptType.receipt, id }],
+      providesTags: (_result, _error, { id }) => [{ type: receiptType.receipt, id }],
     }),
 
     /**

@@ -52,8 +52,6 @@ import {
   Grid,
   Button,
   Divider,
-  Tooltip,
-  Checkbox,
   MenuItem,
   TextField,
   IconButton,
@@ -316,6 +314,9 @@ const normalizeStatus = (
   return FeeCollectionStatusType.Pending;
 };
 
+const isChargeSelectable = (charge: IFeeCharge): boolean =>
+  charge.status !== FeeCollectionStatusType.Paid && charge.status !== 'Paid' && charge.amount > 0;
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 const FeeCollectComponentForm = ({
@@ -341,6 +342,9 @@ const FeeCollectComponentForm = ({
   const [lastCollectResponse, setLastCollectResponse] = useState<CollectFeeOutput | null>(null);
   const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const resolvedStudentName =
+    lastCollectResponse?.studentName?.trim() || student?.name?.trim() || '';
 
   // ── Fetch collect form data from V2 API ────────────────────────────────────
   const {
@@ -391,7 +395,7 @@ const FeeCollectComponentForm = ({
           id: lastCollectResponse.feeReceiptId ?? receiptPreviewState.feeReceipt.id,
           receiptNumber: lastCollectResponse.feeReceiptNumber ?? '',
           studentId: lastCollectResponse.studentId,
-          studentName: lastCollectResponse.studentId,
+          studentName: resolvedStudentName,
           academicYearId: lastCollectResponse.academicYearId,
           totalAmount: lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0),
           collectedAt: lastCollectResponse.collectedAt,
@@ -407,7 +411,7 @@ const FeeCollectComponentForm = ({
           id: lastCollectResponse.chargeReceiptId ?? receiptPreviewState.chargeReceipt.id,
           receiptNumber: lastCollectResponse.chargeReceiptNumber ?? '',
           studentId: lastCollectResponse.studentId,
-          studentName: lastCollectResponse.studentId,
+          studentName: resolvedStudentName,
           academicYearId: lastCollectResponse.academicYearId,
           totalAmount: (lastCollectResponse.paidCharges ?? []).reduce(
             (sum, c) => sum + c.amountPaid,
@@ -671,6 +675,9 @@ const FeeCollectComponentForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtotal]);
 
+  const showOverAllocationWarning =
+    balancePaise < 0 && (Boolean(formik.touched.payment?.amount) || formik.submitCount > 0);
+
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSelectionChange = (items: SelectedItem[]) =>
     formik.setFieldValue('selectedItems', items, false);
@@ -871,6 +878,7 @@ const FeeCollectComponentForm = ({
 
       const collectResponse = await collectFee({
         studentId: String(student?.id ?? ''),
+        studentName: student?.name ?? '',
         academicYearId: currentYear?.id ?? '',
         notes: formik.values.remarks ?? undefined,
         paymentConfirmed: isCashierDecided ? false : undefined,
@@ -906,6 +914,38 @@ const FeeCollectComponentForm = ({
     [filteredLedgerData]
   );
 
+  const orderedFilteredPeriods = useMemo(() => {
+    const uniquePeriods = new Map<string, number>();
+
+    (filteredLedgerData.monthWise ?? []).forEach((group) => {
+      if (!group.items.some((item) => item.due > 0)) {
+        return;
+      }
+
+      const period = toPeriod(
+        FeeMonth[group.month] as string,
+        group.year ?? currentYear?.year ?? new Date().getFullYear()
+      );
+
+      uniquePeriods.set(period, (group.year ?? 0) * 12 + Number(group.month));
+    });
+
+    return [...uniquePeriods.entries()].sort((a, b) => a[1] - b[1]).map(([period]) => period);
+  }, [filteredLedgerData, currentYear]);
+
+  const { selectionFilters } = filters;
+  const hasSelectionFilters = Object.values(selectionFilters).some(Boolean);
+
+  const firstSixPeriodSet = useMemo(
+    () => new Set(orderedFilteredPeriods.slice(0, 6)),
+    [orderedFilteredPeriods]
+  );
+
+  const lastSixPeriodSet = useMemo(
+    () => new Set(orderedFilteredPeriods.slice(-6)),
+    [orderedFilteredPeriods]
+  );
+
   // ── Select-All helpers (based on filtered ledger + charges) ────────────────
   const allSelectableItems = useMemo((): SelectedItem[] => {
     const items: SelectedItem[] = [];
@@ -916,25 +956,47 @@ const FeeCollectComponentForm = ({
       );
       g.items
         .filter((i) => i.due > 0)
-        .forEach((i) =>
+        .forEach((i) => {
+          if (
+            hasSelectionFilters &&
+            !(
+              selectionFilters.allPending ||
+              (selectionFilters.firstSixMonths && firstSixPeriodSet.has(period)) ||
+              (selectionFilters.lastSixMonths && lastSixPeriodSet.has(period))
+            )
+          ) {
+            return;
+          }
+
           items.push({
             dueFeeId: i.dueFeeId,
             feeHeadId: i.feeHeadId,
             period,
             dueAmount: i.due,
-          })
-        );
+          });
+        });
     });
     return items;
-  }, [filteredLedgerData, currentYear]);
+  }, [
+    filteredLedgerData,
+    currentYear,
+    hasSelectionFilters,
+    selectionFilters,
+    firstSixPeriodSet,
+    lastSixPeriodSet,
+  ]);
 
-  const allSelectableChargeIds = useMemo(
-    () =>
-      (chargesData ?? [])
-        .filter((c) => c.status !== 0 && c.status !== 'Paid' && c.amount > 0)
-        .map((c) => c.chargeId),
-    [chargesData]
-  );
+  const allSelectableChargeIds = useMemo(() => {
+    const selectableCharges = (chargesData ?? [])
+      .filter((charge) => isChargeSelectable(charge))
+      .map((charge) => charge.chargeId);
+
+    if (!hasSelectionFilters) {
+      return selectableCharges;
+    }
+
+    return selectionFilters.allCharges ? selectableCharges : [];
+  }, [chargesData, hasSelectionFilters, selectionFilters.allCharges]);
 
   const totalSelectableCount = allSelectableItems.length + allSelectableChargeIds.length;
   const selectedCount = formik.values.selectedItems.length + formik.values.charges.length;
@@ -951,7 +1013,11 @@ const FeeCollectComponentForm = ({
   const isIndeterminate =
     !isAllSelected && (formik.values.selectedItems.length > 0 || formik.values.charges.length > 0);
 
-  const totalSelectableDue = allSelectableItems.reduce((s, i) => s + i.dueAmount, 0);
+  const totalSelectableDue =
+    allSelectableItems.reduce((s, i) => s + i.dueAmount, 0) +
+    (chargesData ?? [])
+      .filter((charge) => allSelectableChargeIds.includes(charge.chargeId))
+      .reduce((sum, charge) => sum + charge.amount, 0);
 
   const handleSelectAll = () => {
     if (isAllSelected) {
@@ -982,6 +1048,45 @@ const FeeCollectComponentForm = ({
       formik.setFieldValue('charges', [...formik.values.charges, ...newChargeIds], false);
     }
   };
+
+  // ── Auto-apply selection when filter checkboxes are toggled ───────────────
+  useEffect(() => {
+    if (!hasSelectionFilters) {
+      return;
+    }
+
+    // Items to add (not already selected)
+    const existingKeys = new Set(
+      formik.values.selectedItems.map((s) => `${s.feeHeadId}|${s.period}`)
+    );
+    const itemsToAdd = allSelectableItems.filter(
+      (i) => !existingKeys.has(`${i.feeHeadId}|${i.period}`)
+    );
+
+    // Charges to add (not already selected)
+    const existingChargeIds = new Set(formik.values.charges);
+    const chargesToAdd = allSelectableChargeIds.filter((id) => !existingChargeIds.has(id));
+
+    // Items to remove: any item that was in a now-unchecked filter scope
+    // We only remove items that are NOT covered by any currently active filter
+    const shouldKeepItem = (item: SelectedItem): boolean => {
+      if (selectionFilters.allPending) return true;
+      if (selectionFilters.firstSixMonths && firstSixPeriodSet.has(item.period)) return true;
+      if (selectionFilters.lastSixMonths && lastSixPeriodSet.has(item.period)) return true;
+      return false;
+    };
+
+    const nextItems = [...formik.values.selectedItems.filter(shouldKeepItem), ...itemsToAdd];
+
+    const shouldKeepCharge = selectionFilters.allCharges;
+    const nextCharges = shouldKeepCharge
+      ? [...new Set([...formik.values.charges, ...chargesToAdd])]
+      : formik.values.charges.filter((id) => !allSelectableChargeIds.includes(id));
+
+    formik.setFieldValue('selectedItems', nextItems, false);
+    formik.setFieldValue('charges', nextCharges, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectionFilters]);
 
   const feeHeadMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -1085,8 +1190,8 @@ const FeeCollectComponentForm = ({
       URL.revokeObjectURL(chargeReceiptBlobUrl);
       setChargeReceiptBlobUrl(null);
     }
-    // Reset form for next fee collection instead of closing
-    formik.resetForm();
+    // Return to parent table/list view after receipt flow is completed.
+    onCancel?.(null, true);
   };
 
   if (isFeeStructureAssigned === false) {
@@ -1234,101 +1339,6 @@ const FeeCollectComponentForm = ({
                 Select at least one fee item or charge to collect
               </Typography>
             )}
-
-          {/* ── Sticky Select-All Card ── */}
-          <Box
-            mt={0.85}
-            sx={{
-              position: 'sticky',
-              top: 0,
-              zIndex: 10,
-              flexShrink: 0,
-            }}
-          >
-            <Card
-              sx={{
-                borderRadius: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                px: 1.5,
-                py: 0.75,
-                bgcolor: 'background.paper',
-                border: (t) => `1px solid ${alpha(t.palette.divider, 0.7)}`,
-                boxShadow: (t) => `var(--shadows-4)`,
-                gap: 1,
-                flexWrap: 'wrap',
-              }}
-            >
-              {/* Left: checkbox + label */}
-              <Box display="flex" alignItems="center" gap={0.5}>
-                <Tooltip
-                  title={
-                    isAllSelected
-                      ? 'Deselect all visible items'
-                      : 'Select all visible pending items'
-                  }
-                  arrow
-                  placement="top"
-                >
-                  <Checkbox
-                    size="small"
-                    checked={isAllSelected}
-                    indeterminate={isIndeterminate}
-                    onChange={handleSelectAll}
-                    disabled={totalSelectableCount === 0}
-                    sx={{ p: 0.5 }}
-                  />
-                </Tooltip>
-                <Box>
-                  <Typography variant="body2" fontWeight={700} lineHeight={1.2}>
-                    Select All
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" lineHeight={1.1}>
-                    {totalSelectableCount} pending item{totalSelectableCount !== 1 ? 's' : ''}
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* Right: selected count + total due */}
-              <Box display="flex" alignItems="center" gap={1.5}>
-                {selectedCount > 0 && (
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.5,
-                      px: 1,
-                      py: 0.35,
-                      borderRadius: 1,
-                      bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
-                    }}
-                  >
-                    <Iconify
-                      icon="solar:check-circle-bold"
-                      width={14}
-                      sx={{ color: 'primary.main' }}
-                    />
-                    <Typography variant="caption" fontWeight={700} color="primary.main">
-                      {selectedCount} selected
-                    </Typography>
-                  </Box>
-                )}
-                <Box textAlign="right">
-                  <Typography variant="caption" color="text.secondary" display="block">
-                    Total Due
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    fontWeight={700}
-                    sx={{ fontVariantNumeric: 'tabular-nums' }}
-                  >
-                    ₹{formatNumber(totalSelectableDue)}
-                  </Typography>
-                </Box>
-              </Box>
-            </Card>
-          </Box>
 
           <Box mt={0.85} sx={{ flex: 1, minHeight: 0 }}>
             <Scrollbar sx={{ height: '100%', pr: 0.3 }}>
@@ -1967,7 +1977,7 @@ const FeeCollectComponentForm = ({
         }}
       >
         <Box display="flex" justifyContent="flex-end" gap={1} alignItems="center" width="100%">
-          {balancePaise < 0 && (
+          {showOverAllocationWarning && (
             <Box flex={2} display="flex" justifyContent="center" ml={4}>
               <Typography variant="caption" color="error" textAlign="center">
                 Total allocated <strong>(₹ {formatNumber(totalAllocated)})</strong> exceeds the
@@ -2035,7 +2045,7 @@ const FeeCollectComponentForm = ({
                       Payment Summary
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Student : <strong>{lastCollectResponse.studentName}</strong>
+                      Student : <strong>{resolvedStudentName}</strong>
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Collected at :{' '}

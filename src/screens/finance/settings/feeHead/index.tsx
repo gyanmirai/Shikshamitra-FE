@@ -4,14 +4,12 @@ import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
@@ -21,7 +19,6 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   useGetFeeHeadsQuery,
   FeeHeadManagementApi,
-  usePatchFeeHeadMutation,
   useDeleteFeeHeadMutation,
 } from 'src/redux/feeHeadManage/feeHeadManageApi';
 
@@ -32,10 +29,6 @@ import type { IFeeHead } from './Components/type';
 
 const FeeHeadCreation = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [patchFeeHead, { isLoading: isPatchFeeHeadLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: usePatchFeeHeadMutation,
-  });
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
 
@@ -67,7 +60,6 @@ const FeeHeadCreation = () => {
 
   // Dialog control states
   const addFeeHeadDialog = useBoolean(); // Controls add/edit fee head dialog
-  const activeDialog = useBoolean(); // Controls active/inactive confirmation dialog
   const deleteDialog = useBoolean(); // Controls delete confirmation dialog
   const { confirmWithUndo } = useConfirmWithUndo();
 
@@ -135,10 +127,6 @@ const FeeHeadCreation = () => {
         onDelete={(data) => {
           setSelectedEntry(data);
           deleteDialog.onTrue();
-        }}
-        onToggle={(data) => {
-          setSelectedEntry(data);
-          activeDialog.onTrue();
         }}
         isLoading={isFeeHeadLoading || isFeeHeadFetching}
         onAddFeeHead={addFeeHeadDialog}
@@ -232,63 +220,6 @@ const FeeHeadCreation = () => {
             }}
           >
             Yes
-          </LoadingButton>
-        }
-      />
-
-      {/* Active/Inactive Confirmation Dialog */}
-      <ConfirmDialog
-        open={activeDialog.value}
-        onClose={() => {
-          setTimeout(() => {
-            setSelectedEntry(null);
-          }, 200);
-          activeDialog.onFalse();
-        }}
-        title={selectedEntry?.isActive ? 'Deactivate Fee Head' : 'Activate Fee Head'}
-        content={
-          <>
-            Are you sure you want to move <strong>{selectedEntry?.name}</strong> fee head to{' '}
-            <strong>{selectedEntry?.isActive ? 'deactivate' : 'activate'}</strong>?
-          </>
-        }
-        action={
-          <LoadingButton
-            variant="contained"
-            size="small"
-            loading={isPatchFeeHeadLoading}
-            startIcon={
-              <Iconify icon={selectedEntry?.isActive ? GlobalIcons.cancel : GlobalIcons.tick} />
-            }
-            onClick={async () => {
-              if (!selectedEntry?.id) return;
-              try {
-                await patchFeeHead({
-                  feeHeadId: selectedEntry.id,
-                  body: { isActive: !selectedEntry.isActive },
-                }).unwrap();
-
-                shikshaMitraToast.success({
-                  message: (
-                    <>
-                      Fee Head: <strong>{selectedEntry?.name}</strong>{' '}
-                      {selectedEntry.isActive ? 'deactivated' : 'activated'} successfully.
-                    </>
-                  ),
-                });
-                setTimeout(() => {
-                  setSelectedEntry(null);
-                }, 200);
-                activeDialog.onFalse();
-              } catch (error) {
-                console.error('Delete operation failed:', error);
-                shikshaMitraToast.error({
-                  message: 'Failed to delete fee head',
-                });
-              }
-            }}
-          >
-            {selectedEntry?.isActive ? 'Deactivate' : 'Activate'}
           </LoadingButton>
         }
       />

@@ -10,21 +10,29 @@ import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { Box, Tab, Chip, Card, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FeeMonth, FeeCollectionStatusOptions } from 'src/enums/fee-collection-type';
 import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
 import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
+import { Box, Tab, Chip, Card, Checkbox, Typography, FormControlLabel } from '@mui/material';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type FeeLedgerTab = 'by-month' | 'by-fee-head';
+
+export interface FeeLedgerSelectionFilters {
+  allPending: boolean;
+  allCharges: boolean;
+  firstSixMonths: boolean;
+  lastSixMonths: boolean;
+}
 
 export interface FeeLedgerFilters {
   activeTab: FeeLedgerTab;
   month: string;
   feeHead: string;
   status: string;
+  selectionFilters: FeeLedgerSelectionFilters;
 }
 
 interface FeeLedgerFilterBarProps {
@@ -41,6 +49,12 @@ export const FEE_LEDGER_INITIAL_FILTERS: FeeLedgerFilters = {
   month: 'All',
   feeHead: 'All',
   status: 'All',
+  selectionFilters: {
+    allPending: false,
+    allCharges: false,
+    firstSixMonths: false,
+    lastSixMonths: false,
+  },
 };
 
 const TABS = [
@@ -61,6 +75,16 @@ export const getAcademicYearMonthOptions = (
 const STATUS_OPTIONS = [
   { label: 'All', value: 'All' },
   ...FeeCollectionStatusOptions.map((s) => ({ label: s.label, value: String(s.value) })),
+];
+
+const SELECTION_FILTER_OPTIONS: Array<{
+  key: keyof FeeLedgerSelectionFilters;
+  label: string;
+}> = [
+  { key: 'allPending', label: 'All Pending' },
+  { key: 'allCharges', label: 'All Charges' },
+  { key: 'firstSixMonths', label: 'First 6 Month' },
+  { key: 'lastSixMonths', label: 'Last 6 Month' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -102,6 +126,16 @@ const FeeLedgerFilterBar = ({
   });
 
   const monthOptions = getAcademicYearMonthOptions(academicYearMonthsData);
+
+  const handleSelectionFilterToggle = (key: keyof FeeLedgerSelectionFilters) => {
+    onFilterChange({
+      ...filters,
+      selectionFilters: {
+        ...filters.selectionFilters,
+        [key]: !filters.selectionFilters[key],
+      },
+    });
+  };
 
   const feeHeadOptions = [
     { id: 'All', name: 'All' },
@@ -258,6 +292,49 @@ const FeeLedgerFilterBar = ({
           formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"
         />
+
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 1,
+            pt: 0.5,
+          }}
+        >
+          <Typography variant="caption" color="text.secondary" fontWeight={700}>
+            Selection Filters
+          </Typography>
+
+          {SELECTION_FILTER_OPTIONS.map((option) => (
+            <FormControlLabel
+              key={option.key}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={filters.selectionFilters[option.key]}
+                  onChange={() => handleSelectionFilterToggle(option.key)}
+                />
+              }
+              label={option.label}
+              sx={{
+                mr: 0.5,
+                ml: 0,
+                borderRadius: 999,
+                px: 0.5,
+                py: 0.5,
+                bgcolor: filters.selectionFilters[option.key]
+                  ? alpha(theme.palette.primary.main, 0.08)
+                  : 'transparent',
+                '& .MuiFormControlLabel-label': {
+                  fontSize: '0.78rem',
+                  fontWeight: 500,
+                },
+              }}
+            />
+          ))}
+        </Box>
       </Box>
     </Card>
   );

@@ -40,7 +40,6 @@ const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprov
         selectedConcession?.concessionRequestId ||
         selectedConcession?.id;
       if (!requestId) return;
-
       try {
         if (mode === 'Reject') {
           await rejectConcessionRequest({

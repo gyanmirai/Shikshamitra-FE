@@ -135,7 +135,7 @@ const AuditFilter = ({
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 1.5 }}>
           <DatePicker
             label="Start Date"
             format="DD/MM/YYYY"
@@ -155,7 +155,7 @@ const AuditFilter = ({
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 1.5 }}>
           <DatePicker
             label="End Date"
             format="DD/MM/YYYY"

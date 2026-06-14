@@ -16,7 +16,6 @@ export interface IFeeHeadTableProps {
   setEditData: (value: IFeeHead | null) => void;
   onEdit: (row: IFeeHead) => void;
   onDelete: (row: IFeeHead) => void;
-  onToggle: (row: IFeeHead) => void;
   totalCount?: number;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onServerSearch?: (searchTerm: string) => void;

@@ -1,11 +1,7 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
-import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -18,12 +14,10 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
   setEditData,
   onEdit,
   onDelete,
-  onToggle,
   totalCount,
   onServerPagination,
   onServerSearch,
 }) => {
-  const theme = useTheme();
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -59,59 +53,6 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
             {value || '-'}
           </Typography>
         ),
-      },
-      {
-        id: 'isActive',
-        label: 'Active',
-        isFilter: false,
-        isSort: false,
-        render(value, row) {
-          const statusColor =
-            value === true ? theme.palette.success.main : theme.palette.text.secondary;
-          return (
-            <CustomTooltip
-              title={value === true ? 'Active' : 'Deactive'}
-              arrow
-              placement="left"
-              PopperProps={{
-                modifiers: [
-                  {
-                    name: 'offset',
-                    options: {
-                      offset: [0, 0],
-                    },
-                  },
-                ],
-              }}
-            >
-              <IconButton
-                onClick={() => {
-                  onToggle(row as IFeeHead);
-                }}
-                sx={{
-                  p: 0.6,
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(0,0,0,0.06)',
-                  transition: 'transform 0.2s ease-in-out, background-color 0.2s',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    transform: 'scale(1.1)',
-                    backgroundColor: 'rgba(0,0,0,0.08)',
-                  },
-                }}
-              >
-                <Iconify
-                  icon={GlobalIcons.tick}
-                  sx={{
-                    width: 20,
-                    height: 20,
-                    color: statusColor,
-                  }}
-                />
-              </IconButton>
-            </CustomTooltip>
-          );
-        },
       },
       {
         id: 'action',

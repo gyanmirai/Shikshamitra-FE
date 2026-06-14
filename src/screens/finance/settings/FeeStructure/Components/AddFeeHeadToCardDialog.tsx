@@ -35,11 +35,6 @@ const AddFeeHeadToCardDialog: React.FC<Props> = ({ existingFeeHeadIds, onAdd, on
     params: { academicYearId: currentYear?.id },
   });
 
-  const availableOptions =
-    feeHeadData?.items?.filter(
-      (item: any) => item.isActive === true && !existingFeeHeadIds.has(item.id)
-    ) ?? [];
-
   const handleSubmit = () => {
     if (!selectedFeeHeadIds.length) {
       setError('Please select at least one Fee Head');
@@ -52,6 +47,7 @@ const AddFeeHeadToCardDialog: React.FC<Props> = ({ existingFeeHeadIds, onAdd, on
       .map((opt: any) => ({
         feeHeadId: opt.id,
         feeHeadName: opt.name,
+        feeCategoryName: opt.feeCategoryName ?? opt.categoryName ?? opt.feeCategory?.name,
         amount: 0,
         isOneTime: false,
         isOptional: false,
@@ -74,7 +70,7 @@ const AddFeeHeadToCardDialog: React.FC<Props> = ({ existingFeeHeadIds, onAdd, on
             setSelectedFeeHeadIds(value);
             if (error) setError('');
           }}
-          options={availableOptions}
+          options={feeHeadData?.items || []}
           labelKey="name"
           valueKey="id"
           error={!!error}

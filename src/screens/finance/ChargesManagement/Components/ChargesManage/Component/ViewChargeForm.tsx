@@ -1,31 +1,19 @@
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
 import dayjs from 'dayjs';
+import React, { useMemo } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { InfoItem } from 'src/components/info-item';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetChargeByIdQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
-import {
-  Box,
-  Grid,
-  Paper,
-  Stack,
-  Table,
-  Button,
-  Divider,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  Typography,
-  DialogActions,
-  TableContainer,
-} from '@mui/material';
+import { Box, Grid, Paper, Stack, Button, Divider, Typography, DialogActions } from '@mui/material';
 
 import RequestorInfoCard from './ViewChargeComponent/RequestorInfoCard';
 import ChargeViewSkeleton from './ViewChargeComponent/ChargeViewSkeleton';
 import ChargeViewDetailsCard from './ViewChargeComponent/ChargeDetailsCard';
-import ChargeInformationAccordion from './ViewChargeComponent/BasicChargeAccordianCard';
 
 import type { IChargeData } from './type';
 
@@ -44,6 +32,17 @@ const ChargeDetailsCard: React.FC<Props> = ({
   onReject,
   onCancel,
 }) => {
+  const studentColumns: IColumn[] = useMemo(
+    () => [
+      { id: 'studentName', label: 'Student Name', align: 'left' },
+      { id: 'grNumber', label: 'GR Number', align: 'left', filterType: 'number' },
+      { id: 'rollNumber', label: 'Roll No.', align: 'left', filterType: 'number' },
+      { id: 'standardName', label: 'Class', align: 'left' },
+      { id: 'divisionName', label: 'Division', align: 'left' },
+    ],
+    []
+  );
+
   const { data: selectedCharge, isLoading: isChargeLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargeByIdQuery,
@@ -59,11 +58,6 @@ const ChargeDetailsCard: React.FC<Props> = ({
     <Box display="flex" flexDirection="column" gap={2} height="100%">
       <Scrollbar sx={{ height: '100%', p: 2 }}>
         <Grid container spacing={2}>
-          {/* Charge Information Section */}
-          <Grid size={{ xs: 12 }}>
-            <ChargeInformationAccordion charge={selectedCharge} />
-          </Grid>
-
           {/* Charge Details and Requestor Info */}
           <Grid size={{ xs: 12, md: 7 }}>
             <ChargeViewDetailsCard charge={selectedCharge} />
@@ -155,65 +149,16 @@ const ChargeDetailsCard: React.FC<Props> = ({
                   </Box>
                 </Stack>
 
-                <TableContainer sx={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  <Table stickyHeader size="small">
-                    <TableHead>
-                      <TableRow
-                        sx={{ '& th': { backgroundColor: 'action.hover', fontWeight: 700 } }}
-                      >
-                        <TableCell align="left" sx={{ minWidth: 150 }}>
-                          Student Name
-                        </TableCell>
-                        <TableCell align="left" sx={{ minWidth: 100 }}>
-                          GR Number
-                        </TableCell>
-                        <TableCell align="center" sx={{ minWidth: 80 }}>
-                          Roll No.
-                        </TableCell>
-                        <TableCell align="left" sx={{ minWidth: 100 }}>
-                          Class
-                        </TableCell>
-                        <TableCell align="left" sx={{ minWidth: 100 }}>
-                          Division
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {selectedCharge.students.map((student: any) => (
-                        <TableRow
-                          key={student.studentId}
-                          sx={{ '&:hover': { backgroundColor: 'action.hover' } }}
-                        >
-                          <TableCell align="left">
-                            <Typography variant="caption" fontSize="13px">
-                              {student.studentName || '-'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="left">
-                            <Typography variant="caption" fontSize="13px">
-                              {student.grNumber || '-'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="caption" fontSize="13px">
-                              {student.rollNumber || '-'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="left">
-                            <Typography variant="caption" fontSize="13px">
-                              {student.standardName || '-'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="left">
-                            <Typography variant="caption" fontSize="13px">
-                              {student.divisionName || '-'}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                <CustomizableTable
+                  tableId="view-charge-student-list"
+                  tableTitle="Student List"
+                  columns={studentColumns}
+                  data={selectedCharge.students}
+                  isFilter={false}
+                  isLoading={isChargeLoading}
+                  noDataText="No students found"
+                  wrapperProps={{ minHeight: 320 }}
+                />
 
                 <Box sx={{ mt: 2, p: 1, backgroundColor: 'action.hover', borderRadius: 1 }}>
                   <Typography variant="caption" color="text.secondary">
