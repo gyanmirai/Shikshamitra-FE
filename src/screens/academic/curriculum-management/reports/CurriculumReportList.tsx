@@ -1,13 +1,18 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useRef, useState, useCallback } from 'react';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Chip, Button, Tooltip, IconButton } from '@mui/material';
@@ -28,6 +33,9 @@ const STATUS_COLOR: Record<string, 'default' | 'primary' | 'success' | 'error' |
 
 const CurriculumReportList = () => {
   const addReportDialog = useBoolean(false);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  const canAdd = hasGrantedPermission(permissions, `${academicPermissions.curriculum.reports}.Add`);
 
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -132,19 +140,21 @@ const CurriculumReportList = () => {
             { name: 'Reports' },
           ]}
           action={
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Add />}
-              onClick={addReportDialog.onTrue}
-            >
-              Report
-            </Button>
+            canAdd ? (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<Add />}
+                onClick={addReportDialog.onTrue}
+              >
+                Report
+              </Button>
+            ) : null
           }
         />
       )}
 
-      {addReportDialog.value ? (
+      {addReportDialog.value && canAdd ? (
         <CurriculumReports addReportDialog={addReportDialog} />
       ) : (
         <CustomizableTable
@@ -221,6 +231,7 @@ const CurriculumReportList = () => {
               sticky: true,
               stickyPosition: 'right',
               render(value, row) {
+                if (!canAdd) return null;
                 const isThisDownloading = downloadingJobId === value;
                 const canDownload =
                   row.status === 'Completed' ||

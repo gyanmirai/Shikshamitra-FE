@@ -24,6 +24,9 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
+  canAdd = true,
+  canView = true,
+  canDelete = true,
 }) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const {
@@ -85,8 +88,8 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
             <ThreeDotsActions
               showThreeDots={false}
               placement="right-top"
-              showDeleteIcon
-              showEditIcon
+              showDeleteIcon={canDelete}
+              showEditIcon={canAdd}
               handleDeleteClick={() => {
                 onDelete(row as IElectiveSubject);
               }}
@@ -98,7 +101,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         },
       },
     ],
-    [onDelete, onEdit]
+    [canAdd, canDelete, onDelete, onEdit]
   );
   return (
     <CustomizableTable
@@ -115,23 +118,25 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
       noDataText={
         <>
           Elective Subject Data Not Found{' '}
-          <Box
-            onClick={() => {
-              onAddElective.onTrue();
-              setOpenDialog(true);
-              setEditData(null);
-            }}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Add Elective Group
-          </Box>
+          {canAdd && (
+            <Box
+              onClick={() => {
+                onAddElective.onTrue();
+                setOpenDialog(true);
+                setEditData(null);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Elective Group
+            </Box>
+          )}
         </>
       }
       columns={columns}

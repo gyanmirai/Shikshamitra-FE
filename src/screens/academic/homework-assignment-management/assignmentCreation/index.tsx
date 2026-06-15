@@ -15,8 +15,10 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -48,6 +50,22 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   const viewAssignmentDetails = useBoolean();
   // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.learningTasks}.Add`
+  );
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.learningTasks}.View`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.learningTasks}.Delete`
+  );
   // State to store currently selected assignment for edit/delete/publish
   const [selectedAssignment, setSelectedAssignment] = useState<IAssignment | null>(null);
   const [viewAssignmentId, setViewAssignmentId] = useState<string | null>(null);
@@ -332,6 +350,9 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         dialog={addAssignmentDialog}
         selectedDivision={division}
         selectedClass={classes}
+        canAdd={canAdd}
+        canView={canView}
+        canDelete={canDelete}
         onSwitchToggle={(row) => {
           setSelectedAssignment(row);
           publishAssignmentDialog.onTrue();

@@ -25,6 +25,9 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
   onDelete,
   onView,
   dialog,
+  canAdd = true,
+  canView = true,
+  canDelete = true,
 }) => {
   // const {
   //   data: assignmentData,
@@ -72,18 +75,20 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
       noDataText={
         <>
           Assignment Data Not Found
-          <Box
-            onClick={dialog.onTrue}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              '&:hover': { color: 'primary.dark' },
-            }}
-          >
-            Create Assignment
-          </Box>
+          {canAdd && (
+            <Box
+              onClick={dialog.onTrue}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                '&:hover': { color: 'primary.dark' },
+              }}
+            >
+              Create Assignment
+            </Box>
+          )}
         </>
       }
       columns={[
@@ -215,9 +220,9 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
               placement="right-top"
               // actions={(prop) => actions({ ...prop, row })}
               showThreeDots={false}
-              showViewIcon
-              showEditIcon={(row as any).status !== PublishUnpublishStatusType.Published}
-              showDeleteIcon
+              showViewIcon={canView}
+              showEditIcon={canAdd && (row as any).status !== PublishUnpublishStatusType.Published}
+              showDeleteIcon={canDelete}
               handleEditClick={() => onEdit(row as IAssignment)}
               handleViewClick={() => {
                 const schedules = (row as any).divisionSchedules || row.divisions || [];

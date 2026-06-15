@@ -21,6 +21,9 @@ const ChapterTable = ({
   onViewDocuments,
   subjectId,
   standardId,
+  canAdd = true,
+  canView = true,
+  canDelete = true,
 }: IChapterTableProps) => {
   const tableData = useMemo(
     () =>
@@ -108,9 +111,9 @@ const ChapterTable = ({
             <ThreeDotsActions
               showThreeDots={false}
               placement="right-top"
-              showEditIcon
-              showDeleteIcon
-              showViewIcon
+              showEditIcon={canAdd}
+              showDeleteIcon={canDelete}
+              showViewIcon={canView}
               handleViewClick={() => {
                 onViewDocuments(row as IChapter);
               }}
@@ -124,7 +127,7 @@ const ChapterTable = ({
         },
       },
     ],
-    [addChapterDialog, onDelete, onViewDocuments, setEditData]
+    [addChapterDialog, canAdd, canDelete, canView, onDelete, onViewDocuments, setEditData]
   );
   return (
     <CustomizableTable
@@ -133,23 +136,25 @@ const ChapterTable = ({
       noDataText={
         <>
           Chapters Data Not Found{' '}
-          <Box
-            onClick={() => {
-              addChapterDialog.onTrue();
-              setEditData(null);
-            }}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Add Syllabus
-          </Box>
+          {canAdd && (
+            <Box
+              onClick={() => {
+                addChapterDialog.onTrue();
+                setEditData(null);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Syllabus
+            </Box>
+          )}
         </>
       }
       columns={columns}

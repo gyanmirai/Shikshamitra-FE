@@ -1,6 +1,9 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -8,6 +11,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
@@ -32,12 +37,24 @@ const TABS = [
 const HomeworkSetting = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'homeworkType' });
 
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAddHomeworkType = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.settings.homeworkTypes}.Add`
+  );
+  const canAddAssignmentType = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.settings.assignmentTypes}.Add`
+  );
+
   const addHomeworkTypeDialog = useBoolean(false);
   const addAssignmentTypeDialog = useBoolean(false);
 
   const renderButton = useMemo(
     () => ({
-      homeworkType: (
+      homeworkType: canAddHomeworkType ? (
         <Button
           sx={{ width: '180px' }}
           startIcon={<Add />}
@@ -47,8 +64,8 @@ const HomeworkSetting = () => {
         >
           Homework Type
         </Button>
-      ),
-      assignmentType: (
+      ) : null,
+      assignmentType: canAddAssignmentType ? (
         <Button
           sx={{ width: '180px' }}
           startIcon={<Add />}
@@ -58,9 +75,14 @@ const HomeworkSetting = () => {
         >
           Assignment Type
         </Button>
-      ),
+      ) : null,
     }),
-    [addHomeworkTypeDialog.onTrue, addAssignmentTypeDialog.onTrue]
+    [
+      addHomeworkTypeDialog.onTrue,
+      addAssignmentTypeDialog.onTrue,
+      canAddHomeworkType,
+      canAddAssignmentType,
+    ]
   );
 
   const currentActiveComponent = useMemo(

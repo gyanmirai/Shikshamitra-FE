@@ -1,13 +1,18 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { electiveGroupsApi } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 
@@ -16,6 +21,22 @@ import SettingElectiveSubjectForm from './components/electiveSubjectForm';
 import { useElectiveSubjectSetting } from './hooks/useElectiveSubjectSetting';
 
 const ElectiveSubjectSetting = () => {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.settings.electiveGroupCreation}.Add`
+  );
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.settings.electiveGroupCreation}.View`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.settings.electiveGroupCreation}.Delete`
+  );
+
   const {
     deleteDialog,
     open,
@@ -42,19 +63,24 @@ const ElectiveSubjectSetting = () => {
           { name: 'Elective Group Creation' },
         ]}
         action={
-          <Button
-            sx={{ width: '160px' }}
-            startIcon={<Add />}
-            onClick={addElectiveGroupDialog.onTrue}
-            variant="contained"
-            size="small"
-          >
-            Elective Group
-          </Button>
+          canAdd && (
+            <Button
+              sx={{ width: '160px' }}
+              startIcon={<Add />}
+              onClick={addElectiveGroupDialog.onTrue}
+              variant="contained"
+              size="small"
+            >
+              Elective Group
+            </Button>
+          )
         }
       />
 
       <ElectiveSubjectTable
+        canAdd={canAdd}
+        canView={canView}
+        canDelete={canDelete}
         onDelete={(data) => {
           setSelected(data);
           deleteDialog.onTrue();

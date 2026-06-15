@@ -11,6 +11,8 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
   data,
   onDelete,
   onEdit,
+  canAdd = true,
+  canDelete = true,
 }) => (
   <CustomizableTable
     tableId="assignment-type-data-table"
@@ -34,8 +36,8 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
           <ThreeDotsActions
             showThreeDots={false}
             placement="right-top"
-            showDeleteIcon
-            showEditIcon
+            showDeleteIcon={canDelete}
+            showEditIcon={canAdd}
             handleDeleteClick={() => {
               onDelete(row as IAssignmentType);
             }}

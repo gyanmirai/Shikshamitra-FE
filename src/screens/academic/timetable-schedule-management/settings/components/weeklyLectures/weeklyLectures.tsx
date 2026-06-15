@@ -8,7 +8,9 @@ import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetWeeklyLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/weeklyLecturesApi';
@@ -21,6 +23,13 @@ import type { ISubject, ISubjectFormValues } from './type';
 
 const WeeklyLectures = () => {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.timetable.settings.weeklyLectures}.Add`
+  );
 
   const {
     data: weeklyLectureData,
@@ -46,7 +55,7 @@ const WeeklyLectures = () => {
     closeView,
   } = useWeeklyLecturesDialogs();
 
-  const columns = useWeeklyLectureColumns({ onView: openView, onEdit: openEdit });
+  const columns = useWeeklyLectureColumns({ onView: openView, onEdit: openEdit, canAdd });
 
   /**
    * `useMemo` is justified: `tableData` is the row source for a memoized
@@ -97,20 +106,22 @@ const WeeklyLectures = () => {
         noDataText={
           <>
             Weekly Lectures Data Not Found{' '}
-            <Box
-              onClick={openCreate}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Add Weekly Lectures
-            </Box>
+            {canAdd && (
+              <Box
+                onClick={openCreate}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Weekly Lectures
+              </Box>
+            )}
           </>
         }
         columns={columns}

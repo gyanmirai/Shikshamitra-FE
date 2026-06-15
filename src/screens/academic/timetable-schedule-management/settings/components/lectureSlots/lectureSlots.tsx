@@ -7,8 +7,10 @@ import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -31,7 +33,18 @@ const LectureSlots = () => {
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { permissions } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.timetable.settings.lectureSlots}.Add`
+  );
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.timetable.settings.lectureSlots}.View`
+  );
 
   const { data: lectureSlotsData, isLoading: isLectureSlotsLoading } = useQueryAndMutation({
     type: 'query',
@@ -153,8 +166,8 @@ const LectureSlots = () => {
           return (
             <ThreeDotsActions
               actions={(prop) => actions({ ...prop, row })}
-              showEditIcon
-              showViewIcon
+              showEditIcon={canAdd}
+              showViewIcon={canView}
               handleViewClick={() => {
                 viewSlotsDialog.onTrue();
                 setDisabled(true);
@@ -173,7 +186,7 @@ const LectureSlots = () => {
         },
       },
     ],
-    [actions, addLectureSlotDialog, viewSlotsDialog]
+    [actions, addLectureSlotDialog, viewSlotsDialog, canAdd, canView]
   );
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -230,19 +243,21 @@ const LectureSlots = () => {
             { name: 'Lecture Slots' },
           ]}
           action={
-            <Button
-              sx={{ width: '160px' }}
-              startIcon={<Add />}
-              onClick={() => {
-                setEditData(null);
-                setIsEdit(false);
-                addLectureSlotDialog.onTrue();
-              }}
-              variant="contained"
-              size="small"
-            >
-              Lecture Slot
-            </Button>
+            canAdd ? (
+              <Button
+                sx={{ width: '160px' }}
+                startIcon={<Add />}
+                onClick={() => {
+                  setEditData(null);
+                  setIsEdit(false);
+                  addLectureSlotDialog.onTrue();
+                }}
+                variant="contained"
+                size="small"
+              >
+                Lecture Slot
+              </Button>
+            ) : null
           }
         />
       )}
@@ -275,22 +290,24 @@ const LectureSlots = () => {
           noDataText={
             <>
               Lecture Slots Data Not Found{' '}
-              <Box
-                onClick={() => {
-                  addLectureSlotDialog.onTrue();
-                }}
-                color="primary.main"
-                fontWeight={600}
-                sx={{
-                  '&:hover': {
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    textDecoration: 'underline',
-                  },
-                }}
-              >
-                Create Slots
-              </Box>
+              {canAdd && (
+                <Box
+                  onClick={() => {
+                    addLectureSlotDialog.onTrue();
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Create Slots
+                </Box>
+              )}
             </>
           }
           columns={columns}
