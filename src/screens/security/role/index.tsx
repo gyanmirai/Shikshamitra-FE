@@ -161,7 +161,7 @@ const RoleScreen = () => {
             label: 'Role',
             render: (value, row) => (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <SubjectColorIndicator color={row.color} />
+                <SubjectColorIndicator color={row.extraProperties?.Color || row.color} />
                 <Typography variant="caption" fontSize="13px">
                   {value}
                 </Typography>
@@ -199,7 +199,7 @@ const RoleScreen = () => {
                       }}
                     >
                       <Iconify icon="material-symbols:beenhere-outline" />
-                      Set Visibility
+                      Set Module Visibility
                     </MenuItem>
                     <MenuItem
                       onClick={() => {
@@ -209,7 +209,7 @@ const RoleScreen = () => {
                       }}
                     >
                       <Iconify icon="mdi:account-lock" sx={{ height: '16px', width: '16px' }} />
-                      Permissions
+                      Module Permission
                     </MenuItem>
                   </MenuList>
                 )}
@@ -334,7 +334,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
   const formik = useFormik<{ role: string; color: string }>({
     initialValues: {
       role: editData ? editData.name : null,
-      color: editData ? editData.color : null,
+      color: editData ? editData.extraProperties?.Color || editData.color : null,
     },
     validationSchema: Yup.object().shape({
       role: Yup.string().required('Role is required'),

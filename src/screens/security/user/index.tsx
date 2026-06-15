@@ -1,7 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import _ from 'lodash';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -15,17 +18,29 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Avatar, MenuList, MenuItem, DialogActions, CircularProgress } from '@mui/material';
 import {
   useGetPermissionsQuery,
   useUpdatePermissionMutation,
 } from 'src/redux/permission/permissionApi';
+import {
+  Box,
+  Avatar,
+  Button,
+  MenuList,
+  MenuItem,
+  Typography,
+  DialogActions,
+  CircularProgress,
+} from '@mui/material';
 
 import Visibility from '../role/visibility';
 import { AccessControlForm } from '../accessControl';
 import { PermissionForm, extractGrantedPermissions } from '../role';
 
 const UserManagementScreen = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const yearSuffix = currentYear?.name ? ` - ${currentYear.name}` : '';
+
   // Dialog control hook for permissions dialog
   const dialog = useBoolean();
 
@@ -108,7 +123,7 @@ const UserManagementScreen = () => {
                       }}
                     >
                       <Iconify icon="material-symbols:beenhere-outline" />
-                      Set Visibility
+                      Set Module Visibility
                     </MenuItem>
                     <MenuItem
                       onClick={() => {
@@ -118,7 +133,7 @@ const UserManagementScreen = () => {
                       }}
                     >
                       <Iconify icon="mdi:account-lock" />
-                      Permissions
+                      Module Permission
                     </MenuItem>
                     <MenuItem
                       onClick={() => {
@@ -150,7 +165,7 @@ const UserManagementScreen = () => {
       </CustomDialog>
       <CustomDialog
         fullScreen
-        title="Academic Permission"
+        title={`Academic Permission${yearSuffix}`}
         open={academicDialog.value}
         handleClose={academicDialog.onFalse}
       >
@@ -199,8 +214,30 @@ const VisibilityForm = ({ editData, handleClose }: any) => {
     <>
       <DialogScrollContent
         sx={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-        scrollBarProps={{ sx: { overflow: 'hidden' } }}
+        scrollBarProps={{
+          sx: {
+            overflow: 'hidden',
+            '.simplebar-content': {
+              height: '100%',
+            },
+          },
+        }}
       >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 2 }}>
+          <Typography color="primary.main" variant="subtitle1">
+            Set Module Visibility
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Iconify icon="fluent:bot-sparkle-24-filled" />}
+            onClick={() => {
+              // setVisibilityOpen(true);
+            }}
+          >
+            MIRU Visibility
+          </Button>
+        </Box>
         {isPermissionLoading ? (
           <CircularProgress />
         ) : (
