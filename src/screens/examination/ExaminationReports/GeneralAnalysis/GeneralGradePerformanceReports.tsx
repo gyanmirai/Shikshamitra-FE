@@ -7,6 +7,7 @@ import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -80,8 +81,8 @@ const GeneralGradePerformanceReportRequiredFieldsMap: Partial<Record<ExamReportT
 // ---- initial values ---------------------------------------------------------
 const examReportInitialValues = {
   report: '' as unknown as ExamReportTitle,
-  organizations: [] as string[],
-  standards: [] as string[],
+  organizations: '',
+  standards: '',
   divisions: [] as string[],
   exam: '',
 };
@@ -140,7 +141,7 @@ const GeneralGradePerformanceReports = ({
       const requestPayload = {
         reportType: ExamReportApiTypeMap[mappedReport],
         filters: {
-          classIds: values.standards.filter((id) => id !== 'all'),
+          classIds: values.standards ? [values.standards] : [],
           divisionIds: values.divisions.filter((id) => id !== 'all'),
           examId: values.exam || null,
         },
@@ -197,72 +198,40 @@ const GeneralGradePerformanceReports = ({
       setAllOrganization([]);
       return;
     }
-    const orgList = cloneDeep(medium.educationMediumStages);
-    setAllOrganization([
-      {
-        id: 'all',
-        name: 'All',
-        creationTime: '',
-        creatorId: '',
-        lastModificationTime: '',
-        lastModifierId: '',
-        educationMediumStageId: '',
-        divisions: [],
-      },
-      ...orgList,
-    ]);
+    setAllOrganization(cloneDeep(medium.educationMediumStages));
   }, [medium?.educationMediumStages]);
 
   // ---- org â†’ class ------------------------------------------------------------
   useEffect(() => {
-    const selectedOrgs = formik.values.organizations.filter((id) => id !== 'all');
+    const selectedOrgId = formik.values.organizations;
 
-    if (selectedOrgs.length === 0) {
+    if (!selectedOrgId) {
       setAllClass([]);
-      formik.setFieldValue('standards', []);
+      formik.setFieldValue('standards', '');
       return;
     }
 
-    const filteredOrgs = allOrganization.filter((org: any) => selectedOrgs.includes(org.id));
-    const allStandards: any[] = [];
-    filteredOrgs.forEach((org: any) => {
-      if (Array.isArray(org.standards)) allStandards.push(...org.standards);
-    });
-    setAllClass(allStandards);
-
-    if (allStandards.length > 0) {
-      formik.setFieldValue('standards', ['all', ...allStandards.map((c: any) => c.id)]);
-    } else {
-      formik.setFieldValue('standards', []);
-    }
+    const selectedOrg = allOrganization.find((org: any) => org.id === selectedOrgId);
+    setAllClass(Array.isArray(selectedOrg?.standards) ? selectedOrg.standards : []);
+    formik.setFieldValue('standards', '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.organizations]);
+  }, [allOrganization, formik.values.organizations]);
 
   // ---- class â†’ division -------------------------------------------------------
   useEffect(() => {
-    const selected = formik.values.standards.filter((id) => id !== 'all');
+    const selectedClassId = formik.values.standards;
 
-    if (!selected || selected.length === 0) {
+    if (!selectedClassId) {
       setAllDivision([]);
       formik.setFieldValue('divisions', []);
       return;
     }
 
-    if (selected.length === 1) {
-      const cl = allClass.find((c: any) => c?.id === selected[0]);
-      const divs = cl?.divisions || [];
-      setAllDivision(divs);
-      const ids = divs.map((d: any) => d.id);
-      formik.setFieldValue('divisions', ids.length > 0 ? ['all', ...ids] : []);
-    } else {
-      const allDivisions = allClass
-        .filter((item: any) => selected.includes(item.id))
-        .flatMap((item: any) => (Array.isArray(item.divisions) ? item.divisions : []));
-      const uniqueDivisions = Array.from(new Map(allDivisions.map((d: any) => [d.id, d])).values());
-      setAllDivision(uniqueDivisions as Division[]);
-      const ids = uniqueDivisions.map((d: any) => d.id);
-      formik.setFieldValue('divisions', ids.length > 0 ? ['all', ...ids] : []);
-    }
+    const selectedClass = allClass.find((c: any) => c?.id === selectedClassId);
+    const divs = selectedClass?.divisions || [];
+    setAllDivision(divs);
+    const ids = divs.map((d: any) => d.id);
+    formik.setFieldValue('divisions', ids.length > 0 ? ['all', ...ids] : []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allClass, formik.values.standards]);
 
@@ -274,74 +243,49 @@ const GeneralGradePerformanceReports = ({
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
             <Grid container spacing={3}>
-              {/* ORGANIZATION (multi, required) */}
+              {/* ORGANIZATION (single, required) */}
               {showField('organizations') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={!!formik.errors.organizations && !!formik.touched.organizations}
                   >
-                    <ResponsiveMultiSelect
-                      label={`Organizations${isRequired('organizations') ? ' *' : ''}`}
-                      options={[
-                        { id: 'all', name: 'All' },
-                        ...allOrganization.filter((o) => o.id !== 'all'),
-                      ]}
-                      value={getDisplayValues(formik.values.organizations)}
-                      getOptionLabel={(opt) => opt?.name}
-                      getOptionValue={(opt) => opt?.id}
-                      onChange={(selectedValues) => {
-                        const allRealIds = allOrganization
-                          .filter((o) => o.id !== 'all')
-                          .map((o) => o.id);
-                        formik.setFieldValue(
-                          'organizations',
-                          resolveMultiSelectValues(
-                            selectedValues,
-                            formik.values.organizations,
-                            allRealIds
-                          )
-                        );
-                      }}
-                      error={!!(formik.touched.organizations && formik.errors.organizations)}
+                    <CustomSelect
+                      label={`Organization${isRequired('organizations') ? ' *' : ''}`}
+                      options={allOrganization}
+                      value={formik.values.organizations}
+                      labelKey="name"
+                      valueKey="id"
+                      onChange={(val) => formik.setFieldValue('organizations', val as string)}
+                      onBlur={() => formik.setFieldTouched('organizations', true)}
+                      error={formik.touched.organizations && Boolean(formik.errors.organizations)}
                       helperText={
                         formik.touched.organizations &&
                         typeof formik.errors.organizations === 'string'
                           ? formik.errors.organizations
                           : undefined
                       }
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                     />
                   </ShakingTextField>
                 </Grid>
               )}
 
-              {/* CLASS (required multi) */}
+              {/* CLASS (single) */}
               {showField('standards') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!formik.errors.standards && !!formik.touched.standards}>
-                    <ResponsiveMultiSelect
+                    <CustomSelect
                       label={`Class${isRequired('standards') ? ' *' : ''}`}
-                      options={[{ id: 'all', name: 'All' }, ...allClass]}
-                      value={getDisplayValues(formik.values.standards)}
-                      getOptionLabel={(opt) => opt?.name}
-                      getOptionValue={(opt) => opt?.id}
-                      disabled={formik.values.organizations.length === 0}
-                      onChange={(selectedValues) => {
-                        const allRealIds = allClass.map((c) => c.id);
-                        formik.setFieldValue(
-                          'standards',
-                          resolveMultiSelectValues(
-                            selectedValues,
-                            formik.values.standards,
-                            allRealIds
-                          )
-                        );
-                      }}
-                      error={!!(formik.touched.standards && formik.errors.standards)}
-                      helperText={
-                        formik.touched.standards && typeof formik.errors.standards === 'string'
-                          ? formik.errors.standards
-                          : undefined
-                      }
+                      options={allClass}
+                      value={formik.values.standards}
+                      labelKey="name"
+                      valueKey="id"
+                      disabled={!formik.values.organizations}
+                      onChange={(val) => formik.setFieldValue('standards', val as string)}
+                      onBlur={() => formik.setFieldTouched('standards', true)}
+                      error={formik.touched.standards && Boolean(formik.errors.standards)}
+                      helperText={(formik.touched.standards && formik.errors.standards) as string}
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -357,7 +301,7 @@ const GeneralGradePerformanceReports = ({
                       value={getDisplayValues(formik.values.divisions)}
                       getOptionLabel={(opt) => opt?.name}
                       getOptionValue={(opt) => opt?.id}
-                      disabled={formik.values.standards.length === 0}
+                      disabled={!formik.values.standards}
                       onChange={(selectedValues) => {
                         const allRealIds = allDivision.map((d) => d.id);
                         formik.setFieldValue(

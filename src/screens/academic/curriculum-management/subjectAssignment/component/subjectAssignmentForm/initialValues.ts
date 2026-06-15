@@ -56,7 +56,7 @@ export const getSubjectAssignmentInitialValues = (
       primaryTeacherId: item.primaryTeacher?.id || '',
       secondaryTeacher: item.secondaryTeachers,
       secondaryTeacherIds: item.secondaryTeachers?.map((t: any) => t.id) || [],
-      learningGoal: item.learningGoal || '',
+      learningGoal: item.learningGoal || item.learningGoals || '',
       prerequisites: item.prerequisites || '',
       description: item.description || '',
       documents: item.documents || [],
@@ -68,8 +68,20 @@ export const getSubjectAssignmentInitialValues = (
 
   const preSelectedOptions =
     data?.subjectType === SubjectType.Elective
-      ? [{ label: data.electiveGroupName, value: data.electiveGroupId }]
-      : [{ label: data.subjects?.[0]?.subjectName, value: data.subjects?.[0]?.subjectId }];
+      ? [
+          {
+            label: data.electiveGroupName,
+            value: data.electiveGroupId,
+            type: 1,
+            color: '#FFA726',
+          },
+        ]
+      : data.subjects?.map((sub: any) => ({
+          label: sub.subjectName,
+          value: sub.subjectId,
+          type: 0,
+          color: sub.color || '#4169E1',
+        })) || [];
   return {
     classId,
     className: selectedClass,

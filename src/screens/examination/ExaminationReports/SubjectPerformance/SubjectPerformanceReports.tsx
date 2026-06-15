@@ -19,11 +19,13 @@ import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/Aca
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
   ExamReportTitle,
   ExamReportApiTypeMap,
   SubjectPerformanceAnalysisReportMap,
 } from 'src/enums/examination-reports';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { getExamValidationSchema } from '../getExamReportValidationSchema';
 import ExaminationReportPreviewDrawer from '../ExaminationReportPreviewDrawer';
@@ -225,8 +227,8 @@ const SubjectPerformanceReportRequiredFieldsMap: Record<ExamReportTitle, string[
 
 const examReportInitialValues = {
   report: '' as unknown as ExamReportTitle,
-  organizations: [] as string[],
-  standards: [] as string[],
+  organizations: '',
+  standards: '',
   divisions: [] as string[],
   exam: '',
   subjects: [] as string[],
@@ -290,7 +292,7 @@ const SubjectPerformanceReports = ({
       const requestPayload = {
         reportType: ExamReportApiTypeMap[mappedReport],
         filters: {
-          classIds: values.standards.filter((id) => id !== 'all'),
+          classIds: values.standards ? [values.standards] : [],
           divisionIds: values.divisions.filter((id) => id !== 'all'),
           examId: values.exam || null,
           subjectIds:
@@ -325,7 +327,7 @@ const SubjectPerformanceReports = ({
   const shouldLoadSubjects =
     (showField('subjects') || showField('subject')) &&
     Boolean((medium as Medium)?.id) &&
-    formik.values.standards.filter((id) => id !== 'all').length > 0;
+    Boolean(formik.values.standards);
   const shouldLoadGrades = showField('grade') && Boolean((medium as Medium)?.id);
 
   const {
@@ -345,18 +347,35 @@ const SubjectPerformanceReports = ({
     },
   });
 
-  const {
-    data: subjectData,
-    isLoading: isSubjectLoading,
-    isFetching: isSubjectFetching,
-  } = useQueryAndMutation({
+  const classId = formik.values.standards || '';
+
+  const { data: coreSubjectData, isLoading: isCoreSubjectLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
     params: { academicMediumId: (medium as Medium)?.id },
     options: {
-      skip: !shouldLoadSubjects,
+      skip: !shouldLoadSubjects || !!classId,
     },
   });
+
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      standardId: classId,
+    },
+    options: {
+      skip: !shouldLoadSubjects || !classId,
+    },
+  });
+
+  const isSubjectLoading = classId ? isSubjectOptionsLoading : isCoreSubjectLoading;
+  const isSubjectFetching = classId ? isSubjectOptionsFetching : false;
 
   const {
     data: gradeScalingData,
@@ -382,16 +401,50 @@ const SubjectPerformanceReports = ({
     [examData]
   );
 
-  const subjectOptions = useMemo(
-    () =>
-      getApiItems(subjectData)
-        .map((subject: any) => ({
-          id: subject.subjectId ?? subject.id ?? '',
-          name: subject.subjectName ?? subject.name ?? '',
-        }))
-        .filter((option: { id: string; name: string }) => option.id && option.name),
-    [subjectData]
-  );
+  const subjectOptions = useMemo(() => {
+    if (classId) {
+      const allOptions: { id: string; name: string }[] = [];
+      subjectOptionsData?.data?.items?.forEach((item: any) => {
+        if (item.status === SubjectAssignmentStatus.Draft) return;
+
+        if (item.subjects?.length > 1 && item.electiveGroupName) {
+          item.subjects.forEach((sub: any, index: number) => {
+            const subId = sub.subjectId || String(index);
+            if (!allOptions.some((opt) => opt.id === subId)) {
+              allOptions.push({
+                id: subId,
+                name: sub.subjectName || `${item.electiveGroupName} ${index + 1}`,
+              });
+            }
+          });
+        } else {
+          const sub = item.subjects?.[0];
+          const subId = sub?.subjectId || item.id;
+          const subName = sub?.subject?.name || sub?.subjectName || '';
+          if (subId && !allOptions.some((opt) => opt.id === subId)) {
+            allOptions.push({
+              id: subId,
+              name: subName,
+            });
+          }
+        }
+      });
+      return allOptions.filter((option) => option.id && option.name);
+    }
+
+    const coreItems =
+      coreSubjectData?.data?.items ??
+      coreSubjectData?.items ??
+      coreSubjectData?.records ??
+      (Array.isArray(coreSubjectData) ? coreSubjectData : []);
+
+    return coreItems
+      .map((item: any) => ({
+        id: item?.id ?? '',
+        name: item?.name ?? '',
+      }))
+      .filter((option: { id: string; name: string }) => option.id && option.name);
+  }, [classId, subjectOptionsData, coreSubjectData]);
 
   const gradeOptions = useMemo(() => {
     const gradeSet = new Set<string>();
@@ -424,51 +477,33 @@ const SubjectPerformanceReports = ({
       return;
     }
 
-    const organizations = cloneDeep(medium.educationMediumStages);
-    setAllOrganization([
-      {
-        id: 'all',
-        name: 'All',
-        creationTime: '',
-        creatorId: '',
-        lastModificationTime: '',
-        lastModifierId: '',
-        educationMediumStageId: '',
-        divisions: [],
-      },
-      ...organizations,
-    ]);
+    setAllOrganization(cloneDeep(medium.educationMediumStages));
   }, [medium?.educationMediumStages]);
 
   useEffect(() => {
-    const selectedOrgIds = formik.values.organizations.filter((id) => id !== 'all');
+    const selectedOrgId = formik.values.organizations;
 
-    if (selectedOrgIds.length === 0) {
+    if (!selectedOrgId) {
       setAllClass([]);
-      formik.setFieldValue('standards', []);
+      formik.setFieldValue('standards', '');
       formik.setFieldValue('divisions', []);
       formik.setFieldValue('subjects', []);
       formik.setFieldValue('subject', '');
       return;
     }
 
-    const standards = allOrganization
-      .filter((org: any) => selectedOrgIds.includes(org.id))
-      .flatMap((org: any) => (Array.isArray(org.standards) ? org.standards : []));
-
-    setAllClass(standards);
-
-    const allClassIds = standards.map((item: any) => item.id);
-    formik.setFieldValue('standards', allClassIds.length > 0 ? ['all', ...allClassIds] : []);
+    const selectedOrg = allOrganization.find((org: any) => org.id === selectedOrgId);
+    setAllClass(Array.isArray(selectedOrg?.standards) ? selectedOrg.standards : []);
+    formik.setFieldValue('standards', '');
     formik.setFieldValue('subjects', []);
     formik.setFieldValue('subject', '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allOrganization, formik.values.organizations]);
 
   useEffect(() => {
-    const selectedClassIds = formik.values.standards.filter((id) => id !== 'all');
+    const selectedClassId = formik.values.standards;
 
-    if (selectedClassIds.length === 0) {
+    if (!selectedClassId) {
       setAllDivision([]);
       formik.setFieldValue('divisions', []);
       formik.setFieldValue('subjects', []);
@@ -476,23 +511,11 @@ const SubjectPerformanceReports = ({
       return;
     }
 
-    if (selectedClassIds.length === 1) {
-      const selectedClass = allClass.find((item: any) => item.id === selectedClassIds[0]);
-      const divisions = selectedClass?.divisions || [];
-      setAllDivision(divisions);
-
-      const divisionIds = divisions.map((item: any) => item.id);
-      formik.setFieldValue('divisions', divisionIds.length > 0 ? ['all', ...divisionIds] : []);
-    } else {
-      const allDivisions = allClass
-        .filter((item: any) => selectedClassIds.includes(item.id))
-        .flatMap((item: any) => (Array.isArray(item.divisions) ? item.divisions : []));
-      const uniqueDivisions = Array.from(new Map(allDivisions.map((d: any) => [d.id, d])).values());
-      setAllDivision(uniqueDivisions as Division[]);
-      const divisionIds = uniqueDivisions.map((d: any) => d.id);
-      formik.setFieldValue('divisions', divisionIds.length > 0 ? ['all', ...divisionIds] : []);
-    }
-
+    const selectedClass = allClass.find((item: any) => item.id === selectedClassId);
+    const divisions = selectedClass?.divisions || [];
+    setAllDivision(divisions);
+    const divisionIds = divisions.map((item: any) => item.id);
+    formik.setFieldValue('divisions', divisionIds.length > 0 ? ['all', ...divisionIds] : []);
     formik.setFieldValue('subjects', []);
     formik.setFieldValue('subject', '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -500,7 +523,7 @@ const SubjectPerformanceReports = ({
 
   useEffect(() => {
     if (!showField('subjects')) return;
-    const validIds = new Set(subjectOptions.map((subject) => subject.id));
+    const validIds = new Set(subjectOptions.map((subject: { id: any }) => subject.id));
     const nextSubjects = formik.values.subjects.filter((id) => id === 'all' || validIds.has(id));
     if (nextSubjects.length !== formik.values.subjects.length) {
       formik.setFieldValue('subjects', nextSubjects);
@@ -512,7 +535,7 @@ const SubjectPerformanceReports = ({
     if (!showField('subject')) return;
     if (
       formik.values.subject &&
-      !subjectOptions.some((subject) => subject.id === formik.values.subject)
+      !subjectOptions.some((subject: { id: string }) => subject.id === formik.values.subject)
     ) {
       formik.setFieldValue('subject', '');
     }
@@ -540,35 +563,22 @@ const SubjectPerformanceReports = ({
                   <ShakingTextField
                     error={!!formik.errors.organizations && !!formik.touched.organizations}
                   >
-                    <ResponsiveMultiSelect
+                    <CustomSelect
                       label={`Organization${isRequired('organizations') ? ' *' : ''}`}
-                      options={[
-                        { id: 'all', name: 'All' },
-                        ...allOrganization.filter((organization) => organization.id !== 'all'),
-                      ]}
-                      value={getDisplayValues(formik.values.organizations)}
-                      getOptionLabel={(option: any) => option?.name}
-                      getOptionValue={(option: any) => option?.id}
-                      onChange={(selectedValues) => {
-                        const allRealIds = allOrganization
-                          .filter((organization) => organization.id !== 'all')
-                          .map((organization) => organization.id);
-
-                        const nextValues = resolveMultiSelectValues(
-                          selectedValues,
-                          formik.values.organizations,
-                          allRealIds
-                        );
-
-                        formik.setFieldValue('organizations', nextValues);
-                      }}
-                      error={!!(formik.touched.organizations && formik.errors.organizations)}
+                      options={allOrganization}
+                      value={formik.values.organizations}
+                      labelKey="name"
+                      valueKey="id"
+                      onChange={(val) => formik.setFieldValue('organizations', val as string)}
+                      onBlur={() => formik.setFieldTouched('organizations', true)}
+                      error={formik.touched.organizations && Boolean(formik.errors.organizations)}
                       helperText={
                         formik.touched.organizations &&
                         typeof formik.errors.organizations === 'string'
                           ? formik.errors.organizations
                           : undefined
                       }
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -577,26 +587,18 @@ const SubjectPerformanceReports = ({
               {showField('standards') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!formik.errors.standards && !!formik.touched.standards}>
-                    <ResponsiveMultiSelect
+                    <CustomSelect
                       label={`Class${isRequired('standards') ? ' *' : ''}`}
-                      options={[{ id: 'all', name: 'All' }, ...allClass]}
-                      value={getDisplayValues(formik.values.standards)}
-                      getOptionLabel={(option: any) => option?.name}
-                      getOptionValue={(option: any) => option?.id}
-                      disabled={formik.values.organizations.length === 0}
-                      onChange={(selectedValues) => {
-                        const allRealIds = allClass.map((item) => item.id);
-
-                        const nextValues = resolveMultiSelectValues(
-                          selectedValues,
-                          formik.values.standards,
-                          allRealIds
-                        );
-
-                        formik.setFieldValue('standards', nextValues);
-                      }}
+                      options={allClass}
+                      value={formik.values.standards}
+                      labelKey="name"
+                      valueKey="id"
+                      disabled={!formik.values.organizations}
+                      onChange={(val) => formik.setFieldValue('standards', val as string)}
+                      onBlur={() => formik.setFieldTouched('standards', true)}
                       error={formik.touched.standards && Boolean(formik.errors.standards)}
                       helperText={(formik.touched.standards && formik.errors.standards) as string}
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -611,7 +613,7 @@ const SubjectPerformanceReports = ({
                       value={getDisplayValues(formik.values.divisions)}
                       getOptionLabel={(option: any) => option?.name}
                       getOptionValue={(option: any) => option?.id}
-                      disabled={formik.values.standards.length === 0}
+                      disabled={!formik.values.standards}
                       onChange={(selectedValues) => {
                         const allRealIds = allDivision.map((item) => item.id);
 

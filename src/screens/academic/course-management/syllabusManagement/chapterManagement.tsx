@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -32,6 +31,7 @@ import { AddNewChapter } from './addChapterForm';
 import { subjectTempData } from '../subjectsData';
 import ChapterTable from './components/chapterTable';
 import ChapterDocuments from './components/chapterDocuments';
+import BulkChapterForm from './components/bulkChapterForm/BulkChapterForm';
 import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
 
 import type { IChapter, SubjectOption } from './type';
@@ -69,6 +69,7 @@ const Subjects = () => {
   const viewDocumentDialog = useBoolean();
   const deleteDialog = useBoolean();
   const addChapterDialog = useBoolean();
+  const bulkChapterDialog = useBoolean();
   const [subjectData] = useState(subjectTempData);
   const [, setDialogData] = useState<
     { divisionName: string; chapters: unknown[]; progress: number }[]
@@ -168,6 +169,15 @@ const Subjects = () => {
     }
   };
 
+  const handleBulkClose = (_e: unknown, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      bulkChapterDialog.onFalse();
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      bulkChapterDialog.onFalse();
+    }
+  };
+
   useEffect(() => {
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
@@ -180,14 +190,16 @@ const Subjects = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Custom breadcrumbs component for navigation and page header */}
-      {addChapterDialog.value ? (
+      {addChapterDialog.value || bulkChapterDialog.value ? (
         <CustomBreadcrumbs
           // heading={selectedChapter ? 'Update Chapter' : 'Add Chapter'}
           heading="Syllabus"
           description={
-            selectedChapter
-              ? 'Edit chapter details including name, sequence, and learning materials. Review and update chapter content to maintain curriculum accuracy and effectiveness.'
-              : 'Add a new chapter to the selected subject and class. Specify chapter details, sequence, and attach relevant learning materials to build the curriculum structure.'
+            bulkChapterDialog.value
+              ? 'Select and assign multiple chapters at once. Fill in the required details for each chapter before submitting.'
+              : selectedChapter
+                ? 'Edit chapter details including name, sequence, and learning materials. Review and update chapter content to maintain curriculum accuracy and effectiveness.'
+                : 'Add a new chapter to the selected subject and class. Specify chapter details, sequence, and attach relevant learning materials to build the curriculum structure.'
           }
           links={[
             // Links for form view (adding/editing chapter)
@@ -198,7 +210,11 @@ const Subjects = () => {
           ]}
           isBack
           onBack={() => {
-            handleClose(null, false);
+            if (bulkChapterDialog.value) {
+              handleBulkClose(null, false);
+            } else {
+              handleClose(null, false);
+            }
           }}
           sx={{ px: 1 }}
         />
@@ -214,7 +230,19 @@ const Subjects = () => {
         />
       )}
       {/* Conditional rendering based on form state */}
-      {addChapterDialog.value ? (
+      {bulkChapterDialog.value ? (
+        // Bulk form view for assigning multiple chapters
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <BulkChapterForm
+            onClose={handleBulkClose}
+            className={classes}
+            subject={subject}
+            classId={classId}
+            subjectId={subjectId}
+            existingChapters={chapterResponse || []}
+          />
+        </Card>
+      ) : addChapterDialog.value ? (
         // Form view for adding/editing chapters
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AddNewChapter
@@ -352,15 +380,15 @@ const Subjects = () => {
               {canAdd && (
                 <Button
                   size="small"
-                  startIcon={<Add />}
+                  startIcon={<Iconify icon="mdi:layers-plus" width={18} />}
                   variant="contained"
                   onClick={() => {
-                    addChapterDialog.onTrue();
+                    bulkChapterDialog.onTrue();
                   }}
                   disabled={!classes || !subject}
                   sx={{ px: '32px' }}
                 >
-                  Syllabus
+                  Add Chapters
                 </Button>
               )}
             </Box>

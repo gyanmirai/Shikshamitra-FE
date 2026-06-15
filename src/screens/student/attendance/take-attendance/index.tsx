@@ -213,7 +213,7 @@ const TakeAttendanceScreen = () => {
       <Card
         sx={{
           mb: 1,
-          pb: 1.5,
+          pb: 1,
           pt: 1,
           pl: 1,
 

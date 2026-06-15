@@ -18,6 +18,8 @@ import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useTeacherSelection } from 'src/screens/academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/hooks/useTeacherSelection';
 import {
   HomeworkAssignmentAnalyticReportTitle,
@@ -68,7 +70,7 @@ const HomeworkAssignmentAnalyticReportFieldsMap: Record<
   ],
   [HomeworkAssignmentAnalyticReportTitle.TeacherPerformanceInHomeworkEvaluationReport]: [
     'organization',
-    'teacher',
+    'teachers',
     'subjects',
     'class',
     'divisions',
@@ -95,7 +97,7 @@ const HomeworkAssignmentAnalyticRequiredFieldsMap: Record<
   [HomeworkAssignmentAnalyticReportTitle.AssignmentLoadAnalysisReport]: ['organization', 'class'],
   [HomeworkAssignmentAnalyticReportTitle.TeacherPerformanceInHomeworkEvaluationReport]: [
     'organization',
-    'teacher',
+    'teachers',
     'subjects',
     'class',
   ],
@@ -109,9 +111,6 @@ const HomeworkAssignmentAnalyticRequiredFieldsMap: Record<
     'class',
   ],
 };
-
-const normalizeArray = (input: any): any[] =>
-  input?.data?.items ?? input?.items ?? input?.records ?? (Array.isArray(input) ? input : []);
 
 const removeAllToken = (values: string[]) => values.filter((id) => id !== 'all');
 
@@ -225,16 +224,76 @@ const HomeworkAssignmentAnalyticsReports = ({
 
   const withRequired = (label: string, field: string) => `${label}${isRequired(field) ? ' *' : ''}`;
 
-  const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
+  const classId = formik.values.class || '';
+
+  // ── Subject API ──────────────────────────────────────────────────────────────
+  const { data: coreSubjectData, isLoading: isCoreSubjectLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
     params: { academicMediumId: (medium as Medium)?.id },
     options: {
-      skip: !showField('subjects') || !(medium as Medium)?.id,
+      skip: !showField('subjects') || !(medium as Medium)?.id || !!classId,
     },
   });
 
-  const subjectOptions = useMemo(() => normalizeArray(subjectData), [subjectData]);
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      standardId: classId,
+    },
+    options: {
+      skip: !showField('subjects') || !medium?.id || !classId,
+    },
+  });
+
+  const subjectOptions: any[] = useMemo(() => {
+    if (classId) {
+      const allOptions: { id: string; name: string }[] = [];
+      subjectOptionsData?.data?.items?.forEach((item: any) => {
+        if (item.status === SubjectAssignmentStatus.Draft) return;
+
+        if (item.subjects?.length > 1 && item.electiveGroupName) {
+          item.subjects.forEach((sub: any, index: number) => {
+            const subId = sub.subjectId || String(index);
+            if (!allOptions.some((opt) => opt.id === subId)) {
+              allOptions.push({
+                id: subId,
+                name: sub.subjectName || `${item.electiveGroupName} ${index + 1}`,
+              });
+            }
+          });
+        } else {
+          const sub = item.subjects?.[0];
+          const subId = sub?.subjectId || item.id;
+          const subName = sub?.subject?.name || sub?.subjectName || '';
+          if (subId && !allOptions.some((opt) => opt.id === subId)) {
+            allOptions.push({
+              id: subId,
+              name: subName,
+            });
+          }
+        }
+      });
+      return allOptions;
+    }
+
+    const coreItems =
+      coreSubjectData?.data?.items ??
+      coreSubjectData?.items ??
+      coreSubjectData?.records ??
+      (Array.isArray(coreSubjectData) ? coreSubjectData : []);
+
+    return coreItems.map((item: any) => ({
+      id: item?.id ?? '',
+      name: item?.name ?? '',
+    }));
+  }, [classId, subjectOptionsData, coreSubjectData]);
 
   const { fetchPrimaryTeacherOptions: fetchTeacherOptions } = useTeacherSelection({
     primaryTeacherId: '',
@@ -427,8 +486,14 @@ const HomeworkAssignmentAnalyticsReports = ({
                       value={formik.values.subjects}
                       getOptionLabel={(opt: any) => opt?.name ?? ''}
                       getOptionValue={(opt: any) => opt?.id ?? ''}
-                      disabled={!formik.values.organization || !formik.values.class}
-                      isLoading={isSubjectLoading}
+                      disabled={
+                        !formik.values.organization || (showField('class') && !formik.values.class)
+                      }
+                      isLoading={
+                        classId
+                          ? isSubjectOptionsLoading || isSubjectOptionsFetching
+                          : isCoreSubjectLoading
+                      }
                       onChange={(selectedValues) => {
                         formik.setFieldValue('subjects', selectedValues);
                       }}
@@ -439,13 +504,13 @@ const HomeworkAssignmentAnalyticsReports = ({
                 </Grid>
               )}
 
-              {showField('teacher') && (
+              {showField('teachers') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.teachers && formik.errors.teachers)}>
                     <PaginatedSearchSelect
                       multiple
                       disableCloseOnSelect
-                      label={withRequired('Teacher', 'teacher')}
+                      label={withRequired('Teacher', 'teachers')}
                       fetchOptions={fetchTeacherOptions}
                       value={teacherObjs}
                       onChange={(_: unknown, newValues: EmployeeOption[]) => {

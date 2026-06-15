@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Medium, Division, Standards, Organization } from 'src/types/school';
+import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
@@ -17,12 +17,13 @@ import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
-import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
   TimetableReportTitle,
   TimetableReportApiTypeMap,
   TimetableReportTitleOptions,
 } from 'src/enums/timetable-reports';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import TimetableReportPreviewDrawer from './TimetableReportPreviewDrawer';
 import { getTimetableValidationSchema } from './timetableReportValidation';
@@ -32,7 +33,7 @@ import { getTimetableValidationSchema } from './timetableReportValidation';
 interface TimetableReportFormValues {
   report: TimetableReportTitle;
   organization: string;
-  classes: string[];
+  classes: string;
   divisions: string[];
   teacher: string;
   roomNo: string;
@@ -46,7 +47,7 @@ type EmployeeOption = { id: string; label: string };
 const initialValues: TimetableReportFormValues = {
   report: '' as unknown as TimetableReportTitle,
   organization: '',
-  classes: [],
+  classes: '',
   divisions: [],
   teacher: '',
   roomNo: '',
@@ -153,9 +154,7 @@ const TimetableReportForm = ({
     enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: async (values, { setSubmitting }) => {
-      const classIds = values.classes.includes('all')
-        ? allClass.filter((c) => c.id !== 'all').map((c) => c.id)
-        : values.classes;
+      const classIds = values.classes ? [values.classes] : [];
 
       const divisionIds = values.divisions.includes('all')
         ? allDivision.filter((d) => d.id !== 'all').map((d) => d.id)
@@ -205,6 +204,8 @@ const TimetableReportForm = ({
   const showField = (fieldName: string) => currentFields.includes(fieldName);
   const isRequired = (fieldName: string) => currentRequiredFields.includes(fieldName);
 
+  const classId = formik.values.classes || '';
+
   // ── Room API ─────────────────────────────────────────────────────────────────
   const { data: roomsData, isLoading: isRoomsLoading } = useQueryAndMutation({
     type: 'query',
@@ -225,23 +226,51 @@ const TimetableReportForm = ({
   );
 
   // ── Subject API ──────────────────────────────────────────────────────────────
-  const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      standardId: classId,
+    },
     options: {
-      skip: !currentFields.includes('subject') || !(medium as Medium)?.id,
+      skip: !currentFields.includes('subject') || !medium?.id || !classId,
     },
   });
 
-  const subjectOptions: any[] = useMemo(
-    () =>
-      subjectData?.data?.items ??
-      subjectData?.items ??
-      subjectData?.records ??
-      (Array.isArray(subjectData) ? subjectData : []),
-    [subjectData]
-  );
+  const subjectOptions: any[] = useMemo(() => {
+    const allOptions: { id: string; name: string }[] = [];
+    subjectOptionsData?.data?.items?.forEach((item: any) => {
+      if (item.status === SubjectAssignmentStatus.Draft) return;
+
+      if (item.subjects?.length > 1 && item.electiveGroupName) {
+        item.subjects.forEach((sub: any, index: number) => {
+          const subId = sub.subjectId || String(index);
+          if (!allOptions.some((opt) => opt.id === subId)) {
+            allOptions.push({
+              id: subId,
+              name: sub.subjectName || `${item.electiveGroupName} ${index + 1}`,
+            });
+          }
+        });
+      } else {
+        const sub = item.subjects?.[0];
+        const subId = sub?.subjectId || item.id;
+        const subName = sub?.subject?.name || sub?.subjectName || '';
+        if (subId && !allOptions.some((opt) => opt.id === subId)) {
+          allOptions.push({
+            id: subId,
+            name: subName,
+          });
+        }
+      }
+    });
+    return allOptions;
+  }, [subjectOptionsData]);
 
   // ── Teacher API (paginated search) ───────────────────────────────────────────
   const [getTeacherOptions] = useLazyGetEmployeeQuery();
@@ -287,53 +316,25 @@ const TimetableReportForm = ({
   useEffect(() => {
     const standards =
       allOrganization.find((org: any) => org?.id === formik.values.organization)?.standards || [];
-
-    if (!standards.some((std) => std.id === 'all')) {
-      standards.unshift({
-        id: 'all',
-        name: 'All',
-        creationTime: '',
-        creatorId: '',
-        lastModificationTime: '',
-        lastModifierId: '',
-        educationMediumStageId: '',
-        divisions: [],
-      });
-    }
     setAllClass(standards);
   }, [allOrganization, formik.values.organization]);
 
-  // Sync division list from selected class(es); auto-select when applicable
+  // Sync division list from selected class; auto-select when applicable
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (formik.values.classes.length === 0) {
+    if (!formik.values.classes) {
       setAllDivision([]);
       formik.setFieldValue('divisions', []);
       return;
     }
 
-    if (formik.values.classes.length === 1 && formik.values.classes[0] !== 'all') {
-      const selectedClass = allClass.find((cls: any) => cls?.id === formik.values.classes[0]);
-      const divisions = selectedClass?.divisions || [];
-      setAllDivision(divisions);
-      formik.setFieldValue(
-        'divisions',
-        divisions.map((div: any) => div.id)
-      );
-    } else {
-      setAllDivision([
-        {
-          id: 'all',
-          name: 'All',
-          creationTime: '',
-          creatorId: '',
-          lastModificationTime: '',
-          lastModifierId: '',
-          strength: 0,
-          standardId: '',
-        },
-      ]);
-      formik.setFieldValue('divisions', ['all']);
-    }
+    const selectedClass = allClass.find((cls: any) => cls?.id === formik.values.classes);
+    const divisions = selectedClass?.divisions || [];
+    setAllDivision(divisions);
+    formik.setFieldValue(
+      'divisions',
+      divisions.map((div: any) => div.id)
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allClass, formik.values.classes]);
 
@@ -363,14 +364,8 @@ const TimetableReportForm = ({
                       value={formik.values.organization}
                       onChange={(val) => {
                         formik.setFieldValue('organization', val);
-
-                        const standards =
-                          allOrganization.find((org: any) => org?.id === val)?.standards || [];
-                        const standardIds = standards.map((standard: any) => standard.id);
-                        formik.setFieldValue('classes', [
-                          'all',
-                          ...standardIds.filter((id: string) => id !== 'all'),
-                        ]);
+                        formik.setFieldValue('classes', '');
+                        formik.setFieldValue('divisions', []);
                       }}
                       onBlur={() => formik.setFieldTouched('organization', true)}
                       error={formik.touched.organization && Boolean(formik.errors.organization)}
@@ -393,36 +388,10 @@ const TimetableReportForm = ({
                     <CustomSelect
                       options={allClass}
                       label={`Class${isRequired('classes') ? ' *' : ''}`}
-                      multiple
                       value={formik.values.classes}
                       onChange={(val) => {
-                        const value = val as string[];
-                        const allClassIds =
-                          allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
-                        const isAllClicked = value.includes('all');
-                        const wasAllPreviouslySelected = (
-                          formik.values.classes as string[]
-                        ).includes('all');
-
-                        if (isAllClicked && !wasAllPreviouslySelected) {
-                          formik.setFieldValue('classes', ['all', ...allClassIds]);
-                        } else if (!isAllClicked && wasAllPreviouslySelected) {
-                          formik.setFieldValue('classes', []);
-                        } else if (isAllClicked && wasAllPreviouslySelected) {
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          if (selectedWithoutAll.length === allClassIds.length) {
-                            formik.setFieldValue('classes', ['all', ...allClassIds]);
-                          } else {
-                            formik.setFieldValue('classes', selectedWithoutAll);
-                          }
-                        } else {
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          if (selectedWithoutAll.length === allClassIds.length) {
-                            formik.setFieldValue('classes', ['all', ...allClassIds]);
-                          } else {
-                            formik.setFieldValue('classes', selectedWithoutAll);
-                          }
-                        }
+                        formik.setFieldValue('classes', val as string);
+                        formik.setFieldValue('divisions', []);
                       }}
                       onBlur={() => formik.setFieldTouched('classes', true)}
                       error={formik.touched.classes && Boolean(formik.errors.classes)}
@@ -436,34 +405,27 @@ const TimetableReportForm = ({
                 </Grid>
               )}
 
-              {/* Division — hidden when "All" classes or no classes selected */}
-              {showField('divisions') &&
-                !(formik.values.classes as string[]).includes('all') &&
-                formik.values.classes.length > 0 && (
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <ShakingTextField
-                      error={!!(formik.touched.divisions && formik.errors.divisions)}
-                    >
-                      <CustomSelect
-                        options={allDivision}
-                        label={`Division${isRequired('divisions') ? ' *' : ''}`}
-                        value={formik.values.divisions}
-                        onChange={(val) => formik.setFieldValue('divisions', val)}
-                        onBlur={() => formik.setFieldTouched('divisions', true)}
-                        error={formik.touched.divisions && Boolean(formik.errors.divisions)}
-                        helperText={(formik.touched.divisions && formik.errors.divisions) as string}
-                        labelKey="name"
-                        valueKey="id"
-                        multiple={
-                          !(formik.values.classes as string[]).includes('all') ||
-                          formik.values.classes.length > 1
-                        }
-                        formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                        disabled={formik.values.classes.length === 0}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                )}
+              {/* Division */}
+              {showField('divisions') && formik.values.classes && (
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ShakingTextField error={!!(formik.touched.divisions && formik.errors.divisions)}>
+                    <CustomSelect
+                      options={allDivision}
+                      label={`Division${isRequired('divisions') ? ' *' : ''}`}
+                      value={formik.values.divisions}
+                      onChange={(val) => formik.setFieldValue('divisions', val)}
+                      onBlur={() => formik.setFieldTouched('divisions', true)}
+                      error={formik.touched.divisions && Boolean(formik.errors.divisions)}
+                      helperText={(formik.touched.divisions && formik.errors.divisions) as string}
+                      labelKey="name"
+                      valueKey="id"
+                      multiple
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                      disabled={!formik.values.classes}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
 
               {/* Teacher — paginated search; only for relevant reports */}
               {showField('teacher') && (
@@ -535,8 +497,8 @@ const TimetableReportForm = ({
                       labelKey="name"
                       valueKey="id"
                       formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                      disabled={!formik.values.organization}
-                      isLoading={isSubjectLoading}
+                      disabled={!formik.values.classes}
+                      isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
                     />
                   </ShakingTextField>
                 </Grid>
