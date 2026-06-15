@@ -131,33 +131,42 @@ const SubjectTable = ({
         sticky: true,
         enumOptions: PublishUnpublishStatusOptions,
         render(value, row) {
-          const statusColor =
-            row.status === SubjectAssignmentStatus.Published
-              ? theme.vars.palette.success.main
-              : theme.vars.palette.text.secondary;
+          const isPublished = row.status === SubjectAssignmentStatus.Published;
+          const isInteractive = !isPublished;
+
+          const statusColor = isPublished
+            ? theme.vars.palette.success.main
+            : theme.vars.palette.text.secondary;
 
           return (
             <CustomTooltip title={value} arrow placement="left">
               {/* Using a span or div wrapper to avoid nested button issues if any */}
               <Box component="span">
                 <IconButton
-                  disabled={!canAdd}
+                  disabled={!isInteractive}
                   onClick={() => onToggleStatus(row as ISubjectFormValues)}
                   sx={{
                     p: 0.6,
                     borderRadius: '50%',
                     backgroundColor: 'rgba(0,0,0,0.06)',
                     transition: 'all 0.2s',
-                    cursor: canAdd ? 'pointer' : 'default',
+                    cursor: isInteractive ? 'pointer' : 'default',
                     '&:hover': {
-                      transform: canAdd ? 'scale(1.1)' : 'none',
+                      transform: isInteractive ? 'scale(1.1)' : 'none',
                       backgroundColor: 'rgba(0,0,0,0.08)',
+                    },
+                    '&.Mui-disabled': {
+                      backgroundColor: 'rgba(0,0,0,0.06)',
                     },
                   }}
                 >
                   <Iconify
                     icon={GlobalIcons.tick}
-                    sx={{ width: 20, height: 20, color: statusColor }}
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      color: statusColor,
+                    }}
                   />
                 </IconButton>
               </Box>

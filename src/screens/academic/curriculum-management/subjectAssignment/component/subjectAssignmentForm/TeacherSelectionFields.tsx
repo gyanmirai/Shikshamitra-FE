@@ -63,7 +63,7 @@ const TeacherSelectionFields = ({
             </Box>
           );
         }}
-        debounceMs={400}
+        debounceMs={1500}
         minChars={0}
         size="small"
         fullWidth
@@ -125,7 +125,7 @@ const TeacherSelectionFields = ({
             ),
           ];
         }}
-        debounceMs={400}
+        debounceMs={1500}
         minChars={0}
         size="small"
         fullWidth

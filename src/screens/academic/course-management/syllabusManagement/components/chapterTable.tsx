@@ -3,7 +3,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -35,6 +35,10 @@ const ChapterTable = ({
         chapterEndTime: chapter.chapterEndTime
           ? dayjs(chapter.chapterEndTime).format('DD-MM-YYYY')
           : '',
+        // Keep original HTML for tooltip display
+        descriptionHtml: chapter.description || '',
+        // Strip HTML for export and table display
+        description: chapter.description ? chapter.description.replace(/<[^>]*>/g, '') : '',
       })) || [],
     [data]
   );
@@ -72,10 +76,11 @@ const ChapterTable = ({
         align: 'left',
         filterType: 'string',
         render: (value, row) => {
-          const plainText = value ? value.replace(/<[^>]*>/g, '') : '';
+          // value is already plain text (HTML stripped in tableData), use descriptionHtml for tooltip
+          const htmlContent = row.descriptionHtml;
           return (
             <CustomTooltip
-              title={value && <div dangerouslySetInnerHTML={{ __html: value || '' }} />}
+              title={htmlContent && <div dangerouslySetInnerHTML={{ __html: htmlContent }} />}
               arrow
               sx={{ textAlign: 'justify' }}
             >
@@ -91,7 +96,7 @@ const ChapterTable = ({
                   minWidth: '100%',
                 }}
               >
-                {plainText}
+                {value}
               </Typography>
             </CustomTooltip>
           );
@@ -133,30 +138,7 @@ const ChapterTable = ({
     <CustomizableTable
       tableId="chapterTable"
       isLoading={isLoading}
-      noDataText={
-        <>
-          Chapters Data Not Found{' '}
-          {canAdd && (
-            <Box
-              onClick={() => {
-                addChapterDialog.onTrue();
-                setEditData(null);
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Add Syllabus
-            </Box>
-          )}
-        </>
-      }
+      noDataText={<>Chapters Data Not Found </>}
       columns={columns}
       data={tableData}
     />

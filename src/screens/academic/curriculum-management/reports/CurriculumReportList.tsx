@@ -134,9 +134,10 @@ const CurriculumReportList = () => {
       {!addReportDialog.value && (
         <CustomBreadcrumbs
           heading="Reports"
+          description="View and manage generated curriculum reports"
           links={[
             { name: 'Academic', href: '/academic/dashboard/' },
-            { name: 'Curriculum', href: '/academic/curriculum-management/dashboard/' },
+            { name: 'Curriculum' },
             { name: 'Reports' },
           ]}
           action={

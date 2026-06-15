@@ -34,7 +34,7 @@ export interface SubjectOption {
 }
 
 export interface IChapterFormValues {
-  chapterNo: number;
+  chapterNo: number | string;
   chapterName: string;
   description: string;
   startDate: Dayjs | null;

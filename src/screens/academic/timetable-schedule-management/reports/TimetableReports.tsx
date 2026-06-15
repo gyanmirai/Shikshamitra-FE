@@ -32,11 +32,11 @@ const TimetableReports = ({ addReportDialog }: { addReportDialog: UseBooleanRetu
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Generate Report"
+        description="Generate and manage timetable reports"
         links={[
           { name: 'Academic', href: '/academic/dashboard/' },
           {
             name: 'Timetable',
-            href: '/academic/timetable-schedule-management/dashboard/',
           },
           { name: 'Generate Report' },
         ]}

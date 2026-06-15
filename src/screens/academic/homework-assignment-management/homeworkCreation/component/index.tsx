@@ -21,6 +21,7 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   homeworkApi,
@@ -185,7 +186,9 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
 
   // Auto-select first subject when subjects load
   useEffect(() => {
-    const firstItem = subjectOptionsData?.data?.items?.[0];
+    const firstItem = subjectOptionsData?.data?.items?.find(
+      (item: any) => item.status !== SubjectAssignmentStatus.Draft
+    );
     if (firstItem && !subject) {
       const firstSubjectId = firstItem.subjects?.[0]?.subjectId || firstItem.id;
       const firstSelectValue = `${firstItem.id}::${firstSubjectId}`;
@@ -254,6 +257,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           options={(() => {
             const allOptions: { value: string; label: string }[] = [];
             subjectOptionsData?.data?.items?.forEach((item: any) => {
+              if (item.status === SubjectAssignmentStatus.Draft) return;
               if (item.subjects?.length > 1 && item.electiveGroupName) {
                 // Elective group — each subject as its own dropdown entry
                 item.subjects.forEach((sub: any, index: number) => {

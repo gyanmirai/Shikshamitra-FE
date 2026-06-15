@@ -17,6 +17,7 @@ import { Box, Grid, Checkbox, TextField, Typography, Autocomplete } from '@mui/m
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
@@ -92,9 +93,11 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
   const subjectOptions: any = useMemo(
     () =>
-      subjectTableData?.data?.items.map((item: any) => ({
-        ...item,
-      })) || [],
+      subjectTableData?.data?.items
+        .filter((item: any) => item.status !== SubjectAssignmentStatus.Draft)
+        .map((item: any) => ({
+          ...item,
+        })) || [],
     [subjectTableData]
   );
 

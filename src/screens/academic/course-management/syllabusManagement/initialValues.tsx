@@ -4,7 +4,7 @@ import type { IChapter } from './type';
 
 export const getChapterInitialValues = (editData?: IChapter | null) => {
   const initialValues = {
-    chapterNo: editData?.chapterNumber ?? 0,
+    chapterNo: editData?.chapterNumber ?? '',
     chapterName: editData?.chapterName || '',
     description: editData?.description || '',
     startDate: editData?.chapterStartTime ? dayjs(editData.chapterStartTime, 'DD-MM-YYYY') : null,

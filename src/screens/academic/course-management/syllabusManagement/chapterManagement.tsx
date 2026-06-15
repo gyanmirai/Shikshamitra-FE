@@ -32,6 +32,7 @@ import { AddNewChapter } from './addChapterForm';
 import { subjectTempData } from '../subjectsData';
 import ChapterTable from './components/chapterTable';
 import ChapterDocuments from './components/chapterDocuments';
+import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
 
 import type { IChapter, SubjectOption } from './type';
 
@@ -265,6 +266,8 @@ const Subjects = () => {
                     const allOptions: SubjectOption[] = [];
 
                     subjectOptionsData?.data?.items?.forEach((item: any) => {
+                      if (item.status === SubjectAssignmentStatus.Draft) return;
+
                       if (item.subjects?.length > 1 && item.electiveGroupName) {
                         // Elective group — each subject as its own dropdown entry
                         // API shape confirmed: { subjectId, subjectName, subjectCode, color }

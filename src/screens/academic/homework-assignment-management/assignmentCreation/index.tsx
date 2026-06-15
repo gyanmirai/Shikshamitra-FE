@@ -34,6 +34,7 @@ import AssignmentForm from './components/assignmentForm';
 import AssignmentTable from './components/assignmentTable';
 import ViewAssignmentDetails from './assignmentDetail/assignmentDetail';
 import { StudentSubmissions } from './studentSubmission/studentSubmission';
+import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
 
 import type { IAssignment } from './type';
 
@@ -156,7 +157,9 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
 
   // Auto-select first subject when subjects load
   useEffect(() => {
-    const firstItem = subjectOptionsData?.data?.items?.[0];
+    const firstItem = subjectOptionsData?.data?.items?.find(
+      (item: any) => item.status !== SubjectAssignmentStatus.Draft
+    );
     if (firstItem && !subject) {
       const firstSubjectId = firstItem.subjects?.[0]?.subjectId || firstItem.id;
       const firstSelectValue = `${firstItem.id}::${firstSubjectId}`;
@@ -248,6 +251,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           options={(() => {
             const allOptions: { value: string; label: string }[] = [];
             subjectOptionsData?.data?.items?.forEach((item: any) => {
+              if (item.status === SubjectAssignmentStatus.Draft) return;
               if (item.subjects?.length > 1 && item.electiveGroupName) {
                 // Elective group — each subject as its own dropdown entry
                 item.subjects.forEach((sub: any, index: number) => {

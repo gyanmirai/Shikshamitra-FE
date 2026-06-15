@@ -14,6 +14,7 @@ import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignment
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
+import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
 
 import type { MarksFeedbackTabProps } from './index';
 
@@ -145,6 +146,7 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           options={(() => {
             const allOptions: { value: string; label: string }[] = [];
             subjectOptionsData?.data?.items?.forEach((item: any) => {
+              if (item.status === SubjectAssignmentStatus.Draft) return;
               if (item.subjects?.length > 1 && item.electiveGroupName) {
                 // Elective group — each subject as its own dropdown entry
                 item.subjects.forEach((sub: any, index: number) => {

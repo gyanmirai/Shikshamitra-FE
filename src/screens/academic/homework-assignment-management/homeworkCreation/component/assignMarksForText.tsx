@@ -118,14 +118,14 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <Box
           component="form"
           sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
           onSubmit={formik.handleSubmit}
         >
-          <Scrollbar sx={{ height: '500px', p: 2 }}>
+          <Scrollbar sx={{ flex: 1, minHeight: 0, p: 2 }}>
             <Grid container spacing={2}>
               {/* Student Profile Section */}
               <Grid size={{ xs: 12 }}>
@@ -448,7 +448,7 @@ I have completed all answers as per the instructions.`}
 
           <Divider />
 
-          <DialogActions sx={{ bgcolor: 'background.paper', p: 2.5 }}>
+          <DialogActions sx={{ bgcolor: 'background.paper', p: 2.5, flexShrink: 0 }}>
             <Button
               variant="outlined"
               color="inherit"

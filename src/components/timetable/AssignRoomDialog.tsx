@@ -129,6 +129,31 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
         newErrors[sub.subjectId] = 'Room is required';
       }
     });
+
+    // Validate: prevent same room assigned to multiple subjects at same time
+    // (multiple classes cannot use the same room simultaneously)
+    const roomAssignments: Record<string, string[]> = {};
+    splitSubjects.forEach((sub) => {
+      const roomId = selectedIds[sub.subjectId];
+      if (roomId) {
+        if (!roomAssignments[roomId]) {
+          roomAssignments[roomId] = [];
+        }
+        roomAssignments[roomId].push(sub.subjectId);
+      }
+    });
+
+    // Find duplicate room assignments
+    Object.entries(roomAssignments).forEach(([roomId, subjectIds]) => {
+      if (subjectIds.length > 1) {
+        // Same room assigned to multiple subjects - mark all as errors
+        subjectIds.forEach((subjectId) => {
+          newErrors[subjectId] =
+            'Same room cannot be assigned to multiple subjects at the same time';
+        });
+      }
+    });
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;

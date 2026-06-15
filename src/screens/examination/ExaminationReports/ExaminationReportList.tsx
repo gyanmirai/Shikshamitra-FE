@@ -30,9 +30,10 @@ const ExaminationReportsList = () => {
       {!addReportDialog.value && (
         <CustomBreadcrumbs
           heading="Reports"
+          description="View and manage generated examination reports"
           links={[
-            { name: 'Student', href: '/student/enrollment/dashboard/' },
-            { name: 'Examination', href: '/examination/dashboard' },
+            { name: 'Academic', href: '/academic/dashboard/' },
+            { name: 'Examination' },
             { name: 'Reports' },
           ]}
           action={
