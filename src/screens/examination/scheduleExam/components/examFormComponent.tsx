@@ -305,7 +305,9 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
           shikshaMitraToast.success({ message: 'Exam schedule saved successfully' });
         } else if (activeStep === 2) {
           await handleRoomAssignment(values);
-          shikshaMitraToast.success({ message: 'Room assignments saved successfully' });
+          if (values.isRoomAssign) {
+            shikshaMitraToast.success({ message: 'Room assignments saved successfully' });
+          }
         }
         if (isSaveButton) {
           return;
@@ -335,9 +337,25 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
           pt: 2,
           pb: 1.5,
         },
+        // Fix loader overlay positioning during step transitions
+        '& .loading-overlay': {
+          position: 'fixed !important',
+          top: '0 !important',
+          left: '0 !important',
+          right: '0 !important',
+          bottom: '0 !important',
+          width: '100vw !important',
+          height: '100vh !important',
+          zIndex: '1300 !important',
+          backgroundColor: 'rgba(255, 255, 255, 0.85) !important',
+          opacity: '1 !important',
+        },
         ...theme.applyStyles('dark', {
           '& .MuiStepConnector-line': {
             borderColor: `${theme.vars.palette.grey[600]} !important`,
+          },
+          '& .loading-overlay': {
+            backgroundColor: 'rgba(33, 43, 54, 0.9) !important',
           },
         }),
       })}

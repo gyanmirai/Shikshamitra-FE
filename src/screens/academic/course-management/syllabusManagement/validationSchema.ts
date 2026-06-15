@@ -30,6 +30,11 @@ export const getChapterValidationSchema = (
         (value) => value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
       )
       .test(
+        'no-past-date',
+        'Start Date cannot be in the past',
+        (value) => !value || dayjs(value as any).isSameOrAfter(dayjs(), 'day')
+      )
+      .test(
         'max-date',
         (value) =>
           `Start Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
@@ -49,6 +54,11 @@ export const getChapterValidationSchema = (
         if (!value || !startDate) return true;
         return dayjs(value as any).isSameOrAfter(dayjs(startDate));
       })
+      .test(
+        'no-past-date',
+        'End Date cannot be in the past',
+        (value) => !value || dayjs(value as any).isSameOrAfter(dayjs(), 'day')
+      )
       .test(
         'min-date',
         (value) =>

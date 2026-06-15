@@ -568,9 +568,23 @@ const SectionHeader = memo(({ icon, accent, title, chips }: SectionHeaderProps) 
 SectionHeader.displayName = 'SectionHeader';
 
 // ---------------------------------------------------------------------------
+// Helper: Check if two exam slots overlap on same date
+// ---------------------------------------------------------------------------
+const slotsOverlap = (a: any, b: any) =>
+  a?.examDate &&
+  b?.examDate &&
+  dayjs(a.examDate).format('YYYY-MM-DD') === dayjs(b.examDate).format('YYYY-MM-DD') &&
+  dayjs(a.startTime).isBefore(dayjs(b.endTime)) &&
+  dayjs(a.endTime).isAfter(dayjs(b.startTime));
+
+// ---------------------------------------------------------------------------
 // Separate-mode inline validator — mirrors validationSchema Step 1 rules
 // ---------------------------------------------------------------------------
-function validateSepSubject(sub: any): Record<string, string> {
+function validateSepSubject(
+  sub: any,
+  allSubjects?: any[],
+  currentGroupId?: string
+): Record<string, string> {
   const errs: Record<string, string> = {};
 
   if (!sub?.examDate || !dayjs(sub.examDate).isValid()) {
@@ -581,26 +595,38 @@ function validateSepSubject(sub: any): Record<string, string> {
 
   if (!sub?.startTime || !dayjs(sub.startTime).isValid()) {
     errs.startTime = 'Start time is required';
-  } else if (sub?.examDate && dayjs(sub.examDate).isValid()) {
-    // Check if exam is scheduled for today and start time is in the past
-    const isToday = dayjs(sub.examDate).isSame(dayjs(), 'day');
-    if (isToday) {
-      const startDateTime = dayjs(sub.examDate)
-        .hour(dayjs(sub.startTime).hour())
-        .minute(dayjs(sub.startTime).minute());
-      if (startDateTime.isBefore(dayjs())) {
-        errs.startTime = 'Start time cannot be in the past for today';
-      }
-    }
+  } else if (sub?.examDate && dayjs(sub.examDate).isSame(dayjs(), 'day')) {
+    const startDT = dayjs(sub.examDate)
+      .hour(dayjs(sub.startTime).hour())
+      .minute(dayjs(sub.startTime).minute());
+    if (startDT.isBefore(dayjs())) errs.startTime = 'Start time cannot be in the past for today';
   }
 
   if (!sub?.endTime || !dayjs(sub.endTime).isValid()) {
     errs.endTime = 'End time is required';
   } else if (sub?.startTime && dayjs(sub.startTime).isValid()) {
-    if (!dayjs(sub.endTime).isAfter(dayjs(sub.startTime))) {
+    if (!dayjs(sub.endTime).isAfter(dayjs(sub.startTime)))
       errs.endTime = 'End time must be after start time';
-    } else if (dayjs(sub.endTime).diff(dayjs(sub.startTime), 'minute') < 30) {
+    else if (dayjs(sub.endTime).diff(dayjs(sub.startTime), 'minute') < 30)
       errs.endTime = 'Exam duration must be at least 30 minutes';
+  }
+
+  // Check for time conflicts with Core subjects and other elective groups
+  if (allSubjects && sub?.examDate && sub?.startTime && sub?.endTime && !errs.startTime) {
+    const conflicting = allSubjects
+      .filter((other: any) => other.electiveGroupId !== currentGroupId) // Skip same group
+      .find((other: any) => {
+        const nestedSubs =
+          other.schedulingMode === 'separate' && Array.isArray(other.subjects)
+            ? other.subjects
+            : [other];
+        return nestedSubs.some((s: any) => slotsOverlap(sub, s));
+      });
+
+    if (conflicting) {
+      errs.startTime = !conflicting.electiveGroupId
+        ? 'Conflicts with a Core subject exam'
+        : 'Conflicts with another elective group exam';
     }
   }
 
@@ -761,7 +787,11 @@ const ElectiveGroupCard = memo(
               <TableBody>
                 {individualSubjects.map((sub: any, j: number) => {
                   const subSchedule = group.subjects?.[j] || sub;
-                  const subErrors = validateSepSubject(subSchedule);
+                  const subErrors = validateSepSubject(
+                    subSchedule,
+                    formik.values.subjects,
+                    group.electiveGroupId
+                  );
                   const subTouched = showAllSepErrors ? ALL_FIELDS_TOUCHED : (sepTouched[j] ?? {});
                   return (
                     <SubjectScheduleRow

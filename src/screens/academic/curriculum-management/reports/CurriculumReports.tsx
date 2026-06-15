@@ -36,7 +36,7 @@ const CurriculumReports = ({ addReportDialog }: { addReportDialog: UseBooleanRet
         heading="Generate Report"
         links={[
           { name: 'Academic', href: '/academic/dashboard/' },
-          { name: 'Curriculum', href: '/academic/curriculum-management/dashboard/' },
+          { name: 'Curriculum' },
           { name: 'Generate Report' },
         ]}
         isBack={addReportDialog?.value}

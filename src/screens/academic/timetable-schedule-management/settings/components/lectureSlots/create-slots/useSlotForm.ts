@@ -214,9 +214,7 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
   );
 
   const handleTotalSlotsChange = useCallback(
-    (configIndex: number, value: string) => {
-      const slotsCount = parseInt(value, 10);
-
+    (configIndex: number, value: number) => {
       formik.setFieldValue(`slotConfigurations[${configIndex}].totalSlots`, value);
       formik.setFieldTouched(`slotConfigurations[${configIndex}].totalSlots`, true, false);
 
@@ -225,14 +223,14 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
         formik.validateField(`slotConfigurations[${configIndex}].totalSlots`);
       }, 0);
 
-      if (!value || isNaN(slotsCount) || slotsCount < 1 || slotsCount > 20) {
+      if (isNaN(value) || value < 1 || value > 20) {
         formik.setFieldValue(`slotConfigurations[${configIndex}].timeSlots`, []);
         return;
       }
 
       formik.setFieldValue(
         `slotConfigurations[${configIndex}].timeSlots`,
-        generateSlots(slotsCount, configIndex)
+        generateSlots(value, configIndex)
       );
     },
     [formik]

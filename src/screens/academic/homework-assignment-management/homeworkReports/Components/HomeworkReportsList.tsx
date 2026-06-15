@@ -40,9 +40,10 @@ const HomeworkReportsList = () => {
       {!addReportDialog.value && (
         <CustomBreadcrumbs
           heading="Homework Reports"
+          description="View and manage generated homework reports"
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Homework & Assignment', href: '/academic/homeworkCreation' },
+            { name: 'Homework & Assignment' },
             { name: 'Reports' },
           ]}
           action={

@@ -28,11 +28,11 @@ const TimetableReportList = () => {
       {!addReportDialog.value && (
         <CustomBreadcrumbs
           heading="Reports"
+          description="View and manage generated timetable reports"
           links={[
             { name: 'Academic', href: '/academic/dashboard/' },
             {
               name: 'Timetable',
-              href: '/academic/timetable-schedule-management/dashboard/',
             },
             { name: 'Reports' },
           ]}

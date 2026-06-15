@@ -126,8 +126,8 @@ const SeatAllocation = () => {
           }}
           links={[
             { name: 'Academic', href: '/academic/dashboard' },
-            { name: 'Examination', href: '/academic/examination' },
-            { name: 'Seating Plan', href: '/academic/examination/seat-allocation' },
+            { name: 'Examination' },
+            { name: 'Seating Plan' },
           ]}
         />
       ) : (
@@ -136,7 +136,7 @@ const SeatAllocation = () => {
           description="This table lists all scheduled exams eligible for seat allocation. Click 'Allocate Seat' to assign students to exam halls for a specific exam."
           links={[
             { name: 'Academic', href: '/academic/dashboard' },
-            { name: 'Examination', href: '/academic/examination' },
+            { name: 'Examination' },
             { name: 'Seating Plan' },
           ]}
         />

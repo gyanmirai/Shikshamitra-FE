@@ -647,7 +647,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             {/* Description Section */}
             <Grid size={{ xs: 12 }}>
               <SectionCard
-                title="Description & Attachments"
+                title="Description & Attachments *"
                 paperProps={{ sx: cardStyle }}
                 headerContent={
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>

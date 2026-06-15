@@ -388,7 +388,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
             >
               <List sx={{ px: 1.5, py: 1 }}>
                 {subjects
-                  .filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .filter((s) => s.name?.toLowerCase().includes(searchQuery.toLowerCase()))
                   .map((sub) => (
                     <SubjectCard
                       key={sub.subjectId}
@@ -397,7 +397,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                       totalSubjects={sub.totalSubjects || 0}
                     />
                   ))}
-                {subjects.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                {subjects.filter((s) => s.name?.toLowerCase().includes(searchQuery.toLowerCase()))
                   .length === 0 && (
                   <Box sx={{ textAlign: 'center', py: 3 }}>
                     <Typography variant="body2" color="text.disabled">

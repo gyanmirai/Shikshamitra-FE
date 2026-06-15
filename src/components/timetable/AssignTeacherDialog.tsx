@@ -244,6 +244,31 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
         newErrors[sub.subjectId] = 'Teacher is required';
       }
     });
+
+    // Validate: prevent same teacher assigned to multiple subjects at same time
+    // (teacher cannot be in two different rooms simultaneously)
+    const teacherAssignments: Record<string, string[]> = {};
+    splitSubjects.forEach((sub) => {
+      const teacherId = selectedIds[sub.subjectId];
+      if (teacherId) {
+        if (!teacherAssignments[teacherId]) {
+          teacherAssignments[teacherId] = [];
+        }
+        teacherAssignments[teacherId].push(sub.subjectId);
+      }
+    });
+
+    // Find duplicate teacher assignments
+    Object.entries(teacherAssignments).forEach(([teacherId, subjectIds]) => {
+      if (subjectIds.length > 1) {
+        // Same teacher assigned to multiple subjects - mark all as errors
+        subjectIds.forEach((subjectId) => {
+          newErrors[subjectId] =
+            'Same teacher cannot be assigned to multiple subjects at the same time';
+        });
+      }
+    });
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;

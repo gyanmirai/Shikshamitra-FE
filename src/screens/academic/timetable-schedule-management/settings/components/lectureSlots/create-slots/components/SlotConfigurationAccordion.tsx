@@ -1,11 +1,14 @@
 import type { FormikProps } from 'formik';
+import type { Standards } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { alpha, lighten } from '@mui/material/styles';
+import CustomSelect from 'src/components/custom-select';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ShakingTextField from 'src/components/shaking-text-field';
 import {
   Box,
   Chip,
@@ -21,9 +24,9 @@ import {
 } from '@mui/material';
 
 import { getDayLabel } from '../utils/dayMarks';
-import TotalSlotsInput from './TotalSlotsInput';
 import SlotTimesTable from '../../slotTimesTable';
 import ActiveDaysSlider from './ActiveDaysSlider';
+import SlotCounterControl from './SlotCounterControl';
 
 interface ISlotConfig {
   id: React.Key | null | undefined;
@@ -42,7 +45,13 @@ interface ISlotConfigurationAccordionProps {
   hasData?: boolean;
   canRemove: boolean;
   onRemove: () => void;
-  onTotalSlotsChange: (value: string) => void;
+  onTotalSlotsChange: (value: number) => void;
+  // New props for class selection
+  classes: Standards[];
+  className: string;
+  classNameError?: string;
+  onClassChange: (val: string) => void;
+  isFirstGroup: boolean;
 }
 
 const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = ({
@@ -55,6 +64,11 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
   canRemove,
   onRemove,
   onTotalSlotsChange,
+  classes,
+  className,
+  classNameError,
+  onClassChange,
+  isFirstGroup,
 }) => {
   // Keep expanded state local — never in formik — so toggling doesn't re-render the whole form
   const [expanded, setExpanded] = useState<boolean>(config.expanded ?? true);
@@ -67,6 +81,10 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
       : null;
 
   const configTouched = (formik.touched as any).slotConfigurations?.[configIndex];
+
+  // Class selected check for enabling slot controls
+  const isClassSelected = Boolean(className);
+  const lockedByEdit = disabled || (isEdit && !!hasData);
 
   // Week range error
   const weekRangeError = useMemo(() => {
@@ -116,8 +134,6 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
     });
     return map;
   }, [configErr]);
-
-  const totalSlotsValue = config.totalSlots != null ? String(config.totalSlots) : '';
 
   const hasError = Boolean(
     weekRangeError || totalSlotsError || timeSlotsArrayError || perSlotMessages.length
@@ -316,106 +332,140 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
         )}
       </AccordionSummary>
 
-      <AccordionDetails sx={{ pt: 1, px: { xs: 1.5, sm: 2 }, pb: 2 }}>
+      <AccordionDetails sx={{ pt: 1.5, px: { xs: 1.5, sm: 2 }, pb: 2 }}>
         <Box width="100%">
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <ActiveDaysSlider
-                value={config.weekRange}
+          {/* Class Selection - Only show in first group */}
+          {isFirstGroup && (
+            <Box sx={{ mb: 2.5 }}>
+              <Grid container>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <ShakingTextField error={Boolean(classNameError)}>
+                    <CustomSelect
+                      options={classes}
+                      value={className}
+                      onChange={(val) => onClassChange(val as string)}
+                      label="Class *"
+                      labelKey="name"
+                      valueKey="id"
+                      formControlProps={{ fullWidth: true }}
+                      error={Boolean(classNameError)}
+                      helperText={classNameError}
+                      disabled={lockedByEdit}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              </Grid>
+            </Box>
+          )}
+
+          {/* Active Days Slider */}
+          <ActiveDaysSlider
+            value={config.weekRange}
+            disabled={disabled || !isClassSelected}
+            error={weekRangeError}
+            onChange={(next) =>
+              formik.setFieldValue(`slotConfigurations[${configIndex}].weekRange`, next)
+            }
+            onBlur={() =>
+              formik.setFieldTouched(`slotConfigurations[${configIndex}].weekRange`, true, false)
+            }
+          />
+
+          {/* Slot Counter - Below Active Days */}
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="flex-end"
+            spacing={1.5}
+            sx={{ mt: 2 }}
+          >
+            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+              Total Slots
+            </Typography>
+            <SlotCounterControl
+              value={Number(config.totalSlots) || 0}
+              disabled={disabled || !isClassSelected}
+              error={totalSlotsError}
+              min={1}
+              max={20}
+              onChange={onTotalSlotsChange}
+            />
+          </Stack>
+          {timeSlotsArrayError && (
+            <Typography
+              variant="caption"
+              color="error"
+              sx={{ mt: 1, display: 'block', textAlign: 'right' }}
+            >
+              {timeSlotsArrayError}
+            </Typography>
+          )}
+
+          {/* Slot Times Table */}
+          {config.timeSlots && config.timeSlots.length > 0 && (
+            <Box sx={{ mt: 2.5 }}>
+              <Divider sx={{ mb: 1.5 }} />
+              <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+                <Box
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: (theme) =>
+                      alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.22 : 0.1),
+                  }}
+                >
+                  <Iconify icon="mdi:table-clock" width={16} sx={{ color: 'primary.main' }} />
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="primary.main" fontWeight={700}>
+                    Slot Times
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Start · End · Duration · Type for each slot
+                  </Typography>
+                </Box>
+                <Chip
+                  size="small"
+                  label={`${config.timeSlots.length} slot${config.timeSlots.length !== 1 ? 's' : ''}`}
+                  variant="soft"
+                  color="primary"
+                  sx={{ ml: 'auto !important', height: 22, fontSize: '0.7rem', fontWeight: 700 }}
+                />
+              </Stack>
+
+              {perSlotMessages.length > 0 && (
+                <Box sx={{ mb: 1 }}>
+                  {perSlotMessages.map((msg, i) => (
+                    <Typography key={i} variant="caption" color="error" display="block">
+                      {msg}
+                    </Typography>
+                  ))}
+                </Box>
+              )}
+
+              <SlotTimesTable
+                configId={config.id ?? configIndex}
+                slots={config.timeSlots as any}
                 disabled={disabled}
-                error={weekRangeError}
+                isEdit={isEdit}
+                errors={slotErrorsMap}
                 onChange={(next) =>
-                  formik.setFieldValue(`slotConfigurations[${configIndex}].weekRange`, next)
+                  formik.setFieldValue(`slotConfigurations[${configIndex}].timeSlots`, next)
                 }
-                onBlur={() =>
+                onTouchField={(slotIndex, field) =>
                   formik.setFieldTouched(
-                    `slotConfigurations[${configIndex}].weekRange`,
+                    `slotConfigurations[${configIndex}].timeSlots[${slotIndex}].${field}`,
                     true,
                     false
                   )
                 }
               />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 3.5 }}>
-              <TotalSlotsInput
-                value={totalSlotsValue}
-                disabled={disabled || (isEdit && !!hasData)}
-                error={totalSlotsError}
-                arrayError={timeSlotsArrayError}
-                onChange={onTotalSlotsChange}
-              />
-            </Grid>
-            {config.timeSlots && config.timeSlots.length > 0 && (
-              <Grid size={{ xs: 12 }}>
-                <Divider sx={{ my: 1.5 }} />
-
-                {/* Slot Times header */}
-                <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-                  <Box
-                    sx={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 1.5,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: (theme) =>
-                        alpha(
-                          theme.palette.primary.main,
-                          theme.palette.mode === 'dark' ? 0.22 : 0.1
-                        ),
-                    }}
-                  >
-                    <Iconify icon="mdi:table-clock" width={16} sx={{ color: 'primary.main' }} />
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" color="primary.main" fontWeight={700}>
-                      Slot Times
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Start · End · Duration · Type for each slot
-                    </Typography>
-                  </Box>
-                  <Chip
-                    size="small"
-                    label={`${config.timeSlots.length} slot${config.timeSlots.length !== 1 ? 's' : ''}`}
-                    variant="soft"
-                    color="primary"
-                    sx={{ ml: 'auto !important', height: 22, fontSize: '0.7rem', fontWeight: 700 }}
-                  />
-                </Stack>
-
-                {perSlotMessages.length > 0 && (
-                  <Box sx={{ mb: 1 }}>
-                    {perSlotMessages.map((msg, i) => (
-                      <Typography key={i} variant="caption" color="error" display="block">
-                        {msg}
-                      </Typography>
-                    ))}
-                  </Box>
-                )}
-
-                <SlotTimesTable
-                  configId={config.id ?? configIndex}
-                  slots={config.timeSlots as any}
-                  disabled={disabled}
-                  isEdit={isEdit}
-                  errors={slotErrorsMap}
-                  onChange={(next) =>
-                    formik.setFieldValue(`slotConfigurations[${configIndex}].timeSlots`, next)
-                  }
-                  onTouchField={(slotIndex, field) =>
-                    formik.setFieldTouched(
-                      `slotConfigurations[${configIndex}].timeSlots[${slotIndex}].${field}`,
-                      true,
-                      false
-                    )
-                  }
-                />
-              </Grid>
-            )}
-          </Grid>
+            </Box>
+          )}
         </Box>
       </AccordionDetails>
     </Accordion>

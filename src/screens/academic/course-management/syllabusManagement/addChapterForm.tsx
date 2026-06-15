@@ -226,7 +226,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               </Stack>
               <Divider sx={{ mb: 2 }} />
 
-              <Grid container spacing={2}>
+              <Grid container spacing={3}>
                 {/* Chapter Number */}
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField
@@ -238,7 +238,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       name="chapterNo"
                       type="number"
                       placeholder="e.g. 1"
-                      inputProps={{ min: 0 }}
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">
@@ -302,6 +301,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       label="Chapter Start Date *"
                       format="DD/MM/YYYY"
                       value={formik.values.startDate}
+                      disablePast
                       onChange={(newValue) => {
                         formik.setFieldValue('startDate', newValue);
                       }}
@@ -329,6 +329,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     <DatePicker
                       label="Chapter End Date *"
                       format="DD/MM/YYYY"
+                      disablePast
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
                       value={formik.values.endDate}
