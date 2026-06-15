@@ -90,6 +90,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
   const [feeHeads, setFeeHeads] = useState<FeeHeadAssignment[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const feeMonthLookup = FeeMonth as unknown as Record<number, string>;
+  const feeStructureSettingsPath = '/finance/settings/create-fee-structure';
 
   // Get student's assigned structure
   const {
@@ -338,6 +339,51 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
     [financeFeeStructures]
   );
 
+  const handleOpenFeeStructureSettings = () => {
+    handleClose(null, false);
+    window.location.assign(feeStructureSettingsPath);
+  };
+
+  const feeStructureEmptyState = (
+    <Box
+      sx={{
+        p: 2,
+        borderRadius: 1.5,
+        border: (theme) => `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.24)}`,
+        bgcolor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.06),
+      }}
+    >
+      <Typography variant="body2" fontWeight={600} color="text.primary">
+        No locked fee structure is available for this class.
+      </Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+        Create a fee structure or lock an existing one in Fee Structure settings to assign it.
+      </Typography>
+      <Typography
+        component="button"
+        type="button"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          handleOpenFeeStructureSettings();
+        }}
+        sx={{
+          mt: 1,
+          p: 0,
+          border: 'none',
+          background: 'transparent',
+          color: 'primary.main',
+          fontSize: 12,
+          fontWeight: 600,
+          cursor: 'pointer',
+          textAlign: 'left',
+        }}
+      >
+        Go to Fee Structure Settings
+      </Typography>
+    </Box>
+  );
+
   const formatMonthYearDisplay = (value?: number | string | null, year?: number | null) => {
     const parsed = parseMonthYearValue(value, year);
     if (!parsed) {
@@ -359,77 +405,87 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
   const normalizeSelectValue = (value: SelectValue): string | number =>
     Array.isArray(value) ? (value[0] ?? '') : value;
 
+  const isFeeStructureOptionsLoading =
+    financeLoading || financeFetching || assignedFetching || assignedLoading || isMonthsLoading;
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={1}>
           <Grid size={{ xs: 12 }}>
-            <CustomSelect
-              fullWidth
-              label="Select Fee Structure *"
-              options={feeStructureOptions}
-              disabled={!!assignedStructureData?.standardFeeStructureId}
-              value={formik.values.feeStructureId}
-              onChange={(value) => {
-                formik.setFieldValue('feeStructureId', value);
-                const selectedStructure = financeFeeStructures?.standardFeeStructures?.find(
-                  (fs: any) => fs.id === value
-                );
-                const heads: FeeHeadAssignment[] = (selectedStructure?.feeHeads || []).map(
-                  (fh: any) => {
-                    const mapped: FeeHeadAssignment = {
-                      feeHeadId: fh.feeHeadId,
-                      feeHeadName: fh.feeHeadName,
-                      amount: fh.amount,
-                      isOneTime: fh.isOneTime,
-                      isOptional: fh.isOptional,
-                      isRefundable: fh.isRefundable,
-                      categoryName: fh.categoryName,
-                      payableMonth: fh.payableMonth,
-                      payableYear: fh.payableYear,
-                      selectedAmount: getDefaultMonthlyAmount(
-                        fh.amount ?? 0,
-                        Boolean(fh.isOneTime)
-                      ),
-                    };
+            {isFeeStructureOptionsLoading ? (
+              <CustomSelect
+                fullWidth
+                label="Select Fee Structure *"
+                options={[]}
+                value=""
+                onChange={() => {}}
+                isLoading
+              />
+            ) : feeStructureOptions.length > 0 ? (
+              <CustomSelect
+                fullWidth
+                label="Select Fee Structure *"
+                options={feeStructureOptions}
+                disabled={!!assignedStructureData?.standardFeeStructureId}
+                value={formik.values.feeStructureId}
+                onChange={(value) => {
+                  formik.setFieldValue('feeStructureId', value);
+                  const selectedStructure = financeFeeStructures?.standardFeeStructures?.find(
+                    (fs: any) => fs.id === value
+                  );
+                  const heads: FeeHeadAssignment[] = (selectedStructure?.feeHeads || []).map(
+                    (fh: any) => {
+                      const mapped: FeeHeadAssignment = {
+                        feeHeadId: fh.feeHeadId,
+                        feeHeadName: fh.feeHeadName,
+                        amount: fh.amount,
+                        isOneTime: fh.isOneTime,
+                        isOptional: fh.isOptional,
+                        isRefundable: fh.isRefundable,
+                        categoryName: fh.categoryName,
+                        payableMonth: fh.payableMonth,
+                        payableYear: fh.payableYear,
+                        selectedAmount: getDefaultMonthlyAmount(
+                          fh.amount ?? 0,
+                          Boolean(fh.isOneTime)
+                        ),
+                      };
 
-                    if (fh.isOptional && fh.isOneTime) {
-                      mapped.payableMonth =
-                        fh.payableMonth !== null && fh.payableMonth !== undefined
-                          ? `${fh.payableMonth}-${fh.payableYear}`
-                          : '';
+                      if (fh.isOptional && fh.isOneTime) {
+                        mapped.payableMonth =
+                          fh.payableMonth !== null && fh.payableMonth !== undefined
+                            ? `${fh.payableMonth}-${fh.payableYear}`
+                            : '';
+                      }
+
+                      if (!fh.isOneTime) {
+                        mapped.startPayableMonth =
+                          fh.startPayableMonth !== null && fh.startPayableMonth !== undefined
+                            ? `${fh.startPayableMonth}-${fh.startPayableYear}`
+                            : defaultRecurringStartMonthYear;
+                        mapped.endPayableMonth =
+                          fh.endPayableMonth !== null && fh.endPayableMonth !== undefined
+                            ? `${fh.endPayableMonth}-${fh.endPayableYear}`
+                            : defaultRecurringEndMonthYear;
+                      }
+
+                      return mapped;
                     }
-
-                    if (!fh.isOneTime) {
-                      mapped.startPayableMonth =
-                        fh.startPayableMonth !== null && fh.startPayableMonth !== undefined
-                          ? `${fh.startPayableMonth}-${fh.startPayableYear}`
-                          : defaultRecurringStartMonthYear;
-                      mapped.endPayableMonth =
-                        fh.endPayableMonth !== null && fh.endPayableMonth !== undefined
-                          ? `${fh.endPayableMonth}-${fh.endPayableYear}`
-                          : defaultRecurringEndMonthYear;
-                    }
-
-                    return mapped;
-                  }
-                );
-                setFeeHeads(heads);
-              }}
-              labelKey="name"
-              valueKey="id"
-              isLoading={
-                financeLoading ||
-                financeFetching ||
-                assignedFetching ||
-                assignedLoading ||
-                isMonthsLoading
-              }
-              error={formik.touched.feeStructureId && Boolean(formik.errors.feeStructureId)}
-              helperText={
-                (formik.touched.feeStructureId && (formik.errors.feeStructureId as string)) || ''
-              }
-            />
+                  );
+                  setFeeHeads(heads);
+                }}
+                labelKey="name"
+                valueKey="id"
+                isLoading={isFeeStructureOptionsLoading}
+                error={formik.touched.feeStructureId && Boolean(formik.errors.feeStructureId)}
+                helperText={
+                  (formik.touched.feeStructureId && (formik.errors.feeStructureId as string)) || ''
+                }
+              />
+            ) : (
+              feeStructureEmptyState
+            )}
           </Grid>
 
           {formik.values.feeStructureId && feeHeads?.length > 0 && (

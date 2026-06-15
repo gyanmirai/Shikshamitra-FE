@@ -411,7 +411,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     popupConfig: { error: false },
   }) as { data: any; isLoading: boolean; isError: boolean; error: any };
 
-  const feeHeads: any[] = useMemo(() => feeStructureData?.feeHeads || [], [feeStructureData]);
+  const feeHeads: any[] = useMemo(
+    () => feeStructureData?.feeHeads?.filter((item) => item.isSelected) || [],
+    [feeStructureData]
+  );
 
   // Detect the "no fee structure assigned" business-rule error
   const noFeeStructureError: boolean =

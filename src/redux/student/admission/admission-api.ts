@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { studentAdmissionType } from 'src/redux/tagTypes';
+import { financeModuleType, studentAdmissionType } from 'src/redux/tagTypes';
 
 export const StudentAdmissionApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -54,7 +54,15 @@ export const StudentAdmissionApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [studentAdmissionType.studentAdmission],
+      invalidatesTags: [studentAdmissionType.studentAdmission, financeModuleType.feeCollection],
+    }),
+    assignBulkFeeStructure: builder.mutation({
+      query: ({ body }) => ({
+        url: `/student-fee-structure/assign-bulk`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionType.studentAdmission, financeModuleType.feeCollection],
     }),
   }),
 });
@@ -65,5 +73,6 @@ export const {
   useAssignDivisionTOStudentMutation,
   useGetDivisionForStandardQuery,
   useAssignFeeStructureMutation,
+  useAssignBulkFeeStructureMutation,
   useGetStudentFeeStructureQuery,
 } = StudentAdmissionApi;

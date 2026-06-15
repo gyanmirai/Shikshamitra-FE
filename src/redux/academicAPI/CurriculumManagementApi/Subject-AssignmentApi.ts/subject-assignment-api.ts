@@ -65,7 +65,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
     // Upload Curriculum File
     uploadCurriculumFile: builder.mutation({
       query: (body) => ({
-        url: `/academics/curriculum/files`,
+        url: `/files`,
         method: 'POST',
         body,
         headers: {
@@ -73,6 +73,15 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         },
       }),
       invalidatesTags: [academicType.curriculumFile],
+    }),
+
+    // Get Curriculum File By Name
+    getCurriculumFileByName: builder.mutation<Blob, string>({
+      query: (fileName) => ({
+        url: `/files/${encodeURIComponent(fileName)}`,
+        method: 'GET',
+        responseHandler: (response) => response.blob(),
+      }),
     }),
 
     // Get subject assignment documents
@@ -104,6 +113,7 @@ export const {
   useDeleteSubjectAssignmentMutation,
   usePublishSubjectAssignmentMutation,
   useUploadCurriculumFileMutation,
+  useGetCurriculumFileByNameMutation,
   useGetSubjectAssignmentDocumentsQuery,
   useGetCoreElectiveSubjectsQuery,
 } = subjectAssignmentsApi;

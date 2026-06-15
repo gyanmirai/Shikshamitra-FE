@@ -39,12 +39,17 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
 
   const tableData = useMemo(
     () =>
-      (feeStructureData?.items ?? []).map((item: IFeeStructure) => ({
-        ...item,
-        boardMediumValue: `${item.boardName ?? ''}/${item.mediumName ?? ''}`,
-        totalClassValue: item.totalClasses ?? null,
-        totalFeeHeadValue: item.totalFeeHeads ?? null,
-      })),
+      (feeStructureData?.items ?? []).map((item: IFeeStructure) => {
+        const configuredClasses = item.configuredClasses ?? 0;
+
+        return {
+          ...item,
+          boardMediumValue: `${item.boardName ?? ''}/${item.mediumName ?? ''}`,
+          totalClassValue:
+            item.totalClasses == null ? null : `${configuredClasses}/${item.totalClasses}`,
+          totalFeeHeadValue: item.totalFeeHeads ?? null,
+        };
+      }),
     [feeStructureData?.items]
   );
 
@@ -66,7 +71,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
           </Stack>
         ),
         align: 'left',
-        filterType: 'number',
+        filterType: 'string',
         render: (value) => (value == null ? '-' : value),
       },
       {

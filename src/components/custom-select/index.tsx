@@ -27,7 +27,7 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   helperText?: string;
   isLoading?: boolean;
   disabled?: boolean;
-  noOptionsMessage?: string;
+  noOptionsMessage?: React.ReactNode;
   sx?: SxProps;
   labelKey?: T;
   valueKey?: T;
@@ -136,7 +136,27 @@ const CustomSelect = <T extends string, J extends boolean>({
             {...props}
           >
             {options?.length === 0 ? (
-              <MenuItem disabled>{noOptionsMessage}</MenuItem>
+              <MenuItem
+                disabled={typeof noOptionsMessage === 'string'}
+                onClick={(event) => {
+                  if (typeof noOptionsMessage !== 'string') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }
+                }}
+                sx={
+                  typeof noOptionsMessage === 'string'
+                    ? undefined
+                    : {
+                        whiteSpace: 'normal',
+                        alignItems: 'flex-start',
+                        cursor: 'default',
+                        '&:hover': { backgroundColor: 'transparent' },
+                      }
+                }
+              >
+                {noOptionsMessage}
+              </MenuItem>
             ) : (
               options.map((option) => {
                 const isDisabled = disabledValues.includes(option[valueKey] as string | number);

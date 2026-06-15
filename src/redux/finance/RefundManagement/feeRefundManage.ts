@@ -112,6 +112,11 @@ export interface UpdateFeeRefundStatusInput {
   notes?: string;
 }
 
+export interface UpdateFeeRefundInput {
+  id: string;
+  body: IFeeRefundApiPayload;
+}
+
 // ─── API slice ────────────────────────────────────────────────────────────────
 
 export const feeRefundApi = financeModuleApi.injectEndpoints({
@@ -153,6 +158,23 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.feeRefund],
     }),
 
+    updateFeeRefund: builder.mutation<FeeRefundRequestDto, UpdateFeeRefundInput>({
+      query: ({ id, body }) => ({
+        url: `/fee-refunds/${id}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [financeModuleType.feeRefund],
+    }),
+
+    deleteFeeRefund: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/fee-refunds/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [financeModuleType.feeRefund],
+    }),
+
     updateFeeRefundStatus: builder.mutation<
       FeeRefundRequestDto,
       { id: string; body: UpdateFeeRefundStatusInput }
@@ -176,5 +198,7 @@ export const {
   useGetRefundEligibilityQuery,
   useLazyGetRefundEligibilityQuery,
   useCreateFeeRefundMutation,
+  useUpdateFeeRefundMutation,
+  useDeleteFeeRefundMutation,
   useUpdateFeeRefundStatusMutation,
 } = feeRefundApi;

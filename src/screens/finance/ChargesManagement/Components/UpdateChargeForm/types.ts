@@ -13,7 +13,6 @@ export interface IUpdateChargeFormValues {
   purposeDescription: string;
   amount: number | string;
   dueDate: any; // dayjs object
-  additionalNotes: string;
 
   // Academic Structure
   boardId: string;
@@ -144,7 +143,6 @@ export interface IChargeUpdatePayload {
   amount: number;
   dueDate: string; // ISO string
   priority: number;
-  additionalNotes?: string;
   studentIds?: string[];
   divisionIds?: string[];
   classIds?: string[];

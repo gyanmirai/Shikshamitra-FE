@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -15,7 +16,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
-import { useUpdateFeeRefundStatusMutation } from 'src/redux/finance/RefundManagement/feeRefundManage';
+import {
+  useDeleteFeeRefundMutation,
+  useUpdateFeeRefundStatusMutation,
+} from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import RefundRemarksForm from './Components/RefundRemarksForm';
 import StudentFeeRefundTable from './Components/FeeRefundTable';
@@ -28,14 +32,21 @@ const FeeRefund = () => {
   const addRefundRequest = useBoolean();
   const viewRefundRequest = useBoolean();
   const onConfirmDialg = useBoolean();
+  const deleteDialog = useBoolean();
   const [selectedMode, setSelectedMode] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   const academicFilters = useFinanceAcademicFilters();
 
-  const [updateStatus] = useQueryAndMutation({
+  const [updateStatus, { isLoading: isUpdateStatus, isFetching: isFetchingStatus }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useUpdateFeeRefundStatusMutation,
+    });
+  const [deleteRefund, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateFeeRefundStatusMutation,
+    currentQueryAndMutation: useDeleteFeeRefundMutation,
   });
 
   // State to store the selected student fee refund data
@@ -50,11 +61,13 @@ const FeeRefund = () => {
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       setSelectedFeeRefund(null);
+      setIsEditMode(false);
       addRefundRequest.onFalse();
       viewRefundRequest.onFalse();
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
       setSelectedFeeRefund(null);
+      setIsEditMode(false);
       addRefundRequest.onFalse();
       viewRefundRequest.onFalse();
     }
@@ -73,8 +86,12 @@ const FeeRefund = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {addRefundRequest.value ? (
         <CustomBreadcrumbs
-          heading="Add Refund Request"
-          description="Form to record and request student fee refunds."
+          heading={isEditMode ? 'Edit Refund Request' : 'Add Refund Request'}
+          description={
+            isEditMode
+              ? 'Form to update and resubmit student fee refund requests.'
+              : 'Form to record and request student fee refunds.'
+          }
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
@@ -82,9 +99,10 @@ const FeeRefund = () => {
               href: '/finance/fee-refund',
               onClick() {
                 addRefundRequest.onFalse();
+                setIsEditMode(false);
               },
             },
-            { name: 'Add Refund Request' },
+            { name: isEditMode ? 'Edit Refund Request' : 'Add Refund Request' },
           ]}
           isBack={addRefundRequest.value}
           onBack={() => {
@@ -123,7 +141,11 @@ const FeeRefund = () => {
           ]}
           action={
             <Button
-              onClick={() => addRefundRequest.onTrue()}
+              onClick={() => {
+                setSelectedFeeRefund(null);
+                setIsEditMode(false);
+                addRefundRequest.onTrue();
+              }}
               size="small"
               startIcon={<Add />}
               variant="contained"
@@ -139,11 +161,32 @@ const FeeRefund = () => {
         <StudentFeeRefundTable
           onRequestRefund={(data) => {
             setSelectedFeeRefund(data);
+            setIsEditMode(false);
             addRefundRequest.onTrue();
           }}
           onView={(data) => {
             setSelectedFeeRefund(data);
+            setIsEditMode(false);
             viewRefundRequest.onTrue();
+          }}
+          onEdit={(data) => {
+            setSelectedFeeRefund(data);
+            setIsEditMode(true);
+            addRefundRequest.onTrue();
+          }}
+          onApprove={(data) => {
+            setSelectedFeeRefund(data);
+            setSelectedMode('Approve');
+            onConfirmDialg.onTrue();
+          }}
+          onReject={(data) => {
+            setSelectedFeeRefund(data);
+            setSelectedMode('Reject');
+            onConfirmDialg.onTrue();
+          }}
+          onDelete={(data) => {
+            setSelectedFeeRefund(data);
+            deleteDialog.onTrue();
           }}
           academicFilters={academicFilters}
         />
@@ -165,6 +208,8 @@ const FeeRefund = () => {
                 ? academicFilters.selectedDivisionId
                 : ''
             }
+            isEdit={isEditMode}
+            editRefundId={selectedFeeRefund?._refundRequestId}
           />
         </Card>
       )}
@@ -237,6 +282,7 @@ const FeeRefund = () => {
                 handleRequstClose(e, true);
                 viewRefundRequest.onFalse();
                 setSelectedFeeRefund(null);
+                setIsEditMode(false);
               } catch (err: any) {
                 shikshaMitraToast.error({
                   message: err?.data?.error?.message ?? 'Status update failed.',
@@ -247,7 +293,58 @@ const FeeRefund = () => {
             }
           }}
           mode={selectedMode}
+          loading={isUpdateStatus || isFetchingStatus}
         />
+      </CustomDialog>
+
+      <CustomDialog
+        open={deleteDialog.value}
+        title="Delete Refund Request"
+        handleClose={() => {
+          deleteDialog.onFalse();
+        }}
+        maxWidth="xs"
+      >
+        <Box sx={{ p: 2 }}>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Are you sure you want to delete this refund request?
+          </Typography>
+          <Box display="flex" justifyContent="flex-end" gap={1}>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                deleteDialog.onFalse();
+              }}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="contained"
+              color="error"
+              loading={isDeleting}
+              disabled={isDeleting}
+              onClick={async () => {
+                try {
+                  if (!selectedFeeRefund?._refundRequestId) return;
+                  await deleteRefund(selectedFeeRefund._refundRequestId).unwrap();
+                  shikshaMitraToast.success({
+                    message: 'Refund request deleted successfully.',
+                  });
+                  deleteDialog.onFalse();
+                  viewRefundRequest.onFalse();
+                  setSelectedFeeRefund(null);
+                  setIsEditMode(false);
+                } catch (err: any) {
+                  shikshaMitraToast.error({
+                    message: err?.data?.error?.message ?? 'Failed to delete refund request.',
+                  });
+                }
+              }}
+            >
+              Delete
+            </LoadingButton>
+          </Box>
+        </Box>
       </CustomDialog>
     </Box>
   );

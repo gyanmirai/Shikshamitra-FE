@@ -10,7 +10,6 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { LocalPhone, Description, CalendarToday } from '@mui/icons-material';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 import {
   Box,
@@ -277,7 +276,7 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
                       {/* Charge Name */}
                       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <InfoItem
-                          icon={<Description />}
+                          icon={<Iconify icon="solar:bill-list-bold" />}
                           label="Charge Name"
                           value={chargeData?.chargeName || 'N/A'}
                         />
@@ -286,7 +285,7 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
                       {/* Charge Category */}
                       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <InfoItem
-                          icon={<Description />}
+                          icon={<Iconify icon="solar:layers-bold" />}
                           label="Charge Category"
                           value={chargeData?.categoryName || 'N/A'}
                         />
@@ -295,7 +294,7 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
                       {/* Amount */}
                       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <InfoItem
-                          icon={<LocalPhone />}
+                          icon={<Iconify icon="solar:wallet-money-bold" />}
                           label="Amount"
                           value={`₹ ${parseFloat(String(chargeData?.amount || 0)).toLocaleString()}`}
                         />
@@ -304,7 +303,7 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
                       {/* Due Date */}
                       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <InfoItem
-                          icon={<CalendarToday />}
+                          icon={<Iconify icon="solar:calendar-date-bold" />}
                           label="Due Date"
                           value={formattedDueDate}
                         />
@@ -313,7 +312,7 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
                       {/* Created Date */}
                       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <InfoItem
-                          icon={<CalendarToday />}
+                          icon={<Iconify icon="solar:calendar-mark-bold" />}
                           label="Created Date"
                           value={formattedCreatedDate}
                         />
@@ -321,29 +320,12 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
 
                       {/* Description */}
                       <Grid size={{ xs: 12, sm: 6, md: 6 }}>
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
-                            Description
-                          </Typography>
-                          <Typography variant="body2" sx={{ mt: 0.5, color: 'text.secondary' }}>
-                            {chargeData?.purposeDescription || '-'}
-                          </Typography>
-                        </Box>
+                        <InfoItem
+                          icon={<Iconify icon="solar:notes-bold" />}
+                          label="Description"
+                          value={chargeData?.purposeDescription || 'No description provided.'}
+                        />
                       </Grid>
-
-                      {/* Additional Notes */}
-                      {chargeData?.additionalNotes && (
-                        <Grid size={{ xs: 12 }}>
-                          <Box>
-                            <Typography variant="caption" color="text.secondary">
-                              Additional Notes
-                            </Typography>
-                            <Typography variant="body2" sx={{ mt: 0.5, color: 'text.secondary' }}>
-                              {chargeData.additionalNotes}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      )}
 
                       {/* Requested By Information Section */}
                       {chargeData?.requestor && (
@@ -365,21 +347,21 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
                           </Grid>
                           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <InfoItem
-                              icon={<Iconify icon="solar:user-rounded-bold-duotone" />}
+                              icon={<Iconify icon="solar:user-id-bold" />}
                               label="Requestor Name"
                               value={chargeData.requestor.requestorName || 'N/A'}
                             />
                           </Grid>
                           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <InfoItem
-                              icon={<Iconify icon="solar:briefcase-bold-duotone" />}
+                              icon={<Iconify icon="solar:case-minimalistic-bold" />}
                               label="Role"
                               value={chargeData.requestor.requestorRole || 'N/A'}
                             />
                           </Grid>
                           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <InfoItem
-                              icon={<CalendarToday />}
+                              icon={<Iconify icon="solar:calendar-bold" />}
                               label="Requested Date"
                               value={
                                 chargeData.requestor.requestedOn

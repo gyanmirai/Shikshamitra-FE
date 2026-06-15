@@ -34,6 +34,7 @@ const mapToCardModel = (
     id: fh.id,
     feeHeadId: fh.feeHeadId,
     feeHeadName: fh.feeHeadName,
+    feeCategoryName: fh.feeCategoryName ?? fh.categoryName,
     amount: fh.amount ?? 0,
     isOneTime: fh.isOneTime ?? false,
     isOptional: fh.isOptional ?? false,

@@ -27,11 +27,17 @@ export interface IStudentFeeData {
   reason?: string;
   remarks?: string;
   paymentDetails?: Record<string, any>; // 👈 dynamic fields from config
+  _refundRequestId?: string;
+  _studentId?: string;
 }
 
 export interface IStudentFeeTableProps {
   onRequestRefund?: (row: IStudentFeeData) => void;
   onView?: (row: IStudentFeeData) => void;
+  onEdit?: (row: IStudentFeeData) => void;
+  onApprove?: (row: IStudentFeeData) => void;
+  onReject?: (row: IStudentFeeData) => void;
+  onDelete?: (row: IStudentFeeData) => void;
 }
 
 export interface IRefundFormProps {

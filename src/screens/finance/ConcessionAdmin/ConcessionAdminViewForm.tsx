@@ -19,7 +19,13 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Cancel, Visibility, CheckCircle } from '@mui/icons-material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { ConcessionStatusType, ConcessionStatusTypeColors } from 'src/enums/concession-status-type';
+import {
+  useRejectConcessionRequestMutation,
+  useGetStudentConcessionDetailsQuery,
+  useDeleteConcessionApplicationMutation,
+} from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 import {
   Box,
   Tab,
@@ -29,6 +35,7 @@ import {
   Stack,
   Paper,
   Button,
+  Divider,
   Skeleton,
   TextField,
   Typography,
@@ -36,11 +43,6 @@ import {
   CardContent,
   DialogActions,
 } from '@mui/material';
-import {
-  useRejectConcessionRequestMutation,
-  useGetStudentConcessionDetailsQuery,
-  useDeleteConcessionApplicationMutation,
-} from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import StudentInformationAccordion from './StucentConcessionCard';
 import DocumentDialog from '../Concession/Components/DocumentDialog';
@@ -198,6 +200,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   onOpenDocs,
   onDelete,
 }) => {
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const isApproved = item.status === ConcessionStatusType.Approved;
   const isRejected = item.status === ConcessionStatusType.Rejected;
   const isCancelled = item.status === ConcessionStatusType.Cancelled;
@@ -212,42 +215,28 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: isApproved
-          ? (theme) => varAlpha(theme.palette.success.mainChannel, 0.04)
-          : isRejected
-            ? (theme) => varAlpha(theme.palette.error.mainChannel, 0.04)
-            : isCancelled
-              ? (theme) => varAlpha(theme.palette.warning.mainChannel, 0.04)
-              : 'background.paper',
-        borderColor: isApproved
-          ? 'success.light'
-          : isRejected
-            ? 'error.light'
-            : isCancelled
-              ? 'warning.light'
-              : 'divider',
+        // bgcolor: isApproved
+        //   ? (theme) => varAlpha(theme.palette.success.mainChannel, 0.04)
+        //   : isRejected
+        //     ? (theme) => varAlpha(theme.palette.error.mainChannel, 0.04)
+        //     : isCancelled
+        //       ? (theme) => varAlpha(theme.palette.warning.mainChannel, 0.04)
+        //       : 'background.paper',
+        // borderColor: isApproved
+        //   ? 'success.light'
+        //   : isRejected
+        //     ? 'error.light'
+        //     : isCancelled
+        //       ? 'warning.light'
+        //       : 'divider',
       }}
     >
-      <CardContent sx={{ p: 1, flex: 1 }}>
+      <CardContent sx={{ p: 1.5, flex: 1 }}>
         {/* Header */}
-        <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={2}>
+        <Box display="flex" alignItems="flex-start" justifyContent="space-between">
           <Box display="flex" alignItems="center" gap={1.5}>
-            <Box
-              sx={{
-                width: 36,
-                height: 36,
-                borderRadius: 1.5,
-                bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Iconify icon="mdi:tag-outline" width={20} sx={{ color: 'primary.main' }} />
-            </Box>
             <Box>
-              <Typography variant="subtitle1" fontWeight={700} lineHeight={1.2}>
+              <Typography variant="subtitle1" fontWeight={600} lineHeight={1.2}>
                 {item.concessionTypeName}
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -263,7 +252,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
             {statusLabel}
           </Label>
         </Box>
-
+        <Divider />
         {/* Concession Amount */}
         <Box
           mb={2}
@@ -271,15 +260,13 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           alignItems="center"
           justifyContent="space-between"
           sx={{
-            p: 1.5,
             borderRadius: 1,
-            bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.06),
           }}
         >
           <Typography variant="body2" fontWeight={700}>
             Concession Amount
           </Typography>
-          <Typography variant="h6" fontWeight={800} color="success.main">
+          <Typography variant="h6" fontWeight={800}>
             {formatNumber(item.totalAmount, 'INR')}
           </Typography>
         </Box>
@@ -332,7 +319,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
-                      window.open(`${process.env.NEXT_PUBLIC_API_URL}${doc.url}`, '_blank');
+                      setPreviewDoc({ url: doc.url, name: doc.documentName });
                     }}
                   >
                     <Visibility sx={{ fontSize: 18 }} />
@@ -342,6 +329,13 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
             </Stack>
           </Box>
         )}
+
+        <DocumentPreviewDialog
+          open={!!previewDoc}
+          onClose={() => setPreviewDoc(null)}
+          url={previewDoc?.url || ''}
+          documentName={previewDoc?.name}
+        />
 
         {/* Message */}
         {item.message && (
@@ -392,7 +386,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
       {/* Action Buttons */}
       <Box
         sx={{
-          px: 2,
+          px: 1,
           pb: 1,
           display: 'flex',
           gap: 1,

@@ -55,6 +55,25 @@ interface ConcessionApprovalFormValues {
   description: string;
 }
 
+const getValidationToastMessage = (errors: unknown): string => {
+  if (!errors) return 'Please fill all required fields.';
+  if (typeof errors === 'string') return errors;
+  if (Array.isArray(errors)) {
+    return (
+      errors.map((err) => getValidationToastMessage(err)).find((message) => Boolean(message)) ??
+      'Please fill all required fields.'
+    );
+  }
+  if (typeof errors === 'object') {
+    return (
+      Object.values(errors as Record<string, unknown>)
+        .map((value) => getValidationToastMessage(value))
+        .find((message) => Boolean(message)) ?? 'Please fill all required fields.'
+    );
+  }
+  return 'Please fill all required fields.';
+};
+
 // ─── Distribution Utility ─────────────────────────────────────────────────────
 
 /**
@@ -494,7 +513,6 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
     validationSchema,
     onSubmit: async (values) => {
       const selectedFeeHeads = values.feeHeads.filter((fh) => fh.selectedDueFeeIds.length > 0);
-
       try {
         if (isApprove) {
           const feeHeadApprovals = selectedFeeHeads.map((fh) => {
@@ -586,6 +604,19 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
   }, 0);
 
   const isSubmitting = isApproving || isCancelling;
+
+  const handleApprovalActionClick = async () => {
+    formik.setTouched({ description: true, feeHeads: true });
+    const errors = await formik.validateForm();
+
+    if (Object.keys(errors).length > 0) {
+      shikshaMitraToast.error({
+        message: getValidationToastMessage(errors),
+      });
+      return;
+    }
+    formik.handleSubmit();
+  };
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -733,16 +764,16 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
         <Box display="flex" alignItems="center" gap={1}>
           {totalSelectedConcession > 0 && (
             <Typography variant="caption" color="success.main" fontWeight={700}>
-              ₹{formatNumber(totalSelectedConcession)} concession selected
+              {formatNumber(totalSelectedConcession, 'INR')} concession selected
             </Typography>
           )}
           <LoadingButton
             loading={isSubmitting}
-            variant="contained"
+            variant="soft"
             size="small"
             color={isApprove ? 'success' : 'warning'}
             startIcon={isApprove ? <CheckCircle fontSize="small" /> : <Cancel fontSize="small" />}
-            onClick={() => formik.handleSubmit()}
+            onClick={handleApprovalActionClick}
           >
             {isApprove ? 'Approve' : 'Cancel'}
           </LoadingButton>

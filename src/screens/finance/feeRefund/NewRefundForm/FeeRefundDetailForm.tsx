@@ -9,8 +9,10 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Grid, MenuItem, TextField, Typography } from '@mui/material';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
-import { getInitialPaymentDetails } from '../Components/RefundProcessForm';
-import { paymentMethodsConfig } from '../../FeeCollection/Components/paymentConfigMethods';
+import {
+  refundPaymentMethodsConfig,
+  getInitialRefundPaymentDetails,
+} from './refundPaymentDetailsConfig';
 
 import type { RefundFormik } from './types';
 import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
@@ -69,7 +71,7 @@ export default function FeeRefundDetailsForm({
                 error={!!(formik.touched.refundMethod && formik.errors.refundMethod)}
               >
                 <CustomSelect
-                  options={Object.keys(paymentMethodsConfig).map((method) => ({
+                  options={Object.keys(refundPaymentMethodsConfig).map((method) => ({
                     value: method,
                     label: method.charAt(0).toUpperCase() + method.slice(1),
                   }))}
@@ -80,7 +82,7 @@ export default function FeeRefundDetailsForm({
                     formik.setFieldTouched('refundMethod', false);
                     formik.setFieldValue(
                       'paymentDetails',
-                      getInitialPaymentDetails(value as string)
+                      getInitialRefundPaymentDetails(value as string)
                     );
                     formik.validateForm();
                   }}
@@ -94,7 +96,9 @@ export default function FeeRefundDetailsForm({
 
             {/* Dynamic payment fields */}
             {formik.values.refundMethod &&
-              paymentMethodsConfig[formik.values.refundMethod as keyof typeof paymentMethodsConfig]
+              refundPaymentMethodsConfig[
+                formik.values.refundMethod as keyof typeof refundPaymentMethodsConfig
+              ]
                 ?.filter((field: IPaymentFieldConfig) => field.name !== 'amount')
                 .map((field: IPaymentFieldConfig) => {
                   const fieldPath = `paymentDetails.${field.name}`;
