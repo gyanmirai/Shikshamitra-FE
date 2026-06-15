@@ -375,6 +375,7 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
           loading={isLoading || isUpdateLoading}
           variant="contained"
           size="small"
+          type="submit"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           Submit

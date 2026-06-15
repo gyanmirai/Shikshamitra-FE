@@ -75,7 +75,13 @@ const CustomDialog = ({
       }}
       {...props}
     >
-      <FormComponent id="dialog-form" style={{ height: '100%' }}>
+      <FormComponent
+        id="dialog-form"
+        style={{ height: '100%' }}
+        onSubmit={(e: React.FormEvent) => {
+          e.preventDefault();
+        }}
+      >
         <Box
           display="flex"
           alignItems="center"
