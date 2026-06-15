@@ -77,7 +77,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
             <ThreeDotsActions
               showThreeDots={false}
               placement="right-top"
-              showDeleteIcon
+              showDeleteIcon={row.isUsedInDownstream}
               showEditIcon
               handleDeleteClick={() => {
                 onDelete(row as IIncomeCategory);

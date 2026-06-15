@@ -3,20 +3,23 @@
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { financeModuleType } from 'src/redux/tagTypes';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Card, Button, Typography } from '@mui/material';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import {
+  feeRefundApi,
   useDeleteFeeRefundMutation,
   useUpdateFeeRefundStatusMutation,
 } from 'src/redux/finance/RefundManagement/feeRefundManage';
@@ -33,6 +36,7 @@ const FeeRefund = () => {
   const viewRefundRequest = useBoolean();
   const onConfirmDialg = useBoolean();
   const deleteDialog = useBoolean();
+  const { confirmWithUndo } = useConfirmWithUndo();
   const [selectedMode, setSelectedMode] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -44,7 +48,7 @@ const FeeRefund = () => {
       type: 'mutation',
       currentQueryAndMutation: useUpdateFeeRefundStatusMutation,
     });
-  const [deleteRefund, { isLoading: isDeleting }] = useQueryAndMutation({
+  const [deleteRefund] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteFeeRefundMutation,
   });
@@ -240,22 +244,53 @@ const FeeRefund = () => {
       <CustomDialog
         open={onConfirmDialg.value}
         title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedMode === 'Approve' ? 'Approve Request' : 'Reject Request'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                selectedMode === 'Approve'
-                  ? 'This modal allows the admin to approve a student’s fee refund request by adding remarks and confirming the approval.'
-                  : 'This modal allows the admin to reject a student’s fee refund request by adding remarks and confirming the rejection.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
+          <Box
+            sx={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 1.5,
+            }}
+          >
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h5" sx={{ lineHeight: 1.25 }}>
+                  {selectedMode === 'Approve' ? 'Approve Request' : 'Reject Request'}
+                </Typography>
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  sx={{ textAlign: 'justify' }}
+                  title={
+                    selectedMode === 'Approve'
+                      ? 'This modal allows the admin to approve a student’s fee refund request by adding remarks and confirming the approval.'
+                      : 'This modal allows the admin to reject a student’s fee refund request by adding remarks and confirming the rejection.'
+                  }
+                >
+                  <Iconify
+                    icon="lucide:info"
+                    sx={{ mt: 0.25, cursor: 'pointer', flexShrink: 0 }}
+                    color="info.main"
+                  />
+                </CustomTooltip>
+              </Box>
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 0.75, lineHeight: 1.4, wordBreak: 'break-word' }}
+              >
+                <Box component="span" sx={{ color: 'text.primary', fontWeight: 600 }}>
+                  {selectedFeeRefund?.name || '-'}{' '}
+                  {selectedFeeRefund?.rollNo && `| Roll No: ${selectedFeeRefund.rollNo}`}
+                </Box>{' '}
+                {selectedFeeRefund?.grNo && `| GR No: ${selectedFeeRefund.grNo}`} | Class :{' '}
+                {[selectedFeeRefund?.class, selectedFeeRefund?.division]
+                  .filter(Boolean)
+                  .join(' ') || '-'}
+              </Typography>
+            </Box>
           </Box>
         }
         handleClose={() => {
@@ -297,55 +332,66 @@ const FeeRefund = () => {
         />
       </CustomDialog>
 
-      <CustomDialog
+      <ConfirmDialog
         open={deleteDialog.value}
-        title="Delete Refund Request"
-        handleClose={() => {
+        onClose={() => {
+          setSelectedFeeRefund(null);
           deleteDialog.onFalse();
         }}
-        maxWidth="xs"
-      >
-        <Box sx={{ p: 2 }}>
-          <Typography variant="body2" color="text.secondary" mb={2}>
-            Are you sure you want to delete this refund request?
-          </Typography>
-          <Box display="flex" justifyContent="flex-end" gap={1}>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                deleteDialog.onFalse();
-              }}
-            >
-              Cancel
-            </Button>
-            <LoadingButton
-              variant="contained"
-              color="error"
-              loading={isDeleting}
-              disabled={isDeleting}
-              onClick={async () => {
-                try {
-                  if (!selectedFeeRefund?._refundRequestId) return;
-                  await deleteRefund(selectedFeeRefund._refundRequestId).unwrap();
-                  shikshaMitraToast.success({
-                    message: 'Refund request deleted successfully.',
-                  });
-                  deleteDialog.onFalse();
-                  viewRefundRequest.onFalse();
-                  setSelectedFeeRefund(null);
-                  setIsEditMode(false);
-                } catch (err: any) {
-                  shikshaMitraToast.error({
-                    message: err?.data?.error?.message ?? 'Failed to delete refund request.',
-                  });
-                }
-              }}
-            >
-              Delete
-            </LoadingButton>
-          </Box>
-        </Box>
-      </CustomDialog>
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete refund request for student{' '}
+            <strong>{selectedFeeRefund?.name}</strong>?
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              deleteDialog.onFalse();
+              if (selectedFeeRefund?._refundRequestId) {
+                confirmWithUndo({
+                  item: selectedFeeRefund,
+                  onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
+                    dispatchFn(
+                      feeRefundApi.util.updateQueryData(
+                        'getFeeRefunds',
+                        {
+                          academicMediumId: academicFilters.filterPayload?.educationMediumId,
+                          standardId: academicFilters.filterPayload?.standardId,
+                          divisionId: academicFilters.filterPayload?.divisionId,
+                        },
+                        (draft) => {
+                          const index = draft.items.findIndex(
+                            (t) => t.id === selectedFeeRefund._refundRequestId
+                          );
+                          if (index !== -1) {
+                            setDeleteIndex(index);
+                            draft.items.splice(index, 1);
+                          }
+                        }
+                      )
+                    );
+                    setSelectedFeeRefund(null);
+                  },
+                  onUndoRestore: (dispatchFn, _deleteIndex) => {
+                    dispatchFn(
+                      feeRefundApi.util.invalidateTags([financeModuleType.feeRefund as any])
+                    );
+                  },
+                  onCommit: () => deleteRefund(selectedFeeRefund._refundRequestId).unwrap(),
+                });
+              }
+              setTimeout(() => deleteDialog.onFalse(), 200);
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
     </Box>
   );
 };

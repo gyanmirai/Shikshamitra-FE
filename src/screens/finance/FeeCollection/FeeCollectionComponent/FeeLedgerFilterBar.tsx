@@ -45,7 +45,7 @@ interface FeeLedgerFilterBarProps {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const FEE_LEDGER_INITIAL_FILTERS: FeeLedgerFilters = {
-  activeTab: 'by-month',
+  activeTab: 'by-fee-head',
   month: 'All',
   feeHead: 'All',
   status: 'All',
@@ -58,8 +58,8 @@ export const FEE_LEDGER_INITIAL_FILTERS: FeeLedgerFilters = {
 };
 
 const TABS = [
-  { value: 'by-month' as FeeLedgerTab, label: 'By Month', icon: 'solar:calendar-bold' },
   { value: 'by-fee-head' as FeeLedgerTab, label: 'By Fee Head', icon: 'solar:tag-bold' },
+  { value: 'by-month' as FeeLedgerTab, label: 'By Month', icon: 'solar:calendar-bold' },
 ];
 
 export const getAcademicYearMonthOptions = (

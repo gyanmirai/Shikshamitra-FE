@@ -47,7 +47,7 @@ const FeeHeadGroup = ({
     return selectedItems.some((s) => s.feeHeadId === group.feeHeadId && s.period === period);
   }).length;
 
-  const isAllSelected = selectableItems.length > 0 && selectedCount === selectableItems.length;
+  const isAllSelected = group.items.length > 0 && selectedCount === selectableItems.length;
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
 
   return (
@@ -132,9 +132,9 @@ const FeeHeadGroup = ({
         <ColHeader firstLabel="Month" showStatus />
         {group.items.map((item, idx) => {
           const period = toPeriod(FeeMonth[item.month] as string, item.year ?? year);
-          const isSelected = selectedItems.some(
-            (s) => s.feeHeadId === group.feeHeadId && s.period === period
-          );
+          const isSelected =
+            item.due === 0 ||
+            selectedItems.some((s) => s.feeHeadId === group.feeHeadId && s.period === period);
           return (
             <React.Fragment key={`${item.month}-${item.year ?? year}`}>
               <FeeRow
@@ -142,6 +142,7 @@ const FeeHeadGroup = ({
                 total={item.total}
                 paid={item.paid}
                 due={item.due}
+                reconciliationAmount={item.reconciliationAmount}
                 status={item.status}
                 isSelected={isSelected}
                 isDisabled={item.due === 0}

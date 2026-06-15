@@ -35,6 +35,7 @@ export interface IConcessionTypeForm {
   name: string;
   documents?: IConcessionDocument[];
   description?: string;
+  isUsedInDownstream?: boolean; // for downstream usage warning
 }
 
 export interface IConcessionTableProps {

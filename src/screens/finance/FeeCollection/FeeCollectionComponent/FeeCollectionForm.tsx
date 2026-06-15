@@ -20,13 +20,13 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -115,17 +115,6 @@ const normalizeDetailValue = (value: unknown): string => {
   if (value == null) return '';
   if (typeof value === 'string') return value.trim();
   return String(value).trim();
-};
-
-const formatBankAccountOption = (account: any): string => {
-  const bankName = typeof account?.bankName === 'string' ? account.bankName.trim() : '';
-  const ifscCode = typeof account?.ifscCode === 'string' ? account.ifscCode.trim() : '';
-  const accountNumber =
-    typeof account?.accountNumber === 'string' ? account.accountNumber.trim() : '';
-
-  if (bankName && ifscCode) return `${bankName} (${ifscCode})`;
-  if (bankName && accountNumber) return `${bankName} (${accountNumber})`;
-  return bankName || ifscCode || accountNumber;
 };
 
 // ─── Validation ────────────────────────────────────────────────────────────────
@@ -441,6 +430,7 @@ const FeeCollectComponentForm = ({
           total: item.total,
           paid: item.paid,
           due: item.due,
+          reconciliationAmount: item.reconciliationAmount,
           status: normalizeStatus(item.status, item.paid, item.due),
         })),
       })) as FeeLedgerData['monthWise'],
@@ -455,6 +445,7 @@ const FeeCollectComponentForm = ({
               total: item.total,
               paid: item.paid,
               due: item.due,
+              reconciliationAmount: item.reconciliationAmount,
               status: normalizeStatus(item.status, item.paid, item.due),
             }))
           )
@@ -476,6 +467,7 @@ const FeeCollectComponentForm = ({
               total: line.total,
               paid: line.paid,
               due: line.due,
+              reconciliationAmount: line.reconciliationAmount,
               status: line.status,
             });
             return acc;
@@ -546,24 +538,22 @@ const FeeCollectComponentForm = ({
         amount: c.pendingAmount,
         total: c.amount,
         paid: c.paidAmount,
+        reconciliationAmount: c.reconciliationAmount,
         status: c.status,
       })),
     [formData]
   );
 
-  const bankAccountOptions = useMemo(() => {
-    const bankAccountItems = Array.isArray(bankAccountsData?.items)
-      ? bankAccountsData.items
-      : Array.isArray(bankAccountsData?.data)
-        ? bankAccountsData.data
-        : Array.isArray(bankAccountsData)
-          ? bankAccountsData
-          : [];
-
-    return bankAccountItems
-      .map(formatBankAccountOption)
-      .filter((option: any): option is string => Boolean(option));
-  }, [bankAccountsData]);
+  const bankAccountOptions = useMemo(
+    () =>
+      bankAccountsData?.items.map(
+        (account: { bankName: string; accountNumber: string; id: string }) => ({
+          name: `${account.bankName} - ${account.accountNumber}`,
+          id: account.id,
+        })
+      ) ?? [],
+    [bankAccountsData]
+  );
 
   const isBankAccountsBusy = bankAccountsLoading || bankAccountsFetching;
 
@@ -1049,26 +1039,29 @@ const FeeCollectComponentForm = ({
     }
   };
 
+  const prevSelectionFilters = useRef(selectionFilters);
   // ── Auto-apply selection when filter checkboxes are toggled ───────────────
   useEffect(() => {
-    if (!hasSelectionFilters) {
+    if (prevSelectionFilters.current === selectionFilters) {
       return;
     }
+    prevSelectionFilters.current = selectionFilters;
 
     // Items to add (not already selected)
     const existingKeys = new Set(
       formik.values.selectedItems.map((s) => `${s.feeHeadId}|${s.period}`)
     );
-    const itemsToAdd = allSelectableItems.filter(
-      (i) => !existingKeys.has(`${i.feeHeadId}|${i.period}`)
-    );
+    const itemsToAdd = hasSelectionFilters
+      ? allSelectableItems.filter((i) => !existingKeys.has(`${i.feeHeadId}|${i.period}`))
+      : [];
 
     // Charges to add (not already selected)
     const existingChargeIds = new Set(formik.values.charges);
-    const chargesToAdd = allSelectableChargeIds.filter((id) => !existingChargeIds.has(id));
+    const chargesToAdd = hasSelectionFilters
+      ? allSelectableChargeIds.filter((id) => !existingChargeIds.has(id))
+      : [];
 
     // Items to remove: any item that was in a now-unchecked filter scope
-    // We only remove items that are NOT covered by any currently active filter
     const shouldKeepItem = (item: SelectedItem): boolean => {
       if (selectionFilters.allPending) return true;
       if (selectionFilters.firstSixMonths && firstSixPeriodSet.has(item.period)) return true;
@@ -1076,12 +1069,16 @@ const FeeCollectComponentForm = ({
       return false;
     };
 
-    const nextItems = [...formik.values.selectedItems.filter(shouldKeepItem), ...itemsToAdd];
+    const nextItems = hasSelectionFilters
+      ? [...formik.values.selectedItems.filter(shouldKeepItem), ...itemsToAdd]
+      : [];
 
     const shouldKeepCharge = selectionFilters.allCharges;
-    const nextCharges = shouldKeepCharge
-      ? [...new Set([...formik.values.charges, ...chargesToAdd])]
-      : formik.values.charges.filter((id) => !allSelectableChargeIds.includes(id));
+    const nextCharges = hasSelectionFilters
+      ? shouldKeepCharge
+        ? [...new Set([...formik.values.charges, ...chargesToAdd])]
+        : formik.values.charges.filter((id) => !allSelectableChargeIds.includes(id))
+      : [];
 
     formik.setFieldValue('selectedItems', nextItems, false);
     formik.setFieldValue('charges', nextCharges, false);
@@ -1813,8 +1810,8 @@ const FeeCollectComponentForm = ({
                                         </MenuItem>
                                       ) : (
                                         selectOptions.map((opt: any) => (
-                                          <MenuItem key={opt} value={opt}>
-                                            {opt}
+                                          <MenuItem key={opt.id} value={opt.id}>
+                                            {opt.name}
                                           </MenuItem>
                                         ))
                                       )}

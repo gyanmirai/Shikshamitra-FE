@@ -1,12 +1,13 @@
-import type { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
-
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-import { FeeCollectionStatusTypeColors } from 'src/enums/fee-collection-type';
 import { Box, Chip, Divider, Collapse, IconButton, Typography } from '@mui/material';
+import {
+  FeeCollectionStatusType,
+  FeeCollectionStatusTypeColors,
+} from 'src/enums/fee-collection-type';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -124,13 +125,7 @@ const MonthRow = ({ item }: { item: IRefundMonthItem }) => (
 
     <Box sx={{ width: 100, display: 'flex', justifyContent: 'center' }}>
       <Label color={FeeCollectionStatusTypeColors[item.status]} variant="soft">
-        {item.status === 2
-          ? 'Paid'
-          : item.status === 1
-            ? 'Partial'
-            : item.status === 0
-              ? 'Pending'
-              : 'Overdue'}
+        {FeeCollectionStatusType[item.status] ?? item.status}
       </Label>
     </Box>
   </Box>

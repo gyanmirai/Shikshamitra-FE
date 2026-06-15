@@ -183,7 +183,7 @@ const financeModule = {
               icon: menuIconView('mdi:cash-refund'),
             },
             {
-              title: 'Invoice & Receipts',
+              title: 'Receipts',
               path: financePaths.fees.invoicesAndReceipts,
               _action: 'invoices-and-receipts',
               shortcutKey: 'Alt+F+2+3',

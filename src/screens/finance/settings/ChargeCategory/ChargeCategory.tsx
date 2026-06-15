@@ -24,6 +24,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   Box,
   Stack,
@@ -195,7 +196,7 @@ const FinanceChargeCategory = () => {
           return (
             <ThreeDotsActions
               showEditIcon
-              showDeleteIcon
+              showDeleteIcon={row.isUsedInDownstream}
               showThreeDots={false}
               placement="right-top"
               handleDeleteClick={() => {
@@ -322,6 +323,10 @@ interface ChargeCategoryDialogProps {
 
 const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
+  const [pendingFormValues, setPendingFormValues] = useState(null);
+
   // PUT mutation for updating
   const [putChargeCategory, { isLoading: putLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -383,39 +388,52 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
     validationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
-      try {
-        const payload = {
-          name: values.chargeName,
-          isApprovalRequired: values.isRefundable,
-          description: values.description || '',
-        };
-
-        if (editData?.id) {
-          await putChargeCategory({
-            chargeCategoryId: editData.id,
-            body: payload,
-          }).unwrap();
-          shikshaMitraToast.success({
-            message: `${values.chargeName} Charge Category Updated Successfully`,
-          });
-        } else {
-          await postChargeCategory({
-            academicYearId: currentYear?.id,
-            body: payload,
-          }).unwrap();
-          shikshaMitraToast.success({
-            message: `${values.chargeName} Charge Category Added Successfully`,
-          });
-        }
-        onClose(null, true);
-      } catch (error) {
-        console.error('Save failed:', error);
-        shikshaMitraToast.error({
-          message: `Failed to ${editData ? 'update' : 'create'} charge category`,
-        });
+      // Check if updating an item that is used downstream
+      if (editData?.isUsedInDownstream && editData?.id) {
+        setPendingFormValues(values);
+        setShowDownstreamWarning(true);
+        return;
       }
+
+      // Proceed with submission if not used downstream
+      await performSubmission(values);
     },
   });
+
+  // Perform the actual form submission
+  const performSubmission = async (values: any) => {
+    try {
+      const payload = {
+        name: values.chargeName,
+        isApprovalRequired: values.isRefundable,
+        description: values.description || '',
+      };
+
+      if (editData?.id) {
+        await putChargeCategory({
+          chargeCategoryId: editData.id,
+          body: payload,
+        }).unwrap();
+        shikshaMitraToast.success({
+          message: `${values.chargeName} Charge Category Updated Successfully`,
+        });
+      } else {
+        await postChargeCategory({
+          academicYearId: currentYear?.id,
+          body: payload,
+        }).unwrap();
+        shikshaMitraToast.success({
+          message: `${values.chargeName} Charge Category Added Successfully`,
+        });
+      }
+      onClose(null, true);
+    } catch (error) {
+      console.error('Save failed:', error);
+      shikshaMitraToast.error({
+        message: `Failed to ${editData ? 'update' : 'create'} charge category`,
+      });
+    }
+  };
 
   // Handle dialog cancellation and form reset
   const handleClose = () => {
@@ -524,6 +542,25 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
+
+      {/* Downstream Usage Warning Dialog */}
+      <DownstreamUsageWarning
+        open={showDownstreamWarning}
+        itemName={editData?.name || ''}
+        itemType="Charge Category"
+        isLoading={postLoading || putLoading}
+        onConfirm={async () => {
+          if (pendingFormValues) {
+            await performSubmission(pendingFormValues);
+            setShowDownstreamWarning(false);
+            setPendingFormValues(null);
+          }
+        }}
+        onCancel={() => {
+          setShowDownstreamWarning(false);
+          setPendingFormValues(null);
+        }}
+      />
     </Box>
   );
 };

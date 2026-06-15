@@ -41,6 +41,12 @@ export const toPeriod = (month: FeeMonth | string, year: number): string => {
   return `${year}-${String(monthNumber).padStart(2, '0')}`;
 };
 
+const AMOUNT_COLUMN_WIDTH = 112;
+const STATUS_COLUMN_WIDTH = 96;
+
+const getLedgerGridColumns = (showStatus: boolean): string =>
+  `28px minmax(160px, 1fr) repeat(4, ${AMOUNT_COLUMN_WIDTH}px)${showStatus ? ` ${STATUS_COLUMN_WIDTH}px` : ''}`;
+
 // ─── ColHeader ─────────────────────────────────────────────────────────────────
 
 export const ColHeader = ({
@@ -51,13 +57,13 @@ export const ColHeader = ({
   showStatus?: boolean;
 }) => (
   <Box
-    display="flex"
+    display="grid"
     alignItems="center"
-    pl={1.25}
-    gap={1}
-    pr={2}
+    columnGap={1}
+    px={1.5}
     py={0.9}
     sx={{
+      gridTemplateColumns: getLedgerGridColumns(showStatus),
       bgcolor: (theme) =>
         theme.palette.mode === 'dark'
           ? alpha(theme.palette.background.neutral ?? theme.palette.action.hover, 0.62)
@@ -66,19 +72,18 @@ export const ColHeader = ({
     }}
   >
     {/* Checkbox placeholder */}
-    <Box sx={{ width: 28 }} />
+    <Box />
     <Typography
       variant="caption"
       color="text.disabled"
       fontWeight={700}
       textTransform="uppercase"
       letterSpacing="0.05em"
-      flex={1}
-      sx={{ fontSize: '0.7rem' }}
+      sx={{ fontSize: '0.7rem', minWidth: 0 }}
     >
       {firstLabel}
     </Typography>
-    {(['TOTAL', 'PAID', 'PENDING'] as const).map((col) => (
+    {(['TOTAL', 'PAID', 'PENDING', 'RECONCILIATION AMOUNT'] as const).map((col) => (
       <Typography
         key={col}
         variant="caption"
@@ -86,7 +91,7 @@ export const ColHeader = ({
         fontWeight={700}
         textTransform="uppercase"
         letterSpacing="0.05em"
-        sx={{ width: 105, textAlign: 'right', fontSize: '0.7rem' }}
+        sx={{ textAlign: 'right', fontSize: '0.7rem' }}
       >
         {col}
       </Typography>
@@ -98,7 +103,7 @@ export const ColHeader = ({
         fontWeight={700}
         textTransform="uppercase"
         letterSpacing="0.05em"
-        sx={{ width: 102, textAlign: 'center', fontSize: '0.7rem' }}
+        sx={{ textAlign: 'center', fontSize: '0.7rem' }}
       >
         STATUS
       </Typography>
@@ -118,6 +123,7 @@ export interface FeeRowProps {
   isDisabled?: boolean;
   showStatus?: boolean;
   onToggle: () => void;
+  reconciliationAmount?: number;
 }
 
 export const FeeRow = ({
@@ -125,6 +131,7 @@ export const FeeRow = ({
   total,
   paid,
   due,
+  reconciliationAmount,
   status,
   isSelected,
   isDisabled = false,
@@ -132,16 +139,17 @@ export const FeeRow = ({
   onToggle,
 }: FeeRowProps) => {
   const theme = useTheme();
+  const safeReconciliationAmount = reconciliationAmount ?? 0;
 
   return (
     <Box
-      display="flex"
+      display="grid"
       alignItems="center"
-      gap={1}
-      pl={4}
-      pr={2}
+      columnGap={1}
+      px={1.5}
       py={0.95}
       sx={{
+        gridTemplateColumns: getLedgerGridColumns(showStatus),
         cursor: isDisabled ? 'default' : 'pointer',
         opacity: isDisabled ? 0.45 : 1,
         transition: 'background-color 0.18s ease, opacity 0.18s ease, border-color 0.18s ease',
@@ -173,8 +181,8 @@ export const FeeRow = ({
           '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
         }}
       />
-      <Box display="flex" alignItems="center" gap={1} flex={1} minWidth={0}>
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+      <Box display="flex" alignItems="center" gap={1} minWidth={0}>
+        <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
           {name}
         </Typography>
       </Box>
@@ -183,52 +191,58 @@ export const FeeRow = ({
       <Typography
         variant="body2"
         sx={{
-          width: 110,
           textAlign: 'right',
-          flexShrink: 0,
           fontVariantNumeric: 'tabular-nums',
           color: 'text.secondary',
         }}
       >
-        ₹{formatNumber(total)}
+        {formatNumber(total, 'INR')}
       </Typography>
 
       {/* PAID */}
       <Typography
         variant="body2"
         sx={{
-          width: 110,
           textAlign: 'right',
-          flexShrink: 0,
           fontVariantNumeric: 'tabular-nums',
           color: 'text.secondary',
         }}
       >
-        ₹{formatNumber(paid)}
+        {formatNumber(paid, 'INR')}
       </Typography>
 
       {/* PENDING / DUE */}
       <Typography
         variant="body2"
         sx={{
-          width: 110,
           textAlign: 'right',
-          flexShrink: 0,
           fontVariantNumeric: 'tabular-nums',
           fontWeight: 600,
         }}
       >
-        ₹{formatNumber(due)}
+        {formatNumber(due, 'INR')}
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={{
+          textAlign: 'right',
+          fontVariantNumeric: 'tabular-nums',
+          fontWeight: 600,
+        }}
+      >
+        {formatNumber(safeReconciliationAmount, 'INR')}
       </Typography>
 
       {/* STATUS */}
-      <Box sx={{ width: 88, display: 'flex', justifyContent: 'center' }}>
-        {showStatus && status != null && (
-          <Label color={FeeCollectionStatusTypeColors[status]} variant="soft">
-            {FeeCollectionStatusType[status]}
-          </Label>
-        )}
-      </Box>
+      {showStatus && (
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          {status != null && (
+            <Label color={FeeCollectionStatusTypeColors[status]} variant="soft">
+              {FeeCollectionStatusType[status]}
+            </Label>
+          )}
+        </Box>
+      )}
     </Box>
   );
 };

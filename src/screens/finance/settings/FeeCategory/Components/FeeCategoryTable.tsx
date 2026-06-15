@@ -103,6 +103,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 setSelectedFeeCategory(row as IFeeCategory);
                 deleteFeeCategoryDialog.onTrue();
               }}
+              disableDeleteIcon={row?.isUsedInDownstream}
               handleEditClick={() => {
                 setEditData(row as IFeeCategory);
                 onAddFeeCategory.onTrue();

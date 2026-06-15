@@ -77,7 +77,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
             <ThreeDotsActions
               showThreeDots={false}
               placement="right-top"
-              showDeleteIcon
+              showDeleteIcon={row.isUsedInDownstream}
               showEditIcon
               handleDeleteClick={() => {
                 onDelete(row as IExpenseCategory);

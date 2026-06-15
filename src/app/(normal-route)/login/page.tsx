@@ -27,7 +27,7 @@ import { LogoWithText } from 'src/components/logo/logo-with-text';
 
 // --- Validation Schemas ---
 const loginSchema = Yup.object({
-  organization: Yup.string().required('School code is required'),
+  // organization: Yup.string().required('School code is required'),
   email: Yup.string().required('Email or Username is required'),
   password: Yup.string().required('Password is required'),
 });

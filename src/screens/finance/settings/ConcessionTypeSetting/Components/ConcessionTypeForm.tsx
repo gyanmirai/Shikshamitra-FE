@@ -5,16 +5,17 @@ import { useFormik } from 'formik';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useRef, useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import React, { useRef, useMemo, useState } from 'react';
 import { LoadingScreen } from 'src/components/loading-screen';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { DownstreamUsageWarning } from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   Box,
   Grid,
@@ -48,12 +49,16 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
 }: IConcessionTypeFormProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
+  // State for downstream usage warning dialog
+  const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
+  const [pendingFormValues, setPendingFormValues] = useState<any>(null);
+
   const { data: concessionTypesData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypesQuery,
     params: { academicYearId: currentYear?.id, maxResultCount: 1000 },
     options: {
-      skip: !currentYear?.id || !open?.value,
+      skip: !currentYear?.id || !open?.value || editData,
     },
   });
 
@@ -98,40 +103,51 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
       concessionTypeDetails?.data || editData
     ),
     onSubmit: async (values) => {
-      try {
-        const payload = {
-          name: values.name,
-          documents:
-            values.documents?.map((doc: any) => ({
-              ...doc,
-              documentSize: doc.documentSize
-                ? Math.round(Number(doc.documentSize) * 1024 * 1024)
-                : doc.documentSize,
-              acceptedFormat: Array.isArray(doc.acceptedFormat)
-                ? doc.acceptedFormat.map(Number)
-                : [],
-            })) || [],
-          description: values.description || '',
-        };
-
-        if (concessionTypeDetails?.data?.id) {
-          await updateConcessionType({
-            concessionTypeId: concessionTypeDetails.data.id,
-            body: payload,
-          }).unwrap();
-        } else {
-          await addConcessionType({
-            academicYearId: currentYear?.id,
-            body: payload,
-          }).unwrap();
-        }
-
-        onClose(null, true);
-      } catch (error) {
-        console.error(`Error ${editData?.id ? 'updating' : 'creating'} concession type:`, error);
+      // Check if updating an item that is used downstream
+      if (editData?.isUsedInDownstream && editData?.id) {
+        setPendingFormValues(values);
+        setShowDownstreamWarning(true);
+        return;
       }
+
+      // Proceed with submission if not used downstream
+      await performSubmission(values);
     },
   });
+
+  // Perform the actual form submission
+  const performSubmission = async (values: any) => {
+    try {
+      const payload = {
+        name: values.name,
+        documents:
+          values.documents?.map((doc: any) => ({
+            ...doc,
+            documentSize: doc.documentSize
+              ? Math.round(Number(doc.documentSize) * 1024 * 1024)
+              : doc.documentSize,
+            acceptedFormat: Array.isArray(doc.acceptedFormat) ? doc.acceptedFormat.map(Number) : [],
+          })) || [],
+        description: values.description || '',
+      };
+
+      if (concessionTypeDetails?.data?.id) {
+        await updateConcessionType({
+          concessionTypeId: concessionTypeDetails.data.id,
+          body: payload,
+        }).unwrap();
+      } else {
+        await addConcessionType({
+          academicYearId: currentYear?.id,
+          body: payload,
+        }).unwrap();
+      }
+
+      onClose(null, true);
+    } catch (error) {
+      console.error(`Error ${editData?.id ? 'updating' : 'creating'} concession type:`, error);
+    }
+  };
 
   // Document add/remove handlers
   const handleAddDocument = () => {
@@ -485,6 +501,25 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
           {editData ? 'Update' : 'Submit'}
         </Button>
       </DialogActions>
+
+      {/* Downstream Usage Warning Dialog */}
+      <DownstreamUsageWarning
+        open={showDownstreamWarning}
+        itemName={concessionTypeDetails?.data?.name || ''}
+        itemType="Concession Type"
+        isLoading={isSubmitting}
+        onConfirm={async () => {
+          if (pendingFormValues) {
+            await performSubmission(pendingFormValues);
+            setShowDownstreamWarning(false);
+            setPendingFormValues(null);
+          }
+        }}
+        onCancel={() => {
+          setShowDownstreamWarning(false);
+          setPendingFormValues(null);
+        }}
+      />
     </BackPopUpChecked>
   );
 };

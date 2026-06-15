@@ -5,7 +5,7 @@ export const FINANCE_AUDIT_SUBMODULE_OPTIONS = [
   { label: 'Collections', value: FinanceAuditSubModule.COLLECTIONS },
   { label: 'Charges', value: FinanceAuditSubModule.CHARGES },
   { label: 'Refunds', value: FinanceAuditSubModule.REFUNDS },
-  { label: 'Invoice & Receipts', value: FinanceAuditSubModule.INVOICE_RECEIPTS },
+  { label: 'Receipts', value: FinanceAuditSubModule.INVOICE_RECEIPTS },
   { label: 'Concessions', value: FinanceAuditSubModule.CONCESSIONS },
   { label: 'Reconciliation', value: FinanceAuditSubModule.RECONCILIATION },
   { label: 'Income Tracking', value: FinanceAuditSubModule.INCOME_TRACKING },
