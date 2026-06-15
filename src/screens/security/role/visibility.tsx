@@ -195,7 +195,7 @@ const Visibility = ({
         </Box>
 
         <Scrollbar sx={{ px: 2, pb: 2 }}>
-          <Stack spacing={1.5}>
+          <Stack spacing={1.5} sx={{ pb: 8 }}>
             {data.map((item, index) => {
               const isUnlocked = visibility.find((t) => t.name === item.permissionName)?.isGranted;
               const isSelected = currentSelected?.title === item.title;
@@ -211,12 +211,11 @@ const Visibility = ({
                       .includes(t.name) && t.isGranted
                 ).length || 0;
 
-              const progress =
-                totalSubmodules > 0
+              const progress = !isUnlocked
+                ? 0
+                : totalSubmodules > 0
                   ? (visibleSubmodules / totalSubmodules) * 100
-                  : isUnlocked
-                    ? 100
-                    : 0;
+                  : 100;
               const isCompleted = progress === 100;
 
               return (
@@ -474,7 +473,7 @@ const Visibility = ({
 
             {/* CONTENT */}
             <Scrollbar sx={{ flexGrow: 1, p: 3 }}>
-              <Stack spacing={3}>
+              <Stack spacing={3} sx={{ pb: 8 }}>
                 {currentSelected.submodule?.length ? (
                   <Stack spacing={1}>
                     {currentSelected.submodule.map((sub: any, idx: number) => (

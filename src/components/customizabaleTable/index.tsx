@@ -26,7 +26,6 @@ import { TableHeader } from './components/TableHeader';
 import { FilterChips } from './components/FilterChips';
 import { useTableConfig } from './hooks/useTableConfig';
 import { TableToolbar } from './components/TableToolbar';
-import { useColumnResize } from './hooks/useColumnResize';
 import { useStickyColumns } from './hooks/useStickyColumns';
 import { ColumnFilterMenu } from './components/ColumnFilterMenu';
 
@@ -118,26 +117,14 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   // For empty content width
   const fullScreenDialog = useBoolean();
 
-  const { columnWidths, handleResizeStart, handleResetWidth } = useColumnResize();
   const { stickyMap, getStickyStyle } = useStickyColumns({
     columns: memoizedColumns,
     columnVisibility,
     headerRefs,
     paginatedData,
-    columnWidths,
     isLoading,
     tableUniqId,
   });
-
-  const effectiveColumnWidths = useMemo(() => {
-    if (Object.keys(columnWidths).length === 0) return {} as Record<string, number>;
-    const widths: Record<string, number> = {};
-    memoizedColumns.forEach((col, index) => {
-      const configuredWidth = typeof col.width === 'number' ? col.width : undefined;
-      widths[col.id] = columnWidths[col.id] ?? configuredWidth ?? headerRefs[index] ?? 100;
-    });
-    return widths;
-  }, [columnWidths, headerRefs, memoizedColumns]);
 
   // Changes whenever search/filter/sort/page changes → triggers row re-animation
   const animationKey = useMemo(
@@ -460,9 +447,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   '&:focus-visible': {
                     outline: 'none',
                   },
-                  ...(Object.keys(effectiveColumnWidths).length > 0
-                    ? { tableLayout: 'fixed' }
-                    : {}),
                 }}
               >
                 <TableHeader
@@ -479,9 +463,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   setHeaderRef={setHeaderRefs}
                   stickyMap={stickyMap}
                   getStickyStyle={getStickyStyle}
-                  columnWidths={effectiveColumnWidths}
-                  onResizeStart={handleResizeStart}
-                  onResetWidth={handleResetWidth}
                   tableUniqId={tableUniqId}
                 />
                 <TableBody
@@ -498,7 +479,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   noDataText={noDataText}
                   tableRef={tableRef}
                   rowsPerPage={rowsPerPage}
-                  columnWidths={effectiveColumnWidths}
                   animationKey={animationKey}
                 />
               </Table>
@@ -605,10 +585,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       tableTitle,
       tableId,
       sortedData,
-      effectiveColumnWidths,
       animationKey,
-      handleResizeStart,
-      handleResetWidth,
     ]
   );
 

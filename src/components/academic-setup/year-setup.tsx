@@ -89,6 +89,21 @@ interface NodeData {
 
 // ----------------------------------------------------------------------
 
+// Helper to recursively find a node in the tree data
+const findNodeInTree = (nodes: NodeData[], id: string, type: NodeType): NodeData | null => {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const node of nodes) {
+    if (node.id === id && node.type === type) {
+      return node;
+    }
+    if (node.children) {
+      const found = findNodeInTree(node.children, id, type);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
 const YearSetup = () => {
   const theme = useTheme();
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('');
@@ -219,6 +234,29 @@ const YearSetup = () => {
     }));
   }, [boards, currentAcademicYear]);
 
+  // Find the active up-to-date selected node from latest treeData or currentAcademicYear
+  const activeSelectedNode = useMemo(() => {
+    if (!selectedNode) return null;
+    if (selectedNode.type === 'Academic Year') {
+      if (!currentAcademicYear) return null;
+      return {
+        id: currentAcademicYear.id,
+        name: currentAcademicYear.name,
+        type: 'Academic Year' as NodeType,
+        data: currentAcademicYear,
+        children: [],
+        parentsData: {},
+      };
+    }
+    return findNodeInTree(treeData, selectedNode.id, selectedNode.type);
+  }, [selectedNode, treeData, currentAcademicYear]);
+
+  useEffect(() => {
+    if (selectedNode && !activeSelectedNode) {
+      setSelectedNode(null);
+    }
+  }, [selectedNode, activeSelectedNode]);
+
   // -- Handlers --
   const handleToggleExpand = (nodeId: string) => {
     setExpandedNodes((prev) => ({ ...prev, [nodeId]: !prev[nodeId] }));
@@ -270,6 +308,7 @@ const YearSetup = () => {
               confirm.onFalse();
               setEditData(null);
               setSelectedAcademicYear(''); // Reset selection
+              setSelectedNode(null);
             }}
           >
             Delete
@@ -341,7 +380,10 @@ const YearSetup = () => {
               <FormControl size="small" variant="standard" sx={{ minWidth: 240 }}>
                 <Select
                   value={selectedAcademicYear}
-                  onChange={(e) => setSelectedAcademicYear(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedAcademicYear(e.target.value);
+                    setSelectedNode(null);
+                  }}
                   displayEmpty
                   disableUnderline
                   sx={{
@@ -476,8 +518,11 @@ const YearSetup = () => {
 
           {/* Right Details Panel */}
           <Grid size={{ xs: 12, md: 8, lg: 9 }} sx={{ height: '100%' }}>
-            {selectedNode ? (
-              <DetailsPanel selectedNode={selectedNode} currentAcademicYear={currentAcademicYear} />
+            {activeSelectedNode ? (
+              <DetailsPanel
+                selectedNode={activeSelectedNode}
+                currentAcademicYear={currentAcademicYear}
+              />
             ) : (
               <Card
                 sx={{

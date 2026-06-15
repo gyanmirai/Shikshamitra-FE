@@ -72,7 +72,7 @@ const RoleScreen = () => {
   });
 
   // Mutation hook for deleting a role
-  const [deleteRole] = useQueryAndMutation({
+  const [deleteRole, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteRoleMutation,
     popupConfig: {
@@ -112,20 +112,31 @@ const RoleScreen = () => {
 
       <ConfirmDialog
         open={confirm.value}
-        onClose={confirm.onFalse}
+        onClose={() => {
+          confirm.onFalse();
+          setDeleteInformation(null);
+        }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete role <strong>{deleteInformation?.name}</strong>?
+          </>
+        }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
-            onClick={() => {
-              deleteRole(deleteInformation?.id);
+            loading={isDeleteLoading}
+            onClick={async () => {
+              if (deleteInformation?.id) {
+                await deleteRole(deleteInformation.id);
+              }
               confirm.onFalse();
+              setDeleteInformation(null);
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
       <CustomizableTable
@@ -184,7 +195,7 @@ const RoleScreen = () => {
                   setDeleteInformation(data);
                   confirm.onTrue();
                 }}
-                placement="right-center"
+                placement="left-center"
                 handleEditClick={() => {
                   setEditData(data);
                   setOpen(true);
@@ -351,6 +362,9 @@ const RoleForm = ({ handleClose, editData }: any) => {
               isDefault: true,
               isPublic: false,
             },
+          }).unwrap();
+          shikshaMitraToast.success({
+            message: `${editData.name} to ${values.role} role updated successfully`,
           });
         } else {
           await addRole({
@@ -358,24 +372,12 @@ const RoleForm = ({ handleClose, editData }: any) => {
             color: values.color,
             isDefault: true,
             isPublic: false,
-          });
-        }
-        // await updatePermission({
-        //   providerName: 'R',
-        //   providerKey: values.role,
-        //   data: {
-        //     permissions: visibility,
-        //   },
-        // });
-        if (editData) {
-          shikshaMitraToast.success({
-            message: `${editData.name} to ${values.role} role updated successfully`,
-          });
-        } else {
+          }).unwrap();
           shikshaMitraToast.success({
             message: `${values.role} role created successfully`,
           });
         }
+
         handleClose();
       } catch (error) {
         console.error('Role operation failed:', error);
@@ -496,7 +498,7 @@ export const PermissionForm = ({
               data: {
                 permissions: diff,
               },
-            });
+            }).unwrap();
             shikshaMitraToast.success({
               message: 'Updated Permissions successfully',
             });
@@ -567,7 +569,18 @@ const VisibilityForm = ({ editData, handleClose }: any) => {
           </Button>
         </Box>
         {isPermissionLoading ? (
-          <CircularProgress />
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flex: 1,
+              height: '100%',
+              minHeight: 200,
+            }}
+          >
+            <CircularProgress />
+          </Box>
         ) : (
           <Visibility setVisibility={setVisibilityData} visibility={visibilityData} />
         )}

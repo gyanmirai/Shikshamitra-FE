@@ -369,6 +369,7 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
           loading={isLoading || isUpdateLoading}
           variant="contained"
           size="small"
+          type="submit"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           Submit
