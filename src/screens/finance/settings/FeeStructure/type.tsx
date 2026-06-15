@@ -51,6 +51,7 @@ export interface IFeeStructure {
   // paymentTerm: string;
   totalFeeHeads?: number;
   totalClasses?: number;
+  configuredClasses?: number;
   // paymentMethod: string[];
   feeStructureClasses: {
     [className: string]: IClassWiseFeeData[];
