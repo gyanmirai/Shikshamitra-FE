@@ -127,6 +127,7 @@ import {
   assignmentMatchesLeavePolicyFilter,
   normalizePayrollDayCalculationType,
   getEffectiveAssignmentLeavePolicyId,
+  getHolidayAcademicYearValidationError,
 } from '../hr-policy-workspace-utils';
 
 import type { AttendanceNumericField } from '../hr-policy-ui-utils';
@@ -1382,6 +1383,15 @@ export function useHRPolicyWorkspace({
       );
       return;
     }
+    const academicYearHolidayError = getHolidayAcademicYearValidationError(
+      calendarForm.holidays,
+      currentYear?.startDate,
+      currentYear?.endDate
+    );
+    if (academicYearHolidayError) {
+      setFormError(academicYearHolidayError);
+      return;
+    }
     const body = buildCalendarPayload();
     if (!body) return;
     await runPolicyOperation(
@@ -1428,6 +1438,8 @@ export function useHRPolicyWorkspace({
     buildCalendarPayload,
     calendarForm,
     clearDrawer,
+    currentYear?.endDate,
+    currentYear?.startDate,
     createWorkCalendarPolicy,
     drawer,
     previewPolicyImpact,
@@ -2098,10 +2110,6 @@ export function useHRPolicyWorkspace({
       setFormError('Manual holiday range must be inside the work calendar effective date range.');
       return;
     }
-    if (manualHolidayConflict) {
-      setFormError(manualHolidayConflictMessage);
-      return;
-    }
     const row: WorkCalendarHoliday = {
       academicYearId,
       date: manualHolidayForm.fromDate,
@@ -2114,6 +2122,19 @@ export function useHRPolicyWorkspace({
       isIncluded: true,
       notes: manualHolidayForm.notes.trim() || null,
     };
+    const academicYearHolidayError = getHolidayAcademicYearValidationError(
+      [row],
+      currentYear?.startDate,
+      currentYear?.endDate
+    );
+    if (academicYearHolidayError) {
+      setFormError(academicYearHolidayError);
+      return;
+    }
+    if (manualHolidayConflict) {
+      setFormError(manualHolidayConflictMessage);
+      return;
+    }
     setCalendarForm((current) => ({
       ...current,
       holidays:
@@ -2134,6 +2155,8 @@ export function useHRPolicyWorkspace({
     calendarForm.effectiveFrom,
     calendarForm.effectiveTo,
     closeManualHolidayDialog,
+    currentYear?.endDate,
+    currentYear?.startDate,
     editingManualHolidayIndex,
     manualHolidayConflict,
     manualHolidayConflictMessage,

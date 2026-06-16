@@ -109,10 +109,12 @@ export function assignmentMatchesLeavePolicyFilter(
 }
 
 export function isDateInsideRange(date: string, from?: string, to?: string): boolean {
-  const value = dayjs(date);
-  if (!value.isValid()) return false;
-  if (from && value.isBefore(dayjs(from), 'day')) return false;
-  if (to && value.isAfter(dayjs(to), 'day')) return false;
+  const value = parseDateOnly(date);
+  if (!value?.isValid()) return false;
+  const start = parseDateOnly(from);
+  const end = parseDateOnly(to);
+  if (start && value.isBefore(start, 'day')) return false;
+  if (end && value.isAfter(end, 'day')) return false;
   return true;
 }
 
@@ -122,11 +124,33 @@ export function isHolidayRangeInsideRange(
   from?: string,
   to?: string
 ): boolean {
+  const fromValue = parseDateOnly(fromDate);
+  const toValue = parseDateOnly(toDate);
+  if (!fromValue?.isValid() || !toValue?.isValid()) return false;
+
   return (
     isDateInsideRange(fromDate, from, to) &&
     isDateInsideRange(toDate, from, to) &&
-    !dayjs(toDate).isBefore(dayjs(fromDate), 'day')
+    !toValue.isBefore(fromValue, 'day')
   );
+}
+
+export function getHolidayAcademicYearValidationError(
+  holidays: WorkCalendarHoliday[],
+  academicYearStart?: string | null,
+  academicYearEnd?: string | null
+): string {
+  if (!academicYearStart || !academicYearEnd) return '';
+
+  const invalidHoliday = holidays.find((holiday) => {
+    const fromDate = getHolidayFromDate(holiday);
+    const toDate = getHolidayToDate(holiday);
+    return !isHolidayRangeInsideRange(fromDate, toDate, academicYearStart, academicYearEnd);
+  });
+
+  if (!invalidHoliday) return '';
+
+  return `${invalidHoliday.holidayName || 'Holiday'} must stay inside the selected academic year (${formatRange(academicYearStart, academicYearEnd)}).`;
 }
 
 // --- Holiday Helpers ----------------------------------------------------------
@@ -563,9 +587,15 @@ export function formatNumber(value?: number | null): string {
 
 export function getErrorMessage(error: unknown, fallback: string): string {
   const value = error as
-    | { data?: { error?: { message?: string }; message?: string }; error?: string }
+    | { data?: { detail?: string; error?: { message?: string }; message?: string }; error?: string }
     | undefined;
-  return value?.data?.error?.message || value?.data?.message || value?.error || fallback;
+  return (
+    value?.data?.detail ||
+    value?.data?.error?.message ||
+    value?.data?.message ||
+    value?.error ||
+    fallback
+  );
 }
 
 export function getAssignmentConflict(error: unknown): HrPolicyAssignmentConflict | null {
