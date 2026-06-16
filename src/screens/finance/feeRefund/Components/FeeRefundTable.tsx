@@ -34,9 +34,9 @@ function mapRefundItem(item: FeeRefundRequestDto, idx: number): IStudentFeeData 
   return {
     id: idx + 1,
     name: item.studentName || item.studentId,
-    board: '',
-    medium: '',
-    class: item.className ?? '',
+    board: item.boardName ?? '',
+    medium: item.educationMediumName ?? '',
+    class: item.standardName ?? '',
     division: item.divisionName ?? '',
     grNo: item.studentGrNo != null ? String(item.studentGrNo) : '',
     rollNo: item.studentRollNo != null ? String(item.studentRollNo) : '',
@@ -218,6 +218,7 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
             width: 100,
             minWidth: 100,
             maxWidth: 150,
+            render: (value) => (value ? `${value}` : '-'),
           },
           {
             id: 'class',

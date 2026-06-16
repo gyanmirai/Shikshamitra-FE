@@ -14,6 +14,7 @@ export interface IBankAccount {
   purpose?: string;
   ifscCode: string;
   upiId?: string;
+  isUsedInDownstream?: boolean;
 }
 
 export interface IBankAccountTableProps {

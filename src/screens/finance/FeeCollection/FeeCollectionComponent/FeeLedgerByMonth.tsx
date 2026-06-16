@@ -47,7 +47,7 @@ const MonthGroup = ({
     selectedItems.some((s) => s.feeHeadId === i.feeHeadId && s.period === period)
   ).length;
 
-  const isAllSelected = selectableItems.length > 0 && selectedCount === selectableItems.length;
+  const isAllSelected = group.items.length > 0 && selectedCount === selectableItems.length;
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
 
   return (
@@ -131,9 +131,9 @@ const MonthGroup = ({
         <Divider />
         <ColHeader firstLabel="Fee Head" showStatus />
         {group.items.map((item, idx) => {
-          const isSelected = selectedItems.some(
-            (s) => s.feeHeadId === item.feeHeadId && s.period === period
-          );
+          const isSelected =
+            item.due === 0 ||
+            selectedItems.some((s) => s.feeHeadId === item.feeHeadId && s.period === period);
           return (
             <React.Fragment key={item.feeHeadId}>
               <FeeRow
@@ -141,6 +141,7 @@ const MonthGroup = ({
                 total={item.total}
                 paid={item.paid}
                 due={item.due}
+                reconciliationAmount={item.reconciliationAmount}
                 status={item.status}
                 showStatus
                 isSelected={isSelected}

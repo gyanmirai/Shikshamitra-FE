@@ -76,7 +76,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
               onView?.(row as IConcessionTypeForm);
             }}
             showEditIcon
-            showDeleteIcon
+            showDeleteIcon={row.isUsedInDownstream}
             handleEditClick={() => onEdit?.(row as IConcessionTypeForm)}
             handleDeleteClick={() => onDelete?.(row as IConcessionTypeForm)}
           />

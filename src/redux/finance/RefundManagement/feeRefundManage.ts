@@ -16,6 +16,10 @@ export interface FeeRefundRequestDto {
   id: string;
   studentId: string;
   academicYearId: string;
+  boardId: string;
+  educationMediumId: string;
+  standardId: string;
+  divisionId: string;
   /** 0=Pending, 1=UnderReview, 2=Approved, 3=Rejected, 4=Cancelled */
   status: number;
   voucherNumber: string;
@@ -23,16 +27,21 @@ export interface FeeRefundRequestDto {
   refundMethod: string | null;
   reason: string | null;
   approverNotes: string | null;
+
   processedByUserId: string | null;
   processedAt: string | null;
   creationTime: string;
   lines: FeeRefundLineDto[];
+  paymentDetails?: Record<string, any>;
 
   // Student snapshot populated by the backend
   studentName: string;
   studentGrNo: number | null;
   studentRollNo: number | null;
   className: string | null;
+  boardName: string | null;
+  educationMediumName: string | null;
+  standardName: string | null;
   divisionName: string | null;
   studentContactNo: string | null;
 

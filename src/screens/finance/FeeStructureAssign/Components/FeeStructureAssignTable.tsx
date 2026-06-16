@@ -426,10 +426,7 @@ const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
                           } as IFeeStructureData)
                         }
                       >
-                        <Iconify
-                          icon="mdi:file-document-outline"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
+                        <Iconify icon="mdi:cash-plus" sx={{ height: '16px', width: '16px' }} />
                       </MenuItem>
                     </CustomTooltip>
                   </MenuList>

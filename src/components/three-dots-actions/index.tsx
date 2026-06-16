@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { Box, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
+import CustomTooltip from '../custom-tooltip';
 import { usePopover, CustomPopover } from '../custom-popover';
 
 import type { UsePopoverReturn } from '../custom-popover';
@@ -19,6 +20,9 @@ interface IThreeDotesActionsType {
   showEditIcon?: boolean;
   showDeleteIcon?: boolean;
   showThreeDots?: boolean;
+  disableDeleteIcon?: boolean;
+  disableEditIcon?: boolean;
+  disableViewIcon?: boolean;
   placement?:
     | 'top-left'
     | 'top-center'
@@ -48,6 +52,9 @@ const ThreeDotsActions = ({
   showEditIcon = false,
   showDeleteIcon = false,
   showThreeDots = true,
+  disableDeleteIcon = false,
+  disableEditIcon = false,
+  disableViewIcon = false,
   handleViewClick = () => {},
   handleEditClick = () => {},
   handleDeleteClick = () => {},
@@ -88,20 +95,32 @@ const ThreeDotsActions = ({
         </IconButton>
       )}
       {showDeleteIcon && (
-        <IconButton
-          data-testid="table-action-delete"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDeleteClick(e);
-          }}
-          sx={{ p: 0 }}
+        <CustomTooltip
+          title={
+            disableDeleteIcon
+              ? 'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.'
+              : ''
+          }
+          placement="top"
         >
-          <Iconify
-            icon="solar:trash-bin-trash-bold"
-            color="error.main"
-            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-          />
-        </IconButton>
+          <span>
+            <IconButton
+              data-testid="table-action-delete"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteClick(e);
+              }}
+              disabled={disableDeleteIcon}
+              sx={{ p: 0 }}
+            >
+              <Iconify
+                icon="solar:trash-bin-trash-bold"
+                color={disableDeleteIcon ? 'default' : 'error.main'}
+                sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+              />
+            </IconButton>
+          </span>
+        </CustomTooltip>
       )}
       {showThreeDots && (
         <IconButton

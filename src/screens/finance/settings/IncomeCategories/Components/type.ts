@@ -5,6 +5,7 @@ export interface IIncomeCategory {
   name: string;
   description?: string;
   tags: string[];
+  isUsedInDownstream?: boolean;
 }
 
 export interface IIncomeCategoryTableProps {

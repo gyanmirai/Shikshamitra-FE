@@ -4,6 +4,7 @@ import type { CollectFeeOutput } from 'src/redux/feeCollection/feeCollection';
 
 import NextLink from 'next/link';
 import { Iconify } from 'src/components/iconify';
+import { formatNumber } from 'src/utils/formate_number';
 import {
   Box,
   Chip,
@@ -65,8 +66,8 @@ export default function FeeCollectionOutcomePanel({
               <TableRow key={line.dueFeeId}>
                 <TableCell>{line.feeHeadName}</TableCell>
                 <TableCell>{line.installmentLabel}</TableCell>
-                <TableCell align="right">₹{line.amountPaid.toLocaleString('en-IN')}</TableCell>
-                <TableCell align="right">₹{line.pendingAfter.toLocaleString('en-IN')}</TableCell>
+                <TableCell align="right">{formatNumber(line.amountPaid, 'INR')}</TableCell>
+                <TableCell align="right">{formatNumber(line.pendingAfter, 'INR')}</TableCell>
               </TableRow>
             ))}
           </TableBody>

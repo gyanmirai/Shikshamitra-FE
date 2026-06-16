@@ -8,6 +8,10 @@ export interface IStudentFeeData {
   medium: string;
   class: string;
   division: string;
+  standardName?: string; // for UI display only
+  divisionName?: string; // for UI display only
+  educationMediumName?: string; // for UI display only
+  boardName?: string; // for UI display only
   grNo: string;
   rollNo: string;
   contactNo?: string;

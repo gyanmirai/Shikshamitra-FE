@@ -98,6 +98,7 @@ export interface FeeLedgerLine {
   paid: number;
   due: number;
   status: number | string;
+  reconciliationAmount?: number;
 }
 
 export interface FeeLedgerMonth {
@@ -113,6 +114,7 @@ export interface ChargeDetail {
   amount: number;
   paidAmount: number;
   pendingAmount: number;
+  reconciliationAmount?: number;
   status: number | string;
 }
 

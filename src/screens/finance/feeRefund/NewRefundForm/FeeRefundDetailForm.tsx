@@ -1,12 +1,17 @@
 // FeeRefundDetailsForm.tsx
+import type { RootState } from 'src/redux/store';
+
 import dayjs from 'dayjs';
 import { getIn } from 'formik';
-import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
+import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Grid, MenuItem, TextField, Typography } from '@mui/material';
+import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
 import {
@@ -17,13 +22,48 @@ import {
 import type { RefundFormik } from './types';
 import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 
+const formatBankAccountOption = (account: any): string => {
+  const bankName = typeof account?.bankName === 'string' ? account.bankName.trim() : '';
+  const ifscCode = typeof account?.ifscCode === 'string' ? account.ifscCode.trim() : '';
+  const accountNumber =
+    typeof account?.accountNumber === 'string' ? account.accountNumber.trim() : '';
+
+  if (bankName && ifscCode) return `${bankName} (${ifscCode})`;
+  if (bankName && accountNumber) return `${bankName} (${accountNumber})`;
+  return bankName || ifscCode || accountNumber;
+};
+
 export default function FeeRefundDetailsForm({
   formik,
 }: {
   formik: RefundFormik;
 }): React.ReactElement {
   const theme = useTheme();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [hasPaymentRecords, setHasPaymentRecords] = useState(false);
+  const {
+    data: bankAccountsData,
+    isLoading: bankAccountsLoading,
+    isFetching: bankAccountsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBankAccountQuery,
+    params: { academicYearId: currentYear?.id ?? '' },
+    options: { skip: !currentYear?.id },
+  });
+
+  const bankAccountOptions = useMemo(
+    () =>
+      bankAccountsData?.items.map(
+        (account: { bankName: string; accountNumber: string; id: string }) => ({
+          name: `${account.bankName} - ${account.accountNumber}`,
+          id: account.id,
+        })
+      ) ?? [],
+    [bankAccountsData]
+  );
+
+  const isBankAccountsBusy = bankAccountsLoading || bankAccountsFetching;
 
   return (
     <Box display="flex" flexDirection="column" gap={1} mt={0}>
@@ -139,12 +179,22 @@ export default function FeeRefundDetailsForm({
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             size="small"
+                            disabled={field.name === 'sourceBankAccount' && isBankAccountsBusy}
                             error={Boolean(touched && error)}
-                            helperText={touched && typeof error === 'string' ? error : ''}
+                            helperText={
+                              touched && typeof error === 'string'
+                                ? error
+                                : field.name === 'sourceBankAccount' && isBankAccountsBusy
+                                  ? 'Loading bank accounts...'
+                                  : ''
+                            }
                           >
-                            {field.options?.map((opt) => (
-                              <MenuItem key={opt} value={opt}>
-                                {opt}
+                            {(field.name === 'sourceBankAccount' && bankAccountOptions.length > 0
+                              ? bankAccountOptions
+                              : field.options
+                            )?.map((opt: any) => (
+                              <MenuItem key={opt.id} value={opt.id}>
+                                {opt.name}
                               </MenuItem>
                             ))}
                           </TextField>

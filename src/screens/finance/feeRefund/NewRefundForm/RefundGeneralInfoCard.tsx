@@ -11,8 +11,14 @@ import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 
 import type { RefundFormik } from './types';
 
-const RefundGeneralInfoCard: React.FC<{ formik: RefundFormik }> = ({
+interface RefundGeneralInfoCardProps {
+  formik: RefundFormik;
+  disabled?: boolean;
+}
+
+const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
   formik,
+  disabled = false,
 }): React.ReactElement => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { values, touched, errors, setFieldValue } = formik;
@@ -88,6 +94,7 @@ const RefundGeneralInfoCard: React.FC<{ formik: RefundFormik }> = ({
         <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
           <CustomSelect
             label="Board *"
+            disabled={disabled}
             options={boards}
             labelKey="name"
             valueKey="id"
@@ -113,7 +120,7 @@ const RefundGeneralInfoCard: React.FC<{ formik: RefundFormik }> = ({
         <ShakingTextField error={!!(touched.mediumId && errors.mediumId)}>
           <CustomSelect
             label="Medium *"
-            disabled={!values.boardId}
+            disabled={disabled || !values.boardId}
             options={mediums}
             labelKey="name"
             valueKey="id"
@@ -138,7 +145,7 @@ const RefundGeneralInfoCard: React.FC<{ formik: RefundFormik }> = ({
         <ShakingTextField error={!!(touched.standardId && errors.standardId)}>
           <CustomSelect
             label="Class *"
-            disabled={!values.mediumId}
+            disabled={disabled || !values.mediumId}
             options={classes || []}
             isLoading={classLoading}
             labelKey="name"
@@ -163,7 +170,7 @@ const RefundGeneralInfoCard: React.FC<{ formik: RefundFormik }> = ({
         <ShakingTextField error={!!(touched.divisionId && errors.divisionId)}>
           <CustomSelect
             label="Division *"
-            disabled={!values.standardId}
+            disabled={disabled || !values.standardId}
             options={allDivisions}
             labelKey="name"
             valueKey="id"
@@ -188,7 +195,7 @@ const RefundGeneralInfoCard: React.FC<{ formik: RefundFormik }> = ({
             loading={studentLoading || studentFetching}
             noOptionsText={values.divisionId ? 'No Student Found' : 'Select a division first'}
             fullWidth
-            disabled={!values.divisionId}
+            disabled={disabled || !values.divisionId}
             options={studentOptions}
             value={studentOptions.find((s: any) => s.studentId === values.studentId) || null}
             onChange={(_e, value: any) => {
