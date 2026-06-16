@@ -67,6 +67,11 @@ ul {
   padding: 0;
   list-style-type: none;
 }
+.nml__editor__content__bullet__list {
+  margin: unset;
+  padding: unset;
+  list-style-type: unset;
+}
 input[type='number'] {
   -moz-appearance: textfield;
   appearance: none;

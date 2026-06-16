@@ -5,6 +5,7 @@ import React from 'react';
 import * as yup from 'yup';
 import { useFormik } from 'formik';
 import { DatePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import {
   Box,
   Menu,
@@ -58,7 +59,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
         then: (schema) => schema.required('Max value is required'),
         otherwise: (schema) => schema.nullable(),
       }),
-      filterValue: yup.string().when('filterType', {
+      filterValue: yup.mixed().when('filterType', {
         is: 'between',
         then: (schema) => schema.nullable(),
         otherwise: (schema) => schema.required('value is required'),
@@ -95,6 +96,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
           { value: 'between', label: 'Between' },
         ];
       case 'date':
+      case 'dateTime':
         return [
           { value: 'equals', label: 'Equals' },
           // { value: 'range', label: 'Date Range' },
@@ -120,6 +122,9 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
     let filterTypeValue = formik.values.filterType;
     if (anchorEl.column.filterType === 'date') {
       value = (value as Dayjs).format('DD-MM-YYYY');
+    }
+    if (anchorEl.column.filterType === 'dateTime') {
+      value = (value as Dayjs).format('DD-MM-YYYY HH:mm');
     }
     if (anchorEl.column.filterType === 'enum') {
       filterTypeValue = 'equals';
@@ -224,6 +229,21 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
                 },
               }}
               format="DD-MM-YYYY"
+            />
+          ) : anchorEl?.column.filterType === 'dateTime' ? (
+            <DateTimePicker
+              value={formik.values.filterValue as null | Dayjs}
+              onChange={(newValue) => formik.setFieldValue('filterValue', newValue)}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  label: `${anchorEl?.column.label} *`,
+                  error: Boolean(formik.touched.filterValue && formik.errors.filterValue),
+                  helperText: (formik.touched.filterValue && formik.errors.filterValue) as string,
+                },
+              }}
+              format="DD-MM-YYYY HH:mm"
             />
           ) : formik.values.filterType === 'between' ? (
             <>

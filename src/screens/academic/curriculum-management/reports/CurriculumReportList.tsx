@@ -200,6 +200,7 @@ const CurriculumReportList = () => {
               id: 'creationTime',
               minWidth: '150px',
               align: 'left',
+              filterType: 'dateTime',
               render(value) {
                 return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—';
               },
@@ -209,6 +210,7 @@ const CurriculumReportList = () => {
               id: 'completedAt',
               minWidth: '150px',
               align: 'left',
+              filterType: 'dateTime',
               render(value) {
                 return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—';
               },
@@ -218,6 +220,7 @@ const CurriculumReportList = () => {
               id: 'expiresAt',
               minWidth: '150px',
               align: 'left',
+              filterType: 'dateTime',
               render(value) {
                 return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—';
               },

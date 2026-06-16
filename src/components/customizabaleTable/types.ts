@@ -12,7 +12,7 @@ export interface IColumnFilterAnchor {
 export interface IColumn {
   id: string;
   label: React.ReactNode; // allow rich header content
-  filterType?: 'string' | 'number' | 'date' | 'enum' | 'formattedNumber';
+  filterType?: 'string' | 'number' | 'date' | 'dateTime' | 'enum' | 'formattedNumber';
   isFilter?: boolean;
   width?: number | string;
   minWidth?: number | string;
@@ -85,7 +85,7 @@ export type IParams = {
   filters: Array<{
     column: string;
     type: string;
-    value: string;
+    value: any;
     valueType: string;
     label?: ReactNode;
   }>;

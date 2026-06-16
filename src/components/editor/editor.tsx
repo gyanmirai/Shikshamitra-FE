@@ -66,7 +66,16 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
       editable,
       extensions: [
         StarterKit.configure({
+          bulletList: {
+            HTMLAttributes: { class: editorClasses.content.bulletList },
+          },
           codeBlock: false,
+          listItem: {
+            HTMLAttributes: { class: editorClasses.content.listItem },
+          },
+          orderedList: {
+            HTMLAttributes: { class: editorClasses.content.orderedList },
+          },
         }),
         PlaceholderExtension.configure({
           placeholder,
@@ -76,7 +85,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
         TextAlignExtension.configure({ types: ['heading', 'paragraph'] }),
         LinkExtension.configure({
           autolink: true,
-          openOnClick: false,
+          // openOnClick: false,
         }),
         CodeBlockLowlightExtension.extend({
           addNodeView() {

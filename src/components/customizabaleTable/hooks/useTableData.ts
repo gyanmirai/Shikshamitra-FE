@@ -4,7 +4,7 @@ import { useMemo, useCallback } from 'react';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 
-import { parseFormattedNumber } from '../utils';
+import { parseTableDate, parseFormattedNumber } from '../utils';
 
 import type { IData, IColumn, IParams } from '../types';
 
@@ -46,19 +46,24 @@ export const useTableData = ({
             ? Number(filter.value)
             : filter.value;
           const isDateType = filter.valueType === 'date';
+          const isDateTimeType = filter.valueType === 'dateTime';
           const isFormattedNumber = filter.valueType === 'formattedNumber';
 
-          if (isDateType) {
+          if (isDateType || isDateTimeType) {
+            const rowDate = parseTableDate(value);
+            const filterDate = parseTableDate(filter.value);
+            const compareUnit = isDateTimeType ? 'minute' : 'day';
+
+            if (!rowDate || !filterDate) return false;
+
             switch (filter.type) {
               case 'equals':
-                return dayjs(value, 'DD-MM-YYYY').isSame(dayjs(filter.value, 'DD-MM-YYYY'));
+                return rowDate.isSame(filterDate, compareUnit);
 
               case 'after':
-                return dayjs(value, 'DD-MM-YYYY').isSameOrAfter(
-                  dayjs(filter.value as string, 'DD-MM-YYYY')
-                );
+                return rowDate.isSameOrAfter(filterDate, compareUnit);
               case 'before':
-                return dayjs(value, 'DD-MM-YYYY').isSameOrBefore(dayjs(filter.value, 'DD-MM-YYYY'));
+                return rowDate.isSameOrBefore(filterDate, compareUnit);
               default:
                 return false;
             }
@@ -140,7 +145,8 @@ export const useTableData = ({
           case 'number':
             return Number(value);
           case 'date':
-            return dayjs(value, 'DD-MM-YYYY').valueOf();
+          case 'dateTime':
+            return parseTableDate(value)?.valueOf() ?? 0;
           case 'formattedNumber':
             return parseFormattedNumber(value);
           default:
