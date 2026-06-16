@@ -3,20 +3,19 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
+import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, MenuList, MenuItem, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetAssignmentSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
@@ -122,60 +121,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       resetState();
     }
   };
-
-  const actions = useCallback(
-    ({ popover: pop, row }: any) =>
-      canAdd ? (
-        <MenuList>
-          {/* Assign marks after student submission */}
-          {[
-            AssignmentSubmissionStatus.Submitted,
-            AssignmentSubmissionStatus.NeedsReview,
-            AssignmentSubmissionStatus.Late,
-          ].includes(row.status) && (
-            <MenuItem
-              onClick={() => {
-                setSelectedStudent({
-                  ...(row as TStudentGrade),
-                  totalMarks: resolveTotalMarks(row),
-                });
-                viewSubmissionDialog.onTrue();
-                pop.onClose();
-              }}
-            >
-              <Iconify icon="mdi:clipboard-check-outline" />
-              Assign Marks
-            </MenuItem>
-          )}
-
-          {/* Edit/View Feedback or Marks */}
-          {row.status === AssignmentSubmissionStatus.Reviewed && (
-            <MenuItem
-              onClick={() => {
-                setSelectedStudent({
-                  ...(row as TStudentGrade),
-                  totalMarks: resolveTotalMarks(row),
-                });
-                viewSubmissionDialog.onTrue();
-                pop.onClose();
-              }}
-            >
-              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
-              Edit/View Marks
-            </MenuItem>
-          )}
-
-          {/* Reminder for pending students */}
-          {row.status === AssignmentSubmissionStatus.Pending && (
-            <MenuItem onClick={() => {}}>
-              <Iconify icon="mdi:bell-outline" sx={{ height: '16px', width: '16px' }} />
-              Send Reminder
-            </MenuItem>
-          )}
-        </MenuList>
-      ) : null,
-    [resolveTotalMarks, viewSubmissionDialog, canAdd]
-  );
 
   /**
    * Handler for sending notifications
@@ -383,15 +328,81 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             isSort: false,
             isFilter: false,
             align: 'left',
-            minWidth: 50,
+            minWidth: 170,
             sticky: true,
             render(value, row) {
-              return canAdd ? (
-                <ThreeDotsActions
-                  actions={(prop) => actions({ ...prop, row })}
-                  placement="right-top"
-                />
-              ) : null;
+              if (!canAdd) return null;
+
+              if (row.status === AssignmentSubmissionStatus.Pending) {
+                return (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ minWidth: '100px' }}
+                    startIcon={
+                      <Iconify icon="mdi:bell-outline" sx={{ height: '16px', width: '16px' }} />
+                    }
+                    onClick={() => {}}
+                  >
+                    Send Reminder
+                  </Button>
+                );
+              }
+
+              if (
+                [
+                  AssignmentSubmissionStatus.Submitted,
+                  AssignmentSubmissionStatus.NeedsReview,
+                  AssignmentSubmissionStatus.Late,
+                ].includes(row.status)
+              ) {
+                return (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ minWidth: '100px' }}
+                    startIcon={
+                      <Iconify
+                        icon="mdi:clipboard-check-outline"
+                        sx={{ height: '16px', width: '16px' }}
+                      />
+                    }
+                    onClick={() => {
+                      setSelectedStudent({
+                        ...(row as TStudentGrade),
+                        totalMarks: resolveTotalMarks(row),
+                      });
+                      viewSubmissionDialog.onTrue();
+                    }}
+                  >
+                    Assign Marks
+                  </Button>
+                );
+              }
+
+              if (row.status === AssignmentSubmissionStatus.Reviewed) {
+                return (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ minWidth: '100px' }}
+                    startIcon={
+                      <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
+                    }
+                    onClick={() => {
+                      setSelectedStudent({
+                        ...(row as TStudentGrade),
+                        totalMarks: resolveTotalMarks(row),
+                      });
+                      viewSubmissionDialog.onTrue();
+                    }}
+                  >
+                    Edit/View Marks
+                  </Button>
+                );
+              }
+
+              return null;
             },
           },
         ]}

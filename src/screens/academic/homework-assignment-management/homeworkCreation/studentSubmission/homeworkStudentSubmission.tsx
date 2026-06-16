@@ -3,20 +3,19 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
+import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, MenuList, MenuItem, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetHomeworkSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
@@ -109,58 +108,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       resetAfterClose();
     }
   };
-
-  // Memoized callback that returns the action menu items for each row
-  const actions = useCallback(
-    ({ popover: pop, row }: any) =>
-      canAdd ? (
-        <MenuList>
-          {/* Reminder for pending students */}
-          {row.status === HomeworkSubmissionStatus.Pending && (
-            <MenuItem onClick={() => {}}>
-              <Iconify icon="mdi:bell-outline" sx={{ height: '16px', width: '16px' }} />
-              Send Reminder
-            </MenuItem>
-          )}
-
-          {/* Give feedback after submission */}
-          {[
-            HomeworkSubmissionStatus.Submitted,
-            HomeworkSubmissionStatus.NeedsReview,
-            HomeworkSubmissionStatus.Late,
-          ].includes(row.status) && (
-            <MenuItem
-              onClick={() => {
-                setSelectedStudent(row as TStudentGrade);
-                viewSubmissionDialog.onTrue();
-                pop.onClose();
-              }}
-            >
-              <Iconify
-                icon="mdi:comment-check-outline"
-                sx={{ height: '16px', width: '16px', mr: -1 }}
-              />
-              Give Feedback
-            </MenuItem>
-          )}
-
-          {/* Edit/View Feedback or Marks */}
-          {row.status === HomeworkSubmissionStatus.Reviewed && (
-            <MenuItem
-              onClick={() => {
-                setSelectedStudent(row);
-                viewSubmissionDialog.onTrue();
-                pop.onClose();
-              }}
-            >
-              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
-              Edit/View Feedback
-            </MenuItem>
-          )}
-        </MenuList>
-      ) : null,
-    [viewSubmissionDialog, canAdd]
-  );
 
   /**
    * Handler for sending notifications
@@ -356,18 +303,78 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: 'actions',
             label: 'Action',
-            minWidth: 50,
+            minWidth: 170,
             isSort: false,
             isFilter: false,
             align: 'left',
             sticky: true,
             render(value, row) {
-              return canAdd ? (
-                <ThreeDotsActions
-                  actions={(prop) => actions({ ...prop, row })}
-                  placement="right-top"
-                />
-              ) : null;
+              if (!canAdd) return null;
+
+              if (row.status === HomeworkSubmissionStatus.Pending) {
+                return (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ minWidth: '100px' }}
+                    startIcon={
+                      <Iconify icon="mdi:bell-outline" sx={{ height: '16px', width: '16px' }} />
+                    }
+                    onClick={() => {}}
+                  >
+                    Send Reminder
+                  </Button>
+                );
+              }
+
+              if (
+                [
+                  HomeworkSubmissionStatus.Submitted,
+                  HomeworkSubmissionStatus.NeedsReview,
+                  HomeworkSubmissionStatus.Late,
+                ].includes(row.status)
+              ) {
+                return (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ minWidth: '100px' }}
+                    startIcon={
+                      <Iconify
+                        icon="mdi:comment-check-outline"
+                        sx={{ height: '16px', width: '16px' }}
+                      />
+                    }
+                    onClick={() => {
+                      setSelectedStudent(row as TStudentGrade);
+                      viewSubmissionDialog.onTrue();
+                    }}
+                  >
+                    Give Feedback
+                  </Button>
+                );
+              }
+
+              if (row.status === HomeworkSubmissionStatus.Reviewed) {
+                return (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ minWidth: '100px' }}
+                    startIcon={
+                      <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
+                    }
+                    onClick={() => {
+                      setSelectedStudent(row as TStudentGrade);
+                      viewSubmissionDialog.onTrue();
+                    }}
+                  >
+                    Edit Feedback
+                  </Button>
+                );
+              }
+
+              return null;
             },
           },
         ]}

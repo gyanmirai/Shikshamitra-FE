@@ -136,7 +136,17 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
     useEffect(() => {
       if (!editor) return;
 
-      if (content !== editor.getHTML()) {
+      const currentHTML = editor.getHTML();
+
+      // Normalize empty states to prevent infinite loop
+      const isContentEmpty = !content || content === '<p></p>' || content.trim() === '';
+      const isEditorEmpty = currentHTML === '<p></p>' || currentHTML === '' || editor.isEmpty;
+
+      if (isContentEmpty && isEditorEmpty) {
+        return;
+      }
+
+      if (content !== currentHTML) {
         editor.commands.setContent(content || '', {
           emitUpdate: false,
         });

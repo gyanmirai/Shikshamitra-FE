@@ -17,8 +17,8 @@ export const getTimetableValidationSchema = (visibleFields: string[], requiredFi
   // Classes
   if (visibleFields.includes('classes')) {
     shape.classes = requiredFields.includes('classes')
-      ? Yup.array().min(1, 'At least one class is required').required('Class is required')
-      : Yup.array();
+      ? Yup.string().required('Class is required')
+      : Yup.string().nullable();
   }
 
   // Divisions — always optional (auto-populated from class selection)

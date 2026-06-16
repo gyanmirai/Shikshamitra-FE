@@ -9,18 +9,18 @@ export const getExamValidationSchema = (showField: string[], requiredFields: str
   // Report
   shape.report = Yup.string().required('Report is required');
 
-  // Organizations (Multi)
+  // Organizations (Single)
   if (showField.includes('organizations')) {
     shape.organizations = isRequired('organizations')
-      ? Yup.array().min(1, 'Select at least one organization').required('Organization is required')
-      : Yup.array();
+      ? Yup.string().required('Organization is required')
+      : Yup.string();
   }
 
-  // Standards / Classes (Multi)
+  // Standards / Classes (Single)
   if (showField.includes('standards')) {
     shape.standards = isRequired('standards')
-      ? Yup.array().min(1, 'Select at least one class').required('Class is required')
-      : Yup.array();
+      ? Yup.string().required('Class is required')
+      : Yup.string();
   }
 
   if (showField.includes('standard_single')) {
@@ -54,11 +54,11 @@ export const getExamValidationSchema = (showField: string[], requiredFields: str
   }
 
   // Single Exam
-  // if (showField.includes('exam')) {
-  //   shape.exam = isRequired('exam', true)
-  //     ? Yup.string().required('Exam is required')
-  //     : Yup.string().nullable();
-  // }
+  if (showField.includes('exam')) {
+    shape.exam = isRequired('exam', true)
+      ? Yup.string().required('Exam is required')
+      : Yup.string().nullable();
+  }
 
   // Multi Exam (Weak Student Analysis, Consolidate Verify)
   if (showField.includes('exams')) {
@@ -77,8 +77,8 @@ export const getExamValidationSchema = (showField: string[], requiredFields: str
   // Multi Exam Group
   if (showField.includes('examGroups')) {
     shape.examGroups = isRequired('examGroups', true)
-      ? Yup.array().min(1, 'Select at least one exam group').required('Exam Group is required')
-      : Yup.array();
+      ? Yup.string().required('Exam Group is required')
+      : Yup.string();
   }
 
   // Multi Subjects
@@ -101,11 +101,11 @@ export const getExamValidationSchema = (showField: string[], requiredFields: str
   }
 
   // Multi Grade (Bright student)
-  // if (showField.includes('grade')) {
-  //   shape.grade = isRequired('grade', true)
-  //     ? Yup.array().min(1, 'Select at least one grade').required('Grade is required')
-  //     : Yup.array();
-  // }
+  if (showField.includes('grade')) {
+    shape.grade = isRequired('grade', true)
+      ? Yup.array().min(1, 'Select at least one grade').required('Grade is required')
+      : Yup.array();
+  }
 
   // Students (Required Multi)
   if (showField.includes('students')) {
@@ -151,19 +151,15 @@ export const getExamValidationSchema = (showField: string[], requiredFields: str
     const baseMax = Yup.number()
       .typeError('Max Marks must be a number')
       .min(0, 'Max Marks cannot be negative')
-      .test(
-        'max-gte-min',
-        'Max Marks must be greater than or equal to Min Marks',
-        function (value) {
-          const { minMark } = this.parent as { minMark?: number | null };
+      .test('max-gte-min', 'Max Marks must be greater than to Min Marks', function (value) {
+        const { minMark } = this.parent as { minMark?: number | null };
 
-          if (value === undefined || value === null || minMark === undefined || minMark === null) {
-            return true;
-          }
-
-          return Number(value) >= Number(minMark);
+        if (value === undefined || value === null || minMark === undefined || minMark === null) {
+          return true;
         }
-      );
+
+        return Number(value) >= Number(minMark);
+      });
 
     shape.maxMark = isRequired('maxMark', true)
       ? baseMax.required('Max Marks is required')

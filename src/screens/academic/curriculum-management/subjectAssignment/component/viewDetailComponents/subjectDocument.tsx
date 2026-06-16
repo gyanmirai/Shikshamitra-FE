@@ -1,7 +1,7 @@
 import { Box, Grid } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
-import { useGetSubjectAssignmentDocumentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import { useGetCurriculumFileByNameMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import type { ISubjectDetail } from '../type';
 
@@ -47,7 +47,7 @@ export const documentsList = [
 const SubjectDocument = ({ subject }: { subject: ISubjectDetail | null }) => {
   useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetSubjectAssignmentDocumentsQuery,
+    currentQueryAndMutation: useGetCurriculumFileByNameMutation,
     params: { subjectAssignmentId: subject?.subjectAssignmentId, subjectId: subject?.id },
     options: {
       skip: !(subject?.subjectAssignmentId && subject?.id),

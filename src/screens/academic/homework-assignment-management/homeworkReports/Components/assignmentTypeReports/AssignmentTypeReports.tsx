@@ -22,6 +22,8 @@ import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   AssignmentReportTitle,
   AssignmentReportApiTypeMap,
@@ -285,16 +287,76 @@ const AssignmentManagementReports = ({
   const withRequired = (label: string, fieldName: string) =>
     `${label}${isRequired(fieldName) ? ' *' : ''}`;
 
-  const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
+  const classId = formik.values.class || '';
+
+  // ── Subject API ──────────────────────────────────────────────────────────────
+  const { data: coreSubjectData, isLoading: isCoreSubjectLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
     params: { academicMediumId: (medium as Medium)?.id },
     options: {
-      skip: !showField('subjects') || !(medium as Medium)?.id,
+      skip: !showField('subjects') || !(medium as Medium)?.id || !!classId,
     },
   });
 
-  const subjectOptions = useMemo(() => normalizeArray(subjectData), [subjectData]);
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      standardId: classId,
+    },
+    options: {
+      skip: !showField('subjects') || !medium?.id || !classId,
+    },
+  });
+
+  const subjectOptions: any[] = useMemo(() => {
+    if (classId) {
+      const allOptions: { id: string; name: string }[] = [];
+      subjectOptionsData?.data?.items?.forEach((item: any) => {
+        if (item.status === SubjectAssignmentStatus.Draft) return;
+
+        if (item.subjects?.length > 1 && item.electiveGroupName) {
+          item.subjects.forEach((sub: any, index: number) => {
+            const subId = sub.subjectId || String(index);
+            if (!allOptions.some((opt) => opt.id === subId)) {
+              allOptions.push({
+                id: subId,
+                name: sub.subjectName || `${item.electiveGroupName} ${index + 1}`,
+              });
+            }
+          });
+        } else {
+          const sub = item.subjects?.[0];
+          const subId = sub?.subjectId || item.id;
+          const subName = sub?.subject?.name || sub?.subjectName || '';
+          if (subId && !allOptions.some((opt) => opt.id === subId)) {
+            allOptions.push({
+              id: subId,
+              name: subName,
+            });
+          }
+        }
+      });
+      return allOptions;
+    }
+
+    const coreItems =
+      coreSubjectData?.data?.items ??
+      coreSubjectData?.items ??
+      coreSubjectData?.records ??
+      (Array.isArray(coreSubjectData) ? coreSubjectData : []);
+
+    return coreItems.map((item: any) => ({
+      id: item?.id ?? '',
+      name: item?.name ?? '',
+    }));
+  }, [classId, subjectOptionsData, coreSubjectData]);
 
   const { fetchPrimaryTeacherOptions: fetchTeacherOptions } = useTeacherSelection({
     primaryTeacherId: '',
@@ -553,7 +615,11 @@ const AssignmentManagementReports = ({
                       disabled={
                         !formik.values.organization || (showField('class') && !formik.values.class)
                       }
-                      isLoading={isSubjectLoading}
+                      isLoading={
+                        classId
+                          ? isSubjectOptionsLoading || isSubjectOptionsFetching
+                          : isCoreSubjectLoading
+                      }
                       onChange={(selectedValues) => {
                         formik.setValues({
                           ...formik.values,
