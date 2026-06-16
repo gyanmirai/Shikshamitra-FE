@@ -21,10 +21,10 @@ export const instituteSetupPermissions = {
   academicSetup: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}AcademicSetup`,
   shiftManagement: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}ShiftManagement`,
   roomsManagement: {
-    root: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}RoomsManagement`,
-    building: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}RoomsManagement.BuildingManagement`,
-    roomType: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}RoomsManagement.RoomTypeManagement`,
-    room: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}RoomsManagement.RoomManagement`,
+    root: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}RoomManagement`,
+    building: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}BuildingManagement`,
+    roomType: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}RoomTypeManagement`,
+    room: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}RoomManagement.Room`,
   },
 };
 

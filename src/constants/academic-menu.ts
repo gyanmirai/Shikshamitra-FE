@@ -120,7 +120,7 @@ export const academicPermissions = {
     schedule: `${defaultAcademicPermissionName}Examination.ScheduleExam`,
     seatAllocation: `${defaultAcademicPermissionName}Examination.SeatAllocation`,
     recordMarks: `${defaultAcademicPermissionName}Examination.RecordMarks`,
-    resultCreation: `${defaultAcademicPermissionName}Examination.RecordMarks`,
+    resultCreation: `${defaultAcademicPermissionName}Examination.Result`,
     quizManagement: `${defaultAcademicPermissionName}Examination.QuizManagement`,
     reports: `${defaultAcademicPermissionName}Examination.Reports`,
     settings: {

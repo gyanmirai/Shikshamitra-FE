@@ -172,7 +172,9 @@ const RoleScreen = () => {
             label: 'Role',
             render: (value, row) => (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <SubjectColorIndicator color={row.extraProperties?.Color || row.color} />
+                <SubjectColorIndicator
+                  color={row.extraProperties?.color || row.extraProperties?.Color || row.color}
+                />
                 <Typography variant="caption" fontSize="13px">
                   {value}
                 </Typography>
@@ -345,7 +347,9 @@ const RoleForm = ({ handleClose, editData }: any) => {
   const formik = useFormik<{ role: string; color: string }>({
     initialValues: {
       role: editData ? editData.name : null,
-      color: editData ? editData.extraProperties?.Color || editData.color : null,
+      color: editData
+        ? editData.extraProperties?.color || editData.extraProperties?.Color || editData.color
+        : null,
     },
     validationSchema: Yup.object().shape({
       role: Yup.string().required('Role is required'),
@@ -361,6 +365,9 @@ const RoleForm = ({ handleClose, editData }: any) => {
               color: values.color,
               isDefault: true,
               isPublic: false,
+              extraProperties: {
+                color: values.color,
+              },
             },
           }).unwrap();
           shikshaMitraToast.success({
@@ -370,8 +377,12 @@ const RoleForm = ({ handleClose, editData }: any) => {
           await addRole({
             name: values.role,
             color: values.color,
+
             isDefault: true,
             isPublic: false,
+            extraProperties: {
+              color: values.color,
+            },
           }).unwrap();
           shikshaMitraToast.success({
             message: `${values.role} role created successfully`,
