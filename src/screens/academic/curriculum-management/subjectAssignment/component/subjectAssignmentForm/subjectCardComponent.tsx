@@ -1,11 +1,8 @@
-import CloseIcon from '@mui/icons-material/Close';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import { fileData } from 'src/components/file-thumbnail';
-import { SingleFilePreview } from 'src/components/upload';
+import { CloseIcon } from 'yet-another-react-lightbox';
+import FileUploader from 'src/components/custom-upload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import {
   Box,
   Chip,
@@ -41,9 +38,12 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     setSecondaryTeacherObjs,
     fetchPrimaryTeacherOptions,
     fetchSecondaryTeacherOptions,
-    previewFile,
-    setPreviewFile,
-    previewDialog,
+    previewDoc,
+    setPreviewDoc,
+    handleDropzoneChange,
+    handleRemoveFile,
+    localFileNames,
+    isUploading,
     isExpanded,
     handleChange,
     getError,
@@ -55,6 +55,27 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     onSubjectChange,
     activeSubjectId,
   });
+
+  const getFileNameFromUrl = (file: string | File): string => {
+    if (!file) return '';
+    if (typeof file !== 'string') return file.name;
+    if (localFileNames && localFileNames[file]) return localFileNames[file];
+
+    const normalized = file.split('?')[0];
+    const segments = normalized.split('/').filter(Boolean);
+    let rawName = decodeURIComponent(segments[segments.length - 1] || '');
+
+    // Check if name has a standard UUID v4 prefix + underscore (36 chars + 1)
+    if (rawName.length > 37 && rawName[36] === '_') {
+      const maybeUuid = rawName.substring(0, 36);
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(maybeUuid)) {
+        rawName = rawName.substring(37);
+      }
+    }
+
+    return rawName;
+  };
 
   return (
     <>
@@ -219,31 +240,31 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               </Typography>
               <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
             </Box>
-            <CustomUpload
+
+            <FileUploader
               multiple
-              previewCount={6}
-              onChange={(files) => onFileUpload(files, index)}
-              value={subject.documents}
-              label="Attach Support Documents"
-              outputFormat="file"
+              showVisibleDocumentCount={6}
+              value={subject.documents as any[]}
+              onChange={handleDropzoneChange}
+              onPreview={(file: any) => {
+                const url =
+                  file instanceof File
+                    ? URL.createObjectURL(file)
+                    : file?.url || file?.filePath || (typeof file === 'string' ? file : '');
+                setPreviewDoc(url);
+              }}
+              primaryText="Drag & drop documents here, or click to upload"
             />
           </Box>
         </AccordionDetails>
       </Accordion>
 
-      <CustomDialog
-        open={previewDialog.value}
-        handleClose={() => {
-          setPreviewFile(null);
-          previewDialog.onFalse();
-        }}
-        title={previewFile ? fileData(previewFile).name : ''}
-        maxWidth="sm"
-      >
-        <Scrollbar sx={{ height: 600, maxHeight: '100%' }}>
-          {previewFile && <SingleFilePreview file={previewFile} />}
-        </Scrollbar>
-      </CustomDialog>
+      <DocumentPreviewDialog
+        open={!!previewDoc}
+        onClose={() => setPreviewDoc(null)}
+        url={previewDoc || ''}
+        documentName={previewDoc ? getFileNameFromUrl(previewDoc) : ''}
+      />
     </>
   );
 };

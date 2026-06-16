@@ -1,66 +1,63 @@
-import { Box, Grid } from '@mui/material';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Grid, Typography } from '@mui/material';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
-import { useGetCurriculumFileByNameMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import type { ISubjectDetail } from '../type';
 
-export const documentsList = [
-  {
-    path: './lecture_notes.pdf',
-    relativePath: './lecture_notes.pdf',
-    name: 'Lecture Notes - Chapter 1',
-    size: '2.5 MB',
-    uploadDate: '2024-03-15',
-    type: 'pdf',
-    url: 'https://example.com/files/lecture_notes.pdf',
-  },
-  {
-    path: './assignment_1.docx',
-    relativePath: './assignment_1.docx',
-    name: 'Assignment 1 - Introduction',
-    size: '850 KB',
-    uploadDate: '2024-03-14',
-    type: 'doc',
-    url: 'https://example.com/files/assignment_1.docx',
-  },
-  {
-    path: './study_guide.pdf',
-    relativePath: './study_guide.pdf',
-    name: 'Complete Study Guide',
-    size: '3.2 MB',
-    uploadDate: '2024-03-13',
-    type: 'pdf',
-    url: 'https://example.com/files/study_guide.pdf',
-  },
-  {
-    path: './course_outline.docx',
-    relativePath: './course_outline.docx',
-    name: 'Detailed Course Outline',
-    size: '1.1 MB',
-    uploadDate: '2024-03-12',
-    type: 'doc',
-    url: 'https://example.com/files/course_outline.docx',
-  },
-];
+const getFileNameFromUrl = (file: string): string => {
+  if (!file) return '';
+
+  const normalized = file.split('?')[0];
+  const segments = normalized.split('/').filter(Boolean);
+  let rawName = decodeURIComponent(segments[segments.length - 1] || '');
+
+  if (rawName.length > 37 && rawName[36] === '_') {
+    const maybeUuid = rawName.substring(0, 36);
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(maybeUuid)) {
+      rawName = rawName.substring(37);
+    }
+  }
+
+  return rawName;
+};
+
 // Documents panel content
 const SubjectDocument = ({ subject }: { subject: ISubjectDetail | null }) => {
-  useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetCurriculumFileByNameMutation,
-    params: { subjectAssignmentId: subject?.subjectAssignmentId, subjectId: subject?.id },
-    options: {
-      skip: !(subject?.subjectAssignmentId && subject?.id),
-    },
-  });
+  const documents = subject?.documents || [];
+
+  if (documents.length === 0) {
+    return (
+      <Box p={3} display="flex" justifyContent="center" alignItems="center">
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          No documents uploaded for this subject.
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <Grid container spacing={2}>
-        {documentsList.map((doc: any, index: number) => (
-          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
-            <DocumentCard file={doc} />
-          </Grid>
-        ))}
+        {documents.map((docItem: any, index: number) => {
+          const docUrl =
+            typeof docItem === 'string' ? docItem : docItem?.url || docItem?.filePath || '';
+          const docName =
+            typeof docItem === 'string' ? getFileNameFromUrl(docItem) : docItem?.name || 'Document';
+          const doc = {
+            name: docName,
+            url: docUrl,
+            size:
+              typeof docItem === 'object' && docItem?.size
+                ? `${(docItem.size / (1024 * 1024)).toFixed(2)} MB`
+                : '',
+          };
+
+          return (
+            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
+              <DocumentCard file={doc} />
+            </Grid>
+          );
+        })}
       </Grid>
     </Box>
   );

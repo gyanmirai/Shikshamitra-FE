@@ -83,7 +83,11 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
       .typeError('Chapter Number must be a number')
       .required('Chapter Number is required')
       .positive('Chapter Number must be positive'),
-    chapterName: Yup.string().trim().required('Chapter Name is required'),
+    chapterName: Yup.string()
+      .trim()
+      .required('Chapter Name is required')
+      .typeError('minimum 3 character required')
+      .min(3, 'minimum 3 character required'),
     startDate: Yup.mixed()
       .required('Start Date is required')
       .test('valid-date', 'Start Date must be a valid date', (val) =>
@@ -386,7 +390,7 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
                     startIcon={<Add />}
                     onClick={handleAddManual}
                   >
-                    Add Syllabus
+                    Add Chapter
                   </Button>
                 </Stack>
                 <Divider sx={{ mb: 2 }} />

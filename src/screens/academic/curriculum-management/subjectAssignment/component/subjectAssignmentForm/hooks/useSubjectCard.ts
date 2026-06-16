@@ -1,8 +1,10 @@
 'use client';
 
 import { getIn } from 'formik';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useCallback } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { useTeacherSelection } from './useTeacherSelection';
 
@@ -30,8 +32,13 @@ export const useSubjectCard = ({
     secondaryTeacherIds: subject.secondaryTeacherIds,
   });
 
-  const [previewFile, setPreviewFile] = useState<File | string | null>(null);
-  const previewDialog = useBoolean();
+  const [uploadCurriculumFile, { isLoading: isUploading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
+
+  const [previewDoc, setPreviewDoc] = useState<string | null>(null);
+  const [localFileNames, setLocalFileNames] = useState<Record<string, string>>({});
 
   const isExpanded = activeSubjectId === subject.subjectNo;
 
@@ -50,11 +57,6 @@ export const useSubjectCard = ({
     [formik.touched, formik.errors, index]
   );
 
-  /**
-   * Memoization Justification:
-   * Re-evaluating errors and touched states for individual subject fields on every typing event is slow.
-   * This memoization checks for nested Formik error/touched updates only when formik's errors/touched values change.
-   */
   const hasSubjectError = useMemo(() => {
     const subjectErrors = getIn(formik.errors, `subjects[${index}]`);
     const subjectTouched = getIn(formik.touched, `subjects[${index}]`);
@@ -67,6 +69,48 @@ export const useSubjectCard = ({
     );
   }, [formik.errors, formik.touched, index]);
 
+  const handleDropzoneChange = async (droppedFiles: any[]) => {
+    // Filter to only new File objects (not already-uploaded strings)
+    const newFiles = droppedFiles.filter((f): f is File => typeof f !== 'string');
+    const existingFiles = droppedFiles.filter((f) => typeof f === 'string');
+
+    if (newFiles.length === 0) {
+      formik.setFieldValue(`subjects.${index}.documents`, existingFiles);
+      formik.setFieldTouched(`subjects.${index}.documents`, true, false);
+      return;
+    }
+
+    try {
+      const newDocs = [...existingFiles];
+      // eslint-disable-next-line no-plusplus
+      for (let i = 0; i < newFiles.length; i++) {
+        const file = newFiles[i];
+        const formData = new FormData();
+        formData.append('FileName', file.name);
+        formData.append('File', file);
+        // eslint-disable-next-line no-await-in-loop
+        const response = await uploadCurriculumFile(formData).unwrap();
+        if (response.data) {
+          newDocs.push(response.data);
+          setLocalFileNames((prev) => ({ ...prev, [response.data]: file.name }));
+        }
+      }
+      formik.setFieldValue(`subjects.${index}.documents`, newDocs);
+      formik.setFieldTouched(`subjects.${index}.documents`, true, false);
+      shikshaMitraToast.success({ message: 'Document(s) uploaded successfully' });
+    } catch (error) {
+      console.error('Upload failed:', error);
+      shikshaMitraToast.error({ message: 'Upload failed' });
+    }
+  };
+
+  const handleRemoveFile = (docIndex: number) => {
+    const newDocs = [...(subject.documents || [])];
+    newDocs.splice(docIndex, 1);
+    formik.setFieldValue(`subjects.${index}.documents`, newDocs);
+    formik.setFieldTouched(`subjects.${index}.documents`, true, false);
+  };
+
   return {
     primaryTeacherObj,
     setPrimaryTeacherObj,
@@ -74,9 +118,12 @@ export const useSubjectCard = ({
     setSecondaryTeacherObjs,
     fetchPrimaryTeacherOptions,
     fetchSecondaryTeacherOptions,
-    previewFile,
-    setPreviewFile,
-    previewDialog,
+    previewDoc,
+    setPreviewDoc,
+    handleDropzoneChange,
+    handleRemoveFile,
+    localFileNames,
+    isUploading,
     isExpanded,
     handleChange,
     getError,

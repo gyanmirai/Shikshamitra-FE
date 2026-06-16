@@ -23,9 +23,9 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetHomeworkTypesQuery } from 'src/redux/academics/homeworkAndAssignment/homeworkTypeApi';
-import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   Box,
@@ -45,6 +45,10 @@ import {
   useGetHomeworkByIdQuery,
   useUpdateHomeworkMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
+import {
+  useGetSubjectAssignmentsQuery,
+  useUploadCurriculumFileMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { getHomeworkInitialValues } from './homeworkInitialValues';
 import { homeworkValidationSchema } from './homeworkValidationSchema';
@@ -103,6 +107,13 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   editData,
   onClose,
 }) => {
+  const [uploadCurriculumFile] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
+  const [previewDoc, setPreviewDoc] = useState<string | null>(null);
+  const [previewFileState, setPreviewFileState] = useState<any>(null);
+
   const [addHomework, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddHomeworkMutation,
@@ -187,7 +198,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
           if (values.attachments && values.attachments.length > 0) {
             values.attachments.forEach((file: any) => {
-              updateFormData.append('attachment', file);
+              const fileValue = file instanceof File ? file : file.url || file.filePath || file;
+              updateFormData.append('attachment', fileValue);
             });
           }
 
@@ -223,7 +235,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
           if (values.attachments && values.attachments.length > 0) {
             values.attachments.forEach((file: any) => {
-              formData.append('attachment', file);
+              const fileValue = file instanceof File ? file : file.url || file.filePath || file;
+              formData.append('attachment', fileValue);
             });
           }
 
@@ -633,6 +646,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     open={homeworkTypeDialog.value}
                     handleClose={homeworkTypeDialog.onFalse}
                     title="Add Homework Type"
+                    hasForm={false}
                   >
                     <HomeworkTypeForm
                       onClose={homeworkTypeDialog.onFalse}
@@ -674,9 +688,41 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     value={formik.values.attachments as any}
                     multiple={false}
                     showVisibleDocumentCount={1}
-                    onChange={(value) => {
-                      const newValue = Array.isArray(value) ? value : value ? [value] : [];
-                      formik.setFieldValue('attachments', newValue);
+                    onChange={async (value) => {
+                      const file = Array.isArray(value) ? value[0] : value;
+                      if (file instanceof File) {
+                        try {
+                          const formData = new FormData();
+                          formData.append('FileName', file.name);
+                          formData.append('File', file);
+                          const response = await uploadCurriculumFile(formData).unwrap();
+                          if (response.data) {
+                            const uploadedFile = {
+                              name: file.name,
+                              size: file.size,
+                              type: file.type,
+                              url: response.data,
+                            };
+                            formik.setFieldValue('attachments', [uploadedFile]);
+                            shikshaMitraToast.success({ message: 'File uploaded successfully' });
+                          }
+                        } catch (e) {
+                          console.error(e);
+                          shikshaMitraToast.error({ message: 'Upload failed' });
+                        }
+                      } else if (file) {
+                        formik.setFieldValue('attachments', [file]);
+                      } else {
+                        formik.setFieldValue('attachments', []);
+                      }
+                    }}
+                    onPreview={(file) => {
+                      setPreviewFileState(file);
+                      const url =
+                        file instanceof File
+                          ? URL.createObjectURL(file)
+                          : file.url || file.filePath || '';
+                      setPreviewDoc(url);
                     }}
                     primaryText="Upload Reference File"
                     secondaryText="Supports PDF, DOCX, IMG (Max 5MB)"
@@ -895,6 +941,12 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           >
             {editData ? 'Update' : 'Create'}
           </LoadingButton>
+          <DocumentPreviewDialog
+            open={!!previewDoc}
+            onClose={() => setPreviewDoc(null)}
+            url={previewDoc || ''}
+            documentName={previewFileState ? previewFileState.name : 'Document Preview'}
+          />
         </Box>
       </Box>
     </BackPopUpChecked>

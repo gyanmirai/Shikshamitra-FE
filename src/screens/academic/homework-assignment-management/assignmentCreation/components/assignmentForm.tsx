@@ -20,9 +20,9 @@ import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetAssignmentTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
-import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
   Grid,
@@ -35,6 +35,10 @@ import {
   Typography,
   FormControl,
 } from '@mui/material';
+import {
+  useGetSubjectAssignmentsQuery,
+  useUploadCurriculumFileMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useAddAssignmentMutation,
   useGetAssignmentByIdQuery,
@@ -100,6 +104,80 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [subjectSelectValue, setSubjectSelectValue] = useState('');
 
+  const [uploadCurriculumFile] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
+  const [previewDoc, setPreviewDoc] = useState<string | null>(null);
+  const [localFileNames, setLocalFileNames] = useState<Record<string, string>>({});
+
+  const getFileNameFromUrl = (file: string | File): string => {
+    if (!file) return '';
+    if (typeof file !== 'string') return file.name;
+    if (localFileNames && localFileNames[file]) return localFileNames[file];
+
+    const normalized = file.split('?')[0];
+    const segments = normalized.split('/').filter(Boolean);
+    let rawName = decodeURIComponent(segments[segments.length - 1] || '');
+
+    if (rawName.length > 37 && rawName[36] === '_') {
+      const maybeUuid = rawName.substring(0, 36);
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(maybeUuid)) {
+        rawName = rawName.substring(37);
+      }
+    }
+
+    return rawName;
+  };
+
+  const handleDropzoneChange = async (value: any[]) => {
+    const droppedFiles = Array.isArray(value) ? value : [value];
+    const newFiles = droppedFiles.filter((f): f is File => f instanceof File);
+    const existingFiles = droppedFiles.filter((f) => !(f instanceof File));
+
+    if (newFiles.length === 0) {
+      formik.setFieldValue('attachments', existingFiles);
+      return;
+    }
+
+    try {
+      const uploadPromises = newFiles.map(async (file) => {
+        const formData = new FormData();
+        formData.append('FileName', file.name);
+        formData.append('File', file);
+        const response = await uploadCurriculumFile(formData).unwrap();
+        if (response.data) {
+          return {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: response.data,
+            filePath: response.data,
+          };
+        }
+        return file;
+      });
+
+      const results = await Promise.all(uploadPromises);
+
+      const nameUpdates: Record<string, string> = {};
+      results.forEach((res) => {
+        if ('url' in res && res.url) {
+          nameUpdates[res.url as string] = res.name;
+        }
+      });
+      setLocalFileNames((prev) => ({ ...prev, ...nameUpdates }));
+
+      const newDocs = [...existingFiles, ...results];
+      formik.setFieldValue('attachments', newDocs);
+      shikshaMitraToast.success({ message: 'Document(s) uploaded successfully' });
+    } catch (error) {
+      console.error('Upload failed:', error);
+      shikshaMitraToast.error({ message: 'Upload failed' });
+    }
+  };
+
   const [addAssignment, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddAssignmentMutation,
@@ -156,7 +234,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
 
         if (values.attachments && values.attachments.length > 0) {
           values.attachments.forEach((file: any) => {
-            formData.append('attachment', file);
+            const fileValue = file instanceof File ? file : file.url || file.filePath || file;
+            formData.append('attachment', fileValue);
           });
         }
 
@@ -597,7 +676,14 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     value={formik.values.attachments}
                     multiple
                     showVisibleDocumentCount={1}
-                    onChange={(value) => formik.setFieldValue('attachments', value)}
+                    onChange={handleDropzoneChange}
+                    onPreview={(file: any) => {
+                      const url =
+                        file instanceof File
+                          ? URL.createObjectURL(file)
+                          : file?.url || file?.filePath || (typeof file === 'string' ? file : '');
+                      setPreviewDoc(url);
+                    }}
                     primaryText="Upload Reference File"
                     secondaryText="Supports PDF, DOCX, IMG (Max 5MB)"
                   />
@@ -826,6 +912,12 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
             {editData ? 'Update' : 'Create'}
           </LoadingButton>
         </Box>
+        <DocumentPreviewDialog
+          open={!!previewDoc}
+          onClose={() => setPreviewDoc(null)}
+          url={previewDoc || ''}
+          documentName={previewDoc ? getFileNameFromUrl(previewDoc) : ''}
+        />
       </Box>
     </BackPopUpChecked>
   );
