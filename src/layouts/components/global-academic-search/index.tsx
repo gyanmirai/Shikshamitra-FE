@@ -136,7 +136,8 @@ const GlobalAcademicSearch = () => {
     [currentYear?.id, yearOptions]
   );
   const selectedBoardMediumOption = useMemo(
-    () => getScopedSelectedAcademicOption(currentYear, currentBoard, currentMedium, options),
+    () =>
+      getScopedSelectedAcademicOption(currentYear, currentBoard, currentMedium, options) ?? null,
     [currentBoard, currentMedium, currentYear, options]
   );
   const pathname = usePathname();
@@ -322,12 +323,14 @@ const GlobalAcademicSearch = () => {
             <AnimatedWrapper error={!hasAcademicSelection}>
               {isShowOnlyYearModule ? (
                 <Autocomplete
+                  key="academic-year-only"
                   open={isDropdownOpen}
                   onOpen={() => setIsDropdownOpen(true)}
                   onClose={() => setIsDropdownOpen(false)}
                   // disablePortal={false}
                   options={yearOptions}
                   getOptionLabel={(option) => option.academicYear.name}
+                  getOptionKey={(option) => option.value}
                   value={selectedYearOption}
                   loading={isYearLoading || isBoardLoading}
                   clearIcon={false}
@@ -387,12 +390,14 @@ const GlobalAcademicSearch = () => {
                 />
               ) : (
                 <Autocomplete
+                  key="academic-year-board-medium"
                   open={isDropdownOpen}
                   // disablePortal={false}
                   onOpen={() => setIsDropdownOpen(true)}
                   onClose={() => setIsDropdownOpen(false)}
                   options={options}
                   getOptionLabel={(option) => option.label}
+                  getOptionKey={(option) => option.value}
                   value={selectedBoardMediumOption}
                   loading={isYearLoading || isBoardLoading}
                   clearIcon={false}

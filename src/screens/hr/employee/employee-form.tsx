@@ -75,6 +75,9 @@ import type {
   IAdditionalInformationResponse,
 } from './types';
 
+const EMPLOYEE_CREATION_DEFAULT_POLICY_CONFIRMATION_TOKEN =
+  '__employee_onboarding_default_policy_assignment__';
+
 export const toRawMobile = (value: string | null | undefined) => {
   if (!value) return '';
   return value.replace(/\s/g, '').replace(/^\+91/, '');
@@ -122,6 +125,7 @@ export const personalInformationInitialValues = (
   // designation: editData ? editData.designation : '',
   dateOfJoining: editData ? dayjs(editData.doj, 'YYYY-MM-DD') : dayjs(),
   employeeGroup: editData ? (editData.isTeaching ? 0 : 1) : '',
+  designation: editData ? (editData as any).designation || '' : '',
   // qualification: editData ? editData. : '',
   role: editData ? editData?.roleId : '',
   // identificationMark1: editData ? editData.identificationMark1 : '',
@@ -500,8 +504,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const initialValues = useMemo(
     () => ({
       ...personalInformationInitialValues(editData),
-      userId: editData?.userId,
-      employeeId: editData?.id,
+      userId: editData?.userId ?? null,
+      employeeId: editData?.id ?? '',
       ...familyInformationInitialValues(),
       ...additionalDetailsInitialValues(),
       ...documentsInitialValues(),
@@ -580,6 +584,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             leavePolicyId: defaultLeavePolicy.id,
             effectiveFrom: policyEffectiveFrom,
             assignmentReason: 'Employee creation policy assignment',
+            confirmationToken: EMPLOYEE_CREATION_DEFAULT_POLICY_CONFIRMATION_TOKEN,
           },
         };
 
@@ -1488,7 +1493,7 @@ const FormSlider = ({
                                 <DatePicker
                                   label={field.label}
                                   name={field.name}
-                                  value={formik.values[field.name]}
+                                  value={formik.values[field.name] ?? null}
                                   format="DD-MM-YYYY"
                                   onChange={(newValue) =>
                                     formik.setFieldValue(field.name, newValue)
@@ -1523,7 +1528,7 @@ const FormSlider = ({
                                     label={field.label}
                                     name={field.name}
                                     placeholder={field.placeholder}
-                                    value={formik.values[field.name]}
+                                    value={formik.values[field.name] ?? ''}
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
                                     error={

@@ -16,6 +16,7 @@ import { useRouter, usePathname, useSearchParams as useNextSearchParams } from '
 import GroupManagement from './group-managemnet';
 import GrNoGenerationScreen from './gr-generation';
 import ChangeDivisionScreen from './change-division';
+import BulkStudentAddScreen from './bulk-student-add';
 import RollNoGenerationScreen from './roll-generation';
 
 import type { IInquiryData } from '../enrollment/Inquiry/type';
@@ -27,6 +28,7 @@ const RollGenerationTab = (props: { division: string }) => <RollNoGenerationScre
 const ChangeDivisionTab = (props: { allDivision: Division[]; division: string }) => (
   <ChangeDivisionScreen {...props} />
 );
+const BulkStudentAddTab = () => <BulkStudentAddScreen />;
 const GroupManagementTab = (props: {
   tableData: IInquiryData[];
   isLoading: boolean;
@@ -51,6 +53,12 @@ const TABS = [
     label: 'Change Division',
     icon: <Iconify icon="mage:exchange-a" width={20} />,
     component: ChangeDivisionTab,
+  },
+  {
+    value: 'bulkStudentAdd',
+    label: 'Bulk Student Add',
+    icon: <Iconify icon="mdi:file-upload-outline" width={20} />,
+    component: BulkStudentAddTab,
   },
   {
     value: 'groupManageMent',

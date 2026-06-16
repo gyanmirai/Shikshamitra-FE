@@ -45,6 +45,10 @@ export type HrReportRequest = {
   reportType: string;
   dataSource?: string;
   format?: HrReportFormat;
+  templateId?: string;
+  templateName?: string;
+  parentJobId?: string;
+  sourceAction?: 'manualExport' | 'retry' | 'regenerate' | 'scheduleRun' | string;
   page?: number;
   pageSize?: number;
   columns?: string[];
@@ -84,6 +88,11 @@ export type HrReportExportJob = {
   reportType: string;
   format: HrReportFormat;
   status: 'Queued' | 'Running' | 'Completed' | 'Failed' | string;
+  requestSnapshot?: HrReportRequest;
+  parentJobId?: string;
+  sourceAction?: 'manualExport' | 'retry' | 'regenerate' | 'scheduleRun' | string;
+  templateId?: string;
+  templateName?: string;
   fileName?: string;
   errorMessage?: string;
   progressPercent?: number;
@@ -201,6 +210,12 @@ export type HrReportScheduleRunResponse = {
   scheduleId: string;
   jobId: string;
   nextRunAt: string;
+};
+
+export type HrReportRecipient = {
+  id: string;
+  displayName: string;
+  email?: string;
 };
 
 export const buildHrReportDownloadUrl = (jobId: string) => `/hr/reports/exports/${jobId}/download`;
@@ -332,6 +347,18 @@ export const hrReportsApi = api.injectEndpoints({
       }),
       providesTags: [employeeType.hrReports],
     }),
+    getHrReportRecipients: builder.query<
+      HrReportRecipient[],
+      { filter?: string; maxResultCount?: number; ids?: string[] } | void
+    >({
+      query: (params) => ({
+        url: '/hr/reports/recipients',
+        method: 'GET',
+        params: params
+          ? { ...params, ids: params.ids?.filter(Boolean).join(',') || undefined }
+          : { maxResultCount: 20 },
+      }),
+    }),
     createHrReportSchedule: builder.mutation<HrReportSchedule, HrReportScheduleRequest>({
       query: (body) => ({
         url: '/hr/reports/schedules',
@@ -400,6 +427,7 @@ export const {
   useShareHrReportExportMutation,
   useDownloadHrReportExportMutation,
   useGetHrReportSchedulesQuery,
+  useGetHrReportRecipientsQuery,
   useCreateHrReportScheduleMutation,
   useUpdateHrReportScheduleMutation,
   usePauseHrReportScheduleMutation,

@@ -62,4 +62,21 @@ describe('hrReportsApi helpers', () => {
       },
     });
   });
+
+  it('preserves optional export lineage metadata while normalizing requests', () => {
+    expect(
+      normalizeHrReportRequest({
+        reportType: 'Employee List',
+        templateId: 'template-1',
+        templateName: 'Employee Template',
+        parentJobId: 'job-1',
+        sourceAction: 'regenerate',
+      })
+    ).toMatchObject({
+      templateId: 'template-1',
+      templateName: 'Employee Template',
+      parentJobId: 'job-1',
+      sourceAction: 'regenerate',
+    });
+  });
 });

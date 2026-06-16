@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Skeleton, Typography, CircularProgress } from '@mui/material';
-import { useDownloadFeeReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
+import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
 import {
   FEE_RECEIPT_KIND_COLORS,
   FEE_RECEIPT_KIND_LABELS,
@@ -23,7 +23,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
 
   const [downloadFeeReceiptPdf, { isLoading: isPdfLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDownloadFeeReceiptPdfMutation,
+    currentQueryAndMutation: useDownloadReceiptPdfMutation,
     popupConfig: {
       error: true,
       errorMessage: 'Unable to load receipt preview',
@@ -36,7 +36,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
 
     const loadPdf = async () => {
       try {
-        const blob = await downloadFeeReceiptPdf(receiptId).unwrap();
+        const blob = await downloadFeeReceiptPdf({ receiptId }).unwrap();
         if (!isActive) return;
         const objectUrl = URL.createObjectURL(blob);
         setReceiptBlobUrl((prev) => {

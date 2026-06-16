@@ -1,9 +1,9 @@
-'use client';
+import type { ReactNode } from 'react';
 
 import { studentPermissions } from 'src/constants/student-menu';
 import StudentPermissionGuard from 'src/components/student-permission-guard';
 
-const DocumentTypesLayout = ({ children }: { children: React.ReactNode }) => (
+const DocumentTypesLayout = ({ children }: { children: ReactNode }) => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.settings.documentTypes}>
     {children}
   </StudentPermissionGuard>

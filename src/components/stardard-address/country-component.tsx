@@ -54,6 +54,7 @@ const CountryComponent = ({
           option?.isoCode === val?.isoCode || option?.name === val?.name
         }
         options={allCountry || []}
+        getOptionKey={(option: any) => option?.isoCode || option?.name || ''}
         getOptionLabel={(option: any) =>
           `${option?.isoCode ? `${option?.isoCode} ` : ''}${option?.name || ''}`
         }
@@ -67,11 +68,14 @@ const CountryComponent = ({
             {...textFieldProps}
           />
         )}
-        renderOption={(props, option: any) => (
-          <li {...props} key={option.id}>
-            {`${option?.isoCode} ${option?.name}`}
-          </li>
-        )}
+        renderOption={(props, option: any) => {
+          const { key, ...optionProps } = props;
+          return (
+            <li key={key || option?.isoCode || option?.name} {...optionProps}>
+              {`${option?.isoCode} ${option?.name}`}
+            </li>
+          );
+        }}
         label="Country"
         {...filedProp}
       />

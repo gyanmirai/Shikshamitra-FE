@@ -335,9 +335,12 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
           <UploadButton
             variant="outlined"
             onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+
               const base64: string = await new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.readAsDataURL(e.target.files[0]);
+                reader.readAsDataURL(file);
                 reader.onload = () => {
                   resolve(reader.result as string);
                 };

@@ -18,6 +18,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import sortQueryString from 'src/utils/sort-query-string';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -31,6 +32,8 @@ import {
   useUnlockAttendanceMutation,
   useGetAttendanceByFilterQuery,
 } from 'src/redux/student/take-attendance/take-attendace-api';
+
+import { getAttendanceLockButtonState } from './attendance-lock-state';
 
 const TakeAttendanceScreen = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -61,6 +64,15 @@ const TakeAttendanceScreen = () => {
 
   const { currentYear, currentMedium: medium } = useSelector(
     (state: RootState) => state.globalState
+  );
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canMarkAttendance = hasGrantedPermission(
+    permissions,
+    'Students.Attendance.MarkAttendance.Add'
+  );
+  const canManageAttendanceLock = hasGrantedPermission(
+    permissions,
+    'Students.Attendance.MarkAttendance.Delete'
   );
 
   const now = dayjs().valueOf();
@@ -106,6 +118,11 @@ const TakeAttendanceScreen = () => {
   }, [allClass, classes]);
 
   const handleSave = async () => {
+    if (!canMarkAttendance) {
+      shikshaMitraToast.error({ message: 'You do not have permission to mark attendance.' });
+      return;
+    }
+
     try {
       const payload = {
         academicYearId: currentYear?.id,
@@ -145,6 +162,13 @@ const TakeAttendanceScreen = () => {
   // Derived from API response
   const isLocked: boolean = data?.isLocked ?? false;
   const attendanceDayId: string | undefined = data?.attendanceDayId;
+  const lockButtonState = getAttendanceLockButtonState({
+    isLocked,
+    attendanceDayId,
+    isLockLoading,
+    isUnlockLoading,
+    canManageLock: canManageAttendanceLock,
+  });
 
   /** Lock payload shared by lock/unlock calls */
   const lockPayload = {
@@ -303,6 +327,7 @@ const TakeAttendanceScreen = () => {
               disabled={
                 isLockLoading ||
                 isUnlockLoading ||
+                !canMarkAttendance ||
                 studentData.length === 0 ||
                 studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
               }
@@ -317,20 +342,14 @@ const TakeAttendanceScreen = () => {
           )}
 
           {/* Lock / Unlock Button */}
-          <CustomTooltip
-            title={
-              isLocked ? 'Attendance is locked and cannot be modified' : 'Click to lock attendance'
-            }
-            arrow
-            placement="top"
-          >
+          <CustomTooltip title={lockButtonState.title} arrow placement="top">
             <span>
               <Button
                 size="small"
-                variant={isLocked ? 'contained' : 'outlined'}
-                color={isLocked ? 'error' : 'inherit'}
+                variant={lockButtonState.variant}
+                color={lockButtonState.color}
                 loading={isLockLoading || isUnlockLoading}
-                disabled={isLocked || !attendanceDayId || isLockLoading || isUnlockLoading}
+                disabled={lockButtonState.disabled}
                 startIcon={
                   <Iconify
                     icon={isLocked ? 'eva:lock-fill' : 'eva:unlock-fill'}
@@ -340,7 +359,7 @@ const TakeAttendanceScreen = () => {
                 onClick={() => lockConfirmDialog.onTrue()}
                 sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
               >
-                {isLocked ? 'Locked' : 'Lock'}
+                {lockButtonState.label}
               </Button>
             </span>
           </CustomTooltip>
@@ -358,6 +377,7 @@ const TakeAttendanceScreen = () => {
               disabled={
                 isLockLoading ||
                 isUnlockLoading ||
+                !canMarkAttendance ||
                 studentData.length === 0 ||
                 studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
               }
@@ -381,6 +401,7 @@ const TakeAttendanceScreen = () => {
         isFetching={isFetching}
         studentData={studentData}
         isLocked={isLocked}
+        canMarkAttendance={canMarkAttendance}
       />
 
       {/* Lock Confirmation Dialog */}
@@ -463,6 +484,7 @@ const ListView = ({
   isFetching,
   studentData,
   isLocked,
+  canMarkAttendance,
 }: any) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
@@ -542,7 +564,7 @@ const ListView = ({
               return row.isPresent === AttendanceStatus.Absent ? (
                 <TextField
                   size="small"
-                  disabled={isLocked}
+                  disabled={isLocked || !canMarkAttendance}
                   value={value || ''}
                   onChange={(e) => {
                     setStudentData((prev: any) =>
@@ -796,6 +818,7 @@ const ListView = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               if (
+                                !canMarkAttendance ||
                                 data.length === 0 ||
                                 data.every(
                                   (item: any) => item.isPresent === AttendanceStatus.Present
@@ -830,6 +853,7 @@ const ListView = ({
                                   : theme.vars.palette.text.secondary,
                               cursor:
                                 data.length === 0 ||
+                                !canMarkAttendance ||
                                 data.every(
                                   (item: any) => item.isPresent === AttendanceStatus.Present
                                 )
@@ -837,6 +861,7 @@ const ListView = ({
                                   : 'pointer',
                               opacity:
                                 data.length === 0 ||
+                                !canMarkAttendance ||
                                 data.every(
                                   (item: any) => item.isPresent === AttendanceStatus.Present
                                 )
@@ -846,6 +871,7 @@ const ListView = ({
                               '&:hover': {
                                 bgcolor: (theme) =>
                                   data.length === 0 ||
+                                  !canMarkAttendance ||
                                   data.every(
                                     (item: any) => item.isPresent === AttendanceStatus.Present
                                   )
@@ -1051,6 +1077,7 @@ const ListView = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               if (
+                                !canMarkAttendance ||
                                 data.length === 0 ||
                                 data.every(
                                   (item: any) => item.isPresent === AttendanceStatus.Absent
@@ -1085,6 +1112,7 @@ const ListView = ({
                                   : theme.vars.palette.text.secondary,
                               cursor:
                                 data.length === 0 ||
+                                !canMarkAttendance ||
                                 data.every(
                                   (item: any) => item.isPresent === AttendanceStatus.Absent
                                 )
@@ -1092,6 +1120,7 @@ const ListView = ({
                                   : 'pointer',
                               opacity:
                                 data.length === 0 ||
+                                !canMarkAttendance ||
                                 data.every(
                                   (item: any) => item.isPresent === AttendanceStatus.Absent
                                 )
@@ -1101,6 +1130,7 @@ const ListView = ({
                               '&:hover': {
                                 bgcolor: (theme) =>
                                   data.length === 0 ||
+                                  !canMarkAttendance ||
                                   data.every(
                                     (item: any) => item.isPresent === AttendanceStatus.Absent
                                   )
@@ -1162,6 +1192,9 @@ const ListView = ({
                           {/* Present Button */}
                           <Box
                             onClick={() => {
+                              if (!canMarkAttendance) {
+                                return;
+                              }
                               setStudentData(
                                 data.map((item: any) =>
                                   item.studentId === row.studentId
@@ -1202,6 +1235,9 @@ const ListView = ({
                           {/* Pending Button */}
                           <Box
                             onClick={() => {
+                              if (!canMarkAttendance) {
+                                return;
+                              }
                               setStudentData(
                                 data.map((item: any) =>
                                   item.studentId === row.studentId
@@ -1242,6 +1278,9 @@ const ListView = ({
                           {/* Absent Button */}
                           <Box
                             onClick={() => {
+                              if (!canMarkAttendance) {
+                                return;
+                              }
                               setStudentData(
                                 data.map((item: any) =>
                                   item.studentId === row.studentId

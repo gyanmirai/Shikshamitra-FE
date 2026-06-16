@@ -4,9 +4,10 @@ import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { Box, Card, Stack, Divider, Typography, LinearProgress } from '@mui/material';
 
 const AttendanceStatusCard = () => {
-  const totalClasses = 32;
-  const completedClasses = 28;
-  const completionPercentage = Math.round((completedClasses / totalClasses) * 100);
+  const totalClasses = 0;
+  const completedClasses = 0;
+  const completionPercentage =
+    totalClasses > 0 ? Math.round((completedClasses / totalClasses) * 100) : 0;
 
   return (
     <Card sx={{ p: 3, height: '100%' }}>
@@ -29,7 +30,7 @@ const AttendanceStatusCard = () => {
       <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
         <SummaryCard
           title="Completed"
-          count={1500}
+          count={0}
           icon="mdi:tick-circle"
           color="primary"
           labels={[
@@ -40,7 +41,7 @@ const AttendanceStatusCard = () => {
 
         <SummaryCard
           title="Pending"
-          count={2}
+          count={0}
           icon="mdi:clock"
           color="warning"
           labels={[
@@ -63,14 +64,14 @@ const AttendanceStatusCard = () => {
       >
         <WarningAmberRoundedIcon color="warning" fontSize="small" />
         <Typography variant="body2" color="text.secondary">
-          Good Progress. Some Classes still Pending.
+          No attendance marking summary found.
         </Typography>
       </Box>
 
       <Divider sx={{ my: 2 }} />
 
       <Typography variant="caption" color="text.secondary">
-        Last updated: 2 minutes ago
+        Last updated: Not available
       </Typography>
     </Card>
   );

@@ -32,6 +32,8 @@ const grossEarningAmount = 30_000;
 const deductionAmount = 1_500;
 const earningComponentName = 'E2E Basic Pay';
 const deductionComponentName = 'E2E Payroll Deduction';
+const overtimeComponentName = 'Overtime Pay';
+const moneyTolerance = 0.02;
 
 async function expectOk(response: Awaited<ReturnType<typeof employeeApiRequest>>, label: string) {
   const details = response.ok() ? '' : await response.text();
@@ -46,6 +48,18 @@ async function getJson(page: Parameters<typeof employeeApiRequest>[0], path: str
 
 function itemsOf(body: any) {
   return Array.isArray(body?.items) ? body.items : Array.isArray(body) ? body : [];
+}
+
+function componentByName(components: any[] | undefined, name: string) {
+  return (components || []).find((component) => component?.name === name);
+}
+
+function sumComponentAmounts(components: any[] | undefined) {
+  return (components || []).reduce((total, component) => total + Number(component?.amount ?? 0), 0);
+}
+
+function expectMoneyClose(actual: unknown, expected: unknown, label: string) {
+  expect(Number(actual), label).toBeCloseTo(Number(expected), 2);
 }
 
 async function ensurePayrollComponent(
@@ -169,6 +183,104 @@ async function setEmployeeSalaryStructure(
   await expectOk(response, 'set employee salary structure');
 }
 
+async function createShift(
+  page: Parameters<typeof employeeApiRequest>[0],
+  startTime: string,
+  endTime: string
+) {
+  const response = await employeeApiRequest(page, '/app/shift-management', {
+    method: 'POST',
+    body: JSON.stringify({
+      shiftName: `E2E Overtime Shift ${Date.now()}`,
+      startTime,
+      endTime,
+    }),
+  });
+  await expectOk(response, 'create overtime shift');
+  return response.json();
+}
+
+async function getEffectivePolicies(
+  page: Parameters<typeof employeeApiRequest>[0],
+  employeeId: string,
+  effectiveDate: string
+) {
+  return getJson(page, `/hr/employees/${employeeId}/effective-policies?date=${effectiveDate}`);
+}
+
+async function createOvertimeAttendancePolicy(
+  page: Parameters<typeof employeeApiRequest>[0],
+  effectivePolicies: any
+) {
+  const { attendancePolicy } = effectivePolicies;
+  const workCalendarPolicyId =
+    attendancePolicy?.workCalendarPolicyId || effectivePolicies.attendanceWorkCalendarPolicy?.id;
+  expect(workCalendarPolicyId, 'effective attendance work calendar policy').toBeTruthy();
+
+  const response = await employeeApiRequest(page, '/hr/attendance/policies', {
+    method: 'POST',
+    body: JSON.stringify({
+      academicYearId: effectivePolicies.academicYearId,
+      workCalendarPolicyId,
+      name: `E2E Overtime Attendance ${Date.now()}`,
+      status: 'active',
+      isDefault: false,
+      captureMode: attendancePolicy?.captureMode || 'manual_with_time',
+      fullDayThresholdPercentage: attendancePolicy?.fullDayThresholdPercentage ?? 75,
+      halfDayThresholdPercentage: attendancePolicy?.halfDayThresholdPercentage ?? 50,
+      absentThresholdPercentage: attendancePolicy?.absentThresholdPercentage ?? 0,
+      missingPunchBehavior: attendancePolicy?.missingPunchBehavior || 'requires_review',
+      manualCorrectionAllowed: true,
+      graceTime: attendancePolicy?.graceTime ?? 0,
+      maxLateAllowedPerMonth: attendancePolicy?.maxLateAllowedPerMonth ?? 0,
+      penaltyType: attendancePolicy?.penaltyType || 'none',
+      penaltyCountThreshold: attendancePolicy?.penaltyCountThreshold ?? 0,
+      earlyExitEnabled: attendancePolicy?.earlyExitEnabled ?? false,
+      earlyExitGraceTime: attendancePolicy?.earlyExitGraceTime ?? 0,
+      overtimeEnabled: true,
+      overtimeRate: '2.0x',
+      minOvertimeMinutes: 30,
+      holidayWorkBehavior: attendancePolicy?.holidayWorkBehavior || 'paid',
+      sandwichRuleEnabled: attendancePolicy?.sandwichRuleEnabled ?? false,
+      payrollPreviewEnabled: true,
+    }),
+  });
+  await expectOk(response, 'create overtime attendance policy');
+  return response.json();
+}
+
+async function upsertEmployeePolicyOverride(
+  page: Parameters<typeof employeeApiRequest>[0],
+  employeeId: string,
+  effectivePolicies: any,
+  attendancePolicyId: string,
+  effectiveFrom: string
+) {
+  const payload = {
+    employeeId,
+    academicYearId: effectivePolicies.academicYearId,
+    payrollPolicyId: effectivePolicies.payrollPolicy?.id,
+    attendancePolicyId,
+    leavePolicyId: effectivePolicies.leavePolicy?.id,
+    effectiveFrom,
+    effectiveTo: null,
+    assignmentReason: 'E2E payroll overtime regression',
+  };
+  expect(payload.payrollPolicyId, 'effective payroll policy').toBeTruthy();
+  expect(payload.leavePolicyId, 'effective leave policy').toBeTruthy();
+
+  const response = await employeeApiRequest(
+    page,
+    '/hr/policy-assignments/direct-employee-override',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+  await expectOk(response, 'upsert employee overtime policy override');
+  return response.json();
+}
+
 test.describe('HR module full cycle', () => {
   test.skip(!fullCycleEnabled, 'Set E2E_HR_FULL_CYCLE=1 against a seeded local backend.');
 
@@ -267,5 +379,110 @@ test.describe('HR module full cycle', () => {
     expect(slipGross).toBeLessThanOrEqual(grossEarningAmount);
     expect(slipNet).toBeGreaterThan(0);
     expect(slipNet).toBeLessThanOrEqual(slipGross);
+  });
+
+  test('includes overtime earning in run payroll preview, lock, and salary slip', async ({
+    page,
+  }) => {
+    test.setTimeout(300_000);
+
+    await page.goto('/dashboard/');
+
+    const shift = await createShift(page, '07:00:00', '17:30:00');
+    const employee = await createEmployeeFromExistingDefaults(
+      page,
+      createEmployeeFixture('Payroll Overtime Employee'),
+      { shiftId: shift.id }
+    );
+    const employeeId = employee.id;
+    const attendanceDate = yyyyMmDd(firstElapsedWeekdayInMonth(today));
+    const month = payrollMonth(today);
+
+    await setEmployeeSalaryStructure(page, employeeId);
+
+    const effectivePolicies = await getEffectivePolicies(page, employeeId, attendanceDate);
+    const overtimePolicy = await createOvertimeAttendancePolicy(page, effectivePolicies);
+    await upsertEmployeePolicyOverride(
+      page,
+      employeeId,
+      effectivePolicies,
+      overtimePolicy.id,
+      attendanceDate
+    );
+
+    const attendanceResponse = await employeeApiRequest(page, '/hr/attendance/register/adjust', {
+      method: 'POST',
+      body: JSON.stringify({
+        employeeId,
+        attendanceDate,
+        statusWire: 'PRESENT',
+        inTime: '07:00:00',
+        outTime: '19:00:00',
+        reason: 'E2E overtime payroll regression',
+      }),
+    });
+    await expectOk(attendanceResponse, 'adjust overtime attendance register');
+
+    await page.goto('/hr/payroll/run-payroll', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await expect(page.getByRole('heading', { name: /Run Payroll/i })).toBeVisible({
+      timeout: 60_000,
+    });
+
+    const preview = await getJson(
+      page,
+      `/payroll/run?month=${encodeURIComponent(month)}&page=0&pageSize=100&forceRefresh=true`
+    );
+    const payrollRow = preview.items?.find((item: any) => item.employeeId === employeeId);
+    expect(payrollRow, `payroll row for ${employee.email}`).toBeTruthy();
+
+    const overtimeLine = componentByName(payrollRow.earningComponents, overtimeComponentName);
+    expect(overtimeLine, 'run payroll overtime earning line').toBeTruthy();
+    expect(Number(overtimeLine.amount)).toBeGreaterThan(moneyTolerance);
+    expect(String(overtimeLine.description || '')).toContain('90');
+    expectMoneyClose(
+      payrollRow.grossSalary,
+      sumComponentAmounts(payrollRow.earningComponents),
+      'run payroll gross matches earning components'
+    );
+
+    const previewGross = Number(payrollRow.grossSalary ?? 0);
+    const previewNet = Number(payrollRow.netPay ?? 0);
+    expect(previewGross).toBeGreaterThan(Number(overtimeLine.amount));
+    expect(previewNet).toBeGreaterThan(0);
+
+    const reviewResponse = await employeeApiRequest(page, '/payroll/run/reviews', {
+      method: 'POST',
+      body: JSON.stringify({ month, employeeIds: [employeeId] }),
+    });
+    await expectOk(reviewResponse, 'mark overtime payroll reviewed');
+
+    const lockResponse = await employeeApiRequest(page, '/payroll/run', {
+      method: 'POST',
+      body: JSON.stringify({ month, employeeIds: [employeeId] }),
+    });
+    await expectOk(lockResponse, 'lock overtime payroll');
+
+    const slip = await getJson(
+      page,
+      `/payroll/salary-slips?monthYear=${encodeURIComponent(month)}&employeeId=${employeeId}`
+    );
+    const slipOvertimeLine = componentByName(slip.earnings, overtimeComponentName);
+    expect(slipOvertimeLine, 'salary slip overtime earning line').toBeTruthy();
+    expect(slipOvertimeLine.isTemp).toBe(true);
+    expectMoneyClose(
+      slipOvertimeLine.amount,
+      overtimeLine.amount,
+      'salary slip overtime matches run payroll overtime'
+    );
+    expectMoneyClose(
+      slip.totalEarning,
+      previewGross,
+      'salary slip earnings match run payroll gross'
+    );
+    expectMoneyClose(
+      slip.netPay ?? slip.netSalary,
+      previewNet,
+      'salary slip net matches run payroll net'
+    );
   });
 });

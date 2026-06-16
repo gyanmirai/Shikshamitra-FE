@@ -20,44 +20,7 @@ import {
   IconButton,
 } from '@mui/material';
 
-const studentsAtRisk = [
-  {
-    id: '1',
-    name: 'Rahul Singh',
-    attendance: 65,
-    performance: 32,
-    issues: ['Low Attendance', 'Failing Grades'],
-    avatarUrl: '',
-    status: 'rational', // critical
-  },
-  {
-    id: '2',
-    name: 'Priya Sharma',
-    attendance: 72,
-    performance: 45,
-    issues: ['Low Attendance'],
-    avatarUrl: '',
-    status: 'warning',
-  },
-  {
-    id: '3',
-    name: 'Amit Patel',
-    attendance: 88,
-    performance: 28,
-    issues: ['Failing Grades', 'Behavior'],
-    avatarUrl: '',
-    status: 'critical',
-  },
-  {
-    id: '4',
-    name: 'Sneha Gupta',
-    attendance: 60,
-    performance: 55,
-    issues: ['Chronic Absenteeism'],
-    avatarUrl: '',
-    status: 'critical',
-  },
-];
+const attentionRows: any[] = [];
 
 const renderInfoTooltip = (title: string, tooltipText: string) => (
   <Stack direction="row" alignItems="center" spacing={1}>
@@ -106,7 +69,7 @@ const StudentsNeedingAttention = () => {
                 {row.name}
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {row.issues.join(' • ')}
+                {row.issues?.join(', ') || '-'}
               </Typography>
             </Box>
           </Stack>
@@ -232,9 +195,9 @@ const StudentsNeedingAttention = () => {
       <Box sx={{ p: 1 }}>
         <CustomizableTable
           tableId="students-attention-table"
-          noDataText="No students available"
+          noDataText="No students needing attention found."
           columns={columns}
-          data={studentsAtRisk}
+          data={attentionRows}
           isPagination={false}
           isFilter={false}
           isShowedDense={false}

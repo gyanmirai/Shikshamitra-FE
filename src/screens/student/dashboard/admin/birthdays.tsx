@@ -8,96 +8,30 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { useGetStudentDashboardSummaryQuery } from 'src/redux/student';
 import { Box, Card, Chip, Stack, Button, Avatar, CardHeader, Typography } from '@mui/material';
-
-const birthdays = [
-  {
-    id: 1,
-    name: 'Arjun Sharma',
-    class: '5A',
-    date: 'Today',
-    isToday: true,
-    avatarUrl: '/assets/images/avatars/avatar_1.jpg',
-  },
-  {
-    id: 2,
-    name: 'Priya Patel',
-    class: '5A',
-    date: 'Tomorrow',
-    isToday: false,
-    avatarUrl: '/assets/images/avatars/avatar_2.jpg',
-  },
-  {
-    id: 3,
-    name: 'Raj Kumar',
-    class: '4B',
-    date: 'Dec 29',
-    isToday: false,
-    avatarUrl: '/assets/images/avatars/avatar_3.jpg',
-  },
-  {
-    id: 4,
-    name: 'Meera Singh',
-    class: '3C',
-    date: 'Dec 30',
-    isToday: false,
-    avatarUrl: '/assets/images/avatars/avatar_4.jpg',
-  },
-  {
-    id: 5,
-    name: 'Sohan Kumar',
-    class: '6A',
-    date: 'Dec 31',
-    isToday: false,
-    avatarUrl: '/assets/images/avatars/avatar_5.jpg',
-  },
-  {
-    id: 6,
-    name: 'Anita Roy',
-    class: '7B',
-    date: 'Jan 01',
-    isToday: false,
-    avatarUrl: '/assets/images/avatars/avatar_6.jpg',
-  },
-  {
-    id: 7,
-    name: 'Vikram Singh',
-    class: '8C',
-    date: 'Jan 02',
-    isToday: false,
-    avatarUrl: '/assets/images/avatars/avatar_7.jpg',
-  },
-  {
-    id: 8,
-    name: 'Rahul Gupta',
-    class: '9A',
-    date: 'Jan 03',
-    isToday: false,
-    avatarUrl: '/assets/images/avatars/avatar_8.jpg',
-  },
-  {
-    id: 9,
-    name: 'Pooja Sharma',
-    class: '10B',
-    date: 'Jan 04',
-    isToday: false,
-    avatarUrl: '/assets/images/avatars/avatar_9.jpg',
-  },
-  {
-    id: 10,
-    name: 'Karan Mehra',
-    class: '11C',
-    date: 'Jan 05',
-    isToday: false,
-    avatarUrl: '/assets/images/avatars/avatar_10.jpg',
-  },
-];
 
 const Birthdays = () => {
   const viewCalendarDialog = useBoolean();
-  const [wishedStudents, setWishedStudents] = React.useState<number[]>([]);
+  const { data: summary } = useGetStudentDashboardSummaryQuery(undefined);
+  const [wishedStudents, setWishedStudents] = React.useState<string[]>([]);
 
-  const handleWish = (id: number) => {
+  const birthdayRows = [
+    ...(summary?.todaysBirthdays || []).map((student: any) => ({
+      ...student,
+      id: `${student.name}-today`,
+      date: 'Today',
+      isToday: true,
+    })),
+    ...(summary?.upcomingBirthdays || []).map((student: any) => ({
+      ...student,
+      id: `${student.name}-${student.dateLabel || 'upcoming'}`,
+      date: student.dateLabel || '-',
+      isToday: false,
+    })),
+  ];
+
+  const handleWish = (id: string) => {
     confetti({
       particleCount: 100,
       spread: 70,
@@ -128,9 +62,6 @@ const Birthdays = () => {
               <Typography variant="h6">Birthdays</Typography>
             </Stack>
           }
-          subheaderTypographyProps={{
-            sx: { color: () => theme.vars?.palette?.text?.secondary || 'text.secondary' },
-          }}
           action={
             <Button
               size="small"
@@ -146,13 +77,19 @@ const Birthdays = () => {
 
         <Scrollbar sx={{ flexGrow: 1 }}>
           <Stack spacing={1} sx={{ p: 1 }}>
-            {birthdays.some((student) => student.isToday) && (
+            {birthdayRows.length === 0 && (
+              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 8 }}>
+                No birthdays found.
+              </Typography>
+            )}
+
+            {birthdayRows.some((student) => student.isToday) && (
               <Box>
                 <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, ml: 1 }}>
                   Today
                 </Typography>
                 <Stack spacing={1}>
-                  {birthdays
+                  {birthdayRows
                     .filter((student) => student.isToday)
                     .map((student) => {
                       const isWished = wishedStudents.includes(student.id);
@@ -174,67 +111,37 @@ const Birthdays = () => {
                                   '',
                                 0.16
                               ),
-                            transition: 'all 0.2s',
-                            '&:hover': {
-                              borderColor: 'transparent',
-                              bgcolor: 'background.neutral',
-                              transform: 'scale(1.02)',
-                              boxShadow: 'none',
-                            },
                           }}
                         >
                           <Stack direction="row" spacing={2} alignItems="center">
-                            <Box sx={{ position: 'relative' }}>
-                              <Avatar
-                                src={student.avatarUrl}
-                                alt={student.name}
-                                sx={{ width: 48, height: 48 }}
-                              />
-                              <Box
-                                sx={{
-                                  position: 'absolute',
-                                  bottom: 0,
-                                  right: 0,
-                                  bgcolor: 'background.paper',
-                                  borderRadius: '50%',
-                                  width: 20,
-                                  height: 20,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  boxShadow: 1,
-                                }}
-                              >
-                                <Typography variant="caption">🎉</Typography>
-                              </Box>
-                            </Box>
+                            <Avatar sx={{ width: 48, height: 48 }}>
+                              {student.name?.[0] || 'S'}
+                            </Avatar>
 
                             <Box>
                               <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                                 {student.name}
                               </Typography>
                               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                Class {student.class}
+                                {student.className || '-'}
                               </Typography>
                             </Box>
                           </Stack>
 
-                          <Stack direction="row" alignItems="center" spacing={1}>
-                            <Button
-                              size="small"
-                              variant={isWished ? 'soft' : 'contained'}
-                              color={isWished ? 'success' : 'primary'}
-                              startIcon={
-                                <Iconify
-                                  icon={isWished ? 'mdi:check-circle-outline' : 'mdi:gift-outline'}
-                                />
-                              }
-                              onClick={() => !isWished && handleWish(student.id)}
-                              sx={{ borderRadius: 3, px: 2 }}
-                            >
-                              {isWished ? 'Wished!' : 'Wish'}
-                            </Button>
-                          </Stack>
+                          <Button
+                            size="small"
+                            variant={isWished ? 'soft' : 'contained'}
+                            color={isWished ? 'success' : 'primary'}
+                            startIcon={
+                              <Iconify
+                                icon={isWished ? 'mdi:check-circle-outline' : 'mdi:gift-outline'}
+                              />
+                            }
+                            onClick={() => !isWished && handleWish(student.id)}
+                            sx={{ borderRadius: 3, px: 2 }}
+                          >
+                            {isWished ? 'Wished!' : 'Wish'}
+                          </Button>
                         </Box>
                       );
                     })}
@@ -242,13 +149,13 @@ const Birthdays = () => {
               </Box>
             )}
 
-            {birthdays.some((student) => !student.isToday) && (
-              <Box sx={{ mt: birthdays.some((student) => student.isToday) ? 2 : 0 }}>
+            {birthdayRows.some((student) => !student.isToday) && (
+              <Box sx={{ mt: birthdayRows.some((student) => student.isToday) ? 2 : 0 }}>
                 <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, ml: 1 }}>
                   Upcoming
                 </Typography>
                 <Stack spacing={1}>
-                  {birthdays
+                  {birthdayRows
                     .filter((student) => !student.isToday)
                     .map((student) => (
                       <Box
@@ -260,38 +167,21 @@ const Birthdays = () => {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          bgcolor: 'transparent',
-                          transition: 'all 0.2s',
-                          '&:hover': {
-                            borderColor: 'transparent',
-                            bgcolor: 'background.neutral',
-                            transform: 'scale(1.02)',
-                            boxShadow: 'none',
-                          },
                         }}
                       >
                         <Stack direction="row" spacing={2} alignItems="center">
-                          <Box sx={{ position: 'relative' }}>
-                            <Avatar
-                              src={student.avatarUrl}
-                              alt={student.name}
-                              sx={{ width: 48, height: 48 }}
-                            />
-                          </Box>
-
+                          <Avatar sx={{ width: 48, height: 48 }}>{student.name?.[0] || 'S'}</Avatar>
                           <Box>
                             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                               {student.name}
                             </Typography>
                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                              Class {student.class}
+                              {student.className || '-'}
                             </Typography>
                           </Box>
                         </Stack>
 
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <Chip label={student.date} size="small" variant="soft" color="default" />
-                        </Stack>
+                        <Chip label={student.date} size="small" variant="soft" color="default" />
                       </Box>
                     ))}
                 </Stack>

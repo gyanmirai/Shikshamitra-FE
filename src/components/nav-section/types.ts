@@ -1,4 +1,5 @@
 import type React from 'react';
+import type { PermissionName } from 'src/utils/permissions';
 import type { ButtonBaseProps } from '@mui/material/ButtonBase';
 import type { Theme, SxProps, CSSObject } from '@mui/material/styles';
 
@@ -52,7 +53,7 @@ export type NavItemBaseProps = {
   style?: any;
   submodule?: any;
   visibility?: boolean;
-  permissionName?: string;
+  permissionName?: PermissionName;
 };
 
 export type NavItemProps = ButtonBaseProps & NavItemStateProps & NavItemBaseProps;

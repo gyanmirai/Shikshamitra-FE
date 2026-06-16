@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { ReportCategory, ReportSubCategory } from 'src/components/common-report/types';
 import type {
   HrReportField,
+  HrReportFormat,
   HrReportSource,
   HrReportRequest,
   HrReportTemplate,
@@ -11,32 +12,9 @@ import type {
 
 import dayjs from 'dayjs';
 
+import type { HrReportBuilderState, HrReportCatalogSelection } from './hr-report-types';
+
 export const DEFAULT_HR_REPORT_PAGE_SIZE = 25;
-
-export type HrReportBuilderState = {
-  selectedSourceId: string;
-  selectedTemplate: HrReportTemplate | null;
-  reportName: string;
-  columns: string[];
-  dateField: string;
-  fromDate: string;
-  toDate: string;
-  month: string;
-  conditions: HrReportFilterCondition[];
-  sortField: string;
-  sortDirection: 'asc' | 'desc';
-  groups: string[];
-  summaryField: string;
-  chartType: 'none' | 'kpi' | 'bar' | 'line' | 'donut';
-  chartCategoryField: string;
-  chartValueField: string;
-  visibility: 'private' | 'organization';
-};
-
-export type HrReportCatalogSelection = {
-  source: HrReportSource;
-  template?: HrReportTemplate;
-};
 
 const sourceIcons: Record<string, string> = {
   employee: 'mdi:account-tie-outline',
@@ -86,11 +64,22 @@ export const isHrReportPayrollSource = (source?: HrReportSource) => source?.id =
 export const getHrReportDateRangeError = (fromDate?: string, toDate?: string) =>
   fromDate && toDate && fromDate > toDate ? 'From Date must be on or before To Date.' : '';
 
-export const cleanHrReportConditions = (conditions: HrReportFilterCondition[] = []) =>
-  conditions.filter((condition) => {
-    if (!condition.field) return false;
-    if (condition.values?.length) return true;
-    return typeof condition.value === 'string' && condition.value.trim().length > 0;
+export const cleanHrReportConditions = (
+  conditions: HrReportFilterCondition[] = []
+): HrReportFilterCondition[] =>
+  conditions.flatMap<HrReportFilterCondition>((condition) => {
+    if (!condition.field) return [];
+    if (condition.operator === 'in') {
+      const rawValues = condition.values?.length ? condition.values : [condition.value ?? ''];
+      const values = rawValues
+        .map((value) => String(value).trim())
+        .filter((value) => value.length > 0);
+
+      return values.length ? [{ ...condition, value: undefined, values }] : [];
+    }
+
+    if (typeof condition.value !== 'string' || condition.value.trim().length === 0) return [];
+    return [{ ...condition, value: condition.value.trim(), values: undefined }];
   });
 
 export const createHrReportStateFromSource = (source: HrReportSource): HrReportBuilderState => ({
@@ -158,6 +147,9 @@ export const buildHrReportRequest = (
   reportType: state.reportName || source?.label || 'HR Report',
   dataSource: state.selectedSourceId,
   format,
+  templateId: state.selectedTemplate?.id,
+  templateName: state.selectedTemplate?.name,
+  sourceAction: 'manualExport',
   page,
   pageSize,
   columns: state.columns,
@@ -227,6 +219,22 @@ export const mapHrSourcesToSubCategories = (
 export const getHrReportExportFileName = (
   job: Pick<HrReportExportJob, 'fileName' | 'reportType'>
 ) => job.fileName || `${job.reportType || 'hr-report'}`;
+
+export const getHrReportFormatLabel = (format?: HrReportFormat) =>
+  format === 'pdf' ? 'PDF' : 'Excel';
+
+export const getHrReportRequestSignature = (request: HrReportRequest) =>
+  JSON.stringify({
+    reportType: request.reportType,
+    dataSource: request.dataSource,
+    format: request.format,
+    columns: request.columns ?? [],
+    sorts: request.sorts ?? [],
+    groups: request.groups ?? [],
+    summaries: request.summaries ?? [],
+    chart: request.chart ?? null,
+    filters: request.filters ?? {},
+  });
 
 export const isHrReportExportActive = (job: HrReportExportJob) =>
   job.status === 'Queued' || job.status === 'Running';

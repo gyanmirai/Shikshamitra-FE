@@ -29,12 +29,15 @@ const StateComponent = ({
     <Autocomplete
       noOptionsText={<Typography variant="caption">No State Found</Typography>}
       fullWidth
-      value={value}
+      value={value?.isoCode || value?.name ? value : null}
       onChange={onChange}
       isOptionEqualToValue={(option, val) =>
         option?.isoCode === val?.isoCode || option?.name === val?.name
       }
       options={allState || []}
+      getOptionKey={(option: any) =>
+        `${option?.countryCode || ''}-${option?.isoCode || option?.name || ''}`
+      }
       getOptionLabel={(option: any) =>
         `${option?.isoCode ? `${option?.isoCode} ` : ''}${option?.name || ''}`
       }
@@ -49,11 +52,17 @@ const StateComponent = ({
           {...textFieldProps}
         />
       )}
-      renderOption={(props, option: any) => (
-        <li {...props} key={option.id}>
-          {`${option?.isoCode} ${option?.name}`}
-        </li>
-      )}
+      renderOption={(props, option: any) => {
+        const { key, ...optionProps } = props;
+        return (
+          <li
+            key={key || `${option?.countryCode || ''}-${option?.isoCode || option?.name || ''}`}
+            {...optionProps}
+          >
+            {`${option?.isoCode} ${option?.name}`}
+          </li>
+        );
+      }}
       disabled={!countryValue?.name}
       label="State"
       {...filedProps}

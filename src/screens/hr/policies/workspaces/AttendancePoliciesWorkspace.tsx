@@ -12,7 +12,7 @@ import { Box, Alert, Drawer, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { PolicyTable } from '../components/PolicyTable';
-import { HR_POLICY_TABS } from '../hr-policy-workspace.constants';
+import { getHRPolicyTab } from '../hr-policy-workspace.constants';
 import { PolicyAuditDrawer } from '../components/PolicyAuditDrawer';
 import { useHRPolicyWorkspace } from '../hooks/useHRPolicyWorkspace';
 import { PolicyImpactDrawer } from '../components/PolicyImpactDrawer';
@@ -23,7 +23,7 @@ import { AttendancePolicyDrawer } from '../components/AttendancePolicyDrawer';
 import type { HRPolicyWorkspaceProps } from '../types/hr-policy-workspace.types';
 
 export default function AttendancePoliciesWorkspace({ focus }: HRPolicyWorkspaceProps) {
-  const ctx = useHRPolicyWorkspace({ focus: 'attendance', tabs: [HR_POLICY_TABS[2]] });
+  const ctx = useHRPolicyWorkspace({ focus: 'attendance', tabs: [getHRPolicyTab('attendance')] });
 
   const {
     drawer,

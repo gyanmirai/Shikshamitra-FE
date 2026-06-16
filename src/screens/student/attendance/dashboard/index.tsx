@@ -4,32 +4,44 @@ import type { Dayjs } from 'dayjs';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
+import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import sortQueryString from 'src/utils/sort-query-string';
 import UserHoverProfile from 'src/components/student-popover';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Grid, Paper, Avatar, Button, Typography } from '@mui/material';
 import {
-  useGetStudentsByDivisionQuery,
-  useGetStudentAttendanceDashboardSummaryQuery,
-} from 'src/redux/student';
-import {
   AttendanceStatusType,
   AttendanceStatusOptions,
   AttendanceStatusTypeColors,
 } from 'src/enums/attendance-type';
+import {
+  useGetStudentsByDivisionQuery,
+  useGetStudentAttendanceHistoryQuery,
+  useGetStudentAttendanceDashboardSummaryQuery,
+} from 'src/redux/student';
+
+import {
+  buildAttendanceHistoryQuery,
+  buildAttendanceSummaryQuery,
+} from './attendance-dashboard-query';
 
 const StudentAttendanceDashboardScreen = () => {
   // State to track selected division for detailed view
   const [selectedDivision, setSelectedDivision] = useState(null);
   // State to track selected month for attendance data
   const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(dayjs());
-  const { data: attendanceSummary } = useGetStudentAttendanceDashboardSummaryQuery({});
+  const attendanceSummaryQuery = useMemo(
+    () => buildAttendanceSummaryQuery(selectedMonth),
+    [selectedMonth]
+  );
+  const { data: attendanceSummary } =
+    useGetStudentAttendanceDashboardSummaryQuery(attendanceSummaryQuery);
   const attendanceClassSummary = attendanceSummary?.classes || [];
   const schoolAttendance = attendanceSummary?.schoolAttendancePercentage || 0;
   return (
@@ -99,6 +111,7 @@ const StudentAttendanceDashboardScreen = () => {
           <DivisionOverview
             selectedDivision={selectedDivision}
             setSelectedDivision={setSelectedDivision}
+            selectedMonth={selectedMonth}
           />
         </>
       )}
@@ -123,6 +136,7 @@ const ClassCard = ({ classItem, setSelectedDivision }: any) => (
     <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
       {classItem.divisions.map((item: any) => (
         <RenderDivision
+          key={item.divisionId || item.name}
           classDetails={classItem}
           item={item}
           setSelectedDivision={setSelectedDivision}
@@ -158,13 +172,20 @@ const RenderDivision = ({ item, setSelectedDivision, classDetails }: any) => (
   </Paper>
 );
 
-const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
+const DivisionOverview = ({ selectedDivision, selectedMonth }: any) => {
   // State to track the selected student
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   // State to track the start date of attendance period, defaults to start of current month
-  const [startDate, setStartDate] = useState<null | Dayjs>(dayjs().startOf('month'));
+  const [startDate, setStartDate] = useState<null | Dayjs>(
+    (selectedMonth ?? dayjs()).startOf('month')
+  );
   // State to track the end date of attendance period, defaults to end of current month
-  const [endDate, setEndDate] = useState<null | Dayjs>(dayjs().endOf('month'));
+  const [endDate, setEndDate] = useState<null | Dayjs>((selectedMonth ?? dayjs()).endOf('month'));
+  const [historyQuery, setHistoryQuery] = useState({
+    sorting: 'date desc',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
   const { data: students, isLoading: studentsLoading } = useGetStudentsByDivisionQuery(
     { divisionId: selectedDivision?.divisionId, skipCount: 0, maxResultCount: 25 },
     { skip: !selectedDivision?.divisionId }
@@ -175,6 +196,43 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
       name:
         student.studentName ||
         [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' '),
+    })) || [];
+  const attendanceHistoryArgs = useMemo(
+    () =>
+      selectedStudent?.studentId
+        ? buildAttendanceHistoryQuery({
+            studentId: selectedStudent.studentId,
+            startDate,
+            endDate,
+            skipCount: historyQuery.skipCount,
+            maxResultCount: historyQuery.maxResultCount,
+            sorting: historyQuery.sorting,
+          })
+        : undefined,
+    [
+      selectedStudent?.studentId,
+      startDate,
+      endDate,
+      historyQuery.skipCount,
+      historyQuery.maxResultCount,
+      historyQuery.sorting,
+    ]
+  );
+  const {
+    data: attendanceHistory,
+    isLoading: attendanceHistoryLoading,
+    isFetching: attendanceHistoryFetching,
+  } = useGetStudentAttendanceHistoryQuery(attendanceHistoryArgs as any, {
+    skip:
+      !attendanceHistoryArgs?.studentId ||
+      !attendanceHistoryArgs.startDate ||
+      !attendanceHistoryArgs.endDate,
+  });
+  const attendanceHistoryRows =
+    attendanceHistory?.items?.map((item: any) => ({
+      ...item,
+      date: dayjs(item.date).format('DD-MM-YYYY'),
+      remarks: item.remarks || '-',
     })) || [];
 
   // Get the current theme instance
@@ -194,9 +252,9 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
             <Typography component="span">
               <Label
                 color={
-                  selectedDivision?.percentage > '75'
+                  selectedDivision?.percentage > 75
                     ? 'success'
-                    : selectedDivision?.percentage > '40'
+                    : selectedDivision?.percentage > 40
                       ? 'warning'
                       : 'error'
                 }
@@ -223,7 +281,7 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
               )}
               {studentRows.map((student: any, index: number) => (
                 <Paper
-                  key={index}
+                  key={student.studentId || index}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -274,20 +332,31 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
               <Grid size={{ xs: 12 }}>
                 <CustomizableTable
                   tableId="attendance-table"
-                  data={[
-                    {
-                      date: '18/07/2024',
-                      status: 'Present',
-                      reason: 'Doctors Appointment',
-                      remarks: 'Student attended half-day due to medical checkup',
-                    },
-                    {
-                      date: '17/07/2024',
-                      status: 'Absent',
-                      reason: 'Traffic',
-                      remarks: 'Student informed about heavy traffic congestion',
-                    },
-                  ]}
+                  data={attendanceHistoryRows}
+                  noDataText={
+                    selectedStudent
+                      ? 'No attendance history found.'
+                      : 'Select a student to view attendance history.'
+                  }
+                  serverSide
+                  serverSidePagination
+                  serverSideSort
+                  totalCount={attendanceHistory?.totalCount || 0}
+                  isLoading={attendanceHistoryLoading || attendanceHistoryFetching}
+                  onServerSort={(column, sortData) => {
+                    setHistoryQuery((prev) => ({
+                      ...prev,
+                      sorting: sortQueryString(sortData) || 'date desc',
+                      skipCount: 0,
+                    }));
+                  }}
+                  onServerPagination={(page: number, rowsPerPage: number) => {
+                    setHistoryQuery((prev) => ({
+                      ...prev,
+                      skipCount: (page - 1) * rowsPerPage,
+                      maxResultCount: rowsPerPage,
+                    }));
+                  }}
                   columns={[
                     { id: 'date', label: 'Date', minWidth: '10%', filterType: 'date' },
                     {
@@ -305,7 +374,6 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
                         );
                       },
                     },
-                    { id: 'reason', label: 'Reason', minWidth: '10%' },
                     { id: 'remarks', label: 'Remarks', minWidth: '20%' },
                   ]}
                 />

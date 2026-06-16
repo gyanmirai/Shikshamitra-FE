@@ -108,7 +108,7 @@ const LeaveAndAbsentScreen = () => {
   const { data: leaveData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentLeaveQuery,
-    ...query,
+    params: query,
   });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -374,16 +374,20 @@ const LeaveAndAbsentScreen = () => {
         columns={columns}
         data={tableData || []}
         serverSide
+        serverSidePagination
+        serverSideSort
+        totalCount={leaveData?.totalCount || 0}
         onServerSort={(column, sortData) => {
           setQuery((prev) => ({
             ...prev,
             sorting: sortQueryString(sortData),
+            skipCount: 0,
           }));
         }}
         onServerPagination={(page: number, rowsPerPage: number) => {
           setQuery((prev) => ({
             ...prev,
-            skipCount: page * rowsPerPage,
+            skipCount: (page - 1) * rowsPerPage,
             maxResultCount: rowsPerPage,
           }));
         }}

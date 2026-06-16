@@ -12,7 +12,7 @@ import { Box, Alert, Drawer, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AssignmentsTab } from '../components/AssignmentsTab';
-import { HR_POLICY_TABS } from '../hr-policy-workspace.constants';
+import { getHRPolicyTab } from '../hr-policy-workspace.constants';
 import { PolicyAuditDrawer } from '../components/PolicyAuditDrawer';
 import { useHRPolicyWorkspace } from '../hooks/useHRPolicyWorkspace';
 import { PolicyImpactDrawer } from '../components/PolicyImpactDrawer';
@@ -23,7 +23,7 @@ import { AssignmentPolicyDrawer } from '../components/AssignmentPolicyDrawer';
 import type { HRPolicyWorkspaceProps } from '../types/hr-policy-workspace.types';
 
 export default function AssignmentsWorkspace({ focus }: HRPolicyWorkspaceProps) {
-  const ctx = useHRPolicyWorkspace({ focus: 'assignments', tabs: [HR_POLICY_TABS[3]] });
+  const ctx = useHRPolicyWorkspace({ focus: 'assignments', tabs: [getHRPolicyTab('assignments')] });
 
   const {
     drawer,

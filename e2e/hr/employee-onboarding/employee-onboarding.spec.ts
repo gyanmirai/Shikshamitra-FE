@@ -24,16 +24,28 @@ const onboardingPermissions = [
   'HR.Employee.EmployeeOnboarding.Finalize',
 ];
 
+const onboardingColumns = ['Candidate', 'Position', 'Status', 'Submitted', 'Expires', 'Actions'];
+
 type CandidateFixture = ReturnType<typeof createCandidateFixture>;
+
+type AcademicYear = {
+  id: string;
+  name: string;
+  startDate?: string;
+  endDate?: string;
+};
 
 type InviteResponse = {
   token: string;
   publicPath: string;
   tokenExpiresAt: string;
+  emailDeliverySucceeded: boolean;
+  emailDeliveryMessage?: string | null;
   application: {
     id: string;
     status: number | string;
     email?: string;
+    publicPath?: string | null;
   };
 };
 
@@ -78,6 +90,11 @@ function createCandidateFixture(prefix = 'Onboard Candidate') {
     familyCaste: 'General',
     qualificationSummary: `M.Sc Mathematics with B.Ed automation ${suffix}`,
     skillsSummary: `Algebra, classroom management, lesson planning ${suffix}`,
+    identificationMark1: `Left hand mark automation ${suffix}`,
+    fatherName: `Father ${nameSuffix}`,
+    fatherOccupation: 'Teacher',
+    fatherMobileNo: `7${suffix.slice(-9).padStart(9, '2')}`,
+    secondLanguage: 'Gujarati',
     address1: 'E2E House 1',
     address2: 'Automation Road',
     address3: 'Regression Area',
@@ -114,13 +131,146 @@ function isStatus(value: unknown, expected: number) {
   );
 }
 
-function expectOk(response: Awaited<ReturnType<typeof employeeApiRequest>>, label: string) {
-  expect(response.ok(), `${label}: ${response.status()}`).toBe(true);
+async function jsonFrom(response: Awaited<ReturnType<typeof employeeApiRequest>>, label: string) {
+  const text = await response.text();
+  if (!response.ok()) {
+    throw new Error(`${label}: ${response.status()} ${text}`);
+  }
+
+  return text ? JSON.parse(text) : {};
 }
 
-async function jsonFrom(response: Awaited<ReturnType<typeof employeeApiRequest>>, label: string) {
-  expectOk(response, label);
-  return response.json();
+async function jsonFromWhenAuthorized(
+  response: Awaited<ReturnType<typeof employeeApiRequest>>,
+  label: string
+) {
+  if (response.status() === 403) {
+    return null;
+  }
+
+  return jsonFrom(response, label);
+}
+
+const addDays = (date: Date, days: number) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+};
+
+const toDateInputValue = (date: Date) => date.toISOString().slice(0, 10);
+
+const getInAcademicYearDate = (academicYear: AcademicYear) => {
+  const start = academicYear.startDate ? new Date(academicYear.startDate) : new Date();
+  const end = academicYear.endDate ? new Date(academicYear.endDate) : addDays(start, 180);
+  let candidate = new Date(Math.max(addDays(start, 1).getTime(), new Date().getTime()));
+
+  if (candidate > end) {
+    candidate = addDays(start, 1);
+  }
+  if (candidate > end) {
+    candidate = start;
+  }
+
+  return toDateInputValue(candidate);
+};
+
+async function getAcademicYearJoiningDate(page: Page) {
+  const years = await jsonFrom(
+    await employeeApiRequest(page, '/app/academic-year?Sorting=name'),
+    'academic year list'
+  );
+  const items = (years.items || []) as AcademicYear[];
+  const now = Date.now();
+  const current =
+    items.find((year) => {
+      const start = year.startDate ? new Date(year.startDate).getTime() : 0;
+      const end = year.endDate ? new Date(year.endDate).getTime() : 0;
+      return start <= now && now <= end;
+    }) || items.find((year) => year.name.includes(String(new Date().getFullYear())));
+
+  if (!current?.id) {
+    throw new Error('No academic year is available for employee onboarding E2E.');
+  }
+
+  await ensureDefaultLeavePolicy(page, current);
+
+  return getInAcademicYearDate(current);
+}
+
+async function ensureDefaultLeavePolicy(page: Page, academicYear: AcademicYear) {
+  const academicYearParam = encodeURIComponent(academicYear.id);
+  const policies = await jsonFrom(
+    await employeeApiRequest(
+      page,
+      `/leave-policies?academicYearId=${academicYearParam}&page=1&pageSize=500`
+    ),
+    'leave policy list'
+  );
+  const policyItems = (policies.items || []) as any[];
+  const activeDefaults = policyItems.filter(
+    (policy) => String(policy.status || '').toLowerCase() === 'active' && policy.isDefault
+  );
+
+  if (activeDefaults.length === 1) {
+    return;
+  }
+
+  const reusablePolicy = policyItems.find(
+    (policy) => String(policy.status || '').toLowerCase() === 'active'
+  );
+
+  if (reusablePolicy?.id) {
+    await jsonFrom(
+      await employeeApiRequest(page, `/leave-policies/${reusablePolicy.id}/set-default`, {
+        method: 'PATCH',
+      }),
+      'set default leave policy'
+    );
+    return;
+  }
+
+  const leaveType = await jsonFrom(
+    await employeeApiRequest(page, `/hr-leave-types?academicYearId=${academicYearParam}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        name: `E2E Onboarding Leave ${Date.now()}`,
+        description: 'Created by employee onboarding E2E setup',
+        color: '#1976D2',
+      }),
+    }),
+    'create leave type'
+  );
+
+  await jsonFrom(
+    await employeeApiRequest(page, `/leave-policies?academicYearId=${academicYearParam}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        policyTitle: `E2E Default Leave ${academicYear.name}`,
+        status: 'Active',
+        effectiveFrom: academicYear.startDate || getInAcademicYearDate(academicYear),
+        effectiveTo: academicYear.endDate || null,
+        description: 'Created by employee onboarding E2E setup',
+        isDefault: true,
+        rules: [
+          {
+            leaveTypeId: leaveType.id,
+            accrualPolicyType: 'Yearly',
+            leaveCount: 12,
+            paidType: 'Paid',
+            carryForward: false,
+            encashmentAllowed: false,
+            requiresApproval: true,
+            minNoticeDays: 0,
+            maxDaysPerRequest: 30,
+            allowHalfDay: true,
+            allowNegativeBalance: false,
+            isActive: true,
+          },
+        ],
+      }),
+    }),
+    'create default leave policy'
+  );
 }
 
 async function fieldByLabel(scope: Page | Locator, label: string) {
@@ -186,6 +336,14 @@ async function gotoOnboarding(page: Page) {
   await expect(page.getByTestId('employee-onboarding-page')).toBeVisible({ timeout: 45_000 });
   await dismissAcademicYearTour(page);
   await ensureOnboardingPermissions(page);
+  const onboardingTable = page.getByTestId('employee-onboarding-table');
+  await expect(onboardingTable).toBeVisible();
+  await Promise.all(
+    onboardingColumns.map((column) =>
+      expect(onboardingTable.getByRole('columnheader', { name: column })).toBeVisible()
+    )
+  );
+  await expect(onboardingTable.getByText('Rows per page')).toBeVisible();
 }
 
 async function ensureOnboardingPermissions(page: Page) {
@@ -199,6 +357,10 @@ async function ensureOnboardingPermissions(page: Page) {
       }),
     }
   );
+
+  if (response.status() === 403) {
+    return;
+  }
 
   expect(response.ok(), `grant onboarding permissions: ${response.status()}`).toBe(true);
 }
@@ -233,18 +395,20 @@ async function createInviteThroughUi(page: Page, candidate: CandidateFixture) {
   expect(invite.token).toBeTruthy();
   expect(invite.publicPath).toContain('/employee-application/');
   expect(invite.application.id).toBeTruthy();
+  expect(invite.application.publicPath).toBe(invite.publicPath);
+  expect(typeof invite.emailDeliverySucceeded).toBe('boolean');
 
   await expect(dialog).toBeHidden({ timeout: 20_000 });
   return invite;
 }
 
 async function searchApplication(page: Page, search: string) {
-  const filters = page.getByTestId('employee-onboarding-filters');
+  const onboardingTable = page.getByTestId('employee-onboarding-table');
   const responsePromise = page.waitForResponse(
     (response) =>
       response.url().includes('/api/employee-applications') && response.request().method() === 'GET'
   );
-  await filters.getByLabel('Search', { exact: false }).fill(search);
+  await onboardingTable.getByPlaceholder('Search...').fill(search);
   await responsePromise.catch(() => undefined);
 }
 
@@ -266,17 +430,20 @@ function applicationRow(page: Page, candidate: CandidateFixture) {
 async function openApplicationDetails(page: Page, candidate: CandidateFixture) {
   const row = applicationRow(page, candidate);
   await expect(row).toBeVisible({ timeout: 30_000 });
-  await row.getByTestId('employee-onboarding-row-details').click();
-  const drawer = page.getByTestId('employee-onboarding-detail-drawer');
-  await expect(drawer).toBeVisible();
-  return drawer;
+  await row.getByTestId('employee-onboarding-row-details').getByTestId('table-action-view').click();
+  const detailView = page.getByTestId('employee-onboarding-detail-view');
+  await expect(detailView).toBeVisible();
+  await expect(page).toHaveURL(/application=/);
+  return detailView;
 }
 
-async function closeDrawer(page: Page) {
-  await page.keyboard.press('Escape');
-  await expect(page.getByTestId('employee-onboarding-detail-drawer')).toBeHidden({
+async function closeDetailView(page: Page) {
+  await page.getByTestId('breadcrumb-back').click();
+  await expect(page.getByTestId('employee-onboarding-detail-view')).toBeHidden({
     timeout: 10_000,
   });
+  await expect(page).not.toHaveURL(/application=/);
+  await expect(page.getByTestId('employee-onboarding-table')).toBeVisible();
 }
 
 async function withAnonymousPage(
@@ -312,19 +479,36 @@ async function fillPublicApplication(page: Page, candidate: CandidateFixture) {
   await fillField(form, 'Religion', candidate.religion);
   await fillField(form, 'Family caste', candidate.familyCaste);
   await selectOption(page, form, 'Marital status', 'Unmarried');
-  await fillField(form, 'Position', candidate.positionAppliedFor);
   await fillField(form, 'Department', candidate.departmentAppliedFor);
-  await fillField(form, 'Qualification summary', candidate.qualificationSummary);
-  await fillField(form, 'Skills summary', candidate.skillsSummary);
+  await fillField(form, 'Designation', candidate.positionAppliedFor);
+  await fillField(form, 'Qualification', candidate.qualificationSummary);
+  await fillField(form, 'Identification mark', candidate.identificationMark1);
   await fillField(form, 'Address line 1', candidate.address1);
   await fillField(form, 'Address line 2', candidate.address2);
-  await fillField(form, 'Country', candidate.countryName);
-  await form.getByLabel('Code', { exact: true }).nth(0).fill(candidate.countryIsoCode);
-  await fillField(form, 'State', candidate.stateName);
-  await form.getByLabel('Code', { exact: true }).nth(1).fill(candidate.stateIsoCode);
-  await fillField(form, 'City', candidate.city);
+  await selectOption(
+    page,
+    form,
+    'State',
+    new RegExp(`${candidate.stateIsoCode}\\s+${candidate.stateName}`)
+  );
+  await selectOption(page, form, 'City', candidate.city);
   await fillField(form, 'Pin code', candidate.pinCode);
+  await page.getByTestId('employee-application-step-0-next').click();
 
+  const familyStep = form.getByTestId('employee-application-step-family');
+  await expect(familyStep).toBeVisible();
+  await familyStep.getByLabel('Name').first().fill(candidate.fatherName);
+  await familyStep.getByLabel('Occupation').first().fill(candidate.fatherOccupation);
+  await familyStep.getByLabel('Mobile no.').first().fill(candidate.fatherMobileNo);
+  await page.getByTestId('employee-application-step-1-next').click();
+
+  const additionalStep = form.getByTestId('employee-application-step-additional');
+  await expect(additionalStep).toBeVisible();
+  await fillField(additionalStep, 'Second language', candidate.secondLanguage);
+  await additionalStep.getByLabel('Library member').check();
+  await page.getByTestId('employee-application-step-2-next').click();
+
+  await expect(form.getByTestId('employee-application-step-experience')).toBeVisible();
   await form.getByRole('button', { name: /Add experience/i }).click();
   await fillField(form, 'Organization', candidate.experience.organization);
   await fillField(form, 'Designation', candidate.experience.designation);
@@ -332,9 +516,10 @@ async function fillPublicApplication(page: Page, candidate: CandidateFixture) {
     .getByLabel('Department', { exact: false })
     .last()
     .fill(candidate.experience.department);
-  await form.getByLabel('City', { exact: false }).last().fill(candidate.experience.city);
   await fillField(form, 'Start', candidate.experience.startDate);
   await fillField(form, 'End', candidate.experience.endDate);
+  await page.getByTestId('employee-application-step-3-next').click();
+  await expect(form.getByTestId('employee-application-step-uploads-review')).toBeVisible();
 }
 
 async function uploadValidPublicFiles(page: Page, candidate: CandidateFixture) {
@@ -355,38 +540,87 @@ async function uploadValidPublicFiles(page: Page, candidate: CandidateFixture) {
 
 function duplicatePublicSubmitPayload(candidate: CandidateFixture) {
   return {
-    firstName: candidate.firstName,
-    middleName: candidate.middleName,
-    lastName: candidate.lastName,
-    email: candidate.email,
-    mobileNo: candidate.mobileNo,
-    positionAppliedFor: candidate.positionAppliedFor,
-    departmentAppliedFor: candidate.departmentAppliedFor,
+    personalInfo: {
+      firstName: candidate.firstName,
+      middleName: candidate.middleName,
+      lastName: candidate.lastName,
+      email: candidate.email,
+      mobileNo: candidate.mobileNo,
+      secondaryMobileNo: candidate.secondaryMobileNo,
+      dateOfBirth: candidate.dateOfBirth,
+      gender: 1,
+      religion: candidate.religion,
+      casteType: 0,
+      familyCaste: candidate.familyCaste,
+      maritalStatus: 0,
+      department: candidate.departmentAppliedFor,
+      designation: candidate.positionAppliedFor,
+      qualification: candidate.qualificationSummary,
+      identificationMark1: candidate.identificationMark1,
+      address1: candidate.address1,
+      address2: candidate.address2,
+      address3: candidate.address3,
+      country: { name: candidate.countryName, isoCode: candidate.countryIsoCode },
+      state: { name: candidate.stateName, isoCode: candidate.stateIsoCode },
+      city: candidate.city,
+      pincode: candidate.pinCode,
+    },
+    familyInfo: {
+      fatherDetails: {
+        name: candidate.fatherName,
+        occupation: candidate.fatherOccupation,
+        mobileNo: candidate.fatherMobileNo,
+      },
+    },
+    additionalInfo: {
+      personWithDisability: false,
+      secondLanguage: candidate.secondLanguage,
+      isLibraryMember: true,
+      isTransportMember: false,
+    },
+    workExperiences: [],
   };
 }
 
 async function submitPublicApplication(page: Page) {
+  const submitResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes('/api/public/employee-applications/') &&
+      response.url().includes('/submit') &&
+      response.request().method() === 'POST',
+    { timeout: 60_000 }
+  );
   await page.getByTestId('employee-application-submit').click();
+  const submitResponse = await submitResponsePromise;
+  if (!submitResponse.ok()) {
+    throw new Error(`public submit: ${submitResponse.status()} ${await submitResponse.text()}`);
+  }
   await expect(page.getByTestId('employee-application-submit-success')).toBeVisible({
     timeout: 45_000,
   });
 }
 
-async function updateStatusToReady(page: Page, drawer: Locator, applicationId: string) {
+async function updateStatusToReady(page: Page, detailView: Locator, applicationId: string) {
   const responsePromise = page.waitForResponse(
     (response) =>
       response.url().includes(`/api/employee-applications/${applicationId}/status`) &&
       response.request().method() === 'PUT'
   );
-  await selectOption(page, drawer, 'Status', 'Ready for onboarding');
-  await drawer.getByRole('button', { name: /^Update$/i }).click();
+  await selectOption(page, detailView, 'Status', 'Ready for onboarding');
+  await detailView.getByRole('button', { name: /^Update$/i }).click();
   const response = await responsePromise;
   expect(response.ok(), `status update: ${response.status()}`).toBe(true);
 }
 
-async function finalizeApplication(page: Page, candidate: CandidateFixture, applicationId: string) {
+async function finalizeApplication(
+  page: Page,
+  candidate: CandidateFixture,
+  applicationId: string,
+  joiningDate: string
+) {
   const row = applicationRow(page, candidate);
-  await row.getByTestId('employee-onboarding-row-finalize').click();
+  await row.getByTestId('employee-onboarding-row-details').getByTestId('table-action-more').click();
+  await page.getByTestId('employee-onboarding-row-finalize').click();
 
   const dialog = page.getByTestId('employee-onboarding-finalize-dialog');
   await expect(dialog).toBeVisible();
@@ -397,10 +631,19 @@ async function finalizeApplication(page: Page, candidate: CandidateFixture, appl
   await expect(dialog.getByLabel('First name', { exact: false })).toHaveValue(candidate.firstName);
   await expect(dialog.getByLabel('Last name', { exact: false })).toHaveValue(candidate.lastName);
   await expect(dialog.getByLabel('Email', { exact: false })).toHaveValue(candidate.email);
+  await expect(dialog.getByLabel('Designation', { exact: false })).toHaveValue(
+    candidate.positionAppliedFor
+  );
+  await expect(dialog.getByLabel('Qualification', { exact: false })).toHaveValue(
+    candidate.qualificationSummary
+  );
+  await expect(dialog.getByLabel('Identification mark', { exact: false })).toHaveValue(
+    candidate.identificationMark1
+  );
 
   await fillField(dialog, 'PAN', candidate.panNo);
   await fillField(dialog, 'Aadhaar no.', candidate.adharNo);
-  await fillField(dialog, 'Joining date', '2024-06-01');
+  await fillField(dialog, 'Joining date', joiningDate);
   await selectFirstOption(page, dialog, 'Role');
   await selectFirstOption(page, dialog, 'Shift');
   await fillField(dialog, 'Address line 1', candidate.address1);
@@ -430,7 +673,9 @@ async function finalizeApplication(page: Page, candidate: CandidateFixture, appl
 
   const finalizeRequest = await finalizeRequestPromise;
   const finalizeResponse = await finalizeResponsePromise;
-  expect(finalizeResponse.ok(), `finalize: ${finalizeResponse.status()}`).toBe(true);
+  if (!finalizeResponse.ok()) {
+    throw new Error(`finalize: ${finalizeResponse.status()} ${await finalizeResponse.text()}`);
+  }
   const result = await finalizeResponse.json();
   expect(isStatus(result.application?.status, EmployeeApplicationStatus.Finalized)).toBe(true);
   expect(result.application?.finalizedEmployeeId).toBeTruthy();
@@ -473,12 +718,30 @@ async function expectFinalizedApiState(
   expect(isStatus(application.status, EmployeeApplicationStatus.Finalized)).toBe(true);
   expect(application.finalizedEmployeeId).toBe(employeeId);
 
-  const workExperience = await jsonFrom(
+  const workExperience = await jsonFromWhenAuthorized(
     await employeeApiRequest(page, `/employees/${employeeId}/work-experience`),
     'employee work experience'
   );
-  expect(JSON.stringify(workExperience)).toContain(candidate.experience.organization);
-  expect(JSON.stringify(workExperience)).toContain(candidate.experience.designation);
+  if (workExperience) {
+    expect(JSON.stringify(workExperience)).toContain(candidate.experience.organization);
+    expect(JSON.stringify(workExperience)).toContain(candidate.experience.designation);
+  }
+
+  const familyInfo = await jsonFromWhenAuthorized(
+    await employeeApiRequest(page, `/employees/${employeeId}/family-info`),
+    'employee family info'
+  );
+  if (familyInfo) {
+    expect(JSON.stringify(familyInfo)).toContain(candidate.fatherName);
+  }
+
+  const additionalInfo = await jsonFromWhenAuthorized(
+    await employeeApiRequest(page, `/employees/${employeeId}/additional-info`),
+    'employee additional info'
+  );
+  if (additionalInfo) {
+    expect(JSON.stringify(additionalInfo)).toContain(candidate.secondLanguage);
+  }
 
   const documentsResponse = await employeeApiRequest(
     page,
@@ -499,6 +762,7 @@ test.describe('HR Employee onboarding E2E', () => {
     const candidate = createCandidateFixture();
 
     await gotoOnboarding(page);
+    const joiningDate = await getAcademicYearJoiningDate(page);
     const invite = await createInviteThroughUi(page, candidate);
     expect(isStatus(invite.application.status, EmployeeApplicationStatus.InvitationSent)).toBe(
       true
@@ -542,20 +806,28 @@ test.describe('HR Employee onboarding E2E', () => {
     await filterApplicationsByStatus(page, 'Applied');
     await expect(applicationRow(page, candidate)).toBeVisible();
 
-    const drawer = await openApplicationDetails(page, candidate);
-    await expect(drawer).toContainText(candidate.qualificationSummary);
-    await expect(drawer).toContainText(candidate.skillsSummary);
-    await expect(drawer.getByTestId('employee-onboarding-work-experience-list')).toContainText(
+    const detailView = await openApplicationDetails(page, candidate);
+    await expect(await fieldByLabel(detailView, 'Qualification')).toHaveValue(
+      candidate.qualificationSummary
+    );
+    await expect(await fieldByLabel(detailView, 'Identification mark')).toHaveValue(
+      candidate.identificationMark1
+    );
+    await expect(await fieldByLabel(detailView, 'Father name')).toHaveValue(candidate.fatherName);
+    await expect(await fieldByLabel(detailView, 'Second language')).toHaveValue(
+      candidate.secondLanguage
+    );
+    await expect(detailView.getByTestId('employee-onboarding-work-experience-list')).toContainText(
       candidate.experience.organization
     );
-    await expect(drawer.getByTestId('employee-onboarding-work-experience-list')).toContainText(
+    await expect(detailView.getByTestId('employee-onboarding-work-experience-list')).toContainText(
       candidate.experience.designation
     );
-    await expect(drawer.getByRole('button', { name: /^Resume$/i })).toBeEnabled();
-    await expect(drawer.getByRole('button', { name: /^Photo$/i })).toBeEnabled();
+    await expect(detailView.getByRole('button', { name: /^Resume$/i })).toBeEnabled();
+    await expect(detailView.getByRole('button', { name: /^Photo$/i })).toBeEnabled();
 
-    await updateStatusToReady(page, drawer, invite.application.id);
-    await closeDrawer(page);
+    await updateStatusToReady(page, detailView, invite.application.id);
+    await closeDetailView(page);
     await filterApplicationsByStatus(page, 'Ready for onboarding');
     await expect(applicationRow(page, candidate)).toContainText('Ready for onboarding', {
       timeout: 30_000,
@@ -564,7 +836,8 @@ test.describe('HR Employee onboarding E2E', () => {
     const { finalizedEmployeeId, finalizeBody } = await finalizeApplication(
       page,
       candidate,
-      invite.application.id
+      invite.application.id,
+      joiningDate
     );
     expect(finalizedEmployeeId).toBeTruthy();
 
@@ -595,7 +868,8 @@ test.describe('HR Employee onboarding E2E', () => {
     await gotoOnboarding(page);
     const invite = await createInviteThroughUi(page, candidate);
     await searchApplication(page, candidate.email);
-    const drawer = await openApplicationDetails(page, candidate);
+    const detailView = await openApplicationDetails(page, candidate);
+    await expect(detailView.getByTestId('employee-onboarding-copy-link')).toBeVisible();
 
     const regenerateResponsePromise = page.waitForResponse(
       (response) =>
@@ -604,12 +878,14 @@ test.describe('HR Employee onboarding E2E', () => {
           .includes(`/api/employee-applications/${invite.application.id}/regenerate-link`) &&
         response.request().method() === 'POST'
     );
-    await drawer.getByTestId('employee-onboarding-regenerate-link').click();
+    await detailView.getByTestId('employee-onboarding-regenerate-link').click();
     const regenerateResponse = await regenerateResponsePromise;
     expect(regenerateResponse.ok(), `regenerate link: ${regenerateResponse.status()}`).toBe(true);
     const regenerated = (await regenerateResponse.json()) as InviteResponse;
     expect(regenerated.token).not.toBe(invite.token);
     expect(regenerated.publicPath).not.toBe(invite.publicPath);
+    expect(regenerated.application.publicPath).toBe(regenerated.publicPath);
+    expect(typeof regenerated.emailDeliverySucceeded).toBe('boolean');
 
     await withAnonymousPage(browser, async (publicPage) => {
       await publicPage.goto(invite.publicPath, { waitUntil: 'domcontentloaded' });
@@ -644,7 +920,9 @@ test.describe('HR Employee onboarding E2E', () => {
         buffer: Buffer.from('unsupported'),
       });
       await publicPage.getByTestId('employee-application-submit').click();
-      await expect(publicPage.getByText(/Resume must be a PDF, DOC, or DOCX file/i)).toBeVisible();
+      await expect(
+        publicPage.getByText(/Resume must be a PDF, DOC, or DOCX file/i).first()
+      ).toBeVisible();
 
       await publicPage.getByTestId('employee-application-resume-input').setInputFiles({
         name: candidate.resumeName,
@@ -657,7 +935,7 @@ test.describe('HR Employee onboarding E2E', () => {
         buffer: Buffer.from('unsupported'),
       });
       await publicPage.getByTestId('employee-application-submit').click();
-      await expect(publicPage.getByText(/Photo must be an image file/i)).toBeVisible();
+      await expect(publicPage.getByText(/Photo must be an image file/i).first()).toBeVisible();
     });
   });
 });

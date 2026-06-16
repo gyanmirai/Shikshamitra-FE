@@ -7,9 +7,6 @@ export const BulkStudentApi = api.injectEndpoints({
       query: (data) => ({
         url: '/students/bulk-upload',
         method: 'POST',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
         data,
       }),
       invalidatesTags: [bulkStudentType.studentDocumentType],

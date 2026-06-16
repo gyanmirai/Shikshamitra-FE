@@ -3,10 +3,11 @@
 import type { FetchArgs } from '@reduxjs/toolkit/query/react';
 
 import { toast } from 'sonner';
-import { signOut, getSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 import { tagTypes } from './tagTypes';
+import { getCachedAuthSession, clearCachedAuthSession } from './session-cache';
 
 // 🔹 Base query (like axios base config)
 // Note: Content-Type is NOT set globally — it's set per-request in baseQueryWithAuth
@@ -27,7 +28,7 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
     };
 
     if (typeof window !== 'undefined') {
-      const session: any = await getSession();
+      const session: any = await getCachedAuthSession();
       const token = session?.accessToken;
 
       if (token) {
@@ -68,6 +69,7 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
       const { status } = result.error;
 
       if (status === 401) {
+        clearCachedAuthSession();
         toast.error('Unauthorized access');
         await signOut({ callbackUrl: '/login' });
       }

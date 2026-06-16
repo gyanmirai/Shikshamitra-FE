@@ -11,6 +11,7 @@ const alphaSuffix = (value: string) =>
 export function createEmployeeFixture(prefix = 'Automation Employee') {
   const suffix = randomSuffix();
   const nameSuffix = alphaSuffix(suffix);
+  const panLetters = nameSuffix.padEnd(6, 'A');
 
   return {
     suffix,
@@ -21,7 +22,7 @@ export function createEmployeeFixture(prefix = 'Automation Employee') {
     email: `e2e.hr.employee.${suffix}@ddvs.test`,
     primaryMobile: `9${suffix.slice(-9).padStart(9, '0')}`,
     secondaryMobile: `8${suffix.slice(-9).padStart(9, '1')}`,
-    panNo: `ABCDE${suffix.slice(-4).padStart(4, '0')}F`,
+    panNo: `${panLetters.slice(0, 5)}${suffix.slice(-4).padStart(4, '0')}${panLetters[5]}`,
     adharNo: `900${suffix.slice(-9).padStart(9, '0')}`,
     dob: '01-01-1990',
     doj: '01-06-2024',

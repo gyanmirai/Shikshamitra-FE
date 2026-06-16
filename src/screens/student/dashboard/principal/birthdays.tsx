@@ -4,50 +4,24 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CalendarView } from 'src/sections/calendar/view';
+import { useGetStudentDashboardSummaryQuery } from 'src/redux/student';
 import { Box, Card, Stack, Button, Avatar, Divider, CardHeader, Typography } from '@mui/material';
 
-const birthdays = [
-  {
-    id: 1,
-    name: 'Arjun Sharma',
-    class: '5A',
-    date: 'Tomorrow',
-    initials: 'AS',
-    color: 'success.main',
-    bgColor: 'success.lighter',
-  },
-  {
-    id: 2,
-    name: 'Priya Patel',
-    class: '5A',
-    date: 'Dec 28',
-    initials: 'PP',
-    color: 'success.main',
-    bgColor: 'success.lighter',
-  },
-  {
-    id: 3,
-    name: 'Raj Kumar',
-    class: '4B',
-    date: 'Dec 29',
-    initials: 'RK',
-    color: 'success.main',
-    bgColor: 'success.lighter',
-  },
-  {
-    id: 4,
-    name: 'Meera Singh',
-    class: '3C',
-    date: 'Dec 30',
-    initials: 'MS',
-    color: 'success.main',
-    bgColor: 'success.lighter',
-  },
-];
-
 const PrincipalBirthdays = () => {
-  // Boolean state to control calendar dialog visibility
   const viewCalendarDialog = useBoolean();
+  const { data: summary } = useGetStudentDashboardSummaryQuery(undefined);
+  const birthdayRows = [
+    ...(summary?.todaysBirthdays || []).map((student: any) => ({
+      ...student,
+      id: `${student.name}-today`,
+      date: 'Today',
+    })),
+    ...(summary?.upcomingBirthdays || []).map((student: any) => ({
+      ...student,
+      id: `${student.name}-${student.dateLabel || 'upcoming'}`,
+      date: student.dateLabel || '-',
+    })),
+  ];
 
   return (
     <>
@@ -71,7 +45,12 @@ const PrincipalBirthdays = () => {
           }
         />
         <Stack spacing={2} sx={{ p: 3 }}>
-          {birthdays.map((student) => (
+          {birthdayRows.length === 0 && (
+            <Typography variant="body2" color="text.secondary" textAlign="center">
+              No birthdays found.
+            </Typography>
+          )}
+          {birthdayRows.map((student) => (
             <Box
               key={student.id}
               sx={{
@@ -86,17 +65,17 @@ const PrincipalBirthdays = () => {
               <Stack direction="row" spacing={2} alignItems="center">
                 <Avatar
                   sx={{
-                    bgcolor: student.bgColor,
-                    color: student.color,
+                    bgcolor: 'success.lighter',
+                    color: 'success.main',
                     fontWeight: 'bold',
                   }}
                 >
-                  {student.initials}
+                  {student.name?.[0] || 'S'}
                 </Avatar>
                 <Box>
                   <Typography variant="subtitle2">{student.name}</Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {student.class}
+                    {student.className || '-'}
                   </Typography>
                 </Box>
               </Stack>
@@ -111,9 +90,7 @@ const PrincipalBirthdays = () => {
           <Button
             size="small"
             color="inherit"
-            onClick={() => {
-              viewCalendarDialog.onTrue();
-            }}
+            onClick={viewCalendarDialog.onTrue}
             endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
           >
             View Calendar View
@@ -124,9 +101,7 @@ const PrincipalBirthdays = () => {
       <CustomDialog
         maxWidth="md"
         open={viewCalendarDialog.value}
-        handleClose={() => {
-          viewCalendarDialog.onFalse();
-        }}
+        handleClose={viewCalendarDialog.onFalse}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Student Birthdays</Typography>

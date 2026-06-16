@@ -60,7 +60,7 @@ export const FatherAddressComponent = ({ formik, disabled }: FatherAddressCompon
         <TextField
           name="fatherPinCode"
           label="Pincode"
-          value={formik.values.fatherPinCode}
+          value={formik.values.fatherPinCode || ''}
           onChange={formik.handleChange}
           error={formik.touched.fatherPinCode && Boolean(formik.errors.fatherPinCode)}
           helperText={formik.touched.fatherPinCode && formik.errors.fatherPinCode}
@@ -78,7 +78,7 @@ export const FatherAddressComponent = ({ formik, disabled }: FatherAddressCompon
         <TextField
           name="fatherAddress1"
           label="Father Address 1"
-          value={formik.values.fatherAddress1}
+          value={formik.values.fatherAddress1 || ''}
           onChange={formik.handleChange}
           error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
           helperText={formik.touched.fatherAddress1 && formik.errors.fatherAddress1}

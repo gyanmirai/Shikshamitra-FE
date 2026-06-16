@@ -203,33 +203,6 @@ const Overview = () => {
     //   width: 4,
     // },
     // {
-    //   id: '4',
-    //   icon: 'bi:pass-fill',
-    //   title: 'Pass-Fail Ratio',
-    //   count: fNumber(17),
-    //   color: 'error.main',
-    //   bgColor: 'error',
-    //   href: '/student/enrollment/entrance-exam/?view=table',
-    //   labels: [
-    //     { name: `Passed ${fNumber(15)}`, color: 'success' },
-    //     { name: `Failed ${fNumber(2)}`, color: 'error' },
-    //   ],
-    //   width: 4,
-    // },
-    // {
-    //   id: '5',
-    //   icon: 'mingcute:performance-fill',
-    //   title: 'Top 3 Performers',
-    //   count: '89 %',
-    //   color: 'success.main',
-    //   bgColor: 'success',
-    //   href: '/student/enrollment/entrance-exam',
-    //   labels: [
-    //     { name: 'Herbert Clark', color: 'success' },
-    //     { name: 'John Loe', color: 'warning' },
-    //   ],
-    //   width: 4,
-    // },
   ]);
   const dashBoardSections = cards.reduce((acc: { [key: string]: JSX.Element }, card, index) => {
     acc[card.id] = (

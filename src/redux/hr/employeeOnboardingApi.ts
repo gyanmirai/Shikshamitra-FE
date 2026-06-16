@@ -19,6 +19,61 @@ export type EmployeeApplicationWorkExperience = {
   endDate?: string | null;
 };
 
+export type EmployeeApplicationFamilyMember = {
+  name?: string | null;
+  occupation?: string | null;
+  mobileNo?: string | null;
+  address1?: string | null;
+  address2?: string | null;
+  address3?: string | null;
+  country?: EmployeeApplicationLocation | null;
+  state?: EmployeeApplicationLocation | null;
+  city?: string | null;
+  pincode?: string | null;
+};
+
+export type EmployeeApplicationFamilyInfo = {
+  fatherDetails?: EmployeeApplicationFamilyMember | null;
+  motherDetails?: EmployeeApplicationFamilyMember | null;
+  spouseDetails?: EmployeeApplicationFamilyMember | null;
+};
+
+export type EmployeeApplicationAdditionalInfo = {
+  personWithDisability?: boolean;
+  secondLanguage?: string | null;
+  isLibraryMember?: boolean;
+  isTransportMember?: boolean;
+};
+
+export type EmployeeApplicationPersonalInfo = {
+  firstName: string;
+  middleName?: string | null;
+  shortName?: string | null;
+  lastName: string;
+  email: string;
+  mobileNo: string;
+  secondaryMobileNo?: string | null;
+  dateOfBirth?: string | null;
+  gender?: number | null;
+  religion?: string | null;
+  casteType?: number | null;
+  familyCaste?: string | null;
+  maritalStatus?: number | null;
+  bloodGroup?: number | null;
+  isTeaching?: boolean;
+  department?: string | null;
+  designation?: string | null;
+  qualification?: string | null;
+  identificationMark1?: string | null;
+  address1?: string | null;
+  address2?: string | null;
+  address3?: string | null;
+  country?: EmployeeApplicationLocation | null;
+  state?: EmployeeApplicationLocation | null;
+  city?: string | null;
+  pincode?: string | null;
+};
+
 export type EmployeeApplication = {
   id: string;
   applicationNumber: string;
@@ -27,6 +82,7 @@ export type EmployeeApplication = {
   firstName?: string;
   middleName?: string;
   lastName?: string;
+  publicPath?: string | null;
   email?: string;
   mobileNo?: string;
   secondaryMobileNo?: string;
@@ -48,6 +104,9 @@ export type EmployeeApplication = {
   state?: EmployeeApplicationLocation | null;
   city?: string | null;
   pinCode?: string | null;
+  personalInfo?: EmployeeApplicationPersonalInfo | null;
+  familyInfo?: EmployeeApplicationFamilyInfo | null;
+  additionalInfo?: EmployeeApplicationAdditionalInfo | null;
   workExperiences?: EmployeeApplicationWorkExperience[];
   tokenExpiresAt: string;
   linkLastIssuedAt: string;
@@ -76,6 +135,8 @@ export type EmployeeApplicationInviteResponse = {
   token: string;
   publicPath: string;
   tokenExpiresAt: string;
+  emailDeliverySucceeded: boolean;
+  emailDeliveryMessage?: string | null;
 };
 
 export type PublicEmployeeApplication = {

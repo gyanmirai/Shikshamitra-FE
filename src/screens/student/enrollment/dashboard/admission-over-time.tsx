@@ -34,9 +34,9 @@ const AdmissionOverTime = () => {
         <Chart
           type="area"
           series={[
-            { name: 'Admission', data: [51, 35, 41, 10, 91, 69, 62, 148, 91, 69, 62, 49] },
-            { name: 'Inquiry', data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50] },
-            { name: 'Registration', data: [40, 67, 58, 59, 49, 77, 88, 99, 98, 36, 55, 51] },
+            { name: 'Admission', data: [] },
+            { name: 'Inquiry', data: [] },
+            { name: 'Registration', data: [] },
           ]}
           options={chartOptions}
           height={320}

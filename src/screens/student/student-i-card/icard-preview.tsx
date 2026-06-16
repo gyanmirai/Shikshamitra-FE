@@ -3,7 +3,7 @@ import { Box, Paper } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { DraggableField } from 'src/components/icard-creation';
 
-const studentData = [{ name: 'Student Name', class: 'Class-Division', rollNumber: 'Roll No.' }];
+const previewData: Record<string, string> = {};
 
 const IcardPreview = ({
   cardDimensions,
@@ -64,7 +64,7 @@ const IcardPreview = ({
                 onDelete={() => {}}
                 isDrag={false}
               >
-                {studentData[field.name] || field.dummyValue}
+                {previewData[field.name] || field.label || '-'}
               </DraggableField>
             ))}
           </Paper>

@@ -1,86 +1,18 @@
 import React from 'react';
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Card, Stack, Avatar, Button, CardHeader, Typography } from '@mui/material';
+import { Card, Stack, Button, CardHeader, Typography } from '@mui/material';
 
-import AssignedTeacherItem from './assignedTeacherCard';
-
-const teachers = [
-  {
-    subject: 'Mathematics',
-    code: 'MATH-10',
-    teacher: 'Dharmik Jinjala',
-    color: '#e53935',
-    avatarUrl: '/assets/images/avatars/avatar_1.jpg',
-  },
-  {
-    subject: 'English',
-    code: 'ENG-11',
-    teacher: 'Prerna Atre',
-    color: '#1e88e5',
-    avatarUrl: '/assets/images/avatars/avatar_2.jpg',
-  },
-  {
-    subject: 'Science',
-    code: 'SCI-04',
-    teacher: 'Parth Ghusar',
-    color: '#f48fb1',
-    avatarUrl: '/assets/images/avatars/avatar_3.jpg',
-  },
-  {
-    subject: 'Social Science',
-    code: 'SOC-08',
-    teacher: 'Anjali Mehta',
-    color: '#FFA500',
-    avatarUrl: '/assets/images/avatars/avatar_4.jpg',
-  },
-  {
-    subject: 'Hindi',
-    code: 'HIN-02',
-    teacher: 'Rajesh Kumar',
-    color: '#FF5630',
-    avatarUrl: '/assets/images/avatars/avatar_5.jpg',
-  },
-  {
-    subject: 'Gujarati',
-    code: 'GUJ-05',
-    teacher: 'Sneha Patel',
-    color: '#FFAB00',
-    avatarUrl: '/assets/images/avatars/avatar_6.jpg',
-  },
-];
+const teacherRows: any[] = [];
 
 const SubjectsTeachersStudentDashboard = () => {
   const [openViewAll, setOpenViewAll] = React.useState(false);
 
   const columns: any[] = [
-    {
-      id: 'teacher',
-      label: 'Teacher',
-      align: 'left',
-      render: (value: any, row: any) => (
-        <Stack direction="row" alignItems="center" spacing={2}>
-          <Avatar src={row.avatarUrl} alt={row.teacher} sx={{ width: 32, height: 32 }} />
-          <Typography variant="subtitle2" noWrap>
-            {row.teacher}
-          </Typography>
-        </Stack>
-      ),
-    },
+    { id: 'teacher', label: 'Teacher', align: 'left' },
     { id: 'subject', label: 'Subject', align: 'left' },
-    {
-      id: 'code',
-      label: 'Code',
-      align: 'center',
-      render: (value: string) => (
-        <Label variant="soft" color="info">
-          {value}
-        </Label>
-      ),
-    },
+    { id: 'code', label: 'Code', align: 'center' },
   ];
 
   return (
@@ -111,14 +43,13 @@ const SubjectsTeachersStudentDashboard = () => {
           sx={{ pb: 0, flexShrink: 0, mt: -1, ml: -1, mb: 2 }}
         />
 
-        <Scrollbar sx={{ p: 1, flexGrow: 1 }}>
-          <Stack spacing={1.5}>
-            {teachers.map((item, index) => (
-              <AssignedTeacherItem key={index} {...item} />
-            ))}
-          </Stack>
-        </Scrollbar>
+        <Stack sx={{ p: 3, flexGrow: 1, justifyContent: 'center' }}>
+          <Typography variant="body2" color="text.secondary" textAlign="center">
+            No assigned teacher data found.
+          </Typography>
+        </Stack>
       </Card>
+
       <CustomDialog
         open={openViewAll}
         handleClose={() => setOpenViewAll(false)}
@@ -127,8 +58,9 @@ const SubjectsTeachersStudentDashboard = () => {
       >
         <CustomizableTable
           columns={columns}
-          data={teachers}
+          data={teacherRows}
           tableId="assigned-teachers-table"
+          noDataText="No assigned teacher data found."
           isSearch={false}
           isFilter={false}
           isPagination={false}

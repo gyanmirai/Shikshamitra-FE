@@ -1,12 +1,28 @@
 import { api } from 'src/redux/service';
 import { studentLeaveType } from 'src/redux/tagTypes';
 
+export type StudentLeaveListQuery = {
+  filterText?: string;
+  studentId?: string;
+  educationMediumId?: string;
+  standardId?: string;
+  divisionId?: string;
+  studentLeaveTypeId?: string;
+  status?: number;
+  startDate?: string;
+  endDate?: string;
+  sorting?: string;
+  skipCount?: number;
+  maxResultCount?: number;
+};
+
 export const StudentLeaveApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentLeave: builder.query({
-      query: () => ({
+      query: (params: StudentLeaveListQuery = {}) => ({
         url: `/students/attendance/leaves`,
         method: 'GET',
+        params,
       }),
       providesTags: [studentLeaveType.studentLeave],
     }),

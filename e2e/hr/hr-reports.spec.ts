@@ -48,18 +48,6 @@ async function login(page: Page, email: string, password: string) {
   await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 30_000 });
 }
 
-async function waitForCompletedExport(page: Page, jobId: string) {
-  return expect
-    .poll(
-      async () => {
-        const job = await getJson(page, `/hr/reports/exports/${jobId}`);
-        return job.status;
-      },
-      { timeout: 120_000, intervals: [2_000, 3_000, 5_000] }
-    )
-    .toBe('Completed');
-}
-
 async function openEmployeeReportBuilder(page: Page) {
   await page.goto('/hr/reports', { waitUntil: 'domcontentloaded' });
   await expect(page.getByTestId('hr-reports-center')).toBeVisible({ timeout: 60_000 });
@@ -74,6 +62,19 @@ async function openEmployeeReportBuilder(page: Page) {
     .first()
     .click();
   await expect(page.getByTestId('hr-report-builder')).toBeVisible();
+}
+
+async function openSavedTemplateFromLanding(page: Page, templateId: string, reportName: string) {
+  await page.goto('/hr/reports', { waitUntil: 'domcontentloaded' });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.getByTestId('hr-reports-center')).toBeVisible({ timeout: 60_000 });
+  await page.getByTestId('hr-reports-tab-templates').click();
+  await page.getByPlaceholder('Search...').first().fill(reportName);
+  const templateRow = page.locator(`[data-row-id="template-${templateId}"]`);
+  await expect(templateRow).toContainText(reportName, { timeout: 60_000 });
+  await templateRow.getByTestId('hr-report-template-open-button').click();
+  await expect(page.getByTestId('hr-report-builder')).toBeVisible();
+  await expect(page.getByLabel('Report Name')).toHaveValue(reportName);
 }
 
 function currentMonthRange() {
@@ -297,40 +298,204 @@ test.describe('HR Reports enterprise E2E', () => {
     });
     expect(template.id).toBeTruthy();
 
-    const exportJob = await postJson(page, '/hr/reports/exports', request);
-    expect(exportJob.jobId).toBeTruthy();
-    await waitForCompletedExport(page, exportJob.jobId);
-
-    const download = await employeeApiRequest(
-      page,
-      `/hr/reports/exports/${exportJob.jobId}/download`
+    await page.goto('/hr/reports', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByTestId('hr-reports-center')).toBeVisible({ timeout: 60_000 });
+    await page.getByTestId('hr-reports-tab-templates').click();
+    await page.getByPlaceholder('Search...').first().fill(reportName);
+    const runTemplateRow = page.locator(`[data-row-id="template-${template.id}"]`);
+    await expect(runTemplateRow).toContainText(reportName, { timeout: 60_000 });
+    const templateRunResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/hr/reports/exports') &&
+        response.request().method() === 'POST' &&
+        response.ok(),
+      { timeout: 60_000 }
     );
-    await expectOk(download, 'download completed HR report export');
-    expect((await download.body()).byteLength).toBeGreaterThan(0);
+    const templateRunRequestPromise = page.waitForRequest(
+      (exportRequest) =>
+        exportRequest.url().endsWith('/api/hr/reports/exports') &&
+        exportRequest.method() === 'POST',
+      { timeout: 60_000 }
+    );
+    await runTemplateRow.getByTestId('hr-report-template-run-button').click();
+    const runTemplateDialog = page.getByRole('dialog', { name: /Run report/i });
+    await expect(runTemplateDialog).toBeVisible();
+    await expect(runTemplateDialog.getByText(reportName)).toBeVisible();
+    await runTemplateDialog.getByTestId('hr-report-run-template-submit-button').click();
+    const templateRunRequest = await templateRunRequestPromise;
+    const templateRunPayload = templateRunRequest.postDataJSON();
+    expect(templateRunPayload.sourceAction).toBe('manualExport');
+    expect(templateRunPayload.parentJobId).toBeUndefined();
+    const templateRunResponse = await templateRunResponsePromise;
+    const templateRunJob = await templateRunResponse.json();
+    expect(templateRunJob.jobId).toBeTruthy();
+    await expect(page.getByTestId('hr-reports-center')).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByTestId('hr-reports-tab-exports')).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    await expect(page.locator(`[data-row-id="${templateRunJob.jobId}"]`)).toContainText(
+      /Queued|Running|Completed/,
+      { timeout: 60_000 }
+    );
 
-    const schedule = await postJson(page, '/hr/reports/schedules', {
-      name: `${reportName} Monthly`,
-      templateId: template.id,
-      frequency: 'monthly',
-      deliveryMode: 'inApp',
-      recipientUserIds: [],
-      definition: request,
-    });
+    await openSavedTemplateFromLanding(page, template.id, reportName);
+
+    const uiScheduleName = `${reportName} Weekly`;
+    await page.getByTestId('hr-report-schedule-button').click();
+    const scheduleDialog = page.getByRole('dialog', { name: /Schedule report/i });
+    await expect(scheduleDialog).toBeVisible();
+    await scheduleDialog.getByLabel('Schedule Name').fill(uiScheduleName);
+    await scheduleDialog.getByLabel('Frequency').click();
+    await page.getByRole('option', { name: /^Weekly$/ }).click();
+    await scheduleDialog.getByLabel('Delivery').click();
+    await page.getByRole('option', { name: /In-app \+ email/i }).click();
+    await scheduleDialog.getByLabel('First Run').fill('2026-07-01T09:30');
+    await expect(scheduleDialog.getByText('Next 3 runs')).toBeVisible();
+    await expect(scheduleDialog.getByText('01 Jul 2026, 09:30 AM')).toBeVisible();
+    await scheduleDialog.getByTestId('hr-report-schedule-submit-button').click();
+    await expect(scheduleDialog).toBeHidden({ timeout: 60_000 });
+
+    await expect
+      .poll(
+        async () => {
+          const schedules = await getJson(page, '/hr/reports/schedules');
+          return schedules.items.some((item: any) => item.name === uiScheduleName);
+        },
+        { timeout: 60_000, intervals: [1_000, 2_000, 3_000] }
+      )
+      .toBe(true);
+    const scheduleList = await getJson(page, '/hr/reports/schedules');
+    const schedule = scheduleList.items.find((item: any) => item.name === uiScheduleName);
+    expect(schedule).toBeTruthy();
     expect(schedule.status).toBe('Active');
 
-    const paused = await postJson(page, `/hr/reports/schedules/${schedule.id}/pause`, {});
-    expect(paused.status).toBe('Paused');
+    const exportCreateResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/hr/reports/exports') &&
+        response.request().method() === 'POST' &&
+        response.ok(),
+      { timeout: 60_000 }
+    );
+    await page.getByTestId('hr-report-export-excel-button').click();
 
-    const resumed = await postJson(page, `/hr/reports/schedules/${schedule.id}/resume`, {});
-    expect(resumed.status).toBe('Active');
+    const exportCreateResponse = await exportCreateResponsePromise;
+    const exportJob = await exportCreateResponse.json();
+    expect(exportJob.jobId).toBeTruthy();
 
-    const run = await postJson(page, `/hr/reports/schedules/${schedule.id}/run-now`, {});
-    expect(run.jobId).toBeTruthy();
+    await expect(page.getByTestId('hr-reports-center')).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByTestId('hr-reports-tab-exports')).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
 
-    const deleteSchedule = await employeeApiRequest(page, `/hr/reports/schedules/${schedule.id}`, {
-      method: 'DELETE',
+    const exportHistoryRow = page.locator(`[data-row-id="${exportJob.jobId}"]`);
+    await expect(exportHistoryRow).toContainText(/Queued|Running|Completed/, {
+      timeout: 60_000,
     });
-    await expectOk(deleteSchedule, 'delete report schedule');
+    await expect
+      .poll(
+        async () => {
+          const jobs = await getJson(page, '/hr/reports/exports');
+          const job = jobs.find((item: any) => item.id === exportJob.jobId);
+          return job?.status;
+        },
+        { timeout: 120_000, intervals: [2_000, 3_000, 5_000] }
+      )
+      .toBe('Completed');
+    await expect(exportHistoryRow).toContainText('Completed', { timeout: 60_000 });
+    await exportHistoryRow.getByTestId('hr-report-export-details-button').click();
+    await expect(page.getByText(`Generated from template: ${reportName}`)).toBeVisible();
+    await expect(page.getByText('Request Snapshot')).toBeVisible();
+    await page.getByRole('button', { name: /^Close$/ }).click();
+
+    const historyDownloadResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes(`/api/hr/reports/exports/${exportJob.jobId}/download`) &&
+        response.ok(),
+      { timeout: 60_000 }
+    );
+    await expect(exportHistoryRow.getByTestId('hr-report-export-download-button')).toBeEnabled();
+    await exportHistoryRow.getByTestId('hr-report-export-download-button').click();
+    const historyDownloadResponse = await historyDownloadResponsePromise;
+    expect((await historyDownloadResponse.body()).byteLength).toBeGreaterThan(0);
+
+    await page.getByTestId('hr-reports-tab-schedules').click();
+    const scheduleRow = page.locator(`[data-row-id="${schedule.id}"]`);
+    await expect(scheduleRow).toContainText(uiScheduleName, { timeout: 60_000 });
+
+    const pauseScheduleResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes(`/api/hr/reports/schedules/${schedule.id}/pause`) && response.ok(),
+      { timeout: 60_000 }
+    );
+    await scheduleRow.getByTestId('hr-report-schedule-toggle-button').click();
+    const paused = await pauseScheduleResponsePromise;
+    expect((await paused.json()).status).toBe('Paused');
+    await expect(scheduleRow).toContainText('Paused', { timeout: 60_000 });
+
+    const resumeScheduleResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes(`/api/hr/reports/schedules/${schedule.id}/resume`) && response.ok(),
+      { timeout: 60_000 }
+    );
+    await scheduleRow.getByTestId('hr-report-schedule-toggle-button').click();
+    const resumed = await resumeScheduleResponsePromise;
+    expect((await resumed.json()).status).toBe('Active');
+    await expect(scheduleRow).toContainText('Active', { timeout: 60_000 });
+
+    const runScheduleResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes(`/api/hr/reports/schedules/${schedule.id}/run-now`) &&
+        response.ok(),
+      { timeout: 60_000 }
+    );
+    await scheduleRow.getByTestId('hr-report-schedule-run-now-button').click();
+    const run = await (await runScheduleResponsePromise).json();
+    expect(run.jobId).toBeTruthy();
+    await expect(page.getByTestId('hr-reports-tab-exports')).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    await expect(page.locator(`[data-row-id="${run.jobId}"]`)).toContainText(
+      /Queued|Running|Completed/,
+      { timeout: 60_000 }
+    );
+    const scheduleRunRow = page.locator(`[data-row-id="${run.jobId}"]`);
+    await scheduleRunRow.getByTestId('hr-report-export-details-button').click();
+    await expect(page.getByText('Scheduled run')).toBeVisible();
+    await page.getByRole('button', { name: /^Close$/ }).click();
+
+    await page.getByTestId('hr-reports-tab-schedules').click();
+    const deleteScheduleResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes(`/api/hr/reports/schedules/${schedule.id}`) &&
+        response.request().method() === 'DELETE' &&
+        response.ok(),
+      { timeout: 60_000 }
+    );
+    await scheduleRow.getByTestId('hr-report-schedule-delete-button').click();
+    await expect(page.getByText('Delete report schedule?')).toBeVisible();
+    await page.getByRole('button', { name: /Delete Schedule/i }).click();
+    await deleteScheduleResponsePromise;
+    await expect(page.getByText('Delete report schedule?')).toBeHidden({ timeout: 60_000 });
+
+    await page.getByTestId('hr-reports-tab-templates').click();
+    await page.getByPlaceholder('Search...').first().fill(reportName);
+    const templateRow = page.locator(`[data-row-id="template-${template.id}"]`);
+    await expect(templateRow).toContainText(reportName, { timeout: 60_000 });
+    const deleteTemplateResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes(`/api/hr/reports/templates/${template.id}`) &&
+        response.request().method() === 'DELETE' &&
+        response.ok(),
+      { timeout: 60_000 }
+    );
+    await templateRow.getByTestId('hr-report-template-delete-button').click();
+    await expect(page.getByText('Delete report template?')).toBeVisible();
+    await page.getByRole('button', { name: /Delete Template/i }).click();
+    await deleteTemplateResponsePromise;
+    await expect(page.getByText('Delete report template?')).toBeHidden({ timeout: 60_000 });
   });
 
   test('lower-permission user cannot export or schedule reports', async ({ browser }) => {

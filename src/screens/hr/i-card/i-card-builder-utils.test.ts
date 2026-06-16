@@ -9,6 +9,11 @@ import {
   migrateFieldsToLayout,
   parsePrintSettingsJson,
   createICardLayoutPreset,
+  canNavigateEmployeeICardStep,
+  updateICardLayoutElementStyle,
+  markEmployeeICardStepCompleted,
+  getDefaultICardDesignerElementId,
+  hasPersistedEmployeeICardTemplate,
 } from './i-card-builder-utils';
 
 describe('Employee I-Card builder utilities', () => {
@@ -117,5 +122,46 @@ describe('Employee I-Card builder utilities', () => {
     expect(parseLayoutJson(JSON.stringify(layout))?.front.elements.length).toBeGreaterThan(0);
     expect(parseLayoutJson('not-json')).toBeNull();
     expect(snapToGrid(18, 4)).toBe(20);
+  });
+
+  it('defaults the designer inspector to the first visible text element', () => {
+    const layout = createICardLayoutPreset('formal-staff');
+
+    expect(getDefaultICardDesignerElementId(layout, null)).toBe(
+      layout.front.elements.find((element) => element.visible && element.type === 'text')?.id
+    );
+    expect(getDefaultICardDesignerElementId(layout, 'photo')).toBe('photo');
+  });
+
+  it('tracks completed step navigation without allowing create-mode jumps ahead', () => {
+    const completed = markEmployeeICardStepCompleted([0], 2);
+
+    expect(completed).toEqual([0, 2]);
+    expect(canNavigateEmployeeICardStep(0, 2, completed, false)).toBe(true);
+    expect(canNavigateEmployeeICardStep(1, 2, completed, false)).toBe(false);
+    expect(canNavigateEmployeeICardStep(4, 2, completed, true)).toBe(true);
+  });
+
+  it('allows full step navigation after a create-mode template is saved in place', () => {
+    expect(hasPersistedEmployeeICardTemplate(null, null)).toBe(false);
+    expect(hasPersistedEmployeeICardTemplate(null, 'saved-template-1')).toBe(true);
+    expect(
+      canNavigateEmployeeICardStep(
+        4,
+        0,
+        [],
+        hasPersistedEmployeeICardTemplate(null, 'saved-template-1')
+      )
+    ).toBe(true);
+  });
+
+  it('persists text color changes in serialized layout json', () => {
+    const layout = createICardLayoutPreset('formal-staff');
+    const updated = updateICardLayoutElementStyle(layout, 'name', { color: '#B91C1C' });
+    const parsed = parseLayoutJson(JSON.stringify(updated));
+
+    expect(parsed?.front.elements.find((element) => element.id === 'name')?.style?.color).toBe(
+      '#B91C1C'
+    );
   });
 });

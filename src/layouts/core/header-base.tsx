@@ -175,7 +175,11 @@ export function HeaderBase({
               sx={{
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'flex-end',
                 gap: { xs: 1, sm: 1.5 },
+                flex: '0 1 auto',
+                minWidth: 0,
+                maxWidth: '100%',
               }}
             >
               {/* -- Help link -- */}
@@ -191,9 +195,19 @@ export function HeaderBase({
                 </Link>
               )}
 
-              {workspaces && <GlobalAcademicSearch />}
+              {workspaces && (
+                <Box sx={{ display: { xs: 'none', md: 'block' }, minWidth: 0 }}>
+                  <GlobalAcademicSearch />
+                </Box>
+              )}
               {/* -- Searchbar -- */}
-              {searchbar && <Searchbar data-slot="searchbar" data={data?.nav} />}
+              {searchbar && (
+                <Searchbar
+                  data-slot="searchbar"
+                  data={data?.nav}
+                  sx={{ display: { xs: 'none', sm: 'flex' } }}
+                />
+              )}
 
               {/* -- Language popover -- */}
               {/* {localization && <LanguagePopover data-slot="localization" data={data?.langs} />} */}

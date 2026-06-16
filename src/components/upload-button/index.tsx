@@ -3,8 +3,8 @@ import type { ButtonProps } from '@mui/material';
 import React, { useRef } from 'react';
 import { Button } from '@mui/material';
 
-type UploadButtonProps = ButtonProps & {
-  onChange?: (e: any) => void;
+type UploadButtonProps = Omit<ButtonProps, 'onChange'> & {
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
   multiple?: boolean;
   accept?: string;
   fileInputProps?: React.InputHTMLAttributes<HTMLInputElement>;
@@ -13,6 +13,7 @@ const UploadButton = ({
   onClick = () => {},
   onChange = () => {},
   multiple = false,
+  accept,
   fileInputProps,
   ...props
 }: UploadButtonProps) => {
@@ -23,6 +24,7 @@ const UploadButton = ({
         ref={inputRef}
         multiple={multiple}
         onChange={onChange}
+        accept={accept}
         type="file"
         style={{ display: 'none' }}
         {...fileInputProps}

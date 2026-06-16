@@ -13,6 +13,7 @@ import {
   Box,
   Chip,
   Grid,
+  Alert,
   Stack,
   Paper,
   Button,
@@ -29,12 +30,17 @@ import {
 import {
   PerformanceBoardType,
   type ProfessionalReview,
+  type PerformanceEvidence,
   type PerformanceTemplate,
   PerformanceStaffCategory,
+  type ProfessionalReviewCycle,
   useGetPerformanceReviewQuery,
   useGetPerformanceReviewsQuery,
+  type PerformanceReviewResponse,
+  useGetPerformanceEvidenceQuery,
   useGetPerformanceDashboardQuery,
   useGetPerformanceTemplatesQuery,
+  type PerformanceTemplateCriterion,
   useAddPerformanceEvidenceMutation,
   useAddPerformanceFeedbackMutation,
   useSavePerformanceOutcomeMutation,
@@ -69,15 +75,6 @@ import {
   performanceWorkspaceSubmodules,
 } from './components/performance-workspace-config';
 import {
-  stageLabels,
-  boardTypeLabels,
-  sqaaDomainLabels,
-  cycleStatusLabels,
-  staffCategoryLabels,
-  isTemplatePublishable,
-  getSectionWeightTotal,
-} from './performance-utils';
-import {
   PerformanceSurface,
   PerformanceEmptyState,
   PerformanceMetricCard,
@@ -87,6 +84,24 @@ import {
   PerformanceWorkflowStepper,
   PerformanceScrollableContent,
 } from './components/PerformanceWorkspaceUI';
+import {
+  stageLabels,
+  boardTypeLabels,
+  sqaaDomainLabels,
+  cycleStatusLabels,
+  staffCategoryLabels,
+  isTemplatePublishable,
+  getSectionWeightTotal,
+  formatPerformanceScore,
+  filterPerformanceReviews,
+  getPerformanceErrorMessage,
+  hasDuplicatePerformanceCycle,
+  getUniquePerformanceTemplates,
+  type PerformanceWorkspaceMode,
+  getLatestActivePerformanceCycle,
+  getMissingRequiredEvidenceCriteria,
+  getPerformanceWorkspaceCapabilities,
+} from './performance-utils';
 
 const getBackendApiUrl = (path: string) => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
@@ -111,6 +126,22 @@ const tablePanelProps = {
     },
   },
 };
+
+const activeReviewStatuses = new Set([0, 1, 2, 4]);
+const reviewStatusLabels: Record<number, string> = {
+  0: 'Draft',
+  1: 'Submitted',
+  2: 'In Progress',
+  3: 'Finalized',
+  4: 'Reopened',
+};
+
+const showPerformanceError = (error: unknown, fallback: string) => {
+  toast.error(getPerformanceErrorMessage(error, fallback));
+};
+
+const isActiveReview = (review: ProfessionalReview) =>
+  activeReviewStatuses.has(Number(review.status));
 
 function PerformanceDataTable({
   wrapperProps,
@@ -534,8 +565,12 @@ function OutcomesWorkspace() {
 
 function GuidedSetupTab() {
   const { data: defaults, isLoading: defaultsLoading } = useGetDefaultPerformanceTemplatesQuery();
-  const { data: templateData, isLoading: templatesLoading } = useGetPerformanceTemplatesQuery({});
-  const { data: cycleData, isLoading: cyclesLoading } = useGetProfessionalReviewCyclesQuery({});
+  const { data: templateData, isLoading: templatesLoading } = useGetPerformanceTemplatesQuery({
+    pageSize: 100,
+  });
+  const { data: cycleData, isLoading: cyclesLoading } = useGetProfessionalReviewCyclesQuery({
+    pageSize: 100,
+  });
   const [createTemplate, createTemplateState] = useCreatePerformanceTemplateMutation();
   const [publishTemplate] = usePublishPerformanceTemplateMutation();
   const [createCycle, createCycleState] = useCreateProfessionalReviewCycleMutation();
@@ -549,9 +584,18 @@ function GuidedSetupTab() {
   const isCyclePeriodInvalid = !periodEnd.isAfter(periodStart, 'day');
   const { data: sqaaEvidence } = useGetPerformanceSqaaEvidenceQuery({ boardType, staffCategory });
 
-  const templates: PerformanceTemplate[] = templateData?.items || [];
-  const cycles: any[] = cycleData?.items || [];
+  const templates: PerformanceTemplate[] = getUniquePerformanceTemplates(templateData?.items || []);
+  const cycles: ProfessionalReviewCycle[] = cycleData?.items || [];
   const defaultItems = defaults?.items || [];
+  const generatedCycleName = `${boardTypeLabels[boardType]} ${cycleName}`.trim();
+  const isDuplicateCycle = hasDuplicatePerformanceCycle({
+    cycles,
+    name: generatedCycleName,
+    periodStart: periodStart.startOf('day').toDate(),
+    periodEnd: periodEnd.startOf('day').toDate(),
+  });
+  const duplicateCycleMessage =
+    'A matching active cycle already exists for this name and period. Change the cycle name or dates to create another cycle.';
   const boardTemplates = templates.filter(
     (template) =>
       (Number(template.boardType ?? 0) === boardType || Number(template.boardType ?? 0) === 0) &&
@@ -570,22 +614,36 @@ function GuidedSetupTab() {
       const itemBoard = Number(item.boardType ?? 0);
       return itemBoard === boardType || itemBoard === PerformanceBoardType.GenericIndian;
     });
-    const existingNames = new Set(templates.map((template) => template.name.toLowerCase()));
-    const candidates = items.filter(
-      (item: any) => !existingNames.has(String(item.name).toLowerCase())
+    const presetKey = (item: any) =>
+      [
+        String(item.name || '')
+          .trim()
+          .replace(/\s+/g, ' ')
+          .toLowerCase(),
+        Number(item.boardType ?? 0),
+        Number(item.staffCategory),
+      ].join('|');
+    const existingPresetKeys = new Set(templates.map(presetKey));
+    const candidates = items.filter((item: any) => !existingPresetKeys.has(presetKey(item)));
+    const uniqueCandidates = Array.from(
+      new Map<string, any>(candidates.map((item: any) => [presetKey(item), item])).values()
     );
-    if (!candidates.length) {
+    if (!uniqueCandidates.length) {
       toast.info('Board presets are already available');
       return;
     }
 
-    await Promise.all(
-      candidates.map(async (item: any) => {
-        const created = await createTemplate(item).unwrap();
-        await publishTemplate(created.id).unwrap();
-      })
-    );
-    toast.success(`${boardTypeLabels[boardType]} appraisal presets added`);
+    try {
+      await Promise.all(
+        uniqueCandidates.map(async (item: any) => {
+          const created = await createTemplate(item).unwrap();
+          await publishTemplate(created.id).unwrap();
+        })
+      );
+      toast.success(`${boardTypeLabels[boardType]} appraisal presets added`);
+    } catch (error) {
+      showPerformanceError(error, 'Unable to add board presets');
+    }
   };
 
   const createAndStartCycle = async () => {
@@ -597,36 +655,44 @@ function GuidedSetupTab() {
       toast.error('Period end must be after period start');
       return;
     }
-
-    let templateId = selectedTemplate.id;
-    if (Number(selectedTemplate.status) !== 1) {
-      const published = await publishTemplate(selectedTemplate.id).unwrap();
-      templateId = published.id;
+    if (isDuplicateCycle) {
+      toast.error(duplicateCycleMessage);
+      return;
     }
 
-    const cycle = await createCycle({
-      name: `${boardTypeLabels[boardType]} ${cycleName}`.trim(),
-      cycleType: 0,
-      periodStart: periodStart.startOf('day').toISOString(),
-      periodEnd: periodEnd.startOf('day').toISOString(),
-      selfReviewDueDate: periodStart.add(14, 'day').toISOString(),
-      reviewerDueDate: periodStart.add(28, 'day').toISOString(),
-      finalizationDueDate: periodStart.add(42, 'day').toISOString(),
-      ratingScaleMax: 5,
-      allowNotApplicable: true,
-      status: 0,
-    }).unwrap();
-    await publishCycle(cycle.id).unwrap();
-    await assignEmployees({
-      id: cycle.id,
-      body: {
-        templateId,
-        employeeIds: [],
-        activeEmployeesOnly: true,
-        staffCategory,
-      },
-    }).unwrap();
-    toast.success('Cycle created, published, and assigned to active staff');
+    try {
+      let templateId = selectedTemplate.id;
+      if (Number(selectedTemplate.status) !== 1) {
+        const published = await publishTemplate(selectedTemplate.id).unwrap();
+        templateId = published.id;
+      }
+
+      const cycle = await createCycle({
+        name: generatedCycleName,
+        cycleType: 0,
+        periodStart: periodStart.startOf('day').toISOString(),
+        periodEnd: periodEnd.startOf('day').toISOString(),
+        selfReviewDueDate: periodStart.add(14, 'day').toISOString(),
+        reviewerDueDate: periodStart.add(28, 'day').toISOString(),
+        finalizationDueDate: periodStart.add(42, 'day').toISOString(),
+        ratingScaleMax: 5,
+        allowNotApplicable: true,
+        status: 0,
+      }).unwrap();
+      await publishCycle(cycle.id).unwrap();
+      await assignEmployees({
+        id: cycle.id,
+        body: {
+          templateId,
+          employeeIds: [],
+          activeEmployeesOnly: true,
+          staffCategory,
+        },
+      }).unwrap();
+      toast.success('Cycle created, published, and assigned to active staff');
+    } catch (error) {
+      showPerformanceError(error, 'Unable to create and assign the performance cycle');
+    }
   };
 
   const evidenceTotals = (sqaaEvidence || []).reduce(
@@ -714,11 +780,15 @@ function GuidedSetupTab() {
                   value={periodEnd}
                   onChange={(value) => value && setPeriodEnd(value)}
                 />
+                {isDuplicateCycle && <Alert severity="warning">{duplicateCycleMessage}</Alert>}
                 <Button
                   variant="contained"
                   color="success"
                   disabled={
-                    !selectedTemplate?.id || isCyclePeriodInvalid || createCycleState.isLoading
+                    !selectedTemplate?.id ||
+                    isCyclePeriodInvalid ||
+                    isDuplicateCycle ||
+                    createCycleState.isLoading
                   }
                   startIcon={<Iconify icon="mdi:rocket-launch-outline" />}
                   onClick={createAndStartCycle}
@@ -797,16 +867,22 @@ function GuidedSetupTab() {
 }
 
 function OverviewWorkspace() {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data, isLoading, isError } = useGetPerformanceDashboardQuery();
-  const { data: pending } = useGetPerformanceReviewsQuery({ status: 2 });
+  const { data: reviewData } = useGetPerformanceReviewsQuery({});
   const { data: pendingActions } = useGetPerformancePendingActionsQuery({});
   const { data: sqaaAuditPack } = useGetPerformanceSqaaAuditPackQuery({});
   const { data: templateData } = useGetPerformanceTemplatesQuery({});
-  const rows = pending?.items || [];
+  const rows = ((reviewData?.items || []) as ProfessionalReview[]).filter(isActiveReview);
   const templates: PerformanceTemplate[] = templateData?.items || [];
   const publishedTemplates = templates.filter((template) => Number(template.status) === 1).length;
   const sqaaSummary = summarizeSqaaAuditPack(sqaaAuditPack);
   const missingEvidence = sqaaSummary.totalMissingEvidence;
+  const hasPerformanceSetup =
+    Number(data?.activeCycles || 0) > 0 ||
+    publishedTemplates > 0 ||
+    Number(reviewData?.totalCount || 0) > 0 ||
+    sqaaSummary.totalRequiredEvidence > 0;
   const actionItems = [
     {
       title: 'Prepare SQAAF Audit Pack',
@@ -870,11 +946,11 @@ function OverviewWorkspace() {
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
             <MetricCard
-              label="SQAAF Ready"
+              label="SQAAF readiness"
               value={sqaaSummary.overallReadinessPercentage}
               icon="mdi:shield-check-outline"
               tone={sqaaSummary.totalMissingEvidence > 0 ? 'warning' : 'success'}
-              helper="% readiness"
+              helper="ready"
             />
           </Grid>
         </Grid>
@@ -1048,11 +1124,11 @@ function OverviewWorkspace() {
                 <Grid container spacing={1.5}>
                   <Grid size={{ xs: 6 }}>
                     <MetricCard
-                      label="Readiness"
+                      label="SQAAF readiness"
                       value={sqaaSummary.overallReadinessPercentage}
                       icon="mdi:shield-check-outline"
                       tone={missingEvidence > 0 ? 'warning' : 'success'}
-                      helper="% ready"
+                      helper="ready"
                     />
                   </Grid>
                   <Grid size={{ xs: 6 }}>
@@ -1065,11 +1141,11 @@ function OverviewWorkspace() {
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <MetricCard
-                      label="Domains"
+                      label="Ready domains"
                       value={sqaaSummary.readyDomainCount}
                       icon="mdi:domain"
                       tone="info"
-                      helper={`${sqaaSummary.totalDomainCount} tracked`}
+                      helper={`of ${sqaaSummary.totalDomainCount} domains`}
                     />
                   </Grid>
                   <Grid size={{ xs: 6 }}>
@@ -1098,7 +1174,13 @@ function OverviewWorkspace() {
                     </Stack>
                   ))}
                   {!sqaaSummary.topGaps.length && (
-                    <EmptyState text="No SQAAF evidence gaps found for the current data." />
+                    <EmptyState
+                      text={
+                        hasPerformanceSetup
+                          ? 'No SQAAF evidence gaps found for the current data.'
+                          : 'Run setup to start SQAAF evidence tracking.'
+                      }
+                    />
                   )}
                 </Stack>
               </Stack>
@@ -1106,24 +1188,33 @@ function OverviewWorkspace() {
           </Grid>
           <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
             <SectionPanel title="Live Review Queue">
-              <ReviewTable rows={rows.slice(0, 5)} />
+              <ReviewTable
+                rows={rows.slice(0, 5)}
+                onOpen={(row) => setSelectedId(row.id)}
+                noDataText={
+                  hasPerformanceSetup
+                    ? 'No active review actions found.'
+                    : 'Run setup to create cycles and staff review assignments.'
+                }
+              />
             </SectionPanel>
           </Grid>
         </Grid>
+        <ReviewWorkspace reviewId={selectedId} onClose={() => setSelectedId(null)} mode="review" />
       </Stack>
     </PerformanceScrollableContent>
   );
 }
 
 function TemplatesTab() {
-  const { data, isLoading } = useGetPerformanceTemplatesQuery({});
+  const { data, isLoading } = useGetPerformanceTemplatesQuery({ pageSize: 100 });
   const { data: defaults } = useGetDefaultPerformanceTemplatesQuery();
   const [createTemplate, createState] = useCreatePerformanceTemplateMutation();
   const [publishTemplate] = usePublishPerformanceTemplateMutation();
   const [cloneTemplate] = useClonePerformanceTemplateMutation();
   const [archiveTemplate] = useArchivePerformanceTemplateMutation();
   const [builderOpen, setBuilderOpen] = useState(false);
-  const templates: PerformanceTemplate[] = data?.items || [];
+  const templates: PerformanceTemplate[] = getUniquePerformanceTemplates(data?.items || []);
 
   const seedDefaults = async () => {
     const items = defaults?.items || [];
@@ -1136,13 +1227,17 @@ function TemplatesTab() {
       return;
     }
 
-    await Promise.all(
-      candidates.map(async (item: any) => {
-        const created = await createTemplate(item).unwrap();
-        await publishTemplate(created.id).unwrap();
-      })
-    );
-    toast.success('Default Indian school templates created and published');
+    try {
+      await Promise.all(
+        candidates.map(async (item: any) => {
+          const created = await createTemplate(item).unwrap();
+          await publishTemplate(created.id).unwrap();
+        })
+      );
+      toast.success('Default Indian school templates created and published');
+    } catch (error) {
+      showPerformanceError(error, 'Unable to create default templates');
+    }
   };
 
   return (
@@ -1259,8 +1354,12 @@ function TemplatesTab() {
                       disabled={row.status === 1 || !isTemplatePublishable(row.sections || [])}
                       onClick={async () => {
                         popover.onClose();
-                        await publishTemplate(row.id).unwrap();
-                        toast.success('Template published');
+                        try {
+                          await publishTemplate(row.id).unwrap();
+                          toast.success('Template published');
+                        } catch (error) {
+                          showPerformanceError(error, 'Unable to publish template');
+                        }
                       }}
                     >
                       Publish
@@ -1268,8 +1367,12 @@ function TemplatesTab() {
                     <MenuItem
                       onClick={async () => {
                         popover.onClose();
-                        await cloneTemplate(row.id).unwrap();
-                        toast.success('Template cloned');
+                        try {
+                          await cloneTemplate(row.id).unwrap();
+                          toast.success('Template cloned');
+                        } catch (error) {
+                          showPerformanceError(error, 'Unable to clone template');
+                        }
                       }}
                     >
                       Clone
@@ -1278,8 +1381,12 @@ function TemplatesTab() {
                       disabled={row.status === 2}
                       onClick={async () => {
                         popover.onClose();
-                        await archiveTemplate(row.id).unwrap();
-                        toast.success('Template archived');
+                        try {
+                          await archiveTemplate(row.id).unwrap();
+                          toast.success('Template archived');
+                        } catch (error) {
+                          showPerformanceError(error, 'Unable to archive template');
+                        }
                       }}
                     >
                       Archive
@@ -1298,9 +1405,13 @@ function TemplatesTab() {
         open={builderOpen}
         onClose={() => setBuilderOpen(false)}
         onCreate={async (body) => {
-          await createTemplate(body).unwrap();
-          toast.success('Template saved as draft');
-          setBuilderOpen(false);
+          try {
+            await createTemplate(body).unwrap();
+            toast.success('Template saved as draft');
+            setBuilderOpen(false);
+          } catch (error) {
+            showPerformanceError(error, 'Unable to save template');
+          }
         }}
       />
     </Stack>
@@ -1719,8 +1830,12 @@ function CyclesTab() {
                       disabled={row.status !== 0}
                       onClick={async () => {
                         popover.onClose();
-                        await publishCycle(row.id).unwrap();
-                        toast.success('Cycle published');
+                        try {
+                          await publishCycle(row.id).unwrap();
+                          toast.success('Cycle published');
+                        } catch (error) {
+                          showPerformanceError(error, 'Unable to publish cycle');
+                        }
                       }}
                     >
                       Publish
@@ -1729,15 +1844,19 @@ function CyclesTab() {
                       disabled={(row.status !== 1 && row.status !== 2) || !templates[0]?.id}
                       onClick={async () => {
                         popover.onClose();
-                        await assignEmployees({
-                          id: row.id,
-                          body: {
-                            templateId: templates[0]?.id,
-                            employeeIds: [],
-                            activeEmployeesOnly: true,
-                          },
-                        }).unwrap();
-                        toast.success('Eligible employees assigned to cycle');
+                        try {
+                          await assignEmployees({
+                            id: row.id,
+                            body: {
+                              templateId: templates[0]?.id,
+                              employeeIds: [],
+                              activeEmployeesOnly: true,
+                            },
+                          }).unwrap();
+                          toast.success('Eligible employees assigned to cycle');
+                        } catch (error) {
+                          showPerformanceError(error, 'Unable to assign employees to cycle');
+                        }
                       }}
                     >
                       Assign Employees
@@ -1746,8 +1865,12 @@ function CyclesTab() {
                       disabled={row.status !== 2}
                       onClick={async () => {
                         popover.onClose();
-                        await moveToCalibration(row.id).unwrap();
-                        toast.success('Cycle moved to calibration');
+                        try {
+                          await moveToCalibration(row.id).unwrap();
+                          toast.success('Cycle moved to calibration');
+                        } catch (error) {
+                          showPerformanceError(error, 'Unable to move cycle to calibration');
+                        }
                       }}
                     >
                       Move to Calibration
@@ -1756,8 +1879,12 @@ function CyclesTab() {
                       disabled={row.status !== 3}
                       onClick={async () => {
                         popover.onClose();
-                        await finalizeCycle(row.id).unwrap();
-                        toast.success('Cycle finalized');
+                        try {
+                          await finalizeCycle(row.id).unwrap();
+                          toast.success('Cycle finalized');
+                        } catch (error) {
+                          showPerformanceError(error, 'Unable to finalize cycle');
+                        }
                       }}
                     >
                       Finalize
@@ -1775,25 +1902,113 @@ function CyclesTab() {
         open={open}
         onClose={() => setOpen(false)}
         onCreate={async (body) => {
-          await createCycle(body).unwrap();
-          toast.success('Cycle created');
-          setOpen(false);
+          try {
+            await createCycle(body).unwrap();
+            toast.success('Cycle created');
+            setOpen(false);
+          } catch (error) {
+            showPerformanceError(error, 'Unable to create cycle');
+          }
         }}
       />
     </Stack>
   );
 }
 
+function ReviewFilterBar({
+  cycles,
+  cycleId,
+  status,
+  onCycleChange,
+  onStatusChange,
+}: {
+  cycles: ProfessionalReviewCycle[];
+  cycleId: string;
+  status: string;
+  onCycleChange: (value: string) => void;
+  onStatusChange: (value: string) => void;
+}) {
+  return (
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+      <TextField
+        select
+        size="small"
+        label="Cycle"
+        value={cycleId}
+        onChange={(event) => onCycleChange(event.target.value)}
+        sx={{ minWidth: { xs: '100%', sm: 260 } }}
+      >
+        <MenuItem value="all">All cycles</MenuItem>
+        {cycles.map((cycle) => (
+          <MenuItem key={cycle.id} value={cycle.id}>
+            {cycle.name}
+          </MenuItem>
+        ))}
+      </TextField>
+      <TextField
+        select
+        size="small"
+        label="Status"
+        value={status}
+        onChange={(event) => onStatusChange(event.target.value)}
+        sx={{ minWidth: { xs: '100%', sm: 180 } }}
+      >
+        <MenuItem value="all">All statuses</MenuItem>
+        {Object.entries(reviewStatusLabels).map(([value, label]) => (
+          <MenuItem key={value} value={value}>
+            {label}
+          </MenuItem>
+        ))}
+      </TextField>
+    </Stack>
+  );
+}
+
+function useReviewTableFilters(rows: ProfessionalReview[]) {
+  const { data: cycleData } = useGetProfessionalReviewCyclesQuery({ pageSize: 100 });
+  const cycles: ProfessionalReviewCycle[] = cycleData?.items || [];
+  const latestCycleId = getLatestActivePerformanceCycle(cycles)?.id || 'all';
+  const [cycleId, setCycleId] = useState('');
+  const [status, setStatus] = useState('all');
+  const effectiveCycleId = cycleId || latestCycleId;
+
+  useEffect(() => {
+    if (!cycleId && latestCycleId) {
+      setCycleId(latestCycleId);
+    }
+  }, [cycleId, latestCycleId]);
+
+  const filteredRows = useMemo(
+    () => filterPerformanceReviews({ reviews: rows, cycleId: effectiveCycleId, status }),
+    [effectiveCycleId, rows, status]
+  );
+
+  return {
+    rows: filteredRows,
+    filters: (
+      <ReviewFilterBar
+        cycles={cycles}
+        cycleId={effectiveCycleId}
+        status={status}
+        onCycleChange={setCycleId}
+        onStatusChange={setStatus}
+      />
+    ),
+  };
+}
+
 function ReviewsTab() {
   const { data, isLoading } = useGetPerformanceReviewsQuery({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rows = data?.items || [];
+  const filtered = useReviewTableFilters(rows);
 
   return (
     <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
       {isLoading && <LinearProgress />}
-      <ReviewTable rows={rows} onOpen={(row) => setSelectedId(row.id)} />
-      <ReviewWorkspace reviewId={selectedId} onClose={() => setSelectedId(null)} />
+      {filtered.filters}
+      <ReviewTable rows={filtered.rows} onOpen={(row) => setSelectedId(row.id)} />
+      <ReviewWorkspace reviewId={selectedId} onClose={() => setSelectedId(null)} mode="review" />
     </Stack>
   );
 }
@@ -1802,17 +2017,19 @@ function MyReviewTab() {
   const { data, isLoading } = useGetPerformanceReviewsQuery({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rows = (data?.items || []).filter((row: ProfessionalReview) => row.status !== 3);
+  const filtered = useReviewTableFilters(rows);
 
   return (
     <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
       {isLoading && <LinearProgress />}
       <TabHeader title="Self-appraisal drafts and submissions" />
-      <ReviewTable rows={rows} onOpen={(row) => setSelectedId(row.id)} actionLabel="Self Review" />
-      <ReviewWorkspace
-        reviewId={selectedId}
-        onClose={() => setSelectedId(null)}
-        initialPanel="self"
+      {filtered.filters}
+      <ReviewTable
+        rows={filtered.rows}
+        onOpen={(row) => setSelectedId(row.id)}
+        actionLabel="Self Review"
       />
+      <ReviewWorkspace reviewId={selectedId} onClose={() => setSelectedId(null)} mode="self" />
     </Stack>
   );
 }
@@ -1825,16 +2042,22 @@ function ObservationsTab() {
       (row.templateName || '').toLowerCase().includes('teacher') ||
       (row.employeeRole || '').toLowerCase().includes('teacher')
   );
+  const filtered = useReviewTableFilters(rows);
 
   return (
     <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
       {isLoading && <LinearProgress />}
       <TabHeader title="Classroom observations" />
-      <ReviewTable rows={rows} onOpen={(row) => setSelectedId(row.id)} actionLabel="Observe" />
+      {filtered.filters}
+      <ReviewTable
+        rows={filtered.rows}
+        onOpen={(row) => setSelectedId(row.id)}
+        actionLabel="Observe"
+      />
       <ReviewWorkspace
         reviewId={selectedId}
         onClose={() => setSelectedId(null)}
-        initialPanel="observation"
+        mode="observation"
       />
     </Stack>
   );
@@ -1845,6 +2068,7 @@ function CalibrationTab() {
   const { data, isLoading } = useGetPerformanceReviewsQuery({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rows = (data?.items || []).filter((row: ProfessionalReview) => row.status !== 3);
+  const filtered = useReviewTableFilters(rows);
 
   return (
     <Stack spacing={2} sx={{ minHeight: 0, flex: 1, height: '100%', overflow: 'hidden' }}>
@@ -1867,18 +2091,15 @@ function CalibrationTab() {
             overflow: 'hidden',
           }}
         >
+          {filtered.filters}
           <ReviewTable
-            rows={rows}
+            rows={filtered.rows}
             onOpen={(row) => setSelectedId(row.id)}
             actionLabel="Calibrate"
           />
         </Grid>
       </Grid>
-      <ReviewWorkspace
-        reviewId={selectedId}
-        onClose={() => setSelectedId(null)}
-        initialPanel="outcome"
-      />
+      <ReviewWorkspace reviewId={selectedId} onClose={() => setSelectedId(null)} mode="outcome" />
     </Stack>
   );
 }
@@ -1924,16 +2145,18 @@ function OutcomesTab() {
   const { data, isLoading } = useGetPerformanceReviewsQuery({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rows = (data?.items || []).filter((row: ProfessionalReview) => row.status !== 3);
+  const filtered = useReviewTableFilters(rows);
   return (
     <Stack spacing={2} sx={{ minHeight: 0, flex: 1, height: '100%' }}>
       {isLoading && <LinearProgress />}
       <TabHeader title="Calibration and final outcomes" />
-      <ReviewTable rows={rows} onOpen={(row) => setSelectedId(row.id)} actionLabel="Finalize" />
-      <ReviewWorkspace
-        reviewId={selectedId}
-        onClose={() => setSelectedId(null)}
-        initialPanel="outcome"
+      {filtered.filters}
+      <ReviewTable
+        rows={filtered.rows}
+        onOpen={(row) => setSelectedId(row.id)}
+        actionLabel="Finalize"
       />
+      <ReviewWorkspace reviewId={selectedId} onClose={() => setSelectedId(null)} mode="outcome" />
     </Stack>
   );
 }
@@ -1972,7 +2195,7 @@ function ReportsTab() {
                 {(increments || []).slice(0, 6).map((item: any) => (
                   <Stack key={item.id} direction="row" justifyContent="space-between" spacing={1}>
                     <Typography variant="body2">{item.finalRating || 'Recommended'}</Typography>
-                    <Chip size="small" label={`Score ${item.finalScore}`} />
+                    <Chip size="small" label={`Score ${formatPerformanceScore(item.finalScore)}`} />
                   </Stack>
                 ))}
                 {!increments?.length && <EmptyState text="No increment recommendations found." />}
@@ -2068,6 +2291,7 @@ function SqaaAuditPackSection() {
   const { data: auditPack, isFetching } = useGetPerformanceSqaaAuditPackQuery(queryParams);
   const [exportAuditPack, exportState] = useLazyGetPerformanceSqaaAuditPackExportQuery();
   const summary = summarizeSqaaAuditPack(auditPack);
+  const hasAuditSetup = summary.totalRequiredEvidence > 0 || summary.totalDomainCount > 0;
 
   const handleExport = async () => {
     try {
@@ -2162,11 +2386,11 @@ function SqaaAuditPackSection() {
         <Grid container spacing={1.5}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <MetricCard
-              label="Readiness"
+              label="SQAAF readiness"
               value={summary.overallReadinessPercentage}
               icon="mdi:shield-check-outline"
               tone={summary.totalMissingEvidence > 0 ? 'warning' : 'success'}
-              helper="% ready"
+              helper="ready"
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -2187,11 +2411,11 @@ function SqaaAuditPackSection() {
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <MetricCard
-              label="Domains Ready"
+              label="Ready domains"
               value={summary.readyDomainCount}
               icon="mdi:domain"
               tone="success"
-              helper={`${summary.totalDomainCount} tracked`}
+              helper={`of ${summary.totalDomainCount} domains`}
             />
           </Grid>
         </Grid>
@@ -2238,7 +2462,11 @@ function SqaaAuditPackSection() {
             },
           ]}
           data={auditPack?.domains || []}
-          noDataText="No SQAAF readiness domains found."
+          noDataText={
+            hasAuditSetup
+              ? 'No SQAAF readiness domains found.'
+              : 'Run setup to create SQAAF mapped templates and reviews.'
+          }
         />
 
         <PerformanceDataTable
@@ -2257,7 +2485,11 @@ function SqaaAuditPackSection() {
             { id: 'criterionName', label: 'Missing Evidence', minWidth: '260px' },
           ]}
           data={auditPack?.missingEvidenceItems || []}
-          noDataText="No missing SQAAF evidence found for the selected filters."
+          noDataText={
+            hasAuditSetup
+              ? 'All required SQAAF evidence is available for the selected filters.'
+              : 'Run setup to create SQAAF evidence requirements.'
+          }
         />
       </Stack>
     </SectionPanel>
@@ -2294,10 +2526,12 @@ function ReviewTable({
   rows,
   onOpen,
   actionLabel = 'Open',
+  noDataText = 'No performance reviews found.',
 }: {
   rows: ProfessionalReview[];
   onOpen?: (row: ProfessionalReview) => void;
   actionLabel?: string;
+  noDataText?: string;
 }) {
   return (
     <PerformanceDataTable
@@ -2311,7 +2545,7 @@ function ReviewTable({
           id: 'finalScore',
           label: 'Score',
           minWidth: '100px',
-          render: (value) => (value ? `${Number(value).toFixed(2)}%` : '-'),
+          render: (value) => formatPerformanceScore(value),
         },
         {
           id: 'status',
@@ -2321,9 +2555,7 @@ function ReviewTable({
             <Chip
               size="small"
               color={Number(value) === 3 ? 'success' : Number(value) === 4 ? 'warning' : 'default'}
-              label={
-                Number(value) === 3 ? 'Finalized' : Number(value) === 4 ? 'Reopened' : 'In Progress'
-              }
+              label={reviewStatusLabels[Number(value)] || 'In Progress'}
             />
           ),
         },
@@ -2347,7 +2579,7 @@ function ReviewTable({
         },
       ]}
       data={rows}
-      noDataText="No performance reviews found."
+      noDataText={noDataText}
     />
   );
 }
@@ -2420,274 +2652,608 @@ function CycleDialog({
 function ReviewWorkspace({
   reviewId,
   onClose,
-  initialPanel = 'review',
+  mode = 'review',
 }: {
   reviewId: string | null;
   onClose: () => void;
-  initialPanel?: 'review' | 'self' | 'observation' | 'outcome';
+  mode?: PerformanceWorkspaceMode;
 }) {
   const { data: review } = useGetPerformanceReviewQuery(reviewId || '', { skip: !reviewId });
+  const {
+    data: fetchedEvidence,
+    error: evidenceError,
+    isError: isEvidenceError,
+  } = useGetPerformanceEvidenceQuery(reviewId || '', { skip: !reviewId });
   const [saveSelfAppraisal] = useSavePerformanceSelfAppraisalMutation();
   const [saveReviewerStage] = useSavePerformanceReviewerStageMutation();
   const [submitStage] = useSubmitPerformanceStageMutation();
   const [saveOutcome] = useSavePerformanceOutcomeMutation();
   const [addObservation] = useAddPerformanceObservationMutation();
-  const [addEvidence] = useAddPerformanceEvidenceMutation();
+  const [addEvidence, addEvidenceState] = useAddPerformanceEvidenceMutation();
   const [addFeedback] = useAddPerformanceFeedbackMutation();
   const [addDevelopmentPlan] = useAddPerformanceDevelopmentPlanMutation();
-  const [stageType, setStageType] = useState<number>(initialPanel === 'outcome' ? 3 : 0);
+  const capabilities = useMemo(() => getPerformanceWorkspaceCapabilities(mode), [mode]);
+  const [stageType, setStageType] = useState<number>(capabilities.stageType);
   const [summary, setSummary] = useState('');
   const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [loadedStageKey, setLoadedStageKey] = useState('');
+  const [evidence, setEvidence] = useState<PerformanceEvidence[]>([]);
+  const [evidenceCriterion, setEvidenceCriterion] = useState<PerformanceTemplateCriterion | null>(
+    null
+  );
+  const [evidenceForm, setEvidenceForm] = useState({
+    title: '',
+    fileName: '',
+    url: '',
+    notes: '',
+  });
 
-  const criteria = useMemo(
-    () => review?.template?.sections?.flatMap((section) => section.criteria || []) || [],
+  const templateSections = useMemo(
+    () => review?.template?.sections || [],
     [review?.template?.sections]
   );
-  const evidenceCriterion =
-    criteria.find((criterion: any) => criterion.evidenceRequired) || criteria[0];
-  const responses = criteria.map((criterion: any) => ({
-    criterionId: criterion.id,
-    rating: ratings[criterion.id] ?? 4,
-    isNotApplicable: false,
-    comment: summary,
-  }));
+  const criteria = useMemo(
+    () => templateSections.flatMap((section) => section.criteria || []),
+    [templateSections]
+  );
+  const currentStage = useMemo(
+    () => review?.stages?.find((stage) => Number(stage.stageType) === stageType),
+    [review?.stages, stageType]
+  );
+  const evidenceByCriterion = useMemo(() => {
+    const next = new Map<string, PerformanceEvidence[]>();
+    evidence.forEach((item) => {
+      if (!item.criterionId) return;
+
+      next.set(item.criterionId, [...(next.get(item.criterionId) || []), item]);
+    });
+    return next;
+  }, [evidence]);
+  const responses: PerformanceReviewResponse[] = useMemo(
+    () =>
+      criteria
+        .filter((criterion) => criterion.id)
+        .map((criterion) => ({
+          criterionId: criterion.id!,
+          rating: ratings[criterion.id!] ?? 4,
+          isNotApplicable: false,
+          comment: summary,
+        })),
+    [criteria, ratings, summary]
+  );
   const averageRating = responses.length
     ? responses.reduce((sum, response) => sum + Number(response.rating || 0), 0) / responses.length
     : 0;
+  const missingRequiredCriteria = useMemo(
+    () => getMissingRequiredEvidenceCriteria({ criteria, responses, evidence }),
+    [criteria, responses, evidence]
+  );
 
   useEffect(() => {
-    if (!criteria.length) return;
+    if (Array.isArray(fetchedEvidence)) {
+      setEvidence(fetchedEvidence);
+    }
+  }, [fetchedEvidence]);
 
-    setRatings((current) => {
-      const next = { ...current };
-      criteria.forEach((criterion: any) => {
-        if (criterion.id && next[criterion.id] === undefined) {
-          next[criterion.id] = 4;
-        }
-      });
-      return next;
+  useEffect(() => {
+    if (reviewId && isEvidenceError) {
+      showPerformanceError(evidenceError, 'Unable to load review evidence');
+    }
+  }, [evidenceError, isEvidenceError, reviewId]);
+
+  useEffect(() => {
+    if (reviewId) {
+      setStageType(capabilities.stageType);
+    }
+  }, [capabilities.stageType, reviewId]);
+
+  useEffect(() => {
+    if (!reviewId) {
+      setLoadedStageKey('');
+      setEvidence([]);
+      setEvidenceCriterion(null);
+      setStageType(capabilities.stageType);
+    }
+  }, [capabilities.stageType, reviewId]);
+
+  useEffect(() => {
+    if (!reviewId || !criteria.length) return;
+
+    const stageKey = `${reviewId}:${stageType}`;
+    if (loadedStageKey === stageKey) return;
+
+    const responseByCriterion = new Map(
+      (currentStage?.responses || []).map((response) => [response.criterionId, response])
+    );
+    const nextRatings: Record<string, number> = {};
+    criteria.forEach((criterion) => {
+      if (!criterion.id) return;
+
+      nextRatings[criterion.id] = responseByCriterion.get(criterion.id)?.rating ?? 4;
     });
-  }, [criteria]);
+
+    setRatings(nextRatings);
+    setSummary(currentStage?.summaryComment || '');
+    setLoadedStageKey(stageKey);
+  }, [criteria, currentStage, loadedStageKey, reviewId, stageType]);
+
+  const openEvidenceDialog = (criterion: PerformanceTemplateCriterion) => {
+    if (!capabilities.canAddEvidence) return;
+    setEvidenceCriterion(criterion);
+    setEvidenceForm({
+      title: criterion.name ? `${criterion.name} evidence` : 'Review evidence',
+      fileName: '',
+      url: '',
+      notes: summary,
+    });
+  };
+
+  const closeEvidenceDialog = () => {
+    setEvidenceCriterion(null);
+    setEvidenceForm({ title: '', fileName: '', url: '', notes: '' });
+  };
+
+  const handleSaveEvidence = async () => {
+    if (!reviewId || !evidenceCriterion?.id) return;
+    if (!evidenceForm.title.trim()) {
+      toast.error('Evidence title is required');
+      return;
+    }
+
+    try {
+      const created = await addEvidence({
+        id: reviewId,
+        body: {
+          criterionId: evidenceCriterion.id,
+          title: evidenceForm.title.trim(),
+          fileName: evidenceForm.fileName.trim() || undefined,
+          url: evidenceForm.url.trim() || undefined,
+          notes: evidenceForm.notes.trim() || undefined,
+        },
+      }).unwrap();
+      setEvidence((current) => [
+        ...current.filter((item) => item.id !== created.id),
+        created as PerformanceEvidence,
+      ]);
+      toast.success('Evidence added');
+      closeEvidenceDialog();
+    } catch (error) {
+      showPerformanceError(error, 'Unable to add evidence');
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!reviewId) return;
+
+    try {
+      const body = {
+        stageType,
+        summaryComment: summary,
+        responses,
+      };
+      if (stageType === 0) {
+        await saveSelfAppraisal({ id: reviewId, body }).unwrap();
+      } else {
+        await saveReviewerStage({ id: reviewId, body }).unwrap();
+      }
+      toast.success('Draft saved');
+    } catch (error) {
+      showPerformanceError(error, 'Unable to save draft');
+    }
+  };
+
+  const handleSubmitStage = async () => {
+    if (!reviewId) return;
+    if (missingRequiredCriteria.length) {
+      const missingNames = missingRequiredCriteria.map((criterion) => criterion.name).slice(0, 4);
+      const remaining = missingRequiredCriteria.length - missingNames.length;
+      toast.error(
+        `Add evidence for each required criterion before submitting. Missing: ${missingNames.join(', ')}${remaining > 0 ? ` and ${remaining} more` : ''}.`
+      );
+      return;
+    }
+
+    try {
+      await submitStage({
+        id: reviewId,
+        body: {
+          stageType,
+          summaryComment: summary,
+          responses,
+        },
+      }).unwrap();
+      toast.success(`${stageLabels[stageType]} submitted`);
+    } catch (error) {
+      showPerformanceError(error, `Unable to submit ${stageLabels[stageType]}`);
+    }
+  };
 
   if (!reviewId) return null;
 
   return (
-    <CustomDialog
-      open={Boolean(reviewId)}
-      handleClose={onClose}
-      title="Performance review workspace"
-      maxWidth="sm"
-    >
-      <Stack
-        spacing={2}
-        sx={{
-          p: 2,
-          bgcolor: 'background.default',
-          maxWidth: '100%',
-          maxHeight: 'calc(100vh - 160px)',
-          overflow: 'auto',
-        }}
+    <>
+      <CustomDialog
+        open={Boolean(reviewId)}
+        handleClose={onClose}
+        title="Performance review workspace"
+        maxWidth="md"
       >
-        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1.5}>
-          <Box>
-            <Typography variant="h6">{review?.employeeName}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {review?.cycleName} - {review?.templateName || 'Template pending'}
-            </Typography>
-          </Box>
-          <Chip label={review?.finalRating || 'Not finalized'} />
-        </Stack>
-
-        <TextField
-          select
-          label="Review Stage"
-          value={stageType}
-          onChange={(event) => setStageType(Number(event.target.value))}
-        >
-          {Object.entries(stageLabels).map(([value, label]) => (
-            <MenuItem key={value} value={Number(value)}>
-              {label}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <Paper
-          variant="outlined"
+        <Stack
+          data-testid="performance-review-workspace"
+          data-workspace-mode={mode}
+          spacing={2}
           sx={{
             p: 2,
-            borderRadius: 1,
-            bgcolor: 'background.paper',
-            borderColor: (theme) =>
-              theme.palette.mode === 'dark' ? 'rgba(145, 158, 171, 0.24)' : 'divider',
+            bgcolor: 'background.default',
+            maxWidth: '100%',
+            maxHeight: 'calc(100vh - 160px)',
+            overflow: 'auto',
           }}
         >
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Criteria Ratings
-          </Typography>
-          <Stack spacing={1.5}>
-            {criteria.slice(0, 8).map((criterion: any) => (
-              <Stack
-                key={criterion.id}
-                direction={{ xs: 'column', sm: 'row' }}
-                alignItems={{ xs: 'flex-start', sm: 'center' }}
-                justifyContent="space-between"
-                spacing={1}
-              >
-                <Typography variant="body2" sx={{ minWidth: 0, flex: 1 }}>
-                  {criterion.name}
-                </Typography>
-                <Rating
-                  sx={{ flexShrink: 0 }}
-                  value={ratings[criterion.id] ?? 4}
-                  onChange={(_, value) =>
-                    setRatings((current) => ({ ...current, [criterion.id]: value || 0 }))
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            justifyContent="space-between"
+            spacing={1.5}
+          >
+            <Box>
+              <Typography variant="h6">{review?.employeeName}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {review?.cycleName} - {review?.templateName || 'Template pending'}
+              </Typography>
+            </Box>
+            <Chip label={review?.finalRating || 'Not finalized'} />
+          </Stack>
+
+          {capabilities.allowStageSelection ? (
+            <TextField
+              select
+              label="Review Stage"
+              value={stageType}
+              onChange={(event) => setStageType(Number(event.target.value))}
+            >
+              {Object.entries(stageLabels).map(([value, label]) => (
+                <MenuItem key={value} value={Number(value)}>
+                  {label}
+                </MenuItem>
+              ))}
+            </TextField>
+          ) : (
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Typography variant="caption" color="text.secondary">
+                Workflow stage
+              </Typography>
+              <Chip size="small" label={stageLabels[stageType]} />
+            </Stack>
+          )}
+
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 2,
+              borderRadius: 1,
+              bgcolor: 'background.paper',
+              borderColor: (theme) =>
+                theme.palette.mode === 'dark' ? 'rgba(145, 158, 171, 0.24)' : 'divider',
+            }}
+          >
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                <Typography variant="subtitle2">Criteria Ratings</Typography>
+                <Chip
+                  size="small"
+                  color={missingRequiredCriteria.length ? 'warning' : 'success'}
+                  label={
+                    missingRequiredCriteria.length
+                      ? `${missingRequiredCriteria.length} missing evidence`
+                      : 'Evidence ready'
                   }
                 />
               </Stack>
-            ))}
-            {!criteria.length && <EmptyState text="No criteria are available for this review." />}
-          </Stack>
-        </Paper>
 
+              {templateSections.map((section) => (
+                <Stack key={section.id || section.name} spacing={1}>
+                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                    <Typography variant="subtitle2">{section.name}</Typography>
+                    <Chip
+                      size="small"
+                      label={sqaaDomainLabels[Number(section.sqaaDomain ?? 2)] || 'SQAAF'}
+                    />
+                    <Chip size="small" variant="outlined" label={`${section.weight}% weight`} />
+                  </Stack>
+
+                  <Stack spacing={1}>
+                    {(section.criteria || []).map((criterion) => {
+                      const criterionEvidence = criterion.id
+                        ? evidenceByCriterion.get(criterion.id) || []
+                        : [];
+                      const evidenceCount = criterionEvidence.length;
+                      const evidenceMissing = Boolean(criterion.evidenceRequired && !evidenceCount);
+
+                      return (
+                        <Stack
+                          key={criterion.id || criterion.name}
+                          data-testid="performance-criterion-row"
+                          direction={{ xs: 'column', md: 'row' }}
+                          alignItems={{ xs: 'stretch', md: 'center' }}
+                          spacing={1.25}
+                          sx={{
+                            p: 1.25,
+                            border: (theme) => `1px solid ${theme.palette.divider}`,
+                            borderRadius: 1,
+                            bgcolor: 'background.default',
+                          }}
+                        >
+                          <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                {criterion.name}
+                              </Typography>
+                              <Chip
+                                size="small"
+                                color={criterion.evidenceRequired ? 'warning' : 'default'}
+                                variant={criterion.evidenceRequired ? 'filled' : 'outlined'}
+                                label={
+                                  criterion.evidenceRequired
+                                    ? 'Evidence required'
+                                    : 'Evidence optional'
+                                }
+                              />
+                            </Stack>
+                            {!!criterionEvidence.length && (
+                              <Typography variant="caption" color="text.secondary">
+                                {criterionEvidence.map((item) => item.title).join(', ')}
+                              </Typography>
+                            )}
+                          </Box>
+                          <Rating
+                            sx={{ flexShrink: 0 }}
+                            readOnly={!capabilities.canEditRatings}
+                            value={criterion.id ? (ratings[criterion.id] ?? 4) : 0}
+                            onChange={(_, value) =>
+                              capabilities.canEditRatings &&
+                              criterion.id &&
+                              setRatings((current) => ({
+                                ...current,
+                                [criterion.id!]: value || 0,
+                              }))
+                            }
+                          />
+                          <Chip
+                            size="small"
+                            color={
+                              evidenceMissing ? 'warning' : evidenceCount ? 'success' : 'default'
+                            }
+                            label={
+                              evidenceCount
+                                ? `Evidence ${evidenceCount}`
+                                : evidenceMissing
+                                  ? 'Evidence missing'
+                                  : 'No evidence'
+                            }
+                          />
+                          {capabilities.canAddEvidence && (
+                            <Button
+                              size="small"
+                              variant={evidenceMissing ? 'contained' : 'outlined'}
+                              disabled={!criterion.id}
+                              onClick={() => openEvidenceDialog(criterion)}
+                            >
+                              {evidenceCount ? 'Add More Evidence' : 'Add Evidence'}
+                            </Button>
+                          )}
+                        </Stack>
+                      );
+                    })}
+                  </Stack>
+                </Stack>
+              ))}
+              {!criteria.length && <EmptyState text="No criteria are available for this review." />}
+            </Stack>
+          </Paper>
+
+          <TextField
+            label={capabilities.summaryLabel}
+            multiline
+            minRows={3}
+            value={summary}
+            onChange={(event) => setSummary(event.target.value)}
+          />
+
+          <Divider />
+
+          <Stack
+            direction="row"
+            flexWrap="wrap"
+            gap={1}
+            sx={{ '& .MuiButton-root': { flexShrink: 0 } }}
+          >
+            {capabilities.canSaveDraft && (
+              <Button variant="outlined" onClick={handleSaveDraft}>
+                Save Draft
+              </Button>
+            )}
+            {capabilities.canSubmitStage && (
+              <Button
+                data-testid="performance-submit-stage"
+                variant="contained"
+                onClick={handleSubmitStage}
+              >
+                Submit Stage
+              </Button>
+            )}
+            {capabilities.canAddObservation && (
+              <Button
+                variant="contained"
+                onClick={async () => {
+                  try {
+                    await addObservation({
+                      id: reviewId,
+                      body: {
+                        observationDate: new Date().toISOString(),
+                        className: 'Class Observation',
+                        subjectName: 'Subject',
+                        lessonObjectiveScore: 4,
+                        studentEngagementScore: 4,
+                        classroomManagementScore: 4,
+                        assessmentScore: 4,
+                        notes: summary || 'Classroom observation recorded.',
+                      },
+                    }).unwrap();
+                    toast.success('Observation added');
+                  } catch (error) {
+                    showPerformanceError(error, 'Unable to add observation');
+                  }
+                }}
+              >
+                Add Observation
+              </Button>
+            )}
+            {capabilities.canAddFeedback && (
+              <Button
+                variant="outlined"
+                onClick={async () => {
+                  try {
+                    await addFeedback({
+                      id: reviewId,
+                      body: {
+                        source: 3,
+                        feedbackText: summary || 'Qualitative feedback recorded.',
+                      },
+                    }).unwrap();
+                    toast.success('Feedback added');
+                  } catch (error) {
+                    showPerformanceError(error, 'Unable to add feedback');
+                  }
+                }}
+              >
+                Add Feedback
+              </Button>
+            )}
+            {capabilities.canAddDevelopmentPlan && (
+              <Button
+                variant="outlined"
+                onClick={async () => {
+                  try {
+                    await addDevelopmentPlan({
+                      id: reviewId,
+                      body: {
+                        goal: 'Professional development follow-up',
+                        actionPlan: summary || 'Training or mentoring action to be tracked.',
+                        status: 0,
+                      },
+                    }).unwrap();
+                    toast.success('Development plan added');
+                  } catch (error) {
+                    showPerformanceError(error, 'Unable to add development plan');
+                  }
+                }}
+              >
+                Add Development Plan
+              </Button>
+            )}
+            {capabilities.canFinalizeOutcome && (
+              <Button
+                color="success"
+                variant="contained"
+                onClick={async () => {
+                  try {
+                    await saveOutcome({
+                      id: reviewId,
+                      body: {
+                        finalRating: averageRating >= 4 ? 'Very Good' : 'Good',
+                        strengths: summary,
+                        improvementAreas: '',
+                        recommendation: averageRating >= 4 ? 1 : 6,
+                        recommendationNotes:
+                          'Recommendation only; payroll is not updated automatically.',
+                        incrementRecommended: averageRating >= 4,
+                        promotionRecommended: false,
+                      },
+                    }).unwrap();
+                    toast.success('Outcome finalized');
+                    onClose();
+                  } catch (error) {
+                    showPerformanceError(error, 'Unable to finalize outcome');
+                  }
+                }}
+              >
+                Finalize Outcome
+              </Button>
+            )}
+          </Stack>
+        </Stack>
+      </CustomDialog>
+
+      <EvidenceDialog
+        open={Boolean(evidenceCriterion)}
+        criterion={evidenceCriterion}
+        form={evidenceForm}
+        isSaving={addEvidenceState.isLoading}
+        onChange={setEvidenceForm}
+        onClose={closeEvidenceDialog}
+        onSave={handleSaveEvidence}
+      />
+    </>
+  );
+}
+
+function EvidenceDialog({
+  open,
+  criterion,
+  form,
+  isSaving,
+  onChange,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  criterion: PerformanceTemplateCriterion | null;
+  form: { title: string; fileName: string; url: string; notes: string };
+  isSaving: boolean;
+  onChange: (value: { title: string; fileName: string; url: string; notes: string }) => void;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <CustomDialog open={open} handleClose={onClose} title="Add criterion evidence" maxWidth="sm">
+      <Stack data-testid="performance-evidence-dialog" spacing={2} sx={{ p: 2 }}>
+        <Box>
+          <Typography variant="subtitle2">{criterion?.name}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Attach a short evidence record for this criterion.
+          </Typography>
+        </Box>
         <TextField
-          label="Stage comment"
+          required
+          label="Evidence title"
+          value={form.title}
+          onChange={(event) => onChange({ ...form, title: event.target.value })}
+          inputProps={{ 'data-testid': 'performance-evidence-title' }}
+        />
+        <TextField
+          label="File name"
+          value={form.fileName}
+          onChange={(event) => onChange({ ...form, fileName: event.target.value })}
+        />
+        <TextField
+          label="URL"
+          value={form.url}
+          onChange={(event) => onChange({ ...form, url: event.target.value })}
+        />
+        <TextField
+          label="Notes"
           multiline
           minRows={3}
-          value={summary}
-          onChange={(event) => setSummary(event.target.value)}
+          value={form.notes}
+          onChange={(event) => onChange({ ...form, notes: event.target.value })}
         />
-
-        <Divider />
-
-        <Stack
-          direction="row"
-          flexWrap="wrap"
-          gap={1}
-          sx={{ '& .MuiButton-root': { flexShrink: 0 } }}
-        >
-          <Button
-            variant="outlined"
-            onClick={async () => {
-              const body = {
-                stageType,
-                summaryComment: summary,
-                responses,
-              };
-              if (stageType === 0) {
-                await saveSelfAppraisal({ id: reviewId, body }).unwrap();
-              } else {
-                await saveReviewerStage({ id: reviewId, body }).unwrap();
-              }
-              toast.success('Draft saved');
-            }}
-          >
-            Save Draft
-          </Button>
-          <Button
-            variant="contained"
-            onClick={async () => {
-              await submitStage({
-                id: reviewId,
-                body: {
-                  stageType,
-                  summaryComment: summary,
-                  responses,
-                },
-              }).unwrap();
-              toast.success(`${stageLabels[stageType]} submitted`);
-            }}
-          >
-            Submit Stage
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={async () => {
-              await addObservation({
-                id: reviewId,
-                body: {
-                  observationDate: new Date().toISOString(),
-                  className: 'Class Observation',
-                  subjectName: 'Subject',
-                  lessonObjectiveScore: 4,
-                  studentEngagementScore: 4,
-                  classroomManagementScore: 4,
-                  assessmentScore: 4,
-                  notes: summary || 'Classroom observation recorded.',
-                },
-              }).unwrap();
-              toast.success('Observation added');
-            }}
-          >
-            Add Observation
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={async () => {
-              await addEvidence({
-                id: reviewId,
-                body: {
-                  criterionId: evidenceCriterion?.id,
-                  title: 'Review evidence',
-                  notes: summary || 'Evidence noted.',
-                },
-              }).unwrap();
-              toast.success('Evidence added');
-            }}
-          >
-            Add Evidence
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={async () => {
-              await addFeedback({
-                id: reviewId,
-                body: { source: 3, feedbackText: summary || 'Qualitative feedback recorded.' },
-              }).unwrap();
-              toast.success('Feedback added');
-            }}
-          >
-            Add Feedback
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={async () => {
-              await addDevelopmentPlan({
-                id: reviewId,
-                body: {
-                  goal: 'Professional development follow-up',
-                  actionPlan: summary || 'Training or mentoring action to be tracked.',
-                  status: 0,
-                },
-              }).unwrap();
-              toast.success('Development plan added');
-            }}
-          >
-            Add Development Plan
-          </Button>
-          <Button
-            color="success"
-            variant="contained"
-            onClick={async () => {
-              await saveOutcome({
-                id: reviewId,
-                body: {
-                  finalRating: averageRating >= 4 ? 'Very Good' : 'Good',
-                  strengths: summary,
-                  improvementAreas: '',
-                  recommendation: averageRating >= 4 ? 1 : 6,
-                  recommendationNotes: 'Recommendation only; payroll is not updated automatically.',
-                  incrementRecommended: averageRating >= 4,
-                  promotionRecommended: false,
-                },
-              }).unwrap();
-              toast.success('Outcome finalized');
-              onClose();
-            }}
-          >
-            Finalize Outcome
-          </Button>
-        </Stack>
       </Stack>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="contained" disabled={isSaving || !form.title.trim()} onClick={onSave}>
+          Save Evidence
+        </Button>
+      </DialogActions>
     </CustomDialog>
   );
 }

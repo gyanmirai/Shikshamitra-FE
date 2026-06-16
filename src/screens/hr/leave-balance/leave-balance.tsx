@@ -6,262 +6,414 @@ import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
 import {
   Box,
-  Card,
-  Grid,
   Chip,
-  Stack,
   Alert,
+  Stack,
+  Table,
   Tooltip,
   Skeleton,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
   Typography,
+  TableContainer,
   LinearProgress,
 } from '@mui/material';
 
 import { useLeaveOverview } from '../leave-request/use-leave-overview';
 import { getLeaveStatusColor, getLeaveStatusLabel } from '../leave-request/leave-status.utils';
-
-import type { LeaveOverviewData, LeaveTypeBreakdown } from '../leave-request/leave-overview.utils';
+import { formatLeaveDays, type LeaveTypeBreakdown } from '../leave-request/leave-overview.utils';
 
 // -----------------------------------------------------------------------
 
-const formatLeaveDays = (value: number) => `${value} ${value === 1 ? 'day' : 'days'}`;
+const getUsagePct = (row: LeaveTypeBreakdown) =>
+  !row.isUnlimited && row.total > 0 ? Math.min(100, Math.round((row.used / row.total) * 100)) : 0;
 
-const BalanceSummaryStrip = ({
-  overview,
+const LeaveMetric = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <Box sx={{ minWidth: 0 }}>
+    <Typography
+      variant="caption"
+      color="text.secondary"
+      sx={{ display: 'block', fontWeight: 700, lineHeight: 1.1 }}
+    >
+      {label}
+    </Typography>
+    <Typography component="div" variant="body2" sx={{ mt: 0.25, fontWeight: 800 }}>
+      {value}
+    </Typography>
+  </Box>
+);
+
+const LeaveSectionHeader = ({
+  icon,
+  title,
+  meta,
+}: {
+  icon: string;
+  title: string;
+  meta?: React.ReactNode;
+}) => (
+  <Stack
+    direction={{ xs: 'column', sm: 'row' }}
+    spacing={1}
+    alignItems={{ xs: 'flex-start', sm: 'center' }}
+    justifyContent="space-between"
+  >
+    <Stack direction="row" alignItems="center" gap={0.75}>
+      <Iconify icon={icon} sx={{ color: 'primary.main', width: 19, height: 19 }} />
+      <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+        {title}
+      </Typography>
+    </Stack>
+    {meta}
+  </Stack>
+);
+
+const LeaveBalanceLedger = ({
+  rows,
   isLoading,
 }: {
-  overview: LeaveOverviewData;
+  rows: LeaveTypeBreakdown[];
   isLoading: boolean;
 }) => {
-  const usagePct =
-    overview.totalLeaves > 0
-      ? Math.min(100, Math.round((overview.usedLeaves / overview.totalLeaves) * 100))
-      : 0;
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+          p: 1.25,
+        }}
+      >
+        <Stack spacing={1}>
+          {[1, 2, 3, 4].map((item) => (
+            <Skeleton key={item} variant="rounded" height={42} sx={{ borderRadius: 1 }} />
+          ))}
+        </Stack>
+      </Box>
+    );
+  }
 
   return (
-    <Card
-      variant="outlined"
-      sx={{
-        p: { xs: 1.5, md: 2 },
-        borderRadius: 2,
-        boxShadow: 'none',
-        bgcolor: 'background.paper',
-      }}
-    >
-      {isLoading ? (
-        <Stack spacing={1.5}>
-          <Skeleton width="28%" height={22} />
-          <Skeleton variant="rounded" height={72} sx={{ borderRadius: 2 }} />
-        </Stack>
-      ) : (
-        <Stack spacing={1.5}>
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            spacing={1.5}
-            justifyContent="space-between"
-          >
-            <Stack direction="row" spacing={1.25} alignItems="center">
+    <>
+      <Box
+        sx={{
+          display: { xs: 'block', sm: 'none' },
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+          overflow: 'hidden',
+        }}
+      >
+        {rows.length === 0 ? (
+          <Stack spacing={0.75} alignItems="center" sx={{ px: 1.25, py: 4, textAlign: 'center' }}>
+            <Iconify
+              icon="solar:calendar-minimalistic-bold-duotone"
+              sx={{ width: 34, height: 34, color: 'text.disabled' }}
+            />
+            <Typography color="text.secondary">No leave allocation found for this year.</Typography>
+          </Stack>
+        ) : (
+          rows.map((row, index) => {
+            const usagePct = getUsagePct(row);
+            const isLowBalance = !row.isUnlimited && row.remaining <= 2 && row.total > 0;
+            const rowKey = row.leaveTypeId || row.leaveTypeName;
+
+            return (
               <Box
+                key={rowKey}
                 sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 1.5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'success.main',
-                  bgcolor: 'success.lighter',
+                  p: 1.25,
+                  borderTop: index === 0 ? 0 : '1px solid',
+                  borderColor: 'divider',
                 }}
               >
-                <Iconify icon="solar:calendar-add-bold-duotone" width={24} />
-              </Box>
-              <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                  Available balance
-                </Typography>
-                <Stack direction="row" alignItems="baseline" spacing={0.75}>
-                  <Typography variant="h3" sx={{ fontWeight: 800, lineHeight: 1 }}>
-                    {overview.remainingLeaves}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
-                    / {formatLeaveDays(overview.totalLeaves)}
-                  </Typography>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+                  <Box
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      flexShrink: 0,
+                      borderRadius: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: row.isUnlimited
+                        ? 'info.main'
+                        : isLowBalance
+                          ? 'error.main'
+                          : 'primary.main',
+                      bgcolor: row.isUnlimited
+                        ? 'info.lighter'
+                        : isLowBalance
+                          ? 'error.lighter'
+                          : 'primary.lighter',
+                    }}
+                  >
+                    <Iconify icon="solar:calendar-mark-bold-duotone" width={18} />
+                  </Box>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 800, overflowWrap: 'anywhere' }}>
+                      {row.leaveTypeName}
+                    </Typography>
+                    {row.isUnlimited && (
+                      <Typography variant="caption" color="text.secondary">
+                        negative balance allowed
+                      </Typography>
+                    )}
+                  </Box>
+                  {row.isUnlimited ? (
+                    <Chip size="small" color="info" variant="soft" label="Unlimited" />
+                  ) : (
+                    <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                      {formatLeaveDays(row.remaining)}
+                    </Typography>
+                  )}
                 </Stack>
+
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                    gap: 1,
+                    mt: 1,
+                  }}
+                >
+                  <LeaveMetric
+                    label="Entitled"
+                    value={row.isUnlimited ? '-' : formatLeaveDays(row.total)}
+                  />
+                  <LeaveMetric label="Used" value={formatLeaveDays(row.used)} />
+                  <LeaveMetric label="Pending" value={formatLeaveDays(row.pendingDays)} />
+                </Box>
+
+                <Box sx={{ mt: 1 }}>
+                  {row.isUnlimited ? (
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                      No limit
+                    </Typography>
+                  ) : (
+                    <Stack spacing={0.5}>
+                      <Stack direction="row" justifyContent="space-between">
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontWeight: 700 }}
+                        >
+                          Utilization
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color={isLowBalance ? 'error.main' : 'text.secondary'}
+                          sx={{ fontWeight: 800 }}
+                        >
+                          {isLowBalance ? `Low - ${usagePct}%` : `${usagePct}%`}
+                        </Typography>
+                      </Stack>
+                      <LinearProgress
+                        variant="determinate"
+                        value={usagePct}
+                        color={usagePct >= 80 ? 'error' : usagePct >= 50 ? 'warning' : 'success'}
+                        sx={{ height: 6, borderRadius: 999, bgcolor: 'background.neutral' }}
+                      />
+                    </Stack>
+                  )}
+                </Box>
               </Box>
-            </Stack>
+            );
+          })
+        )}
+      </Box>
 
-            <Stack
-              direction="row"
-              spacing={1}
-              flexWrap="wrap"
-              useFlexGap
-              sx={{ alignItems: 'center' }}
-            >
-              <Chip
-                size="small"
-                color="warning"
-                variant="soft"
-                label={`${formatLeaveDays(overview.usedLeaves)} used`}
-                sx={{ fontWeight: 700 }}
-              />
-              <Chip
-                size="small"
-                color="info"
-                variant="soft"
-                label={`${overview.pendingLeaves} pending`}
-                sx={{ fontWeight: 700 }}
-              />
-              <Chip
-                size="small"
-                color="primary"
-                variant="soft"
-                label={`${usagePct}% utilized`}
-                sx={{ fontWeight: 700 }}
-              />
-            </Stack>
-          </Stack>
-
-          <LinearProgress
-            variant="determinate"
-            value={usagePct}
-            color={usagePct >= 80 ? 'error' : usagePct >= 50 ? 'warning' : 'success'}
-            sx={{ height: 8, borderRadius: 999, bgcolor: 'background.neutral' }}
-          />
-        </Stack>
-      )}
-    </Card>
-  );
-};
-
-const LeaveTypeSummaryCard = ({ row }: { row: LeaveTypeBreakdown }) => {
-  const usagePct = row.total > 0 ? Math.min(100, Math.round((row.used / row.total) * 100)) : 0;
-  const progressColor: 'success' | 'warning' | 'error' =
-    usagePct >= 80 ? 'error' : usagePct >= 50 ? 'warning' : 'success';
-  const isLowBalance = row.remaining <= 2 && row.total > 0;
-
-  return (
-    <Card
-      variant="outlined"
-      sx={{
-        p: 2,
-        height: 1,
-        borderRadius: 2,
-        borderColor: isLowBalance ? 'error.light' : 'divider',
-        bgcolor: isLowBalance ? 'error.lighter' : 'background.paper',
-      }}
-    >
-      <Stack spacing={1.75} sx={{ height: 1 }}>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1.5}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
-            <Box
+      <TableContainer
+        sx={{
+          display: { xs: 'none', sm: 'block' },
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+          overflowX: 'auto',
+        }}
+      >
+        <Table size="small" sx={{ minWidth: 760 }}>
+          <TableHead>
+            <TableRow
               sx={{
-                width: 36,
-                height: 36,
-                flexShrink: 0,
-                borderRadius: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: isLowBalance ? 'error.main' : 'primary.main',
-                bgcolor: isLowBalance ? 'error.light' : 'primary.lighter',
+                bgcolor: 'background.neutral',
+                '& th': {
+                  py: 1,
+                  color: 'text.secondary',
+                  fontSize: 12,
+                  fontWeight: 800,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                },
               }}
             >
-              <Iconify icon="solar:calendar-mark-bold-duotone" width={20} />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography
-                variant="subtitle2"
-                title={row.leaveTypeName}
-                sx={{
-                  fontWeight: 700,
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {row.leaveTypeName}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {usagePct}% used
-              </Typography>
-            </Box>
-          </Stack>
+              <TableCell>Leave type</TableCell>
+              <TableCell align="right">Available</TableCell>
+              <TableCell align="right">Entitled</TableCell>
+              <TableCell align="right">Used</TableCell>
+              <TableCell align="right">Pending</TableCell>
+              <TableCell sx={{ width: 180 }}>Utilization</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} sx={{ py: 4, borderBottom: 0 }}>
+                  <Stack spacing={0.75} alignItems="center" sx={{ textAlign: 'center' }}>
+                    <Iconify
+                      icon="solar:calendar-minimalistic-bold-duotone"
+                      sx={{ width: 34, height: 34, color: 'text.disabled' }}
+                    />
+                    <Typography color="text.secondary">
+                      No leave allocation found for this year.
+                    </Typography>
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            ) : (
+              rows.map((row) => {
+                const usagePct = getUsagePct(row);
+                const isLowBalance = !row.isUnlimited && row.remaining <= 2 && row.total > 0;
+                const rowKey = row.leaveTypeId || row.leaveTypeName;
 
-          {isLowBalance && (
-            <Chip
-              size="small"
-              color="error"
-              variant="soft"
-              icon={<Iconify icon="solar:danger-triangle-bold" width={14} />}
-              label="Low"
-              sx={{ fontWeight: 700 }}
-            />
-          )}
-        </Stack>
-
-        <Box>
-          <Stack direction="row" alignItems="baseline" spacing={0.75}>
-            <Typography variant="h4" sx={{ lineHeight: 1, fontWeight: 800 }}>
-              {row.remaining}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
-              / {formatLeaveDays(row.total)}
-            </Typography>
-          </Stack>
-          <Typography variant="caption" color="text.secondary">
-            remaining balance
-          </Typography>
-        </Box>
-
-        <Box>
-          <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
-            <Typography variant="caption" color="text.secondary">
-              Usage
-            </Typography>
-            <Typography variant="caption" sx={{ fontWeight: 700 }}>
-              {usagePct}%
-            </Typography>
-          </Stack>
-          <LinearProgress
-            variant="determinate"
-            value={usagePct}
-            color={progressColor}
-            sx={{ height: 8, borderRadius: 999 }}
-          />
-        </Box>
-
-        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1, mt: 'auto' }}>
-          <Chip
-            size="small"
-            color="warning"
-            variant="soft"
-            label={`${formatLeaveDays(row.used)} used`}
-            sx={{ fontWeight: 700 }}
-          />
-          <Chip
-            size="small"
-            color="info"
-            variant="soft"
-            label={`${row.pending} pending`}
-            sx={{ fontWeight: 700 }}
-          />
-        </Stack>
-      </Stack>
-    </Card>
+                return (
+                  <TableRow
+                    key={rowKey}
+                    hover
+                    sx={{
+                      '& td': {
+                        py: 1,
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                      },
+                      '&:last-of-type td': { borderBottom: 0 },
+                    }}
+                  >
+                    <TableCell>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+                        <Box
+                          sx={{
+                            width: 28,
+                            height: 28,
+                            flexShrink: 0,
+                            borderRadius: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: row.isUnlimited
+                              ? 'info.main'
+                              : isLowBalance
+                                ? 'error.main'
+                                : 'primary.main',
+                            bgcolor: row.isUnlimited
+                              ? 'info.lighter'
+                              : isLowBalance
+                                ? 'error.lighter'
+                                : 'primary.lighter',
+                          }}
+                        >
+                          <Iconify icon="solar:calendar-mark-bold-duotone" width={17} />
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography
+                            variant="body2"
+                            title={row.leaveTypeName}
+                            sx={{
+                              fontWeight: 800,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {row.leaveTypeName}
+                          </Typography>
+                          {row.isUnlimited && (
+                            <Typography variant="caption" color="text.secondary">
+                              negative balance allowed
+                            </Typography>
+                          )}
+                        </Box>
+                      </Stack>
+                    </TableCell>
+                    <TableCell align="right">
+                      {row.isUnlimited ? (
+                        <Chip size="small" color="info" variant="soft" label="Unlimited" />
+                      ) : (
+                        <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                          {formatLeaveDays(row.remaining)}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell align="right">
+                      {row.isUnlimited ? '-' : formatLeaveDays(row.total)}
+                    </TableCell>
+                    <TableCell align="right">{formatLeaveDays(row.used)}</TableCell>
+                    <TableCell align="right">{formatLeaveDays(row.pendingDays)}</TableCell>
+                    <TableCell>
+                      {row.isUnlimited ? (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontWeight: 700 }}
+                        >
+                          No limit
+                        </Typography>
+                      ) : (
+                        <Stack spacing={0.5}>
+                          <Stack direction="row" justifyContent="space-between">
+                            <Typography variant="caption" color="text.secondary">
+                              {usagePct}%
+                            </Typography>
+                            {isLowBalance && (
+                              <Typography
+                                variant="caption"
+                                color="error.main"
+                                sx={{ fontWeight: 800 }}
+                              >
+                                Low
+                              </Typography>
+                            )}
+                          </Stack>
+                          <LinearProgress
+                            variant="determinate"
+                            value={usagePct}
+                            color={
+                              usagePct >= 80 ? 'error' : usagePct >= 50 ? 'warning' : 'success'
+                            }
+                            sx={{ height: 6, borderRadius: 999, bgcolor: 'background.neutral' }}
+                          />
+                        </Stack>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </>
   );
 };
 
 type LeaveBalanceProps = {
   mode?: 'hr' | 'self';
   showBreadcrumbs?: boolean;
-  showSummaryCards?: boolean;
   showSelfAccessError?: boolean;
+  /** Leave Center uses its own snapshot; keep the detailed ledger for profile/full balance views. */
+  showBalanceLedger?: boolean;
   overviewState?: ReturnType<typeof useLeaveOverview>;
   /** When provided, displays leave data for this specific employee instead of the logged-in user. */
   employeeId?: string;
@@ -270,8 +422,8 @@ type LeaveBalanceProps = {
 const LeaveBalance = ({
   mode = 'hr',
   showBreadcrumbs = true,
-  showSummaryCards = true,
   showSelfAccessError = true,
+  showBalanceLedger = true,
   overviewState,
   employeeId,
 }: LeaveBalanceProps) => {
@@ -384,8 +536,7 @@ const LeaveBalance = ({
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-      {/* Breadcrumbs */}
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
       {showBreadcrumbs && (
         <CustomBreadcrumbs
           heading={isSelfMode ? 'My Leave Balance' : 'Leave Balance'}
@@ -398,175 +549,94 @@ const LeaveBalance = ({
                   { name: 'Leave Balance' },
                 ]
           }
-          description="View your leave quota, breakdown by leave type, and full leave history."
+          description="Leave quota, breakdown by leave type, and request history."
         />
       )}
 
       {showSelfAccessError && selfAccessError && (
-        <Card sx={{ mt: 1, p: 2 }}>
+        <Box
+          sx={{
+            p: 1.25,
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+            bgcolor: 'background.paper',
+          }}
+        >
           <Alert severity="warning">
             Your user is not linked to an employee profile. Contact admin/HR.
           </Alert>
-        </Card>
+        </Box>
       )}
 
-      {/* ── Section A: Summary Stat Cards ── */}
-      {showSummaryCards && !selfAccessError && (
-        <BalanceSummaryStrip overview={overview} isLoading={isLoadingBalance} />
-      )}
-
-      {/* ── Section B: Leave Type Breakdown ── */}
       {!selfAccessError && (
-        <Stack spacing={1.5} sx={{ mt: 2 }}>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={1}
-            alignItems={{ xs: 'flex-start', sm: 'center' }}
-            justifyContent="space-between"
-          >
-            <Stack direction="row" alignItems="center" gap={1}>
-              <Iconify
+        <>
+          {showBalanceLedger && (
+            <Stack spacing={1}>
+              <LeaveSectionHeader
                 icon="solar:pie-chart-2-bold-duotone"
-                sx={{ color: 'primary.main', width: 22, height: 22 }}
+                title="Leave Balance"
+                meta={
+                  <Chip
+                    size="small"
+                    variant="soft"
+                    color="primary"
+                    label={`${breakdownRows.length} type${breakdownRows.length === 1 ? '' : 's'}`}
+                    sx={{ fontWeight: 800 }}
+                  />
+                }
               />
-              <Box>
-                <Stack direction="row" alignItems="center" gap={0.75}>
-                  <Typography variant="h6">Leave Type Breakdown</Typography>
-                  <CustomTooltip
-                    arrow
-                    placement="right"
-                    title="Shows allocation and usage per leave type. Red remaining balance means you are running low."
-                  >
-                    <Iconify
-                      icon="lucide:info"
-                      sx={{ cursor: 'pointer' }}
-                      fontSize={15}
-                      color="info.main"
-                    />
-                  </CustomTooltip>
-                </Stack>
-                <Typography variant="body2" color="text.secondary">
-                  Allocation and usage by leave type.
-                </Typography>
-              </Box>
+              <LeaveBalanceLedger rows={breakdownRows} isLoading={isLoadingBalance} />
             </Stack>
-
-            <Chip
-              size="small"
-              variant="soft"
-              color="primary"
-              label={`${breakdownRows.length} leave type${breakdownRows.length === 1 ? '' : 's'}`}
-              sx={{ fontWeight: 700 }}
-            />
-          </Stack>
-
-          {isLoadingBalance ? (
-            <Grid container spacing={1.5}>
-              {[1, 2, 3].map((item) => (
-                <Grid key={item} size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}>
-                  <Skeleton variant="rounded" height={190} sx={{ borderRadius: 2 }} />
-                </Grid>
-              ))}
-            </Grid>
-          ) : breakdownRows.length ? (
-            <Grid container spacing={1.5}>
-              {breakdownRows.map((row) => (
-                <Grid
-                  key={row.leaveTypeId || row.leaveTypeName}
-                  size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}
-                >
-                  <LeaveTypeSummaryCard row={row} />
-                </Grid>
-              ))}
-            </Grid>
-          ) : (
-            <Card
-              variant="outlined"
-              sx={{
-                p: 4,
-                minHeight: 180,
-                borderRadius: 2,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Stack spacing={1} alignItems="center">
-                <Iconify
-                  icon="solar:calendar-minimalistic-bold-duotone"
-                  sx={{ width: 48, height: 48, color: 'text.disabled' }}
-                />
-                <Typography color="text.secondary">
-                  No leave type allocation found for this year.
-                </Typography>
-              </Stack>
-            </Card>
           )}
-        </Stack>
-      )}
 
-      {/* ── Section C: My Leave History ── */}
-      {!selfAccessError && (
-        <Card variant="outlined" sx={{ mt: 2, p: 1.5, mb: 1, borderRadius: 2, boxShadow: 'none' }}>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={1}
-            alignItems={{ xs: 'flex-start', sm: 'center' }}
-            justifyContent="space-between"
-            sx={{ mb: 1.5 }}
-          >
-            <Stack direction="row" alignItems="center" gap={1}>
-              <Iconify
-                icon="solar:history-bold-duotone"
-                sx={{ color: 'primary.main', width: 22, height: 22 }}
-              />
-              <Box>
-                <Typography variant="h6">
-                  {isEmployeeProfileMode ? 'Employee Leave History' : 'My Leave History'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Search, review, and export leave request records.
-                </Typography>
-              </Box>
-            </Stack>
-            <Chip
-              size="small"
-              variant="soft"
-              color="info"
-              label={`${historyRows.length} shown`}
-              sx={{ fontWeight: 700 }}
-            />
-          </Stack>
-
-          <CustomizableTable
-            tableId="leave-balance-history"
-            columns={historyColumns}
-            data={historyRows}
-            isLoading={isLoadingHistory}
-            tableTitle="Leave History"
-            noDataText={
-              <Box sx={{ py: 4, textAlign: 'center' }}>
-                <Iconify
-                  icon="solar:document-bold-duotone"
-                  sx={{ width: 48, height: 48, color: 'text.disabled', mb: 1 }}
+          <Stack spacing={1}>
+            <LeaveSectionHeader
+              icon="solar:history-bold-duotone"
+              title={isEmployeeProfileMode ? 'Employee Leave History' : 'My Leave History'}
+              meta={
+                <Chip
+                  size="small"
+                  variant="soft"
+                  color="info"
+                  label={`${historyRows.length} shown`}
+                  sx={{ fontWeight: 800 }}
                 />
-                <Typography color="text.secondary">
-                  No leave history found for this academic year.
+              }
+            />
+
+            <CustomizableTable
+              tableId="leave-balance-history"
+              columns={historyColumns}
+              data={historyRows}
+              isLoading={isLoadingHistory}
+              tableTitle="Leave History"
+              noDataText={
+                <Box sx={{ py: 4, textAlign: 'center' }}>
+                  <Iconify
+                    icon="solar:document-bold-duotone"
+                    sx={{ width: 48, height: 48, color: 'text.disabled', mb: 1 }}
+                  />
+                  <Typography color="text.secondary">
+                    No leave history found for this academic year.
+                  </Typography>
+                </Box>
+              }
+            />
+            {historyData &&
+              typeof historyData.totalCount === 'number' &&
+              historyData.totalCount > (historyData.items?.length ?? 0) && (
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: 'block', px: 0.5 }}
+                >
+                  Showing {historyData.items?.length ?? 0} of {historyData.totalCount} leave
+                  requests for this academic year (max {100} per page).
                 </Typography>
-              </Box>
-            }
-          />
-          {historyData &&
-            typeof historyData.totalCount === 'number' &&
-            historyData.totalCount > (historyData.items?.length ?? 0) && (
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                Showing {historyData.items?.length ?? 0} of {historyData.totalCount} leave requests
-                for this academic year (max {100} per page).
-              </Typography>
-            )}
-        </Card>
+              )}
+          </Stack>
+        </>
       )}
     </Box>
   );

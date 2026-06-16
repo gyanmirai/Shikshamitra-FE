@@ -144,33 +144,7 @@ const ExamType = ({ inquiryPreference }: any) => {
             },
           },
         ]}
-        data={[
-          {
-            id: '1',
-            examType: 'Midterm Exam',
-            class: '10th Grade',
-          },
-          {
-            id: '2',
-            examType: 'Final Exam',
-            class: '12th Grade',
-          },
-          {
-            id: '3',
-            examType: 'Unit Test',
-            class: '8th Grade',
-          },
-          {
-            id: '4',
-            examType: 'Weekly Quiz',
-            class: '7th Grade',
-          },
-          {
-            id: '5',
-            examType: 'Practical Exam',
-            class: '11th Grade',
-          },
-        ]}
+        data={[]}
       />{' '}
       <CustomDialog
         open={inquiryPreference.value}

@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react';
 import { useDispatch } from 'react-redux';
 import { useState, useCallback } from 'react';
 import { clearUser } from 'src/redux/auth/authSlice';
+import { clearCachedAuthSession } from 'src/redux/session-cache';
 
 // ----------------------------------------------------------------------
 
@@ -21,6 +22,7 @@ export function SignOutButton({ onClose, ...other }: Props) {
   const handleLogout = useCallback(async () => {
     try {
       setLoading(true);
+      clearCachedAuthSession();
       dispatch(clearUser());
       await signOut({
         // callbackUrl: `/login`,

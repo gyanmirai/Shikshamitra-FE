@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 import { testIds } from './selectors';
 import { createEmployeeFixture } from './employee-fixtures';
@@ -11,6 +11,13 @@ import {
 } from './employee-api';
 
 test.describe('HR Employee status', () => {
+  const openStatusDropdown = async (page: Page) => {
+    await page
+      .getByTestId(testIds.statusDialog)
+      .getByRole('combobox', { name: /Select Status/i })
+      .click();
+  };
+
   test('changes status through UI and validates required remarks', async ({ page }) => {
     await gotoEmployeeList(page);
     const employee = await createEmployeeFromExistingDefaults(page, createEmployeeFixture());
@@ -18,7 +25,7 @@ test.describe('HR Employee status', () => {
     await openFirstRowAction(page, 'Change Status');
 
     await expect(page.getByTestId(testIds.statusDialog)).toBeVisible();
-    await page.getByLabel(/Status/i).click();
+    await openStatusDropdown(page);
     await page.getByRole('option', { name: /Left/i }).click();
     await page.getByTestId(testIds.statusUpdateButton).click();
     await expect(page.getByText(/remarks|required/i)).toBeVisible();
@@ -89,8 +96,8 @@ test.describe('HR Employee status', () => {
     await openFirstRowAction(page, 'Change Status');
 
     await expect(page.getByTestId(testIds.statusDialog)).toBeVisible();
-    await page.getByLabel(/Status/i).click();
-    await page.getByRole('option', { name: /^Inactive$/i }).click();
+    await openStatusDropdown(page);
+    await page.getByRole('option', { name: /^Inactive\b/i }).click();
 
     await expect(page.getByTestId(testIds.managerDeactivationWarningDialog)).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Cannot Deactivate Manager' })).toBeVisible();
@@ -118,8 +125,8 @@ test.describe('HR Employee status', () => {
 
     await openFirstRowAction(page, 'Change Status');
     await expect(page.getByTestId(testIds.statusDialog)).toBeVisible();
-    await page.getByLabel(/Status/i).click();
-    await page.getByRole('option', { name: /^Inactive$/i }).click();
+    await openStatusDropdown(page);
+    await page.getByRole('option', { name: /^Inactive\b/i }).click();
 
     await expect(page.getByTestId(testIds.managerDeactivationWarningDialog)).toBeHidden();
     await expect(page.getByTestId(testIds.statusUpdateButton)).toBeEnabled();
@@ -158,8 +165,8 @@ test.describe('HR Employee status', () => {
     await openFirstRowAction(page, 'Change Status');
 
     await expect(page.getByTestId(testIds.statusDialog)).toBeVisible();
-    await page.getByLabel(/Status/i).click();
-    await page.getByRole('option', { name: /^Inactive$/i }).click();
+    await openStatusDropdown(page);
+    await page.getByRole('option', { name: /^Inactive\b/i }).click();
 
     await expect(
       page.getByText('Unable to verify reporting-manager assignments. Please try again.')

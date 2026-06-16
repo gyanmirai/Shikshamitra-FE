@@ -141,6 +141,9 @@ const EXCEPTION_FILTERS: Array<{ label: string; value: ExceptionFilter }> = [
   { label: 'Locked', value: 'Locked' },
 ];
 
+const REGISTER_TABLE_MIN_WIDTH = 1080;
+const REGISTER_DAY_TABLE_MIN_WIDTH = 1120;
+
 const normalizeStatus = (
   value: RegisterStatus | number | string | null | undefined
 ): RegisterStatus => {
@@ -549,8 +552,8 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'status',
       label: 'Status',
-      width: 110,
-      minWidth: 110,
+      width: 130,
+      minWidth: 130,
       sticky: true,
       align: 'left',
       isSort: true,
@@ -744,14 +747,18 @@ const AttendanceTrackingScreen = () => {
             height: { xs: 300, sm: 340, md: 380, lg: 420, xl: 460 },
             maxHeight: { xs: 300, sm: 340, md: 380, lg: 420, xl: 460 },
             overflowY: 'visible',
-            overflowX: 'hidden',
+            overflowX: 'auto',
             '& .simplebar-content-wrapper': {
-              overflowX: 'hidden !important',
+              overflowX: 'auto !important',
               overflowY: 'visible !important',
             },
+            '& .simplebar-content': {
+              minWidth: '100%',
+            },
             '& .MuiTable-root': {
+              minWidth: REGISTER_DAY_TABLE_MIN_WIDTH,
               width: '100%',
-              tableLayout: 'fixed',
+              tableLayout: 'auto',
               borderSpacing: 0,
             },
             '& .MuiTableCell-root': {
@@ -817,8 +824,8 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'employeeName',
       label: 'Employee',
-      width: 180,
-      minWidth: 180,
+      width: 220,
+      minWidth: 220,
       sticky: true,
       align: 'left',
       stickyPosition: 'left',
@@ -841,8 +848,8 @@ const AttendanceTrackingScreen = () => {
       id: 'present',
       label: 'Attendance',
       align: 'left',
-      width: 120,
-      minWidth: 120,
+      width: 140,
+      minWidth: 140,
       filterType: 'number',
       isSort: true,
       isFilter: true,
@@ -861,8 +868,8 @@ const AttendanceTrackingScreen = () => {
       id: 'exceptions',
       label: 'Exceptions',
       align: 'left',
-      width: 170,
-      minWidth: 170,
+      width: 190,
+      minWidth: 190,
       isSort: false,
       isFilter: false,
       render: (_value, row: any) => (
@@ -898,8 +905,8 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'employeeGroup',
       label: 'Group',
-      width: 100,
-      minWidth: 100,
+      width: 130,
+      minWidth: 130,
       align: 'left',
       filterType: 'enum',
       enumOptions: [
@@ -925,8 +932,8 @@ const AttendanceTrackingScreen = () => {
       id: 'editability',
       label: 'Editability',
       align: 'left',
-      width: 130,
-      minWidth: 130,
+      width: 145,
+      minWidth: 145,
       isSort: false,
       isFilter: false,
       render: (_value, row: any) => (
@@ -945,8 +952,8 @@ const AttendanceTrackingScreen = () => {
     {
       id: 'actions',
       label: 'Actions',
-      width: 80,
-      minWidth: 80,
+      width: 96,
+      minWidth: 96,
       align: 'left',
       isSort: false,
       isFilter: false,
@@ -1534,7 +1541,14 @@ const AttendanceTrackingScreen = () => {
           sx: {
             maxHeight: 'none',
             overflowY: 'visible',
-            overflowX: 'hidden',
+            overflowX: 'auto',
+            '& .simplebar-content-wrapper': {
+              overflowX: 'auto !important',
+              overflowY: 'visible !important',
+            },
+            '& .simplebar-content': {
+              minWidth: '100%',
+            },
             '& .MuiTableHead-root .MuiTableRow-root > .MuiTableCell-root:first-of-type': {
               width: 44,
               minWidth: 44,
@@ -1555,8 +1569,9 @@ const AttendanceTrackingScreen = () => {
               m: 0,
             },
             '& .MuiTable-root': {
+              minWidth: REGISTER_TABLE_MIN_WIDTH,
               width: '100%',
-              tableLayout: 'fixed',
+              tableLayout: 'auto',
             },
           },
         }}

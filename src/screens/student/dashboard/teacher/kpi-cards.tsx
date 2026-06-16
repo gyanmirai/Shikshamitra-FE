@@ -4,92 +4,53 @@ import { academicPaths } from 'src/constants/academic-menu';
 
 import CompactKPICard from '../principal/kpi-card-item';
 
-interface KPIItem {
+type KpiStatus = 'info' | 'success' | 'warning' | 'primary' | 'error' | 'secondary';
+
+const items: {
   id: string;
   title: string;
   value: string;
-  chart: {
-    type?: 'line' | 'bar' | 'area' | 'donut' | 'pie' | 'radialBar';
-    series?: any[];
-    colors?: string[];
-    width?: number;
-    height?: number;
-    labels?: string[];
-  };
-  status: 'info' | 'success' | 'warning' | 'primary' | 'error' | 'secondary';
+  status: KpiStatus;
   path?: string;
   tooltip?: string;
-}
-
-const kpiData: KPIItem[] = [
+}[] = [
   {
     id: 'CLASS_STRENGTH',
     title: 'Class Strength',
-    value: '45',
-    tooltip: 'Total number of students in the class, including boys and girls.',
-    status: 'info' as const,
-    chart: {
-      type: 'bar' as const,
-      series: [20, 25],
-      labels: ['Boys', 'Girls'],
-      colors: ['#00B8D9', '#FF5630'],
-      width: 30,
-    },
+    value: '-',
+    tooltip: 'Total number of students in the class.',
+    status: 'info',
     path: studentPaths.records.studentList,
   },
   {
     id: 'PRESENT_TODAY',
     title: 'Present Today',
-    value: '42',
-    tooltip: "Shows today's attendance status for the class. View present and absent students.",
-    status: 'success' as const,
-    chart: {
-      type: 'donut' as const,
-      series: [42, 3],
-      labels: ['Present', 'Absent'],
-      colors: ['#22C55E', '#EF4444'],
-      width: 56,
-      height: 56,
-    },
+    value: '-',
+    tooltip: "Today's attendance status for the class.",
+    status: 'success',
     path: studentPaths.attendance.markAttendance,
   },
   {
     id: 'ASSIGNMENT_STATUS',
     title: 'Pending Assignments',
-    value: '12',
-    tooltip: 'Number of assignments that are still pending submission from students.',
-    status: 'success' as const,
-    chart: {
-      type: 'donut' as const,
-      series: [12, 30],
-      labels: ['Pending', 'Completed'],
-      colors: ['#FF5630', '#22C55E'],
-      width: 56,
-      height: 56,
-    },
+    value: '-',
+    tooltip: 'Assignments pending submission from students.',
+    status: 'warning',
     path: academicPaths.homework.learningTasks,
   },
   {
     id: 'CLASS_PERFORMANCE',
     title: 'Class Performance',
-    value: '78%',
-    tooltip: 'Average academic performance of the class based on recorded exam marks.',
-    status: 'primary' as const,
-    chart: {
-      type: 'donut' as const,
-      series: [78, 22],
-      labels: ['Score', 'Remaining'],
-      colors: ['#22C55E', '#FF5630'],
-      width: 56,
-      height: 56,
-    },
+    value: '-',
+    tooltip: 'Average academic performance of the class.',
+    status: 'primary',
     path: academicPaths.examination.recordMarks,
   },
 ];
 
 const TeacherKPICards = () => (
   <Grid container spacing={1}>
-    {kpiData.map((kpi) => (
+    {items.map((kpi) => (
       <Grid size={{ xs: 12, sm: 6, md: 3 }} key={kpi.id}>
         <CompactKPICard
           title={kpi.title}
@@ -97,7 +58,6 @@ const TeacherKPICards = () => (
           status={kpi.status}
           path={kpi.path}
           tooltip={kpi.tooltip}
-          chart={kpi.chart}
         />
       </Grid>
     ))}

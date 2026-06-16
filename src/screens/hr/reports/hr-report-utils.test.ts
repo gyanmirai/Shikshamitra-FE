@@ -32,7 +32,7 @@ const source: HrReportSource = {
       sortable: true,
       groupable: true,
       summarizable: false,
-      operators: ['equals', 'contains'],
+      operators: ['equals', 'contains', 'in'],
       options: [],
     },
     {
@@ -145,6 +145,9 @@ describe('HR report utils', () => {
       reportType: 'Employee Directory',
       dataSource: 'employee',
       format: 'excel',
+      templateId: 'template-1',
+      templateName: 'Employee Directory',
+      sourceAction: 'manualExport',
       page: 1,
       pageSize: DEFAULT_HR_REPORT_PAGE_SIZE,
       columns: ['employeeName'],
@@ -209,9 +212,13 @@ describe('HR report utils', () => {
       cleanHrReportConditions([
         { field: '', operator: 'equals', value: 'x' },
         { field: 'employeeCode', operator: 'equals', value: '' },
-        { field: 'employeeCode', operator: 'in', values: ['EMP-1'] },
+        { field: 'employeeCode', operator: 'in', values: [' EMP-1 ', ''] },
+        { field: 'employeeCode', operator: 'in', value: ' EMP-2 ' },
       ])
-    ).toEqual([{ field: 'employeeCode', operator: 'in', values: ['EMP-1'] }]);
+    ).toEqual([
+      { field: 'employeeCode', operator: 'in', value: undefined, values: ['EMP-1'] },
+      { field: 'employeeCode', operator: 'in', value: undefined, values: ['EMP-2'] },
+    ]);
   });
 
   it('falls back to report name when an export file name is missing', () => {

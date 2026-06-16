@@ -637,8 +637,9 @@ const StudentProfileView = () => {
                   transition: 'font-size 0.3s ease-in-out',
                 }}
               >
-                {currentStudent?.lastName || 'Patel'} {currentStudent?.firstName || 'Ananya'}{' '}
-                {currentStudent?.middleName || 'Kumar'}
+                {[currentStudent?.lastName, currentStudent?.firstName, currentStudent?.middleName]
+                  .filter(Boolean)
+                  .join(' ') || '-'}
               </Typography>
             </Box>
             <Divider
@@ -665,7 +666,7 @@ const StudentProfileView = () => {
                   transition: 'font-size 0.3s ease-in-out',
                 }}
               >
-                {currentStudent?.grNoRecord || '2025000001'}
+                {currentStudent?.grNoRecord || '-'}
               </Typography>
             </Box>
             <Divider
@@ -692,7 +693,7 @@ const StudentProfileView = () => {
                   transition: 'font-size 0.3s ease-in-out',
                 }}
               >
-                {currentStudent?.rollNo || '1'}
+                {currentStudent?.rollNo || '-'}
               </Typography>
             </Box>
             <Divider
@@ -719,7 +720,7 @@ const StudentProfileView = () => {
                   transition: 'font-size 0.3s ease-in-out',
                 }}
               >
-                {currentStudent?.standard?.name || '10'}-{currentStudent?.division?.name || 'A'}
+                {currentStudent?.standard?.name || '-'}-{currentStudent?.division?.name || '-'}
               </Typography>
             </Box>
             <Divider
@@ -746,7 +747,7 @@ const StudentProfileView = () => {
                   transition: 'font-size 0.3s ease-in-out',
                 }}
               >
-                {currentStudent?.educationMedium?.name || 'English'}
+                {currentStudent?.educationMedium?.name || '-'}
               </Typography>
             </Box>
           </Box>

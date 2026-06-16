@@ -202,17 +202,6 @@ export const StudentRegistrationApi = api.injectEndpoints({
       transformResponse: unwrapResultData,
       invalidatesTags: [studentRegistrationType.studentDocument, studentType.student],
     }),
-    studentUpdateDocument: builder.mutation({
-      query: ({ studentId, documentId, body }) => ({
-        url: `/student-enrollment/${studentId}/documents/${documentId}`,
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        body,
-      }),
-      invalidatesTags: [studentRegistrationType.studentDocument],
-    }),
     getStudentDocuments: builder.query({
       query: ({ studentId }) => ({
         url: `/student/enrollment/registrations/${studentId}/documents/required-status`,
@@ -225,12 +214,6 @@ export const StudentRegistrationApi = api.injectEndpoints({
         url: `/student/enrollment/registrations/${studentId}/documents`,
       }),
       transformResponse: unwrapResultData,
-      providesTags: [studentRegistrationType.studentDocument],
-    }),
-    getStudentDocumentById: builder.query({
-      query: ({ studentId, documentId }) => ({
-        url: `/app/student-document/document?studentId=${studentId}&documentId=${documentId}`,
-      }),
       providesTags: [studentRegistrationType.studentDocument],
     }),
     downloadStudentDocument: builder.query({
@@ -270,11 +253,8 @@ export const {
   useUpdateStudentMedicalDetailsMutation,
 
   useUploadStudentDocumentsMutation,
-  useStudentUpdateDocumentMutation,
   useGetStudentDocumentsQuery,
   useGetStudentDocumentListQuery,
-  useGetStudentDocumentByIdQuery,
-  useLazyGetStudentDocumentByIdQuery,
   useDownloadStudentDocumentQuery,
   useLazyDownloadStudentDocumentQuery,
 

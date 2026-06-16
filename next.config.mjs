@@ -1,9 +1,10 @@
 const isStaticExport = 'false';
+const disableTrailingSlashRedirects = process.env.E2E_DISABLE_TRAILING_SLASH === '1';
 
 const nextConfig = {
   productionBrowserSourceMaps: false,
 
-  trailingSlash: true,
+  trailingSlash: !disableTrailingSlashRedirects,
   basePath: process.env.NEXT_PUBLIC_BASE_PATH,
 
   env: {

@@ -170,6 +170,18 @@ async function resolveAcademicMediumId(page: Page) {
   throw new Error('Seeded academic medium is required for student E2E.');
 }
 
+function currentMonthRange() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const format = (value: Date) =>
+    `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(
+      value.getDate()
+    ).padStart(2, '0')}`;
+
+  return { startDate: format(start), endDate: format(end) };
+}
+
 test.describe('Student module role-login E2E', () => {
   test.skip(!studentE2EEnabled, 'Set E2E_STUDENT_MODULE=1 against a seeded local backend.');
   test.use({ storageState: { cookies: [], origins: [] } });
@@ -208,5 +220,128 @@ test.describe('Student module role-login E2E', () => {
     }
 
     expect(pageErrors, `Student UI page errors: ${pageErrors.join('\n')}`).toEqual([]);
+  });
+
+  test('principal attendance dashboard requests selected month summary params', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const summaryRequests: string[] = [];
+    const { startDate, endDate } = currentMonthRange();
+    let responsePercentage: number | null = null;
+
+    page.on('request', (request) => {
+      if (request.url().includes('/api/students/records/attendance-dashboard-summary')) {
+        summaryRequests.push(request.url());
+      }
+    });
+
+    await login(page, process.env.E2E_PRINCIPAL_EMAIL || 'principal-gseb@ddvs.com');
+    const summaryResponsePromise = page.waitForResponse(
+      (summaryResponse) =>
+        summaryResponse.url().includes('/api/students/records/attendance-dashboard-summary') &&
+        summaryResponse.request().method() === 'GET' &&
+        summaryResponse.ok(),
+      { timeout: 60_000 }
+    );
+    const response = await page.goto('/student/attendance/dashboard', {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
+    const summaryResponse = await summaryResponsePromise;
+    const summary = await summaryResponse.json();
+    responsePercentage = Number(summary?.schoolAttendancePercentage ?? 0);
+
+    expect(response?.status(), 'GET /student/attendance/dashboard').toBeLessThan(400);
+    await expect(page.locator('body')).not.toContainText(
+      /404|This page could not be found|Application error|Unhandled Runtime Error/i,
+      { timeout: 5_000 }
+    );
+    await expect
+      .poll(
+        () =>
+          summaryRequests.some((url) => {
+            const parsed = new URL(url);
+            return (
+              parsed.searchParams.get('startDate') === startDate &&
+              parsed.searchParams.get('endDate') === endDate
+            );
+          }),
+        { timeout: 30_000 }
+      )
+      .toBe(true);
+    await expect(page.getByText(`School Attendance : ${responsePercentage}%`)).toBeVisible({
+      timeout: 15_000,
+    });
+  });
+
+  test('principal leave and absent table sends server paging params', async ({ page }) => {
+    test.setTimeout(120_000);
+    const leaveRequests: string[] = [];
+
+    page.on('request', (request) => {
+      if (request.url().includes('/api/students/attendance/leaves')) {
+        leaveRequests.push(request.url());
+      }
+    });
+
+    await login(page, process.env.E2E_PRINCIPAL_EMAIL || 'principal-gseb@ddvs.com');
+    const response = await page.goto('/student/attendance/leave-absent', {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
+
+    expect(response?.status(), 'GET /student/attendance/leave-absent').toBeLessThan(400);
+    await expect
+      .poll(
+        () =>
+          leaveRequests.some((url) => {
+            const parsed = new URL(url);
+            return (
+              parsed.searchParams.get('skipCount') === '0' &&
+              parsed.searchParams.get('maxResultCount') === '10' &&
+              parsed.searchParams.has('sorting')
+            );
+          }),
+        { timeout: 30_000 }
+      )
+      .toBe(true);
+  });
+
+  test('bulk upload multipart requests include a browser boundary', async ({ page }) => {
+    test.setTimeout(120_000);
+
+    await page.route('**/api/students/bulk-upload', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: '{}',
+      });
+    });
+
+    const uploadRequestPromise = page.waitForRequest(
+      (request) =>
+        request.method() === 'POST' && request.url().includes('/api/students/bulk-upload')
+    );
+
+    await login(page, process.env.E2E_PRINCIPAL_EMAIL || 'principal-gseb@ddvs.com');
+    const response = await page.goto('/student/management?tab=bulkStudentAdd', {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
+    expect(response?.status(), 'GET /student/management?tab=bulkStudentAdd').toBeLessThan(400);
+    await expect(page.getByRole('button', { name: /^Import$/ })).toBeVisible({ timeout: 30_000 });
+
+    const fileChooserPromise = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: /^Import$/ }).click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles({
+      name: 'students.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('FormNumber,FirstName,LastName\nE2E-001,Boundary,Check\n'),
+    });
+
+    const uploadRequest = await uploadRequestPromise;
+    expect(uploadRequest.headers()['content-type']).toMatch(/multipart\/form-data; boundary=/);
   });
 });
