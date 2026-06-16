@@ -40,11 +40,22 @@ const CityComponent = ({
       value={value?.name ? value : null}
       onChange={onChange}
       isOptionEqualToValue={(option, val) => option?.name === val?.name}
-      renderOption={(props, option: any) => (
-        <li {...props} key={option.id}>
-          {`${option?.name}`}
-        </li>
-      )}
+      getOptionKey={(option: any) =>
+        `${option?.countryCode || ''}-${option?.stateCode || ''}-${option?.name || ''}`
+      }
+      renderOption={(props, option: any) => {
+        const { key, ...optionProps } = props;
+        return (
+          <li
+            key={
+              key || `${option?.countryCode || ''}-${option?.stateCode || ''}-${option?.name || ''}`
+            }
+            {...optionProps}
+          >
+            {`${option?.name}`}
+          </li>
+        );
+      }}
       disabled={!stateValue?.name}
       options={allCities || []}
       getOptionLabel={(option: any) => `${option?.name || ''}`}

@@ -8,9 +8,6 @@ export const StudentCertificateApi = api.injectEndpoints({
         url: `/students/upload-certificate?studentId=${studentId}`,
         method: 'POST',
         body,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
       }),
       invalidatesTags: [studentCertificateType.enrollmentReportApi],
     }),

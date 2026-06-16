@@ -3,14 +3,19 @@ export type GrantedPermission = {
   isGranted: boolean;
 };
 
+export type PermissionName = string | string[];
+
 const FEE_ADJUSTMENT_PERMISSION = 'Finance.Fees.Adjustment';
 const FEE_ADJUSTMENT_LEGACY_PREFIX = 'Finance.Adjustment';
 
 export const hasGrantedPermission = (
   permissions: GrantedPermission[] | undefined,
-  permissionName?: string
-) => {
+  permissionName?: PermissionName
+): boolean => {
   if (!permissionName || !permissions?.length) return false;
+  if (Array.isArray(permissionName)) {
+    return permissionName.some((name) => hasGrantedPermission(permissions, name));
+  }
 
   const matches = (name: string) =>
     permissions.some(

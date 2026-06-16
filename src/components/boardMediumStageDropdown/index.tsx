@@ -14,7 +14,7 @@ export interface BoardMediumStageOption {
 }
 
 interface Props {
-  value?: BoardMediumStageOption;
+  value?: BoardMediumStageOption | null;
   onChange: (value: BoardMediumStageOption) => void;
   size?: 'small' | 'medium';
   minWidth?: number;
@@ -54,7 +54,7 @@ export default function BoardMediumStageDropdown({
     <Autocomplete
       size={size}
       options={options}
-      value={value}
+      value={value ?? options[0]}
       disableClearable
       getOptionLabel={(option) => option.label}
       isOptionEqualToValue={(option, val) =>

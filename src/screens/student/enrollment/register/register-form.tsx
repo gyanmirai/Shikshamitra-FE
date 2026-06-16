@@ -575,7 +575,7 @@ const RegisterForm = ({
             bodyMassIndex: +values.bmi,
             pulseRate: +values.pulseRate,
             hemoglobin: +values.haemoglobin,
-            boodGroup: values.bloodGroup,
+            bloodGroup: values.bloodGroup,
             haveDisability: values.personWithDisability,
             disabilityDetails: values.disabilityDetails,
             allergies: values.allergies,

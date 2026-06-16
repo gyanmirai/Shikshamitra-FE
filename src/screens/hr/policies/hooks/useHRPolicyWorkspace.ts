@@ -221,6 +221,9 @@ export function useHRPolicyWorkspace({
   const muiTheme = useTheme();
   const searchParams = useSearchParams();
   const queryTab = searchParams.get('tab') as WorkspaceTab | null;
+  const queryEffectiveEmployeeId = searchParams.get('employeeId') || '';
+  const queryEffectiveGroupId = queryEffectiveEmployeeId ? '' : searchParams.get('groupId') || '';
+  const queryEffectiveDate = searchParams.get('date') || '';
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const academicYearId = currentYear?.id;
@@ -309,9 +312,12 @@ export function useHRPolicyWorkspace({
     toDate: '',
   });
   const [effectiveFilters, setEffectiveFilters] = useState({
-    employeeId: '',
-    groupId: '',
-    date: toDateInput(currentYear?.startDate) || dayjs().format('YYYY-MM-DD'),
+    employeeId: queryEffectiveEmployeeId,
+    groupId: queryEffectiveGroupId,
+    date:
+      toDateInput(queryEffectiveDate) ||
+      toDateInput(currentYear?.startDate) ||
+      dayjs().format('YYYY-MM-DD'),
   });
 
   // --- API Queries ----------------------------------------------------------
@@ -319,7 +325,7 @@ export function useHRPolicyWorkspace({
   const assignmentListArgs = { academicYearId, maxResultCount: 1000 };
 
   const { data: employees, isFetching: employeesLoading } = useGetEmployeeQuery(
-    { page: 1, pageSize: 200 },
+    { page: 1, pageSize: 1000 },
     { skip: !academicYearId }
   );
   const { data: groups, isFetching: groupsLoading } = useGetGroupsQuery(

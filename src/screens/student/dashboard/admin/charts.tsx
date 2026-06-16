@@ -9,7 +9,16 @@ import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { fNumber, fPercent } from 'src/utils/format-number';
-import { Box, Grid, Card, Stack, CardHeader, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Card,
+  Stack,
+  CardHeader,
+  Typography,
+  ToggleButton,
+  ToggleButtonGroup,
+} from '@mui/material';
 
 import ClassDivisionFilter from '../principal/class-division-filter';
 
@@ -81,26 +90,16 @@ const AdminCharts = () => {
     },
   });
 
-  // Mock data changing based on period
-  const enrollmentData = {
-    monthly: [
-      { name: 'Current Year', data: [31, 40, 28, 51, 42, 109, 100, 120, 80, 50, 30, 40] },
-      { name: 'Previous Year', data: [28, 32, 25, 45, 38, 95, 90, 110, 75, 45, 25, 35] }, // Comparison
-    ],
-    quarterly: [
-      { name: 'Current Year', data: [99, 121, 329, 120] },
-      { name: 'Previous Year', data: [85, 108, 295, 105] },
-    ],
-    yearly: [
-      { name: 'Current Year', data: [669] },
-      { name: 'Previous Year', data: [593] },
-    ],
+  const enrollmentSeriesByPeriod = {
+    monthly: [],
+    quarterly: [],
+    yearly: [],
   };
 
   const getEnrollmentSeries = () => {
-    if (enrollmentPeriod === 'quarterly') return enrollmentData.quarterly;
-    if (enrollmentPeriod === 'yearly') return enrollmentData.yearly;
-    return enrollmentData.monthly;
+    if (enrollmentPeriod === 'quarterly') return enrollmentSeriesByPeriod.quarterly;
+    if (enrollmentPeriod === 'yearly') return enrollmentSeriesByPeriod.yearly;
+    return enrollmentSeriesByPeriod.monthly;
   };
 
   // ------------------------------------
@@ -166,7 +165,7 @@ const AdminCharts = () => {
     },
   });
 
-  const examStatusSeries = [45, 25, 30];
+  const examStatusSeries: number[] = [];
 
   // ------------------------------------
   // 3. Class-wise Participation (Enhanced)
@@ -210,16 +209,7 @@ const AdminCharts = () => {
     },
   });
 
-  const classParticipationSeries = [
-    {
-      name: 'Boys',
-      data: [24, 30, 21, 35, 12, 6, 18, 30, 40, 45, 7, 18],
-    },
-    {
-      name: 'Girls',
-      data: [20, 25, 20, 32, 10, 6, 16, 26, 38, 45, 5, 16],
-    },
-  ];
+  const classParticipationSeries: { name: string; data: number[] }[] = [];
 
   const renderTitleWithTooltip = (title: string, tooltip: string) => (
     <Stack direction="row" alignItems="center" spacing={1}>
@@ -274,38 +264,43 @@ const AdminCharts = () => {
             </ToggleButtonGroup>
           </Stack>
 
-          <Box dir="ltr">
-            <Chart
-              dir="ltr"
-              type="area" // Using Area for better visualization of trend
-              series={getEnrollmentSeries()}
-              options={{
-                ...enrollmentTrendOptions,
-                xaxis: {
-                  ...enrollmentTrendOptions.xaxis,
-                  categories:
-                    enrollmentPeriod === 'quarterly'
-                      ? ['Q1', 'Q2', 'Q3', 'Q4']
-                      : enrollmentPeriod === 'yearly'
-                        ? ['2024']
-                        : [
-                            'Jan',
-                            'Feb',
-                            'Mar',
-                            'Apr',
-                            'May',
-                            'Jun',
-                            'Jul',
-                            'Aug',
-                            'Sep',
-                            'Oct',
-                            'Nov',
-                            'Dec',
-                          ],
-                },
-              }}
-              // height={364}
-            />
+          <Box dir="ltr" sx={{ p: 3, minHeight: 260 }}>
+            {getEnrollmentSeries().length > 0 ? (
+              <Chart
+                dir="ltr"
+                type="area"
+                series={getEnrollmentSeries()}
+                options={{
+                  ...enrollmentTrendOptions,
+                  xaxis: {
+                    ...enrollmentTrendOptions.xaxis,
+                    categories:
+                      enrollmentPeriod === 'quarterly'
+                        ? ['Q1', 'Q2', 'Q3', 'Q4']
+                        : enrollmentPeriod === 'yearly'
+                          ? ['Year']
+                          : [
+                              'Jan',
+                              'Feb',
+                              'Mar',
+                              'Apr',
+                              'May',
+                              'Jun',
+                              'Jul',
+                              'Aug',
+                              'Sep',
+                              'Oct',
+                              'Nov',
+                              'Dec',
+                            ],
+                  },
+                }}
+              />
+            ) : (
+              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 10 }}>
+                No enrollment trend found.
+              </Typography>
+            )}
           </Box>
         </Card>
       </Grid>
@@ -330,14 +325,14 @@ const AdminCharts = () => {
             )}
             action={<ClassDivisionFilter />}
           />
-          <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-            <Chart
-              dir="ltr"
-              type="donut" // Upgrade to Donut for center text
-              series={examStatusSeries}
-              options={examStatusOptions}
-              // height={300}
-            />
+          <Box sx={{ p: 3, pb: 1, minHeight: 260 }} dir="ltr">
+            {examStatusSeries.length > 0 ? (
+              <Chart dir="ltr" type="donut" series={examStatusSeries} options={examStatusOptions} />
+            ) : (
+              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 10 }}>
+                No entrance exam status found.
+              </Typography>
+            )}
           </Box>
         </Card>
       </Grid>
@@ -375,14 +370,19 @@ const AdminCharts = () => {
               </Box>
             }
           />
-          <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-            <Chart
-              dir="ltr"
-              type="bar"
-              series={classParticipationSeries}
-              options={classParticipationOptions}
-              // height={300}
-            />
+          <Box sx={{ p: 3, pb: 1, minHeight: 260 }} dir="ltr">
+            {classParticipationSeries.length > 0 ? (
+              <Chart
+                dir="ltr"
+                type="bar"
+                series={classParticipationSeries}
+                options={classParticipationOptions}
+              />
+            ) : (
+              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 10 }}>
+                No class participation found.
+              </Typography>
+            )}
           </Box>
         </Card>
       </Grid>

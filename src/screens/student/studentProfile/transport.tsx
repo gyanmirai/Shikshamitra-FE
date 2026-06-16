@@ -8,18 +8,17 @@ import type { StudentTabsComponentType } from '.';
 const StudentTransportProfile = (props: StudentTabsComponentType) => {
   const theme = useTheme();
 
-  // Mock transport data (replace with real props.student values)
   const transport = {
-    routeName: 'Route A-1',
-    routeType: 'Pickup And Drop',
-    startPoint: 'Main Gate',
-    endPoint: 'School Campus',
-    stopName: 'Central Square',
-    pickupTime: '7:30 AM',
-    dropTime: '4:00 PM',
-    driver: { name: 'Rajesh Kumar', phone: '+91 98765 43210' },
-    conductor: { name: 'Suresh Patel', phone: '+91 91234 56780' },
-    vehicle: { number: 'MH 12 AB 4589', type: 'School Bus', capacity: 40, status: 'Active' },
+    routeName: '-',
+    routeType: '-',
+    startPoint: '-',
+    endPoint: '-',
+    stopName: '-',
+    pickupTime: '-',
+    dropTime: '-',
+    driver: { name: '-', phone: '-' },
+    conductor: { name: '-', phone: '-' },
+    vehicle: { number: '-', type: '-', capacity: '-', status: '-' },
   };
 
   const routeDetails = [
@@ -35,7 +34,7 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
   const driverDetails = [
     { label: 'Vehicle No.', value: transport.vehicle.number, icon: 'mdi:bus' },
     { label: 'Vehicle Type', value: transport.vehicle.type, icon: 'mdi:bus-school' },
-    { label: 'Capacity', value: `${transport.vehicle.capacity} Seats`, icon: 'mdi:account-group' },
+    { label: 'Capacity', value: transport.vehicle.capacity, icon: 'mdi:account-group' },
     { label: 'Vehicle Status', value: transport.vehicle.status, icon: 'mdi:shield-check' },
     { label: 'Driver', value: transport.driver.name, icon: 'mdi:account-tie' },
     { label: 'Driver Contact', value: transport.driver.phone, icon: 'mdi:phone', isPhone: true },

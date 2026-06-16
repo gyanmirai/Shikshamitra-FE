@@ -494,7 +494,7 @@ const HrEmployee = () => {
               fullWidth
               label="Organization"
               options={[{ id: 'All', name: 'All Organizations' }, ...organizationOptions]}
-              value={employeeParams.mediumStageId}
+              value={employeeParams.mediumStageId || 'All'}
               valueKey="id"
               labelKey="name"
               isLoading={organizationOptionsLoading}
@@ -511,7 +511,7 @@ const HrEmployee = () => {
               <InputLabel>Group</InputLabel>
               <Select
                 label="Group"
-                value={employeeParams.isTeaching}
+                value={employeeParams.isTeaching || 'All'}
                 onChange={(event) => {
                   setEmployeeParams((pre) => ({
                     ...pre,
@@ -533,7 +533,7 @@ const HrEmployee = () => {
               <InputLabel>Status</InputLabel>
               <Select
                 label="Status"
-                value={employeeParams.status}
+                value={employeeParams.status || 'All'}
                 onChange={(event) => {
                   setEmployeeParams((pre) => ({
                     ...pre,

@@ -19,18 +19,28 @@ export const HR_POLICY_TABS: Array<{
   disabled?: boolean;
 }> = [
   { value: 'calendars', label: 'Work Calendars', icon: 'mdi:calendar-month-outline' },
-  { value: 'payroll', label: 'Payroll Policies', icon: 'mdi:cash-sync' },
   { value: 'attendance', label: 'Attendance Policies', icon: 'mdi:account-clock-outline' },
-  { value: 'assignments', label: 'Policy Assignments', icon: 'mdi:account-switch-outline' },
   { value: 'leave', label: 'Leave Policies', icon: 'mdi:calendar-text-outline' },
+  { value: 'payroll', label: 'Payroll Policies', icon: 'mdi:cash-sync' },
+  { value: 'assignments', label: 'Policy Assignments', icon: 'mdi:account-switch-outline' },
+  { value: 'effective', label: 'Policy Impact', icon: 'mdi:source-branch-check' },
   {
     value: 'holiday',
     label: 'Holiday Impact',
     icon: 'mdi:calendar-search-outline',
     disabled: true,
   },
-  { value: 'effective', label: 'Policy Impact', icon: 'mdi:source-branch-check' },
 ];
+
+export const getHRPolicyTab = (value: WorkspaceTab) => {
+  const tab = HR_POLICY_TABS.find((item) => item.value === value);
+
+  if (!tab) {
+    throw new Error(`Unknown HR policy tab: ${value}`);
+  }
+
+  return tab;
+};
 // Weekday and weekly-rule options
 // --- Weekday / Weekly-Rule Options -------------------------------------------
 

@@ -1,8 +1,4 @@
-import type {
-  HrReportSource,
-  HrReportTemplate,
-  HrReportExportJob,
-} from 'src/redux/hr/hrReportsApi';
+import type { HrReportSource, HrReportTemplate } from 'src/redux/hr/hrReportsApi';
 
 import { useMemo } from 'react';
 import CommonReport from 'src/components/common-report';
@@ -11,25 +7,28 @@ import { HrReportBuilder } from './HrReportBuilder';
 import { mapHrSourcesToCategories, mapHrSourcesToSubCategories } from '../hr-report-utils';
 
 import type { HrReportPermissions } from '../hr-report-permissions';
+import type { HrReportQueuedExport, HrReportCatalogSelection } from '../hr-report-types';
 
 type HrReportCatalogProps = {
   sources: HrReportSource[];
   templates: HrReportTemplate[];
-  exportJobs: HrReportExportJob[];
   isLoadingSources: boolean;
   isFetchingExports: boolean;
-  refetchExports: () => any;
+  refetchExports: () => unknown;
   permissions: HrReportPermissions;
+  directSelection?: HrReportCatalogSelection | null;
+  onExportQueued?: (exportJob: HrReportQueuedExport) => void;
 };
 
 export function HrReportCatalog({
   sources,
   templates,
-  exportJobs,
   isLoadingSources,
   isFetchingExports,
   refetchExports,
   permissions,
+  directSelection,
+  onExportQueued,
 }: HrReportCatalogProps) {
   const categories = useMemo(() => mapHrSourcesToCategories(sources), [sources]);
 
@@ -39,14 +38,27 @@ export function HrReportCatalog({
         <HrReportBuilder
           source={source}
           template={template}
-          exportJobs={exportJobs}
           isFetchingExports={isFetchingExports}
           refetchExports={refetchExports}
           permissions={permissions}
+          onExportQueued={onExportQueued}
         />
       )),
-    [exportJobs, isFetchingExports, permissions, refetchExports, sources, templates]
+    [isFetchingExports, onExportQueued, permissions, refetchExports, sources, templates]
   );
+
+  if (directSelection) {
+    return (
+      <HrReportBuilder
+        source={directSelection.source}
+        template={directSelection.template}
+        isFetchingExports={isFetchingExports}
+        refetchExports={refetchExports}
+        permissions={permissions}
+        onExportQueued={onExportQueued}
+      />
+    );
+  }
 
   return (
     <CommonReport

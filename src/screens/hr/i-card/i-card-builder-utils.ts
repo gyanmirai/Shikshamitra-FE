@@ -121,6 +121,49 @@ export const parseLayoutJson = (value?: string | null): ICardLayout | null => {
   }
 };
 
+export const hasPersistedEmployeeICardTemplate = (
+  templateId?: string | null,
+  savedTemplateId?: string | null
+) => Boolean(templateId || savedTemplateId);
+
+export const getDefaultICardDesignerElementId = (
+  layout: ICardLayout,
+  selectedElementId?: string | null
+) => {
+  const selected = layout.front.elements.find(
+    (item) => item.id === selectedElementId && item.visible
+  );
+  if (selected) return selected.id;
+
+  return layout.front.elements.find((item) => item.visible && item.type === 'text')?.id ?? null;
+};
+
+export const canNavigateEmployeeICardStep = (
+  step: number,
+  activeStep: number,
+  completedSteps: number[],
+  isUpdateMode: boolean
+) => isUpdateMode || step === activeStep || completedSteps.includes(step);
+
+export const markEmployeeICardStepCompleted = (completedSteps: number[], step: number) =>
+  completedSteps.includes(step)
+    ? completedSteps
+    : [...completedSteps, step].sort((first, second) => first - second);
+
+export const updateICardLayoutElementStyle = (
+  layout: ICardLayout,
+  elementId: string,
+  patch: NonNullable<ICardLayoutElement['style']>
+): ICardLayout => ({
+  ...layout,
+  front: {
+    ...layout.front,
+    elements: layout.front.elements.map((element) =>
+      element.id === elementId ? { ...element, style: { ...element.style, ...patch } } : element
+    ),
+  },
+});
+
 export const parsePrintSettingsJson = (value?: string | null): ICardPrintSettings => {
   if (!value?.trim()) return DEFAULT_PRINT_SETTINGS;
   try {

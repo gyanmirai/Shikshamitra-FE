@@ -124,7 +124,7 @@ export const RenderDocuments = (props: any) => {
                     '&:hover': { backgroundColor: 'transparent' },
                   }}
                   onChange={async (e) => {
-                    const file = e.target.files[0];
+                    const file = e.target.files?.[0];
                     if (!file) return;
                     setUploadingDocId(row.documentTypeId);
                     const formData = new FormData();

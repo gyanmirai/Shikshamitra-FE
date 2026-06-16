@@ -64,48 +64,7 @@ const quickActions: QuickAction[] = [
   },
 ];
 
-const upcomingExams = [
-  {
-    id: 1,
-    time: '09:00 - 10:30',
-    date: 'Feb 15, 2026',
-    subject: 'Mathematics',
-    details: 'Unit Test 3 - Mathematics',
-    type: 'Internal',
-    status: 'Scheduled',
-    students: 42,
-  },
-  {
-    id: 2,
-    time: '10:00 - 11:30',
-    date: 'Feb 18, 2026',
-    subject: 'Science',
-    details: 'Science Practical Assessment',
-    type: 'Practical',
-    status: 'Scheduled',
-    students: 40, // Maybe some absent or detached
-  },
-  {
-    id: 3,
-    time: '09:00 - 12:00',
-    date: 'Jan 15, 2026',
-    subject: 'English',
-    details: 'English Mid-Term Exam',
-    type: 'Term',
-    status: 'Completed',
-    students: 42,
-  },
-  {
-    id: 4,
-    time: '09:00 - 12:00',
-    date: 'Jan 15, 2026',
-    subject: 'English',
-    details: 'English Mid-Term Exam',
-    type: 'Term',
-    status: 'Completed',
-    students: 42,
-  },
-];
+const examRows: any[] = [];
 
 // ----------------------------------------------------------------------
 
@@ -274,7 +233,12 @@ export const UpcomingExams = () => {
         />
         <Scrollbar>
           <Stack spacing={1} sx={{ p: 1 }}>
-            {upcomingExams.map((exam) => (
+            {examRows.length === 0 && (
+              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 8 }}>
+                No upcoming exams found.
+              </Typography>
+            )}
+            {examRows.map((exam) => (
               <Box
                 key={exam.id}
                 sx={{
@@ -374,8 +338,9 @@ export const UpcomingExams = () => {
       >
         <CustomizableTable
           columns={examColumns}
-          data={upcomingExams}
+          data={examRows}
           tableId="upcoming-exams-table"
+          noDataText="No upcoming exams found."
           isSearch={false}
           isFilter={false}
           isPagination={false}

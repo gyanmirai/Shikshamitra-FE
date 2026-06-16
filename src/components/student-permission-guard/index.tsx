@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { PermissionName } from 'src/utils/permissions';
 
 import { useSelector } from 'react-redux';
 import { View403 } from 'src/sections/error';
@@ -9,7 +10,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 
 interface Props {
   children: React.ReactNode;
-  permissionKey: string | string[];
+  permissionKey: PermissionName;
 }
 
 const StudentPermissionGuard = ({ children, permissionKey }: Props) => {
@@ -17,9 +18,7 @@ const StudentPermissionGuard = ({ children, permissionKey }: Props) => {
     (state: RootState) => state.auth
   );
 
-  const hasPermission = Array.isArray(permissionKey)
-    ? permissionKey.some((key) => hasGrantedPermission(permissions, key))
-    : hasGrantedPermission(permissions, permissionKey);
+  const hasPermission = hasGrantedPermission(permissions, permissionKey);
   if (loading || !permissionsInitialized) return <SplashScreen />;
   return hasPermission ? children : <View403 />;
 };

@@ -26,6 +26,7 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
             size="small"
             label="BPL Card No."
             {...formik.getFieldProps('bplCardNo')}
+            value={formik.values.bplCardNo || ''}
             onChange={(e) => {
               const val = e.target.value;
               if (/^[A-Za-z0-9 ]*$/.test(val)) {
@@ -52,6 +53,7 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
             <Select
               label="Person with Disability"
               {...formik.getFieldProps('personWithDisability')}
+              value={formik.values.personWithDisability || 'No'}
             >
               <MenuItem value="Yes">Yes</MenuItem>
               <MenuItem value="No">No</MenuItem>
@@ -71,6 +73,7 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
             size="small"
             label="Second Language"
             {...formik.getFieldProps('secondLanguage')}
+            value={formik.values.secondLanguage || ''}
             onChange={(e) => {
               const val = e.target.value;
               const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
@@ -87,7 +90,7 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
         <FormControlLabel
           control={
             <Switch
-              checked={formik.values.libraryMember}
+              checked={Boolean(formik.values.libraryMember)}
               onChange={(e, val) => formik.setFieldValue('libraryMember', val)}
               name="libraryMember"
             />
@@ -99,7 +102,7 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
         <FormControlLabel
           control={
             <Switch
-              checked={formik.values.transportMember}
+              checked={Boolean(formik.values.transportMember)}
               onChange={(e, val) => formik.setFieldValue('transportMember', val)}
               name="transportMember"
             />

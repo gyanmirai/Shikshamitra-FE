@@ -3,8 +3,10 @@ import { it, expect, describe } from 'vitest';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
+  formatLeaveDays,
   buildLeaveOverview,
   EMPTY_LEAVE_OVERVIEW,
+  shouldFetchHrEmployeeLeaveOverview,
 } from 'src/screens/hr/leave-request/leave-overview.utils';
 import {
   SELF_OPTION,
@@ -470,18 +472,17 @@ describe('problem details parsing', () => {
 describe('leave center tab visibility', () => {
   it('shows approvals alongside personal tabs for reviewers', () => {
     expect(getLeaveCenterVisibleTabs('hr', true)).toEqual(['balance', 'my-requests', 'approvals']);
-    expect(getLeaveCenterVisibleTabs('self', true)).toEqual([
-      'balance',
-      'my-requests',
-      'approvals',
-    ]);
     expect(
       resolveLeaveCenterTab('approvals', ['balance', 'my-requests', 'approvals'], 'balance')
     ).toBe('approvals');
   });
 
-  it('keeps personal leave tabs for users who cannot review leaves', () => {
+  it('keeps only personal leave tabs for self-service users', () => {
+    expect(getLeaveCenterVisibleTabs('self', true)).toEqual(['balance', 'my-requests']);
     expect(getLeaveCenterVisibleTabs('self', false)).toEqual(['balance', 'my-requests']);
+  });
+
+  it('keeps personal leave tabs for HR users who cannot review leaves', () => {
     expect(getLeaveCenterVisibleTabs('hr', false)).toEqual(['balance', 'my-requests']);
     expect(resolveLeaveCenterTab('balance', ['balance', 'my-requests'], 'balance')).toBe('balance');
   });
@@ -512,7 +513,36 @@ describe('leave center tab visibility', () => {
 });
 
 describe('leave overview builder', () => {
-  it('totals entitlement, used, remaining, and pending leaves', () => {
+  it('fetches HR overview only when an employee target is available', () => {
+    expect(
+      shouldFetchHrEmployeeLeaveOverview({
+        enabled: true,
+        isSelfMode: false,
+        academicYearId: 'year-1',
+        employeeId: 'employee-1',
+      })
+    ).toBe(true);
+
+    expect(
+      shouldFetchHrEmployeeLeaveOverview({
+        enabled: true,
+        isSelfMode: false,
+        academicYearId: 'year-1',
+        employeeId: undefined,
+      })
+    ).toBe(false);
+
+    expect(
+      shouldFetchHrEmployeeLeaveOverview({
+        enabled: true,
+        isSelfMode: true,
+        academicYearId: 'year-1',
+        employeeId: 'employee-1',
+      })
+    ).toBe(false);
+  });
+
+  it('totals entitlement, used, remaining, and pending leave days', () => {
     const overview = buildLeaveOverview(
       {
         items: [
@@ -534,9 +564,19 @@ describe('leave overview builder', () => {
       },
       {
         items: [
-          { leaveType: 'Sick Leave', status: 'Pending' },
-          { leaveType: 'Casual Leave', status: 'APPROVED' },
-          { leaveType: 'Casual Leave', status: 'PENDING' },
+          { leaveTypeMasterId: 'sick', leaveType: 'Sick Leave', status: 'Pending', totalDays: 0.5 },
+          {
+            leaveTypeMasterId: 'casual',
+            leaveType: 'Casual Leave',
+            status: 'APPROVED',
+            totalDays: 1,
+          },
+          {
+            leaveTypeMasterId: 'casual',
+            leaveType: 'Casual Leave',
+            status: 'PENDING',
+            totalDays: 2,
+          },
         ],
       }
     );
@@ -544,25 +584,57 @@ describe('leave overview builder', () => {
     expect(overview.totalLeaves).toBe(18);
     expect(overview.usedLeaves).toBe(5);
     expect(overview.remainingLeaves).toBe(13);
-    expect(overview.pendingLeaves).toBe(2);
+    expect(overview.pendingLeaveDays).toBe(2.5);
     expect(overview.leaveTypeBreakdown).toEqual([
       {
         leaveTypeId: 'sick',
         leaveTypeName: 'Sick Leave',
         total: 10,
         used: 3,
-        pending: 1,
+        pendingDays: 0.5,
         remaining: 7,
+        isUnlimited: false,
       },
       {
         leaveTypeId: 'casual',
         leaveTypeName: 'Casual Leave',
         total: 8,
         used: 2,
-        pending: 1,
+        pendingDays: 2,
         remaining: 6,
+        isUnlimited: false,
       },
     ]);
+  });
+
+  it('excludes unlimited negative-balance leave types from finite balance totals', () => {
+    const overview = buildLeaveOverview({
+      items: [
+        {
+          leaveTypeMasterId: 'casual',
+          leaveTypeName: 'Casual Leave',
+          entitledDays: 12,
+          usedDays: 0,
+          remainingDays: 12,
+        },
+        {
+          leaveTypeMasterId: 'lop',
+          leaveTypeName: 'Loss of Pay',
+          entitledDays: 365,
+          usedDays: 0,
+          remainingDays: 7.922816251426434e28,
+        },
+      ],
+    });
+
+    expect(overview.totalLeaves).toBe(12);
+    expect(overview.remainingLeaves).toBe(12);
+    expect(overview.leaveTypeBreakdown[1]).toMatchObject({
+      leaveTypeId: 'lop',
+      leaveTypeName: 'Loss of Pay',
+      remaining: 0,
+      isUnlimited: true,
+    });
   });
 
   it('returns zero overview for empty balance data', () => {
@@ -571,7 +643,7 @@ describe('leave overview builder', () => {
     );
   });
 
-  it('counts only pending statuses', () => {
+  it('uses leave type ids before display names for pending day matching', () => {
     const overview = buildLeaveOverview(
       {
         items: [
@@ -586,16 +658,77 @@ describe('leave overview builder', () => {
       },
       {
         items: [
-          { leaveType: 'Sick Leave', status: 'PENDING' },
-          { leaveType: 'Sick Leave', status: 'APPROVED' },
-          { leaveType: 'Sick Leave', status: 'REJECTED' },
-          { leaveType: 'Sick Leave', status: 'UNKNOWN_VALUE' },
+          {
+            leaveTypeMasterId: 'sick',
+            leaveType: 'Renamed Leave',
+            status: 'PENDING',
+            totalDays: 2,
+          },
         ],
       }
     );
 
-    expect(overview.pendingLeaves).toBe(1);
-    expect(overview.leaveTypeBreakdown[0].pending).toBe(1);
+    expect(overview.pendingLeaveDays).toBe(2);
+    expect(overview.leaveTypeBreakdown[0].pendingDays).toBe(2);
+  });
+
+  it('uses balance pending days when provided instead of paged history totals', () => {
+    const overview = buildLeaveOverview(
+      {
+        items: [
+          {
+            leaveTypeMasterId: 'sick',
+            leaveTypeName: 'Sick Leave',
+            entitledDays: 5,
+            usedDays: 1,
+            pendingDays: 3.5,
+            remainingDays: 4,
+          },
+        ],
+      },
+      {
+        items: [
+          { leaveTypeMasterId: 'sick', leaveType: 'Sick Leave', status: 'PENDING', totalDays: 1 },
+        ],
+      }
+    );
+
+    expect(overview.pendingLeaveDays).toBe(3.5);
+    expect(overview.leaveTypeBreakdown[0].pendingDays).toBe(3.5);
+  });
+
+  it('falls back to leave type names when pending requests lack leave type ids', () => {
+    const overview = buildLeaveOverview(
+      {
+        items: [
+          {
+            leaveTypeMasterId: 'sick',
+            leaveTypeName: 'Sick Leave',
+            entitledDays: 5,
+            usedDays: 1,
+            remainingDays: 4,
+          },
+        ],
+      },
+      {
+        items: [
+          { leaveType: 'Sick Leave', status: 'PENDING', totalDays: 0.5 },
+          { leaveType: 'Sick Leave', status: 'APPROVED', totalDays: 1 },
+          { leaveType: 'Sick Leave', status: 'REJECTED', totalDays: 1 },
+          { leaveType: 'Sick Leave', status: 'UNKNOWN_VALUE', totalDays: 1 },
+        ],
+      }
+    );
+
+    expect(overview.pendingLeaveDays).toBe(0.5);
+    expect(overview.leaveTypeBreakdown[0].pendingDays).toBe(0.5);
+  });
+
+  it('formats leave day values without rounding away supported precision', () => {
+    expect(formatLeaveDays(37)).toBe('37');
+    expect(formatLeaveDays(0.5)).toBe('0.5');
+    expect(formatLeaveDays(1.25)).toBe('1.25');
+    expect(formatLeaveDays(7.922816251426434e28)).not.toContain('e');
   });
 });
 

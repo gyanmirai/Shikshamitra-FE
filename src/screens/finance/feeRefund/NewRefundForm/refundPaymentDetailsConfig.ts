@@ -3,10 +3,10 @@ import dayjs from 'dayjs';
 import type { IPaymentMethodsConfig } from '../../FeeCollection/Components/type';
 
 const schoolBankAccounts = [
-  'HDFC Bank (HDFC0001234)',
-  'ICICI Bank (ICIC0005678)',
-  'SBI Bank (SBIN0003344)',
-  'Kotak Bank (KKBK0007788)',
+  { id: 'HDFC Bank (HDFC0001234)', name: 'HDFC Bank (HDFC0001234)' },
+  { id: 'ICICI Bank (ICIC0005678)', name: 'ICICI Bank (ICIC0005678)' },
+  { id: 'SBI Bank (SBIN0003344)', name: 'SBI Bank (SBIN0003344)' },
+  { id: 'Kotak Bank (KKBK0007788)', name: 'Kotak Bank (KKBK0007788)' },
 ];
 
 export const refundPaymentMethodsConfig: IPaymentMethodsConfig = {

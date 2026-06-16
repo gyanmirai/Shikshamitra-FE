@@ -22,9 +22,19 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
-import { Box, Card, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
+import {
+  Box,
+  Card,
+  Chip,
+  Alert,
+  Stack,
+  Button,
+  MenuItem,
+  MenuList,
+  Typography,
+} from '@mui/material';
 import {
   useGetLeaveRequestByIdQuery,
   useLazyGetLeaveRequestsQuery,
@@ -437,41 +447,79 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
           ) : (
             <>
               <Card
+                variant="outlined"
                 sx={{
-                  display: 'flex',
-                  p: 1,
-                  gap: 2,
-                  pl: 1,
+                  p: 1.25,
                   mb: 1,
-                  justifyContent: 'flex-end',
+                  borderRadius: 1,
+                  boxShadow: 'none',
                 }}
               >
-                <Box display="flex" gap={2}>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<Add />}
-                    onClick={() => {
-                      addLeaveRequestDialog.onTrue();
-                    }}
-                    sx={{ px: '32px' }}
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1}
+                  alignItems={{ xs: 'stretch', sm: 'center' }}
+                  justifyContent="space-between"
+                >
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        flexShrink: 0,
+                        borderRadius: 1,
+                        color: 'primary.main',
+                        bgcolor: 'primary.lighter',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Iconify icon="solar:document-text-bold-duotone" width={18} />
+                    </Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                      Leave Requests
+                    </Typography>
+                    <Chip
+                      size="small"
+                      variant="soft"
+                      color="info"
+                      label={`${tableData.length} shown`}
+                      sx={{ fontWeight: 800 }}
+                    />
+                  </Stack>
+
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={1}
+                    justifyContent="flex-end"
                   >
-                    Leave Request
-                  </Button>
-                  {!isSelfMode && (
                     <Button
                       variant="contained"
                       size="small"
-                      startIcon={<Iconify icon={GlobalIcons.calenderIcon} />}
+                      startIcon={<Add />}
                       onClick={() => {
-                        viewCalendarView.onTrue();
+                        addLeaveRequestDialog.onTrue();
                       }}
-                      sx={{ px: '32px' }}
+                      sx={{ borderRadius: 1, px: 2.5 }}
                     >
-                      View Calendar
+                      Leave Request
                     </Button>
-                  )}
-                </Box>
+                    {!isSelfMode && (
+                      <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<Iconify icon={GlobalIcons.calenderIcon} />}
+                        onClick={() => {
+                          viewCalendarView.onTrue();
+                        }}
+                        sx={{ borderRadius: 1, px: 2.5 }}
+                      >
+                        View Calendar
+                      </Button>
+                    )}
+                  </Stack>
+                </Stack>
               </Card>
 
               <CustomizableTable

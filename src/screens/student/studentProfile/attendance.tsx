@@ -102,13 +102,13 @@ const Attendance = (props: StudentTabsComponentType) => {
                   />
                   <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
                     <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                      22 Working Days
+                      No working day data
                     </Typography>
                     <Box
                       sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'text.disabled' }}
                     />
                     <Typography variant="body2" color="error.main" fontWeight={600}>
-                      2 Absent
+                      - Absent
                     </Typography>
                   </Stack>
                 </Box>
@@ -125,7 +125,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                     />
                     <CircularProgress
                       variant="determinate"
-                      value={90}
+                      value={0}
                       size={64}
                       thickness={3}
                       sx={{
@@ -148,14 +148,14 @@ const Attendance = (props: StudentTabsComponentType) => {
                       }}
                     >
                       <Typography variant="h6" fontWeight={800} color="success.dark">
-                        90%
+                        -
                       </Typography>
                     </Box>
                   </Box>
 
                   <Box>
                     <Typography variant="subtitle1" fontWeight={700}>
-                      Good Attendance
+                      No Attendance Summary
                     </Typography>
                   </Box>
                 </Stack>
@@ -223,9 +223,9 @@ const Attendance = (props: StudentTabsComponentType) => {
                     theme.palette.warning.main,
                   ],
                   series: [
-                    { label: 'Present', value: 22 },
-                    { label: 'Absent', value: 2 },
-                    { label: 'Holiday', value: 3 },
+                    { label: 'Present', value: 0 },
+                    { label: 'Absent', value: 0 },
+                    { label: 'Holiday', value: 0 },
                   ],
                 }}
                 sx={{ height: '100%' }}
@@ -296,8 +296,8 @@ const Attendance = (props: StudentTabsComponentType) => {
                     'Dec',
                   ],
                   series: [
-                    { name: 'Present', data: [12, 25, 18, 22, 15, 28, 20, 17, 24, 17, 11, 30] },
-                    { name: 'Absent', data: [18, 5, 12, 8, 15, 2, 10, 13, 6, 13, 19, 0] },
+                    { name: 'Present', data: [] },
+                    { name: 'Absent', data: [] },
                   ],
                 }}
                 sx={{ height: '100%' }}
@@ -352,19 +352,12 @@ const Attendance = (props: StudentTabsComponentType) => {
                   slots={{
                     day: (prop: any) => {
                       const { day } = prop;
-                      const dateStr = day.format('DD-MM-YYYY');
-                      const absent = dateStr === '10-06-2025';
+                      const absent = false;
                       const isSunday = day.day() === 0;
-                      const isHalfDay = dateStr === '11-06-2025';
-                      const isHoliday = dateStr === '09-06-2025';
-                      const isLate = dateStr === '12-06-2025';
-                      const isPresent =
-                        !absent &&
-                        !isHalfDay &&
-                        !isHoliday &&
-                        !isSunday &&
-                        !prop.outsideCurrentMonth &&
-                        day.isBefore(dayjs());
+                      const isHalfDay = false;
+                      const isHoliday = false;
+                      const isLate = false;
+                      const isPresent = false;
 
                       const disabled = isSunday || isHoliday || prop.disabled;
                       let backgroundColor = '';
@@ -391,7 +384,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                               </Typography>
                             </Stack>
                             <Typography variant="caption" sx={{ fontSize: '0.7rem', opacity: 0.9 }}>
-                              Doctors Appointment
+                              No attendance reason available
                             </Typography>
                           </Box>
                         );
@@ -445,7 +438,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                               </Typography>
                             </Stack>
                             <Typography variant="caption" sx={{ fontSize: '0.7rem', opacity: 0.9 }}>
-                              Arrived at 8:15 AM
+                              No late arrival detail available
                             </Typography>
                           </Box>
                         );
@@ -495,12 +488,14 @@ const Attendance = (props: StudentTabsComponentType) => {
                                     bgcolor: 'primary.dark',
                                   },
                                 },
-                                ...(isHalfDay && {
-                                  background: (t) =>
-                                    `linear-gradient(135deg, ${t.palette.warning.lighter} 50%, ${alpha(t.palette.warning.lighter, 0.3)} 50%)`,
-                                  color: 'warning.dark',
-                                  fontWeight: 600,
-                                }),
+                                ...(isHalfDay
+                                  ? {
+                                      background: (t) =>
+                                        `linear-gradient(135deg, ${t.palette.warning.lighter} 50%, ${alpha(t.palette.warning.lighter, 0.3)} 50%)`,
+                                      color: 'warning.dark',
+                                      fontWeight: 600,
+                                    }
+                                  : {}),
                               }}
                               disabled={disabled}
                             />
@@ -621,20 +616,8 @@ const Attendance = (props: StudentTabsComponentType) => {
           <Grid size={{ xs: 12 }}>
             <CustomizableTable
               tableId="student-attendance-table"
-              data={[
-                {
-                  date: '18/07/2024',
-                  status: 'Present',
-                  reason: 'Doctors Appointment',
-                  remarks: 'Student attended half-day due to medical checkup',
-                },
-                {
-                  date: '17/07/2024',
-                  status: 'Absent',
-                  reason: 'Traffic',
-                  remarks: 'Student informed about heavy traffic congestion',
-                },
-              ]}
+              data={[]}
+              noDataText="No attendance history found."
               columns={[
                 { id: 'date', label: 'Date', minWidth: '10%', filterType: 'date' },
                 {

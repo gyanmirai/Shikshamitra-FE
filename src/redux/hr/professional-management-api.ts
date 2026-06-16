@@ -121,6 +121,16 @@ export type PerformanceReviewStage = {
   responses: PerformanceReviewResponse[];
 };
 
+export type PerformanceEvidence = {
+  id: string;
+  reviewAssignmentId: string;
+  criterionId?: string | null;
+  title: string;
+  fileName?: string | null;
+  url?: string | null;
+  notes?: string | null;
+};
+
 export type ProfessionalReview = {
   id: string;
   cycleId: string;
@@ -391,6 +401,11 @@ export const professionalManagementApi = api.injectEndpoints({
       providesTags: [employeeType.professionalReview],
       keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
+    getPerformanceEvidence: builder.query<PerformanceEvidence[], string>({
+      query: (id) => `/hr/professional-management/reviews/${id}/evidence`,
+      providesTags: [employeeType.professionalReview],
+      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
+    }),
     addPerformanceObservation: builder.mutation<any, any>({
       query: ({ id, body }) => ({
         url: `/hr/professional-management/reviews/${id}/observations`,
@@ -565,6 +580,7 @@ export const {
   useSavePerformanceOutcomeMutation,
   useReopenPerformanceReviewMutation,
   useGetPerformanceObservationsQuery,
+  useGetPerformanceEvidenceQuery,
   useAddPerformanceObservationMutation,
   useAddPerformanceEvidenceMutation,
   useDeletePerformanceEvidenceMutation,

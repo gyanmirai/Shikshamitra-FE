@@ -339,8 +339,8 @@ const CollectChargesForm: React.FC<ICollectChargesProps> = ({ open, onClose, cha
                           }
                         >
                           {field.options?.map((opt) => (
-                            <MenuItem key={opt} value={opt}>
-                              {opt}
+                            <MenuItem key={opt.id} value={opt.id}>
+                              {opt.name}
                             </MenuItem>
                           ))}
                         </TextField>

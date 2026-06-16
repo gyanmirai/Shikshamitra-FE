@@ -35,12 +35,12 @@ const HostelRoomMate = (props: StudentTabsComponentType) => {
         </Button>
       </Box>
       <Stack direction="row" spacing={2} alignItems="center">
-        <HostelRoomDetailCard label="Block" value="A" color="success" />
-        <HostelRoomDetailCard label="Floor" value="4" color="success" />
-        <HostelRoomDetailCard label="Room Number" value="102" color="warning" />
-        <HostelRoomDetailCard label="Room Type" value="AC" color="error" />
-        <HostelRoomDetailCard label="Bed Number" value="4" color="error" />
-        <HostelRoomDetailCard label="Bed Type" value="Single" color="error" />
+        <HostelRoomDetailCard label="Block" value="-" color="success" />
+        <HostelRoomDetailCard label="Floor" value="-" color="success" />
+        <HostelRoomDetailCard label="Room Number" value="-" color="warning" />
+        <HostelRoomDetailCard label="Room Type" value="-" color="error" />
+        <HostelRoomDetailCard label="Bed Number" value="-" color="error" />
+        <HostelRoomDetailCard label="Bed Type" value="-" color="error" />
       </Stack>
       <Typography variant="h6" mt={2}>
         Room Mates Info
@@ -49,53 +49,7 @@ const HostelRoomMate = (props: StudentTabsComponentType) => {
         tableId="student-list"
         isShowedDense={false}
         noDataText={<>No Student Data Found </>}
-        data={[
-          {
-            id: 1,
-            name: 'Aarav Mehta',
-            rollNo: 'R001',
-            standardId: '10-A',
-            grNoRecord: 'GR2025001',
-            parentContactNumber: '9876543210',
-            profilePicture: '', // Add base64 or image URL if needed
-          },
-          {
-            id: 2,
-            name: 'Ishita Shah',
-            rollNo: 'R002',
-            standardId: '10-A',
-            grNoRecord: 'GR2025002',
-            parentContactNumber: '9123456789',
-            profilePicture: '',
-          },
-          {
-            id: 3,
-            name: 'Devansh Patel',
-            rollNo: 'R003',
-            standardId: '10-B',
-            grNoRecord: 'GR2025003',
-            parentContactNumber: '9012345678',
-            profilePicture: '',
-          },
-          {
-            id: 4,
-            name: 'Kavya Desai',
-            rollNo: 'R004',
-            standardId: '9-C',
-            grNoRecord: 'GR2025004',
-            parentContactNumber: '9988776655',
-            profilePicture: '',
-          },
-          {
-            id: 5,
-            name: 'Rahul Trivedi',
-            rollNo: 'R005',
-            standardId: '8-B',
-            grNoRecord: 'GR2025005',
-            parentContactNumber: '9876501234',
-            profilePicture: '',
-          },
-        ]}
+        data={[]}
         columns={[
           {
             id: 'name',

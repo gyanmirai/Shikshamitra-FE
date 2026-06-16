@@ -337,6 +337,11 @@ export const CardActions = ({
 
 const getPolicyName = (item: any) => item?.name || item?.policyTitle || item?.title || '-';
 
+export const shouldDisableEmployeeEmailField = (
+  isContactDetailsEditable: boolean,
+  editData?: { id?: string | null } | null
+) => !isContactDetailsEditable || Boolean(editData?.id);
+
 const InformationAllFields = ({
   formik,
   isMainForm,
@@ -489,7 +494,7 @@ const InformationAllFields = ({
               <ShakingTextField error={formik.touched.dob && Boolean(formik.errors.dob)}>
                 <DatePicker
                   label="Date of Birth *"
-                  value={formik.values.dob}
+                  value={formik.values.dob ?? null}
                   onChange={(value) => {
                     formik.setFieldValue('dob', value);
                     // formik.setFieldTouched('dob', true);
@@ -526,7 +531,7 @@ const InformationAllFields = ({
                     id="religion"
                     name="religion"
                     size="small"
-                    value={formik.values.religion}
+                    value={formik.values.religion ?? ''}
                     onChange={formik.handleChange}
                     label="Religion *"
                   >
@@ -569,7 +574,7 @@ const InformationAllFields = ({
                     />
                   )}
                   onChange={(e, value) => {
-                    formik.setFieldValue('castType', value?.id);
+                    formik.setFieldValue('castType', value?.id ?? '');
                   }}
                 />
               </ShakingTextField>
@@ -583,6 +588,7 @@ const InformationAllFields = ({
                   size="small"
                   label="Family Caste *"
                   {...formik.getFieldProps('familyCast')}
+                  value={formik.values.familyCast || ''}
                   onChange={(e) => {
                     const value = e?.target?.value?.replace(/[^A-Za-z\s]/g, '') || '';
                     const newName = value ? value.charAt(0).toUpperCase() + value.slice(1) : '';
@@ -613,7 +619,7 @@ const InformationAllFields = ({
                   <Select
                     labelId="dropdown-label"
                     id="dropdown"
-                    value={formik.values.maritalStatus}
+                    value={formik.values.maritalStatus ?? ''}
                     onChange={formik.handleChange}
                     size="small"
                     label="Marital Status *"
@@ -692,7 +698,7 @@ const InformationAllFields = ({
                   <RadioGroup
                     row
                     name="gender"
-                    value={formik.values.gender}
+                    value={formik.values.gender ?? ''}
                     onChange={formik.handleChange}
                     sx={{
                       alignItems: 'center', // ✅ aligns radio + label text
@@ -733,9 +739,10 @@ const InformationAllFields = ({
               size="small"
               label="Email *"
               {...formik.getFieldProps('email')}
+              value={formik.values.email || ''}
               error={formik.touched.email && Boolean(formik.errors.email)}
               helperText={formik.touched.email && formik.errors.email}
-              disabled={!isContactDetailsEditable.value}
+              disabled={shouldDisableEmployeeEmailField(isContactDetailsEditable.value, editData)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -753,7 +760,7 @@ const InformationAllFields = ({
           <ShakingTextField error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}>
             <PhoneInput
               name="mobileNo"
-              value={formik.values.mobileNo}
+              value={formik.values.mobileNo || ''}
               onChange={(value) => {
                 formik.setFieldValue('mobileNo', value);
                 formik.validateField('mobileNo');
@@ -769,7 +776,7 @@ const InformationAllFields = ({
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           <PhoneInput
             name="secondaryMobileNo"
-            value={formik.values.secondaryMobileNo}
+            value={formik.values.secondaryMobileNo || ''}
             onChange={(value) => {
               formik.setFieldValue('secondaryMobileNo', value);
             }}
@@ -860,7 +867,7 @@ const InformationAllFields = ({
           >
             <DatePicker
               label="Date of Joining *"
-              value={formik.values.dateOfJoining}
+              value={formik.values.dateOfJoining ?? null}
               onChange={(value) => formik.setFieldValue('dateOfJoining', value)}
               format="DD-MM-YYYY"
               maxDate={dayjs().add(1, 'year')}
@@ -891,7 +898,7 @@ const InformationAllFields = ({
               <Select
                 labelId="employee-group-label"
                 id="employeeGroup"
-                value={formik.values.employeeGroup}
+                value={formik.values.employeeGroup ?? ''}
                 onChange={formik.handleChange}
                 size="small"
                 label="Employee Group *"
@@ -916,6 +923,7 @@ const InformationAllFields = ({
               size="small"
               label="Department"
               {...formik.getFieldProps('department')}
+              value={formik.values.department || ''}
               onChange={(e) => {
                 const val = e.target.value;
                 const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
@@ -1026,6 +1034,7 @@ const InformationAllFields = ({
               size="small"
               label="Building No./Flat/House No. *"
               {...formik.getFieldProps('addressLine1')}
+              value={formik.values.addressLine1 || ''}
               onChange={formik.handleChange}
               onBlur={(e) => {
                 formik.setFieldValue('addressLine1', e.target.value.trim());
@@ -1046,6 +1055,7 @@ const InformationAllFields = ({
               size="small"
               label="Area/Locality/Road Name *"
               {...formik.getFieldProps('addressLine2')}
+              value={formik.values.addressLine2 || ''}
               onChange={formik.handleChange}
               onBlur={(e) => {
                 formik.setFieldValue('addressLine2', e.target.value.trim());
@@ -1066,6 +1076,7 @@ const InformationAllFields = ({
               size="small"
               label="Landmark"
               {...formik.getFieldProps('addressLine3')}
+              value={formik.values.addressLine3 || ''}
               onChange={formik.handleChange}
               onBlur={(e) => {
                 formik.setFieldValue('addressLine3', e.target.value.trim());
@@ -1139,6 +1150,7 @@ const InformationAllFields = ({
               label="PIN Code"
               type="text"
               {...formik.getFieldProps('pincode')}
+              value={formik.values.pincode || ''}
               error={formik.touched.pincode && Boolean(formik.errors.pincode)}
               helperText={formik.touched.pincode && formik.errors.pincode}
               disabled={!isAddressDetailsEditable.value}

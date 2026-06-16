@@ -98,9 +98,18 @@ export const StudentApi = api.injectEndpoints({
       providesTags: [studentType.student],
     }),
     getStudentAttendanceDashboardSummary: builder.query({
-      query: () => ({
+      query: (params?: StudentAttendanceDashboardSummaryQuery) => ({
         url: '/students/records/attendance-dashboard-summary',
         method: 'GET',
+        params,
+      }),
+      providesTags: [studentType.student],
+    }),
+    getStudentAttendanceHistory: builder.query({
+      query: (params: StudentAttendanceHistoryQuery) => ({
+        url: '/students/attendance/history',
+        method: 'GET',
+        params,
       }),
       providesTags: [studentType.student],
     }),
@@ -142,6 +151,20 @@ export type StudentLookupItem = {
   divisionName?: string;
 };
 
+export type StudentAttendanceDashboardSummaryQuery = {
+  startDate?: string;
+  endDate?: string;
+};
+
+export type StudentAttendanceHistoryQuery = {
+  studentId: string;
+  startDate?: string;
+  endDate?: string;
+  skipCount?: number;
+  maxResultCount?: number;
+  sorting?: string;
+};
+
 export const {
   useGetFilterStudentsQuery,
   useLazyGetFilterStudentsQuery,
@@ -153,6 +176,7 @@ export const {
   useUploadStudentPhotoMutation,
   useGetStudentDashboardSummaryQuery,
   useGetStudentAttendanceDashboardSummaryQuery,
+  useGetStudentAttendanceHistoryQuery,
   useGetStudentsByScopeQuery,
   useLazyGetStudentsByScopeQuery,
 } = StudentApi;

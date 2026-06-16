@@ -79,7 +79,7 @@ function FatherAddressComponent(props: any) {
           <TextField
             name="fatherAddress1"
             label="Building No./Flat/House No."
-            value={formik.values.fatherAddress1}
+            value={formik.values.fatherAddress1 || ''}
             onChange={formik.handleChange}
             error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
             helperText={formik.touched.fatherAddress1 && formik.errors.fatherAddress1}
@@ -598,7 +598,7 @@ const FamilyMemberSection = ({
         >
           <TextField
             name={`${type}Name`}
-            value={formik.values[`${type}Name`]}
+            value={formik.values[`${type}Name`] || ''}
             label="Full Name"
             onChange={(e) => {
               const newValue = e.target.value.replace(/[^a-zA-Z\s]/g, '');
@@ -621,7 +621,7 @@ const FamilyMemberSection = ({
       <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
         <TextField
           name={`${type}Occupation`}
-          value={formik.values[`${type}Occupation`]}
+          value={formik.values[`${type}Occupation`] || ''}
           label="Occupation"
           onChange={(e) => {
             const val = e.target.value;
@@ -645,7 +645,7 @@ const FamilyMemberSection = ({
         >
           <PhoneInput
             name={`${type}ContactNo`}
-            value={formik.values[`${type}ContactNo`]}
+            value={formik.values[`${type}ContactNo`] || ''}
             label="Mobile No."
             onChange={(value) => {
               formik.setFieldValue(`${type}ContactNo`, value);

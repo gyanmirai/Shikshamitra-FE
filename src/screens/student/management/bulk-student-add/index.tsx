@@ -17,7 +17,7 @@ import { useAddBulkStudentMutation } from 'src/redux/student/buik-student/bulk-s
 
 const BulkStudentAddScreen = () => {
   const [importStudent, { isLoading }] = useQueryAndMutation({
-    type: 'query',
+    type: 'mutation',
     currentQueryAndMutation: useAddBulkStudentMutation,
   });
 
@@ -41,26 +41,50 @@ const BulkStudentAddScreen = () => {
 
   // Implement the logic to handle file import
   // You can use a file input element to select the file and then process it
-  const handleImport = async (e: any) => {
-    const file = e?.target?.files?.[0];
-    if (!file) {
-      shikshaMitraToast.error({ message: 'Please select a file to import' });
-      return;
-    }
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const file = input.files?.[0];
     try {
+      if (!file) {
+        shikshaMitraToast.error({ message: 'Please select a file to import' });
+        return;
+      }
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        shikshaMitraToast.error({ message: 'Please upload the CSV template file.' });
+        return;
+      }
+
       const formData = new FormData();
       formData.append('files', file); // Assuming you have a file input element named 'file'
-      await importStudent(formData);
-      shikshaMitraToast.success({ message: 'File imported successfully' });
+      const response = await importStudent(formData).unwrap();
+      const result = response?.data ?? response;
+      if (result?.failedCount > 0) {
+        shikshaMitraToast.warning({
+          message: `${result.importedCount || 0} students imported, ${result.failedCount} rows failed.`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `${result?.importedCount || 0} students imported successfully`,
+        });
+      }
 
-      const data = await convertCsvToJson(file);
+      let data: Record<string, any>[] = [];
+      try {
+        data = await convertCsvToJson(file);
+      } catch {
+        shikshaMitraToast.warning({
+          message: 'Students imported, but the preview could not be generated.',
+        });
+      }
 
       setReviewStudentData(data); // Set the review student data
       isOpenReviewDialog.onTrue();
 
       // Handle the response from the API here
-    } catch (error) {
-      console.error(error);
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to import students from the selected file.' });
+    } finally {
+      input.value = '';
     }
   };
 
@@ -83,7 +107,7 @@ const BulkStudentAddScreen = () => {
           variant="contained"
           onChange={handleImport}
           disabled={isLoading}
-          accept=".csv, .xlsx, .xls"
+          accept=".csv"
         >
           {isLoading ? 'Importing..' : 'Import'}
         </UploadButton>

@@ -1,13 +1,46 @@
 'use client';
 
+import type { ReactNode } from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { EmployeeApplication } from 'src/redux/hr/employeeOnboardingApi';
 
 import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
-import { useMemo, useState, useEffect } from 'react';
+import { hrPaths } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
+import {
+  Box,
+  Card,
+  Chip,
+  Grid,
+  Step,
+  Stack,
+  Button,
+  Dialog,
+  Select,
+  Stepper,
+  MenuItem,
+  MenuList,
+  Checkbox,
+  TextField,
+  StepLabel,
+  Typography,
+  InputLabel,
+  DialogTitle,
+  FormControl,
+  ListItemIcon,
+  ListItemText,
+  DialogActions,
+  DialogContent,
+  FormControlLabel,
+} from '@mui/material';
 import {
   useGetEmployeeApplicationQuery,
   useGetEmployeeApplicationsQuery,
@@ -19,39 +52,6 @@ import {
   useUpdateEmployeeApplicationStatusMutation,
   useRegenerateEmployeeApplicationLinkMutation,
 } from 'src/redux/hr/employeeOnboardingApi';
-import {
-  Box,
-  Chip,
-  Grid,
-  Step,
-  Paper,
-  Stack,
-  Table,
-  Button,
-  Drawer,
-  Dialog,
-  Select,
-  Stepper,
-  Tooltip,
-  MenuItem,
-  TableRow,
-  Checkbox,
-  TextField,
-  TableBody,
-  TableCell,
-  TableHead,
-  StepLabel,
-  Typography,
-  IconButton,
-  InputLabel,
-  DialogTitle,
-  FormControl,
-  DialogActions,
-  DialogContent,
-  TableContainer,
-  FormControlLabel,
-  CircularProgress,
-} from '@mui/material';
 
 import {
   EmployeeApplicationStatus,
@@ -91,6 +91,9 @@ type FinalizeFormState = {
   doj: string;
   isTeaching: boolean;
   department: string;
+  designation: string;
+  qualification: string;
+  identificationMark1: string;
   roleId: string;
   shiftId: string;
   organizationIds: string;
@@ -107,6 +110,13 @@ type FinalizeFormState = {
   attachResumeAsDocument: boolean;
 };
 
+type EmployeeOnboardingListParams = {
+  page: number;
+  pageSize: number;
+  search: string;
+  status: string;
+};
+
 const defaultInviteForm: InviteFormState = {
   firstName: '',
   middleName: '',
@@ -117,62 +127,141 @@ const defaultInviteForm: InviteFormState = {
   departmentAppliedFor: '',
 };
 
-const formatDate = (value?: string | null) => (value ? dayjs(value).format('DD MMM YYYY') : '-');
+const onboardingBreadcrumbSx = {
+  flexWrap: { xs: 'wrap', sm: 'nowrap' },
+  alignItems: { xs: 'flex-start', sm: 'center' },
+  rowGap: 1,
+  '& > :last-child': {
+    width: { xs: '100%', sm: 'auto' },
+    display: 'flex',
+    justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+  },
+};
+
+const onboardingBreadcrumbSlotProps = {
+  action: {},
+  heading: {
+    maxWidth: { xs: 'calc(100vw - 140px)', sm: 'none' },
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  moreLink: {},
+  breadcrumbs: {
+    display: { xs: 'none', md: 'block' },
+  },
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) {
+    return '-';
+  }
+
+  const parsedDate = dayjs(value);
+
+  return parsedDate.isValid() ? parsedDate.format('DD MMM YYYY') : '-';
+};
 
 const toDateInputValue = (value?: string | null) =>
   value ? dayjs(value).format('YYYY-MM-DD') : '';
 
+const formatBoolean = (value?: boolean | null) => {
+  if (value === true) return 'Yes';
+  if (value === false) return 'No';
+  return '-';
+};
+
 const copyToClipboard = async (value: string, label = 'Link') => {
-  await navigator.clipboard.writeText(value);
-  shikshaMitraToast.success({ message: `${label} copied` });
+  try {
+    await navigator.clipboard.writeText(value);
+    shikshaMitraToast.success({ message: `${label} copied` });
+    return true;
+  } catch {
+    shikshaMitraToast.warning({ message: `${label} could not be copied` });
+    return false;
+  }
 };
 
 const buildPublicLink = (path: string) =>
   typeof window === 'undefined' ? path : `${window.location.origin}${path}`;
 
-const buildFinalizeInitialValues = (application: EmployeeApplication): FinalizeFormState => ({
-  firstName: application.firstName || '',
-  middleName: application.middleName || '',
-  lastName: application.lastName || '',
-  dob: toDateInputValue(application.dateOfBirth),
-  gender: application.gender ? String(application.gender) : '',
-  religion: application.religion || '',
-  casteType:
-    application.casteType !== null && application.casteType !== undefined
-      ? String(application.casteType)
-      : '',
-  familyCaste: application.familyCaste || '',
-  maritalStatus:
-    application.maritalStatus !== null && application.maritalStatus !== undefined
-      ? String(application.maritalStatus)
-      : '',
-  bloodGroup:
-    application.bloodGroup !== null && application.bloodGroup !== undefined
-      ? String(application.bloodGroup)
-      : '',
-  email: application.email || '',
-  mobileNo: application.mobileNo || '',
-  secondaryMobileNo: application.secondaryMobileNo || '',
-  panNo: '',
-  adharNo: '',
-  doj: dayjs().format('YYYY-MM-DD'),
-  isTeaching: true,
-  department: application.departmentAppliedFor || '',
-  roleId: '',
-  shiftId: '',
-  organizationIds: '',
-  address1: application.address1 || '',
-  address2: application.address2 || '',
-  address3: application.address3 || '',
-  countryName: application.country?.name || 'India',
-  countryIsoCode: application.country?.isoCode || 'IN',
-  stateName: application.state?.name || '',
-  stateIsoCode: application.state?.isoCode || '',
-  city: application.city || '',
-  pinCode: application.pinCode || '',
-  useSubmittedPhoto: application.hasPhoto,
-  attachResumeAsDocument: application.hasResume,
-});
+const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
+const showInviteEmailDeliveryToast = (
+  emailDeliverySucceeded: boolean,
+  successMessage: string,
+  failureMessage: string,
+  emailDeliveryMessage?: string | null
+) => {
+  if (emailDeliverySucceeded) {
+    shikshaMitraToast.success({ message: successMessage });
+    return;
+  }
+
+  shikshaMitraToast.warning({ message: emailDeliveryMessage || failureMessage });
+};
+
+const buildFinalizeInitialValues = (application: EmployeeApplication): FinalizeFormState => {
+  const { personalInfo } = application;
+
+  return {
+    firstName: personalInfo?.firstName || application.firstName || '',
+    middleName: personalInfo?.middleName || application.middleName || '',
+    lastName: personalInfo?.lastName || application.lastName || '',
+    dob: toDateInputValue(personalInfo?.dateOfBirth || application.dateOfBirth),
+    gender:
+      personalInfo?.gender !== null && personalInfo?.gender !== undefined
+        ? String(personalInfo.gender)
+        : application.gender
+          ? String(application.gender)
+          : '',
+    religion: personalInfo?.religion || application.religion || '',
+    casteType:
+      personalInfo?.casteType !== null && personalInfo?.casteType !== undefined
+        ? String(personalInfo.casteType)
+        : application.casteType !== null && application.casteType !== undefined
+          ? String(application.casteType)
+          : '',
+    familyCaste: personalInfo?.familyCaste || application.familyCaste || '',
+    maritalStatus:
+      personalInfo?.maritalStatus !== null && personalInfo?.maritalStatus !== undefined
+        ? String(personalInfo.maritalStatus)
+        : application.maritalStatus !== null && application.maritalStatus !== undefined
+          ? String(application.maritalStatus)
+          : '',
+    bloodGroup:
+      personalInfo?.bloodGroup !== null && personalInfo?.bloodGroup !== undefined
+        ? String(personalInfo.bloodGroup)
+        : application.bloodGroup !== null && application.bloodGroup !== undefined
+          ? String(application.bloodGroup)
+          : '',
+    email: personalInfo?.email || application.email || '',
+    mobileNo: personalInfo?.mobileNo || application.mobileNo || '',
+    secondaryMobileNo: personalInfo?.secondaryMobileNo || application.secondaryMobileNo || '',
+    panNo: '',
+    adharNo: '',
+    doj: dayjs().format('YYYY-MM-DD'),
+    isTeaching: personalInfo?.isTeaching ?? true,
+    department: personalInfo?.department || application.departmentAppliedFor || '',
+    designation: personalInfo?.designation || application.positionAppliedFor || '',
+    qualification: personalInfo?.qualification || application.qualificationSummary || '',
+    identificationMark1: personalInfo?.identificationMark1 || '',
+    roleId: '',
+    shiftId: '',
+    organizationIds: '',
+    address1: personalInfo?.address1 || application.address1 || '',
+    address2: personalInfo?.address2 || application.address2 || '',
+    address3: personalInfo?.address3 || application.address3 || '',
+    countryName: personalInfo?.country?.name || application.country?.name || 'India',
+    countryIsoCode: personalInfo?.country?.isoCode || application.country?.isoCode || 'IN',
+    stateName: personalInfo?.state?.name || application.state?.name || '',
+    stateIsoCode: personalInfo?.state?.isoCode || application.state?.isoCode || '',
+    city: personalInfo?.city || application.city || '',
+    pinCode: personalInfo?.pincode || application.pinCode || '',
+    useSubmittedPhoto: application.hasPhoto,
+    attachResumeAsDocument: application.hasResume,
+  };
+};
 
 const toNullableNumber = (value: string) => (value === '' ? null : Number(value));
 
@@ -205,15 +294,22 @@ function StatusChip({ status }: { status: EmployeeApplication['status'] }) {
 function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [form, setForm] = useState<InviteFormState>(defaultInviteForm);
   const [createInvite, { isLoading }] = useCreateEmployeeApplicationInviteMutation();
+  const emailError = Boolean(form.email) && !isValidEmail(form.email);
+  const canCreateInvite = isValidEmail(form.email);
 
   const updateField = (field: keyof InviteFormState, value: string) =>
     setForm((current) => ({ ...current, [field]: value }));
 
   const handleCreate = async () => {
     try {
-      const result = await createInvite(form).unwrap();
+      const result = await createInvite({ ...form, email: form.email.trim() }).unwrap();
       await copyToClipboard(buildPublicLink(result.publicPath), 'Application link');
-      shikshaMitraToast.success({ message: 'Invite created' });
+      showInviteEmailDeliveryToast(
+        result.emailDeliverySucceeded,
+        'Invite created and emailed',
+        'Invite created, but email failed',
+        result.emailDeliveryMessage
+      );
       setForm(defaultInviteForm);
       onClose();
     } catch {
@@ -264,8 +360,11 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
               fullWidth
               size="small"
               label="Email"
+              required
               value={form.email}
               onChange={(event) => updateField('email', event.target.value)}
+              error={emailError}
+              helperText={emailError ? 'Enter a valid email address.' : ' '}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -302,7 +401,7 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
         <Button
           variant="contained"
           onClick={handleCreate}
-          disabled={isLoading || (!form.email && !form.mobileNo)}
+          disabled={isLoading || !canCreateInvite}
           startIcon={<Iconify icon="mdi:link-plus" />}
         >
           Create link
@@ -312,33 +411,139 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
   );
 }
 
-function DetailDrawer({
+function DetailField({
+  label,
+  value,
+  multiline = false,
+}: {
+  label: string;
+  value?: string | number | null;
+  multiline?: boolean;
+}) {
+  return (
+    <TextField
+      fullWidth
+      size="small"
+      label={label}
+      value={value || '-'}
+      multiline={multiline}
+      minRows={multiline ? 3 : undefined}
+      InputProps={{ readOnly: true }}
+    />
+  );
+}
+
+function DetailSection({
+  title,
+  children,
+  testId,
+}: {
+  title: string;
+  children: ReactNode;
+  testId?: string;
+}) {
+  return (
+    <Card sx={{ p: 2 }} data-testid={testId}>
+      <Stack spacing={2}>
+        <Typography variant="subtitle1">{title}</Typography>
+        {children}
+      </Stack>
+    </Card>
+  );
+}
+
+function EmployeeOnboardingDetailView({
   application,
-  open,
-  onClose,
+  onBack,
   onFinalize,
+  onCopyInviteLink,
+  onRegenerateLink,
+  onDelete,
+  regenerateLoading,
+  deleteLoading,
 }: {
   application?: EmployeeApplication;
-  open: boolean;
-  onClose: () => void;
+  onBack: () => void;
   onFinalize: (application: EmployeeApplication) => void;
+  onCopyInviteLink: (application: EmployeeApplication) => Promise<void>;
+  onRegenerateLink: (application: EmployeeApplication) => Promise<void>;
+  onDelete: (application: EmployeeApplication, onDeleted?: () => void) => Promise<void>;
+  regenerateLoading: boolean;
+  deleteLoading: boolean;
 }) {
   const [status, setStatus] = useState<EmployeeApplicationStatus>(
     EmployeeApplicationStatus.Screening
   );
   const [reason, setReason] = useState('');
   const [updateStatus, { isLoading: statusLoading }] = useUpdateEmployeeApplicationStatusMutation();
-  const [regenerateLink, { isLoading: regenerateLoading }] =
-    useRegenerateEmployeeApplicationLinkMutation();
-  const [deleteApplication, { isLoading: deleteLoading }] = useDeleteEmployeeApplicationMutation();
   const [downloadResume] = useLazyGetEmployeeApplicationResumeQuery();
   const [downloadPhoto] = useLazyGetEmployeeApplicationPhotoQuery();
 
+  useEffect(() => {
+    if (application) {
+      setStatus(normalizeEmployeeApplicationStatus(application.status));
+      setReason('');
+    }
+  }, [application]);
+
   if (!application) {
-    return null;
+    return (
+      <Box
+        data-testid="employee-onboarding-detail-view"
+        sx={{ height: '100%', minWidth: 0, overflowX: 'hidden' }}
+      >
+        <CustomBreadcrumbs
+          heading="Employee Onboarding"
+          links={[
+            { name: 'HR/Staff', href: hrPaths.dashboard },
+            { name: 'Employee' },
+            { name: 'Employee Onboarding', onClick: onBack },
+            { name: 'Application details' },
+          ]}
+          sx={onboardingBreadcrumbSx}
+          slotProps={onboardingBreadcrumbSlotProps}
+          isBack
+          onBack={onBack}
+        />
+        <Card sx={{ p: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Loading application details...
+          </Typography>
+        </Card>
+      </Box>
+    );
   }
 
   const normalizedStatus = normalizeEmployeeApplicationStatus(application.status);
+  const canUpdateStatus = normalizedStatus !== EmployeeApplicationStatus.Finalized;
+  const submittedPersonal = application.personalInfo;
+  const { familyInfo } = application;
+  const { additionalInfo } = application;
+  const candidateName =
+    application.fullName ||
+    [submittedPersonal?.firstName, submittedPersonal?.middleName, submittedPersonal?.lastName]
+      .filter(Boolean)
+      .join(' ') ||
+    'Candidate';
+  const candidateEmail = submittedPersonal?.email || application.email;
+  const candidateMobile = submittedPersonal?.mobileNo || application.mobileNo;
+  const candidateSecondaryMobile =
+    submittedPersonal?.secondaryMobileNo || application.secondaryMobileNo;
+  const submittedPosition = submittedPersonal?.designation || application.positionAppliedFor;
+  const submittedDepartment = submittedPersonal?.department || application.departmentAppliedFor;
+  const submittedQualification =
+    submittedPersonal?.qualification || application.qualificationSummary;
+  const submittedIdentificationMark = submittedPersonal?.identificationMark1;
+  const address =
+    [
+      submittedPersonal?.address1 || application.address1,
+      submittedPersonal?.address2 || application.address2,
+      submittedPersonal?.city || application.city,
+      submittedPersonal?.state?.name || application.state?.name,
+      submittedPersonal?.country?.name || application.country?.name,
+    ]
+      .filter(Boolean)
+      .join(', ') || '-';
 
   const handleStatusUpdate = async (nextStatus = status) => {
     try {
@@ -346,26 +551,6 @@ function DetailDrawer({
       shikshaMitraToast.success({ message: 'Status updated' });
     } catch {
       shikshaMitraToast.error({ message: 'Could not update status' });
-    }
-  };
-
-  const handleRegenerate = async () => {
-    try {
-      const result = await regenerateLink(application.id).unwrap();
-      await copyToClipboard(buildPublicLink(result.publicPath), 'New application link');
-      shikshaMitraToast.success({ message: 'Link regenerated' });
-    } catch {
-      shikshaMitraToast.error({ message: 'Could not regenerate link' });
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      await deleteApplication(application.id).unwrap();
-      shikshaMitraToast.success({ message: 'Application deleted' });
-      onClose();
-    } catch {
-      shikshaMitraToast.error({ message: 'Could not delete application' });
     }
   };
 
@@ -387,170 +572,54 @@ function DetailDrawer({
   };
 
   return (
-    <Drawer
-      open={open}
-      anchor="right"
-      onClose={onClose}
-      PaperProps={{ sx: { width: 480, maxWidth: '100%' } }}
+    <Box
+      data-testid="employee-onboarding-detail-view"
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+        overflowX: 'hidden',
+      }}
     >
-      <Box sx={{ p: 3 }} data-testid="employee-onboarding-detail-drawer">
-        <Stack spacing={3}>
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={2}>
-            <Box>
-              <Typography variant="h6">{application.fullName || 'Candidate'}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {application.applicationNumber}
-              </Typography>
-            </Box>
-            <StatusChip status={application.status} />
-          </Stack>
-
-          <Stack spacing={1.2}>
-            <Typography variant="subtitle2">Application</Typography>
-            <Typography variant="body2">
-              Position: {application.positionAppliedFor || '-'}
-            </Typography>
-            <Typography variant="body2">
-              Department: {application.departmentAppliedFor || '-'}
-            </Typography>
-            <Typography variant="body2">Email: {application.email || '-'}</Typography>
-            <Typography variant="body2">Mobile: {application.mobileNo || '-'}</Typography>
-            <Typography variant="body2">
-              Submitted: {formatDate(application.submittedAt)}
-            </Typography>
-            <Typography variant="body2">
-              Link expires: {formatDate(application.tokenExpiresAt)}
-            </Typography>
-          </Stack>
-
-          <Stack spacing={1.2}>
-            <Typography variant="subtitle2">Candidate details</Typography>
-            <Typography variant="body2">
-              Qualification: {application.qualificationSummary || '-'}
-            </Typography>
-            <Typography variant="body2">Skills: {application.skillsSummary || '-'}</Typography>
-            <Typography variant="body2">
-              Address:{' '}
-              {[
-                application.address1,
-                application.address2,
-                application.city,
-                application.state?.name,
-              ]
-                .filter(Boolean)
-                .join(', ') || '-'}
-            </Typography>
-          </Stack>
-
-          <Stack spacing={1.2} data-testid="employee-onboarding-work-experience-list">
-            <Typography variant="subtitle2">Work experience</Typography>
-            {(application.workExperiences || []).length ? (
-              application.workExperiences?.map((experience, index) => (
-                <Box key={`${experience.mediumStageName || 'experience'}-${index}`}>
-                  <Typography variant="body2">
-                    {experience.mediumStageName || '-'}
-                    {experience.designation ? `, ${experience.designation}` : ''}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {[experience.department, experience.city].filter(Boolean).join(' - ') || '-'}
-                  </Typography>
-                </Box>
-              ))
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                No work experience submitted.
-              </Typography>
+      <CustomBreadcrumbs
+        heading={`${candidateName} Application`}
+        links={[
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Employee' },
+          { name: 'Employee Onboarding', onClick: onBack },
+          { name: candidateName },
+        ]}
+        description={application.applicationNumber || 'Candidate onboarding application details.'}
+        sx={onboardingBreadcrumbSx}
+        slotProps={onboardingBreadcrumbSlotProps}
+        isBack
+        onBack={onBack}
+        action={
+          <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="flex-end">
+            {application.publicPath && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => onCopyInviteLink(application)}
+                startIcon={<Iconify icon="mdi:content-copy" />}
+                data-testid="employee-onboarding-copy-link"
+              >
+                Copy link
+              </Button>
             )}
-          </Stack>
-
-          <Stack direction="row" spacing={1} flexWrap="wrap">
             <Button
               size="small"
               variant="outlined"
-              disabled={!application.hasResume}
-              onClick={() => handleDownload('resume')}
-              startIcon={<Iconify icon="mdi:file-download-outline" />}
-            >
-              Resume
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              disabled={!application.hasPhoto}
-              onClick={() => handleDownload('photo')}
-              startIcon={<Iconify icon="mdi:image-outline" />}
-            >
-              Photo
-            </Button>
-          </Stack>
-
-          <Stack spacing={1.5}>
-            <Typography variant="subtitle2">Status action</Typography>
-            <FormControl size="small" fullWidth>
-              <InputLabel>Status</InputLabel>
-              <Select
-                label="Status"
-                value={status}
-                onChange={(event) =>
-                  setStatus(Number(event.target.value) as EmployeeApplicationStatus)
-                }
-              >
-                {EMPLOYEE_APPLICATION_STATUSES.filter(
-                  (item) => item !== EmployeeApplicationStatus.Finalized
-                ).map((item) => (
-                  <MenuItem key={item} value={item}>
-                    {getEmployeeApplicationStatusLabel(item)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              size="small"
-              label="Reason"
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              multiline
-              minRows={2}
-            />
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant="contained"
-                onClick={() => handleStatusUpdate()}
-                disabled={statusLoading || normalizedStatus === EmployeeApplicationStatus.Finalized}
-              >
-                Update
-              </Button>
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={() => handleStatusUpdate(EmployeeApplicationStatus.Rejected)}
-                disabled={statusLoading || normalizedStatus === EmployeeApplicationStatus.Finalized}
-              >
-                Reject
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => handleStatusUpdate(EmployeeApplicationStatus.Withdrawn)}
-                disabled={statusLoading || normalizedStatus === EmployeeApplicationStatus.Finalized}
-              >
-                Withdraw
-              </Button>
-            </Stack>
-          </Stack>
-
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            <Button
-              variant="outlined"
-              onClick={handleRegenerate}
-              disabled={
-                regenerateLoading || normalizedStatus === EmployeeApplicationStatus.Finalized
-              }
+              onClick={() => onRegenerateLink(application)}
+              disabled={regenerateLoading || !canUpdateStatus}
               startIcon={<Iconify icon="mdi:link-variant-plus" />}
               data-testid="employee-onboarding-regenerate-link"
             >
-              Regenerate link
+              Regenerate
             </Button>
             <Button
+              size="small"
               variant="contained"
               color="success"
               onClick={() => onFinalize(application)}
@@ -561,17 +630,284 @@ function DetailDrawer({
               Finalize
             </Button>
             <Button
+              size="small"
               variant="text"
               color="error"
-              onClick={handleDelete}
-              disabled={deleteLoading || normalizedStatus === EmployeeApplicationStatus.Finalized}
+              onClick={() => onDelete(application, onBack)}
+              disabled={deleteLoading || !canUpdateStatus}
+              startIcon={<Iconify icon="mdi:delete-outline" />}
             >
               Delete
             </Button>
           </Stack>
-        </Stack>
-      </Box>
-    </Drawer>
+        }
+      />
+
+      <Stack spacing={2} sx={{ flex: 1, minHeight: 0, minWidth: 0, overflowX: 'hidden' }}>
+        <Card sx={{ p: 2 }}>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={2}
+            justifyContent="space-between"
+            alignItems={{ xs: 'flex-start', md: 'center' }}
+          >
+            <Stack spacing={0.5}>
+              <Typography variant="h6">{candidateName}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {[candidateEmail, candidateMobile].filter(Boolean).join(' / ') || '-'}
+              </Typography>
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+              <StatusChip status={application.status} />
+              <Typography variant="caption" color="text.secondary">
+                Expires {formatDate(application.tokenExpiresAt)}
+              </Typography>
+            </Stack>
+          </Stack>
+        </Card>
+
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, lg: 7 }}>
+            <Stack spacing={2}>
+              <DetailSection title="Application">
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Position" value={submittedPosition} />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Department" value={submittedDepartment} />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Submitted" value={formatDate(application.submittedAt)} />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField
+                      label="Link expires"
+                      value={formatDate(application.tokenExpiresAt)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Application no." value={application.applicationNumber} />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Mobile" value={candidateMobile} />
+                  </Grid>
+                </Grid>
+              </DetailSection>
+
+              <DetailSection title="Candidate details">
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Email" value={candidateEmail} />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Secondary mobile" value={candidateSecondaryMobile} />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField
+                      label="Date of birth"
+                      value={formatDate(submittedPersonal?.dateOfBirth || application.dateOfBirth)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <DetailField label="Qualification" value={submittedQualification} multiline />
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <DetailField
+                      label="Identification mark"
+                      value={submittedIdentificationMark}
+                      multiline
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <DetailField label="Address" value={address} multiline />
+                  </Grid>
+                </Grid>
+              </DetailSection>
+
+              <DetailSection title="Family information">
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Father name" value={familyInfo?.fatherDetails?.name} />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField
+                      label="Father mobile"
+                      value={familyInfo?.fatherDetails?.mobileNo}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Mother name" value={familyInfo?.motherDetails?.name} />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField
+                      label="Mother mobile"
+                      value={familyInfo?.motherDetails?.mobileNo}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Spouse name" value={familyInfo?.spouseDetails?.name} />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField
+                      label="Spouse mobile"
+                      value={familyInfo?.spouseDetails?.mobileNo}
+                    />
+                  </Grid>
+                </Grid>
+              </DetailSection>
+
+              <DetailSection title="Additional details">
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField
+                      label="Person with disability"
+                      value={formatBoolean(additionalInfo?.personWithDisability)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Second language" value={additionalInfo?.secondLanguage} />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField
+                      label="Library member"
+                      value={formatBoolean(additionalInfo?.isLibraryMember)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField
+                      label="Transport member"
+                      value={formatBoolean(additionalInfo?.isTransportMember)}
+                    />
+                  </Grid>
+                </Grid>
+              </DetailSection>
+
+              <DetailSection
+                title="Work experience"
+                testId="employee-onboarding-work-experience-list"
+              >
+                {(application.workExperiences || []).length ? (
+                  <Grid container spacing={2}>
+                    {application.workExperiences?.map((experience, index) => (
+                      <Grid
+                        key={`${experience.mediumStageName || 'experience'}-${index}`}
+                        size={{ xs: 12, md: 6 }}
+                      >
+                        <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+                          <Stack spacing={0.5}>
+                            <Typography variant="subtitle2">
+                              {experience.mediumStageName || '-'}
+                              {experience.designation ? `, ${experience.designation}` : ''}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {[experience.department, experience.city]
+                                .filter(Boolean)
+                                .join(' - ') || '-'}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {[formatDate(experience.startDate), formatDate(experience.endDate)]
+                                .filter((value) => value !== '-')
+                                .join(' to ') || '-'}
+                            </Typography>
+                          </Stack>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No work experience submitted.
+                  </Typography>
+                )}
+              </DetailSection>
+            </Stack>
+          </Grid>
+
+          <Grid size={{ xs: 12, lg: 5 }}>
+            <Stack spacing={2}>
+              <DetailSection title="Documents">
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={!application.hasResume}
+                    onClick={() => handleDownload('resume')}
+                    startIcon={<Iconify icon="mdi:file-download-outline" />}
+                  >
+                    Resume
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={!application.hasPhoto}
+                    onClick={() => handleDownload('photo')}
+                    startIcon={<Iconify icon="mdi:image-outline" />}
+                  >
+                    Photo
+                  </Button>
+                </Stack>
+              </DetailSection>
+
+              <DetailSection title="Status action">
+                <Stack spacing={1.5}>
+                  <FormControl size="small" fullWidth>
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                      label="Status"
+                      value={status}
+                      onChange={(event) =>
+                        setStatus(Number(event.target.value) as EmployeeApplicationStatus)
+                      }
+                    >
+                      {EMPLOYEE_APPLICATION_STATUSES.filter(
+                        (item) => item !== EmployeeApplicationStatus.Finalized
+                      ).map((item) => (
+                        <MenuItem key={item} value={item}>
+                          {getEmployeeApplicationStatusLabel(item)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    size="small"
+                    label="Reason"
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    multiline
+                    minRows={3}
+                  />
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Button
+                      variant="contained"
+                      onClick={() => handleStatusUpdate()}
+                      disabled={statusLoading || !canUpdateStatus}
+                    >
+                      Update
+                    </Button>
+                    <Button
+                      color="error"
+                      variant="outlined"
+                      onClick={() => handleStatusUpdate(EmployeeApplicationStatus.Rejected)}
+                      disabled={statusLoading || !canUpdateStatus}
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      onClick={() => handleStatusUpdate(EmployeeApplicationStatus.Withdrawn)}
+                      disabled={statusLoading || !canUpdateStatus}
+                    >
+                      Withdraw
+                    </Button>
+                  </Stack>
+                </Stack>
+              </DetailSection>
+            </Stack>
+          </Grid>
+        </Grid>
+      </Stack>
+    </Box>
   );
 }
 
@@ -644,6 +980,9 @@ function FinalizeDialog({
             doj: form.doj,
             isTeaching: form.isTeaching,
             department: form.department || null,
+            designation: form.designation || null,
+            qualification: form.qualification || null,
+            identificationMark1: form.identificationMark1 || null,
             roleId: form.roleId,
             shiftId: form.shiftId,
             organizationIds: parseOrganizationIds(form.organizationIds),
@@ -655,6 +994,8 @@ function FinalizeDialog({
             city: form.city,
             pinCode: form.pinCode || null,
           },
+          familyInfo: application.familyInfo || null,
+          additionalInfo: application.additionalInfo || null,
           workExperiences: application.workExperiences || [],
           useSubmittedPhoto: form.useSubmittedPhoto,
           attachResumeAsDocument: form.attachResumeAsDocument,
@@ -908,6 +1249,33 @@ function FinalizeDialog({
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
+                  fullWidth
+                  size="small"
+                  label="Designation"
+                  value={form.designation}
+                  onChange={(event) => updateField('designation', event.target.value)}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Qualification"
+                  value={form.qualification}
+                  onChange={(event) => updateField('qualification', event.target.value)}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Identification mark"
+                  value={form.identificationMark1}
+                  onChange={(event) => updateField('identificationMark1', event.target.value)}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
                   select
                   fullWidth
                   size="small"
@@ -1101,188 +1469,424 @@ function FinalizeDialog({
 }
 
 export default function EmployeeOnboardingScreen() {
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const { getAllParams, setParam, deleteParam } = useCustomSearchParams();
+  const searchParams = getAllParams();
+  const applicationId = searchParams.application || '';
+  const [employeeParams, setEmployeeParams] = useState<EmployeeOnboardingListParams>({
+    page: 1,
+    pageSize: 10,
+    search: '',
+    status: 'All',
+  });
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [finalizeApplication, setFinalizeApplication] = useState<EmployeeApplication | undefined>();
   const finalizeApplicationId = finalizeApplication?.id;
+  const [regenerateLink, { isLoading: regenerateLoading }] =
+    useRegenerateEmployeeApplicationLinkMutation();
+  const [deleteApplication, { isLoading: deleteLoading }] = useDeleteEmployeeApplicationMutation();
+
+  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
+    setEmployeeParams((current) => ({ ...current, page, pageSize: rowsPerPage }));
+  }, []);
+
+  const handleServerSearch = useCallback((search: string) => {
+    setEmployeeParams((current) => ({ ...current, page: 1, search }));
+  }, []);
+
   const queryArgs = useMemo(
     () => ({
-      search,
-      status: statusFilter,
-      skipCount: 0,
-      maxResultCount: 50,
+      search: employeeParams.search,
+      status: employeeParams.status === 'All' ? undefined : employeeParams.status,
+      skipCount: (employeeParams.page - 1) * employeeParams.pageSize,
+      maxResultCount: employeeParams.pageSize,
     }),
-    [search, statusFilter]
+    [employeeParams]
   );
 
   const { data, isFetching } = useGetEmployeeApplicationsQuery(queryArgs);
-  const { data: detailData } = useGetEmployeeApplicationQuery(selectedId || '', {
-    skip: !selectedId,
+  const { data: detailData } = useGetEmployeeApplicationQuery(applicationId || '', {
+    skip: !applicationId,
   });
   const { data: finalizeDetailData } = useGetEmployeeApplicationQuery(finalizeApplicationId || '', {
     skip: !finalizeApplicationId,
   });
 
   const applications = data?.items || [];
-  const selectedApplication = detailData || applications.find((item) => item.id === selectedId);
+  const totalCount = data?.totalCount || 0;
+  const selectedApplication = applicationId
+    ? detailData || applications.find((item) => item.id === applicationId)
+    : undefined;
+
+  const handleOpenApplication = useCallback(
+    (id: string) => {
+      setParam('application', id);
+    },
+    [setParam]
+  );
+
+  const handleBackToList = useCallback(() => {
+    deleteParam('application');
+  }, [deleteParam]);
+
+  const handleCopyInviteLink = useCallback(async (application: EmployeeApplication) => {
+    if (!application.publicPath) {
+      return;
+    }
+
+    await copyToClipboard(buildPublicLink(application.publicPath), 'Application link');
+  }, []);
+
+  const handleRegenerateLink = useCallback(
+    async (application: EmployeeApplication) => {
+      try {
+        const result = await regenerateLink(application.id).unwrap();
+        await copyToClipboard(buildPublicLink(result.publicPath), 'New application link');
+        showInviteEmailDeliveryToast(
+          result.emailDeliverySucceeded,
+          'Link regenerated and emailed',
+          'Link regenerated, but email failed',
+          result.emailDeliveryMessage
+        );
+      } catch {
+        shikshaMitraToast.error({ message: 'Could not regenerate link' });
+      }
+    },
+    [regenerateLink]
+  );
+
+  const handleDeleteApplication = useCallback(
+    async (application: EmployeeApplication, onDeleted?: () => void) => {
+      try {
+        await deleteApplication(application.id).unwrap();
+        shikshaMitraToast.success({ message: 'Application deleted' });
+        onDeleted?.();
+      } catch {
+        shikshaMitraToast.error({ message: 'Could not delete application' });
+      }
+    },
+    [deleteApplication]
+  );
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'candidate',
+        label: 'Candidate',
+        align: 'left',
+        width: 260,
+        minWidth: 220,
+        isSort: false,
+        render: (_value, row) => {
+          const application = row as EmployeeApplication;
+
+          return (
+            <Box
+              component="button"
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                handleOpenApplication(application.id);
+              }}
+              sx={{
+                display: 'block',
+                width: '100%',
+                p: 0,
+                border: 0,
+                bgcolor: 'transparent',
+                color: 'inherit',
+                textAlign: 'left',
+                cursor: 'pointer',
+              }}
+            >
+              <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+                <Typography variant="subtitle2" noWrap>
+                  {application.fullName || 'Candidate'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {application.email || application.mobileNo || application.applicationNumber}
+                </Typography>
+              </Stack>
+            </Box>
+          );
+        },
+      },
+      {
+        id: 'position',
+        label: 'Position',
+        align: 'left',
+        width: 220,
+        minWidth: 180,
+        isSort: false,
+        render: (_value, row) => {
+          const application = row as EmployeeApplication;
+
+          return (
+            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+              <Typography variant="body2" noWrap>
+                {application.positionAppliedFor || '-'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {application.departmentAppliedFor || '-'}
+              </Typography>
+            </Stack>
+          );
+        },
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        align: 'left',
+        width: 160,
+        minWidth: 150,
+        isSort: false,
+        render: (value) => <StatusChip status={value} />,
+      },
+      {
+        id: 'submittedAt',
+        label: 'Submitted',
+        align: 'left',
+        width: 140,
+        minWidth: 130,
+        isSort: false,
+        render: (value) => formatDate(value),
+      },
+      {
+        id: 'tokenExpiresAt',
+        label: 'Expires',
+        align: 'left',
+        width: 140,
+        minWidth: 130,
+        isSort: false,
+        render: (value) => formatDate(value),
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        align: 'right',
+        width: 120,
+        minWidth: 112,
+        isSort: false,
+        isFilter: false,
+        headerSx: { px: 1.5 },
+        cellSx: { px: 1.5 },
+        render: (_value, row) => {
+          const application = row as EmployeeApplication;
+          const canFinalize = canFinalizeEmployeeApplication(application.status);
+          const normalizedStatus = normalizeEmployeeApplicationStatus(application.status);
+          const canMutate = normalizedStatus !== EmployeeApplicationStatus.Finalized;
+
+          return (
+            <Box
+              data-testid="employee-onboarding-row-details"
+              sx={{ display: 'flex', justifyContent: 'flex-end' }}
+            >
+              <ThreeDotsActions
+                showViewIcon
+                placement="right-top"
+                sx={{
+                  gap: 1,
+                  '& .MuiIconButton-root': {
+                    p: 0.75,
+                  },
+                  '& svg': {
+                    width: 18,
+                    height: 18,
+                  },
+                }}
+                handleViewClick={() => handleOpenApplication(application.id)}
+                actions={({ popover }) => (
+                  <MenuList dense>
+                    <MenuItem
+                      data-testid="employee-onboarding-row-finalize"
+                      disabled={!canFinalize}
+                      onClick={() => {
+                        popover.onClose();
+                        setFinalizeApplication(application);
+                      }}
+                    >
+                      <ListItemIcon>
+                        <Iconify icon="mdi:account-check-outline" />
+                      </ListItemIcon>
+                      <ListItemText>Finalize</ListItemText>
+                    </MenuItem>
+                    {application.publicPath && (
+                      <MenuItem
+                        onClick={() => {
+                          popover.onClose();
+                          handleCopyInviteLink(application).catch(() => undefined);
+                        }}
+                      >
+                        <ListItemIcon>
+                          <Iconify icon="mdi:content-copy" />
+                        </ListItemIcon>
+                        <ListItemText>Copy invite link</ListItemText>
+                      </MenuItem>
+                    )}
+                    <MenuItem
+                      disabled={!canMutate}
+                      onClick={() => {
+                        popover.onClose();
+                        handleRegenerateLink(application).catch(() => undefined);
+                      }}
+                    >
+                      <ListItemIcon>
+                        <Iconify icon="mdi:link-variant-plus" />
+                      </ListItemIcon>
+                      <ListItemText>Regenerate link</ListItemText>
+                    </MenuItem>
+                    <MenuItem
+                      disabled={!canMutate}
+                      onClick={() => {
+                        popover.onClose();
+                        handleDeleteApplication(application).catch(() => undefined);
+                      }}
+                    >
+                      <ListItemIcon>
+                        <Iconify icon="mdi:delete-outline" color="error.main" />
+                      </ListItemIcon>
+                      <ListItemText>Delete</ListItemText>
+                    </MenuItem>
+                  </MenuList>
+                )}
+              />
+            </Box>
+          );
+        },
+      },
+    ],
+    [
+      handleCopyInviteLink,
+      handleDeleteApplication,
+      handleOpenApplication,
+      handleRegenerateLink,
+      setFinalizeApplication,
+    ]
+  );
+
+  if (applicationId) {
+    return (
+      <Box
+        data-testid="employee-onboarding-page"
+        sx={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+          overflowX: 'hidden',
+        }}
+      >
+        <EmployeeOnboardingDetailView
+          application={selectedApplication}
+          onBack={handleBackToList}
+          onFinalize={(application) => setFinalizeApplication(application)}
+          onCopyInviteLink={handleCopyInviteLink}
+          onRegenerateLink={handleRegenerateLink}
+          onDelete={handleDeleteApplication}
+          regenerateLoading={regenerateLoading}
+          deleteLoading={deleteLoading}
+        />
+        <FinalizeDialog
+          open={Boolean(finalizeApplication && finalizeDetailData)}
+          application={finalizeDetailData}
+          onClose={() => setFinalizeApplication(undefined)}
+        />
+      </Box>
+    );
+  }
 
   return (
-    <Box sx={{ p: 3 }} data-testid="employee-onboarding-page">
-      <Stack spacing={3}>
-        <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          justifyContent="space-between"
-          alignItems={{ xs: 'stretch', md: 'center' }}
-          spacing={2}
-        >
-          <Box>
-            <Typography variant="h4">Employee Onboarding</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Candidate applications and final employee enrollment.
-            </Typography>
-          </Box>
+    <Box
+      data-testid="employee-onboarding-page"
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+        overflowX: 'hidden',
+      }}
+    >
+      <CustomBreadcrumbs
+        heading="Employee Onboarding"
+        links={[
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Employee' },
+          { name: 'Employee Onboarding' },
+        ]}
+        sx={onboardingBreadcrumbSx}
+        slotProps={onboardingBreadcrumbSlotProps}
+        action={
           <Button
             variant="contained"
+            size="small"
             startIcon={<Iconify icon="mdi:link-plus" />}
             onClick={() => setInviteOpen(true)}
             data-testid="employee-onboarding-create-invite"
+            sx={{ px: '24px' }}
           >
             Create invite
           </Button>
-        </Stack>
+        }
+        description="Candidate applications and final employee enrollment."
+      />
 
-        <Paper
-          variant="outlined"
-          sx={{ p: 2, borderRadius: 1 }}
+      <Stack spacing={2} sx={{ flex: 1, minHeight: 0, minWidth: 0, overflowX: 'hidden' }}>
+        <Card
           data-testid="employee-onboarding-filters"
+          sx={{
+            mb: 1,
+            p: 1,
+            display: 'grid',
+            gap: 1,
+            gridTemplateColumns: { xs: '1fr', sm: 'minmax(180px, 280px)' },
+          }}
         >
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <TextField
-              size="small"
-              label="Search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              sx={{ minWidth: 280 }}
-            />
-            <FormControl size="small" sx={{ minWidth: 220 }}>
-              <InputLabel>Status</InputLabel>
-              <Select
-                label="Status"
-                value={statusFilter}
-                onChange={(event) => setStatusFilter(String(event.target.value))}
-              >
-                <MenuItem value="">All statuses</MenuItem>
-                {EMPLOYEE_APPLICATION_STATUSES.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {getEmployeeApplicationStatusLabel(status)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {isFetching && (
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <CircularProgress size={18} />
-                <Typography variant="body2" color="text.secondary">
-                  Loading
-                </Typography>
-              </Stack>
-            )}
-          </Stack>
-        </Paper>
-
-        <TableContainer
-          component={Paper}
-          variant="outlined"
-          sx={{ borderRadius: 1 }}
-          data-testid="employee-onboarding-table"
-        >
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Candidate</TableCell>
-                <TableCell>Position</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Submitted</TableCell>
-                <TableCell>Expires</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {applications.map((application) => (
-                <TableRow
-                  hover
-                  key={application.id}
-                  data-testid="employee-onboarding-row"
-                  data-application-id={application.id}
-                >
-                  <TableCell>
-                    <Typography variant="subtitle2">
-                      {application.fullName || 'Candidate'}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {application.email || application.mobileNo || application.applicationNumber}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">{application.positionAppliedFor || '-'}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {application.departmentAppliedFor || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <StatusChip status={application.status} />
-                  </TableCell>
-                  <TableCell>{formatDate(application.submittedAt)}</TableCell>
-                  <TableCell>{formatDate(application.tokenExpiresAt)}</TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Open details">
-                      <IconButton
-                        onClick={() => setSelectedId(application.id)}
-                        data-testid="employee-onboarding-row-details"
-                      >
-                        <Iconify icon="mdi:eye-outline" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Finalize onboarding">
-                      <span>
-                        <IconButton
-                          color="success"
-                          disabled={!canFinalizeEmployeeApplication(application.status)}
-                          onClick={() => setFinalizeApplication(application)}
-                          data-testid="employee-onboarding-row-finalize"
-                        >
-                          <Iconify icon="mdi:account-check-outline" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
+          <FormControl size="small" fullWidth>
+            <InputLabel>Status</InputLabel>
+            <Select
+              label="Status"
+              value={employeeParams.status}
+              onChange={(event) => {
+                setEmployeeParams((current) => ({
+                  ...current,
+                  page: 1,
+                  status: String(event.target.value),
+                }));
+              }}
+            >
+              <MenuItem value="All">All Statuses</MenuItem>
+              {EMPLOYEE_APPLICATION_STATUSES.map((status) => (
+                <MenuItem key={status} value={String(status)}>
+                  {getEmployeeApplicationStatusLabel(status)}
+                </MenuItem>
               ))}
-              {!applications.length && (
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <Stack alignItems="center" spacing={1} sx={{ py: 6 }}>
-                      <Iconify icon="mdi:account-search-outline" width={42} />
-                      <Typography variant="body2" color="text.secondary">
-                        No applications found.
-                      </Typography>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            </Select>
+          </FormControl>
+        </Card>
+
+        <CustomizableTable
+          key={employeeParams.status}
+          tableId="employee-onboarding-table"
+          columns={columns}
+          data={applications}
+          isLoading={isFetching}
+          serverSidePagination
+          serverSideFilter
+          totalCount={totalCount}
+          maxServerRowsPerPage={500}
+          onServerPagination={handleServerPagination}
+          serverSideSearch
+          onServerSearch={handleServerSearch}
+          defaultSearchTerm={employeeParams.search}
+          noDataText="No applications found."
+          rowProps={(row) =>
+            ({
+              'data-testid': 'employee-onboarding-row',
+              'data-application-id': row.id,
+            }) as any
+          }
+        />
 
         <InviteDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
-        <DetailDrawer
-          open={Boolean(selectedId)}
-          application={selectedApplication}
-          onClose={() => setSelectedId(null)}
-          onFinalize={(application) => setFinalizeApplication(application)}
-        />
         <FinalizeDialog
           open={Boolean(finalizeApplication && finalizeDetailData)}
           application={finalizeDetailData}

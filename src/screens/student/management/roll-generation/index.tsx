@@ -209,6 +209,20 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
     }
   };
 
+  const buildRollNumberSaveMessage = (saveResult: any, fallbackCount: number) => {
+    const summary = saveResult?.data;
+    if (!summary) {
+      return fallbackCount === 1
+        ? 'Successfully updated 1 Roll No.'
+        : `Successfully updated ${fallbackCount} Roll Nos.`;
+    }
+
+    const updatedCount = (summary.appliedCount || 0) + (summary.clearedCount || 0);
+    const skippedText = summary.skippedCount ? `, ${summary.skippedCount} skipped` : '';
+    const conflictText = summary.conflictCount ? `, ${summary.conflictCount} conflicts` : '';
+    return `Saved ${updatedCount} Roll Nos.${skippedText}${conflictText}.`;
+  };
+
   // Save updated roll numbers to the server
   const handleSave = async () => {
     saveConfirmDialog.onFalse();
@@ -224,14 +238,11 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
     }));
 
     try {
-      await updateRollNumbers({ divisionId: division, body: requestBody }).unwrap();
-
-      // Smart success message based on count
-      const updateCount = changesSummary.length;
-      const message =
-        updateCount === 1
-          ? 'Successfully updated 1 Roll No.'
-          : `Successfully updated ${updateCount} Roll Nos.`;
+      const saveResult = await updateRollNumbers({
+        divisionId: division,
+        body: requestBody,
+      }).unwrap();
+      const message = buildRollNumberSaveMessage(saveResult, changesSummary.length);
 
       shikshaMitraToast.success({ message });
       setInitialData(tableData);

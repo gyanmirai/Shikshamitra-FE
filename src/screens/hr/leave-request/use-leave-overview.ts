@@ -10,8 +10,8 @@ import {
   useGetSelfLeaveBalanceQuery,
 } from 'src/redux/hr/leaveApi';
 
-import { buildLeaveOverview } from './leave-overview.utils';
 import { parseApiProblemDetail, LEAVE_EMPLOYEE_NOT_FOUND } from './leave-request.utils';
+import { buildLeaveOverview, shouldFetchHrEmployeeLeaveOverview } from './leave-overview.utils';
 
 export type LeaveOverviewMode = 'hr' | 'self';
 
@@ -31,6 +31,12 @@ export function useLeaveOverview({
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { employee } = useSelector((state: any) => state.auth);
   const resolvedEmployeeId = isEmployeeProfileMode ? employeeId : employee?.id;
+  const canFetchHrEmployeeOverview = shouldFetchHrEmployeeLeaveOverview({
+    enabled,
+    isSelfMode,
+    academicYearId: currentYear?.id,
+    employeeId: resolvedEmployeeId,
+  });
 
   const {
     data: balanceDataForHr,
@@ -40,7 +46,7 @@ export function useLeaveOverview({
     type: 'query',
     currentQueryAndMutation: useGetMyLeaveBalanceQuery,
     params: { academicYearId: currentYear?.id, employeeId: resolvedEmployeeId },
-    options: { skip: !enabled || !currentYear?.id || isSelfMode },
+    options: { skip: !canFetchHrEmployeeOverview },
   });
 
   const {
@@ -67,10 +73,10 @@ export function useLeaveOverview({
       academicYearId: currentYear?.id,
       page: 1,
       pageSize: 100,
-      ...(isEmployeeProfileMode ? { employeeId } : {}),
+      employeeId: resolvedEmployeeId,
     },
     options: {
-      skip: !enabled || !currentYear?.id || isSelfMode || (isEmployeeProfileMode && !employeeId),
+      skip: !canFetchHrEmployeeOverview,
     },
   });
 

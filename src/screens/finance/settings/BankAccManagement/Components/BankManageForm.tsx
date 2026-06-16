@@ -38,7 +38,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
-  const [pendingFormValues, setPendingFormValues] = useState(null);
+  const [pendingFormValues, setPendingFormValues] = useState<ReturnType<
+    typeof getBankAccountInitialValues
+  > | null>(null);
 
   // POST mutation for creating
   const [addBankAccount, { isLoading: isAddLoading }] = useQueryAndMutation({

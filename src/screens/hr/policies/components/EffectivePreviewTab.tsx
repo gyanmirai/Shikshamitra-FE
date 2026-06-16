@@ -18,15 +18,14 @@ import {
 } from '@mui/material';
 
 import { SectionTable } from './HRPolicySharedUI';
-import { HR_POLICY_TABS } from '../hr-policy-workspace.constants';
+import { getHRPolicyTab } from '../hr-policy-workspace.constants';
 import { useHRPolicyWorkspace } from '../hooks/useHRPolicyWorkspace';
 import { toLabel, optionLabel, getErrorMessage } from '../hr-policy-workspace-utils';
 
 // --- EffectivePreviewTab --------------------------------------------------------
 
 export function EffectivePreviewTab() {
-  const effectiveTab =
-    HR_POLICY_TABS.find((item) => item.value === 'effective') || HR_POLICY_TABS[0];
+  const effectiveTab = getHRPolicyTab('effective');
   const ctx = useHRPolicyWorkspace({ focus: 'effective', tabs: [effectiveTab] });
 
   const {

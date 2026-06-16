@@ -412,7 +412,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   }) as { data: any; isLoading: boolean; isError: boolean; error: any };
 
   const feeHeads: any[] = useMemo(
-    () => feeStructureData?.feeHeads?.filter((item) => item.isSelected) || [],
+    () => feeStructureData?.feeHeads?.filter((item: any) => item.isSelected) || [],
     [feeStructureData]
   );
 

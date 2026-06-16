@@ -539,6 +539,12 @@ const ManualAttendanceScreen = () => {
         label: 'Remarks',
         align: 'left',
         minWidth: '15vw',
+        cellSx: {
+          '& > *': {
+            justifyContent: 'flex-start',
+            textAlign: 'left',
+          },
+        },
         render: (val: any, row: any) =>
           row.status === STATUS.Absent ? (
             <TextField
@@ -563,7 +569,7 @@ const ManualAttendanceScreen = () => {
                 height: '56px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'flex-start',
                 color: 'text.disabled',
                 fontStyle: 'italic',
                 fontSize: '0.875rem',

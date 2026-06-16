@@ -84,6 +84,23 @@ describe('HR production menu', () => {
       path: hrPaths.payroll.runPayroll,
       permissionName: 'HR.PayrollManagement.RunPayroll',
     });
+    const policyMenu = items.find((item) => item.title === 'Policies & Rules');
+    expect(policyMenu?.children?.map((item: any) => item.title)).toEqual([
+      'Work Calendars',
+      'Attendance Policies',
+      'Leave Policies',
+      'Payroll Policies',
+      'Policy Assignments',
+      'Policy Impact',
+    ]);
+    expect(policyMenu?.children?.map((item: any) => item.shortcutKeyName)).toEqual([
+      'Alt+H+Y+1',
+      'Alt+H+Y+2',
+      'Alt+H+Y+3',
+      'Alt+H+Y+4',
+      'Alt+H+Y+5',
+      'Alt+H+Y+6',
+    ]);
     expect(items.find((item) => item.title === 'Leave Policies')).toMatchObject({
       path: hrPaths.policies.leavePolicies,
       permissionName: 'HR.LeaveManagement.Setting.LeavePolicy',

@@ -606,7 +606,10 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
   const isSubmitting = isApproving || isCancelling;
 
   const handleApprovalActionClick = async () => {
-    formik.setTouched({ description: true, feeHeads: true });
+    formik.setTouched({
+      description: true,
+      feeHeads: formik.values.feeHeads.map(() => ({ selectedDueFeeIds: true })),
+    });
     const errors = await formik.validateForm();
 
     if (Object.keys(errors).length > 0) {

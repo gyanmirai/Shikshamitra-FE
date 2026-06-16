@@ -28,7 +28,7 @@ export async function getAccessToken(page: Page) {
 export async function employeeApiRequest(
   page: Page,
   path: string,
-  init: RequestInit = {}
+  init: RequestInit & { timeout?: number } = {}
 ): Promise<APIResponse> {
   const token = await getAccessToken(page);
   const { body, ...requestInit } = init;
@@ -66,7 +66,16 @@ export async function findEmployeeBySearch(page: Page, search: string) {
   return body?.items?.[0] ?? null;
 }
 
-export async function createEmployeeFromExistingDefaults(page: Page, fixture: EmployeeFixture) {
+type EmployeeDefaultOverrides = {
+  dateOfJoining?: string;
+  shiftId?: string;
+};
+
+export async function createEmployeeFromExistingDefaults(
+  page: Page,
+  fixture: EmployeeFixture,
+  overrides: EmployeeDefaultOverrides = {}
+) {
   const token = await getAccessToken(page);
   const tenant = process.env.E2E_TENANT || 'DDVS';
   const baseUrl = apiBaseUrl();
@@ -76,6 +85,7 @@ export async function createEmployeeFromExistingDefaults(page: Page, fixture: Em
       token: evaluatedToken,
       tenant: evaluatedTenant,
       fixture: evaluatedFixture,
+      overrides: evaluatedOverrides,
     }) => {
       const headers = {
         accept: 'application/json',
@@ -145,7 +155,7 @@ export async function createEmployeeFromExistingDefaults(page: Page, fixture: Em
         panNo: evaluatedFixture.panNo,
         adharNo: evaluatedFixture.adharNo,
         department: defaults.department ?? 'Academics',
-        doj: '2024-06-01',
+        doj: evaluatedOverrides.dateOfJoining ?? '2024-06-01',
         isTeaching: defaults.isTeaching ?? true,
         roleId,
         address1: evaluatedFixture.addressLine1,
@@ -155,7 +165,7 @@ export async function createEmployeeFromExistingDefaults(page: Page, fixture: Em
         state: defaults.state ?? { name: 'Gujarat', isoCode: 'GJ' },
         city: defaults.city ?? evaluatedFixture.city,
         pinCode: evaluatedFixture.pincode,
-        shiftId,
+        shiftId: evaluatedOverrides.shiftId ?? shiftId,
       };
 
       if (!body.roleId || !body.shiftId) {
@@ -179,7 +189,7 @@ export async function createEmployeeFromExistingDefaults(page: Page, fixture: Em
 
       return JSON.parse(responseText);
     },
-    { baseUrl, token, tenant, fixture }
+    { baseUrl, token, tenant, fixture, overrides }
   );
 
   return created;

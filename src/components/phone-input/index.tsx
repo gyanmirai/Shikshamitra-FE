@@ -5,7 +5,7 @@ import React from 'react';
 import { MuiTelInput } from 'mui-tel-input';
 
 type PhoneInputProps = Omit<TextFieldProps, 'value' | 'onChange' | 'placeholder'> & {
-  value: string;
+  value?: string | null;
   onChange: (value: string | undefined, info?: MuiTelInputInfo) => void;
   placeholder?: string;
 };
@@ -37,7 +37,7 @@ const PhoneInput = ({ value, onChange, error, label, helperText, ...props }: Pho
       size="small"
       defaultCountry="IN"
       onChange={handleChange}
-      value={value}
+      value={value || ''}
       error={error}
       helperText={helperText}
       fullWidth

@@ -66,6 +66,11 @@ import {
   type ICardLayoutElement,
   type ICardPrintSettings,
   createICardLayoutPreset,
+  canNavigateEmployeeICardStep,
+  updateICardLayoutElementStyle,
+  markEmployeeICardStepCompleted,
+  getDefaultICardDesignerElementId,
+  hasPersistedEmployeeICardTemplate,
 } from './i-card-builder-utils';
 
 type ICardFieldKey =
@@ -601,6 +606,10 @@ const EmployeeICardBuilder = ({
     buildTemplateState(template, academicYearName)
   );
   const [savedTemplateId, setSavedTemplateId] = useState<string | null>(template?.id ?? null);
+  const isUpdateMode = hasPersistedEmployeeICardTemplate(template?.id, savedTemplateId);
+  const [completedSteps, setCompletedSteps] = useState<number[]>(() =>
+    template?.id ? steps.map((_, index) => index) : []
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [employeePage, setEmployeePage] = useState(1);
   const [employeeStatusFilter, setEmployeeStatusFilter] = useState('all');
@@ -616,6 +625,7 @@ const EmployeeICardBuilder = ({
   useEffect(() => {
     setState(buildTemplateState(template, academicYearName));
     setSavedTemplateId(template?.id ?? null);
+    setCompletedSteps(template?.id ? steps.map((_, index) => index) : []);
     setEmployeePage(1);
     setSelectedEmployeesById({});
   }, [academicYearName, template]);
@@ -691,6 +701,12 @@ const EmployeeICardBuilder = ({
   );
 
   const sampleEmployee = employees[0];
+  const previewEmployee = useMemo(
+    () =>
+      state.selectedEmployeeIds.map((id) => selectedEmployeesById[id]).find(Boolean) ||
+      sampleEmployee,
+    [sampleEmployee, selectedEmployeesById, state.selectedEmployeeIds]
+  );
 
   const patchState = (patch: Partial<BuilderState>) => setState((prev) => ({ ...prev, ...patch }));
 
@@ -706,6 +722,7 @@ const EmployeeICardBuilder = ({
       layout: {
         ...prev.layout,
         front: {
+          ...prev.layout.front,
           elements: prev.layout.front.elements.map((element) =>
             element.id === id ? { ...element, ...patch } : element
           ),
@@ -717,18 +734,24 @@ const EmployeeICardBuilder = ({
     if (!state.selectedElementId) return;
     setState((prev) => ({
       ...prev,
-      layout: {
-        ...prev.layout,
-        front: {
-          elements: prev.layout.front.elements.map((element) =>
-            element.id === prev.selectedElementId
-              ? { ...element, style: { ...element.style, ...patch } }
-              : element
-          ),
-        },
-      },
+      layout: updateICardLayoutElementStyle(prev.layout, prev.selectedElementId!, patch),
     }));
   };
+
+  useEffect(() => {
+    if (activeStep !== 1) return;
+
+    const nextElementId = getDefaultICardDesignerElementId(state.layout, state.selectedElementId);
+    if (nextElementId && nextElementId !== state.selectedElementId) {
+      setState((prev) => ({ ...prev, selectedElementId: nextElementId }));
+    }
+  }, [activeStep, state.layout, state.selectedElementId]);
+
+  const markCurrentStepCompleted = () =>
+    setCompletedSteps((prev) => markEmployeeICardStepCompleted(prev, activeStep));
+
+  const canNavigateToStep = (step: number) =>
+    canNavigateEmployeeICardStep(step, activeStep, completedSteps, isUpdateMode);
 
   const applyPreset = (preset: (typeof presets)[number]) => {
     const nextOrientation = preset.key === 'vertical-badge' ? 'Vertical' : 'Horizontal';
@@ -1048,6 +1071,8 @@ const EmployeeICardBuilder = ({
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        pt: 1.5,
+        boxSizing: 'border-box',
       }}
     >
       <CustomStepperWithFormik
@@ -1057,22 +1082,47 @@ const EmployeeICardBuilder = ({
         validateOnChange={false}
         validationSchema={undefined}
         handleBack={() => setActiveStep((prev) => Math.max(prev - 1, 0))}
+        completedSteps={completedSteps}
+        isStepClickable={canNavigateToStep}
+        onStepClick={(step) => {
+          if (step !== activeStep && canNavigateToStep(step)) {
+            setActiveStep(step);
+          }
+        }}
         handleNext={async (isLastStep, _value, _formik, setLoading) => {
           if (isLastStep) {
             setLoading(true);
             try {
               const savedId = await handleSave();
-              if (savedId) handleClose();
+              if (savedId) {
+                markCurrentStepCompleted();
+                handleClose();
+              }
             } finally {
               setLoading(false);
             }
           } else {
+            markCurrentStepCompleted();
             setLoading(false);
             setActiveStep((prev) => Math.min(prev + 1, steps.length - 1));
           }
         }}
-        showSaveButton={false}
+        onSave={async (_isLastStep, _value, _formik, setLoading) => {
+          setLoading(true);
+          try {
+            const savedId = await handleSave();
+            if (savedId) {
+              markCurrentStepCompleted();
+            }
+          } finally {
+            setLoading(false);
+          }
+        }}
+        showSaveButton
         disableSubmit={isSaving || isExporting}
+        nextButtonLabel="Next"
+        finalButtonLabel="Save & Close"
+        saveButtonProps={{ disabled: isSaving || isExporting }}
         saveAndNextButtonProps={{ disabled: isSaving || isExporting }}
         renderItem={({ activeStep: currentStep }) => (
           <Box sx={{ p: 2, height: '100%' }}>
@@ -1235,7 +1285,7 @@ const EmployeeICardBuilder = ({
                     </Stack>
                     <DesignerCanvas
                       state={state}
-                      sampleEmployee={sampleEmployee}
+                      sampleEmployee={previewEmployee}
                       academicYearName={academicYearName}
                       onSelect={(id) => patchState({ selectedElementId: id })}
                       onMove={(id, x, y) => patchLayoutElement(id, { x, y })}
@@ -1273,16 +1323,29 @@ const EmployeeICardBuilder = ({
                     <Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap>
                       <Paper
                         variant="outlined"
-                        sx={{
+                        sx={(theme) => ({
                           px: 1,
                           py: 0.5,
                           borderRadius: 1.5,
                           bgcolor: state.qrCodeEnabled ? 'success.lighter' : 'background.paper',
-                          borderColor: state.qrCodeEnabled ? 'success.light' : 'divider',
-                        }}
+                          borderColor: state.qrCodeEnabled ? 'success.main' : 'divider',
+                          color: 'text.primary',
+                          ...theme.applyStyles('dark', {
+                            bgcolor: state.qrCodeEnabled
+                              ? 'rgba(34, 197, 94, 0.14)'
+                              : 'background.paper',
+                            borderColor: state.qrCodeEnabled ? 'success.light' : 'divider',
+                          }),
+                        })}
                       >
                         <FormControlLabel
-                          sx={{ m: 0 }}
+                          sx={{
+                            m: 0,
+                            '& .MuiFormControlLabel-label': {
+                              color: 'text.primary',
+                              fontWeight: state.qrCodeEnabled ? 600 : 400,
+                            },
+                          }}
                           control={
                             <Checkbox
                               size="small"
@@ -1309,16 +1372,29 @@ const EmployeeICardBuilder = ({
                       </Paper>
                       <Paper
                         variant="outlined"
-                        sx={{
+                        sx={(theme) => ({
                           px: 1,
                           py: 0.5,
                           borderRadius: 1.5,
                           bgcolor: state.barcodeEnabled ? 'info.lighter' : 'background.paper',
-                          borderColor: state.barcodeEnabled ? 'info.light' : 'divider',
-                        }}
+                          borderColor: state.barcodeEnabled ? 'info.main' : 'divider',
+                          color: 'text.primary',
+                          ...theme.applyStyles('dark', {
+                            bgcolor: state.barcodeEnabled
+                              ? 'rgba(56, 189, 248, 0.14)'
+                              : 'background.paper',
+                            borderColor: state.barcodeEnabled ? 'info.light' : 'divider',
+                          }),
+                        })}
                       >
                         <FormControlLabel
-                          sx={{ m: 0 }}
+                          sx={{
+                            m: 0,
+                            '& .MuiFormControlLabel-label': {
+                              color: 'text.primary',
+                              fontWeight: state.barcodeEnabled ? 600 : 400,
+                            },
+                          }}
                           control={
                             <Checkbox
                               size="small"
@@ -1544,7 +1620,7 @@ const EmployeeICardBuilder = ({
                     </Stack>
                     <CardPreview
                       state={state}
-                      employee={sampleEmployee}
+                      employee={previewEmployee}
                       academicYearName={academicYearName}
                     />
                   </Paper>

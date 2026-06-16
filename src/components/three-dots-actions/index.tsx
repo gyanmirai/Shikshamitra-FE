@@ -1,7 +1,7 @@
 import type { IconButtonOwnProps } from '@mui/material';
 
 import React, { useMemo } from 'react';
-import { Box, IconButton } from '@mui/material';
+import { Box, Tooltip, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import CustomTooltip from '../custom-tooltip';
@@ -20,6 +20,10 @@ interface IThreeDotesActionsType {
   showEditIcon?: boolean;
   showDeleteIcon?: boolean;
   showThreeDots?: boolean;
+  viewLabel?: string;
+  editLabel?: string;
+  deleteLabel?: string;
+  moreLabel?: string;
   disableDeleteIcon?: boolean;
   disableEditIcon?: boolean;
   disableViewIcon?: boolean;
@@ -52,6 +56,10 @@ const ThreeDotsActions = ({
   showEditIcon = false,
   showDeleteIcon = false,
   showThreeDots = true,
+  viewLabel = 'View',
+  editLabel = 'Edit',
+  deleteLabel = 'Delete',
+  moreLabel = 'More actions',
   disableDeleteIcon = false,
   disableEditIcon = false,
   disableViewIcon = false,
@@ -65,46 +73,59 @@ const ThreeDotsActions = ({
   return (
     <Box display="flex" gap={2} alignItems="center" {...props}>
       {showViewIcon && (
-        <IconButton
-          data-testid="table-action-view"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleViewClick(e);
-          }}
-          sx={{ p: 0 }}
-        >
-          <Iconify
-            icon="carbon:view-filled"
-            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-          />
-        </IconButton>
+        <Tooltip title={viewLabel}>
+          <span>
+            <IconButton
+              aria-label={viewLabel}
+              data-testid="table-action-view"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewClick(e);
+              }}
+              disabled={disableViewIcon}
+              sx={{ p: 0 }}
+            >
+              <Iconify
+                icon="carbon:view-filled"
+                sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+              />
+            </IconButton>
+          </span>
+        </Tooltip>
       )}
       {showEditIcon && (
-        <IconButton
-          data-testid="table-action-edit"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleEditClick(e);
-          }}
-          sx={{ p: 0 }}
-        >
-          <Iconify
-            icon="solar:pen-bold"
-            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-          />
-        </IconButton>
+        <Tooltip title={editLabel}>
+          <span>
+            <IconButton
+              aria-label={editLabel}
+              data-testid="table-action-edit"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditClick(e);
+              }}
+              disabled={disableEditIcon}
+              sx={{ p: 0 }}
+            >
+              <Iconify
+                icon="solar:pen-bold"
+                sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+              />
+            </IconButton>
+          </span>
+        </Tooltip>
       )}
       {showDeleteIcon && (
         <CustomTooltip
           title={
             disableDeleteIcon
               ? 'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.'
-              : ''
+              : deleteLabel
           }
           placement="top"
         >
           <span>
             <IconButton
+              aria-label={deleteLabel}
               data-testid="table-action-delete"
               onClick={(e) => {
                 e.stopPropagation();
@@ -123,20 +144,23 @@ const ThreeDotsActions = ({
         </CustomTooltip>
       )}
       {showThreeDots && (
-        <IconButton
-          data-testid="table-action-more"
-          onClick={(e) => {
-            e.stopPropagation();
-            popover.onOpen(e as any);
-            onClickThreeDots?.(e);
-          }}
-          sx={{ p: 0 }}
-        >
-          <Iconify
-            icon="eva:more-vertical-fill"
-            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-          />
-        </IconButton>
+        <Tooltip title={moreLabel}>
+          <IconButton
+            aria-label={moreLabel}
+            data-testid="table-action-more"
+            onClick={(e) => {
+              e.stopPropagation();
+              popover.onOpen(e as any);
+              onClickThreeDots?.(e);
+            }}
+            sx={{ p: 0 }}
+          >
+            <Iconify
+              icon="eva:more-vertical-fill"
+              sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+            />
+          </IconButton>
+        </Tooltip>
       )}
       {/* <IconButton
         color={popover.open ? 'inherit' : 'default'}

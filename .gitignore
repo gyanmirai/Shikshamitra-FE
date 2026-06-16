@@ -1,5 +1,5 @@
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -11,10 +11,12 @@ node_modules
 .pnp.js
 
 # testing
-coverage
-playwright-report
-test-results
-playwright/.auth
+coverage/
+playwright-report/
+test-results/
+output/
+playwright/.auth/
+artifacts/
 
 # production
 .next

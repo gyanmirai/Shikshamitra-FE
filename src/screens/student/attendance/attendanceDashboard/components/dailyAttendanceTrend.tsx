@@ -14,35 +14,11 @@ const DailyAttendanceTrend = () => (
     chart={{
       series: [
         {
-          name: 'Last Week',
-          categories: ['21/06', '22/06', '23/06', '24/06', '25/06', '26/06', '27/06'],
+          name: 'Current View',
+          categories: [],
           data: [
-            { name: 'Present', data: [60, 30, 40, 60, 50, 60, 40] },
-            { name: 'Absent', data: [25, 20, 30, 25, 20, 30, 20] },
-          ],
-        },
-        {
-          name: 'Last 15 Days',
-          categories: [
-            '13/06',
-            '14/06',
-            '15/06',
-            '16/06',
-            '17/06',
-            '18/06',
-            '19/06',
-            '20/06',
-            '21/06',
-            '22/06',
-            '23/06',
-            '24/06',
-            '25/06',
-            '26/06',
-            '27/06',
-          ],
-          data: [
-            { name: 'Present', data: [50, 35, 45, 55, 65, 45, 50, 60, 55, 48, 52, 56, 53, 57, 51] },
-            { name: 'Absent', data: [30, 25, 28, 22, 18, 25, 22, 20, 23, 30, 27, 26, 24, 22, 28] },
+            { name: 'Present', data: [] },
+            { name: 'Absent', data: [] },
           ],
         },
       ],
@@ -66,7 +42,7 @@ type Props = CardProps & {
 export function BankingBalanceStatistics({ title, subheader, chart, ...other }: Props) {
   const theme = useTheme();
 
-  const [selectedSeries, setSelectedSeries] = useState('Last Week');
+  const [selectedSeries, setSelectedSeries] = useState('Current View');
 
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
 
@@ -106,8 +82,6 @@ export function BankingBalanceStatistics({ title, subheader, chart, ...other }: 
       <ChartLegends
         colors={chartOptions?.colors}
         labels={chart.series[0].data.map((item) => item.name)}
-        sublabels={[`+${43}`, `+${3}`, `+${8}`]}
-        // values={[fCurrency(6789), fCurrency(1234), fCurrency(1012)]}
         sx={{ px: 3, gap: 3 }}
       />
 

@@ -48,7 +48,7 @@ export function LeavePoliciesPanel() {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLeavePoliciesQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, page: 1, pageSize: 500 },
   });
 
   const [archiveLeavePolicy, archiveState] = useQueryAndMutation({

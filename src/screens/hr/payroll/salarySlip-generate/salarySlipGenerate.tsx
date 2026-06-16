@@ -184,11 +184,14 @@ const PaySlipGenerationScreen = () => {
                 }}
                 value={employee}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
+                renderOption={(prop, option: any) => {
+                  const { key, ...optionProps } = prop;
+                  return (
+                    <li key={key || option.id} {...optionProps}>
+                      {option.label}
+                    </li>
+                  );
+                }}
                 getOptionLabel={(option: any) => option?.label || ''}
                 minChars={2}
                 onChange={(_, value) => setEmployee(value)}

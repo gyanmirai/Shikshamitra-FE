@@ -13,7 +13,7 @@ export interface BoardMediumOption {
 }
 
 interface Props {
-  value?: BoardMediumOption;
+  value?: BoardMediumOption | null;
   onChange: (value: BoardMediumOption) => void;
   size?: 'small' | 'medium';
   minWidth?: number;
@@ -50,9 +50,12 @@ export default function BoardMediumDropdown({
     <Autocomplete
       size={size}
       options={options}
-      value={value ?? (null as any)}
-      disableClearable
+      value={value ?? options[0] ?? null}
+      disableClearable={options.length > 0}
       getOptionLabel={(option) => option.label}
+      isOptionEqualToValue={(option, val) =>
+        option.boardId === val.boardId && option.mediumId === val.mediumId
+      }
       onChange={(_, newValue) => {
         if (newValue) onChange(newValue);
       }}

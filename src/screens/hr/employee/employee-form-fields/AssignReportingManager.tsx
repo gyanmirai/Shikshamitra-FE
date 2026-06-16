@@ -232,7 +232,7 @@ const RightManagerProfile = ({ employee }: { employee: any }) => {
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
+export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
   const theme = useTheme();
   const { setFieldValue } = formik;
 
@@ -453,8 +453,11 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                     onChange={(_e, value) => {
                       const newManagerId = value?.id || '';
                       setSelectedManager(value || null);
-                      formik.setFieldTouched('reportingManager', true, false);
-                      setFieldValue('reportingManager', newManagerId);
+                      formik.setFieldTouched('reportingManager', !newManagerId, false);
+                      setFieldValue('reportingManager', newManagerId, true);
+                      if (newManagerId) {
+                        formik.setFieldError?.('reportingManager', undefined);
+                      }
                       setFieldValue('reportingManagerName', value?.fullName || '');
                       setFieldValue('reportingManagerStatus', value?.status ?? null);
 

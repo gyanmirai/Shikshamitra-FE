@@ -321,11 +321,17 @@ interface ChargeCategoryDialogProps {
   editData?: any | null;
 }
 
+interface ChargeCategoryFormValues {
+  chargeName: string;
+  isRefundable: boolean;
+  description: string;
+}
+
 const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
-  const [pendingFormValues, setPendingFormValues] = useState(null);
+  const [pendingFormValues, setPendingFormValues] = useState<ChargeCategoryFormValues | null>(null);
 
   // PUT mutation for updating
   const [putChargeCategory, { isLoading: putLoading }] = useQueryAndMutation({
@@ -379,7 +385,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
   );
 
   // Initialize formik form with initial values and submit handler
-  const formik = useFormik({
+  const formik = useFormik<ChargeCategoryFormValues>({
     initialValues: {
       chargeName: editData?.name || '',
       isRefundable: editData?.isApprovalRequired || false,
@@ -401,7 +407,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
   });
 
   // Perform the actual form submission
-  const performSubmission = async (values: any) => {
+  const performSubmission = async (values: ChargeCategoryFormValues) => {
     try {
       const payload = {
         name: values.chargeName,
