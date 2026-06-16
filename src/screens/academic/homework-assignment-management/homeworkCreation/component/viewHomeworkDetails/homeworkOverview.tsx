@@ -240,7 +240,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
                     <Box
                       sx={{
                         position: 'absolute',
-                        left: 5,
+                        left: 7,
                         top: 8,
                         bottom: 8,
                         width: 2,

@@ -263,7 +263,7 @@ const CurriculumReportPreviewDrawer = ({
             label={`${totalCount} records`}
             size="small"
             sx={{
-              bgcolor: (t) => alpha(t.palette.common.white, 0.2),
+              // bgcolor: (t) => alpha(t.palette.common.white, 0.2),
               color: 'inherit',
               fontWeight: 600,
               fontSize: '0.7rem',
@@ -300,11 +300,11 @@ const CurriculumReportPreviewDrawer = ({
                     <TableCell
                       key={col.id}
                       sx={(theme) => ({
-                        bgcolor: alpha(theme.palette.primary.light, 0.12),
+                        // bgcolor: alpha(theme.palette.primary.light, 0.12),
                         fontWeight: 700,
                         whiteSpace: 'nowrap',
                         color: theme.palette.primary.dark,
-                        borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                        // borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
                         fontSize: '0.78rem',
                       })}
                     >
@@ -349,7 +349,7 @@ const CurriculumReportPreviewDrawer = ({
                   hover
                   sx={(theme) => ({
                     '&:nth-of-type(even)': {
-                      bgcolor: alpha(theme.palette.grey[100], 0.6),
+                      bgcolor: theme.palette.action.hover,
                     },
                   })}
                 >
@@ -406,7 +406,7 @@ const CurriculumReportPreviewDrawer = ({
           display: 'flex',
           gap: 1,
           justifyContent: 'flex-end',
-          bgcolor: alpha(theme.palette.grey[100], 0.6),
+          // bgcolor: alpha(theme.palette.grey[100], 0.6),
           flexShrink: 0,
         })}
       >

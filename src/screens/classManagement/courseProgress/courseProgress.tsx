@@ -700,6 +700,8 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
   selectedChapter,
   divisionId,
 }: IUpdateProgressProps) => {
+  const currentProgress = selectedChapter?.progress ?? 0;
+
   const [updateChapterProgress, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateChapterProgressMutation,
@@ -707,13 +709,20 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
 
   const formik = useFormik({
     initialValues: {
-      completePercentage: selectedChapter?.progress || 0, // Adjusted field name to match the input ID
+      completePercentage: currentProgress, // Adjusted field name to match the input ID
       description: '',
     },
     validationSchema: Yup.object({
       completePercentage: Yup.number()
         .min(0, 'Percentage cannot be negative')
         .max(100, 'Percentage cannot exceed 100')
+        .test(
+          'is-progress-increased',
+          currentProgress >= 100
+            ? 'Progress is already completed'
+            : `Progress must be greater than current progress (${currentProgress}%)`,
+          (value) => currentProgress < 100 && Number(value) > currentProgress
+        )
         .required('Complete Percentage is required'),
     }),
     onSubmit: async (values) => {
@@ -749,14 +758,24 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
             <Slider
               value={formik.values.completePercentage}
               onChange={(event, value) => {
-                formik.setFieldValue('completePercentage', value);
+                const nextValue = Array.isArray(value) ? value[0] : value;
+                if (nextValue < currentProgress) return;
+
+                formik.setFieldValue('completePercentage', nextValue);
               }}
               getAriaValueText={(value) => `${value}%`}
-              step={1}
+              min={0}
+              max={100}
+              step={10}
               valueLabelDisplay="auto"
               marks={marks}
               sx={{ [`& .${sliderClasses.mark}[data-index="3"]`]: { display: 'none' } }}
             />
+            {formik.touched.completePercentage && formik.errors.completePercentage && (
+              <Typography variant="caption" color="error">
+                {formik.errors.completePercentage}
+              </Typography>
+            )}
           </ComponentBlock>
         </ShakingTextField>
 
@@ -785,6 +804,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
           loading={isUpdateLoading}
           variant="contained"
           size="small"
+          disabled={formik.values.completePercentage <= currentProgress}
           startIcon={<Iconify icon={GlobalIcons.edit} />}
         >
           Update
