@@ -196,9 +196,9 @@ export function HeaderBase({
               )}
 
               {workspaces && (
-                <Box sx={{ display: { xs: 'none', md: 'block' }, minWidth: 0 }}>
-                  <GlobalAcademicSearch />
-                </Box>
+                // <Box sx={{ display: { xs: 'none', md: 'block' }, minWidth: 0 }}>
+                <GlobalAcademicSearch />
+                // </Box>
               )}
               {/* -- Searchbar -- */}
               {searchbar && (
