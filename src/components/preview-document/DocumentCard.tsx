@@ -1,39 +1,77 @@
-import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Card, Tooltip, Typography, IconButton } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Card, Tooltip, Typography, IconButton, CircularProgress } from '@mui/material';
+import { useGetCurriculumFileByNameMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { Iconify } from '../iconify';
-import { Scrollbar } from '../scrollbar';
-import CustomDialog from '../customDialog';
-import { SingleFilePreview } from '../upload';
 import CustomTooltip from '../custom-tooltip';
-import { fileData, FileThumbnail } from '../file-thumbnail';
+import { FileThumbnail } from '../file-thumbnail';
+import DocumentPreviewDialog from './DocumentPreviewDialog';
 
 interface DocumentCardProps {
   file: any;
 }
 
+const getFileNameFromUrl = (url: string): string => {
+  if (!url) return '';
+  const normalized = url.split('?')[0];
+  const segments = normalized.split('/').filter(Boolean);
+  return decodeURIComponent(segments[segments.length - 1] || '');
+};
+
 const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
   const viewDialog = useBoolean();
 
-  const [previewFile, setPreviewFile] = useState<File | string | null>(null);
+  const [getFile, { isLoading: isDownloading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useGetCurriculumFileByNameMutation,
+    popupConfig: { error: true, errorMessage: 'Unable to download file.', success: false },
+  });
 
-  const handleDownload = () => {
-    const fileUrl = file instanceof File ? URL.createObjectURL(file) : file?.url || file;
+  const handleDownload = async () => {
+    const rawUrl = file instanceof File ? URL.createObjectURL(file) : file?.url || file;
 
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = file.name || 'download';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (!rawUrl) return;
 
-    // Clean up the URL if it was created from a File object
-    if (file instanceof File) {
-      URL.revokeObjectURL(fileUrl);
+    if (
+      file instanceof File ||
+      rawUrl.startsWith('blob:') ||
+      rawUrl.startsWith('http://') ||
+      rawUrl.startsWith('https://')
+    ) {
+      const link = document.createElement('a');
+      link.href = rawUrl;
+      link.download = file.name || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      if (file instanceof File && !rawUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(rawUrl);
+      }
+      return;
+    }
+
+    try {
+      const fileName = getFileNameFromUrl(rawUrl);
+      const blob = await getFile(fileName).unwrap();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = file.name || fileName || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download failed:', err);
     }
   };
+
+  const fileUrl = file instanceof File ? URL.createObjectURL(file) : file?.url || file;
 
   return (
     <Card
@@ -89,7 +127,6 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
               size="small"
               onClick={() => {
                 viewDialog.onTrue();
-                setPreviewFile(file);
               }}
             >
               <Iconify icon={GlobalIcons.eye} sx={{ width: 16, height: 16 }} />
@@ -97,26 +134,23 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
           </Tooltip>
           {file && (
             <Tooltip title="Download">
-              <IconButton size="small" onClick={handleDownload}>
-                <Iconify icon={GlobalIcons.download} sx={{ width: 16, height: 16 }} />
+              <IconButton size="small" onClick={handleDownload} disabled={isDownloading}>
+                {isDownloading ? (
+                  <CircularProgress size={16} />
+                ) : (
+                  <Iconify icon={GlobalIcons.download} sx={{ width: 16, height: 16 }} />
+                )}
               </IconButton>
             </Tooltip>
           )}
         </Box>
       </Box>
-      <CustomDialog
+      <DocumentPreviewDialog
         open={viewDialog.value}
-        handleClose={() => {
-          setPreviewFile(null);
-          viewDialog.onFalse();
-        }}
-        title={previewFile ? fileData(previewFile).name : ''}
-        maxWidth="sm"
-      >
-        <Scrollbar sx={{ height: 600, maxHeight: '100%' }}>
-          {previewFile && <SingleFilePreview file={normalizeFileForThumbnail(previewFile)} />}
-        </Scrollbar>
-      </CustomDialog>
+        onClose={viewDialog.onFalse}
+        url={fileUrl}
+        documentName={file.name}
+      />
     </Card>
   );
 };

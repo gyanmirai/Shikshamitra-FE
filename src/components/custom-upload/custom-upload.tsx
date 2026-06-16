@@ -30,6 +30,7 @@ interface CustomUploadProps {
   value?: (FileWithPreview | string)[];
   onChange?: (files: (FileWithPreview | string)[]) => void;
   onDelete?: (file: FileWithPreview | string) => void;
+  onPreview?: (file: FileWithPreview | string) => void;
   error?: boolean;
   helperText?: string;
   label?: string;
@@ -47,6 +48,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
   value = [],
   onChange,
   onDelete,
+  onPreview,
   error = false,
   helperText = '',
   label = 'Drag & drop files here, or click to select files',
@@ -56,6 +58,10 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
   const [files, setFiles] = useState<(FileWithPreview | string)[]>(
     Array.isArray(value) ? value : value ? [value] : []
   );
+
+  React.useEffect(() => {
+    setFiles(Array.isArray(value) ? value : value ? [value] : []);
+  }, [value]);
 
   const [previewDialog, setPreviewDialog] = useState<{
     open: boolean;
@@ -115,7 +121,11 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
   };
 
   const handlePreview = (file: FileWithPreview | string) => {
-    setPreviewDialog({ open: true, file });
+    if (onPreview) {
+      onPreview(file);
+    } else {
+      setPreviewDialog({ open: true, file });
+    }
   };
 
   const getFilePreview = (file: FileWithPreview | string) => {

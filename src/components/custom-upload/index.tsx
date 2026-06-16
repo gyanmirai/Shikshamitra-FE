@@ -27,6 +27,7 @@ import { FileThumbnail } from '../file-thumbnail';
 const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
 
 export interface FileData {
+  filePath: string | undefined;
   name: string;
   size?: number;
   type?: string;
@@ -40,6 +41,7 @@ interface FileUploaderProps<T extends boolean = true> {
   onChange: T extends true
     ? (files: (File | FileData)[]) => void
     : (files: File | FileData) => void;
+  onPreview?: (file: File | FileData) => void;
   error?: string;
   multiple?: T;
   value?: T extends true ? (File | FileData)[] : File | FileData;
@@ -53,6 +55,7 @@ const FileUploader = <T extends boolean = true>({
   primaryText = 'Upload Files',
   secondaryText = '',
   onChange,
+  onPreview,
   error,
   multiple = true as T,
   value,
@@ -67,6 +70,14 @@ const FileUploader = <T extends boolean = true>({
   const viewDialog = useBoolean();
   const [previewFile, setPreviewFile] = useState<File | FileData | null>(null);
   const [showAllDialog, setShowAllDialog] = useState<boolean>(false);
+
+  const handlePreview = (file: File | FileData) => {
+    if (onPreview) {
+      onPreview(file);
+    } else {
+      setPreviewFile(file);
+    }
+  };
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -181,7 +192,10 @@ const FileUploader = <T extends boolean = true>({
       </IconButton> */}
 
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <FileThumbnail file={file} sx={{ height: 25, width: 25 }} />
+        <FileThumbnail
+          file={file instanceof File ? file : file?.url || file?.filePath || ''}
+          sx={{ height: 25, width: 25 }}
+        />
         <Box sx={{ ml: 1.5, flex: 1 }}>
           <Tooltip title={file.name}>
             <Typography
@@ -203,7 +217,7 @@ const FileUploader = <T extends boolean = true>({
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <CustomTooltip title="Preview">
-            <IconButton size="small" onClick={() => setPreviewFile(file)}>
+            <IconButton size="small" onClick={() => handlePreview(file)}>
               <Iconify icon={GlobalIcons.eye} sx={{ width: 16, height: 16 }} />
             </IconButton>
           </CustomTooltip>

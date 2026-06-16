@@ -14,14 +14,15 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import FileUploader from 'src/components/custom-upload';
 import { fileData } from 'src/components/file-thumbnail';
 import { shikshaMitraToast } from 'src/components/toast';
 import { SingleFilePreview } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
@@ -65,6 +66,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<string | null>(null);
+  const [localFileNames, setLocalFileNames] = useState<Record<string, string>>({});
   const previewDialog = useBoolean();
   const [addChapter, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -78,6 +81,26 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useUploadCurriculumFileMutation,
   });
+
+  const getFileNameFromUrl = (file: string | File): string => {
+    if (!file) return '';
+    if (typeof file !== 'string') return file.name;
+    if (localFileNames && localFileNames[file]) return localFileNames[file];
+
+    const normalized = file.split('?')[0];
+    const segments = normalized.split('/').filter(Boolean);
+    let rawName = decodeURIComponent(segments[segments.length - 1] || '');
+
+    if (rawName.length > 37 && rawName[36] === '_') {
+      const maybeUuid = rawName.substring(0, 36);
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(maybeUuid)) {
+        rawName = rawName.substring(37);
+      }
+    }
+
+    return rawName;
+  };
 
   const formik = useFormik<IChapterFormValues>({
     initialValues: getChapterInitialValues(initialValues),
@@ -152,15 +175,45 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     },
   });
 
-  const handleFileUpload = async (files: (File | string)[]) => {
-    const uploadedFiles: (string | File)[] = [];
-    const formData = new FormData();
-    formData.append('FileName', (files[0] as File)?.name);
-    formData.append('File', files[0] as File);
-    const response = await uploadCurriculumFile(formData).unwrap();
-    uploadedFiles.push(response.data);
+  const handleDropzoneChange = async (droppedFiles: any[]) => {
+    const newFiles = droppedFiles.filter((f): f is File => typeof f !== 'string');
+    const existingFiles = droppedFiles.filter((f) => typeof f === 'string');
 
-    formik.setFieldValue(`documents`, uploadedFiles);
+    if (newFiles.length === 0) {
+      formik.setFieldValue('documents', existingFiles);
+      formik.setFieldTouched('documents', true, false);
+      return;
+    }
+
+    try {
+      const uploadPromises = newFiles.map(async (file) => {
+        const formData = new FormData();
+        formData.append('FileName', file.name);
+        formData.append('File', file);
+        const response = await uploadCurriculumFile(formData).unwrap();
+        return { data: response.data, name: file.name };
+      });
+
+      const results = await Promise.all(uploadPromises);
+
+      const newDocs = [...existingFiles];
+      const nameUpdates: Record<string, string> = {};
+
+      results.forEach((res) => {
+        if (res.data) {
+          newDocs.push(res.data);
+          nameUpdates[res.data] = res.name;
+        }
+      });
+
+      setLocalFileNames((prev) => ({ ...prev, ...nameUpdates }));
+      formik.setFieldValue('documents', newDocs);
+      formik.setFieldTouched('documents', true, false);
+      shikshaMitraToast.success({ message: 'Document(s) uploaded successfully' });
+    } catch (error) {
+      console.error('Upload failed:', error);
+      shikshaMitraToast.error({ message: 'Upload failed' });
+    }
   };
 
   return (
@@ -426,15 +479,19 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               </Stack>
               <Divider sx={{ mb: 2 }} />
 
-              <CustomUpload
+              <FileUploader
                 multiple
-                previewCount={6}
-                onChange={(files) => {
-                  handleFileUpload(files);
+                showVisibleDocumentCount={6}
+                onChange={handleDropzoneChange}
+                onPreview={(file: any) => {
+                  const url =
+                    file instanceof File
+                      ? URL.createObjectURL(file)
+                      : file?.url || file?.filePath || (typeof file === 'string' ? file : '');
+                  setPreviewDoc(url);
                 }}
-                value={formik.values.documents}
-                label="Drag & drop files here, or click to browse"
-                outputFormat="file"
+                value={formik.values.documents as any[]}
+                primaryText="Drag & drop files here, or click to browse"
               />
             </Paper>
           </Scrollbar>
@@ -499,6 +556,13 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               {previewFile && <SingleFilePreview file={previewFile} />}
             </Scrollbar>
           </CustomDialog>
+
+          <DocumentPreviewDialog
+            open={!!previewDoc}
+            onClose={() => setPreviewDoc(null)}
+            url={previewDoc || ''}
+            documentName={previewDoc ? getFileNameFromUrl(previewDoc) : ''}
+          />
         </Box>
       </form>
     </BackPopUpChecked>

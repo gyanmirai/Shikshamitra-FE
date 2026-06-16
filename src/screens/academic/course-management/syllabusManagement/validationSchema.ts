@@ -15,7 +15,9 @@ export const getChapterValidationSchema = (
           (ch) => ch.chapterNumber === Number(value) && ch.id !== editingChapterId
         );
       }),
-    chapterName: Yup.string().required('Chapter Name is required'),
+    chapterName: Yup.string()
+      .required('Chapter Name is required')
+      .min(3, 'minimum 3 character required'),
     startDate: Yup.mixed()
       .required('Chapter Start Date is required')
       .test(

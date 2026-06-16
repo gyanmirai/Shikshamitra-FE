@@ -23,6 +23,7 @@ export interface IChapter {
   creationTime: string;
   lastModifierId: string;
   lastModificationTime: string;
+  documents?: string[];
 }
 
 export interface SubjectOption {
