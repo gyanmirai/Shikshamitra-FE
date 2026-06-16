@@ -253,6 +253,11 @@ export const navData = (visibility: boolean[]) => [
         submodule: securityGuardModule[securityGuardPath].flatMap((list) => list.items),
         permissionName: `${defaultModulePermissionName}SecurityGuard`,
       },
+      {
+        ...settingMenu,
+        visibility: visibility[14],
+        submodule: instituteSetupModule[settingPath].flatMap((list) => list.items),
+      },
     ],
   },
 ];
@@ -264,14 +269,7 @@ export const fullNavData = () => navData(fullModuleVisibility);
 export const fullSecurityNavData = () => [
   {
     subheader: 'Management',
-    items: [
-      ...navData(fullModuleVisibility).flatMap((group) => group.items),
-      {
-        ...settingMenu,
-        visibility: true,
-        submodule: instituteSetupModule[settingPath].flatMap((list) => list.items),
-      },
-    ],
+    items: [...navData(fullModuleVisibility).flatMap((group) => group.items)],
   },
 ];
 

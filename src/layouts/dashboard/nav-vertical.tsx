@@ -1,6 +1,7 @@
 import type { Breakpoint } from '@mui/material/styles';
 import type { NavSectionProps } from 'src/components/nav-section';
 
+import { useMemo } from 'react';
 import Box from '@mui/material/Box';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
@@ -36,6 +37,15 @@ export function NavVertical({
   const theme = useTheme();
   const { mainModuleVisibility } = useSelector((state: any) => state.auth);
 
+  const filteredData = useMemo(
+    () =>
+      data.map((group) => ({
+        ...group,
+        items: group.items.filter((item) => item._action !== 'setting'),
+      })),
+    [data]
+  );
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const renderNavVertical = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -46,7 +56,7 @@ export function NavVertical({
       )}
       <Box sx={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <Scrollbar fillContent>
-          <NavSectionVertical data={data} sx={{ px: 2 }} {...other} />
+          <NavSectionVertical data={filteredData} sx={{ px: 2 }} {...other} />
         </Scrollbar>
       </Box>
       {/* Bottom section (Institute Setup) will be rendered outside this Box */}
@@ -62,7 +72,7 @@ export function NavVertical({
       )}
 
       <NavSectionMini
-        data={data}
+        data={filteredData}
         sx={{ pb: 2, px: 0.5, ...hideScrollY, flex: '1 1 auto', overflowY: 'auto' }}
         {...other}
       />
