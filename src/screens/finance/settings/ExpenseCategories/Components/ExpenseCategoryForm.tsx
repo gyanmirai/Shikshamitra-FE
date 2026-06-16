@@ -14,6 +14,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Grid, Button, TextField, DialogActions } from '@mui/material';
+import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   useGetExpenseCategoryQuery,
   usePutExpenseCategoryMutation,
@@ -28,12 +29,16 @@ import type { IExpenseCategoryFormProps } from './type';
 const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
+  // State for downstream usage warning dialog
+  const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
+  const [pendingFormValues, setPendingFormValues] = useState<any>(null);
+
   const { data: expenseCategoryData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseCategoryQuery,
     params: { academicYearId: currentYear?.id, page: 1, pageSize: 1000 },
     options: {
-      skip: !currentYear?.id || !open?.value,
+      skip: !currentYear?.id || !open?.value || editData,
     },
   });
 
@@ -66,44 +71,57 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
     enableReinitialize: true,
     validationSchema: expenseCategoryValidationSchema(existingNames, editData),
     onSubmit: async (values) => {
-      try {
-        // Transform form data to API format
-        const payload = {
-          name: values.name,
-          description: values.description || '',
-          tags: values.tags || [],
-        };
-
-        if (editData?.id) {
-          // Update existing expense category
-          await updateExpenseCategory({
-            expenseCategoryId: editData.id,
-            body: payload,
-          }).unwrap();
-
-          shikshaMitraToast.success({
-            message: `${values.name} Expense Category updated successfully`,
-          });
-        } else {
-          // Create new expense category
-          await addExpenseCategory({
-            academicYearId: currentYear?.id,
-            body: payload,
-          }).unwrap();
-
-          shikshaMitraToast.success({
-            message: `${values.name} Expense Category added successfully`,
-          });
-        }
-        onClose(null, true);
-      } catch (error) {
-        console.error('Save operation failed:', error);
-        shikshaMitraToast.error({
-          message: `Failed to ${editData ? 'update' : 'create'} expense category`,
-        });
+      // Check if updating an item that is used downstream
+      if ((editData as any)?.isUsedInDownstream && editData?.id) {
+        setPendingFormValues(values);
+        setShowDownstreamWarning(true);
+        return;
       }
+
+      // Proceed with submission if not used downstream
+      await performSubmission(values);
     },
   });
+
+  // Perform the actual form submission
+  const performSubmission = async (values: any) => {
+    try {
+      // Transform form data to API format
+      const payload = {
+        name: values.name,
+        description: values.description || '',
+        tags: values.tags || [],
+      };
+
+      if (editData?.id) {
+        // Update existing expense category
+        await updateExpenseCategory({
+          expenseCategoryId: editData.id,
+          body: payload,
+        }).unwrap();
+
+        shikshaMitraToast.success({
+          message: `${values.name} Expense Category updated successfully`,
+        });
+      } else {
+        // Create new expense category
+        await addExpenseCategory({
+          academicYearId: currentYear?.id,
+          body: payload,
+        }).unwrap();
+
+        shikshaMitraToast.success({
+          message: `${values.name} Expense Category added successfully`,
+        });
+      }
+      onClose(null, true);
+    } catch (error) {
+      console.error('Save operation failed:', error);
+      shikshaMitraToast.error({
+        message: `Failed to ${editData ? 'update' : 'create'} expense category`,
+      });
+    }
+  };
 
   const handleKeyDown = (e: any) => {
     if (e.key === 'Enter') {
@@ -249,6 +267,25 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
+
+      {/* Downstream Usage Warning Dialog */}
+      <DownstreamUsageWarning
+        open={showDownstreamWarning}
+        itemName={editData?.name || ''}
+        itemType="Expense Category"
+        isLoading={isAddLoading || isUpdateLoading}
+        onConfirm={async () => {
+          if (pendingFormValues) {
+            await performSubmission(pendingFormValues);
+            setShowDownstreamWarning(false);
+            setPendingFormValues(null);
+          }
+        }}
+        onCancel={() => {
+          setShowDownstreamWarning(false);
+          setPendingFormValues(null);
+        }}
+      />
     </BackPopUpChecked>
   );
 };

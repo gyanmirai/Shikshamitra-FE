@@ -6,14 +6,15 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useRef, useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
+import React, { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   useGetFeeCategoriesQuery,
   useAddFeeCategoryMutation,
@@ -28,12 +29,15 @@ import type { IFeeCategoryFormProps } from './type';
 const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
+  const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
+  const [pendingFormValues, setPendingFormValues] = useState<any>(null);
+
   const { data: feeCategoriesData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeCategoriesQuery,
-    params: { academicYearId: currentYear?.id, page: 1, pageSize: 1000 },
+    params: { academicYearId: currentYear?.id },
     options: {
-      skip: !currentYear?.id || !open?.value,
+      skip: !currentYear?.id || !open?.value || editData,
     },
   });
 
@@ -60,32 +64,52 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     enableReinitialize: true,
     validationSchema: feeCategoryValidationSchema(existingNames, editData),
     onSubmit: (values) => {
+      // Check if updating an item that is used downstream
+      if ((editData as any)?.isUsedInDownstream && editData?.id) {
+        setPendingFormValues(values);
+        setShowDownstreamWarning(true);
+        return;
+      }
+
+      // Proceed with submission if not used downstream
+      performSubmission(values);
+    },
+  });
+
+  // Perform the actual form submission
+  const performSubmission = async (values: any) => {
+    try {
       if (editData) {
-        updateFeeCategory({
+        await updateFeeCategory({
           feeCategoryId: editData.id,
           body: {
             name: values.name,
             description: values.description,
           },
-        });
+        }).unwrap();
         shikshaMitraToast.success({
           message: `${values.name} Fee Category updated successfully`,
         });
       } else {
-        addFeeCategory({
+        await addFeeCategory({
           academicYearId: currentYear?.id,
           body: {
             name: values.name,
             description: values.description,
           },
-        });
+        }).unwrap();
         shikshaMitraToast.success({
           message: `${values.name} Fee Category added successfully`,
         });
       }
       onClose(null, true);
-    },
-  });
+    } catch (error) {
+      console.error('Save operation failed:', error);
+      shikshaMitraToast.error({
+        message: `Failed to ${editData ? 'update' : 'create'} fee category`,
+      });
+    }
+  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -165,6 +189,25 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
+
+      {/* Downstream Usage Warning Dialog */}
+      <DownstreamUsageWarning
+        open={showDownstreamWarning}
+        itemName={editData?.name || ''}
+        itemType="Fee Category"
+        isLoading={isAddLoading || isUpdateLoading}
+        onConfirm={async () => {
+          if (pendingFormValues) {
+            await performSubmission(pendingFormValues);
+            setShowDownstreamWarning(false);
+            setPendingFormValues(null);
+          }
+        }}
+        onCancel={() => {
+          setShowDownstreamWarning(false);
+          setPendingFormValues(null);
+        }}
+      />
     </BackPopUpChecked>
   );
 };

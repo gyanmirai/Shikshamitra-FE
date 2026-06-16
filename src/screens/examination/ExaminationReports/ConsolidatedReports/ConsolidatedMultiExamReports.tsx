@@ -119,12 +119,12 @@ const ConsolidatedMultiExamReportRequiredFieldsMap: Partial<Record<ExamReportTit
 
 const examReportInitialValues = {
   report: '' as unknown as ExamReportTitle,
-  organizations: [] as string[],
-  standards: [] as string[],
+  organizations: '',
+  standards: '',
   standard: '',
   divisions: [] as string[],
   examGroup: '',
-  examGroups: [] as string[],
+  examGroups: '',
 };
 
 const ConsolidatedMultiExamReports = ({
@@ -187,7 +187,9 @@ const ConsolidatedMultiExamReports = ({
         ? values.standard
           ? [values.standard]
           : []
-        : values.standards.filter((id) => id !== 'all');
+        : values.standards
+          ? [values.standards]
+          : [];
 
       const requestPayload = {
         reportType: ExamReportApiTypeMap[mappedReport],
@@ -221,7 +223,7 @@ const ConsolidatedMultiExamReports = ({
       return formik.values.standard ? [formik.values.standard] : [];
     }
 
-    return formik.values.standards.filter((id) => id !== 'all');
+    return formik.values.standards ? [formik.values.standards] : [];
   }, [formik.values.standard, formik.values.standards, showField]);
 
   const shouldLoadExamGroups =
@@ -265,12 +267,11 @@ const ConsolidatedMultiExamReports = ({
   }, [examItems]);
 
   const dynamicExamColumns = useMemo(() => {
-    const selectedGroupIds =
-      formik.values.examGroups.length > 0
-        ? formik.values.examGroups
-        : formik.values.examGroup
-          ? [formik.values.examGroup]
-          : [];
+    const selectedGroupIds = formik.values.examGroups
+      ? [formik.values.examGroups]
+      : formik.values.examGroup
+        ? [formik.values.examGroup]
+        : [];
 
     if (selectedGroupIds.length === 0) return [] as Array<{ key: string; label: string }>;
 
@@ -311,28 +312,15 @@ const ConsolidatedMultiExamReports = ({
       return;
     }
 
-    const organizations = cloneDeep(medium.educationMediumStages);
-    setAllOrganization([
-      {
-        id: 'all',
-        name: 'All',
-        creationTime: '',
-        creatorId: '',
-        lastModificationTime: '',
-        lastModifierId: '',
-        educationMediumStageId: '',
-        divisions: [],
-      },
-      ...organizations,
-    ]);
+    setAllOrganization(cloneDeep(medium.educationMediumStages));
   }, [medium?.educationMediumStages]);
 
   useEffect(() => {
-    const selectedOrgIds = formik.values.organizations.filter((id) => id !== 'all');
+    const selectedOrgId = formik.values.organizations;
 
-    if (selectedOrgIds.length === 0) {
+    if (!selectedOrgId) {
       setAllClass([]);
-      formik.setFieldValue('standards', []);
+      formik.setFieldValue('standards', '');
       formik.setFieldValue('standard', '');
       formik.setFieldValue('divisions', []);
       formik.setFieldValue('examGroup', '');
@@ -340,26 +328,14 @@ const ConsolidatedMultiExamReports = ({
       return;
     }
 
-    const standards = allOrganization
-      .filter((org: any) => selectedOrgIds.includes(org.id))
-      .flatMap((org: any) => (Array.isArray(org.standards) ? org.standards : []));
-
-    setAllClass(standards);
-
-    const allClassIds = standards.map((item: any) => item.id);
-
-    if (showField('standard_single')) {
-      formik.setFieldValue('standard', '');
-      formik.setFieldValue('standards', []);
-    } else {
-      formik.setFieldValue('standards', allClassIds.length > 0 ? ['all', ...allClassIds] : []);
-      formik.setFieldValue('standard', '');
-    }
-
+    const selectedOrg = allOrganization.find((org: any) => org.id === selectedOrgId);
+    setAllClass(Array.isArray(selectedOrg?.standards) ? selectedOrg.standards : []);
+    formik.setFieldValue('standards', '');
+    formik.setFieldValue('standard', '');
     formik.setFieldValue('examGroup', '');
     formik.setFieldValue('examGroups', []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allOrganization, formik.values.organizations, currentFields]);
+  }, [allOrganization, formik.values.organizations]);
 
   useEffect(() => {
     if (selectedClassIds.length === 0) {
@@ -393,9 +369,8 @@ const ConsolidatedMultiExamReports = ({
       formik.setFieldValue('examGroup', '');
     }
 
-    const nextGroups = formik.values.examGroups.filter((id) => validGroupIds.has(id));
-    if (nextGroups.length !== formik.values.examGroups.length) {
-      formik.setFieldValue('examGroups', nextGroups);
+    if (formik.values.examGroups && !validGroupIds.has(formik.values.examGroups)) {
+      formik.setFieldValue('examGroups', '');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examGroupOptions]);
@@ -411,35 +386,22 @@ const ConsolidatedMultiExamReports = ({
                   <ShakingTextField
                     error={!!formik.errors.organizations && !!formik.touched.organizations}
                   >
-                    <ResponsiveMultiSelect
+                    <CustomSelect
                       label={`Organization${isRequired('organizations') ? ' *' : ''}`}
-                      options={[
-                        { id: 'all', name: 'All' },
-                        ...allOrganization.filter((organization) => organization.id !== 'all'),
-                      ]}
-                      value={getDisplayValues(formik.values.organizations)}
-                      getOptionLabel={(option: any) => option?.name}
-                      getOptionValue={(option: any) => option?.id}
-                      onChange={(selectedValues) => {
-                        const allRealIds = allOrganization
-                          .filter((organization) => organization.id !== 'all')
-                          .map((organization) => organization.id);
-
-                        const nextValues = resolveMultiSelectValues(
-                          selectedValues,
-                          formik.values.organizations,
-                          allRealIds
-                        );
-
-                        formik.setFieldValue('organizations', nextValues);
-                      }}
-                      error={!!(formik.touched.organizations && formik.errors.organizations)}
+                      options={allOrganization}
+                      value={formik.values.organizations}
+                      labelKey="name"
+                      valueKey="id"
+                      onChange={(val) => formik.setFieldValue('organizations', val as string)}
+                      onBlur={() => formik.setFieldTouched('organizations', true)}
+                      error={formik.touched.organizations && Boolean(formik.errors.organizations)}
                       helperText={
                         formik.touched.organizations &&
                         typeof formik.errors.organizations === 'string'
                           ? formik.errors.organizations
                           : undefined
                       }
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -448,26 +410,18 @@ const ConsolidatedMultiExamReports = ({
               {showField('standards') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!formik.errors.standards && !!formik.touched.standards}>
-                    <ResponsiveMultiSelect
+                    <CustomSelect
                       label={`Class${isRequired('standards') ? ' *' : ''}`}
-                      options={[{ id: 'all', name: 'All' }, ...allClass]}
-                      value={getDisplayValues(formik.values.standards)}
-                      getOptionLabel={(option: any) => option?.name}
-                      getOptionValue={(option: any) => option?.id}
-                      disabled={formik.values.organizations.length === 0}
-                      onChange={(selectedValues) => {
-                        const allRealIds = allClass.map((item) => item.id);
-
-                        const nextValues = resolveMultiSelectValues(
-                          selectedValues,
-                          formik.values.standards,
-                          allRealIds
-                        );
-
-                        formik.setFieldValue('standards', nextValues);
-                      }}
+                      options={allClass}
+                      value={formik.values.standards}
+                      labelKey="name"
+                      valueKey="id"
+                      disabled={!formik.values.organizations}
+                      onChange={(val) => formik.setFieldValue('standards', val as string)}
+                      onBlur={() => formik.setFieldTouched('standards', true)}
                       error={formik.touched.standards && Boolean(formik.errors.standards)}
                       helperText={(formik.touched.standards && formik.errors.standards) as string}
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -485,7 +439,7 @@ const ConsolidatedMultiExamReports = ({
                       onChange={(value) => formik.setFieldValue('standard', value)}
                       error={formik.touched.standard && Boolean(formik.errors.standard)}
                       helperText={(formik.touched.standard && formik.errors.standard) as string}
-                      disabled={formik.values.organizations.length === 0}
+                      disabled={!formik.values.organizations}
                       formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                     />
                   </ShakingTextField>
@@ -501,7 +455,7 @@ const ConsolidatedMultiExamReports = ({
                       value={getDisplayValues(formik.values.divisions)}
                       getOptionLabel={(option: any) => option?.name}
                       getOptionValue={(option: any) => option?.id}
-                      disabled={selectedClassIds.length === 0}
+                      disabled={!formik.values.standards}
                       onChange={(selectedValues) => {
                         const allRealIds = allDivision.map((item) => item.id);
 
@@ -525,26 +479,19 @@ const ConsolidatedMultiExamReports = ({
                   <ShakingTextField
                     error={!!formik.errors.examGroups && !!formik.touched.examGroups}
                   >
-                    <ResponsiveMultiSelect
+                    <CustomSelect
                       label={`Exam Group${isRequired('examGroups') ? ' *' : ''}`}
                       options={examGroupOptions}
+                      labelKey="name"
+                      valueKey="id"
                       value={formik.values.examGroups}
-                      getOptionLabel={(option: any) => option?.name ?? ''}
-                      getOptionValue={(option: any) => option?.id ?? ''}
+                      onChange={(value) => formik.setFieldValue('examGroups', value)}
+                      error={formik.touched.examGroups && Boolean(formik.errors.examGroups)}
+                      helperText={(formik.touched.examGroups && formik.errors.examGroups) as string}
                       disabled={!shouldLoadExamGroups}
                       isLoading={isExamLoading || isExamFetching}
-                      onChange={(selectedValues) =>
-                        formik.setFieldValue('examGroups', selectedValues)
-                      }
-                      error={formik.touched.examGroups && Boolean(formik.errors.examGroups)}
-                      helperText={
-                        ((formik.touched.examGroups && formik.errors.examGroups) as string)
-                          ? ((formik.touched.examGroups && formik.errors.examGroups) as string)
-                          : examGroupNoOptionsMessage === 'No exam groups found' &&
-                              shouldLoadExamGroups
-                            ? 'No exam groups found'
-                            : undefined
-                      }
+                      noOptionsMessage={examGroupNoOptionsMessage}
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                     />
                   </ShakingTextField>
                 </Grid>

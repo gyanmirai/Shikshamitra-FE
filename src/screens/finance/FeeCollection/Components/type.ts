@@ -148,7 +148,7 @@ export interface IPaymentFieldConfig {
   maxLength?: number;
   pattern?: string;
   patternMessage?: string;
-  options?: string[];
+  options?: { id: string; name: string }[];
   isDefaultToday?: boolean;
 }
 
@@ -171,6 +171,7 @@ export interface MonthWiseFeeItem {
   total: number;
   paid: number;
   due: number;
+  reconciliationAmount?: number;
   status: FeeCollectionStatusType;
 }
 
@@ -187,6 +188,7 @@ export interface FeeHeadWiseFeeItem {
   total: number;
   paid: number;
   due: number;
+  reconciliationAmount?: number;
   status: FeeCollectionStatusType;
 }
 

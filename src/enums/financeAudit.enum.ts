@@ -2,7 +2,7 @@ export enum FinanceAuditSubModule {
   COLLECTIONS = 'Collections',
   CHARGES = 'Charges',
   REFUNDS = 'Refunds',
-  INVOICE_RECEIPTS = 'Invoice & Receipts',
+  INVOICE_RECEIPTS = 'Receipts',
   CONCESSIONS = 'Concessions',
   RECONCILIATION = 'Reconciliation',
   INCOME_TRACKING = 'Income Tracking',

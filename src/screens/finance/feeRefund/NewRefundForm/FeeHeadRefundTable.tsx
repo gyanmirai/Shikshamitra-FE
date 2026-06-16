@@ -96,7 +96,8 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       feeHeadName: fh.feeHeadName,
       items: fh.months.map((m): IMonthItem => {
         const monthIndex = typeof m.month === 'number' ? m.month : 0;
-        const monthLabel = FeeMonth[monthIndex] ?? `Month ${m.month}`;
+        const monthName = FeeMonth[monthIndex] ?? `Month ${m.month}`;
+        const monthLabel = `${monthName} ${m.year}`;
         const refunded = isAdj ? ((m as any).adjusted ?? 0) : ((m as any).refunded ?? 0);
         const refundable = isAdj ? ((m as any).adjustable ?? 0) : ((m as any).refundable ?? 0);
         const concession = (m as any).concession ?? 0;

@@ -21,11 +21,13 @@ import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
   HomeworkReportTitle,
   HomeworkReportApiTypeMap,
   HomeworkReportTitleOptions,
 } from 'src/enums/homework-wise-reports';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import HomeworkReportPreviewDrawer from '../HomeworkReportPreviewDrawer';
 import { getHomeworkValidationSchema } from './HomeworkTypeReportValidation';
@@ -272,23 +274,76 @@ const HomeworkManagementReports = ({
   const showField = (fieldName: string) => currentFields.includes(fieldName);
   const isRequired = (fieldName: string) => currentRequiredFields.includes(fieldName);
 
-  const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
+  const classId = formik.values.class || '';
+
+  // ── Subject API ──────────────────────────────────────────────────────────────
+  const { data: coreSubjectData, isLoading: isCoreSubjectLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
     params: { academicMediumId: (medium as Medium)?.id },
     options: {
-      skip: !currentFields.includes('subjects') || !(medium as Medium)?.id,
+      skip: !currentFields.includes('subjects') || !(medium as Medium)?.id || !!classId,
     },
   });
 
-  const subjectOptions: any[] = useMemo(
-    () =>
-      subjectData?.data?.items ??
-      subjectData?.items ??
-      subjectData?.records ??
-      (Array.isArray(subjectData) ? subjectData : []),
-    [subjectData]
-  );
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      standardId: classId,
+    },
+    options: {
+      skip: !currentFields.includes('subjects') || !medium?.id || !classId,
+    },
+  });
+
+  const subjectOptions: any[] = useMemo(() => {
+    if (classId) {
+      const allOptions: { id: string; name: string }[] = [];
+      subjectOptionsData?.data?.items?.forEach((item: any) => {
+        if (item.status === SubjectAssignmentStatus.Draft) return;
+
+        if (item.subjects?.length > 1 && item.electiveGroupName) {
+          item.subjects.forEach((sub: any, index: number) => {
+            const subId = sub.subjectId || String(index);
+            if (!allOptions.some((opt) => opt.id === subId)) {
+              allOptions.push({
+                id: subId,
+                name: sub.subjectName || `${item.electiveGroupName} ${index + 1}`,
+              });
+            }
+          });
+        } else {
+          const sub = item.subjects?.[0];
+          const subId = sub?.subjectId || item.id;
+          const subName = sub?.subject?.name || sub?.subjectName || '';
+          if (subId && !allOptions.some((opt) => opt.id === subId)) {
+            allOptions.push({
+              id: subId,
+              name: subName,
+            });
+          }
+        }
+      });
+      return allOptions;
+    }
+
+    const coreItems =
+      coreSubjectData?.data?.items ??
+      coreSubjectData?.items ??
+      coreSubjectData?.records ??
+      (Array.isArray(coreSubjectData) ? coreSubjectData : []);
+
+    return coreItems.map((item: any) => ({
+      id: item?.id ?? '',
+      name: item?.name ?? '',
+    }));
+  }, [classId, subjectOptionsData, coreSubjectData]);
 
   const [getTeacherOptions] = useLazyGetEmployeeQuery();
   const seenTeacherIdsRef = useRef<Set<string>>(new Set());
@@ -498,8 +553,14 @@ const HomeworkManagementReports = ({
                       value={formik.values.subjects}
                       getOptionLabel={(opt: any) => opt?.name ?? ''}
                       getOptionValue={(opt: any) => opt?.id ?? ''}
-                      disabled={!formik.values.organization}
-                      isLoading={isSubjectLoading}
+                      disabled={
+                        !formik.values.organization || (showField('class') && !formik.values.class)
+                      }
+                      isLoading={
+                        classId
+                          ? isSubjectOptionsLoading || isSubjectOptionsFetching
+                          : isCoreSubjectLoading
+                      }
                       onChange={(selectedValues) => {
                         formik.setFieldValue('subjects', selectedValues);
                       }}

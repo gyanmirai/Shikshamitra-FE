@@ -14,7 +14,17 @@ import { FeeMonth } from 'src/enums/fee-collection-type';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Chip, Paper, Stack, Button, Divider, Typography } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Grid,
+  Paper,
+  Stack,
+  Button,
+  Divider,
+  Skeleton,
+  Typography,
+} from '@mui/material';
 import {
   useGetFeeRefundByIdQuery,
   type FeeRefundRequestDto,
@@ -45,6 +55,109 @@ interface FeeRefundFormProps {
   editRefundId?: string;
 }
 
+const RefundFormSkeleton = (): React.ReactElement => (
+  <Stack gap={2}>
+    {/* Student Information Card Skeleton */}
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 1.5,
+        borderRadius: 2,
+      }}
+    >
+      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+        <Skeleton variant="circular" width={18} height={18} />
+        <Box sx={{ width: '40%' }}>
+          <Skeleton variant="text" width="60%" height={20} />
+          <Skeleton variant="text" width="100%" height={14} />
+        </Box>
+      </Stack>
+      <Divider sx={{ mb: 2 }} />
+      <Grid container spacing={2}>
+        {[...Array(4)].map((_, index) => (
+          <Grid key={index} size={{ xs: 6, md: 3 }}>
+            <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
+          </Grid>
+        ))}
+        <Grid size={{ xs: 12 }}>
+          <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
+        </Grid>
+      </Grid>
+    </Paper>
+
+    {/* Fee Refund Details Skeleton */}
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 1.5,
+        borderRadius: 2,
+      }}
+    >
+      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+        <Skeleton variant="circular" width={18} height={18} />
+        <Box sx={{ width: '45%' }}>
+          <Skeleton variant="text" width="50%" height={20} />
+          <Skeleton variant="text" width="90%" height={14} />
+        </Box>
+      </Stack>
+      <Divider sx={{ mb: 2 }} />
+      <Stack gap={1.5} mb={2}>
+        {[...Array(3)].map((_, index) => (
+          <Box
+            key={index}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              p: 1.5,
+              borderRadius: 1,
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+            }}
+          >
+            <Skeleton variant="text" width="30%" height={20} />
+            <Skeleton variant="rounded" width={80} height={32} />
+          </Box>
+        ))}
+      </Stack>
+    </Paper>
+
+    {/* Payment Details Skeleton */}
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 1.5,
+        borderRadius: 2,
+      }}
+    >
+      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+        <Skeleton variant="circular" width={18} height={18} />
+        <Box sx={{ width: '50%' }}>
+          <Skeleton variant="text" width="40%" height={20} />
+          <Skeleton variant="text" width="80%" height={14} />
+        </Box>
+      </Stack>
+      <Divider sx={{ mb: 2 }} />
+      <Grid container spacing={2.5}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
+        </Grid>
+        <Grid size={12}>
+          <Skeleton variant="rounded" height={60} width="100%" sx={{ borderRadius: 1 }} />
+        </Grid>
+      </Grid>
+    </Paper>
+  </Stack>
+);
+
 const FeeRefundFormComponent = ({
   onCancel,
   loading = false,
@@ -57,6 +170,7 @@ const FeeRefundFormComponent = ({
 }: FeeRefundFormProps): React.ReactElement => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const theme = useTheme();
+  const [loadingEditData, setLoadingEditData] = React.useState(false);
   const [createFeeRefund, { isLoading: isSubmitting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateFeeRefundMutation,
@@ -89,11 +203,19 @@ const FeeRefundFormComponent = ({
 
   useEffect(() => {
     const loadEditMonths = async () => {
-      if (!isEdit || !editRefundId || !currentYear?.id || !editRefundDetail?.studentId) {
+      if (!isEdit || !editRefundId) {
         setPrefilledFeeHeadRefunds([]);
+        setLoadingEditData(false);
         return;
       }
 
+      if (!currentYear?.id || !editRefundDetail?.studentId) {
+        setPrefilledFeeHeadRefunds([]);
+        setLoadingEditData(true);
+        return;
+      }
+
+      setLoadingEditData(true);
       const detail = editRefundDetail as FeeRefundRequestDto;
       const lineAmountByDueFeeId = new Map<string, number>(
         (detail.lines || []).map((line) => [line.dueFeeId, Number(line.amount) || 0])
@@ -111,7 +233,7 @@ const FeeRefundFormComponent = ({
               .filter((m) => lineAmountByDueFeeId.has(m.dueFeeId))
               .map((m) => ({
                 dueFeeId: m.dueFeeId,
-                month: FeeMonth[m.month] ?? `Month ${m.month}`,
+                month: `${FeeMonth[m.month] ?? `Month ${m.month}`} ${m.year}`,
                 amount: lineAmountByDueFeeId.get(m.dueFeeId) ?? 0,
               }));
 
@@ -125,6 +247,8 @@ const FeeRefundFormComponent = ({
         setPrefilledFeeHeadRefunds(mappedFeeHeads);
       } catch (_err) {
         setPrefilledFeeHeadRefunds([]);
+      } finally {
+        setLoadingEditData(false);
       }
     };
 
@@ -134,10 +258,19 @@ const FeeRefundFormComponent = ({
   const formInitialValues = useMemo(
     () =>
       buildRefundInitialValues({
-        boardId: defaultBoardId,
-        mediumId: defaultMediumId,
-        standardId: defaultStandardId,
-        divisionId: defaultDivisionId,
+        boardId: isEdit
+          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.boardId ?? defaultBoardId)
+          : defaultBoardId,
+        mediumId: isEdit
+          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.educationMediumId ??
+            defaultMediumId)
+          : defaultMediumId,
+        standardId: isEdit
+          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.standardId ?? defaultStandardId)
+          : defaultStandardId,
+        divisionId: isEdit
+          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.divisionId ?? defaultDivisionId)
+          : defaultDivisionId,
         studentId: isEdit
           ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.studentId ?? '')
           : '',
@@ -148,6 +281,9 @@ const FeeRefundFormComponent = ({
           ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.refundMethod ?? '')
           : '',
         notes: isEdit ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.reason ?? '') : '',
+        paymentDetails: isEdit
+          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.paymentDetails ?? {})
+          : {},
         feeHeadRefunds: isEdit ? prefilledFeeHeadRefunds : [],
       }),
     [
@@ -213,6 +349,9 @@ const FeeRefundFormComponent = ({
     return { totalSelectedMonths: months, totalRefundRequested: total };
   }, [formik.values.feeHeadRefunds]);
 
+  const showSkeleton =
+    isEdit && (editLoading || editFetching || loadingEditData || !editRefundDetail);
+
   return (
     <Box
       component={motion.div}
@@ -227,39 +366,45 @@ const FeeRefundFormComponent = ({
       <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
         <Box sx={{ p: { xs: 1, md: 2 }, pb: 1 }}>
           <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-            {/* ── Student Information Card ── */}
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 1.5,
-                mb: 1.5,
-                borderRadius: 2,
-                transition: 'box-shadow 0.2s ease',
-                '&:hover': { boxShadow: 4 },
-              }}
-            >
-              {/* Card header */}
-              <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                <Iconify
-                  icon="solar:users-group-rounded-bold-duotone"
-                  width={18}
-                  sx={{ color: 'primary.main' }}
-                />
-                <Box>
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    Student Information
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Select board, class, and student to proceed
-                  </Typography>
-                </Box>
-              </Stack>
-              <Divider sx={{ mb: 2 }} />
-              <RefundGeneralInfoCard formik={formik} />
-            </Paper>
+            {showSkeleton ? (
+              <RefundFormSkeleton />
+            ) : (
+              <>
+                {/* ── Student Information Card ── */}
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 1.5,
+                    mb: 1.5,
+                    borderRadius: 2,
+                    transition: 'box-shadow 0.2s ease',
+                    '&:hover': { boxShadow: 4 },
+                  }}
+                >
+                  {/* Card header */}
+                  <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                    <Iconify
+                      icon="solar:users-group-rounded-bold-duotone"
+                      width={18}
+                      sx={{ color: 'primary.main' }}
+                    />
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={700}>
+                        Student Information
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Select board, class, and student to proceed
+                      </Typography>
+                    </Box>
+                  </Stack>
+                  <Divider sx={{ mb: 2 }} />
+                  <RefundGeneralInfoCard formik={formik} disabled={isEdit} />
+                </Paper>
 
-            {/* ── Fee Refund Details ── */}
-            <FeeRefundDetailsForm formik={formik} />
+                {/* ── Fee Refund Details ── */}
+                <FeeRefundDetailsForm formik={formik} />
+              </>
+            )}
           </BackPopUpChecked>
         </Box>
       </Scrollbar>
@@ -331,7 +476,14 @@ const FeeRefundFormComponent = ({
               type="submit"
               variant="contained"
               size="small"
-              loading={loading || isSubmitting || isUpdating || editLoading || editFetching}
+              loading={
+                loading ||
+                isSubmitting ||
+                isUpdating ||
+                editLoading ||
+                editFetching ||
+                loadingEditData
+              }
               loadingPosition="start"
               startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
               onClick={() => formik.handleSubmit()}

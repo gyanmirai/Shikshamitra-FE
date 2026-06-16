@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Medium, Division, Standards, Organization } from 'src/types/school';
+import type { Division, Standards, Organization } from 'src/types/school';
 
 import { toast } from 'sonner';
 import { useFormik } from 'formik';
@@ -14,13 +14,14 @@ import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
-import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import {
   CurriculumReportTitle,
   CurriculumReportApiTypeMap,
   CurriculumReportTitleOptions,
 } from 'src/enums/curriuculum-reports';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import CurriculumReportPreviewDrawer from './CurriculumReportPreviewDrawer';
 import { getCurriculumValidationSchema } from './getCurriculumReportsValidationSchema';
@@ -28,7 +29,7 @@ import { getCurriculumValidationSchema } from './getCurriculumReportsValidationS
 interface CurriculumReportInitialValues {
   report: CurriculumReportTitle;
   organization: string;
-  classes: string[];
+  classes: string;
   divisions: string[];
   subjects: string[];
   chapters: string[];
@@ -37,7 +38,7 @@ interface CurriculumReportInitialValues {
 const initialValues: CurriculumReportInitialValues = {
   report: '' as unknown as CurriculumReportTitle,
   organization: '',
-  classes: [],
+  classes: '',
   divisions: [],
   subjects: [],
   chapters: [],
@@ -167,9 +168,7 @@ const CurriculumReportForm = ({
     enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: async (values, { setSubmitting }) => {
-      const classIds = values.classes.includes('all')
-        ? allClass.filter((c) => c.id !== 'all').map((c) => c.id)
-        : values.classes;
+      const classIds = values.classes ? [values.classes] : [];
 
       const divisionIds = values.divisions.includes('all')
         ? allDivision.filter((d) => d.id !== 'all').map((d) => d.id)
@@ -224,37 +223,62 @@ const CurriculumReportForm = ({
   // Helper: should the field label show a required asterisk?
   const isRequired = (fieldName: string) => currentRequiredFields.includes(fieldName);
 
-  // ─── Dynamic subject API ───────────────────────────────────────────────────
-  const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
-    options: {
-      skip: !(medium as Medium)?.id,
-    },
-  });
-
-  const subjectOptions: any[] = useMemo(
-    () =>
-      subjectData?.data?.items ??
-      subjectData?.items ??
-      subjectData?.records ??
-      (Array.isArray(subjectData) ? subjectData : []),
-    [subjectData]
-  );
-
-  // ─── Dynamic chapter API ───────────────────────────────────────────────────
-  // Chapters depend on the first real (non-"all") selected class and the first selected subject.
-  const classId = useMemo(() => {
-    const nonAllClasses = (formik.values.classes as string[]).filter((id) => id !== 'all');
-    return nonAllClasses[0] ?? '';
-  }, [formik.values.classes]);
+  // ─── Derived select identifiers ────────────────────────────────────────────
+  const classId = formik.values.classes || '';
 
   const subjectId = useMemo(
     () => (formik.values.subjects as string[])[0] ?? '',
     [formik.values.subjects]
   );
 
+  // ─── Dynamic subject API ───────────────────────────────────────────────────
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      standardId: classId,
+    },
+    options: {
+      skip: !medium?.id || !classId,
+    },
+  });
+
+  const subjectOptions: any[] = useMemo(() => {
+    const allOptions: { id: string; name: string }[] = [];
+    subjectOptionsData?.data?.items?.forEach((item: any) => {
+      if (item.status === SubjectAssignmentStatus.Draft) return;
+
+      if (item.subjects?.length > 1 && item.electiveGroupName) {
+        item.subjects.forEach((sub: any, index: number) => {
+          const subId = sub.subjectId || String(index);
+          if (!allOptions.some((opt) => opt.id === subId)) {
+            allOptions.push({
+              id: subId,
+              name: sub.subjectName || `${item.electiveGroupName} ${index + 1}`,
+            });
+          }
+        });
+      } else {
+        const sub = item.subjects?.[0];
+        const subId = sub?.subjectId || item.id;
+        const subName = sub?.subject?.name || sub?.subjectName || '';
+        if (subId && !allOptions.some((opt) => opt.id === subId)) {
+          allOptions.push({
+            id: subId,
+            name: subName,
+          });
+        }
+      }
+    });
+    return allOptions;
+  }, [subjectOptionsData]);
+
+  // ─── Dynamic chapter API ───────────────────────────────────────────────────
   const {
     data: chapterResponse,
     isLoading: isChapterLoading,
@@ -295,54 +319,25 @@ const CurriculumReportForm = ({
   useEffect(() => {
     const standards =
       allOrganization.find((org: any) => org?.id === formik.values.organization)?.standards || [];
-
-    if (!standards.some((std) => std.id === 'all')) {
-      standards.unshift({
-        id: 'all',
-        name: 'All',
-        creationTime: '',
-        creatorId: '',
-        lastModificationTime: '',
-        lastModifierId: '',
-        educationMediumStageId: '',
-        divisions: [],
-      });
-    }
     setAllClass(standards);
   }, [allOrganization, formik.values.organization]);
 
-  // Sync division list from selected class(es); auto-select when applicable
+  // Sync division list from selected class; auto-select when applicable
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (formik.values.classes.length === 0) {
+    if (!formik.values.classes) {
       setAllDivision([]);
       formik.setFieldValue('divisions', []);
       return;
     }
 
-    if (formik.values.classes.length === 1 && formik.values.classes[0] !== 'all') {
-      const selectedClass = allClass.find((cls: any) => cls?.id === formik.values.classes[0]);
-      const divisions = selectedClass?.divisions || [];
-      setAllDivision(divisions);
-      formik.setFieldValue(
-        'divisions',
-        divisions.map((div: any) => div.id)
-      );
-    } else {
-      setAllDivision([
-        {
-          id: 'all',
-          name: 'All',
-          creationTime: '',
-          creatorId: '',
-          lastModificationTime: '',
-          lastModifierId: '',
-          strength: 0,
-          standardId: '',
-        },
-      ]);
-      formik.setFieldValue('divisions', ['all']);
-    }
+    const selectedClass = allClass.find((cls: any) => cls?.id === formik.values.classes);
+    const divisions = selectedClass?.divisions || [];
+    setAllDivision(divisions);
+    formik.setFieldValue(
+      'divisions',
+      divisions.map((div: any) => div.id)
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allClass, formik.values.classes]);
 
@@ -370,14 +365,9 @@ const CurriculumReportForm = ({
                     value={formik.values.organization}
                     onChange={(val) => {
                       formik.setFieldValue('organization', val);
-
-                      const standards =
-                        allOrganization.find((org: any) => org?.id === val)?.standards || [];
-                      const standardIds = standards.map((standard: any) => standard.id);
-                      formik.setFieldValue('classes', [
-                        'all',
-                        ...standardIds.filter((id: string) => id !== 'all'),
-                      ]);
+                      formik.setFieldValue('classes', '');
+                      formik.setFieldValue('divisions', []);
+                      formik.setFieldValue('subjects', []);
                     }}
                     onBlur={() => formik.setFieldTouched('organization', true)}
                     error={formik.touched.organization && Boolean(formik.errors.organization)}
@@ -398,36 +388,11 @@ const CurriculumReportForm = ({
                   <CustomSelect
                     options={allClass}
                     label={`Class${isRequired('classes') ? ' *' : ''}`}
-                    multiple
                     value={formik.values.classes}
                     onChange={(val) => {
-                      const value = val as string[];
-                      const allClassIds =
-                        allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
-                      const isAllClicked = value.includes('all');
-                      const wasAllPreviouslySelected = (formik.values.classes as string[]).includes(
-                        'all'
-                      );
-
-                      if (isAllClicked && !wasAllPreviouslySelected) {
-                        formik.setFieldValue('classes', ['all', ...allClassIds]);
-                      } else if (!isAllClicked && wasAllPreviouslySelected) {
-                        formik.setFieldValue('classes', []);
-                      } else if (isAllClicked && wasAllPreviouslySelected) {
-                        const selectedWithoutAll = value.filter((id) => id !== 'all');
-                        if (selectedWithoutAll.length === allClassIds.length) {
-                          formik.setFieldValue('classes', ['all', ...allClassIds]);
-                        } else {
-                          formik.setFieldValue('classes', selectedWithoutAll);
-                        }
-                      } else {
-                        const selectedWithoutAll = value.filter((id) => id !== 'all');
-                        if (selectedWithoutAll.length === allClassIds.length) {
-                          formik.setFieldValue('classes', ['all', ...allClassIds]);
-                        } else {
-                          formik.setFieldValue('classes', selectedWithoutAll);
-                        }
-                      }
+                      formik.setFieldValue('classes', val as string);
+                      formik.setFieldValue('divisions', []);
+                      formik.setFieldValue('subjects', []);
                     }}
                     onBlur={() => formik.setFieldTouched('classes', true)}
                     error={formik.touched.classes && Boolean(formik.errors.classes)}
@@ -440,33 +405,27 @@ const CurriculumReportForm = ({
                 </ShakingTextField>
               </Grid>
 
-              {/* Division — hidden when "All" classes selected */}
-              {!(formik.values.classes as string[]).includes('all') &&
-                formik.values.classes.length > 0 && (
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <ShakingTextField
-                      error={!!(formik.touched.divisions && formik.errors.divisions)}
-                    >
-                      <CustomSelect
-                        options={allDivision}
-                        label={`Division${isRequired('divisions') ? ' *' : ''}`}
-                        value={formik.values.divisions}
-                        onChange={(val) => formik.setFieldValue('divisions', val)}
-                        onBlur={() => formik.setFieldTouched('divisions', true)}
-                        error={formik.touched.divisions && Boolean(formik.errors.divisions)}
-                        helperText={(formik.touched.divisions && formik.errors.divisions) as string}
-                        labelKey="name"
-                        valueKey="id"
-                        multiple={
-                          !(formik.values.classes as string[]).includes('all') ||
-                          formik.values.classes.length > 1
-                        }
-                        formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                        disabled={formik.values.classes.length === 0}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                )}
+              {/* Division */}
+              {formik.values.classes && (
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ShakingTextField error={!!(formik.touched.divisions && formik.errors.divisions)}>
+                    <CustomSelect
+                      options={allDivision}
+                      label={`Division${isRequired('divisions') ? ' *' : ''}`}
+                      value={formik.values.divisions}
+                      onChange={(val) => formik.setFieldValue('divisions', val)}
+                      onBlur={() => formik.setFieldTouched('divisions', true)}
+                      error={formik.touched.divisions && Boolean(formik.errors.divisions)}
+                      helperText={(formik.touched.divisions && formik.errors.divisions) as string}
+                      labelKey="name"
+                      valueKey="id"
+                      multiple
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                      disabled={!formik.values.classes}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
 
               {/* Subject — loaded dynamically from API */}
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -487,8 +446,8 @@ const CurriculumReportForm = ({
                     labelKey="name"
                     valueKey="id"
                     formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                    disabled={!formik.values.organization}
-                    isLoading={isSubjectLoading}
+                    disabled={!formik.values.classes}
+                    isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
                   />
                 </ShakingTextField>
               </Grid>

@@ -69,6 +69,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
               placement="right-top"
               showEditIcon
               showDeleteIcon
+              disableDeleteIcon={row?.isUsedInDownstream}
               handleEditClick={() => {
                 onEdit(row as IFeeHead);
               }}

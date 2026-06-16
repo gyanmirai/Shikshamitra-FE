@@ -121,7 +121,7 @@ export default function StudentRefundInfo({
           <InfoItem
             icon={<Iconify icon="solar:user-bold" />}
             label="Student Name"
-            value={student?.name}
+            value={`${student?.name}${student?.grNo ? ` (${student.grNo})` : ''}`}
           />
         </Grid>
 

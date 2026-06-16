@@ -14,7 +14,6 @@ import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -400,6 +399,7 @@ const TimeTableGrid = () => {
   const [selectedStandardId, setSelectedStandardId] = useState<string>('');
   const [division, setDivision] = useState<string>('');
   const [selectedDivisionId, setSelectedDivisionId] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<number | null>(null);
 
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -434,6 +434,7 @@ const TimeTableGrid = () => {
       setSubjectsGroups(initialSubjectsGroups);
       setOpen(false);
       setIsEdit(false);
+      setSelectedStatus(null);
     }
   };
 
@@ -490,6 +491,7 @@ const TimeTableGrid = () => {
                   handleOpenDialog();
                   setDivision(row.divisionName);
                   setSelectedDivisionId(row.divisionId);
+                  setSelectedStatus(row.status);
                 }}
               >
                 Create
@@ -509,6 +511,7 @@ const TimeTableGrid = () => {
                   handleOpenDialog();
                   setDivision(row.divisionName);
                   setSelectedDivisionId(row.divisionId);
+                  setSelectedStatus(row.status);
                   setIsEdit(true);
                 }}
               >
@@ -583,6 +586,7 @@ const TimeTableGrid = () => {
           divisionId={selectedDivisionId}
           onClose={() => handleCloseDialog(true)}
           setIsDirty={setIsDirty}
+          timetableStatus={selectedStatus}
         />
       </CustomDialog>
 
@@ -840,6 +844,7 @@ const TimeTableForm = ({
   divisionId,
   onClose,
   setIsDirty,
+  timetableStatus,
 }: {
   selectedClass: string;
   classId: string;
@@ -848,6 +853,7 @@ const TimeTableForm = ({
   divisionId: string;
   onClose: () => void;
   setIsDirty: (dirty: boolean) => void;
+  timetableStatus: number | null;
 }) => {
   const {
     data: slotConfigData,
@@ -865,8 +871,6 @@ const TimeTableForm = ({
     type: 'mutation',
     currentQueryAndMutation: useCreateTimetableMutation,
   });
-
-  const draftTimetableDialog = useBoolean();
 
   const transformSlotsToPayload = useCallback(
     (slots: Record<DayOfWeek, TimeSlot[]>, status: number) => {
@@ -1107,21 +1111,23 @@ const TimeTableForm = ({
               </Box>
             )}
 
-            <Button
-              variant="outlined"
-              size="small"
-              color="inherit"
-              startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-              onClick={() => draftTimetableDialog.onTrue()}
-              disabled={isSubmitting}
-              sx={{
-                borderColor: 'divider',
-                color: 'text.secondary',
-                '&:hover': { borderColor: 'text.primary', color: 'text.primary' },
-              }}
-            >
-              Draft
-            </Button>
+            {timetableStatus !== TimetableStatusType.Created && (
+              <Button
+                variant="outlined"
+                size="small"
+                color="inherit"
+                startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
+                onClick={() => handleSubmit(formik.values.slots, 0)}
+                disabled={isSubmitting}
+                sx={{
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  '&:hover': { borderColor: 'text.primary', color: 'text.primary' },
+                }}
+              >
+                Draft
+              </Button>
+            )}
             <Button
               variant="contained"
               size="small"

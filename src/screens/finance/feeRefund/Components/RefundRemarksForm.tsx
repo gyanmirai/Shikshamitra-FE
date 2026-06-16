@@ -76,9 +76,9 @@ const RemarksFormSkeleton = () => (
 const mapDtoToStudentFeeData = (dto: FeeRefundRequestDto): IStudentFeeData => ({
   id: 0,
   name: dto.studentName ?? '',
-  board: '',
-  medium: '',
-  class: dto.className ?? '',
+  board: dto.boardName ?? '',
+  medium: dto.educationMediumName ?? '',
+  class: dto.standardName ?? '',
   division: dto.divisionName ?? '',
   grNo: dto.studentGrNo != null ? String(dto.studentGrNo) : '',
   rollNo: dto.studentRollNo != null ? String(dto.studentRollNo) : '',

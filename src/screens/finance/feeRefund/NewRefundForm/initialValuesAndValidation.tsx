@@ -49,13 +49,14 @@ export interface IFeeHeadRefundItem {
   months: IFeeHeadMonthRefund[];
 }
 
-/** Shape sent to POST /api/fee-refunds */
+/** Shape sent to POST /api/fee-refunds and PUT /api/fee-refunds/{id} */
 export interface IFeeRefundApiPayload {
   studentId: string;
   academicYearId: string;
   lines: { dueFeeId: string; amount: number }[];
   refundMethod: string;
   reason: string;
+  paymentDetails?: Record<string, unknown>;
 }
 
 /** Legacy in-form shape kept for backward compat with other consumers */
@@ -91,6 +92,12 @@ export const buildFeeRefundApiPayload = (
   academicYearId,
   refundMethod: values.refundMethod,
   reason: values.notes,
+  paymentDetails: Object.fromEntries(
+    Object.entries(values.paymentDetails || {}).map(([k, v]) => [
+      k,
+      dayjs.isDayjs(v) ? v.format('YYYY-MM-DD') : v,
+    ])
+  ),
   lines: (values.feeHeadRefunds || []).flatMap((fh) =>
     fh.months
       .filter((m) => Number(m.amount) > 0 && m.dueFeeId)
@@ -112,22 +119,35 @@ export const buildFeeRefundPayload = (values: IRefundFormValues): IFeeRefundPayl
 
 export const buildRefundInitialValues = (
   editData?: IFeeRefundEditData | null
-): IRefundFormValues => ({
-  boardId: editData?.boardId || '',
-  mediumId: editData?.mediumId || '',
-  standardId: editData?.standardId || '',
-  divisionId: editData?.divisionId || '',
-  studentId: editData?.studentId || '',
-  studentName: editData?.studentName || '',
-  refundMethod: editData?.refundMethod || '',
-  notes: editData?.notes || '',
-  paymentDetails: {
-    ...getInitialRefundPaymentDetails(editData?.refundMethod),
-    ...(editData?.paymentDetails || {}),
-  },
-  // Array of { feeHeadId, months: { month, amount }[] } — populated when student is selected
-  feeHeadRefunds: (editData?.feeHeadRefunds || []) as IFeeHeadRefundItem[],
-});
+): IRefundFormValues => {
+  const method = editData?.refundMethod || '';
+  const initialDetails = getInitialRefundPaymentDetails(method);
+  const editDetails = editData?.paymentDetails || {};
+
+  // Convert date fields to dayjs objects
+  const mergedDetails = { ...initialDetails, ...editDetails };
+  const configFields =
+    refundPaymentMethodsConfig[method as keyof typeof refundPaymentMethodsConfig] || [];
+  configFields.forEach((field) => {
+    if (field.type === 'date' && mergedDetails[field.name]) {
+      mergedDetails[field.name] = dayjs(mergedDetails[field.name]);
+    }
+  });
+
+  return {
+    boardId: editData?.boardId || '',
+    mediumId: editData?.mediumId || '',
+    standardId: editData?.standardId || '',
+    divisionId: editData?.divisionId || '',
+    studentId: editData?.studentId || '',
+    studentName: editData?.studentName || '',
+    refundMethod: method,
+    notes: editData?.notes || '',
+    paymentDetails: mergedDetails,
+    // Array of { feeHeadId, months: { month, amount }[] } — populated when student is selected
+    feeHeadRefunds: (editData?.feeHeadRefunds || []) as IFeeHeadRefundItem[],
+  };
+};
 
 // ─── Validation Schema ────────────────────────────────────────────────────────
 
