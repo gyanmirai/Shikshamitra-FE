@@ -590,9 +590,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   );
 
   const handleCloseFullScreen = useCallback(() => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-    }
     fullScreenDialog.onFalse();
   }, [fullScreenDialog]);
 

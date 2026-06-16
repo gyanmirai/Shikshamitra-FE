@@ -285,16 +285,7 @@ export const TableToolbar = React.memo(
                 title={isFullScreen ? 'Exit Fullscreen' : 'Fullscreen'}
               >
                 <IconButton
-                  onClick={async () => {
-                    if (!document.fullscreenElement) {
-                      try {
-                        await document.documentElement.requestFullscreen();
-                      } catch (e) {
-                        console.error('Fullscreen failed', e);
-                      }
-                    } else if (document.exitFullscreen) {
-                      await document.exitFullscreen();
-                    }
+                  onClick={() => {
                     onToggleFullScreen();
                   }}
                   sx={{
