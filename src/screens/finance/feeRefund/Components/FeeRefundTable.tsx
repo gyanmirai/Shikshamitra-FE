@@ -2,22 +2,25 @@
 
 import type { LabelColor } from 'src/components/label';
 
+import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
-import { Box, Tab, Card, Tabs, MenuList, MenuItem, Typography } from '@mui/material';
-import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
+import { Box, Tab, Card, Tabs, Typography, IconButton } from '@mui/material';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
   useGetFeeRefundsQuery,
   type FeeRefundRequestDto,
 } from 'src/redux/finance/RefundManagement/feeRefundManage';
+import {
+  useFinanceAcademicFilters,
+  type UseFinanceAcademicFiltersResult,
+} from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import type { IStudentFeeData, IStudentFeeTableProps } from '../type';
 
@@ -52,10 +55,24 @@ function mapRefundItem(item: FeeRefundRequestDto, idx: number): IStudentFeeData 
     status: item.status as FeeRefundStatusType,
     refundMethod: item.refundMethod ?? '',
     _refundRequestId: item.id,
+    _studentId: item.studentId,
   } as IStudentFeeData;
 }
 
-const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({ onRequestRefund, onView }) => {
+interface StudentFeeRefundTableProps extends IStudentFeeTableProps {
+  academicFilters?: UseFinanceAcademicFiltersResult;
+}
+
+const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
+  onView,
+  onEdit,
+  onApprove,
+  onReject,
+  onDelete,
+  academicFilters,
+}) => {
+  const localFilters = useFinanceAcademicFilters();
+  const filters = academicFilters || localFilters;
   const {
     boards,
     mediums,
@@ -73,7 +90,7 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({ onRequestRefun
     setSelectedStandardId,
     setSelectedDivisionId,
     classesLoading,
-  } = useFinanceAcademicFilters();
+  } = filters;
 
   const tabs = useTabs(FeeRefundStatusType.Pending);
 
@@ -118,19 +135,6 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({ onRequestRefun
   const filteredData = useMemo(
     () => (data || []).filter((item: any) => item?.status === tabs.value),
     [data, tabs.value]
-  );
-
-  // Memoized callback function to render action menu items
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <MenuList>
-        <MenuItem disabled>
-          <Iconify icon="uil:process" sx={{ height: '16px', width: '16px' }} />
-          No actions
-        </MenuItem>
-      </MenuList>
-    ),
-    []
   );
 
   return (
@@ -264,16 +268,52 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({ onRequestRefun
             minWidth: 80,
             sticky: true,
             render(value, row) {
+              const isPending = row?.status === FeeRefundStatusType.Pending;
               return (
-                <ThreeDotsActions
-                  actions={(prop) => actions({ ...prop, row })}
-                  showThreeDots={false}
-                  showViewIcon
-                  handleViewClick={() => {
-                    onView?.(row as IStudentFeeData);
-                  }}
-                  placement="right-top"
-                />
+                <Box display="flex" gap={1} alignItems="center">
+                  <ThreeDotsActions
+                    showThreeDots={false}
+                    showViewIcon
+                    showEditIcon={isPending}
+                    showDeleteIcon={isPending}
+                    handleViewClick={() => {
+                      onView?.(row as IStudentFeeData);
+                    }}
+                    handleEditClick={() => {
+                      onEdit?.(row as IStudentFeeData);
+                    }}
+                    handleDeleteClick={() => {
+                      onDelete?.(row as IStudentFeeData);
+                    }}
+                    placement="right-top"
+                  />
+                  {isPending && (
+                    <Box sx={{ display: 'flex' }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => onApprove?.(row as IStudentFeeData)}
+                        sx={{
+                          color: 'success.main',
+                          '&:hover': { backgroundColor: 'success.lighter' },
+                        }}
+                        title="Approve"
+                      >
+                        <Iconify icon="mdi:approve" width={20} height={20} />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => onReject?.(row as IStudentFeeData)}
+                        sx={{
+                          color: 'error.main',
+                          '&:hover': { backgroundColor: 'error.lighter' },
+                        }}
+                        title="Reject"
+                      >
+                        <Iconify icon="entypo:cross" width={20} height={20} />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Box>
               );
             },
           },

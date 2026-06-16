@@ -49,7 +49,7 @@ const TeacherSelectionFields = ({
         onChange={(_: unknown, newValue: EmployeeOption | null) => onPrimaryChange(newValue)}
         getOptionLabel={(option: EmployeeOption) => option?.label || ''}
         isOptionEqualToValue={(option: EmployeeOption, value: EmployeeOption) =>
-          option.id === value.id
+          option?.id === value?.id
         }
         filterOptions={(options: EmployeeOption[]) =>
           options.filter((o) => !secondaryTeacherIds?.includes(o.id))
@@ -63,7 +63,7 @@ const TeacherSelectionFields = ({
             </Box>
           );
         }}
-        debounceMs={400}
+        debounceMs={1500}
         minChars={0}
         size="small"
         fullWidth
@@ -81,7 +81,7 @@ const TeacherSelectionFields = ({
         onChange={(_: unknown, newValues: EmployeeOption[]) => onSecondaryChange(newValues)}
         getOptionLabel={(option: EmployeeOption) => option?.label || ''}
         isOptionEqualToValue={(option: EmployeeOption, value: EmployeeOption) =>
-          option.id === value.id
+          option?.id === value?.id
         }
         filterOptions={(options: EmployeeOption[]) =>
           options.filter((o) => o.id !== primaryTeacherId)
@@ -125,7 +125,7 @@ const TeacherSelectionFields = ({
             ),
           ];
         }}
-        debounceMs={400}
+        debounceMs={1500}
         minChars={0}
         size="small"
         fullWidth

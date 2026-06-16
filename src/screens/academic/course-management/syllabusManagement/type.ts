@@ -34,7 +34,7 @@ export interface SubjectOption {
 }
 
 export interface IChapterFormValues {
-  chapterNo: number;
+  chapterNo: number | string;
   chapterName: string;
   description: string;
   startDate: Dayjs | null;
@@ -66,4 +66,7 @@ export interface IChapterTableProps {
   onViewDocuments: (chapter: IChapter) => void;
   subjectId?: string;
   standardId?: string;
+  canAdd?: boolean;
+  canView?: boolean;
+  canDelete?: boolean;
 }

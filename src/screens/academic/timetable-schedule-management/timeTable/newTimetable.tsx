@@ -18,8 +18,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import { DEFAULT_CONFIG } from 'src/components/timetable/utils';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import TimetableBoard from 'src/components/timetable/TimetableBoard';
@@ -383,6 +385,14 @@ const TimeTableGrid = () => {
   const [showConfirm, ConfirmDialog] = useConfirmDialog();
   const [isDirty, setIsDirty] = useState(false);
 
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.timetable.management}.Add`
+  );
+
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard name
@@ -470,7 +480,7 @@ const TimeTableGrid = () => {
         isFilter: false,
         render: (value, row) => {
           if (row.status === 0) {
-            return (
+            return canAdd ? (
               <Button
                 size="small"
                 variant="outlined"
@@ -484,10 +494,10 @@ const TimeTableGrid = () => {
               >
                 Create
               </Button>
-            );
+            ) : null;
           }
           if (row.status === 1 || row.status === 2) {
-            return (
+            return canAdd ? (
               <Button
                 size="small"
                 variant="outlined"
@@ -504,13 +514,13 @@ const TimeTableGrid = () => {
               >
                 Update
               </Button>
-            );
+            ) : null;
           }
           return null;
         },
       },
     ],
-    [handleOpenDialog]
+    [handleOpenDialog, canAdd]
   );
 
   const {

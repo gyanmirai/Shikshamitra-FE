@@ -37,6 +37,9 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
   onEditDetails,
   onViewDetails,
   onViewSubmission,
+  canAdd = true,
+  canView = true,
+  canDelete = true,
 }) => {
   /**
    * Get the MUI theme object for styling
@@ -96,19 +99,25 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
       noDataText={
         <>
           Homework Data Not Found
-          <Box
-            onClick={() => {
-              dialog.onTrue();
-              setOpen(true);
-            }}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': { cursor: 'pointer', color: 'primary.main', textDecoration: 'underline' },
-            }}
-          >
-            Create Homework
-          </Box>
+          {canAdd && (
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+                setOpen(true);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Create Homework
+            </Box>
+          )}
         </>
       }
       columns={[
@@ -226,9 +235,9 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
               placement="right-top"
               showThreeDots={false}
               // actions={(prop) => actions({ ...prop, row })}
-              showViewIcon
-              showEditIcon={(row as any).status !== PublishUnpublishStatusType.Published}
-              showDeleteIcon
+              showViewIcon={canView}
+              showEditIcon={canAdd && (row as any).status !== PublishUnpublishStatusType.Published}
+              showDeleteIcon={canDelete}
               handleDeleteClick={() => {
                 onDeleteDetails(row as IHomework);
               }}

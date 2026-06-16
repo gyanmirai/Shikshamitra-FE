@@ -12,9 +12,12 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
 import { Box, Tab, Tabs, Card, Chip, Typography, IconButton } from '@mui/material';
-import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
+import {
+  useFinanceAcademicFilters,
+  type UseFinanceAcademicFiltersResult,
+} from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import type { IChargeData } from './type';
 
@@ -29,10 +32,7 @@ const ChargesTable = ({
   onApprove,
   onReject,
   onRemove,
-  selectedBoard,
-  setSelectedBoard,
-  selectedMedium,
-  setSelectedMedium,
+  academicFilters,
   selectedTab,
   setSelectedTab,
   refetchTrigger,
@@ -43,14 +43,13 @@ const ChargesTable = ({
   onApprove: (data: IChargeData) => void;
   onReject: (data: IChargeData) => void;
   onRemove: (data: IChargeData) => void;
-  selectedBoard: string;
-  setSelectedBoard: (value: string) => void;
-  selectedMedium: string;
-  setSelectedMedium: (value: string) => void;
+  academicFilters?: UseFinanceAcademicFiltersResult;
   selectedTab: string | number;
   setSelectedTab: (value: string | number) => void;
   refetchTrigger?: number;
 }) => {
+  const localFilters = useFinanceAcademicFilters();
+  const filters = academicFilters || localFilters;
   const {
     boards,
     mediums,
@@ -68,7 +67,7 @@ const ChargesTable = ({
     setSelectedStandardId,
     setSelectedDivisionId,
     classesLoading,
-  } = useFinanceAcademicFilters();
+  } = filters;
 
   const tabs = useTabs(selectedTab);
 
@@ -326,7 +325,7 @@ const ChargesTable = ({
                     handleEditClick={() => onEdit(row as IChargeData)}
                   />
                   {isPending && (
-                    <>
+                    <Box sx={{ display: 'flex' }}>
                       <IconButton
                         size="small"
                         onClick={() => onApprove(row as IChargeData)}
@@ -349,7 +348,7 @@ const ChargesTable = ({
                       >
                         <Iconify icon="entypo:cross" width={20} height={20} />
                       </IconButton>
-                    </>
+                    </Box>
                   )}
                 </Box>
               );

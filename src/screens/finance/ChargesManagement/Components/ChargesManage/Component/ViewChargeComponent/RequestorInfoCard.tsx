@@ -2,7 +2,7 @@ import React from 'react';
 import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
 import { InfoItem } from 'src/components/info-item';
-import { Person, CalendarToday } from '@mui/icons-material';
+import { Person, WorkOutline, CalendarToday } from '@mui/icons-material';
 import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
 
 interface RequestorInfoProps {
@@ -43,11 +43,7 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => {
             <InfoItem icon={<Person />} label="Name" value={requestorName} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <InfoItem
-              icon={<Iconify icon="solar:briefcase-bold-duotone" />}
-              label="Role"
-              value={requestorRole}
-            />
+            <InfoItem icon={<WorkOutline />} label="Role" value={requestorRole} />
           </Grid>
           <Grid size={{ xs: 12 }}>
             <InfoItem icon={<CalendarToday />} label="Requested On" value={requestedOn} />

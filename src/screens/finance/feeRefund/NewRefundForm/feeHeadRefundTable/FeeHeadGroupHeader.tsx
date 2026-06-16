@@ -5,16 +5,7 @@ import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import {
-  Box,
-  Chip,
-  Switch,
-  Tooltip,
-  Checkbox,
-  IconButton,
-  Typography,
-  FormControlLabel,
-} from '@mui/material';
+import { Box, Chip, Button, Tooltip, Checkbox, IconButton, Typography } from '@mui/material';
 
 import type { IFeeHeadPayment } from '../types';
 
@@ -51,6 +42,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
   const hasSelectable = selectableItems.length > 0;
   const hasSelectedMonths = selectedMonths.length > 0;
+  const hasValidApplyAmount = applyInAllState.amount !== '' && Number(applyInAllState.amount) >= 0;
 
   return (
     <Box
@@ -118,70 +110,6 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
       </Box>
 
       {/* Apply in all controls - visible only when months are selected */}
-      {hasSelectedMonths && (
-        <Box display="flex" alignItems="center" gap={1}>
-          <NumericFormatCustom
-            size="small"
-            value={applyInAllState.amount}
-            onValueChange={(vals) => onApplyInAllAmountChange?.(vals.value)}
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            placeholder=""
-            inputProps={{
-              // min: 0,
-              style: {
-                textAlign: 'right',
-                fontSize: 13,
-                fontVariantNumeric: 'tabular-nums',
-              },
-            }}
-            sx={{
-              width: 110,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                fontSize: 12,
-                height: 32,
-                '&.Mui-focused': {
-                  boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.15)}`,
-                },
-              },
-            }}
-          />
-          <Tooltip
-            title={
-              applyInAllState.amount !== '' && Number(applyInAllState.amount) >= 0
-                ? `Apply to ${selectedMonths.length} selected month${selectedMonths.length !== 1 ? 's' : ''}`
-                : 'Enter an amount first'
-            }
-            placement="top"
-          >
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked={
-                    applyInAllState.isApplying &&
-                    applyInAllState.amount !== '' &&
-                    Number(applyInAllState.amount) >= 0
-                  }
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    onApplyInAllToggle?.();
-                  }}
-                  disabled={applyInAllState.amount === ''}
-                />
-              }
-              label="Apply to all"
-              onClick={(e) => e.stopPropagation()}
-              // sx={{
-              //   m: 0,
-              //   '& .MuiTypography-root': {
-              //     userSelect: 'none',
-              //   },
-              // }}
-            />
-          </Tooltip>
-        </Box>
-      )}
 
       {/* Fully refunded badge */}
       {!hasSelectable && (
@@ -193,10 +121,6 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
           sx={{ height: 18, fontSize: 10, fontWeight: 600 }}
         />
       )}
-
-      <Box flex={1} />
-
-      {/* Selected refund amount */}
       {totalRefundInput > 0 && (
         <Typography
           variant="caption"
@@ -214,6 +138,62 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
           {formatCurrency(totalRefundInput)}
         </Typography>
       )}
+
+      <Box flex={1} />
+      {hasSelectedMonths && (
+        <Box display="flex" alignItems="center" gap={1}>
+          <NumericFormatCustom
+            size="small"
+            value={applyInAllState.amount}
+            onValueChange={(vals) => onApplyInAllAmountChange?.(vals.value)}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            placeholder=""
+            inputProps={{
+              // min: 0,
+              style: {
+                textAlign: 'right',
+                fontSize: 13,
+                fontVariantNumeric: 'tabular-nums',
+              },
+            }}
+            sx={{
+              width: 100,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '8px',
+                fontSize: 12,
+                height: 32,
+                '&.Mui-focused': {
+                  boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.15)}`,
+                },
+              },
+            }}
+          />
+          <Tooltip
+            title={
+              hasValidApplyAmount
+                ? `Apply to ${selectedMonths.length} selected month${selectedMonths.length !== 1 ? 's' : ''}`
+                : 'Enter an amount first'
+            }
+          >
+            <span>
+              <Button
+                size="small"
+                variant="contained"
+                color="success"
+                disabled={!hasValidApplyAmount}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onApplyInAllToggle?.();
+                }}
+                sx={{ minWidth: 50, fontWeight: 700, fontSize: '0.72rem', borderRadius: 1 }}
+              >
+                Apply
+              </Button>
+            </span>
+          </Tooltip>
+        </Box>
+      )}
+      {/* Selected refund amount */}
 
       {/* Expand / Collapse chevron */}
       <IconButton

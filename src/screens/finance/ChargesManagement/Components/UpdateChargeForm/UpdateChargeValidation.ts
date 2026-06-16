@@ -67,8 +67,6 @@ export const createUpdateChargeValidationSchema = (currentYear: any, isEditMode:
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear?.endDate), 'day')
       ),
 
-    additionalNotes: Yup.string().max(1000, 'Additional Notes cannot exceed 1000 characters'),
-
     // Academic Structure - All required
     boardId: Yup.string().required('Board is required'),
 
@@ -77,16 +75,6 @@ export const createUpdateChargeValidationSchema = (currentYear: any, isEditMode:
     standardId: Yup.array()
       .min(1, 'Please select at least one class')
       .required('Class is required'),
-
-    // Division - Required only if exactly one class is selected
-    divisionIds: Yup.array().when('standardId', {
-      is: (standardId: string[]) => Array.isArray(standardId) && standardId.length === 1,
-      then: (schema) =>
-        schema
-          .min(1, 'Please select at least one division')
-          .required('Division is required for single class'),
-      otherwise: (schema) => schema,
-    }),
 
     // Student Selection - At least one of these must be selected
     studentIds: Yup.array().of(Yup.string()),
@@ -102,10 +90,9 @@ export const createUpdateChargeValidationSchema = (currentYear: any, isEditMode:
     'Please select at least one student, division, or class',
     (values) => {
       const hasStudents = values.studentIds && values.studentIds.length > 0;
-      const hasDivisions = values.divisionIds && values.divisionIds.length > 0;
       const hasClass = Array.isArray(values.standardId) && values.standardId.length > 0;
 
-      return !!(hasStudents || hasDivisions || hasClass);
+      return !!(hasStudents || hasClass);
     }
   );
 

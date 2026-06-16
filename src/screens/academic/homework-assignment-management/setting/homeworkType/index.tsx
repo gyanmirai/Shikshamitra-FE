@@ -11,8 +11,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -42,6 +44,18 @@ const HomeworkTypeCreation = () => {
 
   // Get current medium from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.settings.homeworkTypes}.Add`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.settings.homeworkTypes}.Delete`
+  );
 
   // Currently selected homework type for edit/delete
   const [selectedData, setSelectedData] = useState<IHomeworkType | null>(null);
@@ -106,21 +120,25 @@ const HomeworkTypeCreation = () => {
         ]}
         description="Create and manage homework types for homework and assignments. Add, edit, or delete assignment types as needed."
         action={
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="mdi:plus" />}
-            onClick={addHomeworkTypeDialog.onTrue}
-            size="small"
-            sx={{ px: '32px' }}
-          >
-            Homework Type
-          </Button>
+          canAdd ? (
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="mdi:plus" />}
+              onClick={addHomeworkTypeDialog.onTrue}
+              size="small"
+              sx={{ px: '32px' }}
+            >
+              Homework Type
+            </Button>
+          ) : null
         }
       />
 
       <HomeworkTypeTable
         isLoading={isLoading || isFetching}
         data={homeworkTypeData?.data}
+        canAdd={canAdd}
+        canDelete={canDelete}
         onEdit={(data) => {
           setSelectedData(data);
           addHomeworkTypeDialog.onTrue();

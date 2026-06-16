@@ -10,11 +10,19 @@ import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
+import { FeeMonth } from 'src/enums/fee-collection-type';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Paper, Stack, Button, Divider, Typography } from '@mui/material';
-import { useCreateFeeRefundMutation } from 'src/redux/finance/RefundManagement/feeRefundManage';
+import {
+  useGetFeeRefundByIdQuery,
+  type FeeRefundRequestDto,
+  type RefundEligibilityDto,
+  useCreateFeeRefundMutation,
+  useUpdateFeeRefundMutation,
+  useLazyGetRefundEligibilityQuery,
+} from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import FeeRefundDetailsForm from './FeeRefundDetailForm';
 import RefundGeneralInfoCard from './RefundGeneralInfoCard';
@@ -29,11 +37,23 @@ import type { IFeeHeadRefundItem } from './initialValuesAndValidation';
 interface FeeRefundFormProps {
   onCancel?: (e: React.MouseEvent, isSubmit: boolean) => void;
   loading?: boolean;
+  defaultBoardId?: string;
+  defaultMediumId?: string;
+  defaultStandardId?: string;
+  defaultDivisionId?: string;
+  isEdit?: boolean;
+  editRefundId?: string;
 }
 
 const FeeRefundFormComponent = ({
   onCancel,
   loading = false,
+  defaultBoardId = '',
+  defaultMediumId = '',
+  defaultStandardId = '',
+  defaultDivisionId = '',
+  isEdit = false,
+  editRefundId,
 }: FeeRefundFormProps): React.ReactElement => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const theme = useTheme();
@@ -41,10 +61,110 @@ const FeeRefundFormComponent = ({
     type: 'mutation',
     currentQueryAndMutation: useCreateFeeRefundMutation,
   });
+  const [updateFeeRefund, { isLoading: isUpdating }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateFeeRefundMutation,
+  });
+  const {
+    data: editRefundDetail,
+    isLoading: editLoading,
+    isFetching: editFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeRefundByIdQuery,
+    params: editRefundId,
+    options: {
+      skip: !isEdit || !editRefundId,
+    },
+  });
+
+  const [getRefundEligibility] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetRefundEligibilityQuery,
+  });
+
+  const [prefilledFeeHeadRefunds, setPrefilledFeeHeadRefunds] = React.useState<
+    IFeeHeadRefundItem[]
+  >([]);
+
+  useEffect(() => {
+    const loadEditMonths = async () => {
+      if (!isEdit || !editRefundId || !currentYear?.id || !editRefundDetail?.studentId) {
+        setPrefilledFeeHeadRefunds([]);
+        return;
+      }
+
+      const detail = editRefundDetail as FeeRefundRequestDto;
+      const lineAmountByDueFeeId = new Map<string, number>(
+        (detail.lines || []).map((line) => [line.dueFeeId, Number(line.amount) || 0])
+      );
+
+      try {
+        const eligibility = (await getRefundEligibility({
+          studentId: detail.studentId,
+          academicYearId: currentYear.id,
+        }).unwrap()) as RefundEligibilityDto;
+
+        const mappedFeeHeads: IFeeHeadRefundItem[] = (eligibility?.feeHeads || [])
+          .map((feeHead) => {
+            const months = (feeHead.months || [])
+              .filter((m) => lineAmountByDueFeeId.has(m.dueFeeId))
+              .map((m) => ({
+                dueFeeId: m.dueFeeId,
+                month: FeeMonth[m.month] ?? `Month ${m.month}`,
+                amount: lineAmountByDueFeeId.get(m.dueFeeId) ?? 0,
+              }));
+
+            return {
+              feeHeadId: feeHead.feeHeadId,
+              months,
+            };
+          })
+          .filter((feeHead) => feeHead.months.length > 0);
+
+        setPrefilledFeeHeadRefunds(mappedFeeHeads);
+      } catch (_err) {
+        setPrefilledFeeHeadRefunds([]);
+      }
+    };
+
+    loadEditMonths();
+  }, [isEdit, editRefundId, currentYear?.id, editRefundDetail, getRefundEligibility]);
+
+  const formInitialValues = useMemo(
+    () =>
+      buildRefundInitialValues({
+        boardId: defaultBoardId,
+        mediumId: defaultMediumId,
+        standardId: defaultStandardId,
+        divisionId: defaultDivisionId,
+        studentId: isEdit
+          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.studentId ?? '')
+          : '',
+        studentName: isEdit
+          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.studentName ?? '')
+          : '',
+        refundMethod: isEdit
+          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.refundMethod ?? '')
+          : '',
+        notes: isEdit ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.reason ?? '') : '',
+        feeHeadRefunds: isEdit ? prefilledFeeHeadRefunds : [],
+      }),
+    [
+      defaultBoardId,
+      defaultMediumId,
+      defaultStandardId,
+      defaultDivisionId,
+      isEdit,
+      editRefundDetail,
+      prefilledFeeHeadRefunds,
+    ]
+  );
 
   const formik = useFormik({
-    initialValues: buildRefundInitialValues(),
+    initialValues: formInitialValues,
     validationSchema: buildRefundValidationSchema(currentYear),
+    enableReinitialize: true,
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values, helpers) => {
@@ -58,12 +178,19 @@ const FeeRefundFormComponent = ({
           shikshaMitraToast.error({ message: 'Enter a refund amount for at least one month.' });
           return;
         }
-        await createFeeRefund(payload).unwrap();
-        shikshaMitraToast.success({ message: 'Refund request submitted successfully.' });
+
+        if (isEdit && editRefundId) {
+          await updateFeeRefund({ id: editRefundId, body: payload }).unwrap();
+          shikshaMitraToast.success({ message: 'Refund request updated successfully.' });
+        } else {
+          await createFeeRefund(payload).unwrap();
+          shikshaMitraToast.success({ message: 'Refund request submitted successfully.' });
+        }
+
         helpers.resetForm();
         onCancel?.(new MouseEvent('click') as any, true);
       } catch (err: any) {
-        const message = err?.data?.error?.message ?? 'Failed to submit refund request.';
+        const message = err?.data?.error?.message ?? 'Failed to save refund request.';
         shikshaMitraToast.error({ message });
       }
     },
@@ -194,7 +321,7 @@ const FeeRefundFormComponent = ({
               variant="outlined"
               color="inherit"
               size="small"
-              disabled={loading || isSubmitting}
+              disabled={loading || isSubmitting || isUpdating}
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={(e) => onCancel?.(e, false)}
             >
@@ -204,12 +331,12 @@ const FeeRefundFormComponent = ({
               type="submit"
               variant="contained"
               size="small"
-              loading={loading || isSubmitting}
+              loading={loading || isSubmitting || isUpdating || editLoading || editFetching}
               loadingPosition="start"
-              startIcon={<Iconify icon="solar:money-bag-bold" />}
+              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
               onClick={() => formik.handleSubmit()}
             >
-              Submit Refund
+              {isEdit ? 'Update' : 'Submit'}
             </LoadingButton>
           </Box>
         </Box>

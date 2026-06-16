@@ -1,6 +1,7 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -12,9 +13,10 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 interface IFeeRefundApprovalFormProps {
   onClose: (e: any, isSubmit: boolean, notes?: string) => void;
   mode: string;
+  loading?: boolean;
 }
 
-const FeeRefundReasonApprovalForm = ({ onClose, mode }: IFeeRefundApprovalFormProps) => {
+const FeeRefundReasonApprovalForm = ({ onClose, mode, loading }: IFeeRefundApprovalFormProps) => {
   const formik = useFormik({
     initialValues: {
       reason: '',
@@ -65,18 +67,19 @@ const FeeRefundReasonApprovalForm = ({ onClose, mode }: IFeeRefundApprovalFormPr
           Cancel
         </Button>
 
-        <Button
+        <LoadingButton
+          size="small"
           variant="contained"
           color={mode === 'Reject' ? 'error' : 'success'}
-          size="small"
           startIcon={<Iconify icon={mode === 'Reject' ? GlobalIcons.cancel : GlobalIcons.tick} />}
+          loading={loading}
           onClick={(e: any) => {
             e.preventDefault();
             formik.handleSubmit(e);
           }}
         >
           {mode}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

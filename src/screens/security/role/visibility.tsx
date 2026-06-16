@@ -17,32 +17,6 @@ import {
 
 // ----------------------------------------------------------------------
 
-// Helper to get all submodule titles recursively
-const getAllSubmoduleTitles = (submodules: any[]): { name: string; isGranted: boolean }[] => {
-  let titles: { name: string; isGranted: boolean }[] = [];
-  submodules.forEach((sub) => {
-    if (sub.children) {
-      titles = [...titles, ...getAllSubmoduleTitles(sub.children)];
-    } else {
-      titles.push({ name: sub.permissionName, isGranted: sub.isGranted });
-    }
-  });
-  return titles;
-};
-
-// Helper to flatten submodules for counting
-const countTotalSubmodules = (submodules: any[]): number => {
-  let count = 0;
-  submodules.forEach((sub) => {
-    if (sub.children) {
-      count += countTotalSubmodules(sub.children);
-    } else {
-      count += 1;
-    }
-  });
-  return count;
-};
-
 // Recursive component to render submodules
 const SubmoduleItem = ({
   submodule,
@@ -156,13 +130,14 @@ const Visibility = ({
   };
 
   const handleToggleAllSubmodules = (moduleVisibility: string, allSubmodules: any[]) => {
-    const isAllVisible = allSubmodules.every(
+    const validSubmodules = allSubmodules.filter((sub) => sub.permissionName);
+    const isAllVisible = validSubmodules.every(
       (submodule) => !!visibility.find((t) => t.name === submodule.permissionName)?.isGranted
     );
     if (isAllVisible) {
       const cloneData = [...visibility];
 
-      allSubmodules.forEach((submodule) => {
+      validSubmodules.forEach((submodule) => {
         const index = cloneData.findIndex((t) => t.name === submodule.permissionName);
         if (index !== -1) {
           cloneData[index].isGranted = false;
@@ -173,7 +148,7 @@ const Visibility = ({
     } else {
       const cloneData = [...visibility];
 
-      allSubmodules.forEach((submodule) => {
+      validSubmodules.forEach((submodule) => {
         const index = cloneData.findIndex((t) => t.name === submodule.permissionName);
         if (index !== -1) {
           cloneData[index].isGranted = true;
@@ -220,22 +195,28 @@ const Visibility = ({
         </Box>
 
         <Scrollbar sx={{ px: 2, pb: 2 }}>
-          <Stack spacing={1.5}>
+          <Stack spacing={1.5} sx={{ pb: 8 }}>
             {data.map((item, index) => {
               const isUnlocked = visibility.find((t) => t.name === item.permissionName)?.isGranted;
               const isSelected = currentSelected?.title === item.title;
-              const totalSubmodules = countTotalSubmodules(item.submodule || []);
+              const submodulesWithPermission = (item.submodule || []).filter(
+                (sub: any) => sub.permissionName
+              );
+              const totalSubmodules = submodulesWithPermission.length;
               const visibleSubmodules =
                 visibility?.filter(
                   (t) =>
-                    getAllSubmoduleTitles(item.submodule || [])
-                      .map((sub) => sub.name)
+                    submodulesWithPermission
+                      .map((sub: any) => sub.permissionName)
                       .includes(t.name) && t.isGranted
                 ).length || 0;
 
-              const progress =
-                totalSubmodules > 0 ? (visibleSubmodules / totalSubmodules) * 100 : 0;
-              const isCompleted = progress === 100 && totalSubmodules > 0;
+              const progress = !isUnlocked
+                ? 0
+                : totalSubmodules > 0
+                  ? (visibleSubmodules / totalSubmodules) * 100
+                  : 100;
+              const isCompleted = progress === 100;
 
               return (
                 <Card
@@ -472,10 +453,12 @@ const Visibility = ({
                       Select All
                     </Typography>
                     <Switch
-                      checked={currentSelected.submodule.every(
-                        (submodule: any) =>
-                          visibility.find((t) => t.name === submodule.permissionName)?.isGranted
-                      )}
+                      checked={currentSelected.submodule
+                        .filter((sub: any) => sub.permissionName)
+                        .every(
+                          (submodule: any) =>
+                            visibility.find((t) => t.name === submodule.permissionName)?.isGranted
+                        )}
                       onChange={() =>
                         handleToggleAllSubmodules(
                           currentSelected.permissionName,
@@ -490,7 +473,7 @@ const Visibility = ({
 
             {/* CONTENT */}
             <Scrollbar sx={{ flexGrow: 1, p: 3 }}>
-              <Stack spacing={3}>
+              <Stack spacing={3} sx={{ pb: 8 }}>
                 {currentSelected.submodule?.length ? (
                   <Stack spacing={1}>
                     {currentSelected.submodule.map((sub: any, idx: number) => (

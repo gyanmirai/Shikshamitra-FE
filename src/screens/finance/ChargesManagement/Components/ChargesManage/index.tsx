@@ -16,6 +16,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useDeleteChargeMutation } from 'src/redux/finance/ChargeManagement/chargeApi';
+import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import ChargesTable from './Component/ChargesTable';
 import { UpdateChargeForm } from '../UpdateChargeForm';
@@ -31,10 +32,9 @@ const ChargesManagement = () => {
   const addChargeDialog = useBoolean();
   const onConfirmDialg = useBoolean();
   const { confirmWithUndo } = useConfirmWithUndo();
+  const academicFilters = useFinanceAcademicFilters();
 
-  // Lifted state for board, medium, and tab selection to persist across dialog open/close
-  const [selectedBoard, setSelectedBoard] = useState<string>('');
-  const [selectedMedium, setSelectedMedium] = useState<string>('');
+  // Lifted state for tab selection to persist across dialog open/close
   const [selectedTab, setSelectedTab] = useState<string | number>(0);
 
   // Trigger refetch when charges are modified (create/edit/delete)
@@ -247,10 +247,7 @@ const ChargesManagement = () => {
         !editChargeDialog.value &&
         !approvalReviewDialog.value && (
           <ChargesTable
-            selectedBoard={selectedBoard}
-            setSelectedBoard={setSelectedBoard}
-            selectedMedium={selectedMedium}
-            setSelectedMedium={setSelectedMedium}
+            academicFilters={academicFilters}
             onView={(data) => {
               viewChargeDetailsDialog.onTrue();
               setSelectedChargeData(data);
@@ -285,7 +282,22 @@ const ChargesManagement = () => {
       {/* Add Charge Dialog */}
       {addChargeDialog.value && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <UpdateChargeForm open={addChargeDialog} onClose={handleClose} />
+          <UpdateChargeForm
+            open={addChargeDialog}
+            onClose={handleClose}
+            defaultBoardId={academicFilters.selectedBoard}
+            defaultMediumId={academicFilters.selectedMedium}
+            defaultStandardId={
+              academicFilters.selectedStandardId !== 'All Classes'
+                ? academicFilters.selectedStandardId
+                : ''
+            }
+            defaultDivisionId={
+              academicFilters.selectedDivisionId !== 'All Divisions'
+                ? academicFilters.selectedDivisionId
+                : ''
+            }
+          />
         </Card>
       )}
 

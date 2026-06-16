@@ -17,10 +17,11 @@ export interface IFeeStructureData {
   pendingCharges?: number;
   status?: string;
   name?: string;
+  isFeeStructureAssigned?: boolean;
 }
 
 export interface IFeeStructureTableProps {
   onAssignStructure: (row: IFeeStructureData) => void;
   onEdit?: (row: IFeeStructureData) => void;
-  onBulkAssign?: (rows: IFeeStructureData[]) => void;
+  onBulkAssign?: (rows: IFeeStructureData[], standardId: string) => void;
 }

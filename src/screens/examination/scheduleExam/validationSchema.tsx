@@ -78,24 +78,49 @@ export const validationSchema = [
               'Time conflicts with another subject on the same date',
               // eslint-disable-next-line func-names
               function (value) {
-                const { examDate, electiveGroupId, schedulingMode } = this.parent;
+                const { examDate, endTime, electiveGroupId, schedulingMode } = this.parent;
                 if (electiveGroupId && schedulingMode === 'separate') return true;
 
                 const allSubjects = (this.options as any).from?.[1]?.value?.subjects || [];
-                if (!value || !examDate || !allSubjects) return true;
+                if (!value || !examDate || !endTime || !allSubjects) return true;
 
                 const currentDate = dayjs(examDate as any).format('YYYY-MM-DD');
                 const currentStart = dayjs(value as any);
-                const currentPath = this.path;
-                const currentIndex = parseInt(currentPath.match(/\[(\d+)\]/)?.[1] || '0', 10);
+                const currentEnd = dayjs(endTime as any);
+                const currentIndex = parseInt(this.path.match(/\[(\d+)\]/)?.[1] || '0', 10);
 
-                for (let i = 0; i < allSubjects.length; i += 1) {
-                  if (i === currentIndex) return true;
-                  const otherSubject = allSubjects[i];
-                  if (!otherSubject?.examDate || !otherSubject?.startTime) return true;
-                  const otherDate = dayjs(otherSubject.examDate as any).format('YYYY-MM-DD');
-                  const otherStart = dayjs(otherSubject.startTime as any);
-                  if (currentDate === otherDate && currentStart.isSame(otherStart)) return false;
+                const conflicting = allSubjects
+                  .filter(
+                    (other: any, i: number) =>
+                      i !== currentIndex &&
+                      other?.examDate &&
+                      other?.startTime &&
+                      other?.endTime &&
+                      dayjs(other.examDate as any).format('YYYY-MM-DD') === currentDate &&
+                      currentStart.isBefore(dayjs(other.endTime)) &&
+                      currentEnd.isAfter(dayjs(other.startTime))
+                  )
+                  .find(
+                    (other: any) =>
+                      !electiveGroupId ||
+                      !other.electiveGroupId ||
+                      electiveGroupId !== other.electiveGroupId
+                  );
+
+                // Core subjects cannot overlap with ANY exam; electives only with same group
+                if (conflicting) {
+                  if (!electiveGroupId || !conflicting.electiveGroupId) {
+                    return this.createError({
+                      message: !electiveGroupId
+                        ? 'Core subject cannot overlap with other exams'
+                        : 'Conflicts with a Core subject exam',
+                    });
+                  }
+                  if (electiveGroupId !== conflicting.electiveGroupId) {
+                    return this.createError({
+                      message: 'Conflicts with another elective group exam',
+                    });
+                  }
                 }
                 return true;
               }

@@ -1,20 +1,22 @@
 import type { LabelColor } from 'src/components/label';
+import type { AttendanceStatus } from 'src/enums/grade-entry-status';
 
 import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
 import { useMemo, useState, useEffect } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetExamMarksQuery } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
 import {
   ExamGradeStatusType,
   ExamGradeStatusColor,
+  AttendanceStatusColor,
+  AttendanceStatusLabel,
   ExamGradeStatusOptions,
 } from 'src/enums/grade-entry-status';
 
-import type { IExamMarkItem, IGradeEntryTableProps } from '../type';
+import type { IExamMarkItem, IGradeEntryTableProps, IExamMarksWorkflowFlags } from '../type';
 
 const GradeEntryTable = ({
   selectedStudents,
@@ -24,7 +26,10 @@ const GradeEntryTable = ({
   divisionId,
   subjectId,
   examId,
+  isLocked = false,
   onAllAssignedChange,
+  onStatsChange,
+  onWorkflowFlagsChange,
 }: IGradeEntryTableProps) => {
   const allParamsReady = !!(examId && classId && divisionId && subjectId);
 
@@ -57,6 +62,9 @@ const GradeEntryTable = ({
     return raw.map((item: any) => ({
       ...item,
       id: item.id ?? item.studentId ?? '',
+      // Normalise field name: the API returns `obtainedMarks`, analytics code reads `marks`
+      marks: item.obtainedMarks ?? item.marks ?? null,
+      passingMarks: item.passingMarks ?? null,
     }));
   }, [gradingData]);
 
@@ -66,6 +74,68 @@ const GradeEntryTable = ({
     const allAssigned = tableData.length > 0 && tableData.every((item) => item.status === 1);
     onAllAssignedChange(allAssigned);
   }, [tableData, onAllAssignedChange]);
+
+  // Emit workflow flags to parent whenever the API response changes
+  useEffect(() => {
+    if (!onWorkflowFlagsChange || !gradingData) return;
+    const flags: IExamMarksWorkflowFlags = {
+      workflowStatus: gradingData.workflowStatus ?? 0,
+      isDraft: gradingData.isDraft ?? true,
+      isSubmitted: gradingData.isSubmitted ?? false,
+      isVerified: gradingData.isVerified ?? false,
+      isPublished: gradingData.isPublished ?? false,
+      isMarksPublish: gradingData.isMarksPublish ?? false,
+    };
+    onWorkflowFlagsChange(flags);
+  }, [gradingData, onWorkflowFlagsChange]);
+
+  // Compute and emit analytics stats to parent
+  useEffect(() => {
+    if (!onStatsChange) return;
+    const assigned = tableData.filter((item) => item.status === 1 && item.marks != null);
+    const totalCount = gradingData?.totalCount ?? tableData.length;
+    const pendingCount = totalCount - assigned.length;
+
+    if (assigned.length === 0) {
+      onStatsChange({
+        highestMarks: 0,
+        lowestMarks: 0,
+        averageMarks: 0,
+        passCount: 0,
+        failCount: 0,
+        passPercentage: 0,
+        failPercentage: 0,
+        pendingCount,
+        totalCount,
+      });
+      return;
+    }
+
+    const markValues = assigned.map((item) => item.marks as number);
+    const highest = Math.max(...markValues);
+    const lowest = Math.min(...markValues);
+    const average = markValues.reduce((a, b) => a + b, 0) / markValues.length;
+    // Pass = marks >= passingMarks (if available) or >= 33% of totalMarks
+    const passItems = assigned.filter((item) => {
+      const total = item.totalMarks || 100;
+      const threshold = item.passingMarks != null ? item.passingMarks : total * 0.33;
+      return (item.marks as number) >= threshold;
+    });
+    const passCount = passItems.length;
+    const failCount = assigned.length - passCount;
+
+    onStatsChange({
+      highestMarks: highest,
+      lowestMarks: lowest,
+      averageMarks: Math.round(average * 100) / 100,
+      passCount,
+      failCount,
+      passPercentage: Math.round((passCount / assigned.length) * 100),
+      failPercentage: Math.round((failCount / assigned.length) * 100),
+      pendingCount,
+      totalCount,
+    });
+  }, [tableData, gradingData, onStatsChange]);
 
   return (
     <CustomizableTable
@@ -88,6 +158,28 @@ const GradeEntryTable = ({
           ),
         },
         { id: 'rollNo', label: 'Roll No.', minWidth: 90, align: 'left' },
+        {
+          id: 'attendanceStatus',
+          label: 'Attendance',
+          align: 'left',
+          minWidth: 130,
+          filterType: 'enum',
+          enumOptions: Object.entries(AttendanceStatusLabel).map(([value, label]) => ({
+            label,
+            value: Number(value),
+          })),
+          render: (value: AttendanceStatus) => {
+            if (value == null)
+              return (
+                <Typography variant="caption" color="textSecondary">
+                  —
+                </Typography>
+              );
+            const color = AttendanceStatusColor[value as AttendanceStatus] as LabelColor;
+            const label = AttendanceStatusLabel[value as AttendanceStatus] ?? String(value);
+            return <Label color={color}>{label}</Label>;
+          },
+        },
         {
           id: 'totalMarks',
           label: 'Total Marks',
@@ -116,7 +208,7 @@ const GradeEntryTable = ({
           id: 'grade',
           label: 'Grade',
           render: (value, row) =>
-            value === '' ? (
+            value === '' || value == null ? (
               <Typography variant="subtitle2" color="textSecondary">
                 -
               </Typography>
@@ -128,7 +220,7 @@ const GradeEntryTable = ({
         },
         {
           id: 'feedback',
-          label: 'Feedback',
+          label: 'Remarks',
           render: (value, row) => (
             <CustomTooltip title={value || '-'} arrow>
               <Typography
@@ -171,12 +263,7 @@ const GradeEntryTable = ({
           isFilter: false,
           isSort: false,
           render(value, row) {
-            return (
-              <ThreeDotsActions
-                actions={(prop) => actions({ ...prop, row })}
-                placement="right-top"
-              />
-            );
+            return actions({ row, isLocked });
           },
         },
       ]}

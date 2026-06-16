@@ -9,8 +9,8 @@ import { Add } from '@mui/icons-material';
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { boardApi } from 'src/redux/board/boardApi';
-import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import {
   Tab,
@@ -45,6 +45,7 @@ interface IDivision {
   lastModifierId: string;
   name: string;
   strength: number;
+  roomNo?: string;
   standardId: string;
 }
 interface DivisionSetupProps {
@@ -52,6 +53,7 @@ interface DivisionSetupProps {
 }
 
 const DivisionSetup = ({ classId }: DivisionSetupProps) => {
+  const dispatch = useDispatch();
   const { data: divisions, isLoading: isGetLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDivisionQuery,
@@ -141,6 +143,7 @@ const DivisionSetup = ({ classId }: DivisionSetupProps) => {
             color="error"
             onClick={async () => {
               await deleteDivision(editData?.id || '');
+              dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
               confirm.onFalse();
               setEditData(null);
               // isInitial.current = true;
@@ -244,15 +247,25 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
   });
   const dispatch = useDispatch();
 
+  const roomsOptions = useMemo(
+    () =>
+      rooms?.items?.map((item: any) => ({
+        roomName: `${item.buildingName} > ${item.floorName} > ${item.roomName}`,
+        id: item.id,
+      })),
+    [rooms]
+  );
+
   const formik = useFormik({
     initialValues: {
       division: editData ? editData.name : '',
       strength: editData ? editData.strength : '',
-      roomNo: editData ? editData.roomNo : '',
+      roomId: editData ? editData.roomId : '',
     },
     validationSchema: Yup.object().shape({
       division: Yup.string().required('Division is required'),
       strength: Yup.number().required('Strength is required'),
+      roomId: Yup.string().required('Room No is required'),
     }),
     onSubmit: async (values) => {
       confirm.onTrue();
@@ -267,7 +280,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
             name: formik.values.division,
             standardId: classId,
             strength: formik.values.strength,
-            roomNumber: formik.values.roomNo,
+            roomNumber: formik.values.roomId,
           },
         }).unwrap();
       } else {
@@ -275,7 +288,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
           name: formik.values.division,
           standardId: classId,
           strength: formik.values.strength,
-          roomNumber: formik.values.roomNo,
+          roomNumber: formik.values.roomId,
         }).unwrap();
       }
       dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
@@ -286,7 +299,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
   };
 
   return (
-    <>
+    <Box>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -328,7 +341,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
             fullWidth
             id="division"
             name="division"
-            label="Division Name"
+            label="Division Name *"
             autoFocus
             value={formik.values.division}
             onChange={(e) => {
@@ -345,7 +358,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
             id="strength"
             name="strength"
             type="number"
-            label="Strength"
+            label="Strength *"
             value={formik.values.strength}
             onChange={formik.handleChange}
             error={formik.touched.strength && Boolean(formik.errors.strength)}
@@ -354,15 +367,16 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
             size="small"
           />
           <CustomSelect
-            options={rooms?.items || []}
+            options={roomsOptions || []}
             loading={isRoomLoading || isRoomFetching}
-            value={formik.values.roomNo}
+            value={formik.values.roomId}
             valueKey="id"
             labelKey="roomName"
-            onChange={formik.handleChange}
-            error={formik.touched.roomNo && Boolean(formik.errors.roomNo)}
+            label="Room No *"
+            onChange={(value) => formik.setFieldValue('roomId', value)}
+            error={formik.touched.roomId && Boolean(formik.errors.roomId)}
             // @ts-ignore
-            helperText={formik.touched.roomNo && formik.errors.roomNo}
+            helperText={formik.touched.roomId && formik.errors.roomId}
             size="small"
           />
         </Stack>
@@ -375,11 +389,12 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
           loading={isLoading || isUpdateLoading}
           variant="contained"
           size="small"
+          type="submit"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           Submit
         </LoadingButton>
       </DialogActions>
-    </>
+    </Box>
   );
 };

@@ -74,7 +74,7 @@ const ViewFeeDetails = ({
                 total={overview?.totalFee ?? 0}
                 paid={overview?.paidFee ?? 0}
                 pending={overview?.pendingFee ?? 0}
-                overdue={0}
+                overdue={overview?.overdueFee ?? 0}
                 concession={overview?.concessionAmount ?? 0}
               />
             </motion.div>

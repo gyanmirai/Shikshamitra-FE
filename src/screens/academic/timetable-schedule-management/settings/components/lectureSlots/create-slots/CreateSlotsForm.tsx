@@ -10,7 +10,6 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { useSlotForm } from './useSlotForm';
 import FormFooter from './components/FormFooter';
 import FormSkeleton from './components/FormSkeleton';
-import GeneralInfoSection from './components/GeneralInfoSection';
 import SlotConfigurationAccordion from './components/SlotConfigurationAccordion';
 
 import type { ICreateSlotsFormProps } from '../type';
@@ -80,89 +79,6 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               gap: 2.5,
             }}
           >
-            {/* General Information Card */}
-            <Fade in timeout={350}>
-              <Box
-                sx={{
-                  borderRadius: 2.5,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  p: { xs: 2, sm: 2.5 },
-                  bgcolor: 'background.paper',
-                  backgroundImage: (theme) =>
-                    `linear-gradient(180deg, ${alpha(
-                      theme.palette.primary.main,
-                      theme.palette.mode === 'dark' ? 0.08 : 0.04
-                    )} 0%, ${alpha(theme.palette.background.paper, 0)} 70%)`,
-                  transition: 'box-shadow 200ms ease, border-color 200ms ease',
-                  '&:hover': {
-                    borderColor: (theme) => alpha(theme.palette.primary.main, 0.4),
-                    boxShadow: (theme) =>
-                      `0 4px 18px ${alpha(
-                        theme.palette.primary.main,
-                        theme.palette.mode === 'dark' ? 0.18 : 0.08
-                      )}`,
-                  },
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1.25} mb={2}>
-                  <Box
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 1.5,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: (theme) =>
-                        alpha(
-                          theme.palette.primary.main,
-                          theme.palette.mode === 'dark' ? 0.22 : 0.12
-                        ),
-                      color: (theme) =>
-                        theme.palette.mode === 'dark'
-                          ? lighten(theme.palette.primary.main, 0.7)
-                          : theme.palette.primary.main,
-                    }}
-                  >
-                    <Iconify icon="mdi:information-outline" width={18} />
-                  </Box>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-                      General Information
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Set the class and base hours for this timetable.
-                    </Typography>
-                  </Box>
-                </Stack>
-
-                <GeneralInfoSection
-                  classes={allClass}
-                  className={formik.values.className}
-                  previousClassSlots={formik.values.previousClassSlots}
-                  classNameError={
-                    formik.touched.className && typeof formik.errors.className === 'string'
-                      ? formik.errors.className
-                      : undefined
-                  }
-                  previousClassError={
-                    formik.touched.previousClassSlots &&
-                    typeof formik.errors.previousClassSlots === 'string'
-                      ? formik.errors.previousClassSlots
-                      : undefined
-                  }
-                  disabled={disabled}
-                  isEdit={isEdit}
-                  hasData={!!data}
-                  onChangeClassName={(val) => handleClassChange(val as string)}
-                  onChangePreviousClassSlots={(val) =>
-                    formik.setFieldValue('previousClassSlots', val)
-                  }
-                />
-              </Box>
-            </Fade>
-
             {/* Slot Configurations Header */}
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
@@ -274,6 +190,15 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                     canRemove={showRemove}
                     onRemove={() => handleRemoveSlotConfiguration(configIndex)}
                     onTotalSlotsChange={(value) => handleTotalSlotsChange(configIndex, value)}
+                    classes={allClass}
+                    className={formik.values.className}
+                    classNameError={
+                      formik.touched.className && typeof formik.errors.className === 'string'
+                        ? formik.errors.className
+                        : undefined
+                    }
+                    onClassChange={handleClassChange}
+                    isFirstGroup={configIndex === 0}
                   />
                 </Box>
               </Fade>

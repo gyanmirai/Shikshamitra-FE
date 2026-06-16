@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
+import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -12,18 +13,17 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Card, Button, Checkbox, MenuList, MenuItem } from '@mui/material';
 import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
-import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
-import {
-  ALL_CLASS_OPTION,
-  ALL_DIVISION_OPTION,
-  useFinanceAcademicFilters,
-} from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusOptions,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
+import {
+  ALL_CLASS_OPTION,
+  ALL_DIVISION_OPTION,
+  useFinanceAcademicFilters,
+} from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import type { IFeeStructureData, IFeeStructureTableProps } from './type';
 
@@ -58,6 +58,8 @@ const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
     search: '',
   });
 
+  const [standardIdState, setStandardIdState] = useState(selectedStandardId);
+  const [divisionIdState, setDivisionIdState] = useState(selectedDivisionId);
   const [selectedStudents, setSelectedStudents] = useState<IFeeStructureData[]>([]);
 
   const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
@@ -78,6 +80,38 @@ const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
     () => divisionOptions.filter((opt) => opt.id !== ALL_DIVISION_OPTION.id),
     [divisionOptions]
   );
+
+  useEffect(() => {
+    setStandardIdState(selectedStandardId);
+  }, [selectedStandardId]);
+
+  useEffect(() => {
+    setDivisionIdState(selectedDivisionId);
+  }, [selectedDivisionId]);
+
+  useEffect(() => {
+    if (!filteredClassOptions.length) return;
+    const isSelectedClassValid = filteredClassOptions.some((opt) => opt.id === standardIdState);
+    if (isSelectedClassValid) return;
+
+    const firstClassId = filteredClassOptions[0]?.id;
+    if (!firstClassId) return;
+    setStandardIdState(firstClassId);
+    setSelectedStandardId(firstClassId);
+  }, [filteredClassOptions, standardIdState, setSelectedStandardId]);
+
+  useEffect(() => {
+    if (!filteredDivisionOptions.length) return;
+    const isSelectedDivisionValid = filteredDivisionOptions.some(
+      (opt) => opt.id === divisionIdState
+    );
+    if (isSelectedDivisionValid) return;
+
+    const firstDivisionId = filteredDivisionOptions[0]?.id;
+    if (!firstDivisionId) return;
+    setDivisionIdState(firstDivisionId);
+    setSelectedDivisionId(firstDivisionId);
+  }, [filteredDivisionOptions, divisionIdState, setSelectedDivisionId]);
 
   const {
     data: feeStructureData,
@@ -126,8 +160,16 @@ const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
         overdueFees: item.overdueFees ?? 0,
         totalCharges: item.totalCharges ?? 0,
         pendingCharges: item.pendingCharges ?? 0,
+        // Consider fee structure assigned if totalFees > 0 or explicit flag from API
+        isFeeStructureAssigned: item.isFeeStructureAssigned ?? (item.totalFees ?? 0) > 0,
       })),
     [feeStructureData?.items]
+  );
+
+  // Only selectable students (without an existing fee structure)
+  const selectableTableData = useMemo(
+    () => (tableData ?? []).filter((row: any) => !row.isFeeStructureAssigned),
+    [tableData]
   );
 
   const isReadyToDisplay =
@@ -150,17 +192,38 @@ const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
             onMediumChange={setSelectedMedium}
             selectSx={{ maxWidth: '248px', width: '100%' }}
           />
-          <FinanceClassDivisionFilter
-            classOptions={filteredClassOptions}
-            divisionOptions={filteredDivisionOptions}
-            selectedStandardId={selectedStandardId}
-            selectedDivisionId={selectedDivisionId}
-            isDivisionDisabled={isDivisionDisabled}
-            onClassChange={setSelectedStandardId}
-            onDivisionChange={setSelectedDivisionId}
-            classesLoading={classesLoading}
-            selectSx={{ maxWidth: '248px', width: '100%' }}
-          />
+          <Box sx={{ maxWidth: '248px', width: '100%' }}>
+            <CustomSelect
+              label="Class"
+              options={filteredClassOptions}
+              value={standardIdState}
+              onChange={(value) => {
+                const nextStandardId = String(value);
+                setStandardIdState(nextStandardId);
+                setSelectedStandardId(nextStandardId);
+              }}
+              labelKey="name"
+              valueKey="id"
+              isLoading={classesLoading}
+              fullWidth
+            />
+          </Box>
+          <Box sx={{ maxWidth: '248px', width: '100%' }}>
+            <CustomSelect
+              label="Division"
+              options={filteredDivisionOptions}
+              value={divisionIdState}
+              onChange={(value) => {
+                const nextDivisionId = String(value);
+                setDivisionIdState(nextDivisionId);
+                setSelectedDivisionId(nextDivisionId);
+              }}
+              labelKey="name"
+              valueKey="id"
+              disabled={isDivisionDisabled}
+              fullWidth
+            />
+          </Box>
         </Box>
       </Card>
 
@@ -169,7 +232,7 @@ const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
           <Button
             variant="contained"
             startIcon={<Iconify icon="mdi:file-document-outline" />}
-            onClick={() => onBulkAssign(selectedStudents)}
+            onClick={() => onBulkAssign(selectedStudents, standardIdState)}
             size="small"
           >
             Assign Structure ({selectedStudents.length})
@@ -200,23 +263,28 @@ const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
                 return (
                   <Checkbox
                     checked={
-                      tableData?.length > 0 && selectedStudents?.length === tableData?.length
+                      selectableTableData?.length > 0 &&
+                      selectedStudents?.length === selectableTableData?.length
                     }
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedStudents((tableData as IFeeStructureData[]) || []);
+                        setSelectedStudents((selectableTableData as IFeeStructureData[]) || []);
                       } else {
                         setSelectedStudents([]);
                       }
                     }}
+                    sx={{ mx: 1 }}
                   />
                 );
               },
               render(value, row) {
+                const isAssigned = Boolean((row as any).isFeeStructureAssigned);
                 return (
                   <Checkbox
                     checked={selectedStudents.some((i: any) => i.id === row.id)}
+                    disabled={isAssigned}
                     onChange={(e) => {
+                      if (isAssigned) return;
                       if (e.target.checked) {
                         setSelectedStudents([...selectedStudents, row as IFeeStructureData]);
                       } else {

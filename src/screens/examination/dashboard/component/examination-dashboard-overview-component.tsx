@@ -198,7 +198,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
                   { name: 'Non-Attendees', data: [20, 45, 15, 65, 80, 5] },
                 ],
                 colors: [
-                  alpha(theme.vars.palette.primary.dark, 0.8),
+                  alpha(theme.palette.primary.dark, 0.8),
                   alpha(theme.palette.error.main, 0.8),
                 ],
               }}
@@ -228,7 +228,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
               chart={{
                 categories: ['Quiz 1', 'Quiz 2', 'Quiz 3', 'Quiz 4', 'Quiz 5', 'Quiz 6', 'Quiz 7'],
                 series: [{ name: '', data: [43, 33, 22, 37, 18, 35, 27] }],
-                colors: [alpha(theme.vars.palette.primary.dark, 0.8)],
+                colors: [alpha(theme.palette.primary.dark, 0.8)],
                 options: { legend: { show: false, position: 'top' } },
               }}
               sx={{ height: '100%', boxShadow: 'none' }}

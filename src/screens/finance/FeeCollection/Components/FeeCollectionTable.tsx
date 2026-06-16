@@ -31,8 +31,11 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onCollectFee,
   onView,
   onGiveAdjustment,
+  academicFilters,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const localFilters = useFinanceAcademicFilters();
+  const filters = academicFilters || localFilters;
   const {
     boards,
     mediums,
@@ -50,7 +53,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     setSelectedStandardId,
     setSelectedDivisionId,
     classesLoading,
-  } = useFinanceAcademicFilters();
+  } = filters;
 
   const [feeCollectionParams, setFeeCollectionParams] = useState({
     page: 1,
@@ -280,10 +283,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
                           onCollectFee({ ...row, id: row.studentId ?? row.id } as IFeeData)
                         }
                       >
-                        <Iconify
-                          icon="fluent:payment-16-regular"
-                          sx={{ height: '16px', width: '16px' }}
-                        />
+                        <Iconify icon="mdi:cash-plus" sx={{ height: '16px', width: '16px' }} />
                       </MenuItem>
                     </CustomTooltip>
                     <CustomTooltip title="View Details">
@@ -291,13 +291,13 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
                         <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
                       </MenuItem>
                     </CustomTooltip>
-                    <CustomTooltip title="Give Adjustment">
+                    <CustomTooltip title="Give Fees Adjustment">
                       <MenuItem
                         onClick={() =>
                           onGiveAdjustment({ ...row, id: row.studentId ?? row.id } as IFeeData)
                         }
                       >
-                        <Iconify icon="mdi:adjust" sx={{ height: '16px', width: '16px' }} />
+                        <Iconify icon="tdesign:adjustment" sx={{ height: '16px', width: '16px' }} />
                       </MenuItem>
                     </CustomTooltip>
                   </MenuList>

@@ -97,7 +97,7 @@ function UnifiedReceiptDisplay({
                 <Typography variant="subtitle2" fontWeight={700} mb={1}>
                   Paid Fee Heads
                 </Typography>
-                <TableContainer sx={{ bgcolor: '#fafafa', borderRadius: 1 }}>
+                <TableContainer sx={{ borderRadius: 1 }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow sx={{ bgcolor: alpha(theme.palette.grey[500], 0.12) }}>
@@ -269,7 +269,7 @@ function UnifiedReceiptDisplay({
                 <Typography variant="subtitle2" fontWeight={700} mb={1}>
                   Paid Charges
                 </Typography>
-                <TableContainer sx={{ bgcolor: '#fafafa', borderRadius: 1 }}>
+                <TableContainer sx={{ borderRadius: 1 }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow sx={{ bgcolor: alpha(theme.palette.grey[500], 0.12) }}>

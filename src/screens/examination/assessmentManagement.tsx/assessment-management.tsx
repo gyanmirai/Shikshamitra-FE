@@ -155,13 +155,13 @@ const AssessmentManagement = (props: TabComponentType) => {
   const links = open
     ? [
         { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Examination', href: '/academic/examinationDashboard' },
+        { name: 'Examination' },
         { name: 'Assessment' },
         { name: 'Assessment Form' },
       ]
     : [
         { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Examination', href: '/academic/examinationDashboard' },
+        { name: 'Examination' },
         { name: 'Assessment' },
       ];
 

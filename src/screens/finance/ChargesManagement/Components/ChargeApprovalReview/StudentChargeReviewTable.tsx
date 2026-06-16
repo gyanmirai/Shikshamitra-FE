@@ -1,22 +1,11 @@
 'use client';
 
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useState, useCallback } from 'react';
-import {
-  Box,
-  Stack,
-  Table,
-  Paper,
-  TableRow,
-  Checkbox,
-  TextField,
-  TableBody,
-  TableCell,
-  TableHead,
-  Typography,
-  TableContainer,
-  CircularProgress,
-} from '@mui/material';
+import React, { useMemo, useCallback } from 'react';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, Paper, Checkbox, Typography } from '@mui/material';
 
 import type { IStudentChargeReviewTableProps } from './types';
 
@@ -31,18 +20,6 @@ const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
   onSearchChange,
   isLoading = false,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleSearchChange = useCallback(
-    (query: string) => {
-      setSearchQuery(query);
-      if (onSearchChange) {
-        onSearchChange(query);
-      }
-    },
-    [onSearchChange]
-  );
-
   const handleCheckboxChange = useCallback(
     (studentId: string, isChecked: boolean) => {
       if (onStudentSelect) {
@@ -52,17 +29,64 @@ const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
     [onStudentSelect]
   );
 
-  const filteredStudents = useMemo(() => {
-    if (!searchQuery) return students;
+  const handleSelectAll = useCallback(
+    (isChecked: boolean) => {
+      students.forEach((student) => {
+        const isSelected = selectedStudentIds.includes(student.studentId);
+        if (isChecked && !isSelected) {
+          handleCheckboxChange(student.studentId, true);
+        }
+        if (!isChecked && isSelected) {
+          handleCheckboxChange(student.studentId, false);
+        }
+      });
+    },
+    [students, selectedStudentIds, handleCheckboxChange]
+  );
 
-    const query = searchQuery.toLowerCase();
-    return students.filter(
-      (student) =>
-        student.studentName?.toLowerCase().includes(query) ||
-        student.grNumber?.toString().includes(query) ||
-        student.rollNumber?.toString().includes(query)
-    );
-  }, [students, searchQuery]);
+  const tableRows = useMemo(
+    () =>
+      students.map((student) => ({
+        ...student,
+        isSelected: selectedStudentIds.includes(student.studentId),
+      })),
+    [students, selectedStudentIds]
+  );
+
+  const columns: IColumn[] = useMemo(() => {
+    const allSelected = students.length > 0 && selectedStudentIds.length === students.length;
+    const someSelected = selectedStudentIds.length > 0 && !allSelected;
+
+    return [
+      {
+        id: 'isSelected',
+        label: (
+          <Checkbox
+            indeterminate={someSelected}
+            checked={allSelected}
+            onChange={(e) => handleSelectAll(e.target.checked)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ),
+        align: 'center',
+        isSort: false,
+        isFilter: false,
+        width: 70,
+        render: (value, row) => (
+          <Checkbox
+            checked={Boolean(value)}
+            onChange={(e) => handleCheckboxChange(row.studentId, e.target.checked)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ),
+      },
+      { id: 'studentName', label: 'Student Name', align: 'left' },
+      { id: 'grNumber', label: 'GR Number', align: 'left', filterType: 'number' },
+      { id: 'rollNumber', label: 'Roll No.', align: 'left', filterType: 'number' },
+      { id: 'standardName', label: 'Class', align: 'left' },
+      { id: 'divisionName', label: 'Division', align: 'left' },
+    ];
+  }, [students, selectedStudentIds.length, handleSelectAll, handleCheckboxChange]);
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
@@ -82,124 +106,25 @@ const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
         </Box>
       </Stack>
 
-      {/* Search Bar */}
-      <TextField
-        fullWidth
-        size="small"
-        placeholder="Search by name, GR number, or roll number..."
-        value={searchQuery}
-        onChange={(e) => handleSearchChange(e.target.value)}
-        slotProps={{
-          input: {
-            startAdornment: <Iconify icon="carbon:search" sx={{ mr: 1, color: 'text.disabled' }} />,
-          },
+      <CustomizableTable
+        tableId="charge-approval-review-student-table"
+        tableTitle="Student List"
+        columns={columns}
+        data={tableRows}
+        isFilter={false}
+        isPagination={false}
+        isSearch
+        isLoading={isLoading}
+        serverSideSearch={Boolean(onSearchChange)}
+        onServerSearch={onSearchChange}
+        searchFieldProps={{
+          placeholder: 'Search by name, GR number, or roll number...',
         }}
-        sx={{ mb: 2 }}
+        noDataText="No students found"
+        wrapperProps={{
+          minHeight: 320,
+        }}
       />
-
-      {/* Students Table */}
-      <TableContainer sx={{ maxHeight: '400px', overflowY: 'auto' }}>
-        <Table stickyHeader size="small">
-          <TableHead>
-            <TableRow sx={{ '& th': { backgroundColor: 'action.hover', fontWeight: 700 } }}>
-              <TableCell align="center" sx={{ minWidth: 50 }}>
-                <Checkbox
-                  indeterminate={
-                    selectedStudentIds.length > 0 && selectedStudentIds.length < students.length
-                  }
-                  checked={students.length > 0 && selectedStudentIds.length === students.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      // Select all
-                      students.forEach((student) => {
-                        if (!selectedStudentIds.includes(student.studentId)) {
-                          handleCheckboxChange(student.studentId, true);
-                        }
-                      });
-                    } else {
-                      // Deselect all
-                      students.forEach((student) => {
-                        if (selectedStudentIds.includes(student.studentId)) {
-                          handleCheckboxChange(student.studentId, false);
-                        }
-                      });
-                    }
-                  }}
-                />
-              </TableCell>
-              <TableCell align="left" sx={{ minWidth: 150 }}>
-                Student Name
-              </TableCell>
-              <TableCell align="left" sx={{ minWidth: 100 }}>
-                GR Number
-              </TableCell>
-              <TableCell align="center" sx={{ minWidth: 80 }}>
-                Roll No.
-              </TableCell>
-              <TableCell align="left" sx={{ minWidth: 100 }}>
-                Class
-              </TableCell>
-              <TableCell align="left" sx={{ minWidth: 100 }}>
-                Division
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                  <CircularProgress size={30} />
-                </TableCell>
-              </TableRow>
-            ) : filteredStudents.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                  <Typography variant="caption">No students found</Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredStudents.map((student) => (
-                <TableRow
-                  key={student.studentId}
-                  sx={{ '&:hover': { backgroundColor: 'action.hover' } }}
-                >
-                  <TableCell align="center">
-                    <Checkbox
-                      checked={selectedStudentIds.includes(student.studentId)}
-                      onChange={(e) => handleCheckboxChange(student.studentId, e.target.checked)}
-                    />
-                  </TableCell>
-                  <TableCell align="left">
-                    <Typography variant="caption" fontSize="13px">
-                      {student.studentName || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="left">
-                    <Typography variant="caption" fontSize="13px">
-                      {student.grNumber || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="caption" fontSize="13px">
-                      {student.rollNumber || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="left">
-                    <Typography variant="caption" fontSize="13px">
-                      {student.standardName || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="left">
-                    <Typography variant="caption" fontSize="13px">
-                      {student.divisionName || '-'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
 
       {/* Student Count */}
       <Box sx={{ mt: 2, p: 1, backgroundColor: 'action.hover', borderRadius: 1 }}>

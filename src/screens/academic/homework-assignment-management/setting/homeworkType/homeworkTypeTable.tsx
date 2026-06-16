@@ -11,6 +11,8 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
   data,
   onDelete,
   onEdit,
+  canAdd = true,
+  canDelete = true,
 }) => (
   <CustomizableTable
     tableId="homework-type-data-table"
@@ -34,8 +36,8 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
           <ThreeDotsActions
             showThreeDots={false}
             placement="right-top"
-            showDeleteIcon
-            showEditIcon
+            showDeleteIcon={canDelete}
+            showEditIcon={canAdd}
             handleDeleteClick={() => {
               onDelete(row as IHomeworkType);
             }}

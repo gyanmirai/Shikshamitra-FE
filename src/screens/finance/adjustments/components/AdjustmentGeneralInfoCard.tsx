@@ -40,8 +40,21 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: any }> = ({ formik }) => {
   );
 
   useEffect(() => {
-    setBoards(currentYear?.boards || []);
-  }, [currentYear]);
+    const yearBoards = currentYear?.boards || [];
+    setBoards(yearBoards);
+    if (yearBoards.length > 0) {
+      if (!values.boardId) {
+        const firstBoard = yearBoards[0];
+        setFieldValue('boardId', firstBoard.id);
+        const firstMedium = firstBoard?.educationMediums?.[0]?.id ?? '';
+        setFieldValue('mediumId', firstMedium);
+      } else if (!values.mediumId) {
+        const board = yearBoards.find((b: any) => b.id === values.boardId);
+        const firstMedium = board?.educationMediums?.[0]?.id ?? '';
+        setFieldValue('mediumId', firstMedium);
+      }
+    }
+  }, [currentYear, values.boardId, values.mediumId, setFieldValue]);
 
   useEffect(() => {
     const board = boards.find((b: any) => b.id === values.boardId);

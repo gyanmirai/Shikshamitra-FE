@@ -85,7 +85,6 @@ export const useChargeDetails = (chargeId?: string) => {
       purposeDescription: chargeDetail.purposeDescription || '',
       amount: chargeDetail.amount || '',
       dueDate: chargeDetail.dueDate ? dayjs(chargeDetail.dueDate) : null,
-      additionalNotes: chargeDetail.additionalNotes || '',
       boardId: chargeDetail.audience?.scope?.boardId || '',
       educationMediumId: chargeDetail.audience?.scope?.educationMediumId || '',
       standardId: audienceFields.standardId,

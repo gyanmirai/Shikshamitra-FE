@@ -12,9 +12,11 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetClassQuery } from 'src/redux/class/classApi';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -30,6 +32,7 @@ import { AddNewChapter } from './addChapterForm';
 import { subjectTempData } from '../subjectsData';
 import ChapterTable from './components/chapterTable';
 import ChapterDocuments from './components/chapterDocuments';
+import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
 
 import type { IChapter, SubjectOption } from './type';
 
@@ -40,6 +43,21 @@ const Subjects = () => {
     currentQueryAndMutation: useDeleteChapterMutation,
   });
   const { confirmWithUndo } = useConfirmWithUndo();
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.chaptersManagement}.Add`
+  );
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.chaptersManagement}.View`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.chaptersManagement}.Delete`
+  );
 
   const [classes, setClasses] = useState<string>('');
   const [classId, setClassId] = useState<string>('');
@@ -248,6 +266,8 @@ const Subjects = () => {
                     const allOptions: SubjectOption[] = [];
 
                     subjectOptionsData?.data?.items?.forEach((item: any) => {
+                      if (item.status === SubjectAssignmentStatus.Draft) return;
+
                       if (item.subjects?.length > 1 && item.electiveGroupName) {
                         // Elective group — each subject as its own dropdown entry
                         // API shape confirmed: { subjectId, subjectName, subjectCode, color }
@@ -329,22 +349,27 @@ const Subjects = () => {
                   formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
                 />
               </Box>
-              <Button
-                size="small"
-                startIcon={<Add />}
-                variant="contained"
-                onClick={() => {
-                  addChapterDialog.onTrue();
-                }}
-                disabled={!classes || !subject}
-                sx={{ px: '32px' }}
-              >
-                Syllabus
-              </Button>
+              {canAdd && (
+                <Button
+                  size="small"
+                  startIcon={<Add />}
+                  variant="contained"
+                  onClick={() => {
+                    addChapterDialog.onTrue();
+                  }}
+                  disabled={!classes || !subject}
+                  sx={{ px: '32px' }}
+                >
+                  Syllabus
+                </Button>
+              )}
             </Box>
           </Card>
           {/* Table component for displaying chapter data */}
           <ChapterTable
+            canAdd={canAdd}
+            canView={canView}
+            canDelete={canDelete}
             onDelete={(chapter) => {
               setSelectedChapter(chapter as IChapter);
               deleteDialog.onTrue();

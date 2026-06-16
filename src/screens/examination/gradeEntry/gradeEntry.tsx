@@ -5,6 +5,7 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -19,16 +20,38 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, MenuList, MenuItem, TextField, Typography, Autocomplete } from '@mui/material';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
-import { usePublishExamMarksMutation } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
 import { useGetSubjectsQuery } from 'src/redux/classManagementApi/subjectProgressManageApi/subjectProgressManageApi';
+import {
+  GradeEntryWorkflowStatus,
+  GradeEntryWorkflowStatusColor,
+  GradeEntryWorkflowStatusLabel,
+} from 'src/enums/grade-entry-status';
+import {
+  Box,
+  Card,
+  Grid,
+  Stack,
+  Divider,
+  Skeleton,
+  Collapse,
+  TextField,
+  IconButton,
+  Typography,
+  Autocomplete,
+} from '@mui/material';
+import {
+  useVerifyMarksMutation,
+  useSaveDraftMarksMutation,
+  usePublishAndLockMarksMutation,
+  useSubmitMarksForVerificationMutation,
+} from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
 
 import AssignGrade from './components/assignGradeForm';
 import GradeEntryTable from './components/GradeEntryTable';
 
-import type { IStudentExamGradeEntry } from './type';
 import type { TabComponentType } from '../../hr/leave-request';
+import type { IExamAnalyticsStats, IStudentExamGradeEntry, IExamMarksWorkflowFlags } from './type';
 
 const GradeEntry = (props: TabComponentType) => {
   // Dialog control for showing/hiding modal
@@ -154,6 +177,27 @@ const GradeEntry = (props: TabComponentType) => {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   // True when every student row has status === 1 (marks assigned)
   const [allMarksAssigned, setAllMarksAssigned] = useState(false);
+  // Analytics stats computed by GradeEntryTable
+  const [analyticsStats, setAnalyticsStats] = useState<IExamAnalyticsStats | null>(null);
+  // Current workflow status of the marks entry for this exam/division/subject
+  // Initialised from the API response by handleWorkflowFlagsChange
+  const [workflowStatus, setWorkflowStatus] = useState<GradeEntryWorkflowStatus>(
+    GradeEntryWorkflowStatus.Draft
+  );
+
+  // Reset workflowStatus and stats whenever the user selects a different exam
+  useEffect(() => {
+    setWorkflowStatus(GradeEntryWorkflowStatus.Draft);
+    setAnalyticsStats(null);
+    setSummaryOpen(false);
+  }, [examId]);
+
+  const [summaryOpen, setSummaryOpen] = useState(false);
+
+  // Called by GradeEntryTable when GET /marks returns – syncs local state with DB
+  const handleWorkflowFlagsChange = useCallback((flags: IExamMarksWorkflowFlags) => {
+    setWorkflowStatus(flags.workflowStatus as GradeEntryWorkflowStatus);
+  }, []);
 
   // Dialog control for viewing student submission
   const viewSubmissionDialog = useBoolean();
@@ -177,19 +221,65 @@ const GradeEntry = (props: TabComponentType) => {
 
   const [publishExamMarks, { isLoading: isPublishLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: usePublishExamMarksMutation,
+    currentQueryAndMutation: usePublishAndLockMarksMutation,
+  });
+
+  const [saveDraftMarks, { isLoading: isSaveDraftLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSaveDraftMarksMutation,
+  });
+
+  const [submitMarksForVerification, { isLoading: isSubmitLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSubmitMarksForVerificationMutation,
+  });
+
+  const [verifyMarks, { isLoading: isVerifyLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useVerifyMarksMutation,
   });
 
   const handlePublishMarks = async () => {
-    if (!examId || !division) return;
+    if (!examId || !division || !subject) return;
     try {
-      await publishExamMarks({ examId, divisionId: division }).unwrap();
+      await publishExamMarks({ examId, divisionId: division, subjectId: subject }).unwrap();
       publishMarksDialog.onFalse();
+      setWorkflowStatus(GradeEntryWorkflowStatus.Published);
       shikshaMitraToast.success({
         message: `Marks published successfully for ${examOptions.find((o) => o.examId === examId)?.examName ?? 'selected exam'}.`,
       });
     } catch (error) {
       console.error('[GradeEntry] Failed to publish marks:', error);
+    }
+  };
+
+  const handleWorkflowAction = async (action: 'draft' | 'submit' | 'verify') => {
+    if (!examId || !division || !subject) return;
+    const params = { examId, divisionId: division, subjectId: subject };
+    const actionMap = {
+      draft: {
+        fn: saveDraftMarks,
+        next: GradeEntryWorkflowStatus.Draft,
+        msg: 'Draft saved successfully.',
+      },
+      submit: {
+        fn: submitMarksForVerification,
+        next: GradeEntryWorkflowStatus.Submitted,
+        msg: 'Marks submitted for verification.',
+      },
+      verify: {
+        fn: verifyMarks,
+        next: GradeEntryWorkflowStatus.Verified,
+        msg: 'Marks verified successfully.',
+      },
+    };
+    const { fn, next, msg } = actionMap[action];
+    try {
+      await fn(params).unwrap();
+      setWorkflowStatus(next);
+      shikshaMitraToast.success({ message: msg });
+    } catch (error) {
+      console.error(`[GradeEntry] Failed to ${action}:`, error);
     }
   };
 
@@ -226,40 +316,36 @@ const GradeEntry = (props: TabComponentType) => {
   };
 
   const actions = useCallback(
-    ({ popover, row }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          {row.status === 0 && (
-            <MenuItem
-              onClick={() => {
-                viewSubmissionDialog.onTrue();
-                popover.onClose();
-                setSelectedStudent({ ...row, subjectId: subject, examId: row.examId || examId });
-              }}
-            >
-              {' '}
-              <Iconify icon="mdi:arrow-right-circle" />
-              Assign Marks
-            </MenuItem>
-          )}
-
-          {row.status === 1 && (
-            <MenuItem
-              onClick={() => {
-                popover.onClose();
-                viewSubmissionDialog.onTrue();
-                setSelectedStudent({ ...row, subjectId: subject, examId: row.examId || examId });
-              }}
-            >
-              {' '}
-              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
-              Update Marks
-            </MenuItem>
-          )}
-        </MenuList>
-      </>
-    ),
+    ({ row, isLocked: locked }: any) => {
+      if (locked) {
+        return (
+          <CustomTooltip title="Marks Locked" placement="left">
+            <span>
+              <IconButton size="small" disabled>
+                <Iconify icon="solar:lock-bold" width={18} sx={{ color: 'text.disabled' }} />
+              </IconButton>
+            </span>
+          </CustomTooltip>
+        );
+      }
+      return (
+        <CustomTooltip title={row.status === 1 ? 'Update Marks' : 'Assign Marks'} placement="left">
+          <IconButton
+            size="small"
+            onClick={() => {
+              viewSubmissionDialog.onTrue();
+              setSelectedStudent({ ...row, subjectId: subject, examId: row.examId || examId });
+            }}
+          >
+            <Iconify
+              icon={row.status === 1 ? GlobalIcons.edit : 'mdi:arrow-right-circle'}
+              width={18}
+              sx={{ color: row.status === 1 ? 'primary.main' : 'success.main' }}
+            />
+          </IconButton>
+        </CustomTooltip>
+      );
+    },
     [viewSubmissionDialog, subject, examId]
   );
 
@@ -275,20 +361,58 @@ const GradeEntry = (props: TabComponentType) => {
             { name: 'Grade Entry' },
           ]}
           action={
-            <LoadingButton
-              variant="contained"
-              size="small"
-              disabled={!examId || !allMarksAssigned}
-              startIcon={<Iconify icon={GlobalIcons.publish} />}
-              onClick={() => {
-                publishMarksDialog.onTrue();
-              }}
-              loading={isPublishLoading}
-              title="Publish marks to make them visible to students"
-              sx={{ px: '32px' }}
-            >
-              {} Publish Marks
-            </LoadingButton>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+              {examId && workflowStatus === GradeEntryWorkflowStatus.Draft && (
+                <LoadingButton
+                  variant="outlined"
+                  size="small"
+                  color="inherit"
+                  loading={isSaveDraftLoading}
+                  startIcon={<Iconify icon="solar:diskette-bold" />}
+                  onClick={() => handleWorkflowAction('draft')}
+                >
+                  Save Draft
+                </LoadingButton>
+              )}
+              {examId && workflowStatus === GradeEntryWorkflowStatus.Draft && (
+                <LoadingButton
+                  variant="outlined"
+                  size="small"
+                  color="info"
+                  loading={isSubmitLoading}
+                  disabled={!allMarksAssigned}
+                  startIcon={<Iconify icon="solar:plain-bold" />}
+                  onClick={() => handleWorkflowAction('submit')}
+                >
+                  Submit
+                </LoadingButton>
+              )}
+              {examId && workflowStatus === GradeEntryWorkflowStatus.Submitted && (
+                <LoadingButton
+                  variant="outlined"
+                  size="small"
+                  color="warning"
+                  loading={isVerifyLoading}
+                  startIcon={<Iconify icon="solar:check-circle-bold" />}
+                  onClick={() => handleWorkflowAction('verify')}
+                >
+                  Verify
+                </LoadingButton>
+              )}
+              {examId && workflowStatus === GradeEntryWorkflowStatus.Verified && (
+                <LoadingButton
+                  variant="contained"
+                  size="small"
+                  loading={isPublishLoading}
+                  disabled={!allMarksAssigned}
+                  startIcon={<Iconify icon={GlobalIcons.publish} />}
+                  onClick={() => publishMarksDialog.onTrue()}
+                  sx={{ px: '24px' }}
+                >
+                  Publish Marks
+                </LoadingButton>
+              )}
+            </Stack>
           }
         />
         <motion.div
@@ -367,6 +491,352 @@ const GradeEntry = (props: TabComponentType) => {
             </CustomTooltip>
           </Box>
         </motion.div>
+
+        {/* Unified Grade Entry Summary Card */}
+        {examId && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.35 }}
+          >
+            <Card
+              sx={{
+                p: 0,
+                mb: 1.5,
+                boxShadow: 'var(--shadows-2)',
+                border: (theme) => `1px solid ${theme.palette.divider}`,
+              }}
+            >
+              {/* Accent bar */}
+              <Box
+                sx={{
+                  height: 4,
+                  background: (theme) =>
+                    `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+                }}
+              />
+              {/* Card header */}
+              <Box
+                onClick={() => setSummaryOpen((prev) => !prev)}
+                sx={{
+                  px: 2,
+                  py: 1.25,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  bgcolor: (theme) => `rgba(${theme.palette.grey['500Channel']} / 0.06)`,
+                  borderBottom: (theme) =>
+                    summaryOpen ? `1px solid ${theme.palette.divider}` : 'none',
+                  '&:hover': {
+                    bgcolor: (theme) => `rgba(${theme.palette.grey['500Channel']} / 0.10)`,
+                  },
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" useFlexGap>
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      color: 'text.secondary',
+                      letterSpacing: 0.8,
+                    }}
+                  >
+                    <Iconify
+                      icon="solar:document-text-bold"
+                      width={16}
+                      sx={{ color: 'primary.main' }}
+                    />
+                    Grade Entry Summary
+                  </Typography>
+                  <Divider orientation="vertical" flexItem />
+                  {[
+                    {
+                      icon: 'solar:diploma-bold',
+                      value: examOptions.find((o) => o.examId === examId)?.examName ?? '—',
+                    },
+                    {
+                      icon: 'solar:book-2-bold',
+                      value: subjectOptions.find((s) => s.id === subject)?.name ?? '—',
+                    },
+                    {
+                      icon: 'solar:users-group-rounded-bold',
+                      value: `${allClass.find((c) => c.id === classes)?.name ?? '—'} / ${allDivision.find((d) => d.id === division)?.name ?? '—'}`,
+                    },
+                  ].map((info) => (
+                    <Stack key={info.value} direction="row" alignItems="center" spacing={0.5}>
+                      <Iconify icon={info.icon} width={14} sx={{ color: 'text.disabled' }} />
+                      <Typography variant="caption" color="text.secondary" noWrap>
+                        {info.value}
+                      </Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ ml: 'auto' }}>
+                  <Label
+                    color={GradeEntryWorkflowStatusColor[workflowStatus] as any}
+                    variant="soft"
+                  >
+                    {GradeEntryWorkflowStatusLabel[workflowStatus]}
+                  </Label>
+                  <IconButton
+                    size="small"
+                    sx={{
+                      transition: 'transform 0.2s',
+                      transform: summaryOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    }}
+                  >
+                    <Iconify icon="solar:alt-arrow-down-bold" width={16} />
+                  </IconButton>
+                </Stack>
+              </Box>
+
+              {/* Main content */}
+              <Collapse in={summaryOpen}>
+                <Box sx={{ p: 2 }}>
+                  <Grid container spacing={2}>
+                    {/* Left: Stats KPIs + Progress bar */}
+                    <Grid size={{ xs: 12, md: 8 }}>
+                      <Grid container spacing={1.5} sx={{ mb: analyticsStats ? 2 : 0 }}>
+                        {(analyticsStats
+                          ? [
+                              {
+                                label: 'Total Students',
+                                value: analyticsStats.totalCount,
+                                icon: 'solar:user-bold',
+                                color: 'text.primary',
+                              },
+                              {
+                                label: 'Graded',
+                                value: analyticsStats.totalCount - analyticsStats.pendingCount,
+                                icon: 'solar:check-square-bold',
+                                color: 'success.main',
+                              },
+                              {
+                                label: 'Pending',
+                                value: analyticsStats.pendingCount,
+                                icon: 'solar:clock-circle-bold',
+                                color:
+                                  analyticsStats.pendingCount > 0
+                                    ? 'warning.main'
+                                    : 'text.disabled',
+                              },
+                              {
+                                label: 'Highest Marks',
+                                value: analyticsStats.highestMarks,
+                                icon: 'solar:arrow-up-bold',
+                                color: 'success.main',
+                              },
+                              {
+                                label: 'Lowest Marks',
+                                value: analyticsStats.lowestMarks,
+                                icon: 'solar:arrow-down-bold',
+                                color: 'error.main',
+                              },
+                              {
+                                label: 'Average Marks',
+                                value: analyticsStats.averageMarks,
+                                icon: 'solar:graph-new-bold',
+                                color: 'info.main',
+                              },
+                            ]
+                          : Array.from({ length: 6 }, (_, i) => ({
+                              _skeleton: true,
+                              key: `sk-${i}`,
+                            }))
+                        ).map((stat: any) =>
+                          stat._skeleton ? (
+                            <Grid key={stat.key} size={{ xs: 6, sm: 4 }}>
+                              <Skeleton variant="rounded" height={58} sx={{ borderRadius: 1.5 }} />
+                            </Grid>
+                          ) : (
+                            <Grid key={stat.label} size={{ xs: 6, sm: 4 }}>
+                              <Stack
+                                direction="row"
+                                alignItems="center"
+                                spacing={1}
+                                sx={{
+                                  p: 1.25,
+                                  borderRadius: 1.5,
+                                  bgcolor: (theme) =>
+                                    `rgba(${theme.palette.grey['500Channel']} / 0.04)`,
+                                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                                }}
+                              >
+                                <Iconify
+                                  icon={stat.icon}
+                                  width={18}
+                                  sx={{ color: stat.color, flexShrink: 0 }}
+                                />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    display="block"
+                                    lineHeight={1.2}
+                                  >
+                                    {stat.label}
+                                  </Typography>
+                                  <Typography variant="subtitle2" fontWeight={700} lineHeight={1.4}>
+                                    {String(stat.value)}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Grid>
+                          )
+                        )}
+                      </Grid>
+                    </Grid>
+
+                    {/* Right: Pass/Fail + Result Readiness */}
+                    <Grid
+                      size={{ xs: 12, md: 4 }}
+                      sx={{
+                        borderLeft: { md: '1px solid' },
+                        borderColor: { md: 'divider' },
+                        pl: { md: 2 },
+                      }}
+                    >
+                      {analyticsStats ? (
+                        <Stack spacing={1.5} height="100%">
+                          <Stack spacing={0.75}>
+                            <Stack
+                              direction="row"
+                              justifyContent="space-between"
+                              alignItems="center"
+                            >
+                              <Stack direction="row" alignItems="center" spacing={0.5}>
+                                <Iconify
+                                  icon="solar:check-circle-bold"
+                                  width={15}
+                                  sx={{ color: 'success.main' }}
+                                />
+                                <Typography variant="caption" color="success.main" fontWeight={600}>
+                                  Pass
+                                </Typography>
+                              </Stack>
+                              <Typography variant="caption" fontWeight={700} color="success.main">
+                                {analyticsStats.passCount} ({analyticsStats.passPercentage}%)
+                              </Typography>
+                            </Stack>
+                            <Stack
+                              direction="row"
+                              justifyContent="space-between"
+                              alignItems="center"
+                            >
+                              <Stack direction="row" alignItems="center" spacing={0.5}>
+                                <Iconify
+                                  icon="solar:close-circle-bold"
+                                  width={15}
+                                  sx={{ color: 'error.main' }}
+                                />
+                                <Typography variant="caption" color="error.main" fontWeight={600}>
+                                  Fail
+                                </Typography>
+                              </Stack>
+                              <Typography variant="caption" fontWeight={700} color="error.main">
+                                {analyticsStats.failCount} ({analyticsStats.failPercentage}%)
+                              </Typography>
+                            </Stack>
+                          </Stack>
+                          <Divider />
+                          <Stack spacing={1}>
+                            <Typography
+                              variant="overline"
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.75,
+                                color: 'text.secondary',
+                                letterSpacing: 0.8,
+                              }}
+                            >
+                              <Iconify
+                                icon="solar:clipboard-check-bold"
+                                width={14}
+                                sx={{ color: 'success.main' }}
+                              />
+                              Result Readiness
+                            </Typography>
+                            <Grid container spacing={0.75}>
+                              {[
+                                { label: 'All Students Graded', done: allMarksAssigned },
+                                {
+                                  label: 'Verification Complete',
+                                  done: workflowStatus >= GradeEntryWorkflowStatus.Verified,
+                                },
+                                {
+                                  label: 'No Missing Marks',
+                                  done: analyticsStats.pendingCount === 0,
+                                },
+                                {
+                                  label: 'Ready For Result Generation',
+                                  done:
+                                    allMarksAssigned &&
+                                    workflowStatus >= GradeEntryWorkflowStatus.Published,
+                                },
+                              ].map((check) => (
+                                <Grid key={check.label} size={{ xs: 6 }}>
+                                  <Stack direction="row" alignItems="center" spacing={0.75}>
+                                    <Iconify
+                                      icon={
+                                        check.done
+                                          ? 'solar:check-circle-bold'
+                                          : 'solar:close-circle-bold'
+                                      }
+                                      width={16}
+                                      sx={{
+                                        color: check.done ? 'success.main' : 'text.disabled',
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                    <Typography
+                                      variant="caption"
+                                      color={check.done ? 'text.primary' : 'text.disabled'}
+                                      lineHeight={1.3}
+                                    >
+                                      {check.label}
+                                    </Typography>
+                                  </Stack>
+                                </Grid>
+                              ))}
+                            </Grid>
+                          </Stack>
+                        </Stack>
+                      ) : (
+                        <Stack spacing={1.5} height="100%">
+                          {[...Array(3)].map((_, i) => (
+                            <Skeleton
+                              key={i}
+                              variant="rounded"
+                              height={22}
+                              sx={{ borderRadius: 1 }}
+                            />
+                          ))}
+                          <Divider />
+                          {[...Array(4)].map((_, i) => (
+                            <Skeleton
+                              key={i}
+                              variant="rounded"
+                              height={18}
+                              sx={{ borderRadius: 1 }}
+                            />
+                          ))}
+                        </Stack>
+                      )}
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Collapse>
+            </Card>
+          </motion.div>
+        )}
+
         <GradeEntryTable
           selectedStudents={selectedStudents}
           handleSelectStudent={handleSelectStudent}
@@ -375,7 +845,10 @@ const GradeEntry = (props: TabComponentType) => {
           divisionId={division}
           subjectId={subject}
           examId={examId}
+          isLocked={workflowStatus === GradeEntryWorkflowStatus.Published}
           onAllAssignedChange={setAllMarksAssigned}
+          onStatsChange={setAnalyticsStats}
+          onWorkflowFlagsChange={handleWorkflowFlagsChange}
         />
 
         <CustomDialog

@@ -15,8 +15,10 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -32,6 +34,7 @@ import AssignmentForm from './components/assignmentForm';
 import AssignmentTable from './components/assignmentTable';
 import ViewAssignmentDetails from './assignmentDetail/assignmentDetail';
 import { StudentSubmissions } from './studentSubmission/studentSubmission';
+import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
 
 import type { IAssignment } from './type';
 
@@ -48,6 +51,22 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   const viewAssignmentDetails = useBoolean();
   // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.learningTasks}.Add`
+  );
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.learningTasks}.View`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.learningTasks}.Delete`
+  );
   // State to store currently selected assignment for edit/delete/publish
   const [selectedAssignment, setSelectedAssignment] = useState<IAssignment | null>(null);
   const [viewAssignmentId, setViewAssignmentId] = useState<string | null>(null);
@@ -138,7 +157,9 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
 
   // Auto-select first subject when subjects load
   useEffect(() => {
-    const firstItem = subjectOptionsData?.data?.items?.[0];
+    const firstItem = subjectOptionsData?.data?.items?.find(
+      (item: any) => item.status !== SubjectAssignmentStatus.Draft
+    );
     if (firstItem && !subject) {
       const firstSubjectId = firstItem.subjects?.[0]?.subjectId || firstItem.id;
       const firstSelectValue = `${firstItem.id}::${firstSubjectId}`;
@@ -230,6 +251,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           options={(() => {
             const allOptions: { value: string; label: string }[] = [];
             subjectOptionsData?.data?.items?.forEach((item: any) => {
+              if (item.status === SubjectAssignmentStatus.Draft) return;
               if (item.subjects?.length > 1 && item.electiveGroupName) {
                 // Elective group — each subject as its own dropdown entry
                 item.subjects.forEach((sub: any, index: number) => {
@@ -332,6 +354,9 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         dialog={addAssignmentDialog}
         selectedDivision={division}
         selectedClass={classes}
+        canAdd={canAdd}
+        canView={canView}
+        canDelete={canDelete}
         onSwitchToggle={(row) => {
           setSelectedAssignment(row);
           publishAssignmentDialog.onTrue();

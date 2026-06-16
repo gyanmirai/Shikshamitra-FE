@@ -11,7 +11,9 @@ import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuList, MenuItem, Typography } from '@mui/material';
@@ -59,6 +61,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 
   // Local state for selected students
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.homework.assessment}.Add`
+  );
 
   const [selectedStudents] = useState<any[]>([]);
   const {
@@ -115,56 +124,57 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   };
 
   const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <MenuList>
-        {/* Assign marks after student submission */}
-        {[
-          AssignmentSubmissionStatus.Submitted,
-          AssignmentSubmissionStatus.NeedsReview,
-          AssignmentSubmissionStatus.Late,
-        ].includes(row.status) && (
-          <MenuItem
-            onClick={() => {
-              setSelectedStudent({
-                ...(row as TStudentGrade),
-                totalMarks: resolveTotalMarks(row),
-              });
-              viewSubmissionDialog.onTrue();
-              pop.onClose();
-            }}
-          >
-            <Iconify icon="mdi:clipboard-check-outline" />
-            Assign Marks
-          </MenuItem>
-        )}
+    ({ popover: pop, row }: any) =>
+      canAdd ? (
+        <MenuList>
+          {/* Assign marks after student submission */}
+          {[
+            AssignmentSubmissionStatus.Submitted,
+            AssignmentSubmissionStatus.NeedsReview,
+            AssignmentSubmissionStatus.Late,
+          ].includes(row.status) && (
+            <MenuItem
+              onClick={() => {
+                setSelectedStudent({
+                  ...(row as TStudentGrade),
+                  totalMarks: resolveTotalMarks(row),
+                });
+                viewSubmissionDialog.onTrue();
+                pop.onClose();
+              }}
+            >
+              <Iconify icon="mdi:clipboard-check-outline" />
+              Assign Marks
+            </MenuItem>
+          )}
 
-        {/* Edit/View Feedback or Marks */}
-        {row.status === AssignmentSubmissionStatus.Reviewed && (
-          <MenuItem
-            onClick={() => {
-              setSelectedStudent({
-                ...(row as TStudentGrade),
-                totalMarks: resolveTotalMarks(row),
-              });
-              viewSubmissionDialog.onTrue();
-              pop.onClose();
-            }}
-          >
-            <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
-            Edit/View Marks
-          </MenuItem>
-        )}
+          {/* Edit/View Feedback or Marks */}
+          {row.status === AssignmentSubmissionStatus.Reviewed && (
+            <MenuItem
+              onClick={() => {
+                setSelectedStudent({
+                  ...(row as TStudentGrade),
+                  totalMarks: resolveTotalMarks(row),
+                });
+                viewSubmissionDialog.onTrue();
+                pop.onClose();
+              }}
+            >
+              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
+              Edit/View Marks
+            </MenuItem>
+          )}
 
-        {/* Reminder for pending students */}
-        {row.status === AssignmentSubmissionStatus.Pending && (
-          <MenuItem onClick={() => {}}>
-            <Iconify icon="mdi:bell-outline" sx={{ height: '16px', width: '16px' }} />
-            Send Reminder
-          </MenuItem>
-        )}
-      </MenuList>
-    ),
-    [resolveTotalMarks, viewSubmissionDialog]
+          {/* Reminder for pending students */}
+          {row.status === AssignmentSubmissionStatus.Pending && (
+            <MenuItem onClick={() => {}}>
+              <Iconify icon="mdi:bell-outline" sx={{ height: '16px', width: '16px' }} />
+              Send Reminder
+            </MenuItem>
+          )}
+        </MenuList>
+      ) : null,
+    [resolveTotalMarks, viewSubmissionDialog, canAdd]
   );
 
   /**
@@ -376,12 +386,12 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             minWidth: 50,
             sticky: true,
             render(value, row) {
-              return (
+              return canAdd ? (
                 <ThreeDotsActions
                   actions={(prop) => actions({ ...prop, row })}
                   placement="right-top"
                 />
-              );
+              ) : null;
             },
           },
         ]}

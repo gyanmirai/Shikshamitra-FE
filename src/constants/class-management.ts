@@ -11,6 +11,7 @@ export const classManagementPaths = {
   chapters: '/classManagement/courseProgress',
   teacherAssignment: '/classManagement/teacher',
   classTeacherAssignment: '/classManagement/assignClassTeacher',
+  reports: '/classManagement/reports',
   notification: '/classManagement/notification-management',
 };
 
@@ -21,6 +22,7 @@ export const classManagementPermissions = {
   chapters: `${defaultModulePermissionName}${defaultClassPermissionName}Chapters`,
   teacherAssignment: `${defaultModulePermissionName}${defaultClassPermissionName}TeacherAssignment`,
   classTeacherAssignment: `${defaultModulePermissionName}${defaultClassPermissionName}ClassTeacherAssignment`,
+  reports: `${defaultModulePermissionName}${defaultClassPermissionName}Reports`,
   notification: `${defaultModulePermissionName}${defaultClassPermissionName}Notification`,
 };
 
@@ -76,10 +78,11 @@ const classManagementModule = {
         },
         {
           title: 'Reports',
-          path: '/classManagement/reports',
+          path: classManagementPaths.reports,
           _action: 'reports',
           shortcutKey: 'Alt+A+R',
           shortcutKeyName: 'Alt+A+R',
+          permissionName: classManagementPermissions.reports,
           icon: menuIconView('mdi:chart-box-outline'),
         },
         {

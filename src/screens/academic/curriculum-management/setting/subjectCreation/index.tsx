@@ -1,13 +1,18 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { subjectsApi } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
@@ -17,6 +22,22 @@ import SettingSubjectTable from './settingSubjectTable';
 import { useSubjectCreation } from './hooks/useSubjectCreation';
 
 const SubjectCreation = () => {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.settings.subjectsCreation}.Add`
+  );
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.settings.subjectsCreation}.View`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.settings.subjectsCreation}.Delete`
+  );
+
   const {
     deleteSubjectDialog,
     open,
@@ -44,19 +65,24 @@ const SubjectCreation = () => {
           { name: 'Subject Creation' },
         ]}
         action={
-          <Button
-            sx={{ px: '32px' }}
-            startIcon={<Add />}
-            variant="contained"
-            onClick={drawerOpen.onTrue}
-            size="small"
-          >
-            Subject
-          </Button>
+          canAdd && (
+            <Button
+              sx={{ px: '32px' }}
+              startIcon={<Add />}
+              variant="contained"
+              onClick={drawerOpen.onTrue}
+              size="small"
+            >
+              Subject
+            </Button>
+          )
         }
       />
 
       <SettingSubjectTable
+        canAdd={canAdd}
+        canView={canView}
+        canDelete={canDelete}
         onDelete={(data) => {
           setSelectedSubject(data);
           deleteSubjectDialog.onTrue();

@@ -50,8 +50,8 @@ export default function BoardMediumDropdown({
     <Autocomplete
       size={size}
       options={options}
-      value={value ?? options[0]}
-      disableClearable
+      value={value ?? options[0] ?? null}
+      disableClearable={options.length > 0}
       getOptionLabel={(option) => option.label}
       isOptionEqualToValue={(option, val) =>
         option.boardId === val.boardId && option.mediumId === val.mediumId

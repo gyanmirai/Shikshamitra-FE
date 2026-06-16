@@ -146,19 +146,19 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
                 : undefined
             }
             inputProps={{
-              min: 0,
-              max: refundable,
+              // min: 0,
               style: {
                 textAlign: 'right',
                 fontSize: 13,
                 fontVariantNumeric: 'tabular-nums',
               },
             }}
-            placeholder=""
             sx={{
-              width: 114,
+              width: 100,
               '& .MuiOutlinedInput-root': {
                 borderRadius: '8px',
+                fontSize: 12,
+                height: 32,
                 '&.Mui-focused': {
                   boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.15)}`,
                 },

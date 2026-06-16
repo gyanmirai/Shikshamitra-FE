@@ -58,7 +58,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   {index + 1}.
                 </Typography>
               </Grid>
-              <Grid size={4.5} sx={{ pr: 1 }}>
+              <Grid size={6.2} sx={{ pr: 1 }}>
                 <Typography variant="body2" noWrap>
                   {item.feeHeadName}
                 </Typography>

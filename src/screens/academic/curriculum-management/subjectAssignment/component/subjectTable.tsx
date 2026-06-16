@@ -1,14 +1,18 @@
 // SubjectTable.tsx
 
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import { useSelector } from 'react-redux';
 import { useMemo, useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { RemoveCircle } from '@mui/icons-material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
@@ -32,6 +36,21 @@ const SubjectTable = ({
   totalCount,
 }: ISubjectTableProps) => {
   const theme = useTheme();
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permission checks
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.subjectsAssignment}.Add`
+  );
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.subjectsAssignment}.View`
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.subjectsAssignment}.Delete`
+  );
 
   const subjectData = useMemo(
     () =>
@@ -65,20 +84,21 @@ const SubjectTable = ({
   );
 
   const actions = useCallback(
-    ({ popover, row }: any) => (
-      <MenuList disablePadding dense>
-        <MenuItem
-          onClick={() => {
-            onDelete(row);
-            popover.onClose();
-          }}
-        >
-          <RemoveCircle sx={{ width: '20px', height: '20px', color: 'error.main' }} />
-          Remove
-        </MenuItem>
-      </MenuList>
-    ),
-    [onDelete]
+    ({ popover, row }: any) =>
+      canDelete ? (
+        <MenuList disablePadding dense>
+          <MenuItem
+            onClick={() => {
+              onDelete(row);
+              popover.onClose();
+            }}
+          >
+            <RemoveCircle sx={{ width: '20px', height: '20px', color: 'error.main' }} />
+            Remove
+          </MenuItem>
+        </MenuList>
+      ) : null,
+    [onDelete, canDelete]
   );
 
   const columns: IColumn[] = useMemo(
@@ -111,29 +131,42 @@ const SubjectTable = ({
         sticky: true,
         enumOptions: PublishUnpublishStatusOptions,
         render(value, row) {
-          const statusColor =
-            row.status === SubjectAssignmentStatus.Published
-              ? theme.vars.palette.success.main
-              : theme.vars.palette.text.secondary;
+          const isPublished = row.status === SubjectAssignmentStatus.Published;
+          const isInteractive = !isPublished;
+
+          const statusColor = isPublished
+            ? theme.vars.palette.success.main
+            : theme.vars.palette.text.secondary;
 
           return (
             <CustomTooltip title={value} arrow placement="left">
               {/* Using a span or div wrapper to avoid nested button issues if any */}
               <Box component="span">
                 <IconButton
+                  disabled={!isInteractive}
                   onClick={() => onToggleStatus(row as ISubjectFormValues)}
                   sx={{
                     p: 0.6,
                     borderRadius: '50%',
                     backgroundColor: 'rgba(0,0,0,0.06)',
                     transition: 'all 0.2s',
-                    cursor: 'pointer',
-                    '&:hover': { transform: 'scale(1.1)', backgroundColor: 'rgba(0,0,0,0.08)' },
+                    cursor: isInteractive ? 'pointer' : 'default',
+                    '&:hover': {
+                      transform: isInteractive ? 'scale(1.1)' : 'none',
+                      backgroundColor: 'rgba(0,0,0,0.08)',
+                    },
+                    '&.Mui-disabled': {
+                      backgroundColor: 'rgba(0,0,0,0.06)',
+                    },
                   }}
                 >
                   <Iconify
                     icon={GlobalIcons.tick}
-                    sx={{ width: 20, height: 20, color: statusColor }}
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      color: statusColor,
+                    }}
                   />
                 </IconButton>
               </Box>
@@ -155,8 +188,9 @@ const SubjectTable = ({
             <ThreeDotsActions
               placement="right-top"
               actions={(prop) => actions({ ...prop, row: row as ISubjectFormValues })}
-              showViewIcon
-              showEditIcon
+              showViewIcon={canView}
+              showEditIcon={canAdd}
+              showThreeDots={canDelete}
               handleViewClick={() => onView(row as ISubjectFormValues)}
               handleEditClick={() => onEdit(row as ISubjectFormValues)}
             />
@@ -167,6 +201,9 @@ const SubjectTable = ({
 
     [
       actions,
+      canAdd,
+      canDelete,
+      canView,
       onEdit,
       onToggleStatus,
       onView,
@@ -182,20 +219,22 @@ const SubjectTable = ({
       noDataText={
         <>
           No Subject data found
-          <Box
-            onClick={() => addSubjectDialog.onTrue()}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Allocate Subjects
-          </Box>
+          {canAdd && (
+            <Box
+              onClick={() => addSubjectDialog.onTrue()}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Allocate Subjects
+            </Box>
+          )}
         </>
       }
       serverSidePagination

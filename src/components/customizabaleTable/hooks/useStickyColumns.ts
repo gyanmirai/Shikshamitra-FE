@@ -7,7 +7,6 @@ interface UseStickyColumnsProps {
   columnVisibility: Record<string, boolean>;
   headerRefs: (number | null)[];
   paginatedData: IData[];
-  columnWidths: Record<string, number>;
   isLoading: boolean;
   tableUniqId: string;
 }
@@ -17,7 +16,6 @@ export const useStickyColumns = ({
   columnVisibility,
   headerRefs,
   paginatedData,
-  columnWidths,
   isLoading,
   tableUniqId,
 }: UseStickyColumnsProps) => {
@@ -77,7 +75,7 @@ export const useStickyColumns = ({
         });
       });
     }, 100);
-  }, [columnVisibility, columns, headerRefs, paginatedData, columnWidths, isLoading, tableUniqId]);
+  }, [columnVisibility, columns, headerRefs, paginatedData, isLoading, tableUniqId]);
 
   /**
    * Memoization Justification:

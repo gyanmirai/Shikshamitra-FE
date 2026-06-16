@@ -7,7 +7,7 @@ import {
   List,
   Stack,
   Paper,
-  Divider,
+  Button,
   Checkbox,
   ListItem,
   Skeleton,
@@ -122,11 +122,6 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
     [filteredStudents, selectedStudentIds]
   );
 
-  const someSelected = useMemo(
-    () => filteredStudents.some((s) => selectedStudentIds.includes(s.id)) && !selectAllChecked,
-    [filteredStudents, selectedStudentIds, selectAllChecked]
-  );
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Search Header */}
@@ -141,16 +136,28 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
         }}
       >
         <Stack spacing={1.5}>
-          <TextField
-            size="small"
-            fullWidth
-            placeholder="Search by name, admission #, or roll #"
-            value={localSearchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            InputProps={{
-              startAdornment: <Iconify icon="solar:magnifer-linear" sx={{ mr: 1 }} />,
-            }}
-          />
+          <Stack direction="row" spacing={1} alignItems="center">
+            <TextField
+              size="small"
+              fullWidth
+              placeholder="Search by name, admission #, or roll #"
+              value={localSearchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              InputProps={{
+                startAdornment: <Iconify icon="solar:magnifer-linear" sx={{ mr: 1 }} />,
+              }}
+            />
+            <Button
+              size="small"
+              variant={selectAllChecked ? 'contained' : 'outlined'}
+              onClick={handleSelectAllToggle}
+              color="success"
+              disabled={filteredStudents.length === 0}
+              sx={{ whiteSpace: 'nowrap', minWidth: 96 }}
+            >
+              {selectAllChecked ? 'Clear All' : 'Select All'}
+            </Button>
+          </Stack>
           <Typography variant="caption" color="text.secondary">
             {selectedStudentIds.length} student{selectedStudentIds.length !== 1 ? 's' : ''} selected
           </Typography>
@@ -175,33 +182,6 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
             </Box>
           ) : (
             <List disablePadding>
-              {/* Select All Option */}
-              {filteredStudents.length > 0 && (
-                <>
-                  <ListItem disablePadding>
-                    <ListItemButton onClick={handleSelectAllToggle} sx={{ py: 1, px: 1 }}>
-                      <ListItemIcon sx={{ minWidth: 40 }}>
-                        <Checkbox
-                          edge="start"
-                          checked={selectAllChecked}
-                          indeterminate={someSelected}
-                          tabIndex={-1}
-                          disableRipple
-                        />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          <Typography variant="subtitle2" fontWeight={600}>
-                            Select All
-                          </Typography>
-                        }
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                  <Divider />
-                </>
-              )}
-
               {/* Individual Students */}
               {filteredStudents.map((student) => (
                 <ListItem key={student.id} disablePadding>
@@ -239,14 +219,6 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
           )}
         </Box>
       </Paper>
-      {/* Footer Info */}
-      {!isLoading && filteredStudents.length > 0 && (
-        <Box sx={{ pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="caption" color="text.secondary">
-            Showing {filteredStudents.length} of {students.length} students
-          </Typography>
-        </Box>
-      )}
     </Box>
   );
 };

@@ -88,7 +88,15 @@ const paperSx = {
   '&:hover': { boxShadow: 4 },
 } as const;
 
-function buildInitialValues(detailData?: any): FormValues {
+function buildInitialValues(
+  detailData?: any,
+  defaults?: {
+    boardId?: string;
+    mediumId?: string;
+    standardId?: string;
+    divisionId?: string;
+  }
+): FormValues {
   if (detailData) {
     const typeId = detailData.concessionTypeId;
     const selectedFeeHeads: Record<string, string[]> = {};
@@ -135,13 +143,13 @@ function buildInitialValues(detailData?: any): FormValues {
   }
 
   return {
-    boardId: '',
+    boardId: defaults?.boardId || '',
     boardName: '',
-    mediumId: '',
+    mediumId: defaults?.mediumId || '',
     mediumName: '',
-    standardId: '',
+    standardId: defaults?.standardId || '',
     standardName: '',
-    divisionId: '',
+    divisionId: defaults?.divisionId || '',
     divisionName: '',
     studentId: '',
     studentName: '',
@@ -185,7 +193,14 @@ function computeDiscount(
 // Component
 // ---------------------------------------------------------------------------
 
-const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editData }) => {
+const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
+  onClose,
+  editData,
+  defaultBoardId = '',
+  defaultMediumId = '',
+  defaultStandardId = '',
+  defaultDivisionId = '',
+}) => {
   const isEditMode = !!editData?.id;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const theme = useTheme();
@@ -265,7 +280,16 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
    */
   const feeHeadsRef = useRef<any[]>([]);
 
-  const initialValues = useMemo(() => buildInitialValues(concessionData?.data), [concessionData]);
+  const initialValues = useMemo(
+    () =>
+      buildInitialValues(concessionData?.data, {
+        boardId: defaultBoardId,
+        mediumId: defaultMediumId,
+        standardId: defaultStandardId,
+        divisionId: defaultDivisionId,
+      }),
+    [concessionData, defaultBoardId, defaultMediumId, defaultStandardId, defaultDivisionId]
+  );
 
   const formik = useFormik<FormValues>({
     initialValues,
@@ -387,7 +411,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
     popupConfig: { error: false },
   }) as { data: any; isLoading: boolean; isError: boolean; error: any };
 
-  const feeHeads: any[] = useMemo(() => feeStructureData?.feeHeads || [], [feeStructureData]);
+  const feeHeads: any[] = useMemo(
+    () => feeStructureData?.feeHeads?.filter((item: any) => item.isSelected) || [],
+    [feeStructureData]
+  );
 
   // Detect the "no fee structure assigned" business-rule error
   const noFeeStructureError: boolean =
@@ -490,8 +517,21 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
   // -- Side effects ----------------------------------------------------------
 
   useEffect(() => {
-    setBoards(currentYear?.boards || []);
-  }, [currentYear]);
+    const yearBoards = currentYear?.boards || [];
+    setBoards(yearBoards);
+    if (yearBoards.length > 0) {
+      if (!values.boardId) {
+        const firstBoard = yearBoards[0];
+        setFieldValue('boardId', firstBoard.id);
+        const firstMedium = firstBoard?.educationMediums?.[0]?.id ?? '';
+        setFieldValue('mediumId', firstMedium);
+      } else if (!values.mediumId) {
+        const board = yearBoards.find((b: any) => b.id === values.boardId);
+        const firstMedium = board?.educationMediums?.[0]?.id ?? '';
+        setFieldValue('mediumId', firstMedium);
+      }
+    }
+  }, [currentYear, values.boardId, values.mediumId, setFieldValue]);
 
   useEffect(() => {
     const board = boards.find((b: any) => b.id === values.boardId);

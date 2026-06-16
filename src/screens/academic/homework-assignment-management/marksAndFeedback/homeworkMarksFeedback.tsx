@@ -11,6 +11,7 @@ import { EmptyContent } from 'src/components/empty-content';
 import { Box, TextField, Autocomplete } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetHomeworksQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { StudentSubmissions } from '../homeworkCreation/studentSubmission/homeworkStudentSubmission';
@@ -82,6 +83,7 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   const subjectOptions = (() => {
     const allOptions: { value: string; label: string }[] = [];
     subjectOptionsData?.data?.items?.forEach((item: any) => {
+      if (item.status === SubjectAssignmentStatus.Draft) return;
       if (item.subjects?.length > 1 && item.electiveGroupName) {
         // Elective group — each subject as its own dropdown entry
         item.subjects.forEach((sub: any, index: number) => {

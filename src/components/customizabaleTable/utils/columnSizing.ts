@@ -1,7 +1,7 @@
 import type { IColumn } from '../types';
 
-export const getColumnSizeSx = (column: IColumn, resizedWidth?: number) => {
-  const width = resizedWidth ?? column.width;
+export const getColumnSizeSx = (column: IColumn) => {
+  const { width } = column;
 
   return {
     ...(width !== undefined ? { width } : {}),

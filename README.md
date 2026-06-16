@@ -25,6 +25,7 @@ TODO: Describe and show how to build your code and run the tests.
 
 Give execution permissions to the shell script by running
 
+
 ```
 chmod +x build-and-copy.sh
 

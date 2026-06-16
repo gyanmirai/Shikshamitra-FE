@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetConcessionTypeByIdQuery } from 'src/redux/finance/concessionType';
+import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
@@ -49,6 +50,7 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [localDocs, setLocalDocs] = useState<IConcessionSubmittedDocument[]>([]);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
 
   const documents = React.useMemo(() => concessionData?.data?.documents || [], [concessionData]);
 
@@ -56,7 +58,9 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
     if (!isLoadingDetails && documents.length > 0) {
       const mergedDocs = documents.map((doc: any) => {
         const docId = doc.id || doc.documentId;
-        const existing = (submittedDocuments || []).find((d) => d.documentId === docId);
+        const existing = (submittedDocuments || []).find(
+          (d: IConcessionSubmittedDocument) => d.documentId === docId
+        );
         return {
           documentId: docId,
           documentName: doc.documentName,
@@ -69,9 +73,12 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
       const isDifferent = JSON.stringify(mergedDocs) !== JSON.stringify(localDocs);
       if (isDifferent) {
         setLocalDocs(mergedDocs);
-        // Sync back to parent if we added defaults or if it was empty
-        if (!submittedDocuments || submittedDocuments.length < mergedDocs.length) {
-          onSave(mergedDocs);
+        // Only pass uploaded documents (with URLs) to parent
+        const uploadedDocs = mergedDocs.filter(
+          (doc: IConcessionSubmittedDocument) => doc.url && doc.url.trim() !== ''
+        );
+        if (uploadedDocs.length > 0) {
+          onSave(uploadedDocs);
         }
       }
     } else if (!isLoadingDetails && documents.length === 0) {
@@ -97,7 +104,7 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
 
     try {
       const response = await uploadCurriculumFile(formData).unwrap();
-      const uploadedUrl = response.data;
+      const uploadedUrl = response.data || null;
 
       const updatedDocs = [...localDocs];
       const existingIndex = updatedDocs.findIndex((d) => d.documentId === uploadingDocId);
@@ -118,7 +125,11 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
       }
 
       setLocalDocs(updatedDocs);
-      onSave(updatedDocs);
+      // Only pass uploaded documents (with URLs) to parent
+      const uploadedDocs = updatedDocs.filter(
+        (doc: IConcessionSubmittedDocument) => doc.url && doc.url.trim() !== ''
+      );
+      onSave(uploadedDocs);
       shikshaMitraToast.success({
         message: `Document "${newDoc.documentName}" uploaded successfully.`,
       });
@@ -162,7 +173,9 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
             <Stack spacing={1.5}>
               {(documents || []).map((doc: any) => {
                 const docId = doc.id || doc.documentId;
-                const submitted = localDocs.find((d) => d.documentId === docId);
+                const submitted = localDocs.find(
+                  (d: IConcessionSubmittedDocument) => d.documentId === docId
+                );
                 return (
                   <Box
                     key={docId}
@@ -196,8 +209,9 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
                         {submitted?.url && (
                           <IconButton
                             size="small"
-                            onClick={() => {
-                              window.open(submitted.url, '_blank');
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewDoc({ url: submitted.url, name: submitted.documentName });
                             }}
                           >
                             <Iconify icon="carbon:view-filled" />
@@ -226,6 +240,13 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
           </>
         )}
       </CardContent>
+
+      <DocumentPreviewDialog
+        open={!!previewDoc}
+        onClose={() => setPreviewDoc(null)}
+        url={previewDoc?.url || ''}
+        documentName={previewDoc?.name}
+      />
     </Card>
   );
 };

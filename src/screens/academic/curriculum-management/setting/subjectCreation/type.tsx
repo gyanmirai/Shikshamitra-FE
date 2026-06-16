@@ -26,4 +26,7 @@ export interface ISubjectTableProps {
   onDelete: (data: ISubject) => void;
   onEdit: (data: ISubject) => void;
   onOpenDrawer: () => void;
+  canAdd?: boolean;
+  canView?: boolean;
+  canDelete?: boolean;
 }

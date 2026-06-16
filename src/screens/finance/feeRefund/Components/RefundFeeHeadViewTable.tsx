@@ -230,7 +230,6 @@ const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
             Total Paid :{' '}
             <strong
               style={{
-                color: theme.palette.text.primary,
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
@@ -296,7 +295,7 @@ const RefundFeeHeadViewTable: React.FC<Props> = ({ data }) => {
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Total Paid :{' '}
-          <strong style={{ color: theme.palette.text.primary, fontVariantNumeric: 'tabular-nums' }}>
+          <strong style={{ fontVariantNumeric: 'tabular-nums' }}>
             {formatCurrency(grandTotalPaid)}
           </strong>
         </Typography>

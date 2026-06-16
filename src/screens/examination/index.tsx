@@ -14,6 +14,7 @@ import QuizManagement from './quizManagement';
 import GradeEntry from './gradeEntry/gradeEntry';
 import ScheduleExam from './scheduleExam/ScheduleExam';
 import GradingAndAnalytics from './gradingAndAnalytics';
+import ResultCreation from './resultCreation/ResultCreation';
 import ExaminationDashboardTab from './dashboard/examination-dashboard-tab';
 // eslint-disable-next-line import/no-named-as-default
 import AssessmentManagement from './assessmentManagement.tsx/assessment-management';
@@ -45,6 +46,11 @@ const TABS = [
     value: 'quizManagement',
     label: 'Quiz Management',
     component: (props: TabComponentType) => <QuizManagement {...props} />,
+  },
+  {
+    value: 'resultCreation',
+    label: 'Result Creation',
+    component: (props: TabComponentType) => <ResultCreation {...props} />,
   },
   {
     value: 'studentPerformanceAndAnalytics',

@@ -1,10 +1,10 @@
 import React from 'react';
-import { varAlpha } from 'src/theme/styles';
+import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
-import { Flag, Event, Description, CurrencyRupee } from '@mui/icons-material';
+import { Event, Description, CurrencyRupee, CalendarToday } from '@mui/icons-material';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 
 import type { IChargeDetailData } from '../type';
@@ -14,6 +14,8 @@ interface ChargeDetailsCardProps {
 }
 
 const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => {
+  const detailIconColor = 'success.main';
+
   // Backend enum: Low=0, Medium=1, High=2
   const getPriorityLabel = (value?: number) => {
     switch (value) {
@@ -57,74 +59,41 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
         <Grid container spacing={3}>
           {/* Top Row: Key Metrics */}
           <InfoItem
+            icon={<Description />}
+            label="Charge Name"
+            value={charge?.chargeName || 'N/A'}
+            iconColor={detailIconColor}
+          />
+          <InfoItem
             icon={<CurrencyRupee />}
             label="Amount"
             value={`₹ ${formatNumber(String(charge?.amount || 0))}`}
+            iconColor={detailIconColor}
           />
-          <InfoItem icon={<Description />} label="Category" value={charge?.categoryName || 'N/A'} />
+          <InfoItem
+            icon={<Description />}
+            label="Category"
+            value={charge?.categoryName || 'N/A'}
+            iconColor={detailIconColor}
+          />
           <InfoItem
             icon={<Event />}
             label="Due Date"
-            value={charge?.dueDate ? new Date(charge.dueDate).toLocaleDateString() : 'N/A'}
+            value={charge?.dueDate ? dayjs(charge.dueDate).format('DD-MM-YYYY') : 'N/A'}
+            iconColor={detailIconColor}
           />
-
-          {/* Divider */}
-          <Grid size={{ xs: 12 }}>
-            <Divider sx={{ borderStyle: 'dashed' }} />
-          </Grid>
-
-          {/* Description Section */}
-          <Grid size={{ xs: 12 }}>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Box
-                sx={{
-                  minWidth: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  bgcolor: (theme) => varAlpha(theme.palette.info.mainChannel, 0.08),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'info.main',
-                  mt: 0.5,
-                }}
-              >
-                <Flag sx={{ fontSize: 20 }} />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle2">Description & Notes</Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ lineHeight: 1.6, mb: 1.5 }}
-                >
-                  {charge?.purposeDescription || 'No description provided.'}
-                </Typography>
-
-                {charge?.additionalNotes && (
-                  <Box
-                    sx={{
-                      p: 2,
-                      borderRadius: 1,
-                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.04),
-                      borderLeft: '3px solid',
-                      borderColor: 'primary.main',
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 0.5 }}
-                    >
-                      Additional Notes
-                    </Typography>
-                    <Typography variant="body2" color="text.primary">
-                      {charge.additionalNotes}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            </Box>
-          </Grid>
+          <InfoItem
+            icon={<CalendarToday />}
+            label="Created Date"
+            value={charge?.appliedOn ? dayjs(charge.appliedOn).format('DD-MM-YYYY') : 'N/A'}
+            iconColor={detailIconColor}
+          />
+          <InfoItem
+            icon={<Description />}
+            label="Description"
+            value={charge?.purposeDescription || 'No description provided.'}
+            iconColor={detailIconColor}
+          />
         </Grid>
       </Box>
     </Paper>

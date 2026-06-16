@@ -368,6 +368,7 @@ export const BoardForm = ({
           loading={isLoading || isUpdateLoading}
           variant="contained"
           size="small"
+          type="submit"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           Submit

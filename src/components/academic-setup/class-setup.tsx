@@ -57,6 +57,7 @@ interface ClassSetupProps {
 }
 
 const ClassSetup = ({ organizationId }: ClassSetupProps) => {
+  const dispatch = useDispatch();
   const { data: classes, isLoading: isGetLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -148,6 +149,7 @@ const ClassSetup = ({ organizationId }: ClassSetupProps) => {
             color="error"
             onClick={async () => {
               await deleteClass(editData?.id || '');
+              dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
               confirm.onFalse();
               setEditData(null);
               // isInitial.current = true;
@@ -238,7 +240,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
     initialValues: {
       class: editData ? editData.name : '',
       limit: editData ? editData.ageLowerLimit : null,
-      shift: editData ? editData?.shift : '',
+      shift: editData ? editData?.shiftId || editData?.shift : '',
     },
     validationSchema: Yup.object().shape({
       class: Yup.string().required('Class is required'),
@@ -405,6 +407,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
           loading={isLoading || isUpdateLoading}
           variant="contained"
           size="small"
+          type="submit"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           Submit

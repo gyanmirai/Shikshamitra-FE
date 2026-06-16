@@ -106,7 +106,7 @@ const SubjectAssignmentForm = ({
                     fullWidth
                     size="small"
                     disableCloseOnSelect
-                    disabled={isPublished}
+                    disabled={isEdit || isPublished}
                     options={subjectsOptions}
                     loading={isSubjectOptionsLoading}
                     noOptionsText={
@@ -204,7 +204,7 @@ const SubjectAssignmentForm = ({
                       formik={formik}
                       subject={subject}
                       isCore={formik.values.subjectType === 0}
-                      isPublished={isPublished}
+                      isPublished={isEdit || isPublished}
                       onSubjectChange={handleSubjectFieldChange}
                       onFileUpload={handleFileUpload}
                       activeSubjectId={activeSubjectId}

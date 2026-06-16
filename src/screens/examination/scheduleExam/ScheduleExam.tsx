@@ -135,7 +135,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
             description="Manage all scheduled exams with complete details—subjects, timings. Add, edit, or delete exams as required."
             links={[
               { name: 'Academics', href: '/academic/dashboard' },
-              { name: 'Examination', href: '/academic/examinationDashboard' },
+              { name: 'Examination' },
               { name: 'Schedule Exam' },
             ]}
           />

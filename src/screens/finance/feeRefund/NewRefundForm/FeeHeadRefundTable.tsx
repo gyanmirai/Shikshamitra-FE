@@ -7,8 +7,8 @@ import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { Box, Alert, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
-import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import { useGetAdjustmentEligibilityQuery } from 'src/redux/finance/adjustments/adjustmentApi';
 import { useGetRefundEligibilityQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
@@ -19,21 +19,6 @@ import RefundTableSkeleton from './feeHeadRefundTable/RefundTableSkeleton';
 import type { IMonthItem, RefundFormik, IFeeHeadPayment } from './types';
 
 // ─── Month name mapping (matches backend MonthEnum integer values) ─────────────
-
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -110,8 +95,8 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       feeHeadId: fh.feeHeadId,
       feeHeadName: fh.feeHeadName,
       items: fh.months.map((m): IMonthItem => {
-        const monthIndex = typeof m.month === 'number' ? m.month - 1 : 0;
-        const monthLabel = MONTH_NAMES[monthIndex] ?? `Month ${m.month}`;
+        const monthIndex = typeof m.month === 'number' ? m.month : 0;
+        const monthLabel = FeeMonth[monthIndex] ?? `Month ${m.month}`;
         const refunded = isAdj ? ((m as any).adjusted ?? 0) : ((m as any).refunded ?? 0);
         const refundable = isAdj ? ((m as any).adjustable ?? 0) : ((m as any).refundable ?? 0);
         const concession = (m as any).concession ?? 0;

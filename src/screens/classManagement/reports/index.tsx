@@ -1,14 +1,19 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CommonReport from 'src/components/common-report';
 import sortQueryString from 'src/utils/sort-query-string';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { Box, Chip, Button, IconButton } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { classManagementPermissions } from 'src/constants/class-management';
 
 import ClassMasterReport from './components/ClassMasterReport';
 import ClassCircularReport from './components/ClassCircularReport';
@@ -38,6 +43,10 @@ import ParentTeacherMeetingAttendanceReport from './components/ParentTeacherMeet
 
 const ReportsScreen = () => {
   const openGenerateReport = useBoolean();
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  const canAdd = hasGrantedPermission(permissions, `${classManagementPermissions.reports}.Add`);
+
   const [query, setQuery] = useState({
     sorting: '',
     skipCount: 0,
@@ -52,20 +61,22 @@ const ReportsScreen = () => {
           { name: 'Class Management', href: '/classManagement/dashboard/' },
           { name: 'Reports' },
         ]}
-        isBack={openGenerateReport.value}
+        isBack={openGenerateReport.value && canAdd}
         onBack={openGenerateReport.onFalse}
         action={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={openGenerateReport.onTrue}
-            startIcon={<Iconify icon={GlobalIcons.report} />}
-          >
-            Generate Report
-          </Button>
+          canAdd ? (
+            <Button
+              variant="contained"
+              size="small"
+              onClick={openGenerateReport.onTrue}
+              startIcon={<Iconify icon={GlobalIcons.report} />}
+            >
+              Generate Report
+            </Button>
+          ) : null
         }
       />
-      {openGenerateReport.value ? (
+      {openGenerateReport.value && canAdd ? (
         <CommonReport
           categories={[
             {

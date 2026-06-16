@@ -146,20 +146,20 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const COLUMNS = [
     { label: '#', size: 0.5, align: 'left' },
-    { label: 'Fee Head', size: 2.0, align: 'left' },
-    { label: 'Amount', size: 1.8, align: 'left' },
-    { label: 'One Time', size: 1.5, align: 'center' },
-    { label: 'Payable Month', size: 2.5, align: 'left' },
+    { label: 'Fee Category', size: 2, align: 'left' },
+    { label: 'Fee Head', size: 2.6, align: 'left' },
+    { label: 'Amount', size: 1.7, align: 'left' },
+    { label: 'One Time', size: 1.3, align: 'center' },
+    { label: 'Payable Month', size: 2, align: 'left' },
     {
       label: 'Optional',
-      size: 1.7,
+      size: 1.4,
       align: 'center',
       desc: 'This is an optional fee head, it may or may not be applicable to all students. Select applicable students accordingly when you assign fee structures.',
     },
     { label: '', size: 0.5, align: 'left' },
   ];
 
-  console.log('------formik', formik.errors);
   useEffect(() => {
     onDirtyChange?.(isEditing && (isNew || formik.dirty));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -724,13 +724,19 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         </Typography>
                       </Grid>
 
-                      <Grid size={2.0} sx={{ pr: 1, pt: 0.75 }}>
+                      <Grid size={2} sx={{ pr: 1, pt: 0.75 }}>
+                        <Typography variant="body2" noWrap>
+                          {item.feeCategoryName || (item as any).categoryName || '-'}
+                        </Typography>
+                      </Grid>
+
+                      <Grid size={2.6} sx={{ pr: 1, pt: 0.75 }}>
                         <Typography variant="body2" noWrap>
                           {item.feeHeadName}
                         </Typography>
                       </Grid>
 
-                      <Grid size={1.8} sx={{ pr: 1 }}>
+                      <Grid size={1.7} sx={{ pr: 1 }}>
                         <NumericFormatCustom
                           size="small"
                           fullWidth
@@ -750,7 +756,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         />
                       </Grid>
 
-                      <Grid size={1.5} display="flex" justifyContent="center" sx={{ pt: 0.5 }}>
+                      <Grid size={1.3} display="flex" justifyContent="center" sx={{ pt: 0.5 }}>
                         <Box
                           component="div"
                           onClick={() => {
@@ -795,7 +801,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         </Box>
                       </Grid>
 
-                      <Grid size={2.5} sx={{ pr: 1, display: 'flex', flexDirection: 'column' }}>
+                      <Grid size={2} sx={{ pr: 1, display: 'flex', flexDirection: 'column' }}>
                         <CustomSelect
                           label="Month"
                           options={monthOptions}
@@ -826,7 +832,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         />
                       </Grid>
 
-                      <Grid size={1.7} display="flex" justifyContent="center" sx={{ pt: 0.5 }}>
+                      <Grid size={1.4} display="flex" justifyContent="center" sx={{ pt: 0.5 }}>
                         <Box
                           component="div"
                           onClick={() =>

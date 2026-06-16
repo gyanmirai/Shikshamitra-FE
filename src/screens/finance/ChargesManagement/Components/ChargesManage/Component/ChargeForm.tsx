@@ -107,7 +107,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         divisionIds: [] as string[],
         // Selected students (multiple, from scope lookup)
         selectedStudentIds: [] as string[],
-        additionalNotes: editData.additionalNotes || '',
       };
     }
     return {
@@ -122,7 +121,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       classIds: [] as string[],
       divisionIds: [] as string[],
       selectedStudentIds: [] as string[],
-      additionalNotes: '',
     };
   }, [isEdit, editData]);
 
@@ -183,7 +181,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
           amount: parseFloat(String(values.amount)),
           dueDate: values.dueDate ? dayjs(values.dueDate).toISOString() : null,
           priority: parseInt(values.priority, 10),
-          additionalNotes: values.additionalNotes,
         };
 
         if (isEdit && editData) {
@@ -321,9 +318,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   const isStudentSelected = (studentId: string) => values.selectedStudentIds.includes(studentId);
   const allSelected =
     studentOptions.length > 0 && values.selectedStudentIds.length === studentOptions.length;
-  const someSelected =
-    values.selectedStudentIds.length > 0 &&
-    values.selectedStudentIds.length < studentOptions.length;
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -741,46 +735,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         )}
                       </Box>
                     )}
-                  </Paper>
-                </Grid>
-                {/* Additional Notes */}
-                <Grid size={{ xs: 12 }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 1.5,
-                      mb: 1.5,
-                      borderRadius: 2,
-                      transition: 'box-shadow 0.2s ease',
-                      '&:hover': { boxShadow: 4 },
-                    }}
-                  >
-                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                      <Iconify
-                        icon="solar:notes-bold-duotone"
-                        width={18}
-                        sx={{ color: 'primary.main' }}
-                      />
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          Additional Notes
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Add any internal remarks or special conditions
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ mb: 2 }} />
-                    <TextField
-                      name="additionalNotes"
-                      label="Additional Notes"
-                      multiline
-                      minRows={3}
-                      fullWidth
-                      value={values.additionalNotes}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    />
                   </Paper>
                 </Grid>
               </Grid>

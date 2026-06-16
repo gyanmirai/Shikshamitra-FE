@@ -23,6 +23,7 @@ export interface IFeeTableProps {
   onCollectFee: (row: IFeeData) => void;
   onView: (row: IFeeData) => void;
   onGiveAdjustment: (row: IFeeData) => void;
+  academicFilters?: import('src/screens/finance/hooks/useFinanceAcademicFilters').UseFinanceAcademicFiltersResult;
 }
 // Fee term details (monthly/quarterly/etc.)
 export interface IFeeTerm {

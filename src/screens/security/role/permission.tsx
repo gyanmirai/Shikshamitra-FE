@@ -142,7 +142,7 @@ export default function Permission({
         </Typography>
       </Box>
       <Scrollbar>
-        <Stack spacing={0.5} sx={{ p: 1 }}>
+        <Stack spacing={0.5} sx={{ p: 1, pb: 8 }}>
           {modules.map((module) => {
             const isSelected = selectedModule.title === module.title;
             const hasVisibility = findVisibility(module.permissionName);
@@ -201,7 +201,7 @@ export default function Permission({
       </Box>
 
       <Scrollbar sx={{ p: 2 }}>
-        <Stack spacing={1} sx={{ p: 1 }}>
+        <Stack spacing={1} sx={{ p: 1, pb: 8 }}>
           {selectedModule.submodule && selectedModule.submodule.length > 0 ? (
             selectedModule.submodule.map((subItem: any) => {
               const isSelected = expandedSubModule === subItem.title;
@@ -369,7 +369,7 @@ export default function Permission({
 
       <Scrollbar sx={{ p: 2.5, zIndex: 1 }}>
         {expandedSubModule ? (
-          <Stack spacing={1}>
+          <Stack spacing={1} sx={{ pb: 8 }}>
             {/* Find the selected submodule object */}
             {(() => {
               const activeSubModule = selectedModule.submodule?.find(
@@ -466,7 +466,19 @@ export default function Permission({
       sx={{ height: 'calc(100vh - 100px)', p: 1 }}
     >
       {isPermissionLoading ? (
-        <CircularProgress />
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flex: 1,
+            height: '100%',
+            width: '100%',
+            minHeight: 200,
+          }}
+        >
+          <CircularProgress />
+        </Box>
       ) : (
         <>
           <Box sx={{ width: { xs: '100%', md: 280 }, flexShrink: 0, height: '100%' }}>

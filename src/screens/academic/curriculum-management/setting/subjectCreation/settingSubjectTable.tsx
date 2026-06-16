@@ -22,6 +22,9 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
   onDelete,
   onEdit,
   onOpenDrawer,
+  canAdd = true,
+  canView = true,
+  canDelete = true,
 }) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const {
@@ -66,8 +69,8 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
             <ThreeDotsActions
               showThreeDots={false}
               placement="right-top"
-              showDeleteIcon
-              showEditIcon
+              showDeleteIcon={canDelete}
+              showEditIcon={canAdd}
               handleDeleteClick={() => {
                 onDelete(row as ISubject);
               }}
@@ -79,7 +82,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
         },
       },
     ],
-    [onDelete, onEdit]
+    [canAdd, canDelete, onDelete, onEdit]
   );
 
   return (
@@ -89,23 +92,25 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
       noDataText={
         <>
           Subject Data Not Found{' '}
-          <Box
-            onClick={() => {
-              onOpenDrawer();
-              setOpenDialog(true);
-              setEditData(null);
-            }}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Subject
-          </Box>
+          {canAdd && (
+            <Box
+              onClick={() => {
+                onOpenDrawer();
+                setOpenDialog(true);
+                setEditData(null);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Subject
+            </Box>
+          )}
         </>
       }
       columns={columns}

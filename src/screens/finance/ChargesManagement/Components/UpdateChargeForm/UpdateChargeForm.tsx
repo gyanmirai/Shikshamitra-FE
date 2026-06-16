@@ -14,6 +14,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -60,6 +61,10 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   open,
   onClose,
   isEdit,
+  defaultBoardId = '',
+  defaultMediumId = '',
+  defaultStandardId = '',
+  defaultDivisionId = '',
 }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -76,6 +81,11 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   const [mediums, setMediums] = useState<any[]>([]);
   const [allDivision, setAllDivision] = useState<any[]>([]);
   const [studentSearch, setStudentSearch] = useState('');
+  const [pendingSelectionChange, setPendingSelectionChange] = useState<null | {
+    type: 'class' | 'division';
+    nextStandardIds?: string[];
+    nextDivisionIds?: string[];
+  }>(null);
 
   // Query hooks
   const [getClassByMedium, { data: classes, isLoading: classesLoading }] = useQueryAndMutation({
@@ -118,16 +128,15 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
       purposeDescription: '',
       amount: '',
       dueDate: null,
-      additionalNotes: '',
-      boardId: '',
-      educationMediumId: '',
-      standardId: [],
-      divisionIds: [],
+      boardId: defaultBoardId,
+      educationMediumId: defaultMediumId,
+      standardId: defaultStandardId ? [defaultStandardId] : [],
+      divisionIds: defaultDivisionId ? [defaultDivisionId] : [],
       studentIds: [],
       selectedStudents: [],
       selectionMode: 'students',
     };
-  }, [prefillValues]);
+  }, [prefillValues, defaultBoardId, defaultMediumId, defaultStandardId, defaultDivisionId]);
 
   const validationSchema = useMemo(
     () => createUpdateChargeValidationSchema(currentYear, isEditMode),
@@ -157,7 +166,6 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           purposeDescription: values.purposeDescription,
           amount: parseFloat(String(values.amount)),
           dueDate: dayjs(values.dueDate).toISOString(),
-          additionalNotes: values.additionalNotes,
           audience,
         };
 
@@ -184,6 +192,38 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
   const isDirty = useDirtyState(initialValues, values);
+
+  const applySelectionChange = useCallback(
+    (
+      change: {
+        type: 'class' | 'division';
+        nextStandardIds?: string[];
+        nextDivisionIds?: string[];
+      },
+      clearStudents = false
+    ) => {
+      if (change.type === 'class') {
+        const nextStandardIds = change.nextStandardIds || [];
+        setFieldValue('standardId', nextStandardIds);
+        setFieldTouched('standardId', false);
+        if (nextStandardIds.length !== 1) {
+          setFieldValue('divisionIds', []);
+        }
+      }
+
+      if (change.type === 'division') {
+        const nextDivisionIds = change.nextDivisionIds || [];
+        setFieldValue('divisionIds', nextDivisionIds);
+        setFieldTouched('divisionIds', false);
+      }
+
+      if (clearStudents) {
+        setFieldValue('studentIds', []);
+        setFieldValue('selectedStudents', []);
+      }
+    },
+    [setFieldValue, setFieldTouched]
+  );
 
   const {
     students: scopeStudents,
@@ -230,8 +270,21 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
 
   // Load boards on component mount
   useEffect(() => {
-    setBoards(currentYear?.boards || []);
-  }, [currentYear]);
+    const yearBoards = currentYear?.boards || [];
+    setBoards(yearBoards);
+    if (yearBoards.length > 0) {
+      if (!values.boardId) {
+        const firstBoard = yearBoards[0];
+        setFieldValue('boardId', firstBoard.id);
+        const firstMedium = firstBoard?.educationMediums?.[0]?.id ?? '';
+        setFieldValue('educationMediumId', firstMedium);
+      } else if (!values.educationMediumId) {
+        const board = yearBoards.find((b: any) => b.id === values.boardId);
+        const firstMedium = board?.educationMediums?.[0]?.id ?? '';
+        setFieldValue('educationMediumId', firstMedium);
+      }
+    }
+  }, [currentYear, values.boardId, values.educationMediumId, setFieldValue]);
 
   // Load mediums when board changes
   useEffect(() => {
@@ -349,6 +402,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             label="Charge Name *"
                             fullWidth
                             size="small"
+                            disabled={isEditMode}
                             value={values.chargeName}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
@@ -374,6 +428,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             value={values.chargeCategoryId}
                             onChange={(value) => {
                               setFieldValue('chargeCategoryId', value);
+                              setFieldTouched('chargeCategoryId', false);
                               const category = chargeCategories?.items?.find(
                                 (item: { id: string }) => item.id === value
                               );
@@ -381,12 +436,19 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             }}
                             error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
                             helperText={
-                              isEditMode
-                                ? 'Charge category cannot be changed after creation'
-                                : (touched.chargeCategoryId && errors.chargeCategoryId) || ''
+                              (touched.chargeCategoryId && errors.chargeCategoryId) as string
                             }
                             formControlProps={{ fullWidth: true }}
                           />
+                          {values.chargeCategoryId && (
+                            <Typography variant="caption" color="text.secondary" fontSize="0.75rem">
+                              {chargeCategories?.items?.find(
+                                (item: any) => item.id === values.chargeCategoryId
+                              )?.isApprovalRequired
+                                ? 'This charge need the approval from the authority'
+                                : 'This charge does not need the approval from the authority'}
+                            </Typography>
+                          )}
                         </ShakingTextField>
                       </Grid>
 
@@ -446,7 +508,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             name="purposeDescription"
                             label="Purpose/Description *"
                             multiline
-                            minRows={3}
+                            minRows={2}
                             fullWidth
                             value={values.purposeDescription}
                             onChange={formik.handleChange}
@@ -592,13 +654,19 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                                       const updated = isSelected
                                         ? values.standardId.filter((id) => id !== cls.id)
                                         : [...values.standardId, cls.id];
-                                      setFieldValue('standardId', updated);
-                                      setFieldTouched('standardId', false);
-                                      // Clear divisions if not single class
-                                      if (updated.length !== 1) {
-                                        setFieldValue('divisionIds', []);
+
+                                      if (isSelected && values.studentIds.length > 0) {
+                                        setPendingSelectionChange({
+                                          type: 'class',
+                                          nextStandardIds: updated,
+                                        });
+                                        return;
                                       }
-                                      setFieldValue('studentIds', []);
+
+                                      applySelectionChange(
+                                        { type: 'class', nextStandardIds: updated },
+                                        isSelected
+                                      );
                                     }}
                                     disabled={!values.educationMediumId}
                                   >
@@ -673,8 +741,19 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                                         const updated = isSelected
                                           ? values.divisionIds.filter((id) => id !== div.id)
                                           : [...values.divisionIds, div.id];
-                                        setFieldValue('divisionIds', updated);
-                                        setFieldTouched('divisionIds', false);
+
+                                        if (isSelected && values.studentIds.length > 0) {
+                                          setPendingSelectionChange({
+                                            type: 'division',
+                                            nextDivisionIds: updated,
+                                          });
+                                          return;
+                                        }
+
+                                        applySelectionChange(
+                                          { type: 'division', nextDivisionIds: updated },
+                                          isSelected
+                                        );
                                       }}
                                     >
                                       {div.name}
@@ -739,45 +818,27 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                   </Grid>
                 </Grid>
 
-                {/* Additional Notes */}
-                <Grid size={{ xs: 12 }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 2,
-                      transition: 'box-shadow 0.2s ease',
-                      '&:hover': { boxShadow: 4 },
-                    }}
-                  >
-                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                      <Iconify
-                        icon="solar:notes-bold-duotone"
-                        width={18}
-                        sx={{ color: 'primary.main' }}
-                      />
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          Additional Notes
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Add internal remarks or special conditions
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ mb: 2 }} />
-                    <TextField
-                      name="additionalNotes"
-                      label="Additional Notes"
-                      multiline
-                      minRows={3}
-                      fullWidth
-                      value={values.additionalNotes}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    />
-                  </Paper>
-                </Grid>
+                <ConfirmDialog
+                  open={!!pendingSelectionChange}
+                  icon="warning"
+                  onClose={() => setPendingSelectionChange(null)}
+                  title="Confirm Selection Change"
+                  content="This change will remove selected students. Do you want to continue?"
+                  action={
+                    <Button
+                      variant="contained"
+                      color="error"
+                      size="small"
+                      onClick={() => {
+                        if (!pendingSelectionChange) return;
+                        applySelectionChange(pendingSelectionChange, true);
+                        setPendingSelectionChange(null);
+                      }}
+                    >
+                      Continue
+                    </Button>
+                  }
+                />
               </Grid>
             </Box>
           </Scrollbar>

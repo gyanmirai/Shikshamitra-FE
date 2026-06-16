@@ -1,12 +1,16 @@
 // --- existing imports ---
+import type { RootState } from 'src/redux/store';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Box, MenuItem, MenuList } from '@mui/material';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetSeatAllocationTableDataQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
@@ -31,6 +35,12 @@ const SeatAllocationTable = ({
   onSeatAllocate,
   classId,
 }: SeatAllocationTableProps) => {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.seatAllocation}.Add`
+  );
+
   const {
     data: seatAllocationData,
     isLoading,
@@ -45,26 +55,27 @@ const SeatAllocationTable = ({
   });
 
   const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            onSeatAllocate(row);
-            openSeatAllocation.onTrue();
-            pop.onClose();
-          }}
-        >
-          <>
-            <Iconify
-              icon={row.status === 0 ? 'clarity:form-line' : GlobalIcons.edit}
-              sx={{ mr: 1 }}
-            />
-            {row.status === 0 ? 'Allocate Seats' : 'Update Seats'}
-          </>
-        </MenuItem>
-      </MenuList>
-    ),
-    [onSeatAllocate, openSeatAllocation]
+    ({ popover: pop, row }: any) =>
+      canAdd ? (
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              onSeatAllocate(row);
+              openSeatAllocation.onTrue();
+              pop.onClose();
+            }}
+          >
+            <>
+              <Iconify
+                icon={row.status === 0 ? 'clarity:form-line' : GlobalIcons.edit}
+                sx={{ mr: 1 }}
+              />
+              {row.status === 0 ? 'Allocate Seats' : 'Update Seats'}
+            </>
+          </MenuItem>
+        </MenuList>
+      ) : null,
+    [onSeatAllocate, openSeatAllocation, canAdd]
   );
 
   return (
