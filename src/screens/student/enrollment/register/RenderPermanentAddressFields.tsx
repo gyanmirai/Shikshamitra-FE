@@ -22,7 +22,7 @@ const RenderPermanentAddressFields = (props: any) => {
                 formik.setFieldValue('sameAsLocalForPermanent', e.target.checked);
                 formik.setFieldValue('isOpenPermanentAddress', !e.target.checked);
                 if (e.target.checked) {
-                  formik.setFieldValue('permanentAddressLine1', formik.values.localAddressLine1);
+                  formik.setFieldValue('permanentAddress', formik.values.localAddressLine1);
                   formik.setFieldValue('permanentAddressLine2', formik.values.localAddressLine2);
                   formik.setFieldValue('permanentAddressLine3', formik.values.localAddressLine3);
                   formik.setFieldValue('permanentCountry', formik.values.localCountry);
@@ -30,7 +30,7 @@ const RenderPermanentAddressFields = (props: any) => {
                   formik.setFieldValue('permanentCity', formik.values.localCity);
                   formik.setFieldValue('permanentPincode', formik.values.localPincode);
                 } else {
-                  formik.setFieldValue('permanentAddressLine1', '');
+                  formik.setFieldValue('permanentAddress', '');
                   formik.setFieldValue('permanentAddressLine2', '');
                   formik.setFieldValue('permanentAddressLine3', '');
                   formik.setFieldValue('permanentCountry', null);
@@ -48,14 +48,12 @@ const RenderPermanentAddressFields = (props: any) => {
       <Grid size={{ xs: 12, md: 4 }}>
         <TextField
           disabled={!isEdit}
-          name="permanentAddressLine1"
+          name="permanentAddress"
           label="Building No./Flat/House No."
-          value={formik.values.permanentAddressLine1 || ''}
+          value={formik.values.permanentAddress || ''}
           onChange={formik.handleChange}
-          error={
-            formik.touched.permanentAddressLine1 && Boolean(formik.errors.permanentAddressLine1)
-          }
-          helperText={formik.touched.permanentAddressLine1 && formik.errors.permanentAddressLine1}
+          error={formik.touched.permanentAddress && Boolean(formik.errors.permanentAddress)}
+          helperText={formik.touched.permanentAddress && formik.errors.permanentAddress}
           fullWidth
           size="small"
         />

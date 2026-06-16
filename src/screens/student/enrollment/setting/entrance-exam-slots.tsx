@@ -104,9 +104,9 @@ const EntranceExamSlots = () => {
   // Transform slots data to include formatted time strings
   const tableData = slots?.items?.map((item: ISlot) => ({
     ...item,
-    startTime: dayjs(item.startDateTime, 'HH:mm:ss').format('hh:mm A'),
+    startTime: dayjs(item.startDateTime).format('hh:mm A'),
     creationDate: dayjs(item.creationTime).format('MM-DD-YYYY'),
-    endTime: dayjs(item.endDateTime, 'HH:mm:ss').format('hh:mm A'),
+    endTime: dayjs(item.endDateTime).format('hh:mm A'),
   }));
 
   // Handles closing the incident form
@@ -385,10 +385,15 @@ export const SlotsForm = ({
   // Hydrate cascading state in edit mode once data is available
   useEffect(() => {
     if ((editData?.roomNo || editData?.roomId) && roomOptions.length > 0 && !selectedRoom) {
-      const match = roomOptions.find(
-        (r) =>
-          r.roomName === editData.roomNo || r.id === editData.roomNo || r.id === editData.roomId
-      );
+      const match = roomOptions.find((r) => {
+        const optionDigits = String(r.roomName).replace(/\D/g, '');
+        const editDigits = String(editData.roomNo || '').replace(/\D/g, '');
+        return (
+          r.id === editData.roomId ||
+          (!!optionDigits && !!editDigits && optionDigits === editDigits) ||
+          r.id === editData.roomNo
+        );
+      });
       if (match) {
         setSelectedRoom(match);
         formik.setFieldValue('roomId', match.id);
@@ -399,6 +404,7 @@ export const SlotsForm = ({
     if (!editData) {
       setSelectedRoom(null);
       formik.setFieldValue('roomId', '');
+      formik.setFieldValue('roomNo', '');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editData, roomOptions]);
@@ -417,11 +423,12 @@ export const SlotsForm = ({
   const formik = useFormik({
     initialValues: {
       slotName: editData?.slotName || '',
-      startDateTime: editData?.startDateTime ? dayjs(editData?.startDateTime, 'hh:mm A') : null,
-      endDateTime: editData?.endDateTime ? dayjs(editData?.endDateTime, 'hh:mm A') : null,
+      startDateTime: editData?.startDateTime ? dayjs(editData?.startDateTime) : null,
+      endDateTime: editData?.endDateTime ? dayjs(editData?.endDateTime) : null,
       duration: editData?.duration || '',
       studentLimit: editData?.studentLimit || '',
       roomId: editData?.roomId || '',
+      roomNo: editData?.roomNo || '',
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
@@ -463,6 +470,10 @@ export const SlotsForm = ({
       const newStartTime = values.startDateTime ? values.startDateTime.format('HH:mm:ss') : null;
       const newEndTime = values.endDateTime ? values.endDateTime.format('HH:mm:ss') : null;
 
+      // Extract numeric room number from selection
+      const roomNoString = String(values.roomNo || '').replace(/\D/g, '');
+      const parsedRoomNo = roomNoString ? parseInt(roomNoString, 10) : 0;
+
       try {
         if (editData) {
           await updateSlot({
@@ -470,20 +481,21 @@ export const SlotsForm = ({
             body: {
               academicYearId: currentYear?.id,
               slotName: values.slotName,
-              startTimeDate:
+              startDateTime:
                 values.startDateTime && date
                   ? dateConvertor(
                       dayjs(`${newDate} ${newStartTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
                     )
                   : null,
-              endTimeDate:
+              endDateTime:
                 values.endDateTime && date
                   ? dateConvertor(
                       dayjs(`${newDate} ${newEndTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
                     )
                   : null,
-              studentLimit: values.studentLimit,
+              studentLimit: Number(values.studentLimit),
               roomId: values.roomId,
+              roomNo: parsedRoomNo,
             },
           }).unwrap();
           shikshaMitraToast.success({
@@ -505,8 +517,9 @@ export const SlotsForm = ({
                     dayjs(`${newDate} ${newEndTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
                   )
                 : null,
-            studentLimit: values.studentLimit,
+            studentLimit: Number(values.studentLimit),
             roomId: values.roomId,
+            roomNo: parsedRoomNo,
           }).unwrap();
           shikshaMitraToast.success({
             message: `${values.slotName} exam slot added successfully`,
@@ -682,9 +695,11 @@ export const SlotsForm = ({
                   setSelectedRoom(newVal);
                   if (newVal) {
                     formik.setFieldValue('roomId', newVal.id);
+                    formik.setFieldValue('roomNo', newVal.roomName);
                     formik.setFieldValue('studentLimit', newVal.capacity ?? '');
                   } else {
                     formik.setFieldValue('roomId', '');
+                    formik.setFieldValue('roomNo', '');
                     formik.setFieldValue('studentLimit', '');
                   }
                 }}

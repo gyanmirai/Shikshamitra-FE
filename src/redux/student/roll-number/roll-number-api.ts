@@ -15,9 +15,13 @@ export const studentRollNumberApi = api.injectEndpoints({
       providesTags: [studentRollNumberType.studentRollNumber],
     }),
     updateStudentRollNumber: builder.mutation({
-      query: ({ divisionId, body }) => ({
+      query: ({ divisionId, arrangementType, arrangementBy, body }) => ({
         url: `/students/records/${divisionId}/roll-numbers`,
         method: 'POST',
+        params: {
+          arrangementType,
+          arrangementBy,
+        },
         body,
       }),
       invalidatesTags: [studentRollNumberType.studentRollNumber],

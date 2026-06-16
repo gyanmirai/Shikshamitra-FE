@@ -666,16 +666,14 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="fatherPassOutYear"
               label="Year of Passing"
-              type="number"
+              type="text"
+              inputProps={{ maxLength: 4 }}
               value={formik.values.fatherPassOutYear}
-              onKeyDown={(e) => {
-                if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-                  e.preventDefault();
-                }
-              }}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^0-9]/g, '');
-                formik.setFieldValue('fatherPassOutYear', value);
+                if (value.length <= 4) {
+                  formik.setFieldValue('fatherPassOutYear', value);
+                }
               }}
               error={formik.touched.fatherPassOutYear && Boolean(formik.errors.fatherPassOutYear)}
               helperText={formik.touched.fatherPassOutYear && formik.errors.fatherPassOutYear}
@@ -1150,17 +1148,14 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="motherPassOutYear"
               label="Year of Passing"
-              type="number"
-              disabled={!isMotherDetailsEditable.value}
+              type="text"
+              inputProps={{ maxLength: 4 }}
               value={formik.values.motherPassOutYear}
-              onKeyDown={(e) => {
-                if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-                  e.preventDefault();
-                }
-              }}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^0-9]/g, '');
-                formik.setFieldValue('motherPassOutYear', value);
+                if (value.length <= 4) {
+                  formik.setFieldValue('motherPassOutYear', value);
+                }
               }}
               error={formik.touched.motherPassOutYear && Boolean(formik.errors.motherPassOutYear)}
               helperText={formik.touched.motherPassOutYear && formik.errors.motherPassOutYear}
@@ -1421,17 +1416,14 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="guardianPassOutYear"
               label="Year of Passing"
-              type="number"
-              disabled={!isGuardianDetailsEditable.value}
+              type="text"
+              inputProps={{ maxLength: 4 }}
               value={formik.values.guardianPassOutYear}
-              onKeyDown={(e) => {
-                if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-                  e.preventDefault();
-                }
-              }}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^0-9]/g, '');
-                formik.setFieldValue('guardianPassOutYear', value);
+                if (value.length <= 4) {
+                  formik.setFieldValue('guardianPassOutYear', value);
+                }
               }}
               error={
                 formik.touched.guardianPassOutYear && Boolean(formik.errors.guardianPassOutYear)

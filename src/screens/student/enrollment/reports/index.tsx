@@ -8,8 +8,8 @@ import CommonReport from 'src/components/common-report';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Chip, IconButton, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Chip, Button, IconButton, Typography } from '@mui/material';
 
 import DateOfBirthReport from './components/DateOfBirthReport';
 import PreviousSchoolReport from './components/PreviousSchoolReport';
@@ -44,6 +44,16 @@ const EnrollmentReportScreen = () => {
         ]}
         isBack={openGenerateReport.value}
         onBack={openGenerateReport.onFalse}
+        action={
+          <Button
+            variant="contained"
+            size="small"
+            onClick={openGenerateReport.onTrue}
+            startIcon={<Iconify icon={GlobalIcons.report} />}
+          >
+            Generate Report
+          </Button>
+        }
       />
       {openGenerateReport.value ? (
         <CommonReport

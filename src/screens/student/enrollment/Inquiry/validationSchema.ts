@@ -49,6 +49,13 @@ export const inquiryValidationSchema = Yup.object().shape({
       'Date of Inquiry is required',
       (value) => value && dayjs(value as any).isValid()
     )
+    .test('not-past-date', 'Date of Inquiry cannot be in the past', (value) => {
+      if (!value) return false;
+
+      const selectedDate = dayjs(value as any);
+      // Returns true if the date is today or in the future (not before today)
+      return !selectedDate.isBefore(dayjs(), 'day');
+    })
     .required('Date of Inquiry is required'),
   // dateOfInquiry: Yup.date().required('Date of inquiry is required'),
   email: Yup.string().matches(
