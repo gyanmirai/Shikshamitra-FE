@@ -92,6 +92,11 @@ export default function Permission({
             return { ...item, isGranted: true };
           }
         }
+        if (!newValue && type === 'View') {
+          if (item.name === `${key}.Add` || item.name === `${key}.Delete`) {
+            return { ...item, isGranted: false };
+          }
+        }
         return item;
       })
     );
@@ -347,6 +352,20 @@ export default function Permission({
                                     (i) => i.name === `${item.permissionName}.Add`
                                   );
                                   if (addIndex !== -1) newPermissions[addIndex].isGranted = true;
+                                }
+                              } else if (type === 'View') {
+                                const addIndex = newPermissions.findIndex(
+                                  (i) => i.name === `${item.permissionName}.Add`
+                                );
+                                if (addIndex !== -1) {
+                                  newPermissions[addIndex].isGranted = false;
+                                }
+
+                                const deleteIndex = newPermissions.findIndex(
+                                  (i) => i.name === `${item.permissionName}.Delete`
+                                );
+                                if (deleteIndex !== -1) {
+                                  newPermissions[deleteIndex].isGranted = false;
                                 }
                               }
                             }
