@@ -23,6 +23,7 @@ import { LeavePolicyForm } from './LeavePolicyForm';
 import { InfoTooltipIcon } from './HRPolicySharedUI';
 import { formatDate } from '../hr-policy-workspace-utils';
 import { LeavePolicyImpactDrawer } from './LeavePolicyImpactDrawer';
+import { LeaveYearEndSettlementsPanel } from './LeaveYearEndSettlementsPanel';
 import {
   getLeavePolicyTitle,
   isLeavePolicyArchived,
@@ -371,6 +372,8 @@ export function LeavePoliciesPanel() {
           </Alert>
         ) : null}
       </Card>
+
+      <LeaveYearEndSettlementsPanel />
 
       <CustomizableTable
         tableId="hr-leave-policies-workspace"

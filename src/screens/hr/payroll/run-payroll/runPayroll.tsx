@@ -64,6 +64,10 @@ import {
 
 import { DrawerHeader } from '../../policies/components/HRPolicySharedUI';
 import { SalaryDetailsTableCard } from '../salarySlip-generate/salarySlipGenerate';
+import {
+  getPayrollAdjustmentSourceLabel,
+  isSystemGeneratedPayrollAdjustment,
+} from './run-payroll-adjustment-utils';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -635,6 +639,13 @@ const RunPayroll = () => {
   );
 
   const startEditingAdjustment = useCallback((adjustment: any) => {
+    if (isSystemGeneratedPayrollAdjustment(adjustment)) {
+      shikshaMitraToast.error({
+        message: 'System-generated payroll adjustments cannot be edited.',
+      });
+      return;
+    }
+
     setEditingAdjustmentId(adjustment.id);
     setAdjustmentDraft({
       name: adjustment.name || '',
@@ -1629,65 +1640,113 @@ const RunPayroll = () => {
                         </Stack>
                         {activeRow.payrollAdjustments.length ? (
                           <Stack spacing={0.75}>
-                            {activeRow.payrollAdjustments.map((adjustment) => (
-                              <Stack
-                                key={adjustment.id}
-                                direction="row"
-                                alignItems="center"
-                                justifyContent="space-between"
-                                spacing={1}
-                                sx={{ minWidth: 0 }}
-                              >
-                                <Box sx={{ minWidth: 0, flex: 1 }}>
-                                  <Typography variant="body2" fontWeight={600} noWrap>
-                                    {adjustment.name}
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary" noWrap>
-                                    {adjustment.reason}
-                                  </Typography>
-                                </Box>
+                            {activeRow.payrollAdjustments.map((adjustment) => {
+                              const isSystemGenerated =
+                                isSystemGeneratedPayrollAdjustment(adjustment);
+                              const sourceLabel = getPayrollAdjustmentSourceLabel(adjustment);
+
+                              return (
                                 <Stack
+                                  key={adjustment.id}
                                   direction="row"
                                   alignItems="center"
-                                  spacing={0.5}
-                                  sx={{ flexShrink: 0, minWidth: 0 }}
+                                  justifyContent="space-between"
+                                  spacing={1}
+                                  sx={{ minWidth: 0 }}
                                 >
-                                  <Chip
-                                    size="small"
-                                    color={adjustment.isEarning ? 'success' : 'error'}
-                                    variant="outlined"
-                                    label={`${adjustment.isEarning ? '+' : '-'}${formatCurrency(adjustment.amount)}`}
-                                    sx={{
-                                      maxWidth: { xs: 140, sm: 180 },
-                                      '& .MuiChip-label': {
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                      },
-                                    }}
-                                  />
-                                  {activeRowCanAdjust ? (
-                                    <>
-                                      <IconButton
-                                        size="small"
-                                        disabled={
-                                          updateAdjustmentLoading || deleteAdjustmentLoading
-                                        }
-                                        onClick={() => startEditingAdjustment(adjustment)}
-                                      >
-                                        <Iconify icon="solar:pen-linear" width={16} />
-                                      </IconButton>
-                                      <IconButton
-                                        size="small"
-                                        disabled={deleteAdjustmentLoading}
-                                        onClick={() => removePayrollAdjustment(adjustment.id)}
-                                      >
-                                        <Iconify icon="solar:trash-bin-trash-linear" width={16} />
-                                      </IconButton>
-                                    </>
-                                  ) : null}
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Stack
+                                      direction="row"
+                                      spacing={0.75}
+                                      alignItems="center"
+                                      sx={{ minWidth: 0 }}
+                                    >
+                                      <Typography variant="body2" fontWeight={600} noWrap>
+                                        {adjustment.name}
+                                      </Typography>
+                                      {isSystemGenerated ? (
+                                        <Chip
+                                          size="small"
+                                          label={sourceLabel}
+                                          color="warning"
+                                          variant="outlined"
+                                        />
+                                      ) : null}
+                                    </Stack>
+                                    <Typography variant="caption" color="text.secondary" noWrap>
+                                      {adjustment.reason}
+                                    </Typography>
+                                  </Box>
+                                  <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    spacing={0.5}
+                                    sx={{ flexShrink: 0, minWidth: 0 }}
+                                  >
+                                    <Chip
+                                      size="small"
+                                      color={adjustment.isEarning ? 'success' : 'error'}
+                                      variant="outlined"
+                                      label={`${adjustment.isEarning ? '+' : '-'}${formatCurrency(adjustment.amount)}`}
+                                      sx={{
+                                        maxWidth: { xs: 140, sm: 180 },
+                                        '& .MuiChip-label': {
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                        },
+                                      }}
+                                    />
+                                    {activeRowCanAdjust ? (
+                                      <>
+                                        <Tooltip
+                                          title={
+                                            isSystemGenerated
+                                              ? 'System-generated adjustment'
+                                              : 'Edit adjustment'
+                                          }
+                                        >
+                                          <span>
+                                            <IconButton
+                                              size="small"
+                                              disabled={
+                                                isSystemGenerated ||
+                                                updateAdjustmentLoading ||
+                                                deleteAdjustmentLoading
+                                              }
+                                              onClick={() => startEditingAdjustment(adjustment)}
+                                            >
+                                              <Iconify icon="solar:pen-linear" width={16} />
+                                            </IconButton>
+                                          </span>
+                                        </Tooltip>
+                                        <Tooltip
+                                          title={
+                                            isSystemGenerated
+                                              ? 'System-generated adjustment'
+                                              : 'Remove adjustment'
+                                          }
+                                        >
+                                          <span>
+                                            <IconButton
+                                              size="small"
+                                              disabled={
+                                                isSystemGenerated || deleteAdjustmentLoading
+                                              }
+                                              onClick={() => removePayrollAdjustment(adjustment.id)}
+                                            >
+                                              <Iconify
+                                                icon="solar:trash-bin-trash-linear"
+                                                width={16}
+                                              />
+                                            </IconButton>
+                                          </span>
+                                        </Tooltip>
+                                      </>
+                                    ) : null}
+                                  </Stack>
                                 </Stack>
-                              </Stack>
-                            ))}
+                              );
+                            })}
                           </Stack>
                         ) : (
                           <Typography variant="caption" color="text.secondary">

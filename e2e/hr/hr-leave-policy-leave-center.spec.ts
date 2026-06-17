@@ -62,6 +62,85 @@ const policy = {
   ],
 };
 
+const settlementRun = {
+  id: 'settlement-run-e2e',
+  academicYearId: academicYear.id,
+  targetAcademicYearId: 'year-leave-policy-center-e2e-next',
+  status: 'Draft',
+  previewedAt: '2027-06-01T09:00:00Z',
+  finalizedAt: null,
+  totalItems: 2,
+  finalizedItems: 0,
+  blockedItems: 1,
+  totalCarriedDays: 4,
+  totalEncashedDays: 5,
+  totalForfeitedDays: 0,
+  totalEncashmentAmount: 5000,
+  items: [
+    {
+      id: 'settlement-item-clear-e2e',
+      runId: 'settlement-run-e2e',
+      sourceAcademicYearId: academicYear.id,
+      targetAcademicYearId: 'year-leave-policy-center-e2e-next',
+      employeeId: employee.id,
+      employeeName: employee.fullName,
+      employeeCode: employee.employeeCode,
+      sourceLeavePolicyId: policy.id,
+      sourceLeavePolicyRuleId: 'paid-rule-center-e2e',
+      targetLeavePolicyRuleId: 'paid-rule-next-e2e',
+      accruedDays: 12,
+      carryInDays: 0,
+      approvedUsedDays: 3,
+      pendingDays: 0,
+      unusedDays: 9,
+      carriedDays: 4,
+      encashedDays: 5,
+      forfeitedDays: 0,
+      payrollMonth: '2027-05',
+      amount: 5000,
+      status: 'Draft',
+      issueCodes: [],
+      payrollAdjustmentId: null,
+    },
+    {
+      id: 'settlement-item-blocked-e2e',
+      runId: 'settlement-run-e2e',
+      sourceAcademicYearId: academicYear.id,
+      targetAcademicYearId: 'year-leave-policy-center-e2e-next',
+      employeeId: 'employee-pending-e2e',
+      employeeName: 'Pending Leave Teacher',
+      employeeCode: 'EMP-LP-002',
+      sourceLeavePolicyId: policy.id,
+      sourceLeavePolicyRuleId: 'paid-rule-center-e2e',
+      targetLeavePolicyRuleId: 'paid-rule-next-e2e',
+      accruedDays: 12,
+      carryInDays: 0,
+      approvedUsedDays: 2,
+      pendingDays: 1,
+      unusedDays: 10,
+      carriedDays: 4,
+      encashedDays: 6,
+      forfeitedDays: 0,
+      payrollMonth: '2027-05',
+      amount: 6000,
+      status: 'Blocked',
+      issueCodes: ['pending_leave'],
+      payrollAdjustmentId: null,
+    },
+  ],
+};
+
+const clearSettlementRun = {
+  ...settlementRun,
+  totalItems: 1,
+  finalizedItems: 0,
+  blockedItems: 0,
+  totalCarriedDays: 4,
+  totalEncashedDays: 5,
+  totalEncashmentAmount: 5000,
+  items: [settlementRun.items[0]],
+};
+
 const grantedPermissions = [
   'ShikshaMitra.Module.HR',
   'ShikshaMitra.Module.HR.Policies',
@@ -155,7 +234,13 @@ async function installPermissionRoutes(page: Page) {
 
 async function installLeavePolicyRoutes(
   page: Page,
-  state: { createPayload?: any; updatePayload?: any }
+  state: {
+    createPayload?: any;
+    updatePayload?: any;
+    previewPayload?: any;
+    finalizedRunId?: string;
+    settlementRun?: any;
+  }
 ) {
   await installPermissionRoutes(page);
 
@@ -166,6 +251,54 @@ async function installLeavePolicyRoutes(
   await page.route('**/api/app/academic-year**', (route) =>
     fulfillJson(route, { items: [academicYear], totalCount: 1 })
   );
+
+  let activeSettlementRun: any = state.settlementRun || settlementRun;
+  await page.route('**/api/leave-management/year-end-settlements**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+
+    if (request.method() === 'GET' && url.pathname.endsWith('/year-end-settlements')) {
+      await fulfillJson(route, [activeSettlementRun]);
+      return;
+    }
+
+    if (request.method() === 'GET') {
+      await fulfillJson(route, activeSettlementRun);
+      return;
+    }
+
+    if (request.method() === 'POST' && url.pathname.endsWith('/preview')) {
+      state.previewPayload = request.postDataJSON();
+      activeSettlementRun = { ...(state.settlementRun || settlementRun), status: 'Draft' };
+      await fulfillJson(route, activeSettlementRun);
+      return;
+    }
+
+    if (request.method() === 'POST' && url.pathname.endsWith('/finalize')) {
+      if (activeSettlementRun.blockedItems > 0) {
+        await fulfillJson(
+          route,
+          { message: 'Resolve blocked settlement items before finalizing.' },
+          400
+        );
+        return;
+      }
+
+      const segments = url.pathname.split('/').filter(Boolean);
+      state.finalizedRunId = segments[segments.length - 2];
+      activeSettlementRun = {
+        ...activeSettlementRun,
+        status: 'Finalized',
+        finalizedItems: activeSettlementRun.totalItems,
+        finalizedAt: '2027-06-01T10:00:00Z',
+        items: activeSettlementRun.items.map((item: any) => ({ ...item, status: 'Finalized' })),
+      };
+      await fulfillJson(route, activeSettlementRun);
+      return;
+    }
+
+    await fulfillJson(route, {});
+  });
 
   await page.route('**/api/leave-policies**', async (route) => {
     const request = route.request();
@@ -430,6 +563,58 @@ test.describe('Leave policy and Leave Center matrix', () => {
     );
     expect(JSON.stringify(state.updatePayload)).not.toContain('leaveTypeId');
     expect(JSON.stringify(state.updatePayload)).not.toContain('leaveTypeMasterId');
+  });
+
+  test('blocks year-end settlement finalization when any item has issues', async ({ page }) => {
+    const state: { previewPayload?: any; finalizedRunId?: string } = {};
+    await installLeavePolicyRoutes(page, state);
+
+    await page.goto('/hr/leave-policies', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('Year-End Settlements')).toBeVisible();
+    await expect(page.getByText('4 carried')).toBeVisible();
+    await expect(page.getByText('5 encashed')).toBeVisible();
+    await expect(page.getByText('Pending leave', { exact: true })).toBeVisible();
+
+    const finalizeButton = page.getByRole('button', { name: /^Finalize$/i });
+    await expect(finalizeButton).toBeDisabled();
+
+    await page.getByRole('button', { name: /^Preview$/i }).click();
+    await expect
+      .poll(() => state.previewPayload)
+      .toEqual({
+        academicYearId: academicYear.id,
+      });
+    await expect(finalizeButton).toBeDisabled();
+    expect(state.finalizedRunId).toBeUndefined();
+  });
+
+  test('previews and finalizes clear year-end carry-forward and encashment settlement', async ({
+    page,
+  }) => {
+    const state: { previewPayload?: any; finalizedRunId?: string; settlementRun?: any } = {
+      settlementRun: clearSettlementRun,
+    };
+    await installLeavePolicyRoutes(page, state);
+
+    await page.goto('/hr/leave-policies', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('Year-End Settlements')).toBeVisible();
+    await expect(page.getByText('0 blocked')).toBeVisible();
+
+    await page.getByRole('button', { name: /^Preview$/i }).click();
+    await expect
+      .poll(() => state.previewPayload)
+      .toEqual({
+        academicYearId: academicYear.id,
+      });
+
+    await page.getByRole('button', { name: /^Finalize$/i }).click();
+    const dialog = page.getByRole('dialog', { name: /Finalize settlement/i });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText(/all-or-nothing/i)).toBeVisible();
+    await dialog.getByRole('button', { name: /^Finalize$/i }).click();
+
+    await expect.poll(() => state.finalizedRunId).toBe(settlementRun.id);
+    await expect(page.getByText('Finalized').first()).toBeVisible();
   });
 
   test('shows accrued, unlimited, negative balances and submits Paid and Unpaid requests', async ({
