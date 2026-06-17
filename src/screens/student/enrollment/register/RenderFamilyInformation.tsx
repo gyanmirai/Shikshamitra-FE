@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -505,6 +505,10 @@ function GuardianAddressComponent(props: any) {
 function RenderFamilyInformation(props: any) {
   const { formik, isMainForm = false } = props;
   const [student, setStudent] = useState<any[]>(formik.values.siblingStudents ?? []);
+
+  useEffect(() => {
+    setStudent(formik.values.siblingStudents ?? []);
+  }, [formik.values.siblingStudents]);
 
   const [studentSearchData] = useQueryAndMutation({
     type: 'mutation',

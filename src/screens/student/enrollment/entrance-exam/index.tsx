@@ -1015,17 +1015,22 @@ export const ExamForm = ({
             minHeight: 480,
           }}
         >
-          {/* Left — Calendar */}
+          {/* Left — Calendar & Booking Summary */}
           <Box
             sx={{
-              width: 320,
-              minWidth: 280,
+              width: 380,
               bgcolor: 'background.paper',
               borderRight: '1px solid',
               borderColor: 'divider',
               display: 'flex',
               flexDirection: 'column',
               flexShrink: 0,
+              overflowY: 'auto',
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none',
             }}
           >
             <DateCalendar
@@ -1076,6 +1081,7 @@ export const ExamForm = ({
                 {formik.errors.examDate as string}
               </Typography>
             )}
+
             {/* Legend */}
             <Box sx={{ display: 'flex', gap: 2, px: 2.5, pb: 2.5, flexWrap: 'wrap' }}>
               <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center' }}>
@@ -1084,16 +1090,79 @@ export const ExamForm = ({
                   Today / Selected
                 </Typography>
               </Box>
-              {/* <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center' }}>
-                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.light' }} />
-                <Typography variant="caption" color="text.secondary">
-                  Slots available
-                </Typography>
-              </Box> */}
             </Box>
+
+            {/* Booking summary — Rendered in Left Panel, visible only when slot is selected */}
+            {(() => {
+              const selected = formik.values.slots.find((s: any) => s.id === formik.values.slot);
+              const available = selected
+                ? (selected.studentLimit || 0) - (selected.enrolledStudents || 0)
+                : 0;
+              const slotDuration = selected
+                ? dayjs(selected.endDateTime).diff(dayjs(selected.startDateTime), 'minute')
+                : 0;
+              return (
+                <Box
+                  sx={{
+                    borderRadius: 2,
+                    bgcolor: 'background.paper',
+                    border: '1px solid',
+                    borderColor: formik.values.slot ? 'divider' : 'transparent',
+                    p: 2,
+                    mx: 2,
+                    mb: 2,
+                    opacity: formik.values.slot ? 1 : 0,
+                    pointerEvents: formik.values.slot ? 'auto' : 'none',
+                    transition: 'opacity 0.2s ease',
+                  }}
+                >
+                  <Typography
+                    variant="overline"
+                    color="text.secondary"
+                    fontWeight={700}
+                    sx={{ letterSpacing: 1.5 }}
+                  >
+                    Booking Summary
+                  </Typography>
+                  {selected && (
+                    <>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mt: 1.5 }}>
+                        <Iconify
+                          icon="mdi:calendar-check"
+                          sx={{ mt: 0.25, color: 'text.secondary', width: 18, height: 18 }}
+                        />
+                        <Box>
+                          <Typography variant="body2" fontWeight={700}>
+                            {dayjs(formik.values.examDate).format('dddd, D MMMM YYYY')}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {selected.slotName} · {dayjs(selected.startDateTime).format('hh:mm A')}{' '}
+                            – {dayjs(selected.endDateTime).format('hh:mm A')}
+                          </Typography>
+                          {selected.roomNo && (
+                            <Typography variant="body2" color="text.secondary">
+                              Room {selected.roomNo} · {slotDuration} min duration
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1.5 }}>
+                        <Iconify
+                          icon="mdi:account-check-outline"
+                          sx={{ color: 'success.main', width: 16, height: 16 }}
+                        />
+                        <Typography variant="caption" color="success.main" fontWeight={600}>
+                          {available} seat{available !== 1 ? 's' : ''} still available
+                        </Typography>
+                      </Box>
+                    </>
+                  )}
+                </Box>
+              );
+            })()}
           </Box>
 
-          {/* Right — Slots + Booking Summary */}
+          {/* Right — Slots */}
           <Scrollbar
             sx={{
               flex: 1,
@@ -1288,75 +1357,6 @@ export const ExamForm = ({
                   );
                 })
               )}
-
-              {/* Booking summary — always rendered, visible only when slot is selected */}
-              {(() => {
-                const selected = formik.values.slots.find((s: any) => s.id === formik.values.slot);
-                const available = selected
-                  ? (selected.studentLimit || 0) - (selected.enrolledStudents || 0)
-                  : 0;
-                const slotDuration = selected
-                  ? dayjs(selected.endDateTime).diff(dayjs(selected.startDateTime), 'minute')
-                  : 0;
-                return (
-                  <Box
-                    sx={{
-                      borderRadius: 2,
-                      bgcolor: 'background.paper',
-                      border: '1px solid',
-                      borderColor: formik.values.slot ? 'divider' : 'transparent',
-                      p: 2,
-                      mt: 0.5,
-                      opacity: formik.values.slot ? 1 : 0,
-                      pointerEvents: formik.values.slot ? 'auto' : 'none',
-                      transition: 'opacity 0.2s ease',
-                    }}
-                  >
-                    <Typography
-                      variant="overline"
-                      color="text.secondary"
-                      fontWeight={700}
-                      sx={{ letterSpacing: 1.5 }}
-                    >
-                      Booking Summary
-                    </Typography>
-                    {selected && (
-                      <>
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mt: 1.5 }}>
-                          <Iconify
-                            icon="mdi:calendar-check"
-                            sx={{ mt: 0.25, color: 'text.secondary', width: 18, height: 18 }}
-                          />
-                          <Box>
-                            <Typography variant="body2" fontWeight={700}>
-                              {dayjs(formik.values.examDate).format('dddd, D MMMM YYYY')}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {selected.slotName} ·{' '}
-                              {dayjs(selected.startDateTime).format('hh:mm A')} –{' '}
-                              {dayjs(selected.endDateTime).format('hh:mm A')}
-                            </Typography>
-                            {selected.roomNo && (
-                              <Typography variant="body2" color="text.secondary">
-                                Room {selected.roomNo} · {slotDuration} min duration
-                              </Typography>
-                            )}
-                          </Box>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1.5 }}>
-                          <Iconify
-                            icon="mdi:account-check-outline"
-                            sx={{ color: 'success.main', width: 16, height: 16 }}
-                          />
-                          <Typography variant="caption" color="success.main" fontWeight={600}>
-                            {available} seat{available !== 1 ? 's' : ''} still available
-                          </Typography>
-                        </Box>
-                      </>
-                    )}
-                  </Box>
-                );
-              })()}
 
               {formik.touched.slot && formik.errors.slot && (
                 <Typography variant="caption" color="error">

@@ -62,6 +62,35 @@ const RegisterScreen = () => {
       dialog.onFalse();
     }
   };
+
+  const studentName = editData
+    ? `${editData.firstName || ''} ${editData.middleName || ''} ${editData.lastName || ''}`.trim()
+    : '';
+
+  const standardName = editData
+    ? (typeof editData.standard === 'object' && editData.standard
+        ? editData.standard.name
+        : editData.standard) ||
+      editData.standardName ||
+      ''
+    : '';
+
+  const educationBoard = editData
+    ? (typeof editData.academicBoardName === 'object' && editData.academicBoardName
+        ? editData.academicBoardName.name
+        : editData.academicBoardName) ||
+      editData.educationBoard?.name ||
+      'N/A'
+    : 'N/A';
+
+  const educationMedium = editData
+    ? (typeof editData.academicMediumName === 'object' && editData.academicMediumName
+        ? editData.academicMediumName.name
+        : editData.academicMediumName) ||
+      editData.educationMedium?.name ||
+      'N/A'
+    : 'N/A';
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -126,13 +155,13 @@ const RegisterScreen = () => {
         {editData && (
           <ExamForm
             studentEnrollmentId={editData.studentId || ''}
-            studentName={`${editData.firstName || ''} ${editData.middleName || ''} ${editData.lastName || ''}`.trim()}
-            standardName={editData.standard || ''}
-            educationBoard={editData.academicBoardName?.name || 'N/A'}
-            educationMedium={editData.academicMediumName?.name || 'N/A'}
+            studentName={studentName}
+            standardName={standardName}
+            educationBoard={educationBoard}
+            educationMedium={educationMedium}
             handleClose={handleClose}
           />
-        )}{' '}
+        )}
       </CustomDialog>
 
       <CustomDialog

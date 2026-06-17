@@ -471,6 +471,19 @@ export function StudentProfile() {
                   { label: 'No', value: 'No' },
                 ],
               },
+              // {
+              //   id: 'status',
+              //   label: 'Status',
+              //   minWidth: '6vw',
+              //   align: 'left',
+              //   sticky: true,
+              //   filterType: 'enum',
+              //   enumOptions: StudentStatusOptions,
+              //   render(value, row) {
+              //     const color = RegistrationStatusTypeColor[row.status as RegistrationStatusType] as LabelColor;
+              //     return <Label color={color}>{RegistrationStatusType[row.status]}</Label>;
+              //   },
+              // },
               {
                 id: 'action',
                 label: 'Action',
