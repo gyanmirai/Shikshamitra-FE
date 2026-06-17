@@ -1,4 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, no-await-in-loop, no-restricted-syntax */
+import * as fs from 'node:fs';
+import * as nodePath from 'node:path';
 import { test, expect, type Page, type APIResponse } from '@playwright/test';
 
 const studentE2EEnabled = process.env.E2E_STUDENT_MODULE === '1';
@@ -182,6 +184,225 @@ function currentMonthRange() {
   return { startDate: format(start), endDate: format(end) };
 }
 
+type AcademicPlacement = {
+  academicYearId: string;
+  academicMediumId: string;
+  standardId: string;
+  alternateStandardId?: string;
+  divisionId?: string;
+};
+
+const unwrapApiData = (payload: any) =>
+  payload && Object.prototype.hasOwnProperty.call(payload, 'data') ? payload.data : payload;
+
+const pagedItems = (payload: any) => unwrapApiData(payload)?.items ?? [];
+
+const bugScreenshotPath = (fileName: string) => {
+  const outputDir = nodePath.join(process.cwd(), 'output', 'playwright');
+  fs.mkdirSync(outputDir, { recursive: true });
+  return nodePath.join(outputDir, fileName);
+};
+
+async function captureBugScreenshot(page: Page, fileName: string) {
+  await page.screenshot({ path: bugScreenshotPath(fileName), fullPage: true });
+}
+
+const uniqueToken = (prefix: string) =>
+  `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+
+const uniqueFormNumber = () =>
+  `E2E-${Date.now().toString(36).toUpperCase()}-${Math.random()
+    .toString(36)
+    .slice(2, 6)
+    .toUpperCase()}`;
+
+const uniquePhone = () => `9${Date.now().toString().slice(-9)}`;
+
+const yearsAgoIso = (years: number) => {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - years);
+  return date.toISOString();
+};
+
+const nextWeekIso = () => {
+  const date = new Date();
+  date.setDate(date.getDate() + 7);
+  return date.toISOString();
+};
+
+const state = (name = 'Gujarat', isoCode = 'GJ') => ({ name, isoCode });
+const country = () => ({ name: 'India', isoCode: 'IN' });
+
+const address = (address1: string, city = 'Ahmedabad') => ({
+  address1,
+  address2: 'Near School Road',
+  address3: 'E2E Area',
+  city,
+  state: state(),
+  country: country(),
+  pincode: '380015',
+});
+
+const parent = (fullName: string, aadharNo: string, organization: string) => ({
+  fullName,
+  occupation: 'Engineer',
+  email: `${uniqueToken('parent').toLowerCase()}@example.com`,
+  contactNo: uniquePhone(),
+  officeNo: '0794000000',
+  qualification: 'Graduate',
+  yearOfPassing: '2005',
+  designation: 'Manager',
+  organization,
+  aadharNo,
+  officeAddress: address(`${organization} Office`),
+  localAddress: address(`${fullName} Home`),
+});
+
+function collectStandards(medium: any) {
+  const topLevel = Array.isArray(medium?.standards) ? medium.standards : [];
+  const staged = Array.isArray(medium?.educationMediumStages)
+    ? medium.educationMediumStages.flatMap((stage: any) => stage?.standards ?? [])
+    : [];
+  const seen = new Set<string>();
+
+  return [...topLevel, ...staged].filter((standard: any) => {
+    if (!standard?.id || seen.has(standard.id)) return false;
+    seen.add(standard.id);
+    return true;
+  });
+}
+
+async function resolveAcademicPlacement(page: Page): Promise<AcademicPlacement> {
+  const academicYears = pagedItems(await getJson(page, '/app/academic-year?Sorting=name'));
+  expect(
+    academicYears.length,
+    'Seeded academic year is required for student bug E2E.'
+  ).toBeGreaterThan(0);
+
+  for (const academicYear of academicYears) {
+    const options = pagedItems(
+      await getJson(page, `/app/academic-organization-options?academicYearId=${academicYear.id}`)
+    );
+
+    for (const medium of options) {
+      const academicMediumId = medium?.mediumId ?? medium?.id;
+      const standardPayload = academicMediumId
+        ? await getJson(page, `/education-medium/${academicMediumId}/standards`)
+        : [];
+      const standards = [
+        ...collectStandards(medium),
+        ...collectStandards({ standards: standardPayload }),
+      ];
+      const primaryStandard =
+        standards.find((standard: any) =>
+          standard?.divisions?.some((division: any) => division?.id)
+        ) ?? standards[0];
+      const alternateStandard = standards.find(
+        (standard: any) => standard?.id !== primaryStandard?.id
+      );
+      const divisionId = primaryStandard?.divisions?.find((division: any) => division?.id)?.id;
+
+      if (academicMediumId && primaryStandard?.id) {
+        return {
+          academicYearId: academicYear.id,
+          academicMediumId,
+          standardId: primaryStandard.id,
+          alternateStandardId: alternateStandard?.id,
+          divisionId,
+        };
+      }
+    }
+  }
+
+  throw new Error('Seeded academic medium and standard are required for student bug E2E.');
+}
+
+async function createRegistration(
+  page: Page,
+  placement: AcademicPlacement,
+  suffix: string,
+  overrides: Record<string, unknown> = {}
+) {
+  const payload = {
+    academicMediumId: placement.academicMediumId,
+    standardId: placement.standardId,
+    divisionId: placement.divisionId,
+    formNumber: uniqueFormNumber(),
+    firstName: uniqueToken(suffix),
+    lastName: 'Playwright',
+    dateOfBirth: yearsAgoIso(10),
+    gender: 1,
+    primaryContactNo: uniquePhone(),
+    familyCast: 'General',
+    city: 'Ahmedabad',
+    state: state(),
+    country: country(),
+    ...overrides,
+  };
+
+  const response = await studentApiRequest(
+    page,
+    '/student/enrollment/registrations/general-details',
+    {
+      method: 'POST',
+      body: payload as any,
+    }
+  );
+  await expectOk(response, 'create direct registration');
+
+  const registration = unwrapApiData(await response.json());
+  expect(registration?.studentId, 'Created registration should return studentId.').toBeTruthy();
+  return registration;
+}
+
+async function updateFamilyDetails(page: Page, studentId: string) {
+  const response = await studentApiRequest(
+    page,
+    `/student/enrollment/registrations/${studentId}/family-details`,
+    {
+      method: 'PUT',
+      body: {
+        fatherDetails: parent('E2E Father', '111122223333', 'Father Org'),
+        motherDetails: parent('E2E Mother', '444455556666', 'Mother Org'),
+        guardianDetails: parent('E2E Guardian', '777788889999', 'Guardian Org'),
+      } as any,
+    }
+  );
+  await expectOk(response, 'update family details');
+  return unwrapApiData(await response.json());
+}
+
+async function updateCommunicationDetails(page: Page, studentId: string) {
+  const response = await studentApiRequest(
+    page,
+    `/student/enrollment/registrations/${studentId}/communication-details`,
+    {
+      method: 'PUT',
+      body: {
+        localAddress: address('Student Local Address'),
+        permanentAddress: address('Student Permanent Address'),
+        emergencyAddress: address('Student Emergency Address'),
+        isPermanentSameAsLocal: false,
+        isEmergencySameAsLocal: false,
+        emergencyContactName: 'E2E Emergency',
+        emergencyContactPhone: uniquePhone(),
+        emergencyContactRelation: 'Uncle',
+      } as any,
+    }
+  );
+  await expectOk(response, 'update communication details');
+}
+
+async function openStudentPageForEvidence(page: Page, route: string) {
+  const response = await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  expect(response?.status(), `GET ${route}`).toBeLessThan(400);
+  await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 15_000 });
+  await expect(page.locator('body')).not.toContainText(
+    /404|This page could not be found|Application error|Unhandled Runtime Error/i,
+    { timeout: 5_000 }
+  );
+}
+
 test.describe('Student module role-login E2E', () => {
   test.skip(!studentE2EEnabled, 'Set E2E_STUDENT_MODULE=1 against a seeded local backend.');
   test.use({ storageState: { cookies: [], origins: [] } });
@@ -343,5 +564,272 @@ test.describe('Student module role-login E2E', () => {
 
     const uploadRequest = await uploadRequestPromise;
     expect(uploadRequest.headers()['content-type']).toMatch(/multipart\/form-data; boundary=/);
+  });
+});
+
+test.describe('Student module bug regression E2E', () => {
+  test.skip(!studentE2EEnabled, 'Set E2E_STUDENT_MODULE=1 against a seeded local backend.');
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('4917 inquiry returns age, address, preference, reminder, and status', async ({ page }) => {
+    test.setTimeout(180_000);
+
+    await login(page, process.env.E2E_ADMIN_EMAIL || 'admin-ddvs@ddvs.com');
+    const placement = await resolveAcademicPlacement(page);
+    const preferenceName = uniqueToken('WalkIn');
+    const preferenceResponse = await studentApiRequest(
+      page,
+      `/student-enrollment/${placement.academicYearId}/settings/inquiry-preferences`,
+      {
+        method: 'POST',
+        body: { preferenceName } as any,
+      }
+    );
+    await expectOk(preferenceResponse, 'create inquiry preference');
+    const preference = await preferenceResponse.json();
+
+    const firstName = uniqueToken('InqBug');
+    const reminderDate = nextWeekIso();
+    const createInquiryResponse = await studentApiRequest(page, '/student/enrollment/inquiries', {
+      method: 'POST',
+      body: {
+        academicMediumId: placement.academicMediumId,
+        standardId: placement.standardId,
+        firstName,
+        lastName: 'Computed',
+        dateOfBirth: yearsAgoIso(9),
+        gender: 0,
+        dateOfInquiry: new Date().toISOString(),
+        inquiryPreferenceId: preference.id,
+        primaryContactNo: uniquePhone(),
+        address1: 'Inquiry House 17',
+        address2: 'Near Main Road',
+        city: 'Surat',
+        state: state(),
+        country: country(),
+        pinCode: '395007',
+      } as any,
+    });
+    await expectOk(createInquiryResponse, 'create inquiry');
+
+    const inquiryList = unwrapApiData(
+      await (
+        await studentApiRequest(
+          page,
+          `/student/enrollment/${placement.academicMediumId}/inquiries?maxResultCount=20&searchTerm=${encodeURIComponent(
+            firstName
+          )}`
+        )
+      ).json()
+    );
+    const inquiry = inquiryList.items.find((item: any) => item.firstName === firstName);
+    expect(inquiry?.studentId, 'Created inquiry should be discoverable in the list.').toBeTruthy();
+
+    const noteResponse = await studentApiRequest(
+      page,
+      `/student/enrollment/${inquiry.studentId}/notes`,
+      {
+        method: 'POST',
+        body: {
+          note: 'Interested family requested a follow up.',
+          nextReminderDate: reminderDate,
+          status: 1,
+        } as any,
+      }
+    );
+    await expectOk(noteResponse, 'create inquiry note');
+
+    const detail = unwrapApiData(
+      await (
+        await studentApiRequest(page, `/student/enrollment/inquiries/${inquiry.studentId}`)
+      ).json()
+    );
+    const refreshedList = unwrapApiData(
+      await (
+        await studentApiRequest(
+          page,
+          `/student/enrollment/${placement.academicMediumId}/inquiries?maxResultCount=20&searchTerm=${encodeURIComponent(
+            firstName
+          )}`
+        )
+      ).json()
+    );
+    const refreshedInquiry = refreshedList.items.find(
+      (item: any) => item.studentId === inquiry.studentId
+    );
+
+    for (const item of [detail, refreshedInquiry]) {
+      expect(String(item.age), 'Inquiry age should be populated.').toMatch(/\d+\s+years?/i);
+      expect(item.address, 'Inquiry address should be consolidated.').toContain('Inquiry House 17');
+      expect(item.inquiryPreferenceId).toBe(preference.id);
+      expect(item.inquiryPreference).toBe(preferenceName);
+      expect(
+        Math.abs(Date.parse(String(item.nextReminderDate)) - Date.parse(reminderDate)),
+        'Reminder date should round-trip as the same instant.'
+      ).toBeLessThan(60_000);
+      expect([1, 'Interested']).toContain(item.inquiryStatus);
+    }
+
+    await openStudentPageForEvidence(page, '/student/enrollment/inquiry');
+    await captureBugScreenshot(page, 'student-4917-inquiry-computed-fields.png');
+  });
+
+  test('4923 registration general details persists class changes', async ({ page }) => {
+    test.setTimeout(180_000);
+
+    await login(page, process.env.E2E_ADMIN_EMAIL || 'admin-ddvs@ddvs.com');
+    const placement = await resolveAcademicPlacement(page);
+    test.skip(!placement.alternateStandardId, 'Need at least two standards in the same medium.');
+
+    const registration = await createRegistration(page, placement, 'ClassBug');
+    const existing = unwrapApiData(
+      await (
+        await studentApiRequest(
+          page,
+          `/student/enrollment/registrations/${registration.studentId}/general-details`
+        )
+      ).json()
+    );
+    const response = await studentApiRequest(
+      page,
+      `/student/enrollment/registrations/${registration.studentId}/general-details`,
+      {
+        method: 'PUT',
+        body: {
+          formNumber: existing.formNo,
+          firstName: 'ClassUpdated',
+          lastName: 'Playwright',
+          dateOfBirth: yearsAgoIso(10),
+          gender: 1,
+          primaryContactNo: uniquePhone(),
+          familyCast: 'General',
+          city: 'Ahmedabad',
+          state: state(),
+          country: country(),
+          academicMediumId: placement.academicMediumId,
+          standardId: placement.alternateStandardId,
+        } as any,
+      }
+    );
+    await expectOk(response, 'update registration class');
+    expect(unwrapApiData(await response.json()).standardId).toBe(placement.alternateStandardId);
+
+    const refreshed = unwrapApiData(
+      await (
+        await studentApiRequest(
+          page,
+          `/student/enrollment/registrations/${registration.studentId}/general-details`
+        )
+      ).json()
+    );
+    expect(refreshed.standardId).toBe(placement.alternateStandardId);
+
+    await openStudentPageForEvidence(page, '/student/enrollment/registration');
+    await captureBugScreenshot(page, 'student-4923-registration-class-update.png');
+  });
+
+  test('4922 family details accepts Aadhaar and nested address payloads', async ({ page }) => {
+    test.setTimeout(180_000);
+
+    await login(page, process.env.E2E_ADMIN_EMAIL || 'admin-ddvs@ddvs.com');
+    const placement = await resolveAcademicPlacement(page);
+    const registration = await createRegistration(page, placement, 'FamilyBug');
+
+    const family = await updateFamilyDetails(page, registration.studentId);
+
+    expect(family.fatherDetails?.aadharNo).toBe('111122223333');
+    expect(family.motherDetails?.organization).toBe('Mother Org');
+    expect(family.guardianDetails?.yearOfPassing).toBe('2005');
+    expect(family.guardianDetails?.officeAddress?.city).toBe('Ahmedabad');
+    expect(family.guardianDetails?.localAddress?.address1).toContain('E2E Guardian Home');
+
+    await openStudentPageForEvidence(page, '/student/enrollment/registration');
+    await captureBugScreenshot(page, 'student-4922-family-details-payload.png');
+  });
+
+  test('4918 GR number save rejects duplicate batch and existing conflicts', async ({ page }) => {
+    test.setTimeout(180_000);
+
+    await login(page, process.env.E2E_ADMIN_EMAIL || 'admin-ddvs@ddvs.com');
+    const placement = await resolveAcademicPlacement(page);
+    const first = await createRegistration(page, placement, 'GrBugA');
+    const second = await createRegistration(page, placement, 'GrBugB');
+    const grBase = Number(`8${Date.now().toString().slice(-5)}`);
+
+    const validResponse = await studentApiRequest(page, '/students/records/gr-numbers', {
+      method: 'POST',
+      body: [
+        { studentId: first.studentId, grNo: grBase },
+        { studentId: second.studentId, grNo: grBase + 1 },
+      ] as any,
+    });
+    await expectOk(validResponse, 'save unique GR numbers');
+
+    const duplicateBatchResponse = await studentApiRequest(page, '/students/records/gr-numbers', {
+      method: 'POST',
+      body: [
+        { studentId: first.studentId, grNo: grBase + 2 },
+        { studentId: second.studentId, grNo: grBase + 2 },
+      ] as any,
+    });
+    expect(duplicateBatchResponse.ok(), 'Duplicate GR batch should be rejected.').toBe(false);
+    const duplicateBatchText = await duplicateBatchResponse.text();
+    expect(duplicateBatchText).toContain('ST:Student:010002');
+    expect(duplicateBatchText).toContain(`GR Number ${grBase + 2} is already assigned`);
+
+    const existingConflictResponse = await studentApiRequest(page, '/students/records/gr-numbers', {
+      method: 'POST',
+      body: [{ studentId: first.studentId, grNo: grBase + 1 }] as any,
+    });
+    expect(existingConflictResponse.ok(), 'Existing GR conflict should be rejected.').toBe(false);
+    const existingConflictText = await existingConflictResponse.text();
+    expect(existingConflictText).toContain('ST:Student:010002');
+    expect(existingConflictText).toContain(`GR Number ${grBase + 1} is already assigned`);
+
+    await openStudentPageForEvidence(page, '/student/management/bulk-data-update');
+    await captureBugScreenshot(page, 'student-4918-duplicate-gr-validation.png');
+  });
+
+  test('4919 admission approval with student email succeeds', async ({ page }) => {
+    test.setTimeout(180_000);
+
+    await login(page, process.env.E2E_ADMIN_EMAIL || 'admin-ddvs@ddvs.com');
+    const placement = await resolveAcademicPlacement(page);
+    test.skip(!placement.divisionId, 'Need a seeded division to approve admission.');
+
+    const registration = await createRegistration(page, placement, 'AdmissionBug', {
+      email: `${uniqueToken('student-admission').toLowerCase()}@example.com`,
+    });
+    await updateFamilyDetails(page, registration.studentId);
+    await updateCommunicationDetails(page, registration.studentId);
+
+    const moveResponse = await studentApiRequest(
+      page,
+      `/student-enrollment/entrance-exam/${registration.studentId}/move-to-admission`,
+      { method: 'POST' }
+    );
+    await expectOk(moveResponse, 'move registration to admission');
+
+    const approveResponse = await studentApiRequest(page, '/students/admissions/status', {
+      method: 'POST',
+      body: {
+        items: [
+          {
+            studentId: registration.studentId,
+            action: 1,
+            remarks: 'Admission approved after email account validation.',
+          },
+        ],
+      } as any,
+    });
+    await expectOk(approveResponse, 'approve admission with student email');
+    const approval = await approveResponse.json();
+    expect(approval.succeeded).toBe(1);
+    expect(approval.failed).toBe(0);
+    expect(approval.results?.[0]?.success).toBe(true);
+    expect(approval.results?.[0]?.message ?? '').not.toMatch(/unexpected error/i);
+
+    await openStudentPageForEvidence(page, '/student/enrollment/admission');
+    await captureBugScreenshot(page, 'student-4919-admission-email-approval.png');
   });
 });
