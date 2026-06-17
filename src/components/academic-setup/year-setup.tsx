@@ -13,7 +13,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useMemo, useState, useEffect } from 'react';
 import { useDeleteClassMutation } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useDeleteMediumMutation } from 'src/redux/medium/mediumApi';
 import { useDeleteDivisionMutation } from 'src/redux/division/divisionApi';
 import { useDeleteOrganizationMutation } from 'src/redux/oraganization/oraganization';
@@ -54,6 +53,10 @@ import { DivisionForm } from './division-setup';
 import { ConfirmDialog } from '../confirm-dialog';
 import { OrganizationForm } from './organization-setup';
 import CustomDialog, { DialogScrollContent } from '../customDialog';
+import {
+  parseAcademicYearDateForPicker,
+  formatAcademicYearDateForPayload,
+} from './academic-year-date-utils';
 
 // ----------------------------------------------------------------------
 
@@ -1250,15 +1253,15 @@ const YearForm = ({ handleClose, editData }: IYearForm) => {
           id: editData.id,
           body: {
             name: `${formik.values.startDate.format('YYYY')}-${formik.values.endDate.format('YYYY')}`,
-            startDate: dateConvertor(formik.values.startDate.format(dateFormat)),
-            endDate: dateConvertor(formik.values.endDate.format(dateFormat)),
+            startDate: formatAcademicYearDateForPayload(formik.values.startDate),
+            endDate: formatAcademicYearDateForPayload(formik.values.endDate),
           },
         }).unwrap();
       } else {
         await addYear({
           name: `${formik.values.startDate.format('YYYY')}-${formik.values.endDate.format('YYYY')}`,
-          startDate: dateConvertor(formik.values.startDate.format(dateFormat)),
-          endDate: dateConvertor(formik.values.endDate.format(dateFormat)),
+          startDate: formatAcademicYearDateForPayload(formik.values.startDate),
+          endDate: formatAcademicYearDateForPayload(formik.values.endDate),
         }).unwrap();
       }
       handleClose();
@@ -1270,10 +1273,10 @@ const YearForm = ({ handleClose, editData }: IYearForm) => {
   const formik = useFormik({
     initialValues: {
       startDate: editData
-        ? dayjs(editData.startDate)
+        ? parseAcademicYearDateForPicker(editData.startDate)
         : dayjs().year(dayjs().year()).month(2).date(1),
       endDate: editData
-        ? dayjs(editData.endDate)
+        ? parseAcademicYearDateForPicker(editData.endDate)
         : dayjs()
             .year(dayjs().year() + 1)
             .month(1)
