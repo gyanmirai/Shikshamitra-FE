@@ -70,6 +70,7 @@ const FileUploader = <T extends boolean = true>({
   const viewDialog = useBoolean();
   const [previewFile, setPreviewFile] = useState<File | FileData | null>(null);
   const [showAllDialog, setShowAllDialog] = useState<boolean>(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handlePreview = (file: File | FileData) => {
     if (onPreview) {
@@ -262,7 +263,7 @@ const FileUploader = <T extends boolean = true>({
           height: value && (Array.isArray(value) ? value.length > 0 : value) ? 'auto' : '150px',
           ...sx,
         }}
-        onClick={() => document.getElementById('file-input')?.click()}
+        onClick={() => fileInputRef.current?.click()}
         {...dragRemainingProps}
       >
         <Iconify
@@ -297,7 +298,7 @@ const FileUploader = <T extends boolean = true>({
         )}
 
         <input
-          id="file-input"
+          ref={fileInputRef}
           type="file"
           accept={allowedTypes.join(',')}
           multiple={multiple}

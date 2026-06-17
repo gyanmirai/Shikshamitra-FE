@@ -268,9 +268,7 @@ export function mapBackendToFormik(
     }
 
     const hasGroupSchedule = !!groupSched.examDate;
-    const hasSeparateSchedules = restoredSubjects.some((s: any) => s.examDate);
-    const schedulingMode: 'combined' | 'separate' =
-      hasSeparateSchedules && !hasGroupSchedule ? 'separate' : 'combined';
+    const schedulingMode: 'combined' | 'separate' = hasGroupSchedule ? 'combined' : 'separate';
 
     return [
       {

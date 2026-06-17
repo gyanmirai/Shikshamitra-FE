@@ -1,4 +1,4 @@
-import { CloseIcon } from 'yet-another-react-lightbox';
+import CloseIcon from '@mui/icons-material/Close';
 import FileUploader from 'src/components/custom-upload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
