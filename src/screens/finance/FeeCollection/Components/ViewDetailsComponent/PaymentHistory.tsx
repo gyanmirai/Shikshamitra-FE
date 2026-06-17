@@ -1,11 +1,14 @@
 import type { PaymentHistoryItem } from 'src/redux/feeCollection/feeCollection';
 
+import dayjs from 'dayjs';
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Chip, Paper, Stack, Tooltip, IconButton, Typography } from '@mui/material';
+import { Paper, Stack, Tooltip, IconButton, Typography } from '@mui/material';
+import { ReconciliationStatusType } from 'src/enums/reconciliation-status-type';
 
 import type { IStudentFee } from '../type';
 
@@ -20,7 +23,7 @@ const PaymentHistory = ({
     () =>
       (payments ?? []).map((p) => ({
         receiptNo: p.receiptNumber,
-        date: p.date ? new Date(p.date).toLocaleDateString('en-IN') : '-',
+        date: p.date ? dayjs(p.date).format('DD-MM-YYYY') : '-',
         amount: p.amount,
         paymentMethod: p.paymentMethods?.join(', ') ?? '-',
       })),
@@ -93,21 +96,12 @@ const PaymentHistory = ({
               id: 'paymentMethod',
               label: 'Payment Method',
               align: 'left',
-              render: (value) => {
-                const method = Array.isArray(value) ? value.join(', ') : value;
-                return (
-                  <Chip
-                    label={method}
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      borderRadius: 1,
-                      fontWeight: 600,
-                      borderColor: 'divider',
-                      color: 'text.secondary',
-                    }}
-                  />
-                );
+              sticky: true,
+              width: 100,
+              minWidth: 84,
+              maxWidth: 130,
+              render(value) {
+                return <Label color="default">{ReconciliationStatusType[value[0]]}</Label>;
               },
             },
             {

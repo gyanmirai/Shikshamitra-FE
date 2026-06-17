@@ -614,10 +614,6 @@ const FeeCollectComponentForm = ({
             detailErrors[field.name] = `Invalid ${field.label}`;
             return;
           }
-          if (dateValue.isAfter(dayjs(), 'day')) {
-            detailErrors[field.name] = `${field.label} cannot be a future date`;
-            return;
-          }
         }
 
         const stringValue = normalizeDetailValue(rawValue);
@@ -1781,7 +1777,7 @@ const FeeCollectComponentForm = ({
                                               : '',
                                         },
                                       }}
-                                      disableFuture
+                                      disablePast
                                     />
                                   ) : field.type === 'select' ? (
                                     <TextField

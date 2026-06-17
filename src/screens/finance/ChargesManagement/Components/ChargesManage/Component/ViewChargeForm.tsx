@@ -1,7 +1,9 @@
+import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { InfoItem } from 'src/components/info-item';
@@ -10,6 +12,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetChargeByIdQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
 import { Box, Grid, Paper, Stack, Button, Divider, Typography, DialogActions } from '@mui/material';
+import {
+  ChargesPaymentStatus,
+  ChargesPaymentStatusColors,
+  ChargesPaymentStatusOptions,
+} from 'src/enums/fee-charges-status';
 
 import RequestorInfoCard from './ViewChargeComponent/RequestorInfoCard';
 import ChargeViewSkeleton from './ViewChargeComponent/ChargeViewSkeleton';
@@ -39,6 +46,23 @@ const ChargeDetailsCard: React.FC<Props> = ({
       { id: 'rollNumber', label: 'Roll No.', align: 'left', filterType: 'number' },
       { id: 'standardName', label: 'Class', align: 'left' },
       { id: 'divisionName', label: 'Division', align: 'left' },
+      {
+        id: 'status',
+        label: 'Status',
+        align: 'left',
+        isFilter: true,
+        filterType: 'enum',
+        enumOptions: ChargesPaymentStatusOptions,
+        sticky: true,
+        width: 100,
+        minWidth: 84,
+        maxWidth: 130,
+        render(value) {
+          const statusValue = value as ChargesPaymentStatus;
+          const color = ChargesPaymentStatusColors[statusValue] as LabelColor;
+          return <Label color={color}>{ChargesPaymentStatus[statusValue]}</Label>;
+        },
+      },
     ],
     []
   );
