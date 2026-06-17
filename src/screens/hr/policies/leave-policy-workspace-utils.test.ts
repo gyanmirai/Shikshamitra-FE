@@ -3,21 +3,33 @@ import { it, expect, describe } from 'vitest';
 import {
   getLeavePolicyTitle,
   isLeavePolicyArchived,
-  getLeavePolicyLeaveTypeName,
+  getLeavePolicyBucketSummary,
   buildLeavePolicyImpactReview,
 } from './leave-policy-workspace-utils';
 
 describe('leave policy workspace adapter', () => {
-  it('maps legacy leave policy names and leave type objects for the policy workspace', () => {
+  it('maps leave policy names and paid buckets for the policy workspace', () => {
     expect(getLeavePolicyTitle({ policyTitle: 'Annual casual leave' } as any)).toBe(
       'Annual casual leave'
     );
     expect(getLeavePolicyTitle({ title: 'Legacy title' } as any)).toBe('Legacy title');
     expect(
-      getLeavePolicyLeaveTypeName({
-        rules: [{ id: 'rule-1', leaveType: { id: 'type-1', name: 'Casual' }, isActive: true }],
+      getLeavePolicyBucketSummary({
+        rules: [{ id: 'rule-1', paidType: 'Paid', isActive: true }],
       } as any)
-    ).toBe('Casual');
+    ).toBe('Paid');
+  });
+
+  it('summarizes active paid type rules and ignores inactive rules', () => {
+    expect(
+      getLeavePolicyBucketSummary({
+        rules: [
+          { id: 'rule-1', paidType: 'Paid', isActive: true },
+          { id: 'rule-2', paidType: 'Unpaid', isActive: true },
+          { id: 'rule-3', paidType: 'Unpaid', isActive: false },
+        ],
+      } as any)
+    ).toBe('Paid, Unpaid');
   });
 
   it('treats soft-deleted or inactive policies as archived', () => {
@@ -35,7 +47,7 @@ describe('leave policy workspace adapter', () => {
         rules: [
           {
             id: 'rule-1',
-            leaveType: { id: 'type-1', name: 'Sick' },
+            paidType: 'Paid',
             leaveCount: 12,
             encashmentAllowed: true,
             carryForward: true,
@@ -48,7 +60,7 @@ describe('leave policy workspace adapter', () => {
     );
 
     expect(review.requiresConfirmation).toBe(true);
-    expect(review.leaveTypeName).toBe('Sick');
+    expect(review.bucketSummary).toBe('Paid');
     expect(review.risks.map((risk) => risk.label)).toContain('Needs confirmation');
     expect(review.risks.map((risk) => risk.label)).toContain('Informational');
   });

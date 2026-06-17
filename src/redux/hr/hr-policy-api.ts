@@ -121,7 +121,19 @@ export type LeavePolicySummary = {
   title?: string;
   status?: PolicyStatus | string;
   isDefault?: boolean;
-  allowedLeaveTypeIds?: string[];
+  allowedPaidTypes?: string[];
+  rules?: Array<{
+    id?: string;
+    paidType: 'Paid' | 'Unpaid' | string;
+    entitlementMode?: 'Limited' | 'Unlimited' | string;
+    leaveCount?: number | null;
+    isUnlimited?: boolean;
+    requiresApproval?: boolean;
+    allowHalfDay?: boolean;
+    allowNegativeBalance?: boolean;
+    maxDaysPerRequest?: number | null;
+    attachmentRequiredAfterDays?: number | null;
+  }>;
 };
 
 export type HrPolicyAssignment = {

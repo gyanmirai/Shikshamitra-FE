@@ -18,13 +18,14 @@ import type {
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
+import { toDateOnly } from 'src/utils/date-only';
 import { useSearchParams } from 'next/navigation';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useGetEmployeeQuery, EMPLOYEE_LIST_MAX_PAGE_SIZE } from 'src/redux/hr/employeeApi';
 import {
   useGetGroupsQuery,
   useGetGroupMembersQuery,
@@ -325,7 +326,7 @@ export function useHRPolicyWorkspace({
   const assignmentListArgs = { academicYearId, maxResultCount: 1000 };
 
   const { data: employees, isFetching: employeesLoading } = useGetEmployeeQuery(
-    { page: 1, pageSize: 1000 },
+    { page: 1, pageSize: EMPLOYEE_LIST_MAX_PAGE_SIZE },
     { skip: !academicYearId }
   );
   const { data: groups, isFetching: groupsLoading } = useGetGroupsQuery(
@@ -832,9 +833,9 @@ export function useHRPolicyWorkspace({
       holidays: calendarForm.holidays.map((holiday) => ({
         ...holiday,
         academicYearId,
-        date: dayjs(getHolidayFromDate(holiday)).format('YYYY-MM-DD'),
-        fromDate: dayjs(getHolidayFromDate(holiday)).format('YYYY-MM-DD'),
-        toDate: dayjs(getHolidayToDate(holiday)).format('YYYY-MM-DD'),
+        date: toDateOnly(getHolidayFromDate(holiday)),
+        fromDate: toDateOnly(getHolidayFromDate(holiday)),
+        toDate: toDateOnly(getHolidayToDate(holiday)),
         dayCount: getHolidayDayCount(holiday),
       })),
     };
@@ -1364,8 +1365,8 @@ export function useHRPolicyWorkspace({
         !getHolidayFromDate(holiday) ||
         !getHolidayToDate(holiday) ||
         !(() => {
-          const from = dayjs(getHolidayFromDate(holiday)).format('YYYY-MM-DD');
-          const to = dayjs(getHolidayToDate(holiday)).format('YYYY-MM-DD');
+          const from = toDateOnly(getHolidayFromDate(holiday));
+          const to = toDateOnly(getHolidayToDate(holiday));
           const rangeFrom = calendarForm.effectiveFrom;
           const rangeTo = calendarForm.effectiveTo;
           const fromD = dayjs(from);
@@ -2123,8 +2124,8 @@ export function useHRPolicyWorkspace({
               .map((item, i) => (i === editingManualHolidayIndex ? { ...item, ...row } : item))
               .sort(
                 (left, right) =>
-                  dayjs(getHolidayFromDate(left)).valueOf() -
-                  dayjs(getHolidayFromDate(right)).valueOf()
+                  dayjs(toDateOnly(getHolidayFromDate(left))).valueOf() -
+                  dayjs(toDateOnly(getHolidayFromDate(right))).valueOf()
               ),
     }));
     setFormError('');

@@ -44,11 +44,6 @@ type AcademicYearListItem = AcademicYear & {
   academicYear?: AcademicYear;
 };
 
-type LeaveTypeSummary = {
-  id?: string;
-  name?: string;
-};
-
 type ApiJsonResponse = APIResponse | PlaywrightResponse;
 
 type TestPolicies = {
@@ -468,44 +463,20 @@ async function createPayrollPolicyThroughUi(page: Page, name: string, calendarNa
   return policy;
 }
 
-async function ensureLeaveType(page: Page, academicYearId: string) {
-  const leaveTypes = await getJson<any>(
-    page,
-    `/hr-leave-types?academicYearId=${academicYearId}&page=1&pageSize=100`
-  );
-  const existing = asItems<LeaveTypeSummary>(leaveTypes).find((item) => item?.id && item?.name);
-  if (existing) return existing;
-
-  const response = await employeeApiRequest(
-    page,
-    `/hr-leave-types?academicYearId=${academicYearId}`,
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        name: `E2E Leave Type ${Date.now()}`,
-        description: 'E2E leave type for HR policy payroll golden path',
-        color: '#2f8f68',
-      }),
-    }
-  );
-  return jsonFrom(response, 'create fallback leave type');
-}
-
-async function createLeavePolicyThroughUi(page: Page, name: string, leaveTypeName: string) {
+async function createLeavePolicyThroughUi(page: Page, name: string) {
   await openHrPage(page, '/hr/leave-policies', /Leave Policies|Policies & Rules/i);
   await page.getByRole('button', { name: /New Leave Policy/i }).click();
 
   const dialog = activeDialog(page, /Add Leave Policy/i);
   await expect(dialog).toBeVisible();
   await dialog.getByRole('textbox', { name: /Policy Name/i }).fill(name);
-  await selectComboboxOption(page, dialog, 0, new RegExp(escapeRegExp(leaveTypeName), 'i'));
-  await selectComboboxOption(page, dialog, 1, /^Paid$/i);
-  await selectComboboxOption(page, dialog, 2, /^Yearly$/i);
-  await dialog.getByRole('spinbutton', { name: /Leave Count/i }).fill('12');
-  await setCheckbox(dialog, /Default leave policy/i, true);
-  await setCheckbox(dialog, /Carry Forward/i, false);
-  await setCheckbox(dialog, /Requires approval from supervisor/i, true);
+  await dialog.getByRole('spinbutton', { name: /^Days \*$/i }).fill('12');
+  await setCheckbox(dialog, /Default policy/i, true);
+  await setCheckbox(dialog, /Carry forward/i, false);
+  await setCheckbox(dialog, /^Approval$/i, true);
   await setCheckbox(dialog, /Encashable/i, false);
+  await expect(dialog.getByText(/Paid leave rule/i)).toBeVisible();
+  await expect(dialog.getByText(/Unpaid leave rule/i)).toBeVisible();
 
   const policy = await submitAndMaybeConfirm(
     page,
@@ -995,8 +966,7 @@ test.describe('HR policies to payroll golden path', () => {
         calendarName
       );
       const payroll = await createPayrollPolicyThroughUi(page, payrollPolicyName, calendarName);
-      const leaveType = await ensureLeaveType(page, academicYear.id);
-      const leave = await createLeavePolicyThroughUi(page, leavePolicyName, leaveType.name);
+      const leave = await createLeavePolicyThroughUi(page, leavePolicyName);
       const policies = { calendar, attendance, payroll, leave };
 
       await assertDefaultPolicyInvariants(page, academicYear.id, policies);

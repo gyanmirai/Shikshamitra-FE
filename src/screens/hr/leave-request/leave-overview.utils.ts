@@ -1,8 +1,8 @@
 import { normalizeLeaveStatus } from './leave-status.utils';
 
-export interface LeaveTypeBreakdown {
-  leaveTypeId: string;
-  leaveTypeName: string;
+export interface LeaveBucketBreakdown {
+  bucketId: string;
+  bucketName: string;
   total: number;
   used: number;
   pendingDays: number;
@@ -15,7 +15,7 @@ export interface LeaveOverviewData {
   usedLeaves: number;
   remainingLeaves: number;
   pendingLeaveDays: number;
-  leaveTypeBreakdown: LeaveTypeBreakdown[];
+  bucketBreakdown: LeaveBucketBreakdown[];
 }
 
 export const EMPTY_LEAVE_OVERVIEW: LeaveOverviewData = {
@@ -23,7 +23,7 @@ export const EMPTY_LEAVE_OVERVIEW: LeaveOverviewData = {
   usedLeaves: 0,
   remainingLeaves: 0,
   pendingLeaveDays: 0,
-  leaveTypeBreakdown: [],
+  bucketBreakdown: [],
 };
 
 const UNLIMITED_REMAINING_DAYS_THRESHOLD = 1_000_000;
@@ -37,9 +37,9 @@ function isUnlimitedLeaveBalance(item: any): boolean {
   const remainingDays = toFiniteNumber(item?.remainingDays);
 
   return Boolean(
-    item?.allowNegativeBalance ||
     item?.isUnlimited ||
     item?.unlimited ||
+    String(item?.entitlementMode || '').toLowerCase() === 'unlimited' ||
     remainingDays >= UNLIMITED_REMAINING_DAYS_THRESHOLD
   );
 }
@@ -61,8 +61,12 @@ function normalizeLeaveTypeName(value: unknown): string {
     .toLowerCase();
 }
 
-function getLeaveTypeMasterId(item: any): string {
-  return String(item?.leaveTypeMasterId ?? item?.leaveTypeId ?? '');
+function getPaidType(item: any): string {
+  return String(item?.paidType ?? item?.leaveType ?? '')
+    .trim()
+    .toLowerCase() === 'unpaid'
+    ? 'Unpaid'
+    : 'Paid';
 }
 
 function getLeaveUnits(item: any): number {
@@ -79,26 +83,25 @@ function getPendingUnits(item: any): number {
 
 function resolvePendingDaysForBalanceItem({
   item,
-  leaveTypeId,
-  leaveTypeName,
-  pendingDaysByLeaveTypeId,
+  bucketName,
+  pendingDaysByPaidType,
   pendingDaysByLeaveTypeName,
 }: {
   item: any;
-  leaveTypeId: string;
-  leaveTypeName: string;
-  pendingDaysByLeaveTypeId: Map<string, number>;
+  bucketName: string;
+  pendingDaysByPaidType: Map<string, number>;
   pendingDaysByLeaveTypeName: Map<string, number>;
 }): number {
   if (item?.pendingDays != null) {
     return getPendingUnits(item);
   }
 
-  if (leaveTypeId && pendingDaysByLeaveTypeId.has(leaveTypeId)) {
-    return pendingDaysByLeaveTypeId.get(leaveTypeId) ?? 0;
+  const paidType = getPaidType(item);
+  if (pendingDaysByPaidType.has(paidType)) {
+    return pendingDaysByPaidType.get(paidType) ?? 0;
   }
 
-  return pendingDaysByLeaveTypeName.get(normalizeLeaveTypeName(leaveTypeName)) ?? 0;
+  return pendingDaysByLeaveTypeName.get(normalizeLeaveTypeName(bucketName)) ?? 0;
 }
 
 export function shouldFetchHrEmployeeLeaveOverview({
@@ -144,13 +147,9 @@ export function buildLeaveOverview(balanceData?: any, historyData?: any): LeaveO
   const pendingLeaveDays = useBalancePendingDays
     ? balanceItems.reduce((sum: number, item: any) => sum + getPendingUnits(item), 0)
     : pendingItems.reduce((sum: number, item: any) => sum + getLeaveUnits(item), 0);
-  const pendingDaysByLeaveTypeId = pendingItems.reduce((map: Map<string, number>, item: any) => {
-    const leaveTypeId = getLeaveTypeMasterId(item);
-    if (!leaveTypeId) {
-      return map;
-    }
-
-    map.set(leaveTypeId, (map.get(leaveTypeId) ?? 0) + getLeaveUnits(item));
+  const pendingDaysByPaidType = pendingItems.reduce((map: Map<string, number>, item: any) => {
+    const paidType = getPaidType(item);
+    map.set(paidType, (map.get(paidType) ?? 0) + getLeaveUnits(item));
     return map;
   }, new Map<string, number>());
   const pendingDaysByLeaveTypeName = pendingItems.reduce((map: Map<string, number>, item: any) => {
@@ -168,22 +167,22 @@ export function buildLeaveOverview(balanceData?: any, historyData?: any): LeaveO
     usedLeaves,
     remainingLeaves,
     pendingLeaveDays,
-    leaveTypeBreakdown: balanceItems.map((item: any) => {
-      const leaveTypeName = item.leaveTypeName ?? item.policyName ?? '-';
-      const leaveTypeId = getLeaveTypeMasterId(item);
+    bucketBreakdown: balanceItems.map((item: any) => {
+      const paidType = getPaidType(item);
+      const bucketName = item.paidType ?? item.leaveTypeName ?? paidType;
+      const bucketId = paidType;
       const isUnlimited = isUnlimitedLeaveBalance(item);
       const pendingDays = resolvePendingDaysForBalanceItem({
         item,
-        leaveTypeId,
-        leaveTypeName,
-        pendingDaysByLeaveTypeId,
+        bucketName,
+        pendingDaysByPaidType,
         pendingDaysByLeaveTypeName,
       });
 
       return {
-        leaveTypeId,
-        leaveTypeName,
-        total: toFiniteNumber(item.entitledDays),
+        bucketId,
+        bucketName,
+        total: isUnlimited ? 0 : toFiniteNumber(item.entitledDays),
         used: toFiniteNumber(item.usedDays),
         pendingDays,
         remaining: isUnlimited ? 0 : toFiniteNumber(item.remainingDays),

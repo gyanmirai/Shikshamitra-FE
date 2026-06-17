@@ -24,7 +24,7 @@ Give school administrators and HR staff one module to manage staff records, atte
 | Area | Current requirements | Success state |
 | --- | --- | --- |
 | Dashboard | Show HR summary, attendance trend, payroll status, leaves, alerts, quick actions, birthdays/anniversaries, recent activity | Users can assess HR health without opening detail screens |
-| Employees | Create/search/update employees; manage personal, family, additional, work experience, payroll, reporting, academic, status, documents, and profile tabs | Employee profile persists and is searchable by name, code, email, mobile |
+| Employees | Create/search/update employees; manage personal, family, additional, work experience, payroll, reporting, Academic Permission, status, documents, and profile tabs. Personal Information does not capture organization; Academic Permission owns organization/stage scope. | Employee profile persists and is searchable by name, code, email, mobile |
 | Employee documents | Upload/list/download profile documents and profile picture; validate file constraints | Valid documents display; invalid uploads fail with controlled UI errors |
 | I-card | Manage I-card templates/assets and generate employee I-card PDFs | Templates and generated cards use employee profile data |
 | Payroll settings | Manage earning components, deduction components, PF rules; pages also exist for TDS/professional tax | Active components/rules can be selected by salary/payroll flows |
@@ -33,7 +33,7 @@ Give school administrators and HR staff one module to manage staff records, atte
 | Payslips | Fetch salary slip data and PDF/preview PDF | Slip totals match locked payroll snapshot |
 | Attendance | Mark day attendance, import attendance file, view date-wise and employee-wise tracking, adjust attendance register | Attendance summaries, register rows, and payroll tags update after changes |
 | Attendance locks | Lock/unlock day attendance and imported batches | Locked state blocks or guards edits and protects payroll basis |
-| Leave | Configure leave types/policies, apply leave, approve/reject, show leave center and balances | Request status and balances reflect action rules |
+| Leave | Configure leave policies with Paid/Unpaid rule buckets, apply leave, approve/reject, show leave center and balances | Request status, balances, and payroll impact reflect Paid or Unpaid rules |
 | HR policies | Manage work calendar, leave, payroll, attendance policies; clone/archive/default; assign policies; preview impact/audit/version data | Effective employee policies can be inspected for a date |
 | Performance management | Manage templates, cycles, assignments, reviews, observations, evidence, feedback, outcomes, reports, audit, PDFs | Review cycle progresses through publish, assignment, stages, calibration/finalization |
 | Reports | Build templates, preview report data, export, track export history | HR report outputs reflect selected source/options |

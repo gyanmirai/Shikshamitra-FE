@@ -12,7 +12,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Tab, Box, Paper, Stack, Button, Typography } from '@mui/material';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
-import LeaveType from './leave-type';
 import ShiftManagement from './shift-management';
 
 const TABS = [
@@ -41,12 +40,6 @@ const TABS = [
   //   component: (props: any) => <AttendanceRule {...props} />,
   // },
   {
-    value: 'leaveType',
-    label: 'Leave Type',
-    icon: <Iconify icon="fluent:notepad-edit-16-filled" width={20} />,
-    component: (props: any) => <LeaveType {...props} />,
-  },
-  {
     value: 'deviceIntegration',
     label: 'Device Integration',
     icon: <Iconify icon="mdi:fingerprint" width={20} />,
@@ -63,7 +56,6 @@ const TABS = [
 const HrAttendanceSettingScreen = () => {
   const attendanceRuleDialog = useBoolean(false);
   const shiftManagementDialog = useBoolean(false);
-  const leaveTypeDialog = useBoolean(false);
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'shiftManagement' });
   const currentIndex = useMemo(
     () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
@@ -106,17 +98,6 @@ const HrAttendanceSettingScreen = () => {
           Open Policies
         </Button>
       ),
-      leaveType: (
-        <Button
-          sx={{ width: '160px' }}
-          startIcon={<Add />}
-          variant="contained"
-          size="small"
-          onClick={leaveTypeDialog.onTrue}
-        >
-          Leave Type
-        </Button>
-      ),
       deviceIntegration: (
         <Button
           sx={{ width: '190px' }}
@@ -130,7 +111,7 @@ const HrAttendanceSettingScreen = () => {
         </Button>
       ),
     }),
-    [attendanceRuleDialog.onTrue, leaveTypeDialog.onTrue, shiftManagementDialog.onTrue]
+    [attendanceRuleDialog.onTrue, shiftManagementDialog.onTrue]
   );
 
   const currentActiveComponent = useMemo(
@@ -198,7 +179,6 @@ const HrAttendanceSettingScreen = () => {
             <currentActiveComponent.component
               attendanceRuleDialog={attendanceRuleDialog}
               shiftManagementDialog={shiftManagementDialog}
-              leaveTypeDialog={leaveTypeDialog}
               // searchParams={searchParams}
               // setSearchParams={setSearchParams}
             />

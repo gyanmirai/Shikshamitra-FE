@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { toDateOnly } from 'src/utils/date-only';
 import {
   Box,
   Chip,
@@ -122,7 +123,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
     const matchesSearch = !search || holiday.holidayName.toLowerCase().includes(search);
     const matchesMonth =
       !holidayReviewFilters.month ||
-      dayjs(getHolidayFromDate(holiday)).format('YYYY-MM') === holidayReviewFilters.month;
+      toDateOnly(getHolidayFromDate(holiday)).slice(0, 7) === holidayReviewFilters.month;
     const matchesSource =
       holidayReviewFilters.source === 'all' ||
       (holidayReviewFilters.source === 'included' && holiday.isIncluded) ||

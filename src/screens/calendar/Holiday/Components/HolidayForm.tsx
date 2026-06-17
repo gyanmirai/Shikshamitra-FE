@@ -16,6 +16,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
+import { toDateOnly, parseDateOnly } from 'src/utils/date-only';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
@@ -101,9 +102,9 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
       id: initialValues?.id || '',
       holidayName: initialValues?.holidayName || '',
       holidayTypeId: initialValues?.holidayTypeId || '',
-      startDate: initialValues?.startDate || null,
+      startDate: parseDateOnly(initialValues?.startDate) || null,
       audience: initialValues?.audienceIds || initialValues?.audience || [],
-      endDate: initialValues?.endDate || null,
+      endDate: parseDateOnly(initialValues?.endDate) || null,
       description: initialValues?.description || '',
       attachment: toFileData(initialValues?.attachment || initialValues?.attachments),
       createdBy: initialValues?.createdBy || '',
@@ -131,8 +132,8 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
           academicYearId: currentYear?.id,
           holidayName: values.holidayName,
           holidayTypeId: values.holidayTypeId,
-          startDate: dayjs(values.startDate).toISOString(),
-          endDate: dayjs(values.endDate).toISOString(),
+          startDate: toDateOnly(values.startDate),
+          endDate: toDateOnly(values.endDate),
           description: values.description,
           audienceIds: values.audience,
           attachments: serializeFileValue(values.attachment),

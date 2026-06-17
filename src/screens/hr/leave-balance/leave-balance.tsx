@@ -28,11 +28,11 @@ import {
 
 import { useLeaveOverview } from '../leave-request/use-leave-overview';
 import { getLeaveStatusColor, getLeaveStatusLabel } from '../leave-request/leave-status.utils';
-import { formatLeaveDays, type LeaveTypeBreakdown } from '../leave-request/leave-overview.utils';
+import { formatLeaveDays, type LeaveBucketBreakdown } from '../leave-request/leave-overview.utils';
 
 // -----------------------------------------------------------------------
 
-const getUsagePct = (row: LeaveTypeBreakdown) =>
+const getUsagePct = (row: LeaveBucketBreakdown) =>
   !row.isUnlimited && row.total > 0 ? Math.min(100, Math.round((row.used / row.total) * 100)) : 0;
 
 const LeaveMetric = ({ label, value }: { label: string; value: React.ReactNode }) => (
@@ -79,7 +79,7 @@ const LeaveBalanceLedger = ({
   rows,
   isLoading,
 }: {
-  rows: LeaveTypeBreakdown[];
+  rows: LeaveBucketBreakdown[];
   isLoading: boolean;
 }) => {
   if (isLoading) {
@@ -126,7 +126,7 @@ const LeaveBalanceLedger = ({
           rows.map((row, index) => {
             const usagePct = getUsagePct(row);
             const isLowBalance = !row.isUnlimited && row.remaining <= 2 && row.total > 0;
-            const rowKey = row.leaveTypeId || row.leaveTypeName;
+            const rowKey = row.bucketId || row.bucketName;
 
             return (
               <Box
@@ -163,7 +163,7 @@ const LeaveBalanceLedger = ({
                   </Box>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography variant="body2" sx={{ fontWeight: 800, overflowWrap: 'anywhere' }}>
-                      {row.leaveTypeName}
+                      {row.bucketName}
                     </Typography>
                     {row.isUnlimited && (
                       <Typography variant="caption" color="text.secondary">
@@ -259,7 +259,7 @@ const LeaveBalanceLedger = ({
                 },
               }}
             >
-              <TableCell>Leave type</TableCell>
+              <TableCell>Paid type</TableCell>
               <TableCell align="right">Available</TableCell>
               <TableCell align="right">Entitled</TableCell>
               <TableCell align="right">Used</TableCell>
@@ -286,7 +286,7 @@ const LeaveBalanceLedger = ({
               rows.map((row) => {
                 const usagePct = getUsagePct(row);
                 const isLowBalance = !row.isUnlimited && row.remaining <= 2 && row.total > 0;
-                const rowKey = row.leaveTypeId || row.leaveTypeName;
+                const rowKey = row.bucketId || row.bucketName;
 
                 return (
                   <TableRow
@@ -329,7 +329,7 @@ const LeaveBalanceLedger = ({
                         <Box sx={{ minWidth: 0 }}>
                           <Typography
                             variant="body2"
-                            title={row.leaveTypeName}
+                            title={row.bucketName}
                             sx={{
                               fontWeight: 800,
                               overflow: 'hidden',
@@ -337,7 +337,7 @@ const LeaveBalanceLedger = ({
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            {row.leaveTypeName}
+                            {row.bucketName}
                           </Typography>
                           {row.isUnlimited && (
                             <Typography variant="caption" color="text.secondary">
@@ -438,13 +438,13 @@ const LeaveBalance = ({
   const { historyData, overview, isLoadingBalance, isLoadingHistory, selfAccessError } =
     leaveOverviewState;
 
-  const breakdownRows = useMemo(() => overview.leaveTypeBreakdown, [overview.leaveTypeBreakdown]);
+  const breakdownRows = useMemo(() => overview.bucketBreakdown, [overview.bucketBreakdown]);
 
   const historyColumns: IColumn[] = useMemo(
     () => [
       {
-        id: 'leaveType',
-        label: 'Leave Type',
+        id: 'paidType',
+        label: 'Paid Type',
         align: 'left',
         minWidth: '140px',
         sticky: true,
@@ -525,7 +525,7 @@ const LeaveBalance = ({
       (historyData?.items ?? []).map((item: any) => ({
         id: item.id,
         appliedDate: item.appliedDate ? dayjs(item.appliedDate).format('DD-MM-YYYY') : '-',
-        leaveType: item.leaveType ?? '-',
+        paidType: item.paidType ?? item.leaveType ?? '-',
         startDate: item.startDate ? dayjs(item.startDate).format('DD-MM-YYYY') : '-',
         endDate: item.endDate ? dayjs(item.endDate).format('DD-MM-YYYY') : '-',
         totalDays: item.totalDays ?? '-',
@@ -549,7 +549,7 @@ const LeaveBalance = ({
                   { name: 'Leave Balance' },
                 ]
           }
-          description="Leave quota, breakdown by leave type, and request history."
+          description="Leave quota, breakdown by paid type, and request history."
         />
       )}
 
@@ -581,7 +581,7 @@ const LeaveBalance = ({
                     size="small"
                     variant="soft"
                     color="primary"
-                    label={`${breakdownRows.length} type${breakdownRows.length === 1 ? '' : 's'}`}
+                    label={`${breakdownRows.length} bucket${breakdownRows.length === 1 ? '' : 's'}`}
                     sx={{ fontWeight: 800 }}
                   />
                 }

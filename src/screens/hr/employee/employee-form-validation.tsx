@@ -152,7 +152,6 @@ export const getPersonalInformationValidationSchema = (
       .default(() => ({ name: '' }))
       .required('State is required'),
     pincode: Yup.string().test('picode', 'Must be exactly 6 numbers', isValidPincode),
-    // organization: Yup.string().required('Organization is required'),
     shift: Yup.string().required('Shift is required'),
     //   employeeId: Yup.string().required('Employee ID is required'),
   });

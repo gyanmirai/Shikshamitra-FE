@@ -108,13 +108,12 @@ describe('HR production menu', () => {
     expect(
       items.find(
         (item) =>
-          item.title === 'Leave Policy' && item.path === hrPaths.leaveManagement.setting.leavePolicy
+          item.title === 'Leave Policy' && item.path === '/hr/leave-management-setting/leavePolicy'
       )
     ).toBeUndefined();
+    expect(items.find((item) => item.title === 'Leave Types')).toBeUndefined();
     expect(
-      items.find((item) => item.title === 'Settings' && item._action === 'leave-policy-setup')
-    ).toMatchObject({
-      path: hrPaths.leaveManagement.setting.leaveType,
-    });
+      items.find((item) => item.path === '/hr/leave-management-setting/leaveType')
+    ).toBeUndefined();
   });
 });

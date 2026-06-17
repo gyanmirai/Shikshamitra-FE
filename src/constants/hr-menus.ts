@@ -71,12 +71,6 @@ export const hrPaths = {
     applyLeave: '/hr/apply-leave',
     approvals: '/hr/leave-approvals',
     leaveBalance: '/hr/leave-balance',
-    leavePolicySetup: '/hr/leave-management-setting/leaveType',
-    setting: {
-      root: '/hr/leave-management-setting',
-      leaveType: '/hr/leave-management-setting/leaveType',
-      leavePolicy: '/hr/leave-management-setting/leavePolicy',
-    },
   },
   professionalManagement: {
     root: '/hr/professional-management',
@@ -166,12 +160,6 @@ export const hrPermissions = {
     applyLeave: `${defaultHrPermissionName}LeaveManagement.LeaveCenter`,
     approvals: `${defaultHrPermissionName}LeaveManagement.LeaveCenter`,
     leaveBalance: `${defaultHrPermissionName}LeaveManagement.LeaveCenter`,
-    leavePolicySetup: `${defaultHrPermissionName}LeaveManagement.Setting.LeavePolicy`,
-    setting: {
-      root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceManagement`,
-      leaveType: `${defaultHrPermissionName}LeaveManagement.Setting.LeaveType`,
-      leavePolicy: `${defaultHrPermissionName}LeaveManagement.Setting.LeavePolicy`,
-    },
   },
   professionalManagement: `${defaultHrPermissionName}ProfessionalManagement.View`,
   performanceManagement: {
@@ -464,26 +452,6 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+H+L+1',
               permissionName: hrPermissions.leaveManagement.leaveCenter,
               icon: menuIconView('mdi:calendar-plus-outline'),
-            },
-            {
-              title: 'Settings',
-              path: hrPaths.leaveManagement.setting.leaveType,
-              _action: 'leave-policy-setup',
-              shortcutKey: 'Alt+H+L+2',
-              shortcutKeyName: 'Alt+H+L+2',
-              permissionName: hrPermissions.leaveManagement.setting.root,
-              icon: menuIconView('mdi:file-document-edit-outline'),
-              children: [
-                {
-                  title: 'Leave Types',
-                  path: hrPaths.leaveManagement.setting.leaveType,
-                  _action: 'leave-types',
-                  shortcutKey: 'Alt+H+L+4+1',
-                  shortcutKeyName: 'Alt+H+L+4+1',
-                  permissionName: hrPermissions.leaveManagement.setting.leaveType,
-                  icon: menuIconView('mdi:calendar-text-outline'),
-                },
-              ],
             },
           ],
         },
