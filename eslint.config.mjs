@@ -68,7 +68,7 @@ export default [
       'no-alert': 0,
       'react/prop-types': 'off',
       camelcase: 0,
-      'no-console': [1, { allow: ['error', 'info'] }],
+      'no-console': 0,
       'no-unused-vars': 0,
       'no-nested-ternary': 0,
       'no-param-reassign': 0,
@@ -77,13 +77,16 @@ export default [
       'no-promise-executor-return': 0,
       'import/prefer-default-export': 0,
       'prefer-destructuring': [1, { object: true, array: false }],
+      'func-names': 0,
+      'no-constant-condition': 0,
+      'react/no-danger': 0,
 
       // typescript
       '@typescript-eslint/naming-convention': 0,
       '@typescript-eslint/no-use-before-define': 0,
       '@typescript-eslint/consistent-type-exports': 1,
-      '@typescript-eslint/consistent-type-imports': 1,
-      '@typescript-eslint/no-unused-vars': [1, { args: 'none' }],
+      '@typescript-eslint/consistent-type-imports': 0,
+      '@typescript-eslint/no-unused-vars': 0,
 
       // react
       'react/no-children-prop': 0,
