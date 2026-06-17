@@ -36,7 +36,7 @@ describe('LeaveCenterOverviewPanel', () => {
     render(<LeaveCenterOverviewPanel overview={EMPTY_LEAVE_OVERVIEW} isLoading />);
 
     expect(screen.getByTestId('leave-overview-available-loading')).toBeInTheDocument();
-    expect(screen.getByTestId('leave-overview-entitled-loading')).toBeInTheDocument();
+    expect(screen.getByTestId('leave-overview-accrued-loading')).toBeInTheDocument();
     expect(screen.getByTestId('leave-overview-used-loading')).toBeInTheDocument();
     expect(screen.getByTestId('leave-overview-chart-loading')).toBeInTheDocument();
   });
@@ -45,7 +45,7 @@ describe('LeaveCenterOverviewPanel', () => {
     render(<LeaveCenterOverviewPanel overview={overview} isLoading={false} />);
 
     expect(screen.getByText('Available')).toBeInTheDocument();
-    expect(screen.getByText('Entitled')).toBeInTheDocument();
+    expect(screen.getByText('Accrued')).toBeInTheDocument();
     expect(screen.getByText('Used')).toBeInTheDocument();
     expect(screen.getByText('40% used')).toBeInTheDocument();
     expect(screen.getByText('Pending')).toBeInTheDocument();

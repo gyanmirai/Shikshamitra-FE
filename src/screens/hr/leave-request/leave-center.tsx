@@ -221,7 +221,6 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
             mode={isSelfContext ? 'self' : 'hr'}
             showBreadcrumbs={false}
             showSelfAccessError={false}
-            showBalanceLedger={false}
             overviewState={leaveOverviewState}
           />
         )}

@@ -573,6 +573,60 @@ describe('leave overview builder', () => {
     ]);
   });
 
+  it('uses accrued days for finite leave buckets when the balance contract provides them', () => {
+    const overview = buildLeaveOverview({
+      items: [
+        {
+          paidType: 'Paid',
+          entitledDays: 12,
+          accruedDays: 3,
+          usedDays: 1,
+          pendingDays: 0.5,
+          remainingDays: 2,
+        },
+      ],
+    });
+
+    expect(overview.totalLeaves).toBe(3);
+    expect(overview.usedLeaves).toBe(1);
+    expect(overview.remainingLeaves).toBe(2);
+    expect(overview.bucketBreakdown[0]).toMatchObject({
+      bucketId: 'Paid',
+      total: 3,
+      used: 1,
+      pendingDays: 0.5,
+      remaining: 2,
+      isUnlimited: false,
+    });
+  });
+
+  it('keeps negative-balance buckets finite and displays negative remaining days', () => {
+    const overview = buildLeaveOverview({
+      items: [
+        {
+          paidType: 'Paid',
+          entitlementMode: 'Limited',
+          entitledDays: 12,
+          accruedDays: 2,
+          usedDays: 3,
+          pendingDays: 0,
+          remainingDays: -1,
+          allowNegativeBalance: true,
+          isUnlimited: false,
+        },
+      ],
+    });
+
+    expect(overview.totalLeaves).toBe(2);
+    expect(overview.remainingLeaves).toBe(-1);
+    expect(overview.bucketBreakdown[0]).toMatchObject({
+      total: 2,
+      used: 3,
+      remaining: -1,
+      isUnlimited: false,
+    });
+  });
+
   it('excludes unlimited unpaid buckets from finite balance totals', () => {
     const overview = buildLeaveOverview({
       items: [

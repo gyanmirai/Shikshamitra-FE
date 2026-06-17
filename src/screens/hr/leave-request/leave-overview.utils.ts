@@ -81,6 +81,12 @@ function getPendingUnits(item: any): number {
   return toFiniteNumber(item?.pendingDays);
 }
 
+function getAccruedOrEntitledDays(item: any): number {
+  return item?.accruedDays == null
+    ? toFiniteNumber(item?.entitledDays)
+    : toFiniteNumber(item?.accruedDays);
+}
+
 function resolvePendingDaysForBalanceItem({
   item,
   bucketName,
@@ -129,7 +135,7 @@ export function buildLeaveOverview(balanceData?: any, historyData?: any): LeaveO
   const finiteBalanceItems = balanceItems.filter((item: any) => !isUnlimitedLeaveBalance(item));
 
   const totalLeaves = finiteBalanceItems.reduce(
-    (sum: number, item: any) => sum + toFiniteNumber(item.entitledDays),
+    (sum: number, item: any) => sum + getAccruedOrEntitledDays(item),
     0
   );
   const usedLeaves = balanceItems.reduce(
@@ -182,7 +188,7 @@ export function buildLeaveOverview(balanceData?: any, historyData?: any): LeaveO
       return {
         bucketId,
         bucketName,
-        total: isUnlimited ? 0 : toFiniteNumber(item.entitledDays),
+        total: isUnlimited ? 0 : getAccruedOrEntitledDays(item),
         used: toFiniteNumber(item.usedDays),
         pendingDays,
         remaining: isUnlimited ? 0 : toFiniteNumber(item.remainingDays),
