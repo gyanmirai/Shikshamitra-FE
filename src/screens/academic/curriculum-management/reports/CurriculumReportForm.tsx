@@ -31,7 +31,7 @@ interface CurriculumReportInitialValues {
   organization: string;
   classes: string;
   divisions: string[];
-  subjects: string[];
+  subjects: string;
   chapters: string[];
 }
 
@@ -40,7 +40,7 @@ const initialValues: CurriculumReportInitialValues = {
   organization: '',
   classes: '',
   divisions: [],
-  subjects: [],
+  subjects: '',
   chapters: [],
 };
 
@@ -174,9 +174,7 @@ const CurriculumReportForm = ({
         ? allDivision.filter((d) => d.id !== 'all').map((d) => d.id)
         : values.divisions;
 
-      const subjectIds = values.subjects.includes('all')
-        ? subjectOptions.filter((s) => s.id !== 'all').map((s) => s.id)
-        : values.subjects;
+      const subjectIds = values.subjects ? [values.subjects] : [];
 
       const requestPayload = {
         reportType: CurriculumReportApiTypeMap[report],
@@ -226,10 +224,7 @@ const CurriculumReportForm = ({
   // ─── Derived select identifiers ────────────────────────────────────────────
   const classId = formik.values.classes || '';
 
-  const subjectId = useMemo(
-    () => (formik.values.subjects as string[])[0] ?? '',
-    [formik.values.subjects]
-  );
+  const subjectId = formik.values.subjects || '';
 
   // ─── Dynamic subject API ───────────────────────────────────────────────────
   const {
@@ -367,7 +362,7 @@ const CurriculumReportForm = ({
                       formik.setFieldValue('organization', val);
                       formik.setFieldValue('classes', '');
                       formik.setFieldValue('divisions', []);
-                      formik.setFieldValue('subjects', []);
+                      formik.setFieldValue('subjects', '');
                     }}
                     onBlur={() => formik.setFieldTouched('organization', true)}
                     error={formik.touched.organization && Boolean(formik.errors.organization)}
@@ -392,7 +387,7 @@ const CurriculumReportForm = ({
                     onChange={(val) => {
                       formik.setFieldValue('classes', val as string);
                       formik.setFieldValue('divisions', []);
-                      formik.setFieldValue('subjects', []);
+                      formik.setFieldValue('subjects', '');
                     }}
                     onBlur={() => formik.setFieldTouched('classes', true)}
                     error={formik.touched.classes && Boolean(formik.errors.classes)}
@@ -442,7 +437,6 @@ const CurriculumReportForm = ({
                     error={formik.touched.subjects && Boolean(formik.errors.subjects)}
                     helperText={(formik.touched.subjects && formik.errors.subjects) as string}
                     options={subjectOptions}
-                    multiple
                     labelKey="name"
                     valueKey="id"
                     formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}

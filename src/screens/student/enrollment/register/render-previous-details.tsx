@@ -137,11 +137,18 @@ const RenderPreviousSchoolFields = (props: any) => {
           fullWidth
           label="TC Number"
           name="tcNumber"
-          value={formik.values.tcNumber}
-          onChange={(e: any) => {
-            const onlyText = e.target.value.replace(/[^0-9]/g, '').slice(0, 20);
-            formik.setFieldValue('tcNumber', onlyText);
+          value={formik.values.tcNumber || ''}
+          inputProps={{
+            maxLength: 20,
+            style: { textTransform: 'uppercase' },
           }}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            // Allows uppercase letters, numbers, slashes (/), and hyphens (-)
+            const formattedValue = e.target.value.toUpperCase().replace(/[^A-Z0-9/-]/g, '');
+            formik.setFieldValue('tcNumber', formattedValue);
+          }}
+          error={formik.touched.tcNumber && Boolean(formik.errors.tcNumber)}
+          helperText={formik.touched.tcNumber && formik.errors.tcNumber}
           disabled={!isEditable.value}
         />
       </Grid>

@@ -19,7 +19,7 @@ export interface CurriculumReportInitialValues {
   organization: string;
   classes: string[];
   divisions: string[];
-  subjects: string[];
+  subjects: string;
   chapters: string[];
 }
 
@@ -28,7 +28,7 @@ const initialValues: CurriculumReportInitialValues = {
   organization: '',
   classes: [],
   divisions: [],
-  subjects: [],
+  subjects: '',
   chapters: [],
 };
 
@@ -181,10 +181,7 @@ export const useCurriculumReportForm = (report: CurriculumReportTitle) => {
    * Memoization Justification:
    * Memoizes the primary selected subject ID, avoiding dependency resets on the chapters query.
    */
-  const subjectId = useMemo(
-    () => (formik.values.subjects as string[])[0] ?? '',
-    [formik.values.subjects]
-  );
+  const subjectId = formik.values.subjects || '';
 
   const {
     data: chapterResponse,

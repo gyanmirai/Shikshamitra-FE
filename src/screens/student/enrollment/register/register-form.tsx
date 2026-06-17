@@ -217,6 +217,7 @@ const RegisterForm = ({
   const dispatch = useDispatch();
   const formikRef = useRef<any>(null);
   const resetCurrentStepRef = useRef<(() => void) | null>(null);
+  const [savedStudentId, setSavedStudentId] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [stepCounts, setStepCounts] = useState<{ completed: number; total: number }[]>(
     BASE_STEPS.map((_, i) => ({ completed: 0, total: REQUIRED_FIELD_KEYS[i].length }))
@@ -268,9 +269,10 @@ const RegisterForm = ({
   const handleGeneralFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
-        if (editData || values?.id) {
+        const targetStudentId = editData?.studentId || values?.id || savedStudentId;
+        if (targetStudentId) {
           await updateBasicDetails({
-            id: editData?.studentId || values?.id,
+            id: targetStudentId,
             body: {
               firstName: values.firstName,
               middleName: values.middleName || undefined,
@@ -354,13 +356,19 @@ const RegisterForm = ({
             // academicYearId: values.academicYear,
             // educationBoardId: values.board,
           }).unwrap();
-          formik.setFieldValue('id', resp?.data?.studentId);
+          // Safe fallback checking both studentId and id
+          const newStudentId = resp?.data?.studentId || resp?.data?.id;
+
+          if (newStudentId) {
+            setSavedStudentId(newStudentId);
+            formik.setFieldValue('id', newStudentId);
+          }
         }
       } catch (error) {
         throw new Error(error);
       }
     },
-    [addRegistration, editData, updateBasicDetails]
+    [addRegistration, editData, updateBasicDetails, savedStudentId]
   );
   const handleFamilyFormSubmit = useCallback(
     async (values: any, formik: any) => {
@@ -528,30 +536,42 @@ const RegisterForm = ({
           id: editData?.studentId || values?.id,
           body: {
             localAddress: {
-              address1: values.localAddress1,
-              address2: values.localAddress2,
-              address3: values.localAddress3,
-              country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-              state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-              city: values?.city?.name,
+              address1: values.localAddressLine1,
+              address2: values.localAddressLine2,
+              address3: values.localAddressLine3,
+              country: { name: values?.localCountry?.name, isoCode: values?.localCountry?.isoCode },
+              state: { name: values?.localState?.name, isoCode: values?.localState?.isoCode },
+              city: values?.localCity?.name,
               pincode: values.localPincode,
             },
             permanentAddress: {
-              address1: values.permanentAddress1,
-              address2: values.permanentAddress2,
-              address3: values.permanentAddress3,
-              country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-              state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-              city: values?.city?.name,
+              address1: values.permanentAddress,
+              address2: values.permanentAddressLine2,
+              address3: values.permanentAddressLine3,
+              country: {
+                name: values?.permanentCountry?.name,
+                isoCode: values?.permanentCountry?.isoCode,
+              },
+              state: {
+                name: values?.permanentState?.name,
+                isoCode: values?.permanentState?.isoCode,
+              },
+              city: values?.permanentCity?.name,
               pincode: values.permanentPincode,
             },
             emergencyAddress: {
-              address1: values.emergencyAddress1,
-              address2: values.emergencyAddress2,
-              address3: values.emergencyAddress3,
-              country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-              state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-              city: values?.city?.name,
+              address1: values.emergencyAddressLine1,
+              address2: values.emergencyAddressLine2,
+              address3: values.emergencyAddressLine3,
+              country: {
+                name: values?.emergencyCountry?.name,
+                isoCode: values?.emergencyCountry?.isoCode,
+              },
+              state: {
+                name: values?.emergencyState?.name,
+                isoCode: values?.emergencyState?.isoCode,
+              },
+              city: values?.emergencyCity?.name,
               pincode: values.emergencyPincode,
             },
             isPermanentSameAsLocal: values.sameAsLocalForPermanent,

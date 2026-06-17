@@ -638,6 +638,7 @@ const AdmissionScreen = () => {
           }}
           tabValue={tabs.value}
           selectedStudents={selectedStudents}
+          tableData={tableData}
         />
       </CustomDialog>
 
@@ -1151,12 +1152,14 @@ interface ChangeStatusFormProps {
   handleClose: () => void;
   tabValue?: any; // Add correct type if `tabValue` is needed, or remove if unused
   selectedStudents: any[];
+  tableData: any[];
 }
 
 const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
   handleClose,
   tabValue,
   selectedStudents,
+  tableData,
 }: ChangeStatusFormProps) => {
   const [changeStatus, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -1175,12 +1178,17 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
     }),
     onSubmit: async (values) => {
       try {
-        const hasDivisions = selectedStudents.every((student) => !!student.divisionId);
-        if (!hasDivisions) {
-          shikshaMitraToast.error({
-            message: 'Please assign a division to all selected students before approving.',
+        if (values.status === RegistrationStatusType.Approved) {
+          const hasDivisions = selectedStudents.every((selected) => {
+            const freshStudent = tableData.find((t) => t.studentId === selected.studentId);
+            return !!(freshStudent?.divisionId || selected.divisionId);
           });
-          return;
+          if (!hasDivisions) {
+            shikshaMitraToast.error({
+              message: 'Please assign a division to all selected students before approving.',
+            });
+            return;
+          }
         }
         await changeStatus({
           body: selectedStudents.map((i: any) => ({

@@ -34,8 +34,8 @@ export const getCurriculumValidationSchema = (
   // Subjects
   if (visibleFields.includes('subjects')) {
     shape.subjects = requiredFields.includes('subjects')
-      ? Yup.array().min(1, 'At least one subject is required').required('Subject is required')
-      : Yup.array();
+      ? Yup.string().required('Subject is required')
+      : Yup.string().nullable();
   }
 
   // Chapters — always optional
