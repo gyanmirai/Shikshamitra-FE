@@ -88,7 +88,7 @@ const grantedPermissions = [
   'HR.LeaveManagement.Setting.LeavePolicy',
   'HR.LeaveManagement.LeaveCenter',
   'HR.Policies.View',
-  'HR.Policies.Create',
+  'HR.Policies.Add',
   'HR.Policies.Edit',
   'HR.Policies.SetDefault',
 ];
