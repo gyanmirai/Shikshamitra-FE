@@ -6,7 +6,7 @@ import { normalizeLeaveStatus } from './leave-status.utils';
 // will add type tommorrow working on it
 const leaveValidationSchema = (editData: any) =>
   Yup.object().shape({
-    leaveType: Yup.string().required('Leave type is required'),
+    paidType: Yup.string().required('Paid type is required'),
     isHalfDay: Yup.boolean(),
     startDate: Yup.date().required('Start date is required'),
     endDate: Yup.string()

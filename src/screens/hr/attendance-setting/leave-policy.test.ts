@@ -1,7 +1,10 @@
 import { it, expect, describe } from 'vitest';
 import { AccuralPolicyType } from 'src/enums/accuralPolicyType';
 
-import { toAccrualPolicyTypeApiValue, normalizeAccrualPolicyTypeValue } from './leave-policy';
+import {
+  toAccrualPolicyTypeApiValue,
+  normalizeAccrualPolicyTypeValue,
+} from '../policies/leave-policy-workspace-utils';
 
 describe('leave policy accrual mapping', () => {
   it('normalizes API accrual policy values for the local select', () => {

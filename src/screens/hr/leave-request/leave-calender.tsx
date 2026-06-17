@@ -186,7 +186,8 @@ const LeaveCalender = () => {
           selectedMediumStageId ? String(i?.mediumStageId ?? '') === selectedMediumStageId : true
         )
         .map((i: any) => {
-          const color = i.leaveTypeColor || '#2065D1';
+          const paidType = i.paidType ?? i.leaveTypeName ?? i.leaveType ?? '';
+          const color = paidType === 'Unpaid' ? '#ED6C02' : '#2E7D32';
           const desc = String(i.description ?? '');
           const plainDesc = desc.replace(/<[^>]+>/g, '');
           return {
@@ -197,10 +198,10 @@ const LeaveCalender = () => {
             allDay: false,
             employeeCode: i.employeeCode,
             textColor: color,
-            title: `${i.leaveTypeName ?? i.leaveType ?? ''} [${i.employeeName ?? i.name ?? ''}] ${i.status ?? ''}`,
+            title: `${paidType} [${i.employeeName ?? i.name ?? ''}] ${i.status ?? ''}`,
             reason: i.reason ?? plainDesc,
             description: plainDesc,
-            leaveType: i.leaveTypeName ?? i.leaveType,
+            paidType,
             name: i.employeeName ?? i.name,
             viewStartDate: i.startDate,
             viewEndDate: i.endDate,
@@ -501,10 +502,7 @@ export const LeaveRequestForm = ({
       <Box sx={{ px: 3, py: 2.5 }}>
         <SectionHeader icon="mdi:calendar-outline" label="Leave Details" />
         <Stack spacing={1.5}>
-          <InfoRow
-            label="Leave type"
-            value={detail?.leaveType || editData?.leavePolicy?.leaveType || '-'}
-          />
+          <InfoRow label="Paid type" value={detail?.paidType || editData?.paidType || '-'} />
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0, mr: 2 }}>
               Duration

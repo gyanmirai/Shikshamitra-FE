@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
+import { formatDateOnly } from 'src/utils/date-only';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Tab, Tabs, Paper, Typography } from '@mui/material';
@@ -103,9 +104,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
         filterType: 'date',
         align: 'left',
         minWidth: 130,
-        render: (value) => (
-          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
-        ),
+        render: renderHolidayDate,
       },
       {
         id: 'endDate',
@@ -113,9 +112,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
         filterType: 'date',
         align: 'left',
         minWidth: 130,
-        render: (value) => (
-          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
-        ),
+        render: renderHolidayDate,
       },
       { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
       {
@@ -276,9 +273,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               filterType: 'date',
               align: 'left',
               minWidth: 130,
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
-              ),
+              render: renderHolidayDate,
             },
             {
               id: 'endDate',
@@ -286,9 +281,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               filterType: 'date',
               align: 'left',
               minWidth: 130,
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
-              ),
+              render: renderHolidayDate,
             },
             { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
@@ -352,9 +345,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               filterType: 'date',
               align: 'left',
               minWidth: 130,
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
-              ),
+              render: renderHolidayDate,
             },
             {
               id: 'endDate',
@@ -362,9 +353,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               filterType: 'date',
               align: 'left',
               minWidth: 130,
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
-              ),
+              render: renderHolidayDate,
             },
             { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
@@ -445,9 +434,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               filterType: 'date',
               align: 'left',
               minWidth: 130,
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
-              ),
+              render: renderHolidayDate,
             },
             {
               id: 'endDate',
@@ -455,9 +442,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               filterType: 'date',
               align: 'left',
               minWidth: 130,
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
-              ),
+              render: renderHolidayDate,
             },
             { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
@@ -495,6 +480,10 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
 };
 
 export default HolidayTable;
+
+const renderHolidayDate = (value: unknown) => (
+  <Typography fontSize="13px">{formatDateOnly(value as string | null)}</Typography>
+);
 
 const renderAudienceCount = (value: unknown) => {
   const count = Array.isArray(value) ? value.length : 0;

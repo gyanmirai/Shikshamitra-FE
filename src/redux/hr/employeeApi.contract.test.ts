@@ -5,6 +5,7 @@ import {
   buildWorkExperienceUrl,
   buildReportingManagerUrl,
   buildEmployeeSubresourceUrl,
+  EMPLOYEE_LIST_MAX_PAGE_SIZE,
   buildEmployeeListQueryParams,
   employeePayrollInvalidationTags,
 } from './employeeApi';
@@ -76,6 +77,18 @@ describe('employeeApi contracts', () => {
       page: 1,
       pageSize: 10,
       isTeaching: false,
+    });
+  });
+
+  it('caps employee list page size at the backend contract limit', () => {
+    expect(buildEmployeeListQueryParams({ page: 1, pageSize: 1000 })).toEqual({
+      page: 1,
+      pageSize: EMPLOYEE_LIST_MAX_PAGE_SIZE,
+    });
+
+    expect(buildEmployeeListQueryParams({ page: 1, pageSize: '1000' })).toEqual({
+      page: 1,
+      pageSize: EMPLOYEE_LIST_MAX_PAGE_SIZE,
     });
   });
 });

@@ -72,7 +72,7 @@ export function LeavePolicyImpactDrawer({
               <Box>
                 <Typography variant="subtitle2">{review.policyName}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Leave type: {review.leaveTypeName}
+                  Buckets: {review.bucketSummary}
                 </Typography>
               </Box>
 
@@ -95,9 +95,9 @@ export function LeavePolicyImpactDrawer({
               </Stack>
 
               <Alert severity="info">
-                Historical leave requests keep the archived policy, leave type name, and reporting
+                Historical leave requests keep the archived policy, paid bucket, and reporting
                 context. New requests should only use active leave policies resolved from Leave
-                Type.
+                Policies & Rules.
               </Alert>
             </Stack>
           ) : null}

@@ -3,6 +3,8 @@ import path from 'node:path';
 import { expect, type Page, test as setup } from '@playwright/test';
 
 const authFile = path.join(process.cwd(), 'playwright/.auth/hr-manager.json');
+const defaultHrEmail =
+  process.env.E2E_HR_ATTENDANCE_SYNC === '1' ? 'admin-ddvs' : 'hr-manager@ddvs.com';
 
 setup.setTimeout(120_000);
 
@@ -78,7 +80,7 @@ async function login(page: Page, email: string, password: string) {
 setup('authenticate HR manager', async ({ page }) => {
   await login(
     page,
-    process.env.E2E_HR_EMAIL || 'hr-manager@ddvs.com',
+    process.env.E2E_HR_EMAIL || defaultHrEmail,
     process.env.E2E_HR_PASSWORD || 'Temp@123'
   );
 

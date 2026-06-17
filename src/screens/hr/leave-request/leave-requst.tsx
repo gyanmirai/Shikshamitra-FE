@@ -11,10 +11,10 @@ import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
+import React, { useMemo, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
-import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -24,6 +24,12 @@ import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useGetPolicyAssignmentPreviewQuery } from 'src/redux/hr/hr-policy-api';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
+import {
+  useCreateLeaveRequestMutation,
+  useRejectLeaveRequestMutation,
+  useApproveLeaveRequestMutation,
+  useCreateMyLeaveRequestMutation,
+} from 'src/redux/hr/leaveApi';
 import {
   Grid,
   Chip,
@@ -38,13 +44,6 @@ import {
   CircularProgress,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useLazyGetLeaveTypesQuery,
-  useCreateLeaveRequestMutation,
-  useRejectLeaveRequestMutation,
-  useApproveLeaveRequestMutation,
-  useCreateMyLeaveRequestMutation,
-} from 'src/redux/hr/leaveApi';
 
 import { normalizeLeaveStatus } from './leave-status.utils';
 import {
@@ -60,9 +59,9 @@ import {
   LEAVE_MAX_DAYS_EXCEEDED,
   getMinimumLeaveStartDate,
   isDateWithinAcademicYear,
+  isSelectedPaidTypeVisible,
   LEAVE_INSUFFICIENT_BALANCE,
   buildEmployeeSelectOptions,
-  isSelectedLeaveTypeVisible,
   getLeaveNoticePeriodMessage,
   isLeaveNoticePeriodSatisfied,
   shouldEnforceLeaveNoticePeriod,
@@ -73,7 +72,7 @@ import {
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
   resolveLeavePolicyPreviewEmployeeId,
-  getVisibleLeaveTypeOptionsForEffectivePolicy,
+  getVisiblePaidTypeOptionsForEffectivePolicy,
   isLeavePolicyPreviewEmployeeResolutionBlocked,
 } from './leave-request.utils';
 
@@ -97,7 +96,7 @@ type AddLeaveRequestProps = {
 
 interface FormValues {
   employee: { id: string; label: string } | null;
-  leaveTypeMasterId: string;
+  paidType: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
   halfDay: boolean;
@@ -106,8 +105,6 @@ interface FormValues {
   rejectionReason: string;
   docs: unknown;
 }
-
-const leaveTypeOptionsCacheByAcademicYear: Record<string, any[]> = {};
 
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
@@ -138,11 +135,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const authEmployeeId = useSelector((state: any) => state.auth?.employee?.id);
-  const {
-    data: yearsData,
-    isLoading: isYearsLoading,
-    isFetching: isYearsFetching,
-  } = useGetYearQuery(undefined, {
+  const { data: yearsData } = useGetYearQuery(undefined, {
     refetchOnMountOrArgChange: false,
     refetchOnFocus: false,
     refetchOnReconnect: false,
@@ -151,12 +144,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   const isAdminUser = isAdminFromProfile((session as any)?.profile);
   const shouldUseAdminSelectionRules = isAdminUser && !isSelfMode;
 
-  const [leaveTypeOptions, setLeaveTypeOptions] = useState<any[]>([]);
   const minimumLeaveStartDate = getMinimumLeaveStartDate();
   const leaveNoticePeriodMessage = getLeaveNoticePeriodMessage();
-
-  const [triggerLeaveTypes, { isLoading: isLeaveTypeLoading, isFetching: isLeaveTypeFetching }] =
-    useLazyGetLeaveTypesQuery();
 
   const {
     initialValues,
@@ -176,7 +165,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         : shouldUseAdminSelectionRules
           ? null
           : SELF_OPTION,
-      leaveTypeMasterId: editData?.leaveTypeMasterId || '',
+      paidType: editData?.paidType || '',
       reason: editData?.reason || editData?.description || '',
       startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
       endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
@@ -229,7 +218,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           return dayjs(value as any).isSame(dayjs(startDate as any), 'day');
         }),
       halfDay: Yup.boolean(),
-      leaveTypeMasterId: Yup.string().required('Leave Type is required'),
+      paidType: Yup.string().required('Paid type is required'),
       reason: Yup.string()
         .min(5, 'Reason must be at least 5 characters')
         .max(500, 'Reason must not exceed 500 characters')
@@ -293,33 +282,33 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           }
           if (isEffectivePreviewEmployeeResolutionBlocked) {
             setFieldError(
-              'leaveTypeMasterId',
+              'paidType',
               'Resolving employee profile for leave policy preview. Please wait.'
             );
             return;
           }
           if (hasBlockingEffectivePolicyState) {
             setFieldError(
-              'leaveTypeMasterId',
+              'paidType',
               'No effective leave policy is assigned to this employee for the selected date.'
             );
             return;
           }
-          if (isEffectivePolicyFetching || effectivePolicyError || hasNoAllowedLeaveTypes) {
+          if (isEffectivePolicyFetching || effectivePolicyError || hasNoAllowedPaidTypes) {
             setFieldError(
-              'leaveTypeMasterId',
+              'paidType',
               isEffectivePolicyFetching
                 ? 'Resolving effective leave policy. Please wait.'
                 : effectivePolicyError
                   ? 'Resolve the effective leave policy before submitting.'
-                  : 'No active leave types are available from the effective leave policy.'
+                  : 'No active paid or unpaid buckets are available from the effective leave policy.'
             );
             return;
           }
-          if (!isSelectedLeaveTypeVisible(formValues.leaveTypeMasterId, visibleLeaveTypeOptions)) {
+          if (!isSelectedPaidTypeVisible(formValues.paidType, visiblePaidTypeOptions)) {
             setFieldError(
-              'leaveTypeMasterId',
-              'Selected leave type is not available for the effective leave policy.'
+              'paidType',
+              'Selected paid type is not available for the effective leave policy.'
             );
             return;
           }
@@ -327,7 +316,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           // --- Create flow: build multipart/form-data body as per API contract ---
           const formData = buildCreateLeaveRequestFormData({
             employee: formValues.employee as EmployeeOption | null,
-            leaveTypeMasterId: formValues.leaveTypeMasterId,
+            paidType: formValues.paidType,
             startDate: formValues.startDate,
             endDate: formValues.endDate,
             halfDay: formValues.halfDay,
@@ -357,10 +346,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               parsedError.errorCode === LEAVE_POLICY_INACTIVE ||
               parsedError.errorCode === LEAVE_INSUFFICIENT_BALANCE
             ) {
-              setFieldError(
-                'leaveTypeMasterId',
-                parsedError.detail || 'Please select a valid leave type.'
-              );
+              setFieldError('paidType', parsedError.detail || 'Please select a valid paid type.');
             }
             if (
               parsedError.errorCode === LEAVE_MAX_DAYS_EXCEEDED ||
@@ -439,10 +425,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
   const hasResolvedEffectivePreviewEmployee =
     Boolean(effectivePreviewEmployeeId) || isEffectivePreviewEmployeeResolutionBlocked;
-  const visibleLeaveTypeOptions = useMemo(
+  const visiblePaidTypeOptions = useMemo(
     () =>
-      getVisibleLeaveTypeOptionsForEffectivePolicy(
-        leaveTypeOptions,
+      getVisiblePaidTypeOptionsForEffectivePolicy(
         effectivePolicyPreview?.leavePolicy || null,
         hasResolvedEffectivePreviewEmployee,
         isEffectivePolicyFetching,
@@ -453,7 +438,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       effectivePolicyPreview?.leavePolicy,
       hasResolvedEffectivePreviewEmployee,
       isEffectivePolicyFetching,
-      leaveTypeOptions,
     ]
   );
   const hasBlockingEffectivePolicyState =
@@ -462,63 +446,24 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     !isEffectivePolicyFetching &&
     !effectivePolicyError &&
     !effectivePolicyPreview?.leavePolicy;
-  const hasNoAllowedLeaveTypes =
+  const hasNoAllowedPaidTypes =
     hasResolvedEffectivePreviewEmployee &&
     !isEffectivePreviewEmployeeResolutionBlocked &&
     !isEffectivePolicyFetching &&
     !effectivePolicyError &&
     Boolean(effectivePolicyPreview?.leavePolicy) &&
-    visibleLeaveTypeOptions.length === 0;
-
-  useEffect(() => {
-    if (editData) {
-      return;
-    }
-
-    if (!catalogAcademicYearId) {
-      setLeaveTypeOptions([]);
-      return;
-    }
-
-    const cacheYearKey = String(catalogAcademicYearId);
-    const cachedLeaveTypes = leaveTypeOptionsCacheByAcademicYear[cacheYearKey];
-
-    if (cachedLeaveTypes?.length) {
-      setLeaveTypeOptions(cachedLeaveTypes);
-    } else {
-      setLeaveTypeOptions([]);
-    }
-
-    const loadDropdownsInBackground = async () => {
-      try {
-        const typesRes = await triggerLeaveTypes({
-          academicYearId: catalogAcademicYearId,
-          pageSize: 500,
-        }).unwrap();
-        const nextLeaveTypes = typesRes?.items || [];
-
-        leaveTypeOptionsCacheByAcademicYear[cacheYearKey] = nextLeaveTypes;
-        setLeaveTypeOptions(nextLeaveTypes);
-      } catch (loadError) {
-        console.error(loadError);
-      }
-    };
-
-    loadDropdownsInBackground();
-  }, [catalogAcademicYearId, editData, triggerLeaveTypes]);
+    visiblePaidTypeOptions.length === 0;
 
   useEffect(() => {
     if (editData) return;
-    if (!values.leaveTypeMasterId) return;
+    if (!values.paidType) return;
     if (isEffectivePreviewEmployeeResolutionBlocked || isEffectivePolicyFetching) return;
-    const existsInCatalog = visibleLeaveTypeOptions.some(
-      (item: any) => item?.id === values.leaveTypeMasterId
-    );
-    if (!existsInCatalog) {
-      setFieldValue('leaveTypeMasterId', '');
+    const existsInPolicy = visiblePaidTypeOptions.some((item: any) => item?.id === values.paidType);
+    if (!existsInPolicy) {
+      setFieldValue('paidType', '');
       setFieldError(
-        'leaveTypeMasterId',
-        'Selected leave type is no longer available. Please choose another leave type.'
+        'paidType',
+        'Selected paid type is no longer available. Please choose another paid type.'
       );
     }
   }, [
@@ -527,8 +472,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     isEffectivePreviewEmployeeResolutionBlocked,
     setFieldError,
     setFieldValue,
-    values.leaveTypeMasterId,
-    visibleLeaveTypeOptions,
+    values.paidType,
+    visiblePaidTypeOptions,
   ]);
 
   useEffect(() => {
@@ -651,9 +596,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       policy before submitting.
                     </Alert>
                   ) : null}
-                  {hasNoAllowedLeaveTypes ? (
+                  {hasNoAllowedPaidTypes ? (
                     <Alert severity="warning">
-                      The effective leave policy has no active leave types for the selected date.
+                      The effective leave policy has no active paid or unpaid buckets for the
+                      selected date.
                     </Alert>
                   ) : null}
                 </Stack>
@@ -661,19 +607,15 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             ) : null}
 
             <Grid size={{ xs: 12 }}>
-              <ShakingTextField error={!!touched.leaveTypeMasterId && !!errors.leaveTypeMasterId}>
+              <ShakingTextField error={!!touched.paidType && !!errors.paidType}>
                 <CustomSelect
                   isLoading={
-                    isLeaveTypeLoading ||
-                    isLeaveTypeFetching ||
-                    isEffectivePreviewEmployeeResolutionBlocked ||
-                    isEffectivePolicyFetching ||
-                    (!catalogAcademicYearId && (isYearsLoading || isYearsFetching))
+                    isEffectivePreviewEmployeeResolutionBlocked || isEffectivePolicyFetching
                   }
-                  options={visibleLeaveTypeOptions}
-                  label="Leave Type *"
-                  value={values.leaveTypeMasterId}
-                  name="leaveTypeMasterId"
+                  options={visiblePaidTypeOptions}
+                  label="Paid Type *"
+                  value={values.paidType}
+                  name="paidType"
                   valueKey="id"
                   disabled={
                     !!editData ||
@@ -681,14 +623,14 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     isEffectivePolicyFetching ||
                     Boolean(effectivePolicyError) ||
                     hasBlockingEffectivePolicyState ||
-                    hasNoAllowedLeaveTypes
+                    hasNoAllowedPaidTypes
                   }
                   labelKey="name"
-                  error={!!touched.leaveTypeMasterId && !!errors.leaveTypeMasterId}
-                  helperText={(touched.leaveTypeMasterId && errors.leaveTypeMasterId) || ''}
+                  error={!!touched.paidType && !!errors.paidType}
+                  helperText={(touched.paidType && errors.paidType) || ''}
                   onChange={(value) => {
-                    const leaveTypeMasterId = typeof value === 'string' ? value : '';
-                    setFieldValue('leaveTypeMasterId', leaveTypeMasterId);
+                    const paidType = typeof value === 'string' ? value : '';
+                    setFieldValue('paidType', paidType);
                   }}
                 />
               </ShakingTextField>

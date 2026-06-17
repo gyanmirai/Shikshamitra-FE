@@ -229,18 +229,6 @@ async function ensureDefaultLeavePolicy(page: Page, academicYear: AcademicYear) 
     return;
   }
 
-  const leaveType = await jsonFrom(
-    await employeeApiRequest(page, `/hr-leave-types?academicYearId=${academicYearParam}`, {
-      method: 'POST',
-      body: JSON.stringify({
-        name: `E2E Onboarding Leave ${Date.now()}`,
-        description: 'Created by employee onboarding E2E setup',
-        color: '#1976D2',
-      }),
-    }),
-    'create leave type'
-  );
-
   await jsonFrom(
     await employeeApiRequest(page, `/leave-policies?academicYearId=${academicYearParam}`, {
       method: 'POST',
@@ -253,10 +241,10 @@ async function ensureDefaultLeavePolicy(page: Page, academicYear: AcademicYear) 
         isDefault: true,
         rules: [
           {
-            leaveTypeId: leaveType.id,
+            paidType: 'Paid',
+            entitlementMode: 'Limited',
             accrualPolicyType: 'Yearly',
             leaveCount: 12,
-            paidType: 'Paid',
             carryForward: false,
             encashmentAllowed: false,
             requiresApproval: true,
@@ -264,6 +252,20 @@ async function ensureDefaultLeavePolicy(page: Page, academicYear: AcademicYear) 
             maxDaysPerRequest: 30,
             allowHalfDay: true,
             allowNegativeBalance: false,
+            isActive: true,
+          },
+          {
+            paidType: 'Unpaid',
+            entitlementMode: 'Unlimited',
+            accrualPolicyType: 'Yearly',
+            leaveCount: null,
+            carryForward: false,
+            encashmentAllowed: false,
+            requiresApproval: true,
+            minNoticeDays: 0,
+            maxDaysPerRequest: 30,
+            allowHalfDay: true,
+            allowNegativeBalance: true,
             isActive: true,
           },
         ],
@@ -656,6 +658,10 @@ async function finalizeApplication(
   await fillField(dialog, 'Pin code', candidate.pinCode);
 
   await dialog.getByRole('button', { name: /^Next$/i }).click();
+  await expect(dialog).toContainText('Academic Permission');
+  await selectFirstOption(page, dialog, 'Organization');
+
+  await dialog.getByRole('button', { name: /^Next$/i }).click();
   await expect(dialog.getByLabel('Use submitted photo as profile picture')).toBeChecked();
   await expect(dialog.getByLabel('Attach submitted resume to employee documents')).toBeChecked();
 
@@ -669,6 +675,15 @@ async function finalizeApplication(
       response.url().includes(`/api/employee-applications/${applicationId}/finalize`) &&
       response.request().method() === 'POST'
   );
+  const accessControlRequestPromise = page.waitForRequest(
+    (request) =>
+      request.url().includes('/api/app/user-scope/bulk-assign') && request.method() === 'POST'
+  );
+  const accessControlResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes('/api/app/user-scope/bulk-assign') &&
+      response.request().method() === 'POST'
+  );
   await dialog.getByRole('button', { name: /^Finalize$/i }).click();
 
   const finalizeRequest = await finalizeRequestPromise;
@@ -676,16 +691,26 @@ async function finalizeApplication(
   if (!finalizeResponse.ok()) {
     throw new Error(`finalize: ${finalizeResponse.status()} ${await finalizeResponse.text()}`);
   }
+  const accessControlRequest = await accessControlRequestPromise;
+  const accessControlResponse = await accessControlResponsePromise;
+  if (!accessControlResponse.ok()) {
+    throw new Error(
+      `academic permission: ${accessControlResponse.status()} ${await accessControlResponse.text()}`
+    );
+  }
   const result = await finalizeResponse.json();
   expect(isStatus(result.application?.status, EmployeeApplicationStatus.Finalized)).toBe(true);
   expect(result.application?.finalizedEmployeeId).toBeTruthy();
   expect(result.employee?.email).toBe(candidate.email);
+  const finalizeBody = finalizeRequest.postData() || '';
+  expect(finalizeBody).not.toContain('organizationIds');
+  expect(accessControlRequest.postData() || '').toContain('educationMediumStageIds');
 
   await expect(dialog).toBeHidden({ timeout: 30_000 });
 
   return {
     finalizedEmployeeId: result.application.finalizedEmployeeId as string,
-    finalizeBody: finalizeRequest.postData() || '',
+    finalizeBody,
   };
 }
 

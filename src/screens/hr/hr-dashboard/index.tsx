@@ -1201,7 +1201,7 @@ const LeaveActionCenter = ({ requests }: { requests: HRDashboardLeaveRequest[] }
                     color="text.secondary"
                     sx={{ pl: '40px', display: 'block' }}
                   >
-                    {request.leaveType} • {request.totalDays} day(s) •{' '}
+                    {request.paidType ?? request.leaveType} • {request.totalDays} day(s) •{' '}
                     {dayjs(request.startDate).format('DD MMM')} -{' '}
                     {dayjs(request.endDate).format('DD MMM')}
                   </Typography>
@@ -1221,7 +1221,8 @@ const LeaveActionCenter = ({ requests }: { requests: HRDashboardLeaveRequest[] }
           <Stack spacing={1.5} sx={{ pt: 1 }}>
             {reviewAction ? (
               <Alert severity={reviewAction.action === 'reject' ? 'warning' : 'info'}>
-                {reviewAction.request.employeeName} • {reviewAction.request.leaveType} •{' '}
+                {reviewAction.request.employeeName} •{' '}
+                {reviewAction.request.paidType ?? reviewAction.request.leaveType} •{' '}
                 {dayjs(reviewAction.request.startDate).format('DD MMM')} -{' '}
                 {dayjs(reviewAction.request.endDate).format('DD MMM')}
               </Alert>

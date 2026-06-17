@@ -6,6 +6,7 @@ import type {
 } from 'src/redux/hr/hr-policy-api';
 
 import dayjs from 'dayjs';
+import { toDateOnly, parseDateOnly } from 'src/utils/date-only';
 import {
   getHolidayToDate,
   getHolidayFromDate,
@@ -133,16 +134,16 @@ export function isHolidayRangeInsideRange(
 
 export function getHolidayDayCount(item: WorkCalendarHoliday): number {
   if (typeof item.dayCount === 'number' && item.dayCount > 0) return item.dayCount;
-  const from = dayjs(getHolidayFromDate(item));
-  const to = dayjs(getHolidayToDate(item));
-  if (!from.isValid() || !to.isValid()) return 1;
+  const from = parseDateOnly(getHolidayFromDate(item));
+  const to = parseDateOnly(getHolidayToDate(item));
+  if (!from || !to) return 1;
   return Math.max(1, to.diff(from, 'day') + 1);
 }
 
 export function formatHolidayDateRange(item: WorkCalendarHoliday): string {
-  const from = getHolidayFromDate(item);
-  const to = getHolidayToDate(item);
-  if (!to || dayjs(from).isSame(dayjs(to), 'day')) return formatDate(from);
+  const from = toDateOnly(getHolidayFromDate(item));
+  const to = toDateOnly(getHolidayToDate(item));
+  if (!to || from === to) return formatDate(from);
   return formatRange(from, to);
 }
 
@@ -163,8 +164,8 @@ export function getHolidaySummary(holidays: WorkCalendarHoliday[] = []): {
 }
 
 export function holidayRowKey(item: WorkCalendarHoliday): string {
-  const fromDate = dayjs(getHolidayFromDate(item)).format('YYYY-MM-DD');
-  const toDate = dayjs(getHolidayToDate(item)).format('YYYY-MM-DD');
+  const fromDate = toDateOnly(getHolidayFromDate(item));
+  const toDate = toDateOnly(getHolidayToDate(item));
   return `${item.calendarHolidayId || item.source}-${fromDate}-${toDate}-${item.holidayName.trim().toLowerCase()}`;
 }
 
@@ -189,9 +190,9 @@ export function formatHolidayOverlapMessage(conflict: {
 
 export function getHolidayMonthOptions(holidays: WorkCalendarHoliday[]): string[] {
   return Array.from(
-    new Set(holidays.map((holiday) => dayjs(getHolidayFromDate(holiday)).format('YYYY-MM')))
+    new Set(holidays.map((holiday) => toDateOnly(getHolidayFromDate(holiday)).slice(0, 7)))
   )
-    .filter((month) => month !== 'Invalid Date')
+    .filter((month) => /^\d{4}-\d{2}$/.test(month))
     .sort();
 }
 
@@ -224,13 +225,6 @@ function getDateKey(value: dayjs.Dayjs): string {
   return value.format('YYYY-MM-DD');
 }
 
-function parseDateOnly(value?: string | null): dayjs.Dayjs | null {
-  if (!value) return null;
-  const datePart = value.match(/^(\d{4}-\d{2}-\d{2})/)?.[1];
-  const parsed = dayjs(datePart || value);
-  return parsed.isValid() ? parsed : null;
-}
-
 function getSaturdayUnit(policy: string): number {
   if (policy === 'half-day') return 0.5;
   if (policy === 'off') return 0;
@@ -257,11 +251,11 @@ function getIncludedHolidayDateSet(
   holidays
     .filter((holiday) => holiday.isIncluded)
     .forEach((holiday) => {
-      const holidayFrom = dayjs(getHolidayFromDate(holiday));
-      const holidayTo = dayjs(getHolidayToDate(holiday));
+      const holidayFrom = parseDateOnly(getHolidayFromDate(holiday));
+      const holidayTo = parseDateOnly(getHolidayToDate(holiday));
       if (
-        !holidayFrom.isValid() ||
-        !holidayTo.isValid() ||
+        !holidayFrom ||
+        !holidayTo ||
         holidayTo.isBefore(fromDate, 'day') ||
         holidayFrom.isAfter(toDate, 'day')
       ) {

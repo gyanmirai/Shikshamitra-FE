@@ -1,10 +1,12 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { EmployeeApplication } from 'src/redux/hr/employeeOnboardingApi';
 
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -14,7 +16,9 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useAddAccessControlMutation } from 'src/redux/hr/employeeApi';
 import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
+import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   Box,
   Card,
@@ -35,6 +39,7 @@ import {
   InputLabel,
   DialogTitle,
   FormControl,
+  Autocomplete,
   ListItemIcon,
   ListItemText,
   DialogActions,
@@ -96,7 +101,7 @@ type FinalizeFormState = {
   identificationMark1: string;
   roleId: string;
   shiftId: string;
-  organizationIds: string;
+  academicPermissionStageIds: string;
   address1: string;
   address2: string;
   address3: string;
@@ -248,7 +253,7 @@ const buildFinalizeInitialValues = (application: EmployeeApplication): FinalizeF
     identificationMark1: personalInfo?.identificationMark1 || '',
     roleId: '',
     shiftId: '',
-    organizationIds: '',
+    academicPermissionStageIds: '',
     address1: personalInfo?.address1 || application.address1 || '',
     address2: personalInfo?.address2 || application.address2 || '',
     address3: personalInfo?.address3 || application.address3 || '',
@@ -265,7 +270,7 @@ const buildFinalizeInitialValues = (application: EmployeeApplication): FinalizeF
 
 const toNullableNumber = (value: string) => (value === '' ? null : Number(value));
 
-const parseOrganizationIds = (value: string) =>
+const parseStageIds = (value: string) =>
   value
     .split(',')
     .map((item) => item.trim())
@@ -922,14 +927,23 @@ function FinalizeDialog({
 }) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FinalizeFormState | null>(null);
+  const [finalizedUserId, setFinalizedUserId] = useState<string | null>(null);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { data: rolesData, isLoading: rolesLoading } = useGetRolesQuery(undefined);
   const { data: shiftsData, isLoading: shiftsLoading } = useGetShiftsQuery(undefined);
+  const {
+    options: organizationOptions,
+    byId: organizationOptionsById,
+    isLoading: organizationsLoading,
+  } = useAcademicOrganizationOptions(currentYear?.id);
   const [finalizeApplication, { isLoading }] = useFinalizeEmployeeApplicationMutation();
+  const [addAccessControl, { isLoading: academicPermissionSaving }] = useAddAccessControlMutation();
 
   useEffect(() => {
     if (application && open) {
       setForm(buildFinalizeInitialValues(application));
       setStep(0);
+      setFinalizedUserId(null);
     }
   }, [application, open]);
 
@@ -939,8 +953,25 @@ function FinalizeDialog({
 
   const updateField = (field: keyof FinalizeFormState, value: string | boolean) =>
     setForm((current) => (current ? { ...current, [field]: value } : current));
+  const selectedStageIds = parseStageIds(form.academicPermissionStageIds);
+  const selectedStages = selectedStageIds.map((id) => {
+    const option = organizationOptionsById.get(id);
+    return (
+      option || {
+        id,
+        name: id,
+        label: id,
+        stageName: id,
+        mediumId: '',
+        mediumName: '',
+        boardId: '',
+        boardName: '',
+        academicYearId: currentYear?.id || '',
+      }
+    );
+  });
 
-  const canSubmit =
+  const canSubmit = Boolean(
     form.firstName &&
     form.lastName &&
     form.email &&
@@ -950,57 +981,87 @@ function FinalizeDialog({
     form.doj &&
     form.roleId &&
     form.shiftId &&
+    currentYear?.id &&
+    selectedStageIds.length > 0 &&
     form.address1 &&
     form.address2 &&
     form.countryName &&
     form.stateName &&
-    form.city;
+    form.city
+  );
 
   const handleFinalize = async () => {
     try {
-      await finalizeApplication({
-        id: application.id,
-        body: {
-          personalInfo: {
-            firstName: form.firstName,
-            middleName: form.middleName,
-            lastName: form.lastName,
-            dob: form.dob || null,
-            gender: toNullableNumber(form.gender),
-            religion: form.religion || null,
-            casteType: toNullableNumber(form.casteType),
-            familyCaste: form.familyCaste || null,
-            maritalStatus: toNullableNumber(form.maritalStatus),
-            bloodGroup: toNullableNumber(form.bloodGroup),
-            email: form.email,
-            mobileNo: form.mobileNo,
-            secondaryMobileNo: form.secondaryMobileNo || null,
-            panNo: form.panNo,
-            adharNo: form.adharNo,
-            doj: form.doj,
-            isTeaching: form.isTeaching,
-            department: form.department || null,
-            designation: form.designation || null,
-            qualification: form.qualification || null,
-            identificationMark1: form.identificationMark1 || null,
-            roleId: form.roleId,
-            shiftId: form.shiftId,
-            organizationIds: parseOrganizationIds(form.organizationIds),
-            address1: form.address1,
-            address2: form.address2,
-            address3: form.address3 || null,
-            country: { name: form.countryName, isoCode: form.countryIsoCode || 'IN' },
-            state: { name: form.stateName, isoCode: form.stateIsoCode },
-            city: form.city,
-            pinCode: form.pinCode || null,
+      let userId = finalizedUserId;
+      if (!userId) {
+        const result = await finalizeApplication({
+          id: application.id,
+          body: {
+            personalInfo: {
+              firstName: form.firstName,
+              middleName: form.middleName,
+              lastName: form.lastName,
+              dob: form.dob || null,
+              gender: toNullableNumber(form.gender),
+              religion: form.religion || null,
+              casteType: toNullableNumber(form.casteType),
+              familyCaste: form.familyCaste || null,
+              maritalStatus: toNullableNumber(form.maritalStatus),
+              bloodGroup: toNullableNumber(form.bloodGroup),
+              email: form.email,
+              mobileNo: form.mobileNo,
+              secondaryMobileNo: form.secondaryMobileNo || null,
+              panNo: form.panNo,
+              adharNo: form.adharNo,
+              doj: form.doj,
+              isTeaching: form.isTeaching,
+              department: form.department || null,
+              designation: form.designation || null,
+              qualification: form.qualification || null,
+              identificationMark1: form.identificationMark1 || null,
+              roleId: form.roleId,
+              shiftId: form.shiftId,
+              address1: form.address1,
+              address2: form.address2,
+              address3: form.address3 || null,
+              country: { name: form.countryName, isoCode: form.countryIsoCode || 'IN' },
+              state: { name: form.stateName, isoCode: form.stateIsoCode },
+              city: form.city,
+              pinCode: form.pinCode || null,
+            },
+            familyInfo: application.familyInfo || null,
+            additionalInfo: application.additionalInfo || null,
+            workExperiences: application.workExperiences || [],
+            useSubmittedPhoto: form.useSubmittedPhoto,
+            attachResumeAsDocument: form.attachResumeAsDocument,
           },
-          familyInfo: application.familyInfo || null,
-          additionalInfo: application.additionalInfo || null,
-          workExperiences: application.workExperiences || [],
-          useSubmittedPhoto: form.useSubmittedPhoto,
-          attachResumeAsDocument: form.attachResumeAsDocument,
-        },
-      }).unwrap();
+        }).unwrap();
+        userId = (result.employee as any)?.userId || null;
+        if (userId) {
+          setFinalizedUserId(userId);
+        }
+      }
+
+      if (!userId || !currentYear?.id) {
+        shikshaMitraToast.warning({
+          message: 'Employee finalized, but Academic Permission could not be saved.',
+        });
+        return;
+      }
+
+      try {
+        await addAccessControl({
+          academicYearIds: [currentYear.id],
+          userIds: [userId],
+          educationMediumStageIds: selectedStageIds,
+        }).unwrap();
+      } catch {
+        shikshaMitraToast.warning({
+          message: 'Employee finalized, but Academic Permission could not be saved.',
+        });
+        return;
+      }
+
       shikshaMitraToast.success({ message: 'Employee finalized' });
       onClose();
     } catch {
@@ -1020,7 +1081,7 @@ function FinalizeDialog({
       <DialogContent>
         <Stack spacing={3} sx={{ pt: 1 }}>
           <Stepper activeStep={step} alternativeLabel>
-            {['Review', 'Employee fields', 'Confirm'].map((label) => (
+            {['Review', 'Employee fields', 'Academic Permission', 'Confirm'].map((label) => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
               </Step>
@@ -1310,16 +1371,6 @@ function FinalizeDialog({
                   ))}
                 </TextField>
               </Grid>
-              <Grid size={{ xs: 12, md: 8 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Organization IDs"
-                  value={form.organizationIds}
-                  onChange={(event) => updateField('organizationIds', event.target.value)}
-                  placeholder="Comma-separated stage IDs"
-                />
-              </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
@@ -1405,6 +1456,48 @@ function FinalizeDialog({
           )}
 
           {step === 2 && (
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="subtitle2">Academic Permission</Typography>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Autocomplete
+                  multiple
+                  size="small"
+                  options={organizationOptions}
+                  value={selectedStages}
+                  loading={organizationsLoading}
+                  disabled={organizationsLoading || !currentYear?.id}
+                  getOptionLabel={(option) => option.name || option.label || ''}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  onChange={(_, value) =>
+                    updateField(
+                      'academicPermissionStageIds',
+                      value.map((item) => item.id).join(',')
+                    )
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      required
+                      label="Organization"
+                      error={!currentYear?.id || selectedStageIds.length === 0}
+                      helperText={
+                        !currentYear?.id
+                          ? 'Academic year is required'
+                          : selectedStageIds.length === 0
+                            ? 'Academic Permission organization is required'
+                            : undefined
+                      }
+                    />
+                  )}
+                />
+              </Grid>
+            </Grid>
+          )}
+
+          {step === 3 && (
             <Stack spacing={2}>
               <Typography variant="subtitle2">Final review</Typography>
               <Typography variant="body2">
@@ -1436,7 +1529,7 @@ function FinalizeDialog({
               </Stack>
               {!canSubmit && (
                 <Typography variant="body2" color="error">
-                  Complete required employee fields before finalizing.
+                  Complete required employee fields and Academic Permission before finalizing.
                 </Typography>
               )}
             </Stack>
@@ -1448,7 +1541,7 @@ function FinalizeDialog({
         <Button disabled={step === 0} onClick={() => setStep((current) => current - 1)}>
           Back
         </Button>
-        {step < 2 ? (
+        {step < 3 ? (
           <Button variant="contained" onClick={() => setStep((current) => current + 1)}>
             Next
           </Button>
@@ -1457,10 +1550,10 @@ function FinalizeDialog({
             variant="contained"
             color="success"
             onClick={handleFinalize}
-            disabled={isLoading || !canSubmit}
+            disabled={isLoading || academicPermissionSaving || !canSubmit}
             startIcon={<Iconify icon="mdi:account-check-outline" />}
           >
-            Finalize
+            {finalizedUserId ? 'Save Academic Permission' : 'Finalize'}
           </Button>
         )}
       </DialogActions>
