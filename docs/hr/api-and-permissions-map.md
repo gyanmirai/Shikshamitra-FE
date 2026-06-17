@@ -23,8 +23,7 @@ Sources: `src/constants/hr-menus.ts`, `src/redux/hr/**`, `src/redux/runPayroll/r
 | Mark attendance | `/hr/manual-attendance` | `HR.AttendanceAndLeave.MarkAttendance` | `HR.AttendanceAndLeave.MarkAttendance.*` |
 | Shift management | `/hr/attendance-setting/shiftManagement` | `HR.AttendanceAndLeave.Setting.ShiftManagement` | frontend constant; validate backend before adding gates |
 | Leave center/apply/approvals/balance | `/hr/leave-center`, `/hr/apply-leave`, `/hr/leave-approvals`, `/hr/leave-balance` | `HR.LeaveManagement.LeaveCenter` | `HR.LeaveManagement.LeaveCenter.*` |
-| Leave type setting | `/hr/leave-management-setting/leaveType` | `HR.LeaveManagement.Setting.LeaveType` | `HR.LeaveManagement.Setting.LeaveType.*` |
-| Leave policy setting | `/hr/leave-management-setting/leavePolicy`, `/hr/leave-policies` | `HR.LeaveManagement.Setting.LeavePolicy` | `HR.LeaveManagement.Setting.LeavePolicy.*` |
+| Leave policies | `/hr/leave-policies` | `HR.LeaveManagement.Setting.LeavePolicy` | `HR.LeaveManagement.Setting.LeavePolicy.*` |
 | Policies | `/hr/calendars`, `/hr/payrollPolicies`, `/hr/attendance`, `/hr/assignments`, `/hr/effective-preview` | `HR.Policies.*` | `HR.Policies.*` |
 | Performance | `/hr/professional-management/**` | `HR.ProfessionalManagement.View`; performance action constants also exist | `HR.ProfessionalManagement.*`, `HR.PerformanceManagement.*` |
 | Reports | `/hr/reports` | `HR.Reports` | `HR.Reports.*` |
@@ -43,7 +42,7 @@ Sources: `src/constants/hr-menus.ts`, `src/redux/hr/**`, `src/redux/runPayroll/r
 | `runPayrollApi.ts` | `/payroll/run`, readiness, reviews, adjustments, salary slips, PDFs | `HR/Payroll/RunPayroll/**`, `HR/Payroll/SalarySlips/**` |
 | `attendanceApi.ts` | attendance tracking, employee attendance, import preview/confirm/template, take-attendance day, register/grouped/adjust | `HR/AttendanceAndLeaves/**` |
 | `attendanceImportApi.ts` | `/hr/attendance/automated-runs`, rows, lock/unlock, row save | `HR/Payroll/AttendanceImports/**` |
-| `leaveApi.ts` | leave types, leave policies, leave-management requests/actions/balances | `HR/AttendanceAndLeaves/**` |
+| `leaveApi.ts` | leave policies, Paid/Unpaid leave requests/actions/balances | `HR/AttendanceAndLeaves/**` |
 | `hr-policy-api.ts` | work calendars, payroll/attendance policies, assignments, impact, versions, audit, holiday impact | `HR/Policies/**` |
 | `professional-management-api.ts` | professional dashboard, templates, cycles, reviews, stages, evidence, feedback, outcomes, reports, audit | `HR/ProfessionalManagement/**` |
 | `hrReportsApi.ts` | sources, options, templates, preview, export, export history | `HR/Reports/**` |

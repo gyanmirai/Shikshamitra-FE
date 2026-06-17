@@ -4,7 +4,7 @@ import { convertBase64Format } from 'src/utils/base64Formate';
 // will add type tommorrow working on it
 
 export const leaveRequestInitialValues = (editData: any) => ({
-  leaveType: editData?.leaveTypeMasterId || '',
+  paidType: editData?.paidType || '',
   description: editData?.description || '',
   startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
   endDate: editData?.endDate ? dayjs(editData?.endDate) : null,

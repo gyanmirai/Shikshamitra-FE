@@ -53,7 +53,7 @@ const ViewFeeDetails = ({
           {/* Student header */}
           <Grid size={{ xs: 12 }}>
             <motion.div {...slideUp(0)}>
-              <StudentFeesSummaryView student={student} />
+              <StudentFeesSummaryView student={feeDetails?.student} />
             </motion.div>
           </Grid>
 

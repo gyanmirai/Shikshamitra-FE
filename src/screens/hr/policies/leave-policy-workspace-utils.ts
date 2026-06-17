@@ -1,4 +1,6 @@
-import type { ILeavePolicy } from '../attendance-setting/leave-type';
+import { AccuralPolicyType } from 'src/enums/accuralPolicyType';
+
+import type { ILeavePolicy } from './leave-policy-types';
 
 export type LeavePolicyRiskSeverity = 'blocking' | 'confirmation' | 'info';
 
@@ -6,7 +8,7 @@ export type LeavePolicyImpactReview = {
   policyId: string;
   policyName: string;
   action: 'archive' | 'update' | 'default-change' | 'effective-date-change';
-  leaveTypeName: string;
+  bucketSummary: string;
   affectedEmployeeCount: number;
   affectedRequestCount: number;
   balanceImpactCount: number;
@@ -24,22 +26,33 @@ export function getLeavePolicyTitle(policy: Partial<ILeavePolicy> | null | undef
   return policy?.policyTitle || policy?.title || 'Untitled leave policy';
 }
 
-export function getLeavePolicyLeaveTypeName(policy: Partial<ILeavePolicy> | null | undefined) {
+export function normalizeAccrualPolicyTypeValue(value: unknown) {
+  if (value === AccuralPolicyType.Yearly || value === 'Yearly') {
+    return AccuralPolicyType.Yearly;
+  }
+
+  if (value === AccuralPolicyType.Monthly || value === 'Monthly') {
+    return AccuralPolicyType.Monthly;
+  }
+
+  return AccuralPolicyType.Yearly;
+}
+
+export function toAccrualPolicyTypeApiValue(value: AccuralPolicyType | string) {
+  return normalizeAccrualPolicyTypeValue(value) === AccuralPolicyType.Monthly
+    ? 'Monthly'
+    : 'Yearly';
+}
+
+export function getLeavePolicyBucketSummary(policy: Partial<ILeavePolicy> | null | undefined) {
   const activeRules = (policy?.rules || []).filter((rule) => rule?.isActive !== false);
   if (activeRules.length > 0) {
-    const names = activeRules
-      .map((rule) => rule.leaveType?.name)
-      .filter((name): name is string => Boolean(name));
-    return names.length > 0 ? names.join(', ') : `${activeRules.length} leave rules`;
+    const buckets = activeRules.map((rule) =>
+      String(rule?.paidType || '').toLowerCase() === 'unpaid' ? 'Unpaid' : 'Paid'
+    );
+    return Array.from(new Set(buckets)).join(', ');
   }
-
-  const leaveType = policy?.leaveType;
-
-  if (!leaveType) {
-    return '-';
-  }
-
-  return typeof leaveType === 'object' ? leaveType.name || '-' : String(leaveType);
+  return '-';
 }
 
 export function isLeavePolicyArchived(policy: Partial<ILeavePolicy> | null | undefined) {
@@ -56,7 +69,7 @@ export function buildLeavePolicyImpactReview(
   action: LeavePolicyImpactReview['action']
 ): LeavePolicyImpactReview {
   const policyName = getLeavePolicyTitle(policy);
-  const leaveTypeName = getLeavePolicyLeaveTypeName(policy);
+  const bucketSummary = getLeavePolicyBucketSummary(policy);
   const activeRules = (policy.rules || []).filter((rule) => rule?.isActive !== false);
   const leaveCount = activeRules.reduce((sum, rule) => sum + Number(rule.leaveCount ?? 0), 0);
   const requiresApproval = activeRules.some((rule) => Boolean(rule.requiresApproval));
@@ -121,7 +134,7 @@ export function buildLeavePolicyImpactReview(
       severity: 'info',
       label: 'Informational',
       message:
-        'Existing pending approvals should continue to show this leave policy and leave type.',
+        'Existing pending approvals should continue to show this leave policy and paid bucket.',
     });
   }
 
@@ -129,7 +142,7 @@ export function buildLeavePolicyImpactReview(
     policyId: policy.id || '',
     policyName,
     action,
-    leaveTypeName,
+    bucketSummary,
     affectedEmployeeCount: leaveCount > 0 ? 1 : 0,
     affectedRequestCount: action === 'archive' ? 1 : 0,
     balanceImpactCount: leaveCount > 0 ? 1 : 0,

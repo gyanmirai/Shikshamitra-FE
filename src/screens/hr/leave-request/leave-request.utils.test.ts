@@ -21,22 +21,21 @@ import {
   isDateWithinAcademicYear,
   getAcademicYearStartMonth,
   getLeaveCenterVisibleTabs,
+  isSelectedPaidTypeVisible,
   buildEmployeeSelectOptions,
-  isSelectedLeaveTypeVisible,
   getLeaveNoticePeriodMessage,
   isLeaveNoticePeriodSatisfied,
   APPLY_LEAVE_ROW_ACTION_LABELS,
   shouldEnforceLeaveNoticePeriod,
   buildCreateLeaveRequestFormData,
   buildLeaveAttachmentDownloadPath,
-  getSelectableLeaveRequestOptions,
   formatLeaveCalendarDateForPayload,
   formatLeaveCalendarDateForDisplay,
   isEmployeeSelectionValidForCreate,
   resolveAcademicYearIdForLeaveDate,
   resolveLeavePolicyPreviewEmployeeId,
   shouldDisableMonthBeforeAcademicYearStart,
-  getVisibleLeaveTypeOptionsForEffectivePolicy,
+  getVisiblePaidTypeOptionsForEffectivePolicy,
   isLeavePolicyPreviewEmployeeResolutionBlocked,
 } from 'src/screens/hr/leave-request/leave-request.utils';
 
@@ -44,7 +43,7 @@ describe('leave request payload mapping', () => {
   it('uses forEmployeeId for non-self selection and never sends employeeId', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: 'emp-123', label: 'John Doe' },
-      leaveTypeMasterId: 'type-1',
+      paidType: 'Paid',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
       halfDay: false,
@@ -55,13 +54,14 @@ describe('leave request payload mapping', () => {
     expect(formData.get('forEmployeeId')).toBe('emp-123');
     expect(formData.get('employeeId')).toBeNull();
     expect(formData.get('leavePolicyId')).toBeNull();
-    expect(formData.get('leaveTypeId')).toBe('type-1');
+    expect(formData.get('paidType')).toBe('Paid');
+    expect(formData.get('leaveTypeId')).toBeNull();
   });
 
   it('omits forEmployeeId for self selection', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: SELF_EMPLOYEE_ID, label: 'Self' },
-      leaveTypeMasterId: 'type-1',
+      paidType: 'Paid',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
       halfDay: false,
@@ -76,7 +76,7 @@ describe('leave request payload mapping', () => {
   it('does not append file when docs is empty', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: 'emp-123', label: 'John Doe' },
-      leaveTypeMasterId: 'type-1',
+      paidType: 'Paid',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
       halfDay: false,
@@ -90,7 +90,7 @@ describe('leave request payload mapping', () => {
   it('sends half-day flag in create payloads', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: 'emp-123', label: 'John Doe' },
-      leaveTypeMasterId: 'type-1',
+      paidType: 'Paid',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-01'),
       halfDay: true,
@@ -104,7 +104,7 @@ describe('leave request payload mapping', () => {
   it('sends selected leave days as date-only values to avoid timezone date shifts', () => {
     const formData = buildCreateLeaveRequestFormData({
       employee: { id: 'emp-123', label: 'John Doe' },
-      leaveTypeMasterId: 'type-1',
+      paidType: 'Paid',
       startDate: dayjs('2026-07-06'),
       endDate: dayjs('2026-07-10'),
       halfDay: false,
@@ -124,12 +124,6 @@ describe('leave request payload mapping', () => {
 });
 
 describe('leave request effective policy filtering', () => {
-  const leaveTypes = [
-    { id: 'sick', name: 'Sick Leave' },
-    { id: 'casual', name: 'Casual Leave' },
-    { id: 'earned', name: 'Earned Leave' },
-  ];
-
   it('uses the selected employee id for HR-created non-self leave', () => {
     expect(
       resolveLeavePolicyPreviewEmployeeId(
@@ -161,36 +155,65 @@ describe('leave request effective policy filtering', () => {
     expect(isLeavePolicyPreviewEmployeeResolutionBlocked(null, undefined, 'hr')).toBe(false);
   });
 
-  it('filters catalog leave types by effective policy allowed ids', () => {
+  it('shows paid type buckets from the effective policy', () => {
     expect(
-      getVisibleLeaveTypeOptionsForEffectivePolicy(
-        leaveTypes,
-        { id: 'policy-1', allowedLeaveTypeIds: ['casual', 'earned'] },
+      getVisiblePaidTypeOptionsForEffectivePolicy(
+        {
+          id: 'policy-1',
+          allowedPaidTypes: ['Paid', 'Unpaid'],
+          rules: [
+            { id: 'paid-rule', paidType: 'Paid', isActive: true, leaveCount: 12 },
+            {
+              id: 'unpaid-rule',
+              paidType: 'Unpaid',
+              isActive: true,
+              entitlementMode: 'Unlimited',
+              isUnlimited: true,
+            },
+          ],
+        },
         true
-      ).map((item) => item.id)
-    ).toEqual(['casual', 'earned']);
+      )
+    ).toEqual([
+      {
+        id: 'Paid',
+        name: 'Paid',
+        color: '#2E7D32',
+        entitlementMode: undefined,
+        leaveCount: 12,
+        isUnlimited: undefined,
+      },
+      {
+        id: 'Unpaid',
+        name: 'Unpaid',
+        color: '#ED6C02',
+        entitlementMode: 'Unlimited',
+        leaveCount: undefined,
+        isUnlimited: true,
+      },
+    ]);
   });
 
-  it('checks whether the selected leave type remains visible after policy filtering', () => {
-    expect(isSelectedLeaveTypeVisible('casual', leaveTypes)).toBe(true);
-    expect(isSelectedLeaveTypeVisible('vacation', leaveTypes)).toBe(false);
-    expect(isSelectedLeaveTypeVisible('', leaveTypes)).toBe(true);
+  it('checks whether the selected paid type remains visible after policy filtering', () => {
+    const visiblePaidTypes = [{ id: 'Paid', name: 'Paid' }] as any;
+
+    expect(isSelectedPaidTypeVisible('Paid', visiblePaidTypes)).toBe(true);
+    expect(isSelectedPaidTypeVisible('Unpaid', visiblePaidTypes)).toBe(false);
+    expect(isSelectedPaidTypeVisible('', visiblePaidTypes)).toBe(true);
   });
 
   it('does not fail open when preview is missing, loading, or errored', () => {
-    expect(getVisibleLeaveTypeOptionsForEffectivePolicy(leaveTypes, null, true)).toEqual([]);
+    expect(getVisiblePaidTypeOptionsForEffectivePolicy(null, true)).toEqual([]);
     expect(
-      getVisibleLeaveTypeOptionsForEffectivePolicy(
-        leaveTypes,
-        { id: 'policy-1', allowedLeaveTypeIds: ['sick'] },
+      getVisiblePaidTypeOptionsForEffectivePolicy(
+        { id: 'policy-1', allowedPaidTypes: ['Paid'] },
         true,
         true
       )
     ).toEqual([]);
     expect(
-      getVisibleLeaveTypeOptionsForEffectivePolicy(
-        leaveTypes,
-        { id: 'policy-1', allowedLeaveTypeIds: ['sick'] },
+      getVisiblePaidTypeOptionsForEffectivePolicy(
+        { id: 'policy-1', allowedPaidTypes: ['Paid'] },
         true,
         false,
         true
@@ -198,10 +221,11 @@ describe('leave request effective policy filtering', () => {
     ).toEqual([]);
   });
 
-  it('keeps full catalog only while no employee/date preview target is resolved', () => {
-    expect(getVisibleLeaveTypeOptionsForEffectivePolicy(leaveTypes, null, false)).toEqual(
-      leaveTypes
-    );
+  it('keeps both paid type buckets only while no employee/date preview target is resolved', () => {
+    expect(getVisiblePaidTypeOptionsForEffectivePolicy(null, false)).toEqual([
+      { id: 'Paid', name: 'Paid', color: '#2E7D32' },
+      { id: 'Unpaid', name: 'Unpaid', color: '#ED6C02' },
+    ]);
   });
 });
 
@@ -248,60 +272,6 @@ describe('leave notice period helpers', () => {
   it('builds the earliest available leave date message', () => {
     expect(getMinimumLeaveStartDate(today).format('YYYY-MM-DD')).toBe('2026-05-30');
     expect(getLeaveNoticePeriodMessage(today)).toContain('Earliest available date is 30/05/2026.');
-  });
-
-  it('excludes policy rules whose leave type is missing from the active catalog', () => {
-    const result = getSelectableLeaveRequestOptions(
-      [{ id: 'type-1', name: 'Sick' } as any],
-      [
-        {
-          id: 'policy-1',
-          rules: [{ id: 'rule-1', leaveType: { id: 'deleted-type' }, isActive: true }],
-        } as any,
-      ]
-    );
-
-    expect(result.leaveTypes).toEqual([]);
-    expect(result.leavePolicies).toEqual([]);
-  });
-
-  it('excludes policies without active rules', () => {
-    const result = getSelectableLeaveRequestOptions(
-      [{ id: 'type-1', name: 'Sick' } as any],
-      [{ id: 'policy-1', rules: [] } as any]
-    );
-
-    expect(result.leaveTypes).toEqual([]);
-    expect(result.leavePolicies).toEqual([]);
-  });
-
-  it('keeps leave types from active policy rules selectable', () => {
-    const result = getSelectableLeaveRequestOptions(
-      [
-        { id: 'type-1', name: 'Sick' },
-        { id: 'type-2', name: 'Casual' },
-      ] as any,
-      [
-        { id: 'policy-1', rules: [{ id: 'rule-1', leaveType: { id: 'type-1' }, isActive: true }] },
-      ] as any
-    );
-
-    expect(result.leaveTypes.map((item: any) => item.id)).toEqual(['type-1']);
-    expect(result.leavePolicies.map((item: any) => item.id)).toEqual(['policy-1']);
-  });
-
-  it('deduplicates the same leave type across policy rules', () => {
-    const policies = [
-      { id: 'policy-1', rules: [{ id: 'rule-1', leaveType: { id: 'type-1' }, isActive: true }] },
-      { id: 'policy-2', rules: [{ id: 'rule-2', leaveType: { id: 'type-1' }, isActive: true }] },
-    ];
-    const result = getSelectableLeaveRequestOptions(
-      [{ id: 'type-1', name: 'Sick' } as any],
-      policies
-    );
-
-    expect(result.leaveTypes.map((item: any) => item.id)).toEqual(['type-1']);
-    expect(result.leavePolicies.map((item: any) => item.id)).toEqual(['policy-1', 'policy-2']);
   });
 
   it('enforces notice only for self-created leave requests', () => {
@@ -547,15 +517,13 @@ describe('leave overview builder', () => {
       {
         items: [
           {
-            leaveTypeMasterId: 'sick',
-            leaveTypeName: 'Sick Leave',
+            paidType: 'Paid',
             entitledDays: 10,
             usedDays: 3,
             remainingDays: 7,
           },
           {
-            leaveTypeMasterId: 'casual',
-            leaveTypeName: 'Casual Leave',
+            paidType: 'Unpaid',
             entitledDays: 8,
             usedDays: 2,
             remainingDays: 6,
@@ -564,16 +532,14 @@ describe('leave overview builder', () => {
       },
       {
         items: [
-          { leaveTypeMasterId: 'sick', leaveType: 'Sick Leave', status: 'Pending', totalDays: 0.5 },
+          { paidType: 'Paid', status: 'Pending', totalDays: 0.5 },
           {
-            leaveTypeMasterId: 'casual',
-            leaveType: 'Casual Leave',
+            paidType: 'Unpaid',
             status: 'APPROVED',
             totalDays: 1,
           },
           {
-            leaveTypeMasterId: 'casual',
-            leaveType: 'Casual Leave',
+            paidType: 'Unpaid',
             status: 'PENDING',
             totalDays: 2,
           },
@@ -585,10 +551,10 @@ describe('leave overview builder', () => {
     expect(overview.usedLeaves).toBe(5);
     expect(overview.remainingLeaves).toBe(13);
     expect(overview.pendingLeaveDays).toBe(2.5);
-    expect(overview.leaveTypeBreakdown).toEqual([
+    expect(overview.bucketBreakdown).toEqual([
       {
-        leaveTypeId: 'sick',
-        leaveTypeName: 'Sick Leave',
+        bucketId: 'Paid',
+        bucketName: 'Paid',
         total: 10,
         used: 3,
         pendingDays: 0.5,
@@ -596,8 +562,8 @@ describe('leave overview builder', () => {
         isUnlimited: false,
       },
       {
-        leaveTypeId: 'casual',
-        leaveTypeName: 'Casual Leave',
+        bucketId: 'Unpaid',
+        bucketName: 'Unpaid',
         total: 8,
         used: 2,
         pendingDays: 2,
@@ -607,31 +573,30 @@ describe('leave overview builder', () => {
     ]);
   });
 
-  it('excludes unlimited negative-balance leave types from finite balance totals', () => {
+  it('excludes unlimited unpaid buckets from finite balance totals', () => {
     const overview = buildLeaveOverview({
       items: [
         {
-          leaveTypeMasterId: 'casual',
-          leaveTypeName: 'Casual Leave',
+          paidType: 'Paid',
           entitledDays: 12,
           usedDays: 0,
           remainingDays: 12,
         },
         {
-          leaveTypeMasterId: 'lop',
-          leaveTypeName: 'Loss of Pay',
-          entitledDays: 365,
+          paidType: 'Unpaid',
+          entitlementMode: 'Unlimited',
+          entitledDays: null,
           usedDays: 0,
-          remainingDays: 7.922816251426434e28,
+          remainingDays: null,
         },
       ],
     });
 
     expect(overview.totalLeaves).toBe(12);
     expect(overview.remainingLeaves).toBe(12);
-    expect(overview.leaveTypeBreakdown[1]).toMatchObject({
-      leaveTypeId: 'lop',
-      leaveTypeName: 'Loss of Pay',
+    expect(overview.bucketBreakdown[1]).toMatchObject({
+      bucketId: 'Unpaid',
+      bucketName: 'Unpaid',
       remaining: 0,
       isUnlimited: true,
     });
@@ -643,13 +608,12 @@ describe('leave overview builder', () => {
     );
   });
 
-  it('uses leave type ids before display names for pending day matching', () => {
+  it('uses paid type before display names for pending day matching', () => {
     const overview = buildLeaveOverview(
       {
         items: [
           {
-            leaveTypeMasterId: 'sick',
-            leaveTypeName: 'Sick Leave',
+            paidType: 'Paid',
             entitledDays: 5,
             usedDays: 1,
             remainingDays: 4,
@@ -659,7 +623,7 @@ describe('leave overview builder', () => {
       {
         items: [
           {
-            leaveTypeMasterId: 'sick',
+            paidType: 'Paid',
             leaveType: 'Renamed Leave',
             status: 'PENDING',
             totalDays: 2,
@@ -669,7 +633,7 @@ describe('leave overview builder', () => {
     );
 
     expect(overview.pendingLeaveDays).toBe(2);
-    expect(overview.leaveTypeBreakdown[0].pendingDays).toBe(2);
+    expect(overview.bucketBreakdown[0].pendingDays).toBe(2);
   });
 
   it('uses balance pending days when provided instead of paged history totals', () => {
@@ -677,8 +641,7 @@ describe('leave overview builder', () => {
       {
         items: [
           {
-            leaveTypeMasterId: 'sick',
-            leaveTypeName: 'Sick Leave',
+            paidType: 'Paid',
             entitledDays: 5,
             usedDays: 1,
             pendingDays: 3.5,
@@ -687,23 +650,20 @@ describe('leave overview builder', () => {
         ],
       },
       {
-        items: [
-          { leaveTypeMasterId: 'sick', leaveType: 'Sick Leave', status: 'PENDING', totalDays: 1 },
-        ],
+        items: [{ paidType: 'Paid', status: 'PENDING', totalDays: 1 }],
       }
     );
 
     expect(overview.pendingLeaveDays).toBe(3.5);
-    expect(overview.leaveTypeBreakdown[0].pendingDays).toBe(3.5);
+    expect(overview.bucketBreakdown[0].pendingDays).toBe(3.5);
   });
 
-  it('falls back to leave type names when pending requests lack leave type ids', () => {
+  it('falls back to paid bucket names when pending requests lack paid type values', () => {
     const overview = buildLeaveOverview(
       {
         items: [
           {
-            leaveTypeMasterId: 'sick',
-            leaveTypeName: 'Sick Leave',
+            leaveTypeName: 'Paid',
             entitledDays: 5,
             usedDays: 1,
             remainingDays: 4,
@@ -712,16 +672,16 @@ describe('leave overview builder', () => {
       },
       {
         items: [
-          { leaveType: 'Sick Leave', status: 'PENDING', totalDays: 0.5 },
-          { leaveType: 'Sick Leave', status: 'APPROVED', totalDays: 1 },
-          { leaveType: 'Sick Leave', status: 'REJECTED', totalDays: 1 },
-          { leaveType: 'Sick Leave', status: 'UNKNOWN_VALUE', totalDays: 1 },
+          { leaveType: 'Paid', status: 'PENDING', totalDays: 0.5 },
+          { leaveType: 'Paid', status: 'APPROVED', totalDays: 1 },
+          { leaveType: 'Paid', status: 'REJECTED', totalDays: 1 },
+          { leaveType: 'Paid', status: 'UNKNOWN_VALUE', totalDays: 1 },
         ],
       }
     );
 
     expect(overview.pendingLeaveDays).toBe(0.5);
-    expect(overview.leaveTypeBreakdown[0].pendingDays).toBe(0.5);
+    expect(overview.bucketBreakdown[0].pendingDays).toBe(0.5);
   });
 
   it('formats leave day values without rounding away supported precision', () => {

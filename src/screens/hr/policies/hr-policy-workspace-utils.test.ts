@@ -1,4 +1,4 @@
-import type { WorkCalendarPolicy } from 'src/redux/hr/hr-policy-api';
+import type { WorkCalendarPolicy, WorkCalendarHoliday } from 'src/redux/hr/hr-policy-api';
 
 import { it, expect, describe } from 'vitest';
 
@@ -12,6 +12,7 @@ import {
   getAssignmentFormValidationError,
   assignmentMatchesLeavePolicyFilter,
   getEffectiveAssignmentLeavePolicyId,
+  getHolidayAcademicYearValidationError,
 } from './hr-policy-workspace-utils';
 
 describe('HR policy workspace date-only academic year handling', () => {
@@ -157,6 +158,44 @@ describe('HR policy workspace date-only academic year handling', () => {
 
     expect(rows[0].monthStart.format('YYYY-MM')).toBe('2026-06');
     expect(rows.at(-1)?.monthStart.format('YYYY-MM')).toBe('2027-05');
+  });
+
+  it('allows holidays through the academic-year end business date', () => {
+    const holidays: WorkCalendarHoliday[] = [
+      {
+        academicYearId: 'ay-2026-2027',
+        date: '2027-04-30',
+        fromDate: '2027-04-30',
+        toDate: '2027-05-31',
+        holidayName: 'Summer Vacation',
+        source: 'manual',
+        isIncluded: true,
+      },
+    ];
+
+    expect(
+      getHolidayAcademicYearValidationError(holidays, academicYearStart, academicYearEnd)
+    ).toBe('');
+  });
+
+  it('returns a specific message when a holiday leaves the selected academic year', () => {
+    const holidays: WorkCalendarHoliday[] = [
+      {
+        academicYearId: 'ay-2026-2027',
+        date: '2027-05-31',
+        fromDate: '2027-05-31',
+        toDate: '2027-06-01',
+        holidayName: 'Bridge Holiday',
+        source: 'manual',
+        isIncluded: true,
+      },
+    ];
+
+    expect(
+      getHolidayAcademicYearValidationError(holidays, academicYearStart, academicYearEnd)
+    ).toBe(
+      'Bridge Holiday must stay inside the selected academic year (01 Jun 2026 - 31 May 2027).'
+    );
   });
 
   it('offers only weekly rules accepted by the backend work-calendar contract', () => {

@@ -1,12 +1,20 @@
 import { api } from 'src/redux/service';
 import { employeeType } from 'src/redux/tagTypes';
 
+export const EMPLOYEE_LIST_MAX_PAGE_SIZE = 500;
+
 const compactParams = (params: Record<string, unknown>) =>
   Object.fromEntries(
     Object.entries(params).filter(
       ([, value]) => value !== undefined && value !== null && value !== ''
     )
   );
+
+const normalizeEmployeeListPageSize = (value: unknown): number => {
+  const numericPageSize = Number(value ?? 10);
+  if (!Number.isFinite(numericPageSize)) return 10;
+  return Math.min(EMPLOYEE_LIST_MAX_PAGE_SIZE, Math.max(1, Math.trunc(numericPageSize)));
+};
 
 export const normalizeIsTeachingFilter = (value: unknown): boolean | undefined => {
   if (typeof value === 'boolean') {
@@ -30,7 +38,7 @@ export const buildEmployeeListQueryParams = (args?: Record<string, unknown>) => 
 
   return compactParams({
     page,
-    pageSize,
+    pageSize: normalizeEmployeeListPageSize(pageSize),
     search,
     ...filters,
     isTeaching: normalizeIsTeachingFilter(isTeaching),

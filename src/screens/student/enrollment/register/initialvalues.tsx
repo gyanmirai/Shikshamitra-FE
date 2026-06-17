@@ -326,14 +326,32 @@ export const additionalDetailsInitialValues = (
 });
 
 export const medicalFieldsInitialValues = (editData?: IMedicalInformationResponse | null) => ({
-  weight: editData?.weightKg || '',
-  height: editData?.heightCm || '',
-  bmi: editData?.bodyMassIndex || '',
-  pulseRate: editData?.pulseRate || '',
-  haemoglobin: editData?.hemoglobin || '',
+  weight:
+    editData?.weightKg !== undefined && editData?.weightKg !== null
+      ? String(editData.weightKg)
+      : '',
+  height:
+    editData?.heightCm !== undefined && editData?.heightCm !== null
+      ? String(editData.heightCm)
+      : '',
+  bmi:
+    editData?.bodyMassIndex !== undefined && editData?.bodyMassIndex !== null
+      ? String(editData.bodyMassIndex)
+      : '',
+  pulseRate:
+    editData?.pulseRate !== undefined && editData?.pulseRate !== null
+      ? String(editData.pulseRate)
+      : '',
+  haemoglobin:
+    editData?.hemoglobin !== undefined && editData?.hemoglobin !== null
+      ? String(editData.hemoglobin)
+      : '',
   allergies: editData?.allergies || '',
-  covidVaccination: editData?.covidVaccinationDoses || '',
-  haveDisability: editData?.haveDisability || false,
+  covidVaccination:
+    editData?.covidVaccinationDoses !== undefined && editData?.covidVaccinationDoses !== null
+      ? String(editData.covidVaccinationDoses)
+      : '',
+  personWithDisability: editData?.haveDisability || false,
   disabilityDetails: editData?.disabilityDetails || '',
   bloodGroup: editData?.bloodGroup || '',
   childImmunisation: editData?.childImmunization || '',
@@ -349,7 +367,10 @@ export const previousSchoolFieldsInitialValues = (editData?: IPreviousSchoolResp
   lastClassPassed: editData?.lastClassPassed || '',
   previousSchool: editData?.previousSchool || '',
   previousClass: editData?.lastClassAttended || '',
-  percentage: editData?.percentageObtained || '',
+  percentage:
+    editData?.percentageObtained !== undefined && editData?.percentageObtained !== null
+      ? String(editData.percentageObtained)
+      : '',
   reasonForLeaving: editData?.reasonForLeaving || '',
   schoolIndexNumber: editData?.schoolIndexNumber || '',
 });

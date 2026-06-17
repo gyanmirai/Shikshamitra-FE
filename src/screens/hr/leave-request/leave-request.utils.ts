@@ -31,15 +31,14 @@ export type EmployeeOption = {
 };
 
 export type LeavePolicyOption = {
-  id?: string;
-  leaveType?: string | { id?: string | null } | null;
-  leaveTypeMasterId?: string | null;
+  id?: string | null;
   rules?: Array<{
     id?: string | null;
-    leaveType?: { id?: string | null; name?: string | null; color?: string | null } | null;
-    leaveTypeId?: string | null;
+    paidType?: string | null;
+    entitlementMode?: string | null;
     isActive?: boolean | null;
     leaveCount?: number | null;
+    isUnlimited?: boolean | null;
     minNoticeDays?: number | null;
     maxDaysPerRequest?: number | null;
     attachmentRequiredAfterDays?: number | null;
@@ -48,25 +47,24 @@ export type LeavePolicyOption = {
   }> | null;
 };
 
-export type LeaveTypeOption = {
-  id?: string | null;
-  name?: string | null;
+export type PaidTypeOption = {
+  id: 'Paid' | 'Unpaid';
+  name: string;
+  entitlementMode?: string | null;
+  leaveCount?: number | null;
+  isUnlimited?: boolean | null;
   color?: string | null;
 };
 
 export type EffectiveLeavePolicyPreview = {
   id?: string | null;
-  allowedLeaveTypeIds?: Array<string | null | undefined> | null;
+  allowedPaidTypes?: Array<string | null | undefined> | null;
+  rules?: LeavePolicyOption['rules'];
 } | null;
-
-export type LeavePolicyResolution =
-  | { status: 'resolved'; policyId: string }
-  | { status: 'missing'; policyId: ''; message: string }
-  | { status: 'ambiguous'; policyId: ''; message: string };
 
 export interface LeaveRequestFormValuesForPayload {
   employee: EmployeeOption | null;
-  leaveTypeMasterId: string;
+  paidType: string;
   startDate: dayjs.Dayjs | null;
   endDate: dayjs.Dayjs | null;
   halfDay: boolean;
@@ -126,95 +124,8 @@ export function shouldEnforceLeaveNoticePeriod(
   return !employee?.id || employee.id === SELF_EMPLOYEE_ID;
 }
 
-export function resolveLeaveTypeMasterIdFromPolicy(
-  policy: LeavePolicyOption | null | undefined
-): string {
-  if (!policy) {
-    return '';
-  }
-
-  if (typeof policy.leaveType === 'string') {
-    return policy.leaveType;
-  }
-
-  return policy.leaveType?.id || policy.leaveTypeMasterId || '';
-}
-
-export function resolveLeavePolicyIdForLeaveType(
-  policies: LeavePolicyOption[] | null | undefined,
-  leaveTypeMasterId: string | null | undefined
-): LeavePolicyResolution {
-  if (!leaveTypeMasterId) {
-    return {
-      status: 'missing',
-      policyId: '',
-      message: 'Please select a leave type.',
-    };
-  }
-
-  const matchingPolicies = (policies || []).filter(
-    (policy) => resolveLeaveTypeMasterIdFromPolicy(policy) === leaveTypeMasterId
-  );
-
-  if (matchingPolicies.length === 1 && matchingPolicies[0]?.id) {
-    return { status: 'resolved', policyId: matchingPolicies[0].id };
-  }
-
-  if (matchingPolicies.length > 1) {
-    return {
-      status: 'ambiguous',
-      policyId: '',
-      message:
-        'Multiple active leave policies are configured for this leave type. Please fix Policies & Rules before creating this request.',
-    };
-  }
-
-  return {
-    status: 'missing',
-    policyId: '',
-    message:
-      'No active leave policy is configured for this leave type. Please configure it in Policies & Rules.',
-  };
-}
-
 export function getActiveLeavePolicyRules(policy: LeavePolicyOption | null | undefined) {
   return (policy?.rules || []).filter((rule) => rule?.isActive !== false);
-}
-
-export function getSelectableLeaveRequestOptions<
-  TLeaveType extends LeaveTypeOption,
-  TLeavePolicy extends LeavePolicyOption,
->(
-  leaveTypes: TLeaveType[] | null | undefined,
-  leavePolicies: TLeavePolicy[] | null | undefined
-): { leaveTypes: TLeaveType[]; leavePolicies: TLeavePolicy[] } {
-  const catalogById = new Map(
-    (leaveTypes || [])
-      .filter((leaveType) => Boolean(leaveType?.id))
-      .map((leaveType) => [leaveType.id as string, leaveType])
-  );
-  const selectableById = new Map<string, TLeaveType>();
-  const policiesWithRules = (leavePolicies || []).filter((policy) =>
-    getActiveLeavePolicyRules(policy).some((rule) => {
-      const leaveTypeId = rule.leaveType?.id || rule.leaveTypeId || '';
-      return Boolean(leaveTypeId && catalogById.has(leaveTypeId));
-    })
-  );
-
-  policiesWithRules.forEach((policy) => {
-    getActiveLeavePolicyRules(policy).forEach((rule) => {
-      const leaveTypeId = rule.leaveType?.id || rule.leaveTypeId || '';
-      if (!leaveTypeId || !catalogById.has(leaveTypeId) || selectableById.has(leaveTypeId)) {
-        return;
-      }
-      selectableById.set(leaveTypeId, catalogById.get(leaveTypeId)!);
-    });
-  });
-
-  return {
-    leaveTypes: Array.from(selectableById.values()),
-    leavePolicies: policiesWithRules,
-  };
 }
 
 export function resolveLeavePolicyPreviewEmployeeId(
@@ -237,39 +148,60 @@ export function isLeavePolicyPreviewEmployeeResolutionBlocked(
   return (mode === 'self' || employee?.id === SELF_EMPLOYEE_ID) && !authEmployeeId;
 }
 
-export function getVisibleLeaveTypeOptionsForEffectivePolicy<TLeaveType extends LeaveTypeOption>(
-  leaveTypes: TLeaveType[] | null | undefined,
+const paidTypeLabel = (paidType: string) => (paidType === 'Unpaid' ? 'Unpaid' : 'Paid');
+
+export function getVisiblePaidTypeOptionsForEffectivePolicy(
   leavePolicy: EffectiveLeavePolicyPreview,
   hasResolvedEmployee: boolean,
   isPreviewLoading = false,
   hasPreviewError = false
-): TLeaveType[] {
-  const catalog = leaveTypes || [];
+): PaidTypeOption[] {
+  const fallback: PaidTypeOption[] = [
+    { id: 'Paid', name: 'Paid', color: '#2E7D32' },
+    { id: 'Unpaid', name: 'Unpaid', color: '#ED6C02' },
+  ];
   if (!hasResolvedEmployee) {
-    return catalog;
+    return fallback;
   }
 
   if (isPreviewLoading || hasPreviewError || !leavePolicy?.id) {
     return [];
   }
 
-  const allowedLeaveTypeIds = new Set((leavePolicy.allowedLeaveTypeIds || []).filter(Boolean));
-  if (allowedLeaveTypeIds.size === 0) {
+  const activeRules = getActiveLeavePolicyRules(leavePolicy);
+  const allowedPaidTypes = new Set(
+    [...(leavePolicy.allowedPaidTypes || []), ...activeRules.map((rule) => rule?.paidType)]
+      .filter(Boolean)
+      .map((item) => paidTypeLabel(String(item)))
+  );
+  if (allowedPaidTypes.size === 0) {
     return [];
   }
 
-  return catalog.filter((item) => Boolean(item?.id && allowedLeaveTypeIds.has(item.id)));
+  return fallback
+    .filter((item) => allowedPaidTypes.has(item.id))
+    .map((item) => {
+      const matchingRule = activeRules.find(
+        (rule) => paidTypeLabel(String(rule?.paidType)) === item.id
+      );
+      return {
+        ...item,
+        entitlementMode: matchingRule?.entitlementMode,
+        leaveCount: matchingRule?.leaveCount,
+        isUnlimited: matchingRule?.isUnlimited,
+      };
+    });
 }
 
-export function isSelectedLeaveTypeVisible<TLeaveType extends LeaveTypeOption>(
-  leaveTypeMasterId: string | null | undefined,
-  visibleLeaveTypes: TLeaveType[] | null | undefined
+export function isSelectedPaidTypeVisible(
+  paidType: string | null | undefined,
+  visiblePaidTypes: PaidTypeOption[] | null | undefined
 ): boolean {
-  if (!leaveTypeMasterId) {
+  if (!paidType) {
     return true;
   }
 
-  return (visibleLeaveTypes || []).some((item) => item?.id === leaveTypeMasterId);
+  return (visiblePaidTypes || []).some((item) => item?.id === paidTypeLabel(paidType));
 }
 
 export function buildCreateLeaveRequestFormData(
@@ -281,7 +213,7 @@ export function buildCreateLeaveRequestFormData(
     formData.append('forEmployeeId', values.employee.id);
   }
 
-  formData.append('leaveTypeId', values.leaveTypeMasterId);
+  formData.append('paidType', values.paidType);
   formData.append('startDate', formatLeaveCalendarDateForPayload(values.startDate));
   formData.append('endDate', formatLeaveCalendarDateForPayload(values.endDate));
   formData.append('halfDay', String(values.halfDay));

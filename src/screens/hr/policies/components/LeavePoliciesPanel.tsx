@@ -2,7 +2,6 @@
 
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { ILeavePolicy } from 'src/screens/hr/attendance-setting/leave-type';
 
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
@@ -13,7 +12,6 @@ import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { LeavePolicyForm } from 'src/screens/hr/attendance-setting/leave-policy';
 import { Card, Chip, Stack, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import {
   useGetLeavePoliciesQuery,
@@ -21,17 +19,33 @@ import {
   useSetDefaultLeavePolicyMutation,
 } from 'src/redux/hr/leaveApi';
 
+import { LeavePolicyForm } from './LeavePolicyForm';
 import { InfoTooltipIcon } from './HRPolicySharedUI';
 import { formatDate } from '../hr-policy-workspace-utils';
 import { LeavePolicyImpactDrawer } from './LeavePolicyImpactDrawer';
 import {
   getLeavePolicyTitle,
   isLeavePolicyArchived,
-  getLeavePolicyLeaveTypeName,
   buildLeavePolicyImpactReview,
 } from '../leave-policy-workspace-utils';
 
 import type { LeavePolicyImpactReview } from '../leave-policy-workspace-utils';
+import type { ILeavePolicy, LeavePaidType, ILeavePolicyRule } from '../leave-policy-types';
+
+const getActivePolicyRules = (policy: ILeavePolicy) =>
+  (policy.rules || []).filter((rule) => rule?.isActive !== false);
+
+const getRuleBucket = (rule: ILeavePolicyRule) =>
+  String(rule.paidType || '').toLowerCase() === 'unpaid' ? 'Unpaid' : 'Paid';
+
+const getRuleByBucket = (policy: ILeavePolicy, bucket: LeavePaidType) =>
+  getActivePolicyRules(policy).find((rule) => getRuleBucket(rule) === bucket);
+
+const formatRuleEntitlement = (rule?: ILeavePolicyRule) => {
+  if (!rule) return '-';
+  if (rule.isUnlimited || rule.entitlementMode === 'Unlimited') return 'Unlimited';
+  return `${rule.leaveCount ?? 0} ${rule.accrualPolicyType || 'Yearly'}`;
+};
 
 export function LeavePoliciesPanel() {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -163,30 +177,87 @@ export function LeavePoliciesPanel() {
         render: (_value, row) => getLeavePolicyTitle(row.policyItem),
       },
       {
-        id: 'leaveType',
-        label: 'Leave Type',
-        minWidth: 150,
-        render: (_value, row) => getLeavePolicyLeaveTypeName(row.policyItem),
+        id: 'ruleCount',
+        label: 'Rules',
+        minWidth: 90,
+        render: (_value, row) => {
+          const rules = getActivePolicyRules(row.policyItem);
+          const hasPaid = rules.some((rule) => getRuleBucket(rule) === 'Paid');
+          const hasUnpaid = rules.some((rule) => getRuleBucket(rule) === 'Unpaid');
+          return (
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+              <Chip size="small" label={`${rules.length}/2`} variant="outlined" />
+              {hasPaid ? (
+                <Chip size="small" label="Paid" color="success" variant="outlined" />
+              ) : null}
+              {hasUnpaid ? (
+                <Chip size="small" label="Unpaid" color="warning" variant="outlined" />
+              ) : null}
+            </Stack>
+          );
+        },
       },
-      { id: 'accrualPolicyType', label: 'Accrual', minWidth: 120 },
-      { id: 'leaveCount', label: 'Entitlement', minWidth: 120 },
       {
-        id: 'rules.0.carryForward',
-        label: 'Carry Forward',
-        minWidth: 130,
-        render: (value) => (value ? 'Yes' : 'No'),
+        id: 'buckets',
+        label: 'Buckets',
+        minWidth: 220,
+        render: (_value, row) => {
+          const paid = getRuleByBucket(row.policyItem, 'Paid');
+          const unpaid = getRuleByBucket(row.policyItem, 'Unpaid');
+          return (
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+              <Chip size="small" label={`Paid: ${formatRuleEntitlement(paid)}`} color="success" />
+              <Chip
+                size="small"
+                label={`Unpaid: ${formatRuleEntitlement(unpaid)}`}
+                color="warning"
+              />
+            </Stack>
+          );
+        },
       },
       {
-        id: 'rules.0.encashmentAllowed',
-        label: 'Encashable',
-        minWidth: 120,
-        render: (value) => (value ? 'Yes' : 'No'),
+        id: 'entitlements',
+        label: 'Entitlement',
+        minWidth: 240,
+        render: (_value, row) => {
+          const paid = getRuleByBucket(row.policyItem, 'Paid');
+          const unpaid = getRuleByBucket(row.policyItem, 'Unpaid');
+          return (
+            <Stack spacing={0.25}>
+              <Typography variant="body2">Paid: {formatRuleEntitlement(paid)}</Typography>
+              <Typography variant="body2">Unpaid: {formatRuleEntitlement(unpaid)}</Typography>
+            </Stack>
+          );
+        },
       },
       {
-        id: 'rules.0.requiresApproval',
-        label: 'Approval',
-        minWidth: 120,
-        render: (value) => (value ? 'Required' : 'Not required'),
+        id: 'controls',
+        label: 'Controls',
+        minWidth: 230,
+        render: (_value, row) => {
+          const rules = getActivePolicyRules(row.policyItem);
+          const flags = [
+            rules.some((rule) => rule.requiresApproval) ? 'Approval' : null,
+            rules.some((rule) => rule.carryForward) ? 'Carry forward' : null,
+            rules.some((rule) => rule.encashmentAllowed) ? 'Encashment' : null,
+          ].filter((flag): flag is string => Boolean(flag));
+
+          return (
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+              {flags.map((flag) => (
+                <Chip
+                  key={flag}
+                  size="small"
+                  label={flag}
+                  color={flag === 'Encashment' ? 'warning' : 'default'}
+                  variant="outlined"
+                />
+              ))}
+              {!flags.length ? <Chip size="small" label="Basic" variant="outlined" /> : null}
+            </Stack>
+          );
+        },
       },
       {
         id: 'status',
@@ -264,8 +335,8 @@ export function LeavePoliciesPanel() {
     id: policy.id,
     policyItem: policy,
     policyTitle: getLeavePolicyTitle(policy),
-    leaveType: getLeavePolicyLeaveTypeName(policy),
-    accrualPolicyType: policy.accrualPolicyType || policy.accuralPolicyType || '-',
+    ruleCount: getActivePolicyRules(policy).length,
+    encashmentAllowed: getActivePolicyRules(policy).some((rule) => rule.encashmentAllowed),
     updatedAt: formatDate(policy.lastModificationTime || policy.creationTime),
   }));
 
@@ -279,8 +350,8 @@ export function LeavePoliciesPanel() {
               <Chip size="small" label={`${archivedCount} archived`} variant="outlined" />
             </Stack>
             <Typography variant="body2" color="text.secondary">
-              Entitlements, accrual, carry-forward, encashment, and approval rules live here. Leave
-              Management Settings keeps only leave types.
+              Entitlements, accrual, carry-forward, encashment, and approval rules live here. Each
+              policy contains one Paid bucket and one Unpaid bucket.
             </Typography>
           </Stack>
           <Button

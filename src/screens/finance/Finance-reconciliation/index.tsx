@@ -16,7 +16,7 @@ import { useNewSearchParam } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { ReconciliationtatusType } from 'src/enums/reconciliation-status-type';
+import { ReconciliationStatusType } from 'src/enums/reconciliation-status-type';
 import { useGetReconciliationTabCountsQuery } from 'src/redux/finance/reconciliation';
 
 import UpiTable from './Component/UpiTable';
@@ -30,37 +30,37 @@ import ChequeDetailsForm from './Component/ChequeDetailsTable';
 const reconciliationTabConfig = [
   {
     label: 'Cheque',
-    value: ReconciliationtatusType.Cheque,
+    value: ReconciliationStatusType.Cheque,
     color: 'info' as LabelColor,
     component: (props: any) => <ChequeDetailsForm {...props} />,
   },
   {
     label: 'Demand Draft',
-    value: ReconciliationtatusType.DemandDraft,
+    value: ReconciliationStatusType.DemandDraft,
     color: 'primary' as LabelColor,
     component: (props: any) => <DemandDraftTable {...props} />,
   },
   {
     label: 'Bank Transfer',
-    value: ReconciliationtatusType.BankTransfer,
+    value: ReconciliationStatusType.BankTransfer,
     color: 'success' as LabelColor,
     component: (props: any) => <BankTransferTable {...props} />,
   },
   {
     label: 'Credit Card',
-    value: ReconciliationtatusType.CreditCard,
+    value: ReconciliationStatusType.CreditCard,
     color: 'warning' as LabelColor,
     component: (props: any) => <CreditCardTable {...props} />,
   },
   {
     label: 'Debit Card',
-    value: ReconciliationtatusType.DebitCard,
+    value: ReconciliationStatusType.DebitCard,
     color: 'warning' as LabelColor,
     component: (props: any) => <DebitCardTable {...props} />,
   },
   {
     label: 'UPI',
-    value: ReconciliationtatusType.UPI,
+    value: ReconciliationStatusType.UPI,
     color: 'error' as LabelColor,
     component: (props: any) => <UpiTable {...props} />,
   },
@@ -69,7 +69,7 @@ const reconciliationTabConfig = [
 const FinanceReconciliation = () => {
   // Tab state
   const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
-  const [activeTab, setActiveTab] = useState(ReconciliationtatusType.Cheque);
+  const [activeTab, setActiveTab] = useState(ReconciliationStatusType.Cheque);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
@@ -102,37 +102,37 @@ const FinanceReconciliation = () => {
   // Map tab counts to per-tab stats (pending, approved, rejected, total)
   const tabStats = useMemo(
     () => ({
-      [ReconciliationtatusType.Cash]: {
+      [ReconciliationStatusType.Cash]: {
         pending: 0,
         approved: 0,
         rejected: 0,
       },
-      [ReconciliationtatusType.Cheque]: {
+      [ReconciliationStatusType.Cheque]: {
         pending: tabCounts?.chequePending ?? 0,
         approved: tabCounts?.chequeApproved ?? 0,
         rejected: tabCounts?.chequeRejected ?? 0,
       },
-      [ReconciliationtatusType.DemandDraft]: {
+      [ReconciliationStatusType.DemandDraft]: {
         pending: tabCounts?.demandDraftPending ?? 0,
         approved: tabCounts?.demandDraftApproved ?? 0,
         rejected: tabCounts?.demandDraftRejected ?? 0,
       },
-      [ReconciliationtatusType.BankTransfer]: {
+      [ReconciliationStatusType.BankTransfer]: {
         pending: tabCounts?.bankTransferPending ?? 0,
         approved: tabCounts?.bankTransferApproved ?? 0,
         rejected: tabCounts?.bankTransferRejected ?? 0,
       },
-      [ReconciliationtatusType.CreditCard]: {
+      [ReconciliationStatusType.CreditCard]: {
         pending: tabCounts?.creditCardPending ?? 0,
         approved: tabCounts?.creditCardApproved ?? 0,
         rejected: tabCounts?.creditCardRejected ?? 0,
       },
-      [ReconciliationtatusType.DebitCard]: {
-        pending: 0,
-        approved: 0,
-        rejected: 0,
+      [ReconciliationStatusType.DebitCard]: {
+        pending: tabCounts?.debitCardPending ?? 0,
+        approved: tabCounts?.debitCardApproved ?? 0,
+        rejected: tabCounts?.debitCardRejected ?? 0,
       },
-      [ReconciliationtatusType.UPI]: {
+      [ReconciliationStatusType.UPI]: {
         pending: tabCounts?.upiPending ?? 0,
         approved: tabCounts?.upiApproved ?? 0,
         rejected: tabCounts?.upiRejected ?? 0,

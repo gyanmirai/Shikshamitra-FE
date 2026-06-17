@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { toDateOnly } from 'src/utils/date-only';
 import CommonCalender from 'src/components/calender';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetCalendarViewQuery } from 'src/redux/calendar/calendarApi';
@@ -96,9 +97,9 @@ const CalendarView = () => {
 
         return {
           ...i,
-          start: buildCalendarDate(i.startDate, holiday ? undefined : i.startTime),
+          start: holiday ? toDateOnly(i.startDate) : buildCalendarDate(i.startDate, i.startTime),
           color: i.color || fallbackColor,
-          end: buildCalendarDate(i.endDate, holiday ? undefined : i.endTime),
+          end: holiday ? toDateOnly(i.endDate) : buildCalendarDate(i.endDate, i.endTime),
           allDay: holiday,
           textColor: fallbackColor,
           title: i.title,

@@ -156,6 +156,24 @@ const normalizeStatus = (
 const labelize = (value?: string | null) =>
   value ? value.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()) : '-';
 
+const getEmployeeCode = (option: any) =>
+  option?.employeeCode || option?.employeeIdentifier || option?.code || '';
+
+const getEmployeeName = (option: any) =>
+  option?.employeeName ||
+  option?.fullName ||
+  [option?.firstName, option?.middleName, option?.lastName].filter(Boolean).join(' ') ||
+  '';
+
+const getEmployeeOptionLabel = (option: any) => {
+  if (typeof option === 'string') return option;
+
+  const name = getEmployeeName(option);
+  const code = getEmployeeCode(option);
+
+  return [name, code ? `(${code})` : ''].filter(Boolean).join(' ').trim();
+};
+
 const statusMeta = (value: RegisterStatus | number | string) =>
   REGISTER_STATUS_OPTIONS.find((item) => item.value === normalizeStatus(value)) ||
   REGISTER_STATUS_OPTIONS[0];
@@ -260,6 +278,8 @@ const AttendanceTrackingScreen = () => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [filters, setFilters] = useState(getDefaultFilters);
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [selectedEmployeeOption, setSelectedEmployeeOption] = useState<any | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -277,11 +297,15 @@ const AttendanceTrackingScreen = () => {
   const [draftErrors, setDraftErrors] = useState<AttendanceDraftErrors>({});
   const academicYearId = currentYear?.id;
   const { options: stages } = useAcademicOrganizationOptions(academicYearId);
+  const employeeLookupSearch =
+    selectedEmployeeOption && employeeSearch === getEmployeeOptionLabel(selectedEmployeeOption)
+      ? getEmployeeCode(selectedEmployeeOption) || getEmployeeName(selectedEmployeeOption)
+      : employeeSearch || filters.search;
 
   const { data: employeeOptions } = useGetEmployeeQuery({
     page: 1,
     pageSize: 50,
-    search: filters.search,
+    search: employeeLookupSearch,
   });
 
   useEffect(() => {
@@ -1291,6 +1315,8 @@ const AttendanceTrackingScreen = () => {
                 size="small"
                 onClick={() => {
                   setFilters(getDefaultFilters());
+                  setEmployeeSearch('');
+                  setSelectedEmployeeOption(null);
                   resetPaging();
                 }}
               >
@@ -1405,10 +1431,34 @@ const AttendanceTrackingScreen = () => {
                 size="small"
                 fullWidth
                 options={employeeOptions?.items || []}
-                getOptionLabel={(option: any) =>
-                  `${option.employeeName || option.fullName || option.firstName || ''} ${option.employeeCode ? `(${option.employeeCode})` : ''}`
-                }
-                onChange={(_event, value: any) => setFilter('employeeId', value?.id || '')}
+                value={selectedEmployeeOption}
+                inputValue={employeeSearch}
+                filterOptions={(options) => options}
+                getOptionLabel={getEmployeeOptionLabel}
+                isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
+                onInputChange={(_event, value, reason) => {
+                  setEmployeeSearch(value);
+
+                  if (reason === 'clear') {
+                    setSelectedEmployeeOption(null);
+                    setFilter('employeeId', '');
+                    return;
+                  }
+
+                  if (
+                    reason === 'input' &&
+                    selectedEmployeeOption &&
+                    value !== getEmployeeOptionLabel(selectedEmployeeOption)
+                  ) {
+                    setSelectedEmployeeOption(null);
+                    setFilter('employeeId', '');
+                  }
+                }}
+                onChange={(_event, value: any) => {
+                  setSelectedEmployeeOption(value || null);
+                  setEmployeeSearch(value ? getEmployeeOptionLabel(value) : '');
+                  setFilter('employeeId', value?.id || '');
+                }}
                 renderInput={(params) => <TextField {...params} label="Employee" />}
               />
             </Box>

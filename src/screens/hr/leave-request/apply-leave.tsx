@@ -236,7 +236,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
         submittedBy: item.submittedByEmployeeCode
           ? `${item.submittedByName || '-'} (${item.submittedByEmployeeCode})`
           : (item.submittedByName ?? '-'),
-        leaveType: item.leaveType,
+        paidType: item.paidType ?? item.leaveType,
         startDate: formatLeaveCalendarDateForDisplay(item.startDate),
         endDate: formatLeaveCalendarDateForDisplay(item.endDate),
         totalDays: item.totalDays,
@@ -303,8 +303,8 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
         },
       },
       {
-        label: 'Leave Type',
-        id: 'leaveType',
+        label: 'Paid Type',
+        id: 'paidType',
         align: 'left',
         minWidth: '10vw',
       },

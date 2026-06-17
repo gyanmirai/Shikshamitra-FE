@@ -2,49 +2,42 @@ import { employeeType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
+type LeaveRequestQueryArgs = {
+  academicYearId?: string;
+  'month-year'?: string;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: string;
+  leavePolicyId?: string;
+  paidType?: string;
+  employeeId?: string;
+};
+
+export const buildLeaveRequestQueryParams = ({
+  academicYearId,
+  'month-year': monthYear,
+  page = 1,
+  pageSize = 20,
+  search,
+  status,
+  leavePolicyId,
+  paidType,
+  employeeId,
+}: LeaveRequestQueryArgs = {}) => ({
+  academicYearId,
+  ...(monthYear != null && monthYear !== '' ? { 'month-year': monthYear } : {}),
+  page,
+  pageSize,
+  ...(search ? { search } : {}),
+  ...(status ? { status } : {}),
+  ...(leavePolicyId ? { leavePolicyId } : {}),
+  ...(paidType ? { paidType } : {}),
+  ...(employeeId ? { employeeId } : {}),
+});
+
 export const leaveApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    // Leave Types
-    getLeaveTypes: builder.query({
-      query: ({ page = 1, pageSize = 10, academicYearId, search }) => ({
-        url: '/hr-leave-types',
-        method: 'GET',
-        params: { academicYearId, page, pageSize, search },
-      }),
-      providesTags: [employeeType.employeeType],
-    }),
-    createLeaveType: builder.mutation({
-      query: ({ academicYearId, body }) => ({
-        url: '/hr-leave-types',
-        method: 'POST',
-        params: { academicYearId },
-        body,
-      }),
-      invalidatesTags: [employeeType.employeeType],
-    }),
-    getLeaveTypeById: builder.query({
-      query: (id) => ({
-        url: `/hr-leave-types/${id}`,
-        method: 'GET',
-      }),
-      providesTags: [employeeType.employeeType],
-    }),
-    updateLeaveType: builder.mutation({
-      query: ({ leaveTypeId, body }) => ({
-        url: `/hr-leave-types/${leaveTypeId}`,
-        method: 'PUT',
-        body,
-      }),
-      invalidatesTags: [employeeType.employeeType],
-    }),
-    deleteLeaveType: builder.mutation({
-      query: (id) => ({
-        url: `/hr-leave-types/${id}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: [employeeType.employeeType, employeeType.employeeLeavePolicy],
-    }),
-
     // Leave Policies
     getLeavePolicies: builder.query({
       query: ({ academicYearId, page = 1, pageSize = 10, search }) => ({
@@ -115,56 +108,18 @@ export const leaveApi = api.injectEndpoints({
 
     // Leave Management
     getLeaveRequests: builder.query({
-      query: ({
-        academicYearId,
-        'month-year': monthYear,
-        page = 1,
-        pageSize = 20,
-        search,
-        status,
-        leavePolicyId,
-        leaveTypeMasterId,
-        employeeId,
-      }) => ({
+      query: (args) => ({
         url: '/leave-management',
         method: 'GET',
-        params: {
-          academicYearId,
-          ...(monthYear != null && monthYear !== '' ? { 'month-year': monthYear } : {}),
-          page,
-          pageSize,
-          search,
-          status,
-          leavePolicyId,
-          leaveTypeMasterId,
-          employeeId,
-        },
+        params: buildLeaveRequestQueryParams(args),
       }),
       providesTags: [employeeType.employee],
     }),
     getMyLeaveRequests: builder.query({
-      query: ({
-        academicYearId,
-        'month-year': monthYear,
-        page = 1,
-        pageSize = 20,
-        search,
-        status,
-        leavePolicyId,
-        leaveTypeMasterId,
-      }) => ({
+      query: (args) => ({
         url: '/leave-management/my',
         method: 'GET',
-        params: {
-          academicYearId,
-          ...(monthYear != null && monthYear !== '' ? { 'month-year': monthYear } : {}),
-          page,
-          pageSize,
-          search,
-          status,
-          leavePolicyId,
-          leaveTypeMasterId,
-        },
+        params: buildLeaveRequestQueryParams(args),
       }),
       providesTags: [employeeType.employee],
     }),
@@ -178,7 +133,7 @@ export const leaveApi = api.injectEndpoints({
         search,
         status,
         leavePolicyId,
-        leaveTypeMasterId,
+        paidType,
       }) => ({
         url: '/leave-management/calendar',
         method: 'GET',
@@ -191,7 +146,7 @@ export const leaveApi = api.injectEndpoints({
           search,
           status,
           leavePolicyId,
-          leaveTypeMasterId,
+          paidType,
         },
       }),
       providesTags: [employeeType.employee],
@@ -280,12 +235,6 @@ export const leaveApi = api.injectEndpoints({
 });
 
 export const {
-  useGetLeaveTypesQuery,
-  useLazyGetLeaveTypesQuery,
-  useCreateLeaveTypeMutation,
-  useGetLeaveTypeByIdQuery,
-  useUpdateLeaveTypeMutation,
-  useDeleteLeaveTypeMutation,
   useGetLeavePoliciesQuery,
   useLazyGetLeavePoliciesQuery,
   useCreateLeavePolicyMutation,

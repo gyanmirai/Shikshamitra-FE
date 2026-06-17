@@ -59,7 +59,7 @@ export const StudentFeesSummaryView = ({ student }: any) => (
             <InfoItem
               icon={<Class />}
               label="Class / Division"
-              value={`${student?.standardDivision ?? ''}`}
+              value={`${student?.standardName ?? ''} / ${student?.divisionName ?? ''}`}
               iconColor="warning.main"
               iconBgColor={(theme) => varAlpha(theme.palette.warning.mainChannel, 0.08)}
             />

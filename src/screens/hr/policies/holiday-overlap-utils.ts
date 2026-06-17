@@ -1,6 +1,7 @@
 import type { WorkCalendarHoliday } from 'src/redux/hr/hr-policy-api';
 
 import dayjs from 'dayjs';
+import { toDateOnly, parseDateOnly } from 'src/utils/date-only';
 
 export type HolidayDateRange = {
   fromDate: string;
@@ -22,9 +23,9 @@ export function getHolidayToDate(item: WorkCalendarHoliday) {
 }
 
 export function normalizeHolidayDateRange(item: WorkCalendarHoliday): HolidayDateRange | null {
-  const fromDate = dayjs(getHolidayFromDate(item));
-  const toDate = dayjs(getHolidayToDate(item));
-  if (!fromDate.isValid() || !toDate.isValid() || toDate.isBefore(fromDate, 'day')) {
+  const fromDate = parseDateOnly(getHolidayFromDate(item));
+  const toDate = parseDateOnly(getHolidayToDate(item));
+  if (!fromDate || !toDate || toDate.isBefore(fromDate, 'day')) {
     return null;
   }
   return {
@@ -99,7 +100,8 @@ export function mergeNonOverlappingHolidayRows(
   return {
     rows: [...currentRows, ...additions].sort(
       (left, right) =>
-        dayjs(getHolidayFromDate(left)).valueOf() - dayjs(getHolidayFromDate(right)).valueOf()
+        dayjs(toDateOnly(getHolidayFromDate(left))).valueOf() -
+        dayjs(toDateOnly(getHolidayFromDate(right))).valueOf()
     ),
     addedCount: additions.length,
     skippedDuplicateCount,

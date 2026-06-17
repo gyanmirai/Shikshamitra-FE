@@ -121,11 +121,17 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     }));
   }, [eligibility, isAdj]);
 
+  const prevStudentIdRef = React.useRef(studentId);
+
   // Reset refund state when student changes
   useEffect(() => {
-    if (!studentId) return;
-    setShowValidation(false);
-    formik.setFieldValue('feeHeadRefunds', [], false);
+    if (studentId !== prevStudentIdRef.current) {
+      prevStudentIdRef.current = studentId;
+      if (studentId) {
+        setShowValidation(false);
+        formik.setFieldValue('feeHeadRefunds', [], false);
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId]);
 

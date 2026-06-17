@@ -276,10 +276,9 @@ function leavePolicyCreatePayload(
   effectiveFrom: string
 ) {
   const sourceRule = (sourcePolicy.rules || sourcePolicy.Rules || []).find(
-    (rule: any) => rule?.leaveType?.id || rule?.leaveTypeId
+    (rule: any) => String(rule?.paidType || '').toLowerCase() === 'paid'
   );
-  expect(sourceRule, 'source leave policy must have at least one leave type rule').toBeTruthy();
-  const leaveTypeId = sourceRule.leaveType?.id || sourceRule.leaveTypeId;
+  expect(sourceRule, 'source leave policy must have a paid rule').toBeTruthy();
 
   return {
     policyTitle: name,
@@ -290,10 +289,10 @@ function leavePolicyCreatePayload(
     isDefault: false,
     rules: [
       {
-        leaveTypeId,
+        paidType: 'Paid',
+        entitlementMode: 'Limited',
         accrualPolicyType: 'Yearly',
         leaveCount,
-        paidType: 'Paid',
         carryForward: false,
         carryForwardLimit: null,
         encashmentAllowed: false,
@@ -304,6 +303,23 @@ function leavePolicyCreatePayload(
         allowHalfDay: true,
         attachmentRequiredAfterDays: null,
         allowNegativeBalance: false,
+        isActive: true,
+      },
+      {
+        paidType: 'Unpaid',
+        entitlementMode: 'Unlimited',
+        accrualPolicyType: 'Yearly',
+        leaveCount: null,
+        carryForward: false,
+        carryForwardLimit: null,
+        encashmentAllowed: false,
+        encashmentTiming: null,
+        requiresApproval: true,
+        minNoticeDays: 0,
+        maxDaysPerRequest: 30,
+        allowHalfDay: true,
+        attachmentRequiredAfterDays: null,
+        allowNegativeBalance: true,
         isActive: true,
       },
     ],

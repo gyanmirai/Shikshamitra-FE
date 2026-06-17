@@ -192,6 +192,7 @@ export type HRDashboardLeaveRequest = {
   employeeId: string;
   employeeName: string;
   employeeIdentifier: string;
+  paidType?: string;
   leaveType: string;
   startDate: string;
   endDate: string;

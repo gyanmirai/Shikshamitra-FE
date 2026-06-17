@@ -23,7 +23,7 @@ Sources: `src/constants/hr-menus.ts`, `src/app/(auth-route)/hr/**`, `src/screens
 | Employee | `/hr/employee`, `/hr/i-card`, `/hr/setting`, `/hr/profile` |
 | Payroll | `/hr/payroll`, `/hr/payroll/dashboard`, `/hr/payroll/run-payroll`, `/hr/payroll/payslip-generation`, `/hr/payroll/structure`, `/hr/payroll/setting/earning-component`, `/hr/payroll/setting/deduction-component`, `/hr/payroll/setting/pf`, `/hr/payroll/setting/tds`, `/hr/payroll/setting/professional-tax` |
 | Attendance | `/hr/attendance-dashboard`, `/hr/manual-attendance`, `/hr/attendance-tracking`, `/hr/biometric-attendance`, `/hr/biometric-integration`, `/hr/attendance-notification`, `/hr/attendance-setting/shiftManagement` |
-| Leave | `/hr/leave-center`, `/hr/apply-leave`, `/hr/leave-approvals`, `/hr/leave-balance`, `/hr/leave-management-setting/leaveType`, `/hr/leave-management-setting/leavePolicy` |
+| Leave | `/hr/leave-center`, `/hr/apply-leave`, `/hr/leave-approvals`, `/hr/leave-balance` |
 | Policies | `/hr/calendars`, `/hr/leave-policies`, `/hr/payrollPolicies`, `/hr/attendance`, `/hr/assignments`, `/hr/holiday`, `/hr/effective-preview` |
 | Performance | `/hr/professional-management`, `/hr/professional-management/overview`, `/reviews`, `/cycles`, `/outcomes`, `/reports`, `/settings`, `/settings/setup`, plus `/hr/performance` |
 | Reports/notifications | `/hr/reports`, `/hr/hr-notification` |

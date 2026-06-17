@@ -240,6 +240,8 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
     try {
       const saveResult = await updateRollNumbers({
         divisionId: division,
+        arrangementType: arrangementType === 'mix' ? 0 : arrangementType === 'boysFirst' ? 1 : 2,
+        arrangementBy: arrangeBy === 'firstName' ? 0 : 1,
         body: requestBody,
       }).unwrap();
       const message = buildRollNumberSaveMessage(saveResult, changesSummary.length);

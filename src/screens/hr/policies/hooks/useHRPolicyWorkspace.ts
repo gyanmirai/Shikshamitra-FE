@@ -18,13 +18,14 @@ import type {
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
+import { toDateOnly } from 'src/utils/date-only';
 import { useSearchParams } from 'next/navigation';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useGetEmployeeQuery, EMPLOYEE_LIST_MAX_PAGE_SIZE } from 'src/redux/hr/employeeApi';
 import {
   useGetGroupsQuery,
   useGetGroupMembersQuery,
@@ -127,6 +128,7 @@ import {
   assignmentMatchesLeavePolicyFilter,
   normalizePayrollDayCalculationType,
   getEffectiveAssignmentLeavePolicyId,
+  getHolidayAcademicYearValidationError,
 } from '../hr-policy-workspace-utils';
 
 import type { AttendanceNumericField } from '../hr-policy-ui-utils';
@@ -325,7 +327,7 @@ export function useHRPolicyWorkspace({
   const assignmentListArgs = { academicYearId, maxResultCount: 1000 };
 
   const { data: employees, isFetching: employeesLoading } = useGetEmployeeQuery(
-    { page: 1, pageSize: 1000 },
+    { page: 1, pageSize: EMPLOYEE_LIST_MAX_PAGE_SIZE },
     { skip: !academicYearId }
   );
   const { data: groups, isFetching: groupsLoading } = useGetGroupsQuery(
@@ -832,9 +834,9 @@ export function useHRPolicyWorkspace({
       holidays: calendarForm.holidays.map((holiday) => ({
         ...holiday,
         academicYearId,
-        date: dayjs(getHolidayFromDate(holiday)).format('YYYY-MM-DD'),
-        fromDate: dayjs(getHolidayFromDate(holiday)).format('YYYY-MM-DD'),
-        toDate: dayjs(getHolidayToDate(holiday)).format('YYYY-MM-DD'),
+        date: toDateOnly(getHolidayFromDate(holiday)),
+        fromDate: toDateOnly(getHolidayFromDate(holiday)),
+        toDate: toDateOnly(getHolidayToDate(holiday)),
         dayCount: getHolidayDayCount(holiday),
       })),
     };
@@ -1364,8 +1366,8 @@ export function useHRPolicyWorkspace({
         !getHolidayFromDate(holiday) ||
         !getHolidayToDate(holiday) ||
         !(() => {
-          const from = dayjs(getHolidayFromDate(holiday)).format('YYYY-MM-DD');
-          const to = dayjs(getHolidayToDate(holiday)).format('YYYY-MM-DD');
+          const from = toDateOnly(getHolidayFromDate(holiday));
+          const to = toDateOnly(getHolidayToDate(holiday));
           const rangeFrom = calendarForm.effectiveFrom;
           const rangeTo = calendarForm.effectiveTo;
           const fromD = dayjs(from);
@@ -1380,6 +1382,15 @@ export function useHRPolicyWorkspace({
       setFormError(
         'All finalized holidays need a name, valid date range, and must stay inside the work calendar effective date range.'
       );
+      return;
+    }
+    const academicYearHolidayError = getHolidayAcademicYearValidationError(
+      calendarForm.holidays,
+      currentYear?.startDate,
+      currentYear?.endDate
+    );
+    if (academicYearHolidayError) {
+      setFormError(academicYearHolidayError);
       return;
     }
     const body = buildCalendarPayload();
@@ -1428,6 +1439,8 @@ export function useHRPolicyWorkspace({
     buildCalendarPayload,
     calendarForm,
     clearDrawer,
+    currentYear?.endDate,
+    currentYear?.startDate,
     createWorkCalendarPolicy,
     drawer,
     previewPolicyImpact,
@@ -2098,10 +2111,6 @@ export function useHRPolicyWorkspace({
       setFormError('Manual holiday range must be inside the work calendar effective date range.');
       return;
     }
-    if (manualHolidayConflict) {
-      setFormError(manualHolidayConflictMessage);
-      return;
-    }
     const row: WorkCalendarHoliday = {
       academicYearId,
       date: manualHolidayForm.fromDate,
@@ -2114,6 +2123,19 @@ export function useHRPolicyWorkspace({
       isIncluded: true,
       notes: manualHolidayForm.notes.trim() || null,
     };
+    const academicYearHolidayError = getHolidayAcademicYearValidationError(
+      [row],
+      currentYear?.startDate,
+      currentYear?.endDate
+    );
+    if (academicYearHolidayError) {
+      setFormError(academicYearHolidayError);
+      return;
+    }
+    if (manualHolidayConflict) {
+      setFormError(manualHolidayConflictMessage);
+      return;
+    }
     setCalendarForm((current) => ({
       ...current,
       holidays:
@@ -2123,8 +2145,8 @@ export function useHRPolicyWorkspace({
               .map((item, i) => (i === editingManualHolidayIndex ? { ...item, ...row } : item))
               .sort(
                 (left, right) =>
-                  dayjs(getHolidayFromDate(left)).valueOf() -
-                  dayjs(getHolidayFromDate(right)).valueOf()
+                  dayjs(toDateOnly(getHolidayFromDate(left))).valueOf() -
+                  dayjs(toDateOnly(getHolidayFromDate(right))).valueOf()
               ),
     }));
     setFormError('');
@@ -2134,6 +2156,8 @@ export function useHRPolicyWorkspace({
     calendarForm.effectiveFrom,
     calendarForm.effectiveTo,
     closeManualHolidayDialog,
+    currentYear?.endDate,
+    currentYear?.startDate,
     editingManualHolidayIndex,
     manualHolidayConflict,
     manualHolidayConflictMessage,

@@ -56,7 +56,7 @@ export function LeaveCenterOverviewPanel({ overview, isLoading }: LeaveCenterOve
   const theme = useTheme();
   const utilizationPercent = getLeaveUtilizationPercent(overview);
   const hasFiniteEntitlement = overview.totalLeaves > 0;
-  const hasUnlimitedLeave = overview.leaveTypeBreakdown.some((row) => row.isUnlimited);
+  const hasUnlimitedLeave = overview.bucketBreakdown.some((row) => row.isUnlimited);
   const metrics = useMemo(() => getOverviewMetrics(overview), [overview]);
   const chartSeries = useMemo(
     () =>
@@ -230,10 +230,10 @@ export function LeaveCenterOverviewPanel({ overview, isLoading }: LeaveCenterOve
               </Stack>
               <Stack direction="row" justifyContent="space-between" spacing={1}>
                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                  Balance types
+                  Buckets
                 </Typography>
                 <Typography variant="caption" sx={{ fontWeight: 800 }}>
-                  {overview.leaveTypeBreakdown.length}
+                  {overview.bucketBreakdown.length}
                 </Typography>
               </Stack>
             </Stack>
@@ -255,7 +255,7 @@ export function LeaveCenterOverviewPanel({ overview, isLoading }: LeaveCenterOve
             </Typography>
             {hasUnlimitedLeave ? (
               <Typography variant="caption" color="text.secondary">
-                Unlimited leave types are tracked in history.
+                Unlimited unpaid leave is tracked in history.
               </Typography>
             ) : (
               <Typography variant="caption" color="text.secondary">

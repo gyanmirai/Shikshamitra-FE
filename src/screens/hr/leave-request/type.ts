@@ -1,7 +1,7 @@
 export interface LeaveRequestType {
   userId: string;
   employeeId: string;
-  leaveType: string;
+  paidType: string;
   color: string;
   halfDay: boolean;
   startDate: string;

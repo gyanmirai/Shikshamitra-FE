@@ -74,10 +74,15 @@ const RenderAdditionalDetails = (props: any) => {
             label="BPL Card No."
             size="small"
             disabled={!isAdditionalDetailsEditable.value}
-            value={formik.values.bplCardNo}
+            value={formik.values.bplCardNo || ''}
+            inputProps={{
+              maxLength: 15,
+              style: { textTransform: 'uppercase' }, // Visual hint for uppercase
+            }}
             onChange={(e) => {
-              const onlyNumbers = e.target.value.replace(/[^0-9]/g, '');
-              formik.setFieldValue('bplCardNo', onlyNumbers);
+              // Strip non-alphanumeric characters and force uppercase
+              const formattedValue = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+              formik.setFieldValue('bplCardNo', formattedValue);
             }}
             error={formik.touched.bplCardNo && Boolean(formik.errors.bplCardNo)}
             helperText={formik.touched.bplCardNo && formik.errors.bplCardNo}

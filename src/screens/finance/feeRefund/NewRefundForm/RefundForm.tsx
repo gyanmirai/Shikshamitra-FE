@@ -45,7 +45,7 @@ import {
 import type { IFeeHeadRefundItem } from './initialValuesAndValidation';
 
 interface FeeRefundFormProps {
-  onCancel?: (e: React.MouseEvent, isSubmit: boolean) => void;
+  onCancel?: (e: any, isSubmit: boolean) => void;
   loading?: boolean;
   defaultBoardId?: string;
   defaultMediumId?: string;
@@ -324,7 +324,7 @@ const FeeRefundFormComponent = ({
         }
 
         helpers.resetForm();
-        onCancel?.(new MouseEvent('click') as any, true);
+        onCancel?.(null, true);
       } catch (err: any) {
         const message = err?.data?.error?.message ?? 'Failed to save refund request.';
         shikshaMitraToast.error({ message });
@@ -476,14 +476,7 @@ const FeeRefundFormComponent = ({
               type="submit"
               variant="contained"
               size="small"
-              loading={
-                loading ||
-                isSubmitting ||
-                isUpdating ||
-                editLoading ||
-                editFetching ||
-                loadingEditData
-              }
+              loading={loading || isSubmitting || isUpdating || editLoading || editFetching}
               loadingPosition="start"
               startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
               onClick={() => formik.handleSubmit()}

@@ -18,10 +18,10 @@ const overview: LeaveOverviewData = {
   usedLeaves: 4,
   remainingLeaves: 6,
   pendingLeaveDays: 1.5,
-  leaveTypeBreakdown: [
+  bucketBreakdown: [
     {
-      leaveTypeId: 'casual',
-      leaveTypeName: 'Casual Leave',
+      bucketId: 'Paid',
+      bucketName: 'Paid',
       total: 10,
       used: 4,
       pendingDays: 1.5,
@@ -61,14 +61,14 @@ describe('LeaveCenterOverviewPanel', () => {
     expect(screen.queryByTestId('leave-utilization-chart')).not.toBeInTheDocument();
   });
 
-  it('handles unlimited or zero-balance leave types without drawing a finite chart', () => {
+  it('handles unlimited or zero-balance buckets without drawing a finite chart', () => {
     const unlimitedOverview: LeaveOverviewData = {
       ...EMPTY_LEAVE_OVERVIEW,
       usedLeaves: 2,
-      leaveTypeBreakdown: [
+      bucketBreakdown: [
         {
-          leaveTypeId: 'lop',
-          leaveTypeName: 'Loss of Pay',
+          bucketId: 'Unpaid',
+          bucketName: 'Unpaid',
           total: 0,
           used: 2,
           pendingDays: 0,
@@ -81,7 +81,7 @@ describe('LeaveCenterOverviewPanel', () => {
     render(<LeaveCenterOverviewPanel overview={unlimitedOverview} isLoading={false} />);
 
     expect(screen.getByText('No finite leave entitlement')).toBeInTheDocument();
-    expect(screen.getByText('Unlimited leave types are tracked in history.')).toBeInTheDocument();
+    expect(screen.getByText('Unlimited unpaid leave is tracked in history.')).toBeInTheDocument();
     expect(screen.queryByTestId('leave-utilization-chart')).not.toBeInTheDocument();
   });
 
