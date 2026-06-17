@@ -5,21 +5,22 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { Save } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { Save, Lock, LockOpen } from '@mui/icons-material';
 import React, { useMemo, useState, useEffect } from 'react';
-import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Card, Alert, Button, Tooltip, AlertTitle, Typography } from '@mui/material';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useGetStudentElectiveAssignmentsQuery,
+  useLockStudentElectiveAssignmentsMutation,
   useUpdateStudentElectiveAssignmentsMutation,
 } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
 
@@ -34,10 +35,10 @@ const AssignElectiveSubject = () => {
 
   const [students, setStudents] = useState<any[]>([]);
   const [studentSelections, setStudentSelections] = useState<Record<string, string>>({});
-  const [selectedHeaderSubject, setSelectedHeaderSubject] = useState<string>('');
 
   const resetDialog = useBoolean();
   const saveDialog = useBoolean();
+  const lockDialog = useBoolean();
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -95,7 +96,6 @@ const AssignElectiveSubject = () => {
     setElectiveGroupId('');
     setStudents([]);
     setStudentSelections({});
-    setSelectedHeaderSubject('');
   }, [allClass, classes]);
 
   // --------------------------------------------
@@ -137,7 +137,6 @@ const AssignElectiveSubject = () => {
       // Prevent setState inside render → schedule after paint
       requestAnimationFrame(() => {
         setStudentSelections(initial);
-        setSelectedHeaderSubject('');
       });
     }
   }, [assignmentData]);
@@ -146,15 +145,13 @@ const AssignElectiveSubject = () => {
   // BULK SELECT (HEADER)
   // --------------------------------------------
   const handleHeaderSubjectClick = (subjectId: string) => {
+    if (isLocked) return;
     const isSame = selectedHeaderSubject === subjectId;
 
     if (isSame) {
-      setSelectedHeaderSubject('');
       setStudentSelections({});
       return;
     }
-
-    setSelectedHeaderSubject(subjectId);
 
     const selections: Record<string, string> = {};
     students.forEach((s) => {
@@ -168,17 +165,54 @@ const AssignElectiveSubject = () => {
   // INDIVIDUAL ROW CLICK
   // --------------------------------------------
   const handleStudentSubjectClick = (studentId: string, subjectId: string) => {
+    if (isLocked) return;
     setStudentSelections((prev) => {
       const updated = { ...prev, [studentId]: subjectId };
-
-      const allSame = students.every((s) => updated[s.studentId] === subjectId);
-      setSelectedHeaderSubject(allSame ? subjectId : '');
-
       return updated;
     });
   };
 
+  const isLocked = !!assignmentData?.isLocked;
+
+  const selectedHeaderSubject = useMemo(() => {
+    if (!students || students.length === 0) return '';
+    const firstSel = studentSelections[students[0].studentId];
+    if (!firstSel) return '';
+    const allSame = students.every((s) => studentSelections[s.studentId] === firstSel);
+    return allSame ? firstSel : '';
+  }, [studentSelections, students]);
+
   const hasSelections = Object.keys(studentSelections).length > 0;
+
+  const allStudentsAssigned = useMemo(
+    () => students.length > 0 && students.every((st) => studentSelections[st.studentId]),
+    [studentSelections, students]
+  );
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!assignmentData?.records) return false;
+    if (students.length !== assignmentData.records.length) return true;
+    return students.some(
+      (st) =>
+        studentSelections[st.studentId] !==
+        assignmentData.records.find((r: any) => r.studentId === st.studentId)?.selectedSubjectId
+    );
+  }, [studentSelections, assignmentData, students]);
+
+  const canLock = allStudentsAssigned && !hasUnsavedChanges && !isLocked;
+
+  const getLockTooltip = () => {
+    if (isLocked) {
+      return 'These elective assignments are locked and cannot be modified.';
+    }
+    if (!allStudentsAssigned) {
+      return 'Assign elective subjects to all students before locking.';
+    }
+    if (hasUnsavedChanges) {
+      return 'Save your changes before locking.';
+    }
+    return 'Lock assignments. Warning: Once locked, you cannot modify student elective assignments.';
+  };
 
   // --------------------------------------------
   // PUT API USING useQueryAndMutation
@@ -213,10 +247,35 @@ const AssignElectiveSubject = () => {
   // --------------------------------------------
   const handleReset = () => {
     setStudentSelections({});
-    setSelectedHeaderSubject('');
     resetDialog.onFalse();
 
     shikshaMitraToast.success({ message: 'Selections reset successfully!' });
+  };
+
+  // --------------------------------------------
+  // LOCK API USING useQueryAndMutation
+  // --------------------------------------------
+  const [lockStudentElectiveAssignments, { isLoading: isLocking }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLockStudentElectiveAssignmentsMutation,
+  });
+
+  const handleLock = async () => {
+    const payload = {
+      academicMediumId: medium?.id,
+      classId: classes,
+      divisionId: division,
+      electiveGroupId,
+    };
+
+    try {
+      await lockStudentElectiveAssignments(payload).unwrap();
+      shikshaMitraToast.success({ message: 'Elective assignments locked successfully!' });
+      lockDialog.onFalse();
+      refetchElectives();
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to lock assignments.' });
+    }
   };
 
   // --------------------------------------------
@@ -293,32 +352,79 @@ const AssignElectiveSubject = () => {
           <Box
             sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'flex-end', sm: 'flex-start' } }}
           >
-            <Button
-              variant="outlined"
-              color="inherit"
-              startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-              disabled={!hasSelections}
-              onClick={() => resetDialog.onTrue()}
-              size="medium"
-              sx={{ px: 3 }}
-            >
-              Reset
-            </Button>
+            {!isLocked && (
+              <>
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+                  disabled={!hasSelections}
+                  onClick={() => resetDialog.onTrue()}
+                  size="medium"
+                  sx={{ px: 3 }}
+                >
+                  Reset
+                </Button>
 
-            <LoadingButton
-              variant="contained"
-              startIcon={<Save />}
-              disabled={!hasSelections}
-              onClick={() => saveDialog.onTrue()}
-              size="medium"
-              loading={isSaving}
-              sx={{ px: 3, boxShadow: (theme) => theme.customShadows.z8 }}
-            >
-              Save
-            </LoadingButton>
+                <LoadingButton
+                  variant="contained"
+                  startIcon={<Save />}
+                  disabled={!hasSelections}
+                  onClick={() => saveDialog.onTrue()}
+                  size="medium"
+                  loading={isSaving}
+                  sx={{ px: 3, boxShadow: (theme) => theme.customShadows.z8 }}
+                >
+                  Save
+                </LoadingButton>
+              </>
+            )}
+
+            <Tooltip title={getLockTooltip()} arrow>
+              <span>
+                <LoadingButton
+                  variant="contained"
+                  color={isLocked ? 'success' : 'error'}
+                  startIcon={isLocked ? <Lock /> : <LockOpen />}
+                  disabled={!canLock}
+                  onClick={() => lockDialog.onTrue()}
+                  size="medium"
+                  loading={isLocking}
+                  sx={{ px: 3, boxShadow: (theme) => theme.customShadows.z8 }}
+                >
+                  {isLocked ? 'Locked' : 'Lock'}
+                </LoadingButton>
+              </span>
+            </Tooltip>
           </Box>
         </Box>
       </Card>
+
+      {isLocked && (
+        <Alert
+          severity="error"
+          variant="standard"
+          icon={<Lock sx={{ width: 22, height: 22 }} />}
+          sx={{ mb: 1.5 }}
+          // sx={{
+          //   mb: 1.5,
+          //   borderRadius: 1.5,
+          //   borderWidth: '1px',
+          //   backgroundColor: (theme) =>
+          //     theme.palette.mode === 'dark' ? 'rgba(255, 167, 38, 0.05)' : 'rgba(255, 244, 229, 0.5)',
+          //   borderColor: (theme) =>
+          //     theme.palette.mode === 'dark' ? 'rgba(255, 167, 38, 0.3)' : 'rgba(255, 224, 178, 1)',
+          //   color: (theme) =>
+          //     theme.palette.mode === 'dark' ? '#FFE0B2' : '#E65100',
+          //   '& .MuiAlert-icon': {
+          //     color: '#FF9800',
+          //   },
+          // }}
+        >
+          <AlertTitle sx={{ fontWeight: 600 }}>Assignments Locked</AlertTitle>
+          These elective subject assignments have been finalized and locked. Editing is disabled.
+        </Alert>
+      )}
 
       {/* TABLE */}
 
@@ -360,19 +466,22 @@ const AssignElectiveSubject = () => {
                           py: 0.625,
                           borderRadius: 1,
                           border: '1px solid',
-                          cursor: 'pointer',
+                          cursor: isLocked ? 'default' : 'pointer',
                           userSelect: 'none',
                           transition: 'all 0.18s ease',
+                          pointerEvents: isLocked ? 'none' : 'auto',
                           ...(isSelected
                             ? {
                                 boxShadow: `0 1px 4px ${s.subjectColor}30`,
-                                '&:hover': { backgroundColor: `${s.subjectColor}22` },
+                                '&:hover': {
+                                  backgroundColor: isLocked ? 'transparent' : `${s.subjectColor}22`,
+                                },
                               }
                             : {
-                                opacity: 0.6,
+                                opacity: isLocked ? 0.3 : 0.6,
                                 '&:hover': {
-                                  backgroundColor: 'background.paper',
-                                  borderColor: 'divider',
+                                  backgroundColor: isLocked ? 'transparent' : 'background.paper',
+                                  borderColor: isLocked ? 'divider' : 'divider',
                                 },
                               }),
                         }}
@@ -423,19 +532,22 @@ const AssignElectiveSubject = () => {
                         py: 0.625,
                         borderRadius: 1,
                         border: '1px solid',
-                        cursor: 'pointer',
+                        cursor: isLocked ? 'default' : 'pointer',
                         userSelect: 'none',
                         transition: 'all 0.18s ease',
+                        pointerEvents: isLocked ? 'none' : 'auto',
                         ...(isSelected
                           ? {
                               boxShadow: `0 1px 4px ${s.subjectColor}30`,
-                              '&:hover': { backgroundColor: `${s.subjectColor}22` },
+                              '&:hover': {
+                                backgroundColor: isLocked ? 'transparent' : `${s.subjectColor}22`,
+                              },
                             }
                           : {
-                              opacity: 0.6,
+                              opacity: isLocked ? 0.3 : 0.6,
                               '&:hover': {
-                                backgroundColor: 'background.paper',
-                                borderColor: 'divider',
+                                backgroundColor: isLocked ? 'transparent' : 'background.paper',
+                                borderColor: isLocked ? 'divider' : 'divider',
                               },
                             }),
                       }}
@@ -492,6 +604,19 @@ const AssignElectiveSubject = () => {
         action={
           <LoadingButton variant="contained" onClick={handleSave} loading={isSaving}>
             Save
+          </LoadingButton>
+        }
+      />
+
+      {/* LOCK DIALOG */}
+      <ConfirmDialog
+        open={lockDialog.value}
+        onClose={() => lockDialog.onFalse()}
+        title="Lock Elective Assignments"
+        content="Are you sure you want to lock these elective assignments? Once locked, you will not be able to edit or assign subjects to students for this class and division."
+        action={
+          <LoadingButton variant="contained" color="error" onClick={handleLock} loading={isLocking}>
+            Lock
           </LoadingButton>
         }
       />
