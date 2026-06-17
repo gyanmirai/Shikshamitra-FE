@@ -16,10 +16,8 @@ import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuList, Typography, IconButton } from '@mui/material';
-import {
-  useGetReconciliationListQuery,
-  useDownloadReconciliationReceiptPdfMutation,
-} from 'src/redux/finance/reconciliation';
+import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
+import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
 import {
   PamentMethodsStatusColor,
   PaymentMethodsStatusType,
@@ -60,7 +58,7 @@ const ChequeDetailsForm = ({
 
   const [downloadReceiptPdf] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDownloadReconciliationReceiptPdfMutation,
+    currentQueryAndMutation: useDownloadReceiptPdfMutation,
     popupConfig: {
       error: true,
       errorMessage: 'Unable to load receipt',
@@ -240,7 +238,10 @@ const ChequeDetailsForm = ({
 
             try {
               const blob = await downloadReceiptPdf({
-                receiptId: row.id,
+                receiptId:
+                  row?.status === PaymentMethodsStatusType.Approved
+                    ? row?.finalReceiptId
+                    : row?.provisionalReceiptId,
               }).unwrap();
               const objectUrl = URL.createObjectURL(blob);
               setReceiptBlobUrl(objectUrl);

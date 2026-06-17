@@ -51,11 +51,6 @@ export const ConsolidatedFeeDetails = ({
     status: c.status,
   }));
 
-  const getStatus = (paid: number, total: number) => {
-    if (paid >= total) return FeeCollectionStatusType.Paid;
-    return FeeCollectionStatusType.Pending;
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 18 }}
@@ -203,42 +198,33 @@ export const ConsolidatedFeeDetails = ({
                     </TableHead>
 
                     <TableBody>
-                      {chargeList.map((charge, index) => {
-                        const status = getStatus(charge.paid, charge.total);
-                        return (
-                          <TableRow
-                            key={index}
-                            hover
-                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                          >
-                            <TableCell sx={{ fontWeight: 500 }}>{charge.name}</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 600 }}>
-                              ₹ {formatNumber(charge.total)}
-                            </TableCell>
-                            <TableCell
-                              align="right"
-                              sx={{ color: 'success.dark', fontWeight: 600 }}
+                      {chargeList.map((charge, index) => (
+                        <TableRow
+                          key={index}
+                          hover
+                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                        >
+                          <TableCell sx={{ fontWeight: 500 }}>{charge.name}</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600 }}>
+                            ₹ {formatNumber(charge.total)}
+                          </TableCell>
+                          <TableCell align="right" sx={{ color: 'success.dark', fontWeight: 600 }}>
+                            ₹ {formatNumber(charge.paid)}
+                          </TableCell>
+                          <TableCell align="right" sx={{ color: 'warning.dark', fontWeight: 600 }}>
+                            ₹ {formatNumber(charge.pending)}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Label
+                              variant="soft"
+                              color={FeeCollectionStatusTypeColors[charge?.status] as LabelColor}
+                              sx={{ fontSize: 11, height: 20 }}
                             >
-                              ₹ {formatNumber(charge.paid)}
-                            </TableCell>
-                            <TableCell
-                              align="right"
-                              sx={{ color: 'warning.dark', fontWeight: 600 }}
-                            >
-                              ₹ {formatNumber(charge.pending)}
-                            </TableCell>
-                            <TableCell align="center">
-                              <Label
-                                variant="soft"
-                                color={FeeCollectionStatusTypeColors[status] as LabelColor}
-                                sx={{ fontSize: 11, height: 20 }}
-                              >
-                                {FeeCollectionStatusType[status]}
-                              </Label>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                              {FeeCollectionStatusType[charge?.status]}
+                            </Label>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                     </TableBody>
                   </Table>
                 </TableContainer>

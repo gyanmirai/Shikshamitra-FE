@@ -21,7 +21,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
   disabled = false,
 }): React.ReactElement => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { values, touched, errors, setFieldValue } = formik;
+  const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
 
   const [boards, setBoards] = useState<any[]>([]);
   const [mediums, setMediums] = useState<any[]>([]);
@@ -101,10 +101,15 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
             value={values.boardId}
             onChange={(val) => {
               setFieldValue('boardId', val);
+              setFieldTouched('boardId', false);
               setFieldValue('mediumId', '');
+              setFieldTouched('mediumId', false);
               setFieldValue('standardId', '');
+              setFieldTouched('standardId', false);
               setFieldValue('divisionId', '');
+              setFieldTouched('divisionId', false);
               setFieldValue('studentId', '');
+              setFieldTouched('studentId', false);
               setFieldValue('studentName', '');
               setFieldValue('feeHeadRefunds', []);
             }}
@@ -127,9 +132,13 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
             value={values.mediumId}
             onChange={(val) => {
               setFieldValue('mediumId', val);
+              setFieldTouched('mediumId', false);
               setFieldValue('standardId', '');
+              setFieldTouched('standardId', false);
               setFieldValue('divisionId', '');
+              setFieldTouched('divisionId', false);
               setFieldValue('studentId', '');
+              setFieldTouched('studentId', false);
               setFieldValue('studentName', '');
               setFieldValue('feeHeadRefunds', []);
             }}
@@ -153,8 +162,11 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
             value={values.standardId}
             onChange={(val) => {
               setFieldValue('standardId', val);
+              setFieldTouched('standardId', false);
               setFieldValue('divisionId', '');
+              setFieldTouched('divisionId', false);
               setFieldValue('studentId', '');
+              setFieldTouched('studentId', false);
               setFieldValue('studentName', '');
               setFieldValue('feeHeadRefunds', []);
             }}
@@ -177,7 +189,9 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
             value={values.divisionId}
             onChange={(val) => {
               setFieldValue('divisionId', val);
+              setFieldTouched('divisionId', false);
               setFieldValue('studentId', '');
+              setFieldTouched('studentId', false);
               setFieldValue('studentName', '');
               setFieldValue('feeHeadRefunds', []);
             }}
@@ -200,6 +214,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
             value={studentOptions.find((s: any) => s.studentId === values.studentId) || null}
             onChange={(_e, value: any) => {
               setFieldValue('studentId', value?.studentId || '');
+              setFieldTouched('studentId', false);
               setFieldValue('studentName', value?.name || '');
               setFieldValue('feeHeadRefunds', []);
             }}

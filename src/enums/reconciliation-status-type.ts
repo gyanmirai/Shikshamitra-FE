@@ -1,4 +1,4 @@
-export enum ReconciliationtatusType {
+export enum ReconciliationStatusType {
   Cash = 0,
   Cheque = 1,
   DemandDraft = 2,

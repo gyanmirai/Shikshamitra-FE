@@ -20,6 +20,7 @@ import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
 import { Button, MenuList, TextField, IconButton, Typography, DialogActions } from '@mui/material';
 import {
   PamentMethodsStatusColor,
@@ -30,7 +31,6 @@ import {
   useGetReconciliationListQuery,
   useRejectReconciliationMutation,
   useApproveReconciliationMutation,
-  useDownloadReconciliationReceiptPdfMutation,
 } from 'src/redux/finance/reconciliation';
 
 import ReconciliationReceiptDialog from './ReconciliationReceiptDialog';
@@ -67,7 +67,7 @@ const DemandDraftTable = ({
 
   const [downloadReceiptPdf] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDownloadReconciliationReceiptPdfMutation,
+    currentQueryAndMutation: useDownloadReceiptPdfMutation,
     popupConfig: {
       error: true,
       errorMessage: 'Unable to load receipt',
@@ -257,7 +257,10 @@ const DemandDraftTable = ({
 
             try {
               const blob = await downloadReceiptPdf({
-                receiptId: row.id,
+                receiptId:
+                  row?.status === PaymentMethodsStatusType.Approved
+                    ? row?.finalReceiptId
+                    : row?.provisionalReceiptId,
               }).unwrap();
               const objectUrl = URL.createObjectURL(blob);
               setReceiptBlobUrl(objectUrl);

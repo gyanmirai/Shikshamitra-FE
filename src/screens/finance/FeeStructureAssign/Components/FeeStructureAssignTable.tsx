@@ -255,6 +255,8 @@ const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
               id: 'checkBox',
               align: 'center',
               minWidth: '60px',
+              maxWidth: '70px',
+              width: '60px',
               isSort: false,
               sticky: true,
               isFilter: false,
@@ -273,7 +275,7 @@ const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
                         setSelectedStudents([]);
                       }
                     }}
-                    sx={{ mx: 1 }}
+                    sx={{ mx: 0.2 }}
                   />
                 );
               },

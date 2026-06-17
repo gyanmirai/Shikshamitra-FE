@@ -512,8 +512,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     },
     [values.concessionTypeDocuments]
   );
-  console.log('formik initial values---', formik.initialValues);
-  console.log('formik values-------------', formik.values);
   // -- Side effects ----------------------------------------------------------
 
   useEffect(() => {

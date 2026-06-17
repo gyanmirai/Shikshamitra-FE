@@ -131,7 +131,13 @@ const validationSchema = Yup.object({
     amount: Yup.number()
       .typeError('Amount must be a number')
       .required('Amount is required')
-      .positive('Amount must be positive'),
+      .positive('Amount must be positive')
+      .test(
+        'is-valid-amount',
+        'Enter a valid amount. Example: 1000',
+        (value) => value == null || /^[0-9]+(\.[0-9]{1,2})?$/.test(String(value))
+      )
+      .min(0.01, 'Amount must be at least 0.01'),
   }),
 });
 
@@ -606,10 +612,6 @@ const FeeCollectComponentForm = ({
           const dateValue = dayjs(rawValue);
           if (!dateValue.isValid()) {
             detailErrors[field.name] = `Invalid ${field.label}`;
-            return;
-          }
-          if (dateValue.isBefore(dayjs(), 'day')) {
-            detailErrors[field.name] = `${field.label} cannot be in the past`;
             return;
           }
         }
@@ -1825,8 +1827,24 @@ const FeeCollectComponentForm = ({
                                       label={`${field.label} *`}
                                       name={fieldPath}
                                       value={value || ''}
-                                      onChange={formik.handleChange}
-                                      onBlur={formik.handleBlur}
+                                      onChange={(e) => {
+                                        let val = e.target.value.replace(/[<>]/g, '');
+                                        if (
+                                          (field as any).maxLength &&
+                                          val.length > (field as any).maxLength
+                                        ) {
+                                          val = val.slice(0, (field as any).maxLength);
+                                        }
+                                        formik.setFieldValue(fieldPath, val);
+                                      }}
+                                      onBlur={(e) => {
+                                        const val = e.target.value;
+                                        const trimmed = val.trim().replace(/\s+/g, ' ');
+                                        if (trimmed !== val) {
+                                          formik.setFieldValue(fieldPath, trimmed);
+                                        }
+                                        formik.handleBlur(e);
+                                      }}
                                       error={Boolean((touched || formik.submitCount > 0) && error)}
                                       helperText={
                                         (touched || formik.submitCount > 0) &&
@@ -1841,7 +1859,9 @@ const FeeCollectComponentForm = ({
                                       type={
                                         field.type === 'text' ||
                                         field.type === 'numbers' ||
-                                        field.type === 'last4digits'
+                                        field.type === 'last4digits' ||
+                                        field.type === 'uppercase' ||
+                                        field.type === 'anytext'
                                           ? 'text'
                                           : field.type
                                       }
@@ -1855,6 +1875,12 @@ const FeeCollectComponentForm = ({
                                         // Handle text-only fields (letters and spaces only)
                                         if (field.type === 'text') {
                                           newValue = newValue.replace(/[^a-zA-Z\s]/g, '');
+                                        }
+
+                                        if (field.type === 'uppercase') {
+                                          newValue = newValue
+                                            .toUpperCase()
+                                            .replace(/[^A-Z0-9]/g, '');
                                         }
 
                                         // Handle numbers-only fields (digits only)
@@ -1880,7 +1906,16 @@ const FeeCollectComponentForm = ({
 
                                         formik.setFieldValue(fieldPath, newValue);
                                       }}
-                                      onBlur={formik.handleBlur}
+                                      onBlur={(e) => {
+                                        const val = e.target.value;
+                                        if (typeof val === 'string') {
+                                          const trimmed = val.trim().replace(/\s+/g, ' ');
+                                          if (trimmed !== val) {
+                                            formik.setFieldValue(fieldPath, trimmed);
+                                          }
+                                        }
+                                        formik.handleBlur(e);
+                                      }}
                                       error={Boolean((touched || formik.submitCount > 0) && error)}
                                       helperText={
                                         (touched || formik.submitCount > 0) &&

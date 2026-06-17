@@ -22,17 +22,6 @@ import {
 import type { RefundFormik } from './types';
 import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 
-const formatBankAccountOption = (account: any): string => {
-  const bankName = typeof account?.bankName === 'string' ? account.bankName.trim() : '';
-  const ifscCode = typeof account?.ifscCode === 'string' ? account.ifscCode.trim() : '';
-  const accountNumber =
-    typeof account?.accountNumber === 'string' ? account.accountNumber.trim() : '';
-
-  if (bankName && ifscCode) return `${bankName} (${ifscCode})`;
-  if (bankName && accountNumber) return `${bankName} (${accountNumber})`;
-  return bankName || ifscCode || accountNumber;
-};
-
 export default function FeeRefundDetailsForm({
   formik,
 }: {
@@ -158,7 +147,7 @@ export default function FeeRefundDetailsForm({
                             format="DD/MM/YYYY"
                             value={value ? dayjs(value) : null}
                             onChange={(date) => formik.setFieldValue(fieldPath, date)}
-                            disablePast
+                            disableFuture
                             sx={{ width: '100%' }}
                             slotProps={{
                               textField: {
@@ -207,8 +196,24 @@ export default function FeeRefundDetailsForm({
                             label={`${field.label}${field.required ? ' *' : ''}`}
                             name={fieldPath}
                             value={value || ''}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={(e) => {
+                              let val = e.target.value.replace(/[<>]/g, '');
+                              if (
+                                (field as any).maxLength &&
+                                val.length > (field as any).maxLength
+                              ) {
+                                val = val.slice(0, (field as any).maxLength);
+                              }
+                              formik.setFieldValue(fieldPath, val);
+                            }}
+                            onBlur={(e) => {
+                              const val = e.target.value;
+                              const trimmed = val.trim().replace(/\s+/g, ' ');
+                              if (trimmed !== val) {
+                                formik.setFieldValue(fieldPath, trimmed);
+                              }
+                              formik.handleBlur(e);
+                            }}
                             error={Boolean(touched && error)}
                             helperText={touched && typeof error === 'string' ? error : ''}
                           />
@@ -218,7 +223,9 @@ export default function FeeRefundDetailsForm({
                             type={
                               field.type === 'text' ||
                               field.type === 'numbers' ||
-                              field.type === 'last4digits'
+                              field.type === 'last4digits' ||
+                              field.type === 'uppercase' ||
+                              field.type === 'anytext'
                                 ? 'text'
                                 : field.type
                             }
@@ -232,6 +239,10 @@ export default function FeeRefundDetailsForm({
                               // Handle text-only fields (letters and spaces only)
                               if (field.type === 'text') {
                                 newValue = newValue.replace(/[^a-zA-Z\s]/g, '');
+                              }
+
+                              if (field.type === 'uppercase') {
+                                newValue = newValue.toUpperCase().replace(/[^A-Z0-9]/g, '');
                               }
 
                               // Handle numbers-only fields (digits only)
@@ -257,7 +268,16 @@ export default function FeeRefundDetailsForm({
 
                               formik.setFieldValue(fieldPath, newValue);
                             }}
-                            onBlur={formik.handleBlur}
+                            onBlur={(e) => {
+                              const val = e.target.value;
+                              if (typeof val === 'string') {
+                                const trimmed = val.trim().replace(/\s+/g, ' ');
+                                if (trimmed !== val) {
+                                  formik.setFieldValue(fieldPath, trimmed);
+                                }
+                              }
+                              formik.handleBlur(e);
+                            }}
                             error={Boolean(touched && error)}
                             helperText={touched && typeof error === 'string' ? error : ''}
                             inputProps={
@@ -280,7 +300,19 @@ export default function FeeRefundDetailsForm({
                 label="Notes (Optional)"
                 name="notes"
                 value={formik.values.notes}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  let val = e.target.value.replace(/[<>]/g, '');
+                  if (val.length > 500) val = val.slice(0, 500);
+                  formik.setFieldValue('notes', val);
+                }}
+                onBlur={(e) => {
+                  const val = e.target.value;
+                  const trimmed = val.trim().replace(/\s+/g, ' ');
+                  if (trimmed !== val) {
+                    formik.setFieldValue('notes', trimmed);
+                  }
+                  formik.handleBlur(e);
+                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '10px',
