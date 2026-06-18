@@ -25,6 +25,7 @@ import {
   buildEmployeeSelectOptions,
   getLeaveNoticePeriodMessage,
   isLeaveNoticePeriodSatisfied,
+  getLeaveRequestBalanceWarning,
   APPLY_LEAVE_ROW_ACTION_LABELS,
   shouldEnforceLeaveNoticePeriod,
   buildCreateLeaveRequestFormData,
@@ -120,6 +121,64 @@ describe('leave request payload mapping', () => {
   it('formats API leave dates without applying browser timezone offsets', () => {
     expect(formatLeaveCalendarDateForPayload(dayjs('2026-07-06'))).toBe('2026-07-06');
     expect(formatLeaveCalendarDateForDisplay('2026-07-06T00:00:00.000Z')).toBe('06-07-2026');
+  });
+});
+
+describe('leave request balance warning', () => {
+  it('warns when a finite bucket does not have enough remaining balance', () => {
+    expect(
+      getLeaveRequestBalanceWarning(
+        {
+          items: [
+            {
+              paidType: 'Paid',
+              entitlementMode: 'Limited',
+              remainingDays: 0.5,
+              isUnlimited: false,
+              allowNegativeBalance: false,
+            },
+          ],
+        },
+        'Paid',
+        1
+      )
+    ).toContain('Paid leave balance is 0.5 day(s)');
+  });
+
+  it('does not warn for negative-balance or unlimited buckets', () => {
+    expect(
+      getLeaveRequestBalanceWarning(
+        {
+          items: [
+            {
+              paidType: 'Paid',
+              remainingDays: -1,
+              isUnlimited: false,
+              allowNegativeBalance: true,
+            },
+          ],
+        },
+        'Paid',
+        2
+      )
+    ).toBeNull();
+
+    expect(
+      getLeaveRequestBalanceWarning(
+        {
+          items: [
+            {
+              paidType: 'Unpaid',
+              entitlementMode: 'Unlimited',
+              remainingDays: null,
+              isUnlimited: true,
+            },
+          ],
+        },
+        'Unpaid',
+        20
+      )
+    ).toBeNull();
   });
 });
 

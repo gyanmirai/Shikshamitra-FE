@@ -328,7 +328,7 @@ async function installLeavePolicyRoutes(
 
 async function installLeaveCenterRoutes(
   page: Page,
-  state: { paidForm?: string; unpaidForm?: string }
+  state: { paidForm?: string; unpaidForm?: string; balancePayload?: any }
 ) {
   await installPermissionRoutes(page);
 
@@ -353,7 +353,7 @@ async function installLeaveCenterRoutes(
       leavePolicy: policy,
     })
   );
-  const balancePayload = {
+  const balancePayload = state.balancePayload || {
     items: [
       {
         paidType: 'Paid',
@@ -615,6 +615,54 @@ test.describe('Leave policy and Leave Center matrix', () => {
 
     await expect.poll(() => state.finalizedRunId).toBe(settlementRun.id);
     await expect(page.getByText('Finalized').first()).toBeVisible();
+  });
+
+  test('warns and blocks finite over-balance Paid leave before submit', async ({ page }) => {
+    const state: { paidForm?: string; unpaidForm?: string; balancePayload?: any } = {
+      balancePayload: {
+        items: [
+          {
+            paidType: 'Paid',
+            entitlementMode: 'Limited',
+            entitledDays: 12,
+            accruedDays: 1,
+            usedDays: 0.5,
+            pendingDays: 0,
+            remainingDays: 0.5,
+            isUnlimited: false,
+            allowNegativeBalance: false,
+          },
+          {
+            paidType: 'Unpaid',
+            entitlementMode: 'Unlimited',
+            entitledDays: null,
+            accruedDays: null,
+            usedDays: 0,
+            pendingDays: 0,
+            remainingDays: null,
+            isUnlimited: true,
+            allowNegativeBalance: true,
+          },
+        ],
+      },
+    };
+    await installLeaveCenterRoutes(page, state);
+
+    await page.goto('/hr/leave-center?tab=my-requests', { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: /Leave Request/i }).click();
+
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('combobox', { name: /Employee \*/i }).fill(employee.fullName);
+    await page.getByRole('option', { name: new RegExp(employee.fullName, 'i') }).click();
+    await expect(dialog.getByText(/Effective leave policy/i)).toBeVisible();
+    await chooseComboboxOption(dialog, 1, /^Paid$/i);
+    await fillSegmentedDate(dialog, /Start Date/i, leaveDate());
+    await fillSegmentedDate(dialog, /End Date/i, leaveDate());
+    await dialog.getByLabel(/Reason for leave/i).fill('Over balance paid leave');
+
+    await expect(dialog.getByText(/Paid leave balance is 0.5 day\(s\)/i)).toBeVisible();
+    await expect(dialog.getByRole('button', { name: /^Submit$/i })).toBeDisabled();
+    expect(state.paidForm).toBeUndefined();
   });
 
   test('shows accrued, unlimited, negative balances and submits Paid and Unpaid requests', async ({
