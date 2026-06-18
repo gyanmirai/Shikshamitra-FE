@@ -228,6 +228,11 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
             minWidth: 80,
             maxWidth: 120,
             filterType: 'number',
+            render: (value) => (
+              <Typography variant="caption" fontSize="13px">
+                {value || '-'}
+              </Typography>
+            ),
           },
           {
             id: 'standardName',

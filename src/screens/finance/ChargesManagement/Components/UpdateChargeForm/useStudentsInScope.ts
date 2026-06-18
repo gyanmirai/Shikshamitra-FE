@@ -19,6 +19,8 @@ function mapStudent(item: any): IStudentOption {
     grNumber: item.grNo?.toString(),
     standardName: item.standardName,
     divisionName: item.divisionName,
+    standardId: item.standardId,
+    divisionId: item.divisionId,
   };
 }
 
@@ -31,6 +33,7 @@ export function useStudentsInScope(
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [students, setStudents] = useState<IStudentOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const [getStudentsByScope] = useQueryAndMutation({
     type: 'mutation',
@@ -56,6 +59,7 @@ export function useStudentsInScope(
     async function load() {
       if (!boardId || !educationMediumId || standardIds.length === 0 || !currentYear?.id) {
         setStudents([]);
+        setHasFetched(true);
         return;
       }
 
@@ -89,6 +93,7 @@ export function useStudentsInScope(
             if (mapped.id) unique.set(mapped.id, mapped);
           });
           setStudents(Array.from(unique.values()));
+          setHasFetched(true);
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -102,5 +107,5 @@ export function useStudentsInScope(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopeKey]);
 
-  return { students, isLoading, candidateStudentIds: students.map((s) => s.id) };
+  return { students, isLoading, hasFetched, candidateStudentIds: students.map((s) => s.id) };
 }

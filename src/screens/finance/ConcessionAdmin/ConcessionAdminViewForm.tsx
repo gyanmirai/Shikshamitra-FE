@@ -255,7 +255,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
         <Divider />
         {/* Concession Amount */}
         <Box
-          mb={2}
+          mb={1}
           display="flex"
           alignItems="center"
           justifyContent="space-between"
