@@ -200,6 +200,19 @@ export const validationSchema = [
                 return true;
               }
             ),
+          gradeScalingId: yup
+            .mixed()
+            .nullable()
+            .test(
+              'grade-scale-required',
+              'Grade Scale is required',
+              // eslint-disable-next-line func-names
+              function (value) {
+                const { electiveGroupId, schedulingMode } = this.parent;
+                if (electiveGroupId && schedulingMode === 'separate') return true;
+                return !!value;
+              }
+            ),
         })
       )
       .required('At least one subject is required')
@@ -209,10 +222,23 @@ export const validationSchema = [
           // For separate-mode elective groups: validate each individual subject
           if (div.electiveGroupId && div.schedulingMode === 'separate') {
             return (div.subjects || []).every(
-              (s: any) => s.examDate && s.startTime && s.endTime && s.totalMarks && s.passingMarks
+              (s: any) =>
+                s.examDate &&
+                s.startTime &&
+                s.endTime &&
+                s.totalMarks &&
+                s.passingMarks &&
+                s.gradeScalingId
             );
           }
-          return div.examDate && div.startTime && div.endTime && div.totalMarks && div.passingMarks;
+          return (
+            div.examDate &&
+            div.startTime &&
+            div.endTime &&
+            div.totalMarks &&
+            div.passingMarks &&
+            div.gradeScalingId
+          );
         });
       }),
   }),

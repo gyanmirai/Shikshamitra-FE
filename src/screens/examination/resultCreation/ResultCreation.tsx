@@ -9,10 +9,13 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
+import { useSession } from 'next-auth/react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { DialogScrollContent } from 'src/components/customDialog';
+import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
@@ -20,13 +23,6 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { ExamReportTitle, ExamReportApiTypeMap } from 'src/enums/examination-reports';
 import { usePreviewAcademicReportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
-import {
-  useGetResultHeaderQuery,
-  useFreezeResultMutation,
-  usePublishResultMutation,
-  useGenerateResultMutation,
-  useGetResultReadinessQuery,
-} from 'src/redux/academicAPI/ExaminationApi/ResultApi/resultApi';
 import {
   Box,
   Card,
@@ -44,9 +40,16 @@ import {
   Typography,
   Autocomplete,
   DialogActions,
-  DialogContent,
   LinearProgress,
 } from '@mui/material';
+import {
+  useGetResultHeaderQuery,
+  useFreezeResultMutation,
+  usePublishResultMutation,
+  useGenerateResultMutation,
+  useGetResultReadinessQuery,
+  useGetStudentResultDetailsQuery,
+} from 'src/redux/academicAPI/ExaminationApi/ResultApi/resultApi';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -110,268 +113,602 @@ interface StudentDialogProps {
   open: boolean;
   onClose: () => void;
   row: PreviewRow | null;
-  columns: PreviewColumn[];
-  examName: string;
-  className: string;
-  divisionName: string;
+  examId: string;
+  examName?: string;
+  schoolName: string;
 }
+
+const getSubjectTheme = (subjectName: string) => {
+  const name = subjectName.toLowerCase().trim();
+  if (name.includes('math')) {
+    return { color: '#00897b', icon: 'mdi:function', bg: 'rgba(0, 137, 123, 0.1)' };
+  }
+  if (name.includes('sci')) {
+    return { color: '#3f51b5', icon: 'mdi:flask-outline', bg: 'rgba(63, 81, 181, 0.1)' };
+  }
+  if (name.includes('eng')) {
+    return {
+      color: '#8e24aa',
+      icon: 'mdi:book-open-variant-outline',
+      bg: 'rgba(142, 36, 170, 0.1)',
+    };
+  }
+  if (name.includes('soc') || name.includes('hist') || name.includes('geo')) {
+    return { color: '#fb8c00', icon: 'mdi:earth', bg: 'rgba(251, 140, 0, 0.1)' };
+  }
+  if (name.includes('comp') || name.includes('ict') || name.includes('info')) {
+    return { color: '#03a9f4', icon: 'mdi:monitor', bg: 'rgba(3, 169, 244, 0.1)' };
+  }
+  if (name.includes('hin')) {
+    return { color: '#e91e63', icon: 'mdi:alphabet-latin', bg: 'rgba(233, 30, 99, 0.1)' };
+  }
+  if (name.includes('sans')) {
+    return { color: '#9c27b0', icon: 'mdi:script-text-outline', bg: 'rgba(156, 39, 176, 0.1)' };
+  }
+  if (name.includes('phy') || name.includes('pe') || name.includes('sport')) {
+    return { color: '#4caf50', icon: 'mdi:run', bg: 'rgba(76, 175, 80, 0.1)' };
+  }
+  return { color: '#607d8b', icon: 'mdi:book-outline', bg: 'rgba(96, 125, 139, 0.1)' };
+};
 
 function StudentDetailsDialog({
   open,
   onClose,
   row,
-  columns,
-  examName,
-  className,
-  divisionName,
+  examId,
+  examName: propExamName,
+  schoolName,
 }: StudentDialogProps) {
+  const studentId = row?.StudentId || row?.studentId || '';
+  const { data, isLoading } = useGetStudentResultDetailsQuery(
+    { examId, studentId },
+    { skip: !open || !examId || !studentId }
+  );
+
   if (!row) return null;
 
-  const subjectCols = columns.filter((c) => c.id?.startsWith('subj_'));
-  const pctRaw = row.Percentage ?? '—';
-  const gradeValue = row.Grade ?? '—';
-  const totalValue = row.Total ?? '—';
-  const rollNo = row.RollNo ?? '—';
-  const studentName = row.StudentName ?? '—';
-  const pctNum = parseFloat(pctRaw.replace('%', '')) || 0;
-  const isPassing = pctNum >= 33 && gradeValue !== 'F';
+  if (isLoading || !data) {
+    return (
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            p: 3,
+            borderRadius: 2,
+            textAlign: 'center',
+          },
+        }}
+      >
+        <Typography variant="body2" color="text.secondary" mb={2}>
+          Loading student result details...
+        </Typography>
+        <LinearProgress />
+      </Dialog>
+    );
+  }
 
-  const gradeColorMap: Record<string, string> = {
-    'A+': '#00897b',
-    A: '#26a69a',
-    'B+': '#42a5f5',
-    B: '#64b5f6',
-    'C+': '#ffa726',
-    C: '#ffb74d',
-    D: '#ef5350',
-    F: '#b71c1c',
-    '—': '#9e9e9e',
-  };
-  const gradeColor = gradeColorMap[gradeValue] ?? '#9e9e9e';
+  const {
+    studentName,
+    grNo,
+    rollNo,
+    dateOfBirth: dob,
+    className,
+    divisionName,
+    examName: apiExamName,
+    grade: gradeValue,
+    rank,
+    totalStudentsInClass,
+    totalMarks: totalMaxMarksStr,
+    obtainedMarks: totalValueStr,
+    attendancePercentage,
+    status,
+    subjects = [],
+  } = data;
+
+  const examName = apiExamName || propExamName;
+  const cleanSchoolName = schoolName === 'DDVS' ? '' : schoolName;
+
+  const totalMaxMarks = parseFloat(totalMaxMarksStr) || 0;
+  const totalValue = parseFloat(totalValueStr) || 0;
+
+  const pctNum = totalMaxMarks > 0 ? Math.round((totalValue / totalMaxMarks) * 100) : 0;
+  const pctRaw = `${pctNum}%`;
+  const isPassing = status?.toUpperCase() === 'PASS';
+
+  // Radial progress calculations
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (pctNum / 100) * circumference;
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
-      PaperProps={{ sx: { borderRadius: 2, overflow: 'hidden' } }}
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          height: '90vh',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          bgcolor: 'background.default',
+        },
+      }}
     >
-      {/* Header */}
-      <Box
+      {/* Main Marksheet container */}
+      {/* <Box
+        id="student-marksheet-card"
         sx={{
-          background: (theme) =>
-            `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
-          px: 2.5,
-          pt: 2.5,
-          pb: 2,
-          color: 'white',
+          bgcolor: 'background.default',
+          color: 'text.primary',
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+        }}
+      > */}
+      {/* Content Body */}
+      <DialogScrollContent
+        sx={{
+          p: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+          overflowY: 'auto',
+          flexGrow: 1,
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+        {/* Header Block containing Exam Name & School Name */}
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          pb={2}
+          sx={{ borderBottom: (theme) => `1px dashed ${theme.palette.divider}` }}
+        >
           <Box>
-            <Typography variant="h6" fontWeight={700} lineHeight={1.2}>
-              {studentName}
+            <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.primary' }}>
+              {examName || 'Result Details'}
             </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.8 }}>
-              Roll No: {rollNo}
+            <Typography
+              variant="subtitle2"
+              sx={{ color: 'text.secondary', mt: 0.5, fontWeight: 600 }}
+            >
+              Academic Report Card
             </Typography>
           </Box>
-          <IconButton onClick={onClose} size="small" sx={{ color: 'white', mt: -0.5, mr: -1 }}>
-            <Iconify icon="mdi:close" width={20} />
-          </IconButton>
-        </Box>
-        <Box display="flex" gap={0.75} mt={1.25} flexWrap="wrap">
-          {examName && (
-            <Box
-              component="span"
-              sx={{
-                px: 1,
-                py: 0.3,
-                bgcolor: 'rgba(255,255,255,0.18)',
-                borderRadius: 1,
-                fontSize: 11,
-                fontWeight: 600,
-              }}
-            >
-              {examName}
-            </Box>
-          )}
-          {className && (
-            <Box
-              component="span"
-              sx={{
-                px: 1,
-                py: 0.3,
-                bgcolor: 'rgba(255,255,255,0.12)',
-                borderRadius: 1,
-                fontSize: 11,
-              }}
-            >
-              {className}
-            </Box>
-          )}
-          {divisionName && (
-            <Box
-              component="span"
-              sx={{
-                px: 1,
-                py: 0.3,
-                bgcolor: 'rgba(255,255,255,0.12)',
-                borderRadius: 1,
-                fontSize: 11,
-              }}
-            >
-              Div: {divisionName}
-            </Box>
-          )}
-        </Box>
-      </Box>
-
-      {/* Progress bar */}
-      <LinearProgress
-        variant="determinate"
-        value={Math.min(pctNum, 100)}
-        color={isPassing ? 'success' : 'error'}
-        sx={{ height: 5 }}
-      />
-
-      <DialogContent sx={{ p: 0 }}>
-        {/* Summary row */}
-        <Box
-          display="grid"
-          gridTemplateColumns="repeat(3, 1fr)"
-          sx={{ borderBottom: 1, borderColor: 'divider' }}
-        >
-          {[
-            { label: 'Total Marks', value: totalValue, color: undefined as string | undefined },
-            {
-              label: 'Percentage',
-              value: pctRaw,
-              color: pctNum >= 75 ? '#11998e' : pctNum >= 33 ? '#f7971e' : '#f5576c',
-            },
-            { label: 'Grade', value: gradeValue, color: gradeColor },
-          ].map((item) => (
-            <Box
-              key={item.label}
-              sx={{
-                p: 2,
-                textAlign: 'center',
-                borderRight: 1,
-                borderColor: 'divider',
-                '&:last-child': { borderRight: 0 },
-              }}
-            >
-              <Typography
-                variant="h5"
-                fontWeight={800}
-                sx={{ color: item.color || 'text.primary' }}
-                lineHeight={1}
-              >
-                {item.value}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {item.label}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-
-        {/* Pass / Fail banner */}
-        <Box
-          sx={{
-            px: 2,
-            py: 1,
-            bgcolor: isPassing
-              ? (theme) => alpha(theme.palette.success.main, 0.1)
-              : (theme) => alpha(theme.palette.error.main, 0.1),
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            borderBottom: 1,
-            borderColor: 'divider',
-          }}
-        >
-          <Iconify
-            icon={isPassing ? 'mdi:check-circle' : 'mdi:close-circle'}
-            width={18}
-            sx={{ color: isPassing ? 'success.main' : 'error.main' }}
-          />
-          <Typography
-            variant="subtitle2"
-            fontWeight={700}
-            sx={{ color: isPassing ? 'success.dark' : 'error.dark' }}
-          >
-            {isPassing ? 'RESULT: PASS' : 'RESULT: FAIL'}
-          </Typography>
-        </Box>
-
-        {/* Subject marks table */}
-        {subjectCols.length > 0 && (
-          <Box sx={{ px: 2, pt: 2, pb: 1.5 }}>
-            <Typography
-              variant="overline"
-              color="text.secondary"
-              sx={{ letterSpacing: 1, fontSize: 10 }}
-            >
-              Subject-wise Marks
+          {cleanSchoolName && (
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'primary.main' }}>
+              {cleanSchoolName}
             </Typography>
-            <Table size="small" sx={{ mt: 0.75 }}>
+          )}
+        </Box>
+
+        {/* Top Grid: Student Info, Result Summary */}
+        <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1.4fr 1.2fr' }} gap={3}>
+          {/* Student Info Card */}
+          <Card
+            sx={{
+              p: 2.5,
+              bgcolor: 'background.paper',
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              borderRadius: 1.5,
+              boxShadow: 'none',
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Iconify icon="mdi:account-outline" width={20} sx={{ color: 'primary.main' }} />
+              <Typography
+                variant="subtitle2"
+                fontWeight="bold"
+                sx={{ letterSpacing: 0.5, textTransform: 'uppercase' }}
+              >
+                Student Information
+              </Typography>
+            </Box>
+            <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={1.5}>
+              <Box sx={{ gridColumn: 'span 2' }}>
+                <Typography variant="caption" color="text.secondary">
+                  Student Name
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {studentName}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Gr. No.
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {grNo}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Roll No.
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {rollNo}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Date of Birth
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {dob}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Class & Division
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {className} {divisionName}
+                </Typography>
+              </Box>
+            </Box>
+          </Card>
+
+          {/* Result Summary Card */}
+          <Card
+            sx={{
+              p: 2.5,
+              bgcolor: 'background.paper',
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              borderRadius: 1.5,
+              boxShadow: 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={1} mb={2} width="100%">
+              <Iconify icon="mdi:chart-arc" width={20} sx={{ color: 'primary.main' }} />
+              <Typography
+                variant="subtitle2"
+                fontWeight="bold"
+                sx={{ letterSpacing: 0.5, textTransform: 'uppercase' }}
+              >
+                Result Summary
+              </Typography>
+            </Box>
+
+            {/* Radial circle chart */}
+            <Box
+              sx={{
+                position: 'relative',
+                width: 90,
+                height: 90,
+                display: 'flex',
+                alignItems: 'center',
+                justifyItems: 'center',
+                mb: 1.5,
+              }}
+            >
+              <svg width="90" height="90" viewBox="0 0 90 90">
+                <circle
+                  cx="45"
+                  cy="45"
+                  r={radius}
+                  fill="transparent"
+                  stroke="rgba(0,0,0,0.05)"
+                  strokeWidth="6"
+                />
+                <circle
+                  cx="45"
+                  cy="45"
+                  r={radius}
+                  fill="transparent"
+                  stroke={isPassing ? '#10b981' : '#ef4444'}
+                  strokeWidth="6"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  transform="rotate(-90 45 45)"
+                />
+              </svg>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography variant="body2" fontWeight="800">
+                  {pctRaw}
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box display="flex" gap={1} alignItems="center" mb={2}>
+              <Box
+                sx={{
+                  px: 1.5,
+                  py: 0.3,
+                  bgcolor: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  color: '#10b981',
+                  borderRadius: 3,
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                }}
+              >
+                Grade: {gradeValue}
+              </Box>
+              <Box
+                sx={{
+                  px: 1.5,
+                  py: 0.3,
+                  bgcolor: 'rgba(251, 140, 0, 0.1)',
+                  border: '1px solid rgba(251, 140, 0, 0.3)',
+                  color: '#fb8c00',
+                  borderRadius: 3,
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                }}
+              >
+                Rank #{rank} of {totalStudentsInClass}
+              </Box>
+            </Box>
+
+            {/* Sub-stats grid */}
+            <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={1.25} width="100%">
+              <Box
+                sx={{
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                  borderRadius: 1,
+                  p: 0.75,
+                  textAlign: 'center',
+                }}
+              >
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Total Marks
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {totalMaxMarksStr}
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                  borderRadius: 1,
+                  p: 0.75,
+                  textAlign: 'center',
+                }}
+              >
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Obtained
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {totalValueStr}
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                  borderRadius: 1,
+                  p: 0.75,
+                  textAlign: 'center',
+                }}
+              >
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Attendance
+                </Typography>
+                <Typography variant="body2" fontWeight="bold">
+                  {attendancePercentage}
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                  borderRadius: 1,
+                  p: 0.75,
+                  textAlign: 'center',
+                }}
+              >
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Status
+                </Typography>
+                <Typography
+                  variant="body2"
+                  fontWeight="bold"
+                  sx={{ color: isPassing ? 'success.main' : 'error.main' }}
+                >
+                  {status}
+                </Typography>
+              </Box>
+            </Box>
+          </Card>
+        </Box>
+
+        {/* Marks Obtained Card */}
+        {subjects.length > 0 && (
+          <Card
+            sx={{
+              p: 2.5,
+              bgcolor: 'background.paper',
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              borderRadius: 1.5,
+              boxShadow: 'none',
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Iconify icon="mdi:format-list-bulleted" width={20} sx={{ color: 'primary.main' }} />
+              <Typography
+                variant="subtitle2"
+                fontWeight="bold"
+                sx={{ letterSpacing: 0.5, textTransform: 'uppercase' }}
+              >
+                Marks Obtained (Scholastic Areas)
+              </Typography>
+            </Box>
+            <Table size="medium">
               <TableHead>
-                <TableRow sx={{ bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06) }}>
-                  <TableCell sx={{ fontWeight: 700, py: 0.75, fontSize: 12 }}>Subject</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700, py: 0.75, fontSize: 12 }}>
-                    Obtained
+                <TableRow sx={{ bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04) }}>
+                  <TableCell sx={{ fontWeight: 700, fontSize: 13, py: 1.25 }}>Subject</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, fontSize: 13, py: 1.25 }}>
+                    Max Marks
                   </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700, py: 0.75, fontSize: 12 }}>
-                    Status
+                  <TableCell sx={{ fontWeight: 700, fontSize: 13, py: 1.25, width: '40%' }}>
+                    Score & Progress
                   </TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, fontSize: 13, py: 1.25 }}>
+                    Grade
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700, fontSize: 13, py: 1.25 }}>Remarks</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {subjectCols.map((col) => {
-                  const val = row[col.id!] ?? '—';
-                  const isAbsent = val === 'Ab' || val.toLowerCase() === 'absent';
-                  const marksNum = isAbsent ? null : parseFloat(val);
+                {subjects.map((sub: any, idx: number) => {
+                  const marksObtainedStr = sub.marksObtained ?? '—';
+                  const isSubjectAbsent =
+                    marksObtainedStr === 'Ab' || marksObtainedStr.toLowerCase() === 'absent';
+                  const marksObtained = isSubjectAbsent ? 0 : parseFloat(marksObtainedStr) || 0;
+                  const maxMarksStr = sub.maxMarks ?? '100';
+                  const maxMarks = parseFloat(maxMarksStr) || 100;
+                  const progressPct =
+                    maxMarks > 0 ? Math.min((marksObtained / maxMarks) * 100, 100) : 0;
+                  const subjectGrade = sub.grade ?? '—';
+                  const subjectRemarks = sub.remarks ?? (isSubjectAbsent ? 'Absent' : '—');
+
+                  const themeInfo = getSubjectTheme(sub.subjectName ?? '');
+
                   return (
-                    <TableRow key={col.id} hover>
-                      <TableCell sx={{ py: 0.75 }}>
-                        <Typography variant="body2" fontWeight={500}>
-                          {col.label}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center" sx={{ py: 0.75 }}>
-                        <Typography variant="body2" fontWeight={600}>
-                          {isAbsent ? '—' : val}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center" sx={{ py: 0.75 }}>
-                        {isAbsent ? (
-                          <Label variant="soft" color="default">
-                            Absent
-                          </Label>
-                        ) : (
-                          <Label
-                            variant="soft"
-                            color={marksNum !== null && marksNum > 0 ? 'info' : 'default'}
+                    <TableRow key={idx} hover>
+                      <TableCell sx={{ py: 1.25 }}>
+                        <Box display="flex" alignItems="center" gap={1.25}>
+                          <Box
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: '50%',
+                              bgcolor: themeInfo.bg,
+                              color: themeInfo.color,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
                           >
-                            {marksNum !== null && marksNum > 0 ? 'Appeared' : '—'}
-                          </Label>
+                            <Iconify icon={themeInfo.icon} width={16} />
+                          </Box>
+                          <Typography variant="body2" fontWeight={600}>
+                            {sub.subjectName}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center" sx={{ py: 1.25, fontWeight: 500 }}>
+                        {maxMarksStr}
+                      </TableCell>
+                      <TableCell sx={{ py: 1.25 }}>
+                        {isSubjectAbsent ? (
+                          <Typography variant="body2" color="error.main" fontWeight="bold">
+                            ABSENT
+                          </Typography>
+                        ) : (
+                          <Box display="flex" alignItems="center" gap={1.5}>
+                            <Box
+                              sx={{
+                                flex: 1,
+                                height: 6,
+                                bgcolor: (theme) => alpha(theme.palette.text.primary, 0.06),
+                                borderRadius: 3,
+                                overflow: 'hidden',
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  width: `${progressPct}%`,
+                                  height: '100%',
+                                  bgcolor: themeInfo.color,
+                                  borderRadius: 3,
+                                }}
+                              />
+                            </Box>
+                            <Typography
+                              variant="body2"
+                              fontWeight="bold"
+                              sx={{ minWidth: 40, textAlign: 'right' }}
+                            >
+                              {marksObtainedStr}
+                            </Typography>
+                          </Box>
                         )}
+                      </TableCell>
+                      <TableCell align="center" sx={{ py: 1.25 }}>
+                        <Label
+                          variant="soft"
+                          color={
+                            subjectGrade === 'A+' || subjectGrade === 'A'
+                              ? 'success'
+                              : subjectGrade === 'F'
+                                ? 'error'
+                                : 'warning'
+                          }
+                          sx={{ fontWeight: 'bold' }}
+                        >
+                          {subjectGrade}
+                        </Label>
+                      </TableCell>
+                      <TableCell sx={{ py: 1.25, color: 'text.secondary', fontWeight: 500 }}>
+                        {subjectRemarks}
                       </TableCell>
                     </TableRow>
                   );
                 })}
               </TableBody>
             </Table>
-          </Box>
+          </Card>
         )}
-      </DialogContent>
+      </DialogScrollContent>
+      {/* </Box> */}
 
-      <DialogActions sx={{ px: 2, py: 1.5, borderTop: 1, borderColor: 'divider' }}>
-        <Button onClick={onClose} variant="outlined" size="small">
+      {/* Action Buttons */}
+      <DialogActions
+        className="no-print"
+        sx={{
+          px: 3,
+          py: 2,
+          borderTop: 1,
+          borderColor: 'divider',
+          justifyContent: 'flex-end',
+          gap: 1.5,
+        }}
+      >
+        <Button onClick={onClose} variant="outlined" size="medium" sx={{ borderRadius: '8px' }}>
           Close
         </Button>
+        {/* <Button
+          onClick={() => window.print()}
+          variant="outlined"
+          color="inherit"
+          startIcon={<Iconify icon="mdi:printer" />}
+          sx={{ borderRadius: '8px', border: (theme) => `1px solid ${theme.palette.divider}` }}
+        >
+          Print Result
+        </Button>
+        <Button
+          onClick={() => window.print()}
+          variant="contained"
+          color="primary"
+          startIcon={<Iconify icon="mdi:arrow-top-right" />}
+          sx={{ borderRadius: '8px' }}
+        >
+          Download PDF
+        </Button> */}
       </DialogActions>
     </Dialog>
   );
@@ -397,36 +734,16 @@ function AnalyticsCards({
   averagePercentage,
 }: AnalyticsCardsProps) {
   const cards = [
-    { label: 'Appeared', value: appeared, icon: 'mdi:account-group', g: ['#667eea', '#764ba2'] },
-    {
-      label: 'Passed',
-      value: passed,
-      icon: 'mdi:check-decagram',
-      g: ['#11998e', '#38ef7d'],
-    },
-    {
-      label: 'Failed',
-      value: failed,
-      icon: 'mdi:close-circle',
-      g: ['#f5576c', '#f093fb'],
-    },
-    {
-      label: 'Pass %',
-      value: `${passPercentage}%`,
-      icon: 'mdi:chart-donut',
-      g: ['#4facfe', '#00f2fe'],
-    },
-    {
-      label: 'Highest %',
-      value: `${highestPercentage}%`,
-      icon: 'mdi:trophy',
-      g: ['#f7971e', '#ffd200'],
-    },
+    { label: 'Appeared', value: appeared, icon: 'mdi:account-group', color: '#6366f1' },
+    { label: 'Passed', value: passed, icon: 'mdi:check-decagram', color: '#22c55e' },
+    { label: 'Failed', value: failed, icon: 'mdi:close-circle', color: '#ef4444' },
+    { label: 'Pass %', value: `${passPercentage}%`, icon: 'mdi:chart-donut', color: '#3b82f6' },
+    { label: 'Highest %', value: `${highestPercentage}%`, icon: 'mdi:trophy', color: '#f59e0b' },
     {
       label: 'Average %',
       value: `${averagePercentage}%`,
       icon: 'mdi:trending-up',
-      g: ['#a18cd1', '#fbc2eb'],
+      color: '#a855f7',
     },
   ];
 
@@ -438,51 +755,80 @@ function AnalyticsCards({
     >
       <Box
         display="grid"
-        gridTemplateColumns="repeat(auto-fill, minmax(145px, 1fr))"
-        gap={1.5}
-        mb={2}
+        gridTemplateColumns="repeat(auto-fill, minmax(150px, 1fr))"
+        gap={2}
+        mb={2.5}
       >
         {cards.map((card) => (
-          <Box
+          <Card
             key={card.label}
             sx={{
-              background: `linear-gradient(135deg, ${card.g[0]} 0%, ${card.g[1]} 100%)`,
-              borderRadius: 2,
-              p: 2,
-              color: 'white',
+              p: 2.25,
+              borderRadius: 1.5,
+              bgcolor: 'background.paper',
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              boxShadow: 'none',
               position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
               overflow: 'hidden',
-              boxShadow: `0 4px 18px ${card.g[0]}50`,
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               cursor: 'default',
               '&:hover': {
-                transform: 'translateY(-3px)',
-                boxShadow: `0 8px 28px ${card.g[0]}70`,
+                transform: 'translateY(-2px)',
+                boxShadow: (theme) => `0 6px 20px ${alpha(card.color, 0.08)}`,
+                borderColor: card.color,
               },
             }}
           >
+            {/* Top Row: Muted Label and Small Icon Badge */}
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'text.secondary',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.8,
+                  fontSize: 10,
+                }}
+              >
+                {card.label}
+              </Typography>
+              <Box
+                sx={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: alpha(card.color, 0.1),
+                  color: card.color,
+                }}
+              >
+                <Iconify icon={card.icon} width={16} />
+              </Box>
+            </Box>
+
+            {/* Bottom Row: Big Bold Metric Value */}
+            <Typography variant="h4" fontWeight={800} sx={{ color: 'text.primary', lineHeight: 1 }}>
+              {card.value}
+            </Typography>
+
+            {/* Subtle bottom color indicator bar */}
             <Box
               sx={{
                 position: 'absolute',
-                right: -10,
-                bottom: -10,
-                opacity: 0.18,
-                pointerEvents: 'none',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 3,
+                bgcolor: alpha(card.color, 0.6),
               }}
-            >
-              <Iconify icon={card.icon} width={64} />
-            </Box>
-            <Iconify icon={card.icon} width={22} sx={{ mb: 1, opacity: 0.92 }} />
-            <Typography variant="h4" fontWeight={800} lineHeight={1} mb={0.5}>
-              {card.value}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ opacity: 0.88, fontWeight: 600, letterSpacing: 0.3 }}
-            >
-              {card.label}
-            </Typography>
-          </Box>
+            />
+          </Card>
         ))}
       </Box>
     </motion.div>
@@ -493,6 +839,18 @@ function AnalyticsCards({
 
 const ResultCreation = (_props: TabComponentType) => {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const session: any = useSession();
+  const { data: user } = session;
+  const { data: tenantData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetTenantByIdQuery,
+    params: user?.profile?.tenantid,
+    options: {
+      skip: !user?.profile?.tenantid,
+    },
+  });
+  const schoolName = tenantData?.extraProperties?.InstituteName || 'Shiksha Mitra Public School';
 
   // ─── Filter states ─────────────────────────────────────────────────────
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -541,6 +899,7 @@ const ResultCreation = (_props: TabComponentType) => {
       StandardId: classes,
       DivisionId: division,
       Status: examScheduledStatus.Completed,
+      GradeEntryPublishedOnly: true,
     },
     options: { skip: !(medium?.id && classes && division) },
   });
@@ -628,7 +987,7 @@ const ResultCreation = (_props: TabComponentType) => {
       const result: any = await generateResult({
         examId,
         divisionId: division,
-        forceRegenerate: resultHeaderData?.statusCode === 2,
+        forceRegenerate: true,
       }).unwrap();
       shikshaMitraToast.success({
         message: `Result generated! ${result?.passed ?? 0} passed out of ${result?.totalStudents ?? 0} students.`,
@@ -637,7 +996,7 @@ const ResultCreation = (_props: TabComponentType) => {
     } catch {
       // error handled by useQueryAndMutation popupConfig
     }
-  }, [allFiltersSet, generateResult, examId, division, resultHeaderData, handleLoadResults]);
+  }, [allFiltersSet, generateResult, examId, division, handleLoadResults]);
 
   const handlePublish = useCallback(async () => {
     if (!resultHeaderData?.id) return;
@@ -668,17 +1027,27 @@ const ResultCreation = (_props: TabComponentType) => {
     if (!previewResult?.columns?.length) return [];
 
     const dataCols: any[] = previewResult.columns
-      .filter((col) => col.id && col.label)
+      .filter((col) => col.id && col.label && !col.id.startsWith('subj_'))
       .map((col) => ({
+        ...col,
         id: col.id as string,
         label: col.label as string,
         minWidth: col.id?.startsWith('subj_') ? 110 : 130,
         align: 'left' as const,
-        render: (value: any) => {
+        sticky: col.id === 'RollNo' || col.id === 'StudentName',
+        render: (value: any, row: any) => {
           if (value == null || value === '') {
             return (
               <Typography variant="caption" color="text.disabled">
                 —
+              </Typography>
+            );
+          }
+          if (col.id === 'Total' || col.id === 'total') {
+            const maxMarks = row.TotalMaxMarks || row.totalMaxMarks || '—';
+            return (
+              <Typography variant="caption" fontWeight={600}>
+                {value} / {maxMarks}
               </Typography>
             );
           }
@@ -715,7 +1084,8 @@ const ResultCreation = (_props: TabComponentType) => {
     dataCols.push({
       id: '_action',
       label: 'Details',
-      minWidth: 72,
+      minWidth: 50,
+      sticky: true,
       align: 'center' as const,
       render: (_: any, row: any) => (
         <Tooltip title="View full result">
@@ -723,11 +1093,11 @@ const ResultCreation = (_props: TabComponentType) => {
             size="small"
             onClick={() => handleViewStudent(row)}
             sx={{
-              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-              '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.18) },
+              bgcolor: (theme) => alpha(theme.palette.action.selected, 0.08),
+              '&:hover': { bgcolor: (theme) => alpha(theme.palette.action.selected, 0.18) },
             }}
           >
-            <Iconify icon="mdi:eye-outline" width={17} sx={{ color: 'primary.main' }} />
+            <Iconify icon="mdi:eye-outline" width={17} sx={{ color: 'text.secondary' }} />
           </IconButton>
         </Tooltip>
       ),
@@ -738,10 +1108,22 @@ const ResultCreation = (_props: TabComponentType) => {
 
   const placeholderColumns = useMemo(
     () => [
-      { id: 'studentName', label: 'Student Name', minWidth: 180, align: 'left' as const },
-      { id: 'rollNo', label: 'Roll No.', minWidth: 90, align: 'left' as const },
+      {
+        id: 'studentName',
+        label: 'Student Name',
+        minWidth: 180,
+        align: 'left' as const,
+        sticky: true,
+      },
+      { id: 'rollNo', label: 'Roll No.', minWidth: 90, align: 'left' as const, sticky: true },
       { id: 'total', label: 'Total', minWidth: 110, align: 'left' as const },
-      { id: 'percentage', label: 'Percentage', minWidth: 120, align: 'left' as const },
+      {
+        id: 'percentage',
+        label: 'Percentage',
+        minWidth: 120,
+        align: 'left' as const,
+        sticky: true,
+      },
       { id: 'grade', label: 'Grade', minWidth: 80, align: 'left' as const },
     ],
     []
@@ -792,20 +1174,17 @@ const ResultCreation = (_props: TabComponentType) => {
               </Label>
             )}
 
-            {allFiltersSet && (
+            {allFiltersSet && !resultHeaderData && (
               <LoadingButton
                 variant="contained"
                 size="small"
                 loading={isGenerating}
-                startIcon={
-                  <Iconify
-                    icon={resultHeaderData ? 'mdi:refresh' : 'mdi:calculator-variant-outline'}
-                  />
-                }
+                disabled={!readinessData?.isReady}
+                startIcon={<Iconify icon="mdi:calculator-variant-outline" />}
                 onClick={handleGenerate}
                 sx={{ minWidth: 145 }}
               >
-                {resultHeaderData ? 'Regenerate' : 'Generate Result'}
+                Generate Result
               </LoadingButton>
             )}
 
@@ -1009,10 +1388,9 @@ const ResultCreation = (_props: TabComponentType) => {
         open={dialogStudent !== null}
         onClose={() => setDialogStudent(null)}
         row={dialogStudent}
-        columns={previewResult?.columns ?? []}
-        examName={selectedExamName}
-        className={selectedClassName}
-        divisionName={selectedDivisionName}
+        examId={examId}
+        examName={examOptions.find((opt) => opt.examId === examId)?.examName || ''}
+        schoolName={schoolName}
       />
     </Box>
   );

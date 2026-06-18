@@ -302,25 +302,31 @@ const SubjectScheduleRow = memo(
       </TableCell>
 
       {/* Grade Scale */}
-      <TableCell sx={{ minWidth: 180, py: 1, px: 1.5 }}>
-        <Box sx={{ pb: '20px' }}>
+      <TableCell sx={{ minWidth: 180, py: 1, px: 1.5, verticalAlign: 'top' }}>
+        <ShakingTextField error={!!(touched.gradeScalingId && errors.gradeScalingId)}>
           <CustomSelect
-            label="Scale"
+            label="Scale *"
             options={gradeScalings}
             value={values.gradeScalingId ?? ''}
             labelKey="name"
             valueKey="id"
             isLoading={isGradeScalingsLoading}
             formControlProps={{ sx: { width: 165 } }}
+            error={!!(touched.gradeScalingId && errors.gradeScalingId)}
+            helperText={
+              touched.gradeScalingId && errors.gradeScalingId ? errors.gradeScalingId : ' '
+            }
             onChange={(selectedId) => {
               onFieldChange('gradeScalingId', selectedId || null);
+              onFieldBlur('gradeScalingId');
               const selected = gradeScalings.find((s: any) => s.id === selectedId);
               if (selected?.totalMarks !== undefined) {
                 onFieldChange('totalMarks', selected.totalMarks ?? '');
+                onFieldBlur('totalMarks');
               }
             }}
           />
-        </Box>
+        </ShakingTextField>
       </TableCell>
 
       {/* Total Marks */}
@@ -650,6 +656,10 @@ function validateSepSubject(
     errs.passingMarks = 'Passing marks cannot exceed total marks';
   }
 
+  if (!sub?.gradeScalingId) {
+    errs.gradeScalingId = 'Grade Scale is required';
+  }
+
   return errs;
 }
 
@@ -657,6 +667,7 @@ const ALL_FIELDS_TOUCHED: Record<string, boolean> = {
   examDate: true,
   startTime: true,
   endTime: true,
+  gradeScalingId: true,
   totalMarks: true,
   passingMarks: true,
 };

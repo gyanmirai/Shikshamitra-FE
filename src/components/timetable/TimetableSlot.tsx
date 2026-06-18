@@ -285,7 +285,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
         <Box
           sx={{
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'stretch',
             gap: 0.75,
             pb: 0.75,
             mb: 0.75,
@@ -295,11 +295,9 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
           <Box
             sx={{
               width: 3,
-              minHeight: 32,
               borderRadius: 1,
               bgcolor: accentColor,
               flexShrink: 0,
-              mt: '2px',
             }}
           />
           <Box>

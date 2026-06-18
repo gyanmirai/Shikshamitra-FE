@@ -69,6 +69,18 @@ export const examResultApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.examResult],
     }),
+
+    // ─── View Student Result Details ───────────────────────────────────────
+    getStudentResultDetails: builder.query({
+      query: ({ examId, studentId }: { examId: string; studentId: string }) => ({
+        url: `/academics/results/student-details`,
+        method: 'GET',
+        params: { examId, studentId },
+      }),
+      providesTags: (result, error, arg) => [
+        { type: academicType.examResult, id: `details-${arg.examId}-${arg.studentId}` },
+      ],
+    }),
   }),
 });
 
@@ -79,4 +91,5 @@ export const {
   useGenerateResultMutation,
   usePublishResultMutation,
   useFreezeResultMutation,
+  useGetStudentResultDetailsQuery,
 } = examResultApi;

@@ -43,6 +43,7 @@ import {
 import {
   useVerifyMarksMutation,
   useSaveDraftMarksMutation,
+  useGetExamMarksSummaryQuery,
   usePublishAndLockMarksMutation,
   useSubmitMarksForVerificationMutation,
 } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
@@ -185,14 +186,31 @@ const GradeEntry = (props: TabComponentType) => {
     GradeEntryWorkflowStatus.Draft
   );
 
-  // Reset workflowStatus and stats whenever the user selects a different exam
+  // Reset stats whenever the user selects a different exam
   useEffect(() => {
-    setWorkflowStatus(GradeEntryWorkflowStatus.Draft);
     setAnalyticsStats(null);
     setSummaryOpen(false);
   }, [examId]);
 
   const [summaryOpen, setSummaryOpen] = useState(false);
+
+  const { data: summaryData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExamMarksSummaryQuery,
+    params: {
+      ExamId: examId,
+      SubjectId: subject,
+      DivisionId: division,
+    },
+    options: {
+      skip: !(examId && subject && division),
+    },
+  });
+
+  const targetSummaryData = useMemo(() => {
+    if (!summaryData) return null;
+    return (summaryData as any).data ?? summaryData;
+  }, [summaryData]);
 
   // Called by GradeEntryTable when GET /marks returns – syncs local state with DB
   const handleWorkflowFlagsChange = useCallback((flags: IExamMarksWorkflowFlags) => {
@@ -568,6 +586,10 @@ const GradeEntry = (props: TabComponentType) => {
                       icon: 'solar:users-group-rounded-bold',
                       value: `${allClass.find((c) => c.id === classes)?.name ?? '—'} / ${allDivision.find((d) => d.id === division)?.name ?? '—'}`,
                     },
+                    {
+                      icon: 'solar:checklist-minimalistic-bold',
+                      value: `Pending Publish: ${targetSummaryData?.pendingPublishedCount ?? 0} Subj`,
+                    },
                   ].map((info) => (
                     <Stack key={info.value} direction="row" alignItems="center" spacing={0.5}>
                       <Iconify icon={info.icon} width={14} sx={{ color: 'text.disabled' }} />
@@ -644,8 +666,17 @@ const GradeEntry = (props: TabComponentType) => {
                                 icon: 'solar:graph-new-bold',
                                 color: 'info.main',
                               },
+                              {
+                                label: 'Pending Publish',
+                                value: `${targetSummaryData?.pendingPublishedCount ?? 0} Subj`,
+                                icon: 'solar:file-send-bold',
+                                color:
+                                  (targetSummaryData?.pendingPublishedCount ?? 0) > 0
+                                    ? 'warning.main'
+                                    : 'success.main',
+                              },
                             ]
-                          : Array.from({ length: 6 }, (_, i) => ({
+                          : Array.from({ length: 7 }, (_, i) => ({
                               _skeleton: true,
                               key: `sk-${i}`,
                             }))

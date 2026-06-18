@@ -309,13 +309,13 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           const matchedSub = item.subjects.find((sub: any) => sub.subjectId === subjectId);
           if (matchedSub) selectValue = `${item.id}::${subjectId}`;
         } else if (item.subjects?.[0]?.subjectId === subjectId) {
-          selectValue = item.id;
+          selectValue = `${item.id}::${subjectId}`;
         }
       });
       setSubjectSelectValue(selectValue || subjectId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editData?.id, subjectOptionsData?.data?.items]);
+  }, [editData?.id, subjectOptionsData?.data?.items, formik.values.subjectId]);
 
   const {
     data: homeworkTypeData,

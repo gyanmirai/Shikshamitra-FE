@@ -22,6 +22,7 @@ import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
+import CurriculumReportPreviewDrawer from 'src/screens/academic/curriculum-management/reports/CurriculumReportPreviewDrawer';
 import {
   HomeworkReportTitle,
   HomeworkReportApiTypeMap,
@@ -29,7 +30,6 @@ import {
 } from 'src/enums/homework-wise-reports';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
-import HomeworkReportPreviewDrawer from '../HomeworkReportPreviewDrawer';
 import { getHomeworkValidationSchema } from './HomeworkTypeReportValidation';
 
 type EmployeeOption = { id: string; label: string };
@@ -698,7 +698,7 @@ const HomeworkManagementReports = ({
           </Box>
         </form>
       </Card>
-      <HomeworkReportPreviewDrawer
+      <CurriculumReportPreviewDrawer
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         reportRequest={reportRequest}

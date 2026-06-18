@@ -18,6 +18,7 @@ import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
+import CurriculumReportPreviewDrawer from 'src/screens/academic/curriculum-management/reports/CurriculumReportPreviewDrawer';
 import {
   TimetableReportTitle,
   TimetableReportApiTypeMap,
@@ -25,7 +26,6 @@ import {
 } from 'src/enums/timetable-reports';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
-import TimetableReportPreviewDrawer from './TimetableReportPreviewDrawer';
 import { getTimetableValidationSchema } from './timetableReportValidation';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -530,7 +530,7 @@ const TimetableReportForm = ({
           </Box>
         </form>
       </Card>
-      <TimetableReportPreviewDrawer
+      <CurriculumReportPreviewDrawer
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         reportRequest={reportRequest}

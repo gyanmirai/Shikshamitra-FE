@@ -19,6 +19,7 @@ import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
+import CurriculumReportPreviewDrawer from 'src/screens/academic/curriculum-management/reports/CurriculumReportPreviewDrawer';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useTeacherSelection } from 'src/screens/academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/hooks/useTeacherSelection';
 import {
@@ -27,7 +28,6 @@ import {
   HomeworkAssignmentAnalyticReportTitleOptions,
 } from 'src/enums/homeworkAssignmentAnalytic-report';
 
-import HomeworkReportPreviewDrawer from '../HomeworkReportPreviewDrawer';
 import { getHomeworkAssignmentAnalyticsValidationSchema } from './AnalyticsReportsValidation';
 
 type EmployeeOption = { id: string; label: string };
@@ -583,7 +583,7 @@ const HomeworkAssignmentAnalyticsReports = ({
           </Box>
         </form>
       </Card>
-      <HomeworkReportPreviewDrawer
+      <CurriculumReportPreviewDrawer
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         reportRequest={reportRequest}

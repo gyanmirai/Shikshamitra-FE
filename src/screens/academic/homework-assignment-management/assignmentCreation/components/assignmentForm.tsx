@@ -310,7 +310,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
       setSubjectSelectValue(selectValue || subjectId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editData?.id, subjectOptionsData?.data?.items]);
+  }, [editData?.id, subjectOptionsData?.data?.items, formik.values.subjectId]);
 
   const isLoadingData = isAssignmentByIdLoading || isAssignmentByIdFetching;
 
