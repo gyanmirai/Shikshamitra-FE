@@ -10,16 +10,8 @@ import sortQueryString from 'src/utils/sort-query-string';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Chip, Button, IconButton, Typography } from '@mui/material';
-
-import StudentWiseAbsentDays from './components/StudentWiseAbsentDays';
-import MonthlyStrengthSummary from './components/MonthlyStrengthSummary';
-import StudentAttendanceSheet from './components/StudentAttendanceSheet';
-import DailyStrengthGenderWiseSummary from './components/DailyStrengthGenderWiseSummary';
-import DailyStrengthAttendanceSummary from './components/DailyStrengthAttendanceSummary';
-import StudentAttendanceRegisterSmall from './components/StudentAttendanceRegisterSmall';
-import StudentWiseAbsentDaysDateRange from './components/StudentWiseAbsentDaysDateRange';
-import MonthlyStrengthSummaryDateRange from './components/MonthlyStrengthSummaryDateRange';
-import MonthlyStrengthAttendanceSummary from './components/MonthlyStrengthAttendanceSummary';
+import { StudentRecordsReportTitle } from 'src/enums/studentRecordsReports';
+import StudentRecordsReportForm from 'src/screens/student/reports/components/StudentRecordsReportForm';
 
 const AttendanceReportScreen = () => {
   const openGenerateReport = useBoolean();
@@ -76,7 +68,11 @@ const AttendanceReportScreen = () => {
               name: 'Daily Strength & Gender Summary',
               id: 'daily-gender-summary',
               icon: '',
-              render: () => <DailyStrengthGenderWiseSummary />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.DailyStrengthGenderWiseSummary}
+                />
+              ),
               description: 'View daily strength summary by gender',
               categoryId: 'Daily',
             },
@@ -84,67 +80,87 @@ const AttendanceReportScreen = () => {
               name: 'Daily Strength & Attendance',
               id: 'daily-attendance-summary',
               icon: '',
-              render: () => <DailyStrengthAttendanceSummary />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.DailyStrengthAttendanceSummary}
+                />
+              ),
               description: 'View daily attendance and strength summary',
               categoryId: 'Daily',
             },
 
             // Monthly Reports
             {
-              name: 'Monthly Strength Summary',
-              id: 'monthly-strength-summary',
-              icon: '',
-              render: () => <MonthlyStrengthSummary />,
-              description: 'View monthly strength summary',
-              categoryId: 'Monthly',
-            },
-            {
-              name: 'Monthly Strength & Attendance',
+              name: 'Monthly Attendance Summary',
               id: 'monthly-attendance-summary',
               icon: '',
-              render: () => <MonthlyStrengthAttendanceSummary />,
-              description: 'View monthly strength and attendance summary',
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.MonthlyAttendanceSummary}
+                />
+              ),
+              description: 'View attendance percentage for each class during a month',
               categoryId: 'Monthly',
             },
             {
-              name: 'Attendance Register (Small)',
-              id: 'attendance-register-small',
+              name: 'Monthly Attendance Register',
+              id: 'monthly-attendance-register',
               icon: '',
-              render: () => <StudentAttendanceRegisterSmall />,
-              description: 'View attendance register in small format',
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.MonthlyAttendanceRegister}
+                />
+              ),
+              description: 'Generate month-wise attendance register',
               categoryId: 'Monthly',
             },
             {
-              name: 'Attendance Sheet',
-              id: 'attendance-sheet',
+              name: 'Monthly Strength Report',
+              id: 'monthly-strength-report',
               icon: '',
-              render: () => <StudentAttendanceSheet />,
-              description: 'View monthly attendance sheet',
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.MonthlyStrengthSummary}
+                />
+              ),
+              description: 'Analyze attendance strength over a selected month',
               categoryId: 'Monthly',
             },
 
             // Student-Specific Reports
             {
-              name: 'Student Absent Days',
+              name: 'Student Absent Days Report',
               id: 'student-absent-days',
               icon: '',
-              render: () => <StudentWiseAbsentDays />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.StudentAbsentDaysReport}
+                />
+              ),
               description: 'View student-wise absent days',
               categoryId: 'Student-Specific',
             },
             {
-              name: 'Absent Days (Date Range)',
+              name: 'Absent Days Report (Date Range)',
               id: 'absent-days-date-range',
               icon: '',
-              render: () => <StudentWiseAbsentDaysDateRange />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.AbsentDaysReportDateRange}
+                />
+              ),
               description: 'View absent days with custom date range',
               categoryId: 'Student-Specific',
             },
             {
-              name: 'Monthly Strength (Date Range)',
+              name: 'Monthly Strength Report (Date Range)',
               id: 'monthly-strength-date-range',
               icon: '',
-              render: () => <MonthlyStrengthSummaryDateRange />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.MonthlyStrengthReportDateRange}
+                />
+              ),
               description: 'View monthly strength with custom date range',
               categoryId: 'Student-Specific',
             },

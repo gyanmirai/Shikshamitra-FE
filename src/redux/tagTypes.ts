@@ -195,6 +195,12 @@ export const enrollmentReportType = {
   enrollmentReportApi: 'Enrollment-Report-Api',
 } as const;
 
+// ===== Student Report API (reducerPath: studentReportApi) =====
+export const studentReportType = {
+  studentReport: 'Student-Report',
+  studentReportExport: 'Student-Report-Export',
+} as const;
+
 // ===== Entrance Exam API (reducerPath: EntranceExamApi) =====
 export const entranceExamType = {
   entranceExam: 'Entrance-Exam',
@@ -615,6 +621,7 @@ export const allTagTypes = {
   ...earningComponentType,
   ...employeeType,
   ...enrollmentReportType,
+  ...studentReportType,
   ...entranceExamType,
   ...entranceExamSlotType,
   ...eventHolidayType,
