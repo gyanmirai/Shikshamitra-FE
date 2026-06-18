@@ -9,7 +9,7 @@ const flattenItems = (items: any[]): any[] =>
 describe('HR production menu', () => {
   it('exposes HR MVP routes with production permissions', async () => {
     process.env.BUILD_STATIC_EXPORT = process.env.BUILD_STATIC_EXPORT ?? 'false';
-    const { default: hrModule, hrPaths } = await import('./hr-menus');
+    const { default: hrModule, hrPaths, hrPermissions } = await import('./hr-menus');
     const navItems = Object.values(hrModule(true)).flatMap((sections) =>
       sections.flatMap((section) => section.items)
     );
@@ -41,32 +41,32 @@ describe('HR production menu', () => {
         expect.objectContaining({
           title: 'Overview',
           path: hrPaths.professionalManagement.overview,
-          permissionName: 'HR.ProfessionalManagement.View',
+          permissionName: hrPermissions.performanceManagement.view,
         }),
         expect.objectContaining({
           title: 'Reviews',
           path: hrPaths.professionalManagement.reviews,
-          permissionName: 'HR.ProfessionalManagement.View',
+          permissionName: hrPermissions.performanceManagement.reviewEmployees,
         }),
         expect.objectContaining({
           title: 'Cycles & Templates',
           path: hrPaths.professionalManagement.cycles,
-          permissionName: 'HR.ProfessionalManagement.View',
+          permissionName: hrPermissions.performanceManagement.manageCycles,
         }),
         expect.objectContaining({
           title: 'Outcomes',
           path: hrPaths.professionalManagement.outcomes,
-          permissionName: 'HR.ProfessionalManagement.View',
+          permissionName: hrPermissions.performanceManagement.outcomes,
         }),
         expect.objectContaining({
           title: 'Reports',
           path: hrPaths.professionalManagement.reports,
-          permissionName: 'HR.ProfessionalManagement.View',
+          permissionName: hrPermissions.performanceManagement.reports,
         }),
         expect.objectContaining({
           title: 'Settings',
           path: hrPaths.professionalManagement.settings.root,
-          permissionName: 'HR.ProfessionalManagement.View',
+          permissionName: hrPermissions.professionalManagement,
         }),
       ])
     );
@@ -77,7 +77,7 @@ describe('HR production menu', () => {
       expect.objectContaining({
         title: 'Setup & Readiness',
         path: hrPaths.professionalManagement.settings.setup,
-        permissionName: 'HR.ProfessionalManagement.View',
+        permissionName: hrPermissions.performanceManagement.setting.setup,
       }),
     ]);
     expect(items.find((item) => item.title === 'Run Payroll')).toMatchObject({
