@@ -1,4 +1,5 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { LibraryDashboardOverview } from 'src/redux/library/library-adapters';
 
 import { Iconify } from 'src/components/iconify';
 import { fNumber } from 'src/utils/format-number';
@@ -9,19 +10,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Chart, useChart, ChartSelect } from 'src/components/chart';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Box,
-  Grid,
-  Link,
-  Card,
-  Stack,
-  Button,
-  Typography,
-  CardHeader,
-  IconButton,
-} from '@mui/material';
-
-import InventoryIntelligenceDrawer from './inventory-intelligence-drawer';
+import { Box, Grid, Link, Card, Stack, Typography, CardHeader, IconButton } from '@mui/material';
 
 // Mock data for Admin-specific charts
 const mockCategoryDistribution = {
@@ -311,22 +300,30 @@ const mockSectionBooks = {
 };
 
 // Top Book Categories Chart (Progress Bar Style)
-export const CategoryDistributionChart = () => {
+export const CategoryDistributionChart = ({
+  overview,
+}: {
+  overview?: LibraryDashboardOverview;
+}) => {
   const theme = useTheme();
 
-  // Sort data in descending order by book count
-  const sortedData = mockCategoryDistribution.categories
-    .map((category, index) => ({
-      category,
-      count: mockCategoryDistribution.series[index],
-    }))
-    .sort((a, b) => b.count - a.count);
+  const categorySource = overview?.categoryDistribution?.length
+    ? overview.categoryDistribution.map((item: any) => ({
+        category: item.categoryName,
+        count: item.copyCount,
+      }))
+    : [];
 
-  const totalBooks = sortedData.reduce((sum, item) => sum + item.count, 0);
+  const sortedData = categorySource.sort((a: any, b: any) => b.count - a.count);
+
+  const totalBooks = sortedData.reduce((sum: number, item: any) => sum + item.count, 0);
 
   // Insights summary
-  const largestCategory = sortedData[0];
-  const smallestCategory = sortedData[sortedData.length - 1];
+  const largestCategory = sortedData[0] || { category: 'No category', count: 0 };
+  const smallestCategory = sortedData[sortedData.length - 1] || {
+    category: 'No category',
+    count: 0,
+  };
   const totalCategories = sortedData.length;
 
   return (
@@ -344,198 +341,208 @@ export const CategoryDistributionChart = () => {
         sx={{ mt: -1, ml: -1 }}
       />
 
-      {/* Insight Summary */}
-      <Box
-        sx={{
-          mx: 1,
-          mb: 1,
-          p: 1.5,
-          borderRadius: 1.5,
-          bgcolor: alpha(theme.palette.primary.main, 0.04),
-          border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
-        }}
-      >
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 4 }}>
-            <Stack spacing={0.5}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                Largest Category
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                {largestCategory.category}
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {fNumber(largestCategory.count)} books
-              </Typography>
-            </Stack>
-          </Grid>
-          <Grid size={{ xs: 4 }}>
-            <Stack spacing={0.5}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                Smallest Category
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                {smallestCategory.category}
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {fNumber(smallestCategory.count)} books
-              </Typography>
-            </Stack>
-          </Grid>
-          <Grid size={{ xs: 4 }}>
-            <Stack spacing={0.5}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                Total Categories
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                {totalCategories}
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {fNumber(totalBooks)} books total
-              </Typography>
-            </Stack>
-          </Grid>
-        </Grid>
-      </Box>
-
-      {/* Progress Bar List */}
-      <Box sx={{ px: 1, pb: 1 }}>
-        <Stack spacing={2.5}>
-          {sortedData.map((item, index) => {
-            const percentage = Math.round((item.count / totalBooks) * 100);
-            const isTop = index === 0;
-
-            return (
-              <Box
-                key={item.category}
-                sx={{
-                  position: 'relative',
-                  transition: theme.transitions.create(['transform', 'box-shadow']),
-                  '&:hover': {
-                    transform: 'translateX(4px)',
-                  },
-                }}
-              >
-                {/* Category Name and Value Row */}
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  sx={{ mb: 1 }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontWeight: isTop ? 700 : 600,
-                      color: isTop ? 'text.primary' : 'text.secondary',
-                    }}
-                  >
-                    {item.category}
+      {sortedData.length === 0 ? (
+        <Box sx={{ p: 3, textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            No category inventory available.
+          </Typography>
+        </Box>
+      ) : (
+        <>
+          {/* Insight Summary */}
+          <Box
+            sx={{
+              mx: 1,
+              mb: 1,
+              p: 1.5,
+              borderRadius: 1.5,
+              bgcolor: alpha(theme.palette.primary.main, 0.04),
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+            }}
+          >
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 4 }}>
+                <Stack spacing={0.5}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                    Largest Category
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontWeight: 700,
-                      color: 'text.primary',
-                    }}
-                  >
-                    {fNumber(item.count)}{' '}
-                    <Box
-                      component="span"
-                      sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.875rem' }}
-                    >
-                      ({percentage}%)
-                    </Box>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                    {largestCategory.category}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {fNumber(largestCategory.count)} books
                   </Typography>
                 </Stack>
+              </Grid>
+              <Grid size={{ xs: 4 }}>
+                <Stack spacing={0.5}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                    Smallest Category
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                    {smallestCategory.category}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {fNumber(smallestCategory.count)} books
+                  </Typography>
+                </Stack>
+              </Grid>
+              <Grid size={{ xs: 4 }}>
+                <Stack spacing={0.5}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                    Total Categories
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                    {totalCategories}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {fNumber(totalBooks)} books total
+                  </Typography>
+                </Stack>
+              </Grid>
+            </Grid>
+          </Box>
 
-                {/* Progress Bar */}
-                <Box
-                  sx={{
-                    position: 'relative',
-                    height: 10,
-                    borderRadius: 1.5,
-                    bgcolor: alpha(theme.palette.grey[500], 0.08),
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                  }}
-                >
+          {/* Progress Bar List */}
+          <Box sx={{ px: 1, pb: 1 }}>
+            <Stack spacing={2.5}>
+              {sortedData.map((item: any, index: number) => {
+                const percentage = totalBooks ? Math.round((item.count / totalBooks) * 100) : 0;
+                const isTop = index === 0;
+
+                return (
                   <Box
+                    key={item.category}
                     sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      height: '100%',
-                      width: `${percentage}%`,
-                      bgcolor: isTop
-                        ? theme.palette.primary.main
-                        : alpha(theme.palette.primary.main, 0.7),
-                      borderRadius: 1.5,
-                      transition: theme.transitions.create(['width', 'background-color'], {
-                        duration: 800,
-                        easing: 'ease-out',
-                      }),
-                      '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: `linear-gradient(90deg, transparent, ${alpha(
-                          theme.palette.common.white,
-                          0.2
-                        )}, transparent)`,
-                        animation: 'shimmer 2s infinite',
-                      },
-                      '@keyframes shimmer': {
-                        '0%': { transform: 'translateX(-100%)' },
-                        '100%': { transform: 'translateX(100%)' },
+                      position: 'relative',
+                      transition: theme.transitions.create(['transform', 'box-shadow']),
+                      '&:hover': {
+                        transform: 'translateX(4px)',
                       },
                     }}
-                  />
-                </Box>
-              </Box>
-            );
-          })}
-        </Stack>
-      </Box>
+                  >
+                    {/* Category Name and Value Row */}
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      sx={{ mb: 1 }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: isTop ? 700 : 600,
+                          color: isTop ? 'text.primary' : 'text.secondary',
+                        }}
+                      >
+                        {item.category}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 700,
+                          color: 'text.primary',
+                        }}
+                      >
+                        {fNumber(item.count)}{' '}
+                        <Box
+                          component="span"
+                          sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.875rem' }}
+                        >
+                          ({percentage}%)
+                        </Box>
+                      </Typography>
+                    </Stack>
 
-      {/* Legend */}
-      <Box
-        sx={{
-          mx: 3,
-          mb: 3,
-          pt: 2,
-          borderTop: `1px solid ${theme.palette.divider}`,
-        }}
-      >
-        <Stack direction="row" alignItems="center" spacing={1}>
+                    {/* Progress Bar */}
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        height: 10,
+                        borderRadius: 1.5,
+                        bgcolor: alpha(theme.palette.grey[500], 0.08),
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          height: '100%',
+                          width: `${percentage}%`,
+                          bgcolor: isTop
+                            ? theme.palette.primary.main
+                            : alpha(theme.palette.primary.main, 0.7),
+                          borderRadius: 1.5,
+                          transition: theme.transitions.create(['width', 'background-color'], {
+                            duration: 800,
+                            easing: 'ease-out',
+                          }),
+                          '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: `linear-gradient(90deg, transparent, ${alpha(
+                              theme.palette.common.white,
+                              0.2
+                            )}, transparent)`,
+                            animation: 'shimmer 2s infinite',
+                          },
+                          '@keyframes shimmer': {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' },
+                          },
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Stack>
+          </Box>
+
+          {/* Legend */}
           <Box
             sx={{
-              width: 12,
-              height: 12,
-              borderRadius: 0.75,
-              bgcolor: theme.palette.primary.main,
+              mx: 3,
+              mb: 3,
+              pt: 2,
+              borderTop: `1px solid ${theme.palette.divider}`,
             }}
-          />
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-            Largest category
-          </Typography>
-          <Box sx={{ mx: 2 }}>|</Box>
-          <Box
-            sx={{
-              width: 12,
-              height: 12,
-              borderRadius: 0.75,
-              bgcolor: alpha(theme.palette.primary.main, 0.7),
-            }}
-          />
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-            Other categories
-          </Typography>
-        </Stack>
-      </Box>
+          >
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Box
+                sx={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 0.75,
+                  bgcolor: theme.palette.primary.main,
+                }}
+              />
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                Largest category
+              </Typography>
+              <Box sx={{ mx: 2 }}>|</Box>
+              <Box
+                sx={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 0.75,
+                  bgcolor: alpha(theme.palette.primary.main, 0.7),
+                }}
+              />
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                Other categories
+              </Typography>
+            </Stack>
+          </Box>
+        </>
+      )}
     </Card>
   );
 };
@@ -647,11 +654,22 @@ const InventoryInsightItem = ({
   );
 };
 
-export const InventoryIntelligence = () => {
+export const InventoryIntelligence = ({ overview }: { overview?: LibraryDashboardOverview }) => {
   const theme = useTheme();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<string>('');
+  const topIssuedBooks = (overview?.popularBooks || []).map((book: any) => ({
+    title: book.title,
+    author: book.author,
+    count: book.issueCount,
+  }));
+  const lowUtilizationSections = (overview?.sectionInventory || [])
+    .filter((section: any) => section.copyCount > 0 && section.utilizationRate <= 10)
+    .map((section: any) => ({
+      title: section.sectionName,
+      utilization: `${Math.round(section.utilizationRate)}% utilization`,
+      info: `${section.copyCount} copies`,
+    }));
 
   // Define table columns for member borrowing data
   const memberColumns: IColumn[] = [
@@ -722,10 +740,6 @@ export const InventoryIntelligence = () => {
     },
   ];
 
-  const handleOpenDrawer = () => {
-    setDrawerOpen(true);
-  };
-
   const handleViewDetails = (bookTitle: string) => {
     setSelectedBook(bookTitle);
     setDialogOpen(true);
@@ -734,10 +748,6 @@ export const InventoryIntelligence = () => {
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setSelectedBook('');
-  };
-
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false);
   };
 
   return (
@@ -769,16 +779,6 @@ export const InventoryIntelligence = () => {
             </Stack>
           }
           subheader="Usage analytics & procurement insights"
-          action={
-            <Button
-              size="small"
-              color="inherit"
-              endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
-              onClick={handleOpenDrawer}
-            >
-              Analyze All
-            </Button>
-          }
           sx={{ mb: 1, mt: -1, ml: -1 }}
         />
 
@@ -794,19 +794,24 @@ export const InventoryIntelligence = () => {
 
               <Scrollbar sx={{ height: 400, pr: 1 }}>
                 <Stack spacing={0}>
-                  {mockInventoryInsights.topIssued.map((book) => (
-                    <InventoryInsightItem
-                      key={book.title}
-                      title={book.title}
-                      subtitle={`by ${book.author}`}
-                      info={`${book.count} issues`}
-                      status="info"
-                      icon="solar:book-2-linear"
-                      trend={book.trend as 'up' | 'down'}
-                      actionLabel="View details"
-                      onClick={() => handleViewDetails(book.title)}
-                    />
-                  ))}
+                  {topIssuedBooks.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+                      No circulation demand data yet.
+                    </Typography>
+                  ) : (
+                    topIssuedBooks.map((book: any) => (
+                      <InventoryInsightItem
+                        key={book.title}
+                        title={book.title}
+                        subtitle={`by ${book.author}`}
+                        info={`${book.count} issues`}
+                        status="info"
+                        icon="solar:book-2-linear"
+                        actionLabel=""
+                        onClick={() => handleViewDetails(book.title)}
+                      />
+                    ))
+                  )}
                 </Stack>
               </Scrollbar>
             </Grid>
@@ -825,25 +830,29 @@ export const InventoryIntelligence = () => {
 
               <Scrollbar sx={{ height: 400, pr: 1 }}>
                 <Stack spacing={0}>
-                  {mockInventoryInsights.lowUtilization.map((book) => (
-                    <InventoryInsightItem
-                      key={book.title}
-                      title={book.title}
-                      subtitle={`${book.utilization} utilization`}
-                      info={book.lastIssued}
-                      status="error"
-                      icon="solar:ghost-linear"
-                      actionLabel=""
-                    />
-                  ))}
+                  {lowUtilizationSections.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+                      No low-utilization sections found.
+                    </Typography>
+                  ) : (
+                    lowUtilizationSections.map((section: any) => (
+                      <InventoryInsightItem
+                        key={section.title}
+                        title={section.title}
+                        subtitle={section.utilization}
+                        info={section.info}
+                        status="warning"
+                        icon="solar:shield-warning-linear"
+                        actionLabel=""
+                      />
+                    ))
+                  )}
                 </Stack>
               </Scrollbar>
             </Grid>
           </Grid>
         </Box>
       </Card>
-
-      <InventoryIntelligenceDrawer open={drawerOpen} onClose={handleCloseDrawer} />
 
       {/* Member Borrowing Details Dialog */}
       <CustomDialog
@@ -869,18 +878,42 @@ export const InventoryIntelligence = () => {
 };
 
 // Member Activity Trend Chart
-export const MemberActivityChart = () => {
+export const MemberActivityChart = ({ overview }: { overview?: LibraryDashboardOverview }) => {
   const theme = useTheme();
-  const [selectedYear, setSelectedYear] = useState('2024');
+  const memberActivityData = overview?.weeklyCirculation?.length
+    ? {
+        series: [
+          {
+            name: 'Current Week',
+            data: [
+              {
+                name: 'Books Issued',
+                data: overview.weeklyCirculation.map((point: any) => point.issued),
+              },
+            ],
+          },
+        ],
+        categories: overview.weeklyCirculation.map((point: any) => point.label),
+      }
+    : {
+        series: [
+          {
+            name: 'Current Week',
+            data: [{ name: 'Books Issued', data: [0, 0, 0, 0, 0, 0, 0] }],
+          },
+        ],
+        categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      };
+  const [selectedYear, setSelectedYear] = useState(memberActivityData.series[0].name);
 
   const chartColors = [theme.palette.primary.main];
 
-  const currentYearData = mockMemberActivity.series.find((y) => y.name === selectedYear);
+  const currentYearData = memberActivityData.series.find((y) => y.name === selectedYear);
 
   const chartOptions = useChart({
     colors: chartColors,
     xaxis: {
-      categories: mockMemberActivity.categories,
+      categories: memberActivityData.categories,
       axisBorder: { show: false },
       axisTicks: { show: false },
       labels: { style: { colors: theme.palette.text.secondary } },
@@ -923,7 +956,7 @@ export const MemberActivityChart = () => {
         subheader="Books issued over time"
         action={
           <ChartSelect
-            options={mockMemberActivity.series.map((item) => item.name)}
+            options={memberActivityData.series.map((item) => item.name)}
             value={selectedYear}
             onChange={handleChangeYear}
           />
@@ -942,22 +975,44 @@ export const MemberActivityChart = () => {
 };
 
 // Weekly Circulation Chart
-export const WeeklyCirculationChart = () => {
+export const WeeklyCirculationChart = ({ overview }: { overview?: LibraryDashboardOverview }) => {
   const theme = useTheme();
   const [selectedRange, setSelectedRange] = useState('This Week');
+  const weeklyPoints = overview?.weeklyCirculation?.length
+    ? overview.weeklyCirculation
+    : [
+        { label: 'Mon', issued: 0, returned: 0 },
+        { label: 'Tue', issued: 0, returned: 0 },
+        { label: 'Wed', issued: 0, returned: 0 },
+        { label: 'Thu', issued: 0, returned: 0 },
+        { label: 'Fri', issued: 0, returned: 0 },
+        { label: 'Sat', issued: 0, returned: 0 },
+        { label: 'Sun', issued: 0, returned: 0 },
+      ];
+  const weeklyCirculation = {
+    series: [
+      {
+        name: 'This Week',
+        data: [
+          { name: 'Issued', data: weeklyPoints.map((point: any) => point.issued) },
+          { name: 'Returned', data: weeklyPoints.map((point: any) => point.returned) },
+        ],
+      },
+    ],
+    categories: weeklyPoints.map((point: any) => point.label),
+  };
+  const netCirculation =
+    (overview?.circulation.issuesThisWeek || 0) - (overview?.circulation.returnsThisWeek || 0);
 
   // Restore vibrant colors
   const chartColors = [theme.palette.primary.main, theme.palette.info.main];
 
-  const currentData = mockWeeklyCirculation.series.find((w) => w.name === selectedRange);
+  const currentData = weeklyCirculation.series.find((w) => w.name === selectedRange);
 
   const chartOptions = useChart({
     colors: chartColors,
     xaxis: {
-      categories:
-        selectedRange === 'This Week'
-          ? mockWeeklyCirculation.weekCategories
-          : mockWeeklyCirculation.monthCategories,
+      categories: weeklyCirculation.categories,
       axisBorder: { show: false },
       axisTicks: { show: false },
       labels: { style: { colors: theme.palette.text.secondary } },
@@ -1012,10 +1067,10 @@ export const WeeklyCirculationChart = () => {
             </CustomTooltip>
           </Stack>
         }
-        subheader={`Net circulation: ${selectedRange === 'This Week' ? '+10' : '+45'}`}
+        subheader={`Net circulation: ${netCirculation >= 0 ? '+' : ''}${netCirculation}`}
         action={
           <ChartSelect
-            options={mockWeeklyCirculation.series.map((item) => item.name)}
+            options={weeklyCirculation.series.map((item) => item.name)}
             value={selectedRange}
             onChange={handleChangeRange}
           />
@@ -1029,14 +1084,35 @@ export const WeeklyCirculationChart = () => {
 };
 
 // Section-wise Book Count Chart (Shelf Health)
-export const SectionBooksChart = () => {
+export const SectionBooksChart = ({ overview }: { overview?: LibraryDashboardOverview }) => {
   const theme = useTheme();
-  const [selectedSection, setSelectedSection] = useState('Section A');
+  const sectionBooks = overview?.sectionInventory?.length
+    ? {
+        series: [
+          {
+            name: 'All Sections',
+            data: overview.sectionInventory.map((section: any) => ({
+              name: section.sectionName,
+              data: [Math.round(section.utilizationRate)],
+              capacity: 100,
+            })),
+          },
+        ],
+      }
+    : {
+        series: [
+          {
+            name: 'All Sections',
+            data: [{ name: 'No inventory', data: [0], capacity: 100 }],
+          },
+        ],
+      };
+  const [selectedSection, setSelectedSection] = useState(sectionBooks.series[0].name);
 
-  const currentSectionData = mockSectionBooks.series.find((s) => s.name === selectedSection);
+  const currentSectionData = sectionBooks.series.find((s) => s.name === selectedSection);
 
-  const categories = currentSectionData?.data.map((item) => item.name) || [];
-  const seriesData = currentSectionData?.data.map((item) => item.data[0]) || [];
+  const categories = currentSectionData?.data.map((item: any) => item.name) || [];
+  const seriesData = currentSectionData?.data.map((item: any) => item.data[0]) || [];
 
   const chartOptions = useChart({
     xaxis: {
@@ -1053,7 +1129,7 @@ export const SectionBooksChart = () => {
         distributed: true,
       },
     } as any,
-    colors: seriesData.map((val) => {
+    colors: seriesData.map((val: number) => {
       // Functional color only: Error for > 85%, else Neutral/Gray
       if (val > 85) return theme.palette.error.main;
       if (val > 60) return theme.palette.warning.main;
@@ -1114,7 +1190,7 @@ export const SectionBooksChart = () => {
         subheader="Capacity utilization per shelf"
         action={
           <ChartSelect
-            options={mockSectionBooks.series.map((item) => item.name)}
+            options={sectionBooks.series.map((item) => item.name)}
             value={selectedSection}
             onChange={handleChangeSection}
           />

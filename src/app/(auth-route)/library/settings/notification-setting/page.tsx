@@ -1,6 +1,5 @@
-import React from 'react';
-import LibraryNotificationSettingScreen from 'src/screens/library/settings/notification-setting/library-notification-setting-screen';
+import { redirect } from 'next/navigation';
 
-const LibraryNotificationSetting = () => <LibraryNotificationSettingScreen />;
-
-export default LibraryNotificationSetting;
+export default function LibraryNotificationSettingRedirect() {
+  redirect('/library/notification');
+}

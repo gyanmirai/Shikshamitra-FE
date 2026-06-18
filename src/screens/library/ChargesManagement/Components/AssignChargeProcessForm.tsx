@@ -12,10 +12,13 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Grid, Button, MenuItem, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { useUpdateLibraryChargeMutation } from 'src/redux/library/charges-management/charges-get-api';
 import { getInitialPaymentDetails } from 'src/screens/finance/feeRefund/Components/RefundProcessForm';
 import { paymentMethodsConfig } from 'src/screens/finance/FeeCollection/Components/paymentConfigMethods';
 
@@ -24,6 +27,11 @@ import { collectChargeValidationSchema } from './AssignValidationCharges';
 import type { ICollectChargesProps, ICollectChargesFormValues } from './type';
 
 const CollectChargesForm: React.FC<ICollectChargesProps> = ({ open, onClose, charge }) => {
+  const [updateLibraryCharge, { isLoading: isUpdatingCharge }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateLibraryChargeMutation,
+  });
+
   const formik = useFormik<ICollectChargesFormValues>({
     initialValues: {
       role: charge?.role || '',
@@ -46,9 +54,33 @@ const CollectChargesForm: React.FC<ICollectChargesProps> = ({ open, onClose, cha
     validateOnChange: true,
     validateOnBlur: true,
     validationSchema: collectChargeValidationSchema,
-    onSubmit: (values) => {
-      shikshaMitraToast.success({ message: 'Charge collected successfully' });
-      onClose(null, true);
+    onSubmit: async (values) => {
+      if (!charge?.id) return;
+
+      try {
+        const result = await updateLibraryCharge({
+          chargeId: charge.id,
+          body: {
+            amount: Number(values.paymentDetails.paymentAmount || values.fineAmount),
+            dueDate: values.dueDate ? dayjs(values.dueDate).toISOString() : undefined,
+            paymentStatus: 1,
+            paidDate: dayjs().toISOString(),
+            remarks: values.reason || values.paymentDetails.notes || undefined,
+          },
+        });
+
+        if (result?.error) {
+          const parsed = parseApiProblemDetail(result.error);
+          shikshaMitraToast.error({ message: parsed.detail });
+          return;
+        }
+
+        shikshaMitraToast.success({ message: 'Charge collected successfully' });
+        onClose(null, true);
+      } catch (error) {
+        const parsed = parseApiProblemDetail(error);
+        shikshaMitraToast.error({ message: parsed.detail });
+      }
     },
   });
 
@@ -516,6 +548,7 @@ const CollectChargesForm: React.FC<ICollectChargesProps> = ({ open, onClose, cha
           type="submit"
           onClick={(e: any) => formik.handleSubmit(e)}
           size="small"
+          disabled={isUpdatingCharge}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
         >
           Submit

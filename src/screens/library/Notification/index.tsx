@@ -49,7 +49,10 @@ const LibraryNotificationScreen = () => {
   const [isBackClick, setIsBackClick] = useState(false);
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      data-testid="library-notification-page"
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       {dialog.value ? (
         <CustomBreadcrumbs
           heading={isViewMode ? 'View Notification' : 'Edit Notification'}
@@ -99,7 +102,13 @@ const LibraryNotificationScreen = () => {
           role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+            <Tab
+              key={tab.value}
+              value={tab.value}
+              label={tab.label}
+              icon={tab.icon}
+              data-testid={`library-notification-tab-${tab.value}`}
+            />
           ))}
         </CustomTabs>
       )}

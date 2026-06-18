@@ -70,7 +70,7 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
   };
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box data-testid="library-members-page" height="100%" display="flex" flexDirection="column">
       {showBreadCumb &&
         (open ? (
           <CustomBreadcrumbs

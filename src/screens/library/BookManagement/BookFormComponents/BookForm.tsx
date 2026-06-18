@@ -253,7 +253,7 @@ const BookStepForm = ({ activeStep: step, formik, editData, allSteps, academicYe
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box p={2}>
-        <StepComponent formik={formik} isEdit={!!editData} />
+        <StepComponent formik={formik} isEdit={!!editData} bookId={bookId} />
       </Box>
     </BackPopUpChecked>
   );

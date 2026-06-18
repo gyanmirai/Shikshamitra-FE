@@ -5,7 +5,6 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import Image from 'next/image';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import debounce from 'src/utils/debounce';
 import { GlobalIcons } from 'src/utils/icons';
@@ -15,11 +14,20 @@ import { ExpandMore } from '@mui/icons-material';
 import noCover from 'src/assets/icons/no-cover.png';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetMemberDetailsQuery } from 'src/redux/library/libraryMembers/memberManagementApi';
+import { useGetBookDetailsByAccessionQuery } from 'src/redux/library/issueAndReturnApi/issueAndReturnApi';
+import {
+  buildCreateChargePayload,
+  buildUpdateChargePayload,
+} from 'src/redux/library/library-adapters';
+import { useGetLibraryChargeCategoryOptionsQuery } from 'src/redux/library/charges-management/charge-category-api';
 import {
   useAddLibraryChargeMutation,
   useUpdateLibraryChargeMutation,
@@ -44,228 +52,24 @@ import { assignLibraryChargeValidationSchema } from './AssignChargesValidationSc
 
 import type { IAssignChargesFormProps } from './type';
 
-// Static Data
-const staticRoles = [
-  { id: '1', role: 'Employee' },
-  { id: '2', role: 'Student' },
-];
-
-export const staticChargeCategories = [
-  { id: 'None', name: 'None', amount: '', isFixed: false },
-  { id: 'Late Book Return', name: 'Late Book Return', amount: '', isFixed: false },
-  { id: 'Damaged Book', name: 'Damaged Book', amount: '', isFixed: false },
-  { id: 'Lost Book', name: 'Lost Book', amount: '', isFixed: false },
-  { id: 'Membership Renewal', name: 'Membership Renewal', amount: 100, isFixed: true },
-  { id: 'Reservation Fee', name: 'Reservation Fee', amount: 30, isFixed: true },
-];
-
-const staticBookTitles = [
-  { id: 'title1', label: 'Introduction to Physics', value: 'Introduction to Physics' },
-  { id: 'title2', label: 'Advanced Chemistry', value: 'Advanced Chemistry' },
-  { id: 'title3', label: 'Science Explorer', value: 'Science Explorer' },
-  { id: 'title4', label: 'Mathematics Grade 10', value: 'Mathematics Grade 10' },
-];
-
-const staticClasses = [
-  {
-    id: '10',
-    name: '10',
-    divisions: [
-      { id: 'A', name: 'A' },
-      { id: 'B', name: 'B' },
-    ],
-  },
-  {
-    id: '9',
-    name: ' 9',
-    divisions: [
-      { id: 'A', name: 'A' },
-      { id: 'B', name: 'B' },
-    ],
-  },
-  {
-    id: '12',
-    name: ' 12',
-    divisions: [
-      { id: 'A', name: 'A' },
-      { id: 'B', name: 'B' },
-      { id: 'D', name: 'D' },
-    ],
-  },
-  {
-    id: '7',
-    name: ' 7',
-    divisions: [
-      { id: 'A', name: 'A' },
-      { id: 'B', name: 'B' },
-    ],
-  },
-];
-
-const staticMembers = [
-  {
-    id: '1',
-    memberId: 'M001',
-    class: '10',
-    division: 'A',
-    reservedBook: 'Introduction to Computer Science',
-    accessionNo: 'ACC01',
-    grNo: 'G001',
-    role: 'Student',
-    name: 'Dharmik Jinjala',
-    email: 'dharmik@school.edu',
-    contactNo: '9876543210',
-    joinDate: '2023-06-15',
-    currentIssue: 4,
-    overdueReturn: 1,
-    memberStatus: '0',
-    requestedDate: '2025-09-15T10:30:00Z',
-    reserveDueDate: '2025-09-22T10:30:00Z',
-    rollNo: '1',
-    avatarUrl: 'https://randomuser.me/api/portraits/men/10.jpg',
-  },
-  {
-    id: '2',
-    memberId: 'M002',
-    class: '-',
-    division: '-',
-    reservedBook: 'Introduction to Computer Science',
-    accessionNo: 'ACC01',
-    grNo: '-',
-    role: 'Employee',
-    name: 'Prerna Atre',
-    email: 'prerna.atre@school.edu',
-    contactNo: '9123456789',
-    joinDate: '2021-04-10',
-    currentIssue: 1,
-    overdueReturn: 0,
-    memberStatus: '0',
-    requestedDate: '2025-09-16T09:45:00Z',
-    reserveDueDate: '2025-09-23T09:45:00Z',
-    avatarUrl: 'https://randomuser.me/api/portraits/women/5.jpg',
-  },
-  {
-    id: '3',
-    memberId: 'M003',
-    class: '12',
-    division: 'C',
-    reservedBook: 'Introduction to Computer Science',
-    accessionNo: 'ACC01',
-    grNo: 'G003',
-    role: 'Student',
-    name: 'Parth Ghusar',
-    email: 'parth.ghusar@school.edu',
-    contactNo: '9988776655',
-    joinDate: '2022-07-01',
-    currentIssue: 2,
-    overdueReturn: 0,
-    memberStatus: '1',
-    requestedDate: '2025-09-17T11:00:00Z',
-    reserveDueDate: '2025-09-24T11:00:00Z',
-    rollNo: '2',
-    avatarUrl: 'https://randomuser.me/api/portraits/men/12.jpg',
-  },
-  {
-    id: '4',
-    memberId: 'M004',
-    class: '11',
-    division: 'A',
-    reservedBook: 'Introduction to Computer Science',
-    accessionNo: 'ACC01',
-    grNo: 'G004',
-    role: 'Student',
-    name: 'Mayur Solanki',
-    email: 'mayur.solanki@school.edu',
-    contactNo: '9876543211',
-    joinDate: '2023-03-20',
-    currentIssue: 0,
-    overdueReturn: 2,
-    memberStatus: '0',
-    requestedDate: '2025-09-18T13:15:00Z',
-    reserveDueDate: '2025-09-25T13:15:00Z',
-    rollNo: '3',
-    avatarUrl: 'https://randomuser.me/api/portraits/men/15.jpg',
-  },
-  {
-    id: '5',
-    memberId: 'M005',
-    class: '9',
-    division: 'D',
-    reservedBook: 'Introduction to Computer Science',
-    accessionNo: 'ACC01',
-    grNo: 'G005',
-    role: 'Student',
-    name: 'Raj Baku',
-    email: 'raj.baku@school.edu',
-    contactNo: '9123456788',
-    joinDate: '2024-01-05',
-    currentIssue: 7,
-    overdueReturn: 0,
-    memberStatus: '1',
-    requestedDate: '2025-09-19T08:20:00Z',
-    reserveDueDate: '2025-09-26T08:20:00Z',
-    rollNo: '4',
-    avatarUrl: 'https://randomuser.me/api/portraits/men/25.jpg',
-  },
-];
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const staticBooks = [
-  {
-    bookNumber: 'BK001',
-    title: 'Introduction to Physics',
-    author: 'Dr. John Smith',
-    isbn: '978-0123456789',
-    category: 'Science',
-    publisher: 'Academic Press',
-    edition: '3rd Edition',
-  },
-  {
-    bookNumber: 'BK002',
-    title: 'Advanced Chemistry',
-    author: 'Prof. Sarah Johnson',
-    isbn: '978-0987654321',
-    category: 'Science',
-    publisher: 'Scientific Publications',
-    edition: '2nd Edition',
-  },
-  {
-    bookNumber: 'BK003',
-    title: 'Science Explorer',
-    author: 'Dr. Michael Brown',
-    isbn: '978-0456789123',
-    category: 'General Science',
-    publisher: 'Education Books',
-    edition: '1st Edition',
-  },
-  {
-    bookNumber: 'BK004',
-    title: 'Mathematics Grade 10',
-    author: 'Prof. Lisa Wilson',
-    isbn: '978-0321654987',
-    category: 'Mathematics',
-    publisher: 'Math Publishers',
-    edition: '4th Edition',
-  },
-];
-
-// Helper to fill missing fields from static data
 function fillEditData(editData: any) {
   if (!editData) return null;
   return {
-    role: editData.role || staticRoles[0].role,
-    class: editData.classNo || staticClasses[0].id,
-    division: editData.division || staticClasses[0].divisions[0].id,
-    member: editData.memberId || staticMembers[0].id,
-    bookTitle: editData.bookTitle || staticBookTitles[0].value,
-    chargeCategory: editData.chargeCategory || staticChargeCategories[0].id,
+    role: editData.role || '',
+    class: editData.classNo || '',
+    division: editData.division || '',
+    member: editData.memberId || '',
+    bookNumber: editData.accessionNo || editData.bookNumber || '',
+    bookTitle: editData.bookTitle || '',
+    chargeCategory: editData.chargeCategoryId || editData.chargeCategory || '',
     amount:
       editData.fineAmount !== undefined
         ? editData.fineAmount
-        : staticChargeCategories.find((cat) => cat.id === editData.chargeCategory)?.amount || '',
+        : editData.amount !== undefined
+          ? editData.amount
+          : '',
     dueDate: editData.dueDate || '',
     reason: editData.reason || '',
-    // Add other fields as needed
   };
 }
 
@@ -284,50 +88,90 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
   const [debouncedMemberId, setDebouncedMemberId] = useState('');
   const [debouncedBookNumber, setDebouncedBookNumber] = useState('');
 
-  // Add library charge mutation hook
-  const { addLibraryCharge } = useQueryAndMutation({
+  const { data: chargeCategoryData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLibraryChargeCategoryOptionsQuery,
+    params: { academicYearId: currentAcademicYearId, pageSize: 100 },
+  });
+
+  const { data: queriedMember, isLoading: isMemberQueryLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetMemberDetailsQuery,
+    params: { memberId: debouncedMemberId },
+    options: { skip: !debouncedMemberId },
+  });
+
+  const { data: queriedBook, isLoading: isBookQueryLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBookDetailsByAccessionQuery,
+    params: { accessionNo: debouncedBookNumber },
+    options: { skip: !debouncedBookNumber },
+  });
+
+  const chargeCategories = useMemo(() => chargeCategoryData || [], [chargeCategoryData]);
+
+  const [addLibraryCharge, { isLoading: isAddChargeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddLibraryChargeMutation,
   });
 
-  // Update library charge mutation hook
-  const { updateLibraryCharge } = useQueryAndMutation({
+  const [updateLibraryCharge, { isLoading: isUpdateChargeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateLibraryChargeMutation,
   });
+
+  useEffect(() => {
+    if (!debouncedMemberId) return;
+    setSelectedMember(queriedMember || null);
+  }, [debouncedMemberId, queriedMember]);
+
+  useEffect(() => {
+    if (!debouncedBookNumber) return;
+
+    setSelectedBook(
+      queriedBook
+        ? {
+            bookNumber: queriedBook.accessionNo,
+            title: queriedBook.title,
+            author: queriedBook.author,
+            isbn: queriedBook.isbn,
+            category: queriedBook.category,
+            publisher: queriedBook.publisher,
+            edition: queriedBook.edition,
+            coverImage: queriedBook.coverImage,
+          }
+        : null
+    );
+  }, [debouncedBookNumber, queriedBook]);
 
   const formik = useFormik({
     initialValues: assignLibraryChargeInitialValues(fillEditData(editData)),
     validationSchema: assignLibraryChargeValidationSchema(currentYear),
     onSubmit: async (values) => {
-      // Construct payload matching API specification
-      const payload = {
-        memberId: values.memberId,
-        accessionNo: values.bookNumber,
-        chargeCategory: values.chargeCategory,
-        amount: Number(values.amount),
-        dueDate: values.dueDate,
-        reason: values.reason,
-      };
+      try {
+        const result = editData
+          ? await updateLibraryCharge({
+              chargeId: editData.id,
+              body: buildUpdateChargePayload(values),
+            })
+          : await addLibraryCharge({
+              body: buildCreateChargePayload(values),
+            });
 
-      if (editData) {
-        // Update existing charge - PUT /library/charges/{chargeId}?academicYearId={academicYearId}
-        await updateLibraryCharge({
-          chargeId: editData.id,
-          data: payload,
-          academicYearId: currentAcademicYearId,
-        });
+        if (result?.error) {
+          const parsed = parseApiProblemDetail(result.error);
+          shikshaMitraToast.error({ message: parsed.detail });
+          return;
+        }
+
         shikshaMitraToast.success({
-          message: 'Charge updated successfully',
+          message: editData ? 'Charge updated successfully' : 'Charge assigned successfully',
         });
-      } else {
-        // Create new charge - POST /library/charges/create
-        await addLibraryCharge(payload);
-        shikshaMitraToast.success({
-          message: 'Charge assigned successfully',
-        });
+        onClose(null, true);
+      } catch (error) {
+        const parsed = parseApiProblemDetail(error);
+        shikshaMitraToast.error({ message: parsed.detail });
       }
-      onClose(null, true);
     },
   });
 
@@ -343,14 +187,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
 
     setLoadingMember(true);
     debounce(() => {
-      setDebouncedMemberId(value);
-      const foundMember = staticMembers.find((m) => m.memberId === value);
-
-      if (foundMember) {
-        setSelectedMember(foundMember);
-      } else {
-        setSelectedMember(null);
-      }
+      setDebouncedMemberId(value.trim());
       setLoadingMember(false);
     }, 800);
   };
@@ -367,21 +204,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
 
     setLoadingBook(true);
     debounce(() => {
-      setDebouncedBookNumber(value);
-      if (value === 'ACC-0001') {
-        setSelectedBook({
-          bookNumber: 'ACC-0001',
-          title: 'Introduction to Physics',
-          author: 'Dr. John Smith',
-          isbn: '978-0123456789',
-          category: 'Science',
-          publisher: 'Academic Press',
-          edition: '3rd Edition',
-          coverImage: '/placeholder-book.jpg',
-        });
-      } else {
-        setSelectedBook(null);
-      }
+      setDebouncedBookNumber(value.trim());
       setLoadingBook(false);
     }, 800);
   };
@@ -460,7 +283,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
 
           {/* Member Details Display */}
           {(() => {
-            if (loadingMember) {
+            if (loadingMember || isMemberQueryLoading) {
               return (
                 <Grid size={{ xs: 12 }}>
                   <Box display="flex" justifyContent="center" alignItems="center" py={2}>
@@ -597,7 +420,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                           }}
                         >
                           <Avatar
-                            src={selectedMember.avatarUrl}
+                            src={selectedMember.avatar || selectedMember.avatarUrl}
                             sx={{
                               width: 80,
                               height: 80,
@@ -681,7 +504,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
 
           {/* Book Details Display */}
           {(() => {
-            if (loadingBook) {
+            if (loadingBook || isBookQueryLoading) {
               return (
                 <Grid size={{ xs: 12 }}>
                   <Box display="flex" justifyContent="center" alignItems="center" py={2}>
@@ -895,10 +718,14 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
             >
               <CustomSelect
                 label="Charge Category *"
-                options={staticChargeCategories || []}
+                options={chargeCategories}
                 value={formik.values.chargeCategory}
                 onChange={(val) => {
                   formik.setFieldValue('chargeCategory', val);
+                  const selectedCategory = chargeCategories.find((cat: any) => cat.id === val);
+                  if (selectedCategory?.isFixed) {
+                    formik.setFieldValue('amount', selectedCategory.amount);
+                  }
                 }}
                 labelKey="name"
                 valueKey="id"
@@ -921,7 +748,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                 name="amount"
                 value={formik.values.amount}
                 disabled={
-                  !!(staticChargeCategories || []).find(
+                  !!chargeCategories.find(
                     (cat: any) => cat.id === formik.values.chargeCategory && cat.isFixed
                   )
                 }
@@ -1001,6 +828,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          disabled={isAddChargeLoading || isUpdateChargeLoading}
           sx={{ minWidth: 120, px: 3 }}
         >
           {editData ? 'Update' : 'Submit'}

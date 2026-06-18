@@ -6,7 +6,7 @@ export const bookCategoryApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getBookCategories: builder.query({
       query: (params) => ({
-        url: '/book-categories',
+        url: '/library/book-categories',
         method: 'GET',
         params,
       }),
@@ -16,7 +16,7 @@ export const bookCategoryApi = api.injectEndpoints({
       query: (data) => {
         const { academicYearId, ...body } = data;
         return {
-          url: '/book-categories',
+          url: '/library/book-categories',
           method: 'POST',
           body,
           params: { academicYearId },
@@ -26,7 +26,7 @@ export const bookCategoryApi = api.injectEndpoints({
     }),
     updateBookCategory: builder.mutation({
       query: ({ categoryId, data }) => ({
-        url: `/book-categories/${categoryId}`,
+        url: `/library/book-categories/${categoryId}`,
         method: 'PUT',
         data,
       }),
@@ -34,7 +34,7 @@ export const bookCategoryApi = api.injectEndpoints({
     }),
     deleteBookCategory: builder.mutation({
       query: ({ categoryId }) => ({
-        url: `/book-categories/${categoryId}`,
+        url: `/library/book-categories/${categoryId}`,
         method: 'DELETE',
       }),
       invalidatesTags: [bookCategoryType.bookCategory],

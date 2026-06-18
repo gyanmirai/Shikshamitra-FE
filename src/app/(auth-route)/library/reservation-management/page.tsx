@@ -1,6 +1,5 @@
-import React from 'react';
-import ReservationManagement from 'src/screens/library/ReservationManagement';
+import { redirect } from 'next/navigation';
 
-const page = () => <ReservationManagement />;
-
-export default page;
+export default function LibraryReservationManagementRedirect() {
+  redirect('/library/book-list');
+}

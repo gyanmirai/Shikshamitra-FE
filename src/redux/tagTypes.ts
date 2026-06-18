@@ -327,6 +327,7 @@ export const libraryChargeType = {
 export const libraryModuleType = {
   books: 'Books',
   copies: 'Copies',
+  copyLabels: 'CopyLabels',
   members: 'Members',
   bookCategory: 'BookCategory',
   bookIssue: 'BookIssue',
@@ -335,6 +336,11 @@ export const libraryModuleType = {
   memberCharges: 'MemberCharges',
   borrowHistory: 'BorrowHistory',
   librarySettings: 'LibrarySettings',
+  dashboard: 'LibraryDashboard',
+  reports: 'LibraryReports',
+  reportExports: 'LibraryReportExports',
+  libraryNotifications: 'LibraryNotifications',
+  libraryNotificationHistory: 'LibraryNotificationHistory',
 } as const;
 
 // ===== Library Settings API (reducerPath: LibrarySettingsApi) =====

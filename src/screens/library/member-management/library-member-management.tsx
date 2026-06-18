@@ -1,13 +1,17 @@
 'use client';
 
+import { toast } from 'sonner';
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Checkbox, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
+import { useSendLibraryNotificationMutation } from 'src/redux/library/notifications-api';
+import { buildLibraryManualNotificationPayload } from 'src/redux/library/library-adapters';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import AddNewMemberDialog from './component/add-new-member-dialog';
@@ -198,11 +202,29 @@ const LibraryMemberManagementScreen = () => {
   };
 
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [sendNotification, sendNotificationState] = useSendLibraryNotificationMutation();
   const sendInstantNotificationDialogValue = useBoolean();
 
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
+    }
+  };
+
+  const handleSendNotification = async (values: any) => {
+    try {
+      await sendNotification(
+        buildLibraryManualNotificationPayload(
+          { ...values, eventType: 'fineDueReminder' },
+          selectedStudents
+        )
+      ).unwrap();
+      toast.success('Notification recorded.');
+      sendInstantNotificationDialogValue.onFalse();
+    } catch (error) {
+      const parsed = parseApiProblemDetail(error);
+      toast.error(parsed.detail);
+      throw error;
     }
   };
   return (
@@ -339,6 +361,8 @@ const LibraryMemberManagementScreen = () => {
           onClose={sendInstantNotificationDialogValue.onFalse}
           data={[]}
           userList={selectedStudents}
+          onSend={handleSendNotification}
+          isSending={sendNotificationState.isLoading}
         />
       )}
 

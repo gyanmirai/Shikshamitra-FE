@@ -1,6 +1,5 @@
-import React from 'react';
-import LibraryReservationManagement from 'src/screens/library/circulation/reservation-management/library-reservation-management';
+import { redirect } from 'next/navigation';
 
-const LibraryReservationCiruculation = () => <LibraryReservationManagement />;
-
-export default LibraryReservationCiruculation;
+export default function LibraryReservationCirculationRedirect() {
+  redirect('/library/book-list');
+}

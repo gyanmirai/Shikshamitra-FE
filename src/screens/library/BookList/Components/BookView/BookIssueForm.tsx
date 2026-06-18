@@ -15,6 +15,8 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { buildIssueBookPayload } from 'src/redux/library/library-adapters';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetMemberDetailsQuery } from 'src/redux/library/libraryMembers/memberManagementApi';
 import {
@@ -62,17 +64,12 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     validationSchema: getIssueBookSchema(currentYear),
     onSubmit: async (values) => {
       try {
-        const payload = {
-          accessionNo: values.accessionNumber,
-          memberId: memberData?.id || values.memberId,
-          issueDate: values.issueDate ? dayjs(values.issueDate).toISOString() : undefined,
-          dueDate: values.dueDate ? dayjs(values.dueDate).toISOString() : undefined,
-        };
-
-        const res = await issueBook(payload);
+        const payload = buildIssueBookPayload(values, memberData?.id || values.memberId);
+        const res = await issueBook({ body: payload });
         if (res.error) {
+          const parsed = parseApiProblemDetail(res.error);
           shikshaMitraToast.error({
-            message: `${editData?.book?.title || ''} book issued failed`,
+            message: parsed.detail,
           });
           return;
         }
@@ -81,7 +78,8 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
         });
         onClose(null, true);
       } catch (error) {
-        console.error(error);
+        const parsed = parseApiProblemDetail(error);
+        shikshaMitraToast.error({ message: parsed.detail });
       }
     },
   });
@@ -747,6 +745,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
           onClick={(e: any) => {
             formik.handleSubmit(e);
           }}
+          disabled={issueBookLoading}
           size="small"
           variant="contained"
           sx={{ minWidth: 120, px: 3 }}

@@ -9,9 +9,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -24,12 +22,10 @@ import type { ILibraryBookData } from './Components/type';
 const IssueReturnBook = () => {
   // State for selected record
   const [, setSelectedRecord] = useState<ILibraryBookData | null>(null);
-  const [reservedRecordToDelete, setReservedRecordToDelete] = useState<any>(null);
 
   // Dialog states
   const issueDialog = useBoolean();
   const returnDialog = useBoolean();
-  const deleteDialog = useBoolean();
 
   // Redux confirm state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -52,7 +48,10 @@ const IssueReturnBook = () => {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      data-testid="library-issue-return-page"
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       <CustomBreadcrumbs
         heading="Issue & Return"
         description={
@@ -67,6 +66,7 @@ const IssueReturnBook = () => {
         action={
           <Box display="flex" gap={1}>
             <Button
+              data-testid="library-issue-open-button"
               onClick={() => issueDialog.onTrue()}
               size="small"
               startIcon={<Iconify icon="octicon:issue-closed-16" width={16} height={10} />}
@@ -76,6 +76,7 @@ const IssueReturnBook = () => {
               Issue
             </Button>
             <Button
+              data-testid="library-return-open-button"
               onClick={() => returnDialog.onTrue()}
               size="small"
               startIcon={<Iconify icon="mdi:arrow-u-left-top" width={16} height={10} />}
@@ -144,47 +145,6 @@ const IssueReturnBook = () => {
       >
         <ReturnBookModal onClose={handleClose} accessionNo="" />
       </CustomDialog>
-
-      {/* Delete Confirmation for Reserved Record */}
-      <ConfirmDialog
-        open={deleteDialog.value}
-        onClose={() => {
-          deleteDialog.onFalse();
-          setTimeout(() => {
-            setReservedRecordToDelete(null);
-          }, 200);
-        }}
-        title="Delete Reservation"
-        content={
-          <>
-            Are you sure you want to delete reservation for{' '}
-            <strong>{reservedRecordToDelete?.memberName}</strong> -{' '}
-            <strong>{reservedRecordToDelete?.bookTitle}</strong>?
-          </>
-        }
-        action={
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={() => {
-              // TODO: Handle delete API call here
-              shikshaMitraToast.success({
-                message: (
-                  <>
-                    Reservation<strong>{reservedRecordToDelete?.bookTitle}</strong> deleted
-                    successfully
-                  </>
-                ),
-              });
-              deleteDialog.onFalse();
-              setReservedRecordToDelete(null);
-            }}
-          >
-            Yes
-          </Button>
-        }
-      />
     </Box>
   );
 };

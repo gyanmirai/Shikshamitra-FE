@@ -1,32 +1,15 @@
-import { useState } from 'react';
+import type { LibraryDashboardOverview } from 'src/redux/library/library-adapters';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Card, Stack, Button, Typography, CardHeader, IconButton } from '@mui/material';
+import { Box, Card, Stack, Typography, CardHeader, IconButton } from '@mui/material';
 
-import AlertsDrawer from './alerts-drawer';
-
-export const DEFAULTERS = [
-  { id: 1, name: 'Rahul', books: 3, days: 5 },
-  { id: 2, name: 'Sneha', books: 2, days: 3 },
-  { id: 3, name: 'Amit', books: 1, days: 10 },
-];
-
-export const OVERDUE_BOOKS = [
-  { id: 1, title: 'Advanced Physics', member: 'Aryan', days: 12 },
-  { id: 2, title: 'History of India', member: 'Priya', days: 8 },
-];
-
-export const HIGH_DEMAND = [
-  { id: 1, title: 'JavaScript (Advanced)', requests: 12 },
-  { id: 2, title: 'Atomic Habits', requests: 8 },
-];
-
-export const LOW_STOCK = [
-  { id: 1, title: 'Introduction to Algorithms', stock: 2 },
-  { id: 2, title: 'Database Systems', stock: 1 },
-];
+export const DEFAULTERS: { id: number; name: string; books: number; days: number }[] = [];
+export const OVERDUE_BOOKS: { id: number; title: string; member: string; days: number }[] = [];
+export const HIGH_DEMAND: { id: number; title: string; requests: number }[] = [];
+export const LOW_STOCK: { id: number; title: string; stock: number }[] = [];
 
 export interface AlertItemProps {
   title: string;
@@ -37,10 +20,30 @@ export interface AlertItemProps {
   isCritical?: boolean;
 }
 
+const severityToStatus = (
+  severity?: string
+): 'success' | 'warning' | 'error' | 'info' | 'default' => {
+  const value = (severity || '').toLowerCase();
+  if (value === 'critical' || value === 'error') return 'error';
+  if (value === 'warning') return 'warning';
+  if (value === 'success') return 'success';
+  if (value === 'info') return 'info';
+  return 'default';
+};
+
 export const getSeverityStatus = (days: number): 'warning' | 'error' | 'default' => {
   if (days >= 8) return 'error';
   if (days >= 3) return 'warning';
   return 'default';
+};
+
+const alertIcon = (type?: string) => {
+  const value = (type || '').toLowerCase();
+  if (value.includes('overdue')) return 'solar:alarm-linear';
+  if (value.includes('reservation')) return 'solar:calendar-mark-linear';
+  if (value.includes('charge')) return 'solar:wallet-money-linear';
+  if (value.includes('stock')) return 'solar:box-linear';
+  return 'solar:info-circle-linear';
 };
 
 export const AlertItem = ({ title, subtitle, info, status, icon, isCritical }: AlertItemProps) => {
@@ -52,6 +55,7 @@ export const AlertItem = ({ title, subtitle, info, status, icon, isCritical }: A
     if (status === 'info') return theme.palette.info.main;
     if (status === 'primary') return theme.palette.primary.main;
     if (status === 'secondary') return theme.palette.secondary.main;
+    if (status === 'success') return theme.palette.success.main;
     return theme.palette.text.secondary;
   };
 
@@ -60,8 +64,8 @@ export const AlertItem = ({ title, subtitle, info, status, icon, isCritical }: A
   const getStatusIcon = () => {
     if (status === 'error' || isCritical) return 'solar:danger-circle-linear';
     if (status === 'warning') return 'solar:clock-circle-linear';
-    if (status === 'info' || status === 'primary') return 'solar:info-circle-linear';
-    return 'solar:check-circle-linear';
+    if (status === 'success') return 'solar:check-circle-linear';
+    return 'solar:info-circle-linear';
   };
 
   return (
@@ -115,164 +119,110 @@ export const AlertItem = ({ title, subtitle, info, status, icon, isCritical }: A
   );
 };
 
-const SummaryStrip = () => (
-  <Stack
-    direction="row"
-    spacing={2}
-    sx={{
-      px: 3,
-      py: 1.5,
-      bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04), // Softer background
-      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-    }}
-  >
-    {[
-      { label: '12 Overdue', icon: 'solar:alarm-linear', color: 'error.main' },
-      { label: '5 High Demand', icon: 'solar:star-linear', color: 'info.main' },
-      { label: '3 Dead Stock', icon: 'solar:ghost-linear', color: 'warning.main' },
-    ].map((item) => (
-      <Stack key={item.label} direction="row" alignItems="center" spacing={0.5}>
-        <Iconify icon={item.icon} width={16} sx={{ color: item.color }} />
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-          {item.label}
-        </Typography>
-      </Stack>
-    ))}
-  </Stack>
-);
-
-const AdminAlerts = () => {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const handleOpenDrawer = () => {
-    setDrawerOpen(true);
-  };
-
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false);
-  };
+const SummaryStrip = ({ overview }: { overview?: LibraryDashboardOverview }) => {
+  const items = [
+    {
+      label: `${overview?.circulation.overdueIssues || 0} Overdue`,
+      icon: 'solar:alarm-linear',
+      color: 'error.main',
+    },
+    {
+      label: `${overview?.reservations.activeReservations || 0} Reservations`,
+      icon: 'solar:calendar-mark-linear',
+      color: 'info.main',
+    },
+    {
+      label: `${overview?.stockTotals.damagedCopies || 0} Damaged`,
+      icon: 'solar:shield-warning-linear',
+      color: 'warning.main',
+    },
+  ];
 
   return (
-    <>
-      <Card
-        sx={{
-          height: '100%',
-          borderRadius: 2,
-          boxShadow: 'none',
-          border: (theme) => `1px solid ${theme.palette.divider}`,
-          mb: 2,
-        }}
-      >
-        <CardHeader
-          title={
-            <Stack direction="row" alignItems="center" spacing={0.5}>
-              <Typography variant="h6">Operational Alerts</Typography>
-              <CustomTooltip
-                title="Important notifications requiring immediate attention"
-                placement="top"
-              >
-                <IconButton size="small" sx={{ p: 0 }}>
-                  <Iconify
-                    icon="solar:info-circle-linear"
-                    width={18}
-                    sx={{ color: 'text.disabled' }}
-                  />
-                </IconButton>
-              </CustomTooltip>
-            </Stack>
-          }
-          subheader="High priority tasks"
-          sx={{ mb: 1, mt: -1, ml: -1 }}
-          action={
-            <Button
-              size="small"
-              color="inherit"
-              endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
-              onClick={handleOpenDrawer}
-            >
-              View All
-            </Button>
-          }
-        />
+    <Stack
+      direction="row"
+      spacing={2}
+      sx={{
+        px: 3,
+        py: 1.5,
+        bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
+        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+        flexWrap: 'wrap',
+      }}
+    >
+      {items.map((item) => (
+        <Stack key={item.label} direction="row" alignItems="center" spacing={0.5}>
+          <Iconify icon={item.icon} width={16} sx={{ color: item.color }} />
+          <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+            {item.label}
+          </Typography>
+        </Stack>
+      ))}
+    </Stack>
+  );
+};
 
-        <SummaryStrip />
+const AdminAlerts = ({ overview }: { overview?: LibraryDashboardOverview }) => {
+  const alerts = overview?.alerts || [];
 
-        <Scrollbar sx={{ px: 1, pb: 1, height: 420 }}>
-          <Stack spacing={0}>
-            <Typography
-              variant="overline"
-              sx={{ color: 'text.disabled', mt: 2, mb: 1, fontWeight: 800, display: 'block' }}
+  return (
+    <Card
+      sx={{
+        height: '100%',
+        borderRadius: 2,
+        boxShadow: 'none',
+        border: (theme) => `1px solid ${theme.palette.divider}`,
+        mb: 2,
+      }}
+    >
+      <CardHeader
+        title={
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Typography variant="h6">Operational Alerts</Typography>
+            <CustomTooltip
+              title="Important Library notifications requiring attention"
+              placement="top"
             >
-              Top Defaulters
-            </Typography>
-            {DEFAULTERS.map((item) => (
-              <AlertItem
-                key={`def-${item.id}`}
-                title={item.name}
-                subtitle={`${item.books} books overdue`}
-                info={`${item.days}d`}
-                status={getSeverityStatus(item.days)}
-                icon="solar:user-rounded-linear"
-              />
-            ))}
-
-            <Typography
-              variant="overline"
-              sx={{ color: 'text.disabled', mt: 3, mb: 1, fontWeight: 800, display: 'block' }}
-            >
-              Overdue &gt; 7 Days
-            </Typography>
-            {OVERDUE_BOOKS.map((item) => (
-              <AlertItem
-                key={`ovr-${item.id}`}
-                title={item.title}
-                subtitle={item.member}
-                info={`${item.days}d`}
-                status="error"
-                isCritical
-                icon="solar:book-bookmark-linear"
-              />
-            ))}
-
-            <Typography
-              variant="overline"
-              sx={{ color: 'text.disabled', mt: 3, mb: 1, fontWeight: 800, display: 'block' }}
-            >
-              High Demand
-            </Typography>
-            {HIGH_DEMAND.map((item) => (
-              <AlertItem
-                key={`dem-${item.id}`}
-                title={item.title}
-                subtitle="Waitlist items"
-                info={`${item.requests} req`}
-                status="info"
-                icon="solar:star-linear"
-              />
-            ))}
-
-            <Typography
-              variant="overline"
-              sx={{ color: 'text.disabled', mt: 3, mb: 1, fontWeight: 800, display: 'block' }}
-            >
-              Low Stock
-            </Typography>
-            {LOW_STOCK.map((item) => (
-              <AlertItem
-                key={`low-${item.id}`}
-                title={item.title}
-                subtitle="Less than 3 copies"
-                info={`${item.stock} left`}
-                status="error"
-                icon="solar:box-linear"
-              />
-            ))}
+              <IconButton size="small" sx={{ p: 0 }}>
+                <Iconify
+                  icon="solar:info-circle-linear"
+                  width={18}
+                  sx={{ color: 'text.disabled' }}
+                />
+              </IconButton>
+            </CustomTooltip>
           </Stack>
-        </Scrollbar>
-      </Card>
+        }
+        subheader="Live backend signals"
+        sx={{ mb: 1, mt: -1, ml: -1 }}
+      />
 
-      <AlertsDrawer open={drawerOpen} onClose={handleCloseDrawer} />
-    </>
+      <SummaryStrip overview={overview} />
+
+      <Scrollbar sx={{ px: 1, pb: 1, height: 420 }}>
+        <Stack spacing={0} sx={{ pt: 2 }}>
+          {alerts.length === 0 ? (
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                No operational alerts right now.
+              </Typography>
+            </Box>
+          ) : (
+            alerts.map((item: any, index: number) => (
+              <AlertItem
+                key={`${item.type}-${index}`}
+                title={item.title}
+                subtitle={item.message}
+                info={item.count ? `${item.count}` : ''}
+                status={severityToStatus(item.severity)}
+                isCritical={severityToStatus(item.severity) === 'error'}
+                icon={alertIcon(item.type)}
+              />
+            ))
+          )}
+        </Stack>
+      </Scrollbar>
+    </Card>
   );
 };
 

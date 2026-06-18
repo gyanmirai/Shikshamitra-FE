@@ -5,6 +5,8 @@ import { expect, type Page, test as setup } from '@playwright/test';
 const authFile = path.join(process.cwd(), 'playwright/.auth/hr-manager.json');
 const defaultHrEmail =
   process.env.E2E_HR_ATTENDANCE_SYNC === '1' ? 'admin-ddvs' : 'hr-manager@ddvs.com';
+const defaultLibraryEmail = process.env.E2E_ADMIN_EMAIL || 'admin-ddvs';
+const defaultEmail = process.env.E2E_LIBRARY === '1' ? defaultLibraryEmail : defaultHrEmail;
 
 setup.setTimeout(120_000);
 
@@ -80,8 +82,8 @@ async function login(page: Page, email: string, password: string) {
 setup('authenticate HR manager', async ({ page }) => {
   await login(
     page,
-    process.env.E2E_HR_EMAIL || defaultHrEmail,
-    process.env.E2E_HR_PASSWORD || 'Temp@123'
+    process.env.E2E_LIBRARY_EMAIL || process.env.E2E_HR_EMAIL || defaultEmail,
+    process.env.E2E_LIBRARY_PASSWORD || process.env.E2E_HR_PASSWORD || 'Temp@123'
   );
 
   await page.evaluate(() => localStorage.setItem('onboarding_completed', 'true'));

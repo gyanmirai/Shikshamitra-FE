@@ -6,7 +6,7 @@ export const librarySettingsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getLibrarySettings: builder.query({
       query: ({ academicYearId, ...params }) => ({
-        url: '/sections',
+        url: '/library/sections',
         method: 'GET',
         params: { academicYearId, ...params },
       }),
@@ -15,7 +15,7 @@ export const librarySettingsApi = api.injectEndpoints({
 
     getBookCategory: builder.query({
       query: ({ academicYearId, ...params }) => ({
-        url: '/api/library/charge-categories',
+        url: '/library/charge-categories',
         method: 'GET',
         params: { academicYearId, ...params },
       }),
@@ -26,7 +26,7 @@ export const librarySettingsApi = api.injectEndpoints({
       query: (data) => {
         const { academicYearId, ...body } = data;
         return {
-          url: '/api/library/charge-categories',
+          url: '/library/charge-categories',
           method: 'POST',
           body,
           params: { academicYearId },
@@ -36,17 +36,17 @@ export const librarySettingsApi = api.injectEndpoints({
     }),
 
     updateChargeCategory: builder.mutation({
-      query: ({ categoryId, data }) => ({
-        url: `/api/library/charge-categories/${categoryId}`,
+      query: ({ categoryId, data, body }) => ({
+        url: `/library/charge-categories/${categoryId}`,
         method: 'PUT',
-        data,
+        body: body ?? data,
       }),
       invalidatesTags: [librarySettingsType.librarySettings],
     }),
 
     deleteChargeCategory: builder.mutation({
       query: ({ categoryId }) => ({
-        url: `/api/library/charge-categories/${categoryId}`,
+        url: `/library/charge-categories/${categoryId}`,
         method: 'DELETE',
       }),
       invalidatesTags: [librarySettingsType.librarySettings],
@@ -54,7 +54,7 @@ export const librarySettingsApi = api.injectEndpoints({
 
     getLibraryTiming: builder.query({
       query: (params) => ({
-        url: '/api/library-hours',
+        url: '/library/library-hours',
         method: 'GET',
         params,
       }),
@@ -65,7 +65,7 @@ export const librarySettingsApi = api.injectEndpoints({
       query: (data) => {
         const { academicYearId, ...body } = data;
         return {
-          url: '/api/library-hours',
+          url: '/library/library-hours',
           method: 'POST',
           body,
           params: { academicYearId },
@@ -76,24 +76,24 @@ export const librarySettingsApi = api.injectEndpoints({
 
     getBorrowingReturnRules: builder.query({
       query: (params) => ({
-        url: `/api/borrowing-rules`,
+        url: `/library/borrowing-rules`,
         method: 'GET',
         params,
       }),
       providesTags: [librarySettingsType.librarySettings],
     }),
     addBorrowingReturnRules: builder.mutation({
-      query: ({ data, academicYearId }) => ({
-        url: `/api/borrowing-rules`,
+      query: ({ data, body, academicYearId }) => ({
+        url: `/library/borrowing-rules`,
         method: 'POST',
-        data,
+        body: body ?? data,
         params: { academicYearId },
       }),
       invalidatesTags: [librarySettingsType.librarySettings],
     }),
     getSectionManagement: builder.query({
       query: ({ academicYearId, ...params }) => ({
-        url: `/api/library/sections`,
+        url: `/library/sections`,
         method: 'GET',
         params: { academicYearId, ...params },
       }),
@@ -101,7 +101,7 @@ export const librarySettingsApi = api.injectEndpoints({
     }),
     getSectionManagementById: builder.query({
       query: ({ sectionId, academicYearId }) => ({
-        url: `/api/library/sections/${sectionId}`,
+        url: `/library/sections/${sectionId}`,
         method: 'GET',
         params: { academicYearId },
       }),
@@ -109,7 +109,7 @@ export const librarySettingsApi = api.injectEndpoints({
     }),
     addSectionManagement: builder.mutation({
       query: ({ academicYearId, body }) => ({
-        url: `/api/library/sections`,
+        url: `/library/sections`,
         method: 'POST',
         body,
         params: { academicYearId },
@@ -117,18 +117,19 @@ export const librarySettingsApi = api.injectEndpoints({
       invalidatesTags: [librarySettingsType.librarySettings],
     }),
     updateSectionManagement: builder.mutation({
-      query: ({ data, sectionId, academicYearId }) => ({
-        url: `/api/library/sections/${sectionId}`,
+      query: ({ data, body, sectionId, academicYearId }) => ({
+        url: `/library/sections/${sectionId}`,
         method: 'PUT',
-        data,
+        body: body ?? data,
         params: { academicYearId },
       }),
       invalidatesTags: [librarySettingsType.librarySettings],
     }),
     deleteSectionManagement: builder.mutation({
-      query: ({ sectionId }) => ({
+      query: ({ sectionId, academicYearId }) => ({
         url: `/library/sections/${sectionId}`,
         method: 'DELETE',
+        params: { academicYearId },
       }),
       invalidatesTags: [librarySettingsType.librarySettings],
     }),

@@ -2,12 +2,16 @@
 
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import { toast } from 'sonner';
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Box, Checkbox } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useSendLibraryNotificationMutation } from 'src/redux/library/notifications-api';
+import { buildLibraryManualNotificationPayload } from 'src/redux/library/library-adapters';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import CommonCtaComponent from '../../component/common-cta-component';
@@ -25,6 +29,7 @@ import type { IReservationData } from '../data/dummy-data-interface';
 const LibraryReservationManagement = () => {
   // State to keep track of selected students in the table
   const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
+  const [sendNotification, sendNotificationState] = useSendLibraryNotificationMutation();
 
   // Object containing boolean states for different dialogs using custom useBoolean hook
   const dialogStates = {
@@ -43,6 +48,23 @@ const LibraryReservationManagement = () => {
   // Helper function to close a specific dialog
   const handleDialogClose = (dialog: keyof typeof dialogStates) => {
     dialogStates[dialog].onFalse();
+  };
+
+  const handleSendNotification = async (values: any) => {
+    try {
+      await sendNotification(
+        buildLibraryManualNotificationPayload(
+          { ...values, eventType: 'reservedBookAvailable' },
+          selectedStudents
+        )
+      ).unwrap();
+      toast.success('Notification recorded.');
+      handleDialogClose('sendNotification');
+    } catch (error) {
+      const parsed = parseApiProblemDetail(error);
+      toast.error(parsed.detail);
+      throw error;
+    }
   };
   const tableColumns = [
     {
@@ -139,6 +161,8 @@ const LibraryReservationManagement = () => {
           onClose={() => handleDialogClose('sendNotification')}
           data={[]}
           userList={selectedStudents}
+          onSend={handleSendNotification}
+          isSending={sendNotificationState.isLoading}
         />
       )}
 

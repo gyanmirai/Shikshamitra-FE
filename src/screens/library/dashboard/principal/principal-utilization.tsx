@@ -1,3 +1,5 @@
+import type { LibraryDashboardOverview } from 'src/redux/library/library-adapters';
+
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { fNumber } from 'src/utils/format-number';
@@ -48,8 +50,15 @@ const MetricItem = ({
   </Stack>
 );
 
-export default function PrincipalUtilization() {
+export default function PrincipalUtilization({
+  overview,
+}: {
+  overview?: LibraryDashboardOverview;
+}) {
   const theme = useTheme();
+  const lowUtilizationSections = (overview?.sectionInventory || []).filter(
+    (section: any) => section.copyCount > 0 && section.utilizationRate <= 10
+  ).length;
 
   return (
     <Card
@@ -64,29 +73,29 @@ export default function PrincipalUtilization() {
         sx={{ py: 1 }}
       >
         <MetricItem
-          label="High Demand Categories"
-          value={fNumber(12)}
+          label="Active Reservations"
+          value={fNumber(overview?.reservations.activeReservations || 0)}
           icon="solar:fire-linear"
           color="error"
         />
 
         <MetricItem
           label="Low Utilization"
-          value={fNumber(5)}
+          value={fNumber(lowUtilizationSections)}
           icon="solar:leaf-linear"
           color="success"
         />
 
         <MetricItem
           label="Overdue Books"
-          value={fNumber(45)}
+          value={fNumber(overview?.circulation.overdueIssues || 0)}
           icon="solar:alarm-add-linear"
           color="warning"
         />
 
         <MetricItem
           label="Books Under Repair"
-          value={fNumber(12)}
+          value={fNumber(overview?.stockTotals.underRepairCopies || 0)}
           icon="solar:medical-kit-linear"
           color="secondary"
         />

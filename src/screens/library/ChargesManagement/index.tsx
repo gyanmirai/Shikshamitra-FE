@@ -76,7 +76,10 @@ const LibraryChargesManagement = () => {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      data-testid="library-charges-page"
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       <CustomBreadcrumbs
         heading="Charges"
         description={
@@ -90,6 +93,7 @@ const LibraryChargesManagement = () => {
         ]}
         action={
           <Button
+            data-testid="library-charge-assign-button"
             onClick={() => addDialog.onTrue()}
             size="small"
             startIcon={<Add />}

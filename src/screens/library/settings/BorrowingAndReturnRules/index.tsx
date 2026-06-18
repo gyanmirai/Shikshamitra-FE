@@ -199,7 +199,12 @@ const BorrowingReturnRules = () => {
   const hasChanges = JSON.stringify(rulesData) !== JSON.stringify(originalRulesData);
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box
+      data-testid="library-settings-borrowing-rules-page"
+      height="100%"
+      display="flex"
+      flexDirection="column"
+    >
       <CustomBreadcrumbs
         heading="Borrowing Rules"
         description="This screen sets the borrowing policies for different member roles, including maximum books allowed, reservation limits, and applicable late return fines."
@@ -221,6 +226,7 @@ const BorrowingReturnRules = () => {
               Reset
             </Button>
             <LoadingButton
+              data-testid="library-settings-borrowing-rules-save-button"
               loading={saveLoading}
               startIcon={!saveLoading ? <Save /> : undefined}
               variant="contained"

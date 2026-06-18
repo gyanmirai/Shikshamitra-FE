@@ -1,15 +1,10 @@
 import type { RootState } from 'src/redux/store';
-import type {
-  IBookCopy,
-  IBookCopyWithBook,
-} from 'src/screens/library/BookManagement/Components/type';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Stack } from '@mui/system';
 import { useSelector } from 'react-redux';
-import debounce from 'src/utils/debounce';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -18,15 +13,17 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
-import libraryDummyData from 'src/json/library/libraryData.json';
 import { DialogScrollContent } from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
-import { useGetAllCopiesQuery } from 'src/redux/library/bookList/copies-api';
+import { buildReturnBookPayload } from 'src/redux/library/library-adapters';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { staticChargeCategories } from 'src/screens/library/ChargesManagement/Components/AssignChargesForm';
+import { useGetLibraryChargeCategoryOptionsQuery } from 'src/redux/library/charges-management/charge-category-api';
+import {
+  useReturnBookMutation,
+  useGetReturnDetailsQuery,
+} from 'src/redux/library/issueAndReturnApi/issueAndReturnApi';
 import {
   Box,
   Grid,
@@ -46,24 +43,72 @@ interface ReturnBookFormProps {
   accessionNo?: string | null;
 }
 
+const hasSelectedCharge = (value?: string) => !!value && value !== 'none' && value !== 'None';
+
+const returnCopyStatusOptions = [
+  { id: 0, name: 'Available' },
+  { id: 4, name: 'Damaged' },
+  { id: 3, name: 'Lost' },
+  { id: 5, name: 'Under Repair' },
+  { id: 6, name: 'Discarded' },
+];
+
 const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [selectedBook, setSelectedBook] = useState<IBookCopyWithBook | null>(null);
-  const [selectedMember, setSelectedMember] = useState<any | null>(null);
-  const [reservationList] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [debouncedAccessionNo, setDebouncedAccessionNo] = useState(accessionNo || '');
   const [expandedBook, setExpandedBook] = useState(false);
   const [expandedMemberAccordion, setExpandedMemberAccordion] = useState(false);
 
-  const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
+  const {
+    data: returnDetails,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetAllMembersQuery,
+    currentQueryAndMutation: useGetReturnDetailsQuery,
+    params: { accessionNo: debouncedAccessionNo },
+    options: { skip: !debouncedAccessionNo },
   });
-  const { data: copies } = useQueryAndMutation({
+
+  const { data: chargeCategoryData } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetAllCopiesQuery,
+    currentQueryAndMutation: useGetLibraryChargeCategoryOptionsQuery,
+    params: { academicYearId: currentYear?.id, pageSize: 100 },
   });
-  const [books] = useState(libraryDummyData.books);
+
+  const [returnBook, { isLoading: isReturnLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useReturnBookMutation,
+  });
+
+  const selectedBook = useMemo(
+    () =>
+      returnDetails?.bookDetails
+        ? {
+            accessionNo: returnDetails.bookDetails.accessionNo,
+            issueDate: returnDetails.bookDetails.issueDate,
+            book: {
+              title: returnDetails.bookDetails.bookTitle,
+              author: returnDetails.bookDetails.author,
+              isbn: returnDetails.bookDetails.isbn,
+              publisher: returnDetails.bookDetails.publisher,
+              addedOn: returnDetails.bookDetails.addedOn,
+              createdOn: returnDetails.bookDetails.addedOn,
+              language: returnDetails.bookDetails.language,
+              edition: returnDetails.bookDetails.edition,
+              category: returnDetails.bookDetails.category,
+              numberOfPages: returnDetails.bookDetails.pages,
+              coverImage: returnDetails.bookDetails.coverImage,
+            },
+          }
+        : null,
+    [returnDetails?.bookDetails]
+  );
+  const selectedMember = returnDetails?.memberDetails || null;
+  const chargeCategories = useMemo(
+    () => [{ id: 'none', name: 'None', amount: '', isFixed: false }, ...(chargeCategoryData || [])],
+    [chargeCategoryData]
+  );
 
   // formik setup
   const formik = useFormik({
@@ -74,6 +119,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
       returnDate: dayjs(),
       fineDueDate: null,
       remarks: '',
+      copyStatus: 0,
     },
     validationSchema: Yup.object({
       accessionNo: Yup.string().required('Accession No. is required'),
@@ -97,7 +143,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
           (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
         ),
       fineDueDate: Yup.mixed().when('chargeCategory', {
-        is: (val: string) => !!val && val !== 'none',
+        is: hasSelectedCharge,
         then: (schema) =>
           schema
             .required('Fine Due Date is required')
@@ -123,67 +169,53 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
         otherwise: (schema) => schema.nullable(),
       }),
       amount: Yup.string().when('chargeCategory', {
-        is: (val: string) => !!val && val !== 'none',
+        is: hasSelectedCharge,
         then: (schema) => schema.required('Amount is required'),
         otherwise: (schema) => schema.nullable(),
       }),
       remarks: Yup.string()
         .transform((value) => (value ? value.trim() : value)) // Automatically trim the value
         .when('chargeCategory', {
-          is: (val: string) => !!val && val !== 'none',
+          is: hasSelectedCharge,
           then: (schema) =>
             schema.required('Remarks is required').min(1, 'Remarks must have at least 1 character'),
           otherwise: (schema) => schema.nullable(),
         }),
     }),
-    onSubmit: (values) => {
-      shikshaMitraToast.success({
-        message: `Book with accession no. ${values.accessionNo} returned successfully.`,
-      });
-      onClose(null, true);
+    onSubmit: async (values) => {
+      if (!selectedMember?.id) {
+        shikshaMitraToast.error({ message: 'Search a valid issued accession number first.' });
+        return;
+      }
+
+      try {
+        const result = await returnBook({
+          body: buildReturnBookPayload(values, selectedMember.id),
+        });
+
+        if (result?.error) {
+          const parsed = parseApiProblemDetail(result.error);
+          shikshaMitraToast.error({ message: parsed.detail });
+          return;
+        }
+
+        shikshaMitraToast.success({
+          message: `Book with accession no. ${values.accessionNo} returned successfully.`,
+        });
+        onClose(null, true);
+      } catch (error) {
+        const parsed = parseApiProblemDetail(error);
+        shikshaMitraToast.error({ message: parsed.detail });
+      }
     },
   });
 
   const handleSearchBookForReturn = (value: string) => {
     formik.setFieldValue('accessionNo', value);
-    if (!value) {
-      setSelectedBook(null);
-      setSelectedMember(null);
-      return;
-    }
-
-    setLoading(true);
-    debounce(() => {
-      const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
-      const foundBook = foundCopy
-        ? {
-            ...foundCopy,
-            book: books?.find((b) => b.id === foundCopy.bookId),
-          }
-        : null;
-
-      if (foundBook) {
-        if (foundBook.status !== 1) {
-          // only proceed if book is currently issued
-          shikshaMitraToast.error({
-            message: `Book "${foundBook.book.title}" is not currently issued.`,
-          });
-          setSelectedBook(null);
-          setSelectedMember(null);
-        } else {
-          setSelectedBook(foundBook);
-
-          const foundMember = memberData?.find(
-            (member: any) => member.memberId?.toLowerCase() === foundBook.memberId?.toLowerCase()
-          );
-          setSelectedMember(foundMember || null);
-        }
-      } else {
-        setSelectedBook(null);
-        setSelectedMember(null);
-      }
-      setLoading(false);
-    }, 1000);
+    window.clearTimeout((handleSearchBookForReturn as any).timer);
+    (handleSearchBookForReturn as any).timer = window.setTimeout(() => {
+      setDebouncedAccessionNo(value.trim());
+    }, 600);
   };
 
   // Auto search when accession number is passed as prop
@@ -288,7 +320,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
             </Grid>
           )}
 
-          {loading ? (
+          {isLoading || isFetching ? (
             <CircularProgress size={20} />
           ) : selectedBook ? (
             <>
@@ -686,14 +718,11 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                 >
                   <CustomSelect
                     label="Charge Category"
-                    options={staticChargeCategories || []}
+                    options={chargeCategories}
                     value={formik.values.chargeCategory}
                     onChange={(val) => {
                       formik.setFieldValue('chargeCategory', val);
-                      // Find selected charge category and set its amount
-                      const selectedCategory = (staticChargeCategories || []).find(
-                        (cat: any) => cat.id === val
-                      );
+                      const selectedCategory = chargeCategories.find((cat: any) => cat.id === val);
                       if (selectedCategory && selectedCategory.amount !== undefined) {
                         formik.setFieldValue('amount', selectedCategory.amount);
                       }
@@ -708,9 +737,20 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                   />
                 </ShakingTextField>
               </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CustomSelect
+                  label="Copy Status After Return"
+                  options={returnCopyStatusOptions}
+                  value={formik.values.copyStatus}
+                  onChange={(val) => formik.setFieldValue('copyStatus', val)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
 
               {/* Amount */}
-              {formik.values.chargeCategory && formik.values.chargeCategory !== 'none' && (
+              {hasSelectedCharge(formik.values.chargeCategory) && (
                 <>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
@@ -721,7 +761,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                         name="amount"
                         value={formik.values.amount}
                         disabled={
-                          !!(staticChargeCategories || []).find(
+                          !!chargeCategories.find(
                             (cat: any) => cat.id === formik.values.chargeCategory && cat.isFixed
                           )
                         }
@@ -777,79 +817,6 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                       />
                     </ShakingTextField>
                   </Grid>
-                  <Grid size={12}>
-                    {reservationList?.length ? (
-                      <>
-                        <Typography variant="subtitle1">Reserved List</Typography>
-                        <CustomizableTable
-                          tableId="reserved-members-table"
-                          noDataText="No Reserved Members Found"
-                          isLoading={memberLoading}
-                          columns={[
-                            { id: 'memberId', label: 'Member ID', align: 'left', sticky: true },
-                            { id: 'name', label: 'Member Name', align: 'left' },
-                            { id: 'role', label: 'Role', align: 'left' },
-                            { id: 'class', label: 'Class', align: 'left' },
-                            { id: 'division', label: 'Division', align: 'left' },
-                            { id: 'rollNo', label: 'Roll No', align: 'left' },
-                            { id: 'grNo', label: 'GR No', align: 'left' },
-                            {
-                              id: 'accessionNo',
-                              label: 'Accession No',
-                              align: 'left',
-                            },
-                            {
-                              id: 'reservedBook',
-                              label: 'Reserved Book',
-                              align: 'left',
-                              render: (value) => (
-                                <Typography variant="caption" fontSize="13px">
-                                  {typeof value === 'object' ? value?.title || '-' : value || '-'}
-                                </Typography>
-                              ),
-                            },
-                            {
-                              id: 'requestedDate',
-                              label: 'Requested Date',
-                              align: 'left',
-                              filterType: 'date',
-                              render: (value) => (
-                                <Typography variant="caption" fontSize="13px">
-                                  {dayjs(value).format('DD-MM-YYYY')}
-                                </Typography>
-                              ),
-                            },
-                            {
-                              id: 'reserveDueDate',
-                              label: 'Reserve Due Date',
-                              align: 'left',
-                              filterType: 'date',
-                              render: (value) => (
-                                <Typography variant="caption" fontSize="13px">
-                                  {dayjs(value).format('DD-MM-YYYY')}
-                                </Typography>
-                              ),
-                            },
-                          ]}
-                          data={reservationList || []}
-                        />
-                      </>
-                    ) : (
-                      <Grid size={{ xs: 12 }}>
-                        <div
-                          style={{
-                            padding: '12px',
-                            borderRadius: '4px',
-                            backgroundColor: '#e3f2fd',
-                            color: '#2196f3',
-                            textAlign: 'center',
-                          }}
-                        >
-                          No reservations yet
-                        </div>
-                      </Grid>
-                    )}
-                  </Grid>
                 </>
               )}
             </>
@@ -871,6 +838,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          disabled={isReturnLoading || !selectedBook || !selectedMember}
           startIcon={<Iconify icon="mdi:arrow-u-left-top" width={16} height={16} />}
           sx={{ minWidth: 120, px: 3 }}
         >

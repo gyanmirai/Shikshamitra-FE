@@ -1,24 +1,26 @@
 import { libraryModuleType } from 'src/redux/tagTypes';
 
 import { libraryModuleApi } from '../libraryModuleApi';
+import { mapLibraryMemberDto, toLibraryPaginatedList } from '../library-adapters';
 
 export const memberManagementApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({
-    getMembers: builder.query({
+    getLibraryMembers: builder.query({
       query: (params) => ({
         url: '/library/members',
         method: 'GET',
         params,
       }),
+      transformResponse: (response) => toLibraryPaginatedList(response, mapLibraryMemberDto),
       providesTags: [libraryModuleType.members],
     }),
 
     getMemberDetails: builder.query({
-      query: ({ memberId, academicYearId }) => ({
+      query: ({ memberId }) => ({
         url: `/library/members/${memberId}`,
         method: 'GET',
-        params: { academicYearId },
       }),
+      transformResponse: mapLibraryMemberDto,
       providesTags: (result, error, { memberId }) => [
         { type: libraryModuleType.members, id: memberId },
       ],
@@ -26,18 +28,20 @@ export const memberManagementApi = libraryModuleApi.injectEndpoints({
 
     getMemberBorrowedBooks: builder.query({
       query: ({ memberId, ...params }) => ({
-        url: `/library/members/${memberId}/borrowed`,
+        url: `/library/members/${memberId}/borrowed-books`,
         method: 'GET',
         params,
       }),
+      transformResponse: (response) => toLibraryPaginatedList(response),
     }),
 
     getMemberReservedBooks: builder.query({
       query: ({ memberId, ...params }) => ({
-        url: `/library/members/${memberId}/reserved`,
+        url: `/library/members/${memberId}/reserved-books`,
         method: 'GET',
         params,
       }),
+      transformResponse: (response) => toLibraryPaginatedList(response),
     }),
 
     getMemberCharges: builder.query({
@@ -46,6 +50,7 @@ export const memberManagementApi = libraryModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
+      transformResponse: (response) => toLibraryPaginatedList(response),
     }),
 
     getMemberBorrowHistory: builder.query({
@@ -54,13 +59,14 @@ export const memberManagementApi = libraryModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
+      transformResponse: (response) => toLibraryPaginatedList(response),
     }),
   }),
   overrideExisting: false,
 });
 
 export const {
-  useGetMembersQuery,
+  useGetLibraryMembersQuery,
   useGetMemberDetailsQuery,
   useGetMemberBorrowedBooksQuery,
   useGetMemberReservedBooksQuery,

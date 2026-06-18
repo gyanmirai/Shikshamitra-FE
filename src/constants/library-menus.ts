@@ -1,7 +1,6 @@
 import { libraryPath } from 'src/routes/paths';
 
 import menuIconView from './icon-view';
-import { defaultModulePermissionName } from './student-menu';
 
 const defaultLibraryPermissionName = 'Library.';
 
@@ -24,21 +23,21 @@ export const libraryPaths = {
 };
 
 export const libraryPermissions = {
-  root: `${defaultModulePermissionName}Library`,
-  dashboard: `${defaultModulePermissionName}${defaultLibraryPermissionName}Dashboard`,
-  allBooks: `${defaultModulePermissionName}${defaultLibraryPermissionName}AllBooks`,
-  issueReturn: `${defaultModulePermissionName}${defaultLibraryPermissionName}IssueReturn`,
-  members: `${defaultModulePermissionName}${defaultLibraryPermissionName}LibraryMembers`,
-  charges: `${defaultModulePermissionName}${defaultLibraryPermissionName}Charges`,
-  reports: `${defaultModulePermissionName}${defaultLibraryPermissionName}Reports`,
-  notification: `${defaultModulePermissionName}${defaultLibraryPermissionName}Notification`,
+  root: 'Library',
+  dashboard: `${defaultLibraryPermissionName}Dashboard.View`,
+  allBooks: `${defaultLibraryPermissionName}AllBooks.View`,
+  issueReturn: `${defaultLibraryPermissionName}IssueReturn.View`,
+  members: `${defaultLibraryPermissionName}LibraryMembers.View`,
+  charges: `${defaultLibraryPermissionName}Charges.View`,
+  reports: `${defaultLibraryPermissionName}Reports.View`,
+  notification: `${defaultLibraryPermissionName}Notification.View`,
   settings: {
-    root: `${defaultModulePermissionName}${defaultLibraryPermissionName}Settings`,
-    bookCategories: `${defaultLibraryPermissionName}Settings.BookCategories`,
-    chargeCategories: `${defaultLibraryPermissionName}Settings.ChargesCategories`,
-    libraryHours: `${defaultLibraryPermissionName}Settings.LibraryHours`,
-    borrowingRules: `${defaultLibraryPermissionName}Settings.BorrowingRules`,
-    sectionManagement: `${defaultLibraryPermissionName}Settings.SectionManagement`,
+    root: `${defaultLibraryPermissionName}Settings.View`,
+    bookCategories: `${defaultLibraryPermissionName}Settings.BookCategories.View`,
+    chargeCategories: `${defaultLibraryPermissionName}Settings.ChargesCategories.View`,
+    libraryHours: `${defaultLibraryPermissionName}Settings.LibraryHours.View`,
+    borrowingRules: `${defaultLibraryPermissionName}Settings.BorrowingRules.View`,
+    sectionManagement: `${defaultLibraryPermissionName}Settings.SectionManagement.View`,
   },
 };
 
