@@ -57,8 +57,15 @@ const GradeEntryTable = ({
     },
   });
 
+  const targetData = useMemo(() => {
+    if (!gradingData) return null;
+    return (gradingData as any).data && 'items' in (gradingData as any).data
+      ? (gradingData as any).data
+      : gradingData;
+  }, [gradingData]);
+
   const tableData = useMemo<IExamMarkItem[]>(() => {
-    const raw: any[] = gradingData?.items ?? [];
+    const raw: any[] = targetData?.items ?? [];
     return raw.map((item: any) => ({
       ...item,
       id: item.id ?? item.studentId ?? '',
@@ -66,7 +73,7 @@ const GradeEntryTable = ({
       marks: item.obtainedMarks ?? item.marks ?? null,
       passingMarks: item.passingMarks ?? null,
     }));
-  }, [gradingData]);
+  }, [targetData]);
 
   // Notify parent whether all students have marks assigned (status === 1)
   useEffect(() => {
@@ -77,23 +84,34 @@ const GradeEntryTable = ({
 
   // Emit workflow flags to parent whenever the API response changes
   useEffect(() => {
-    if (!onWorkflowFlagsChange || !gradingData) return;
+    if (!onWorkflowFlagsChange) return;
+    if (!targetData) {
+      onWorkflowFlagsChange({
+        workflowStatus: 0,
+        isDraft: true,
+        isSubmitted: false,
+        isVerified: false,
+        isPublished: false,
+        isMarksPublish: false,
+      });
+      return;
+    }
     const flags: IExamMarksWorkflowFlags = {
-      workflowStatus: gradingData.workflowStatus ?? 0,
-      isDraft: gradingData.isDraft ?? true,
-      isSubmitted: gradingData.isSubmitted ?? false,
-      isVerified: gradingData.isVerified ?? false,
-      isPublished: gradingData.isPublished ?? false,
-      isMarksPublish: gradingData.isMarksPublish ?? false,
+      workflowStatus: targetData.workflowStatus ?? 0,
+      isDraft: targetData.isDraft ?? true,
+      isSubmitted: targetData.isSubmitted ?? false,
+      isVerified: targetData.isVerified ?? false,
+      isPublished: targetData.isPublished ?? false,
+      isMarksPublish: targetData.isMarksPublish ?? false,
     };
     onWorkflowFlagsChange(flags);
-  }, [gradingData, onWorkflowFlagsChange]);
+  }, [targetData, onWorkflowFlagsChange]);
 
   // Compute and emit analytics stats to parent
   useEffect(() => {
     if (!onStatsChange) return;
     const assigned = tableData.filter((item) => item.status === 1 && item.marks != null);
-    const totalCount = gradingData?.totalCount ?? tableData.length;
+    const totalCount = targetData?.totalCount ?? tableData.length;
     const pendingCount = totalCount - assigned.length;
 
     if (assigned.length === 0) {
@@ -135,7 +153,7 @@ const GradeEntryTable = ({
       pendingCount,
       totalCount,
     });
-  }, [tableData, gradingData, onStatsChange]);
+  }, [tableData, targetData, onStatsChange]);
 
   return (
     <CustomizableTable

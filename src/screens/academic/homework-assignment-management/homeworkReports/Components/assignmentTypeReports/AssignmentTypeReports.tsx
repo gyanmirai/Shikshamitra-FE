@@ -23,6 +23,7 @@ import { useCreateAcademicReportExportMutation } from 'src/redux/academicAPI/Aca
 import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
+import CurriculumReportPreviewDrawer from 'src/screens/academic/curriculum-management/reports/CurriculumReportPreviewDrawer';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   AssignmentReportTitle,
@@ -31,7 +32,6 @@ import {
 } from 'src/enums/assignment-wise-report';
 import { useTeacherSelection } from 'src/screens/academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/hooks/useTeacherSelection';
 
-import HomeworkReportPreviewDrawer from '../HomeworkReportPreviewDrawer';
 import { getAssignmentValidationSchema } from './AssignmentTypeReportValidation';
 
 type EmployeeOption = { id: string; label: string };
@@ -805,7 +805,7 @@ const AssignmentManagementReports = ({
           </Box>
         </form>
       </Card>
-      <HomeworkReportPreviewDrawer
+      <CurriculumReportPreviewDrawer
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         reportRequest={reportRequest}

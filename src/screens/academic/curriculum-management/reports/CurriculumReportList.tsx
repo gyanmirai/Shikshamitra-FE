@@ -9,13 +9,14 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useRef, useState, useCallback } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Chip, Button, Tooltip, IconButton } from '@mui/material';
+import { CurriculumReportApiTypeMap } from 'src/enums/curriuculum-reports';
 import {
   useGetAcademicReportExportsQuery,
   useLazyDownloadAcademicReportQuery,
@@ -23,6 +24,7 @@ import {
 } from 'src/redux/academicAPI/AcademicReportApi';
 
 import CurriculumReports from './CurriculumReports';
+import CurriculumReportPreviewDrawer from './CurriculumReportPreviewDrawer';
 
 const STATUS_COLOR: Record<string, 'default' | 'primary' | 'success' | 'error' | 'warning'> = {
   Queued: 'default',
@@ -127,7 +129,34 @@ const CurriculumReportList = () => {
     [downloadingJobId, pollJobStatus, saveFile, stopPolling, triggerDownload]
   );
 
-  const rows = Array.isArray(exportsData) ? exportsData : [];
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [selectedReportRequest, setSelectedReportRequest] = useState<any>(null);
+  const [selectedReportTitle, setSelectedReportTitle] = useState('');
+  const handleView = (row: any) => {
+    try {
+      let requestPayload: any = {};
+      if (row.requestJson && row.requestJson !== '{}') {
+        requestPayload = JSON.parse(row.requestJson);
+      }
+      if (!requestPayload.reportType) {
+        requestPayload.reportType = row.reportType;
+      }
+      if (!requestPayload.filters) {
+        requestPayload.filters = {};
+      }
+      setSelectedReportRequest(requestPayload);
+      setSelectedReportTitle(row.reportType);
+      setPreviewOpen(true);
+    } catch (e) {
+      toast.error('Failed to parse report parameters.');
+    }
+  };
+
+  const rows = useMemo(() => {
+    const allExports = Array.isArray(exportsData) ? exportsData : [];
+    const curriculumReportTypes = Object.values(CurriculumReportApiTypeMap);
+    return allExports.filter((job: any) => curriculumReportTypes.includes(job.reportType));
+  }, [exportsData]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -228,7 +257,7 @@ const CurriculumReportList = () => {
             {
               label: 'Action',
               id: 'id',
-              minWidth: '60px',
+              minWidth: '80px',
               align: 'center',
               isFilter: false,
               isSort: false,
@@ -242,39 +271,54 @@ const CurriculumReportList = () => {
                   row.status === 'Queued' ||
                   row.status === 'Processing';
                 return (
-                  <Tooltip
-                    title={
-                      row.status === 'Failed'
-                        ? (row.errorMessage ?? 'Export failed')
-                        : isThisDownloading
-                          ? 'Downloading...'
-                          : 'Download'
-                    }
-                  >
-                    <span>
-                      <IconButton
-                        size="small"
-                        disabled={!canDownload || !!downloadingJobId}
-                        onClick={() => handleDownload(value, row.status)}
-                      >
-                        <Iconify
-                          icon={
-                            isThisDownloading
-                              ? 'eos-icons:loading'
-                              : row.status === 'Failed'
-                                ? 'mdi:alert-circle-outline'
-                                : GlobalIcons.report
-                          }
-                        />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Tooltip title="View">
+                      <span>
+                        <IconButton size="small" onClick={() => handleView(row)} sx={{ mr: 0.5 }}>
+                          <Iconify icon={GlobalIcons.eye} />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip
+                      title={
+                        row.status === 'Failed'
+                          ? (row.errorMessage ?? 'Export failed')
+                          : isThisDownloading
+                            ? 'Downloading...'
+                            : 'Download'
+                      }
+                    >
+                      <span>
+                        <IconButton
+                          size="small"
+                          disabled={!canDownload || !!downloadingJobId}
+                          onClick={() => handleDownload(value, row.status)}
+                        >
+                          <Iconify
+                            icon={
+                              isThisDownloading
+                                ? 'eos-icons:loading'
+                                : row.status === 'Failed'
+                                  ? 'mdi:alert-circle-outline'
+                                  : GlobalIcons.report
+                            }
+                          />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </Box>
                 );
               },
             },
           ]}
         />
       )}
+      <CurriculumReportPreviewDrawer
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        reportRequest={selectedReportRequest}
+        reportTitle={selectedReportTitle}
+      />
     </Box>
   );
 };

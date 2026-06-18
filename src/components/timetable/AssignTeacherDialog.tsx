@@ -6,12 +6,14 @@ import { useGetSubjectAssignmentByIdQuery } from 'src/redux/academicAPI/Curricul
 import {
   Box,
   Button,
+  Checkbox,
   TextField,
   Typography,
   Autocomplete,
   DialogContent,
   DialogActions,
   CircularProgress,
+  FormControlLabel,
 } from '@mui/material';
 
 import { Iconify } from '../iconify';
@@ -35,7 +37,14 @@ interface AssignTeacherDialogProps {
   standardId: string;
   divisionId: string;
   onClose: () => void;
-  onSave: (day: DayOfWeek, slotIndex: number, updatedSubjects: SlotSubject[]) => void;
+  onSave: (
+    day: DayOfWeek,
+    slotIndex: number,
+    updatedSubjects: SlotSubject[],
+    bulkOptions?: {
+      applyTeacherToAllSubjectSlots: Record<string, boolean>;
+    }
+  ) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -208,7 +217,11 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
   onSave,
 }) => {
   const [selectedIds, setSelectedIds] = useState<Record<string, string>>({});
+  const [selectedNames, setSelectedNames] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [applyTeacherToAllSubjectSlots, setApplyTeacherToAllSubjectSlots] = useState<
+    Record<string, boolean>
+  >({});
 
   const [assignTeachers, { isLoading: isAssigningTeachers }] = useQueryAndMutation({
     type: 'mutation',
@@ -220,11 +233,17 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
   if (open !== prevRef.current) {
     prevRef.current = open;
     if (open) {
-      const initial: Record<string, string> = {};
+      const initialIds: Record<string, string> = {};
+      const initialNames: Record<string, string> = {};
       splitPipeSubjects(open.subjects).forEach((sub) => {
-        if (sub.teacherId) initial[sub.subjectId] = sub.teacherId;
+        if (sub.teacherId) {
+          initialIds[sub.subjectId] = sub.teacherId;
+          initialNames[sub.subjectId] = sub.teacherName ?? '';
+        }
       });
-      setSelectedIds(initial);
+      setSelectedIds(initialIds);
+      setSelectedNames(initialNames);
+      setApplyTeacherToAllSubjectSlots({});
     }
   }
 
@@ -232,6 +251,7 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
 
   const handleChange = useCallback((subjectId: string, value: TeacherOption | null) => {
     setSelectedIds((prev) => ({ ...prev, [subjectId]: value?.id ?? '' }));
+    setSelectedNames((prev) => ({ ...prev, [subjectId]: value?.name ?? '' }));
   }, []);
 
   const handleSave = async () => {
@@ -279,12 +299,13 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
     const updatedSubjects: SlotSubject[] = splitSubjects.map((sub) => ({
       ...sub,
       teacherId: selectedIds[sub.subjectId] || undefined,
-      teacherName: undefined,
+      teacherName: selectedNames[sub.subjectId] || undefined,
     }));
 
     if (standardId && divisionId) {
       const currentSlot = slots[day]?.[slotIndex];
       if (currentSlot) {
+        // Only call API for the current slot to prevent backend lock issues and rate-limiting
         const subjectsPayload = splitSubjects
           .map((sub) => {
             const selectedTeacherId = selectedIds[sub.subjectId];
@@ -310,13 +331,16 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
               subjects: subjectsPayload,
             }).unwrap();
           } catch {
-            // API errors handled globally
+            // API errors are handled globally
+            return;
           }
         }
       }
     }
 
-    onSave(day, slotIndex, updatedSubjects);
+    onSave(day, slotIndex, updatedSubjects, {
+      applyTeacherToAllSubjectSlots,
+    });
     onClose();
   };
 
@@ -329,10 +353,18 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
       title="Assign Teacher"
     >
       <DialogContent sx={{ pb: 2 }}>
-        <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
           {splitSubjects.length > 0 ? (
             splitSubjects.map((sub) => (
-              <Box key={sub.subjectId}>
+              <Box
+                key={sub.subjectId}
+                sx={{
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  pb: 2,
+                  '&:last-child': { borderBottom: 'none', pb: 0 },
+                }}
+              >
                 <SubjectTeacherRow
                   sub={sub}
                   selectedId={selectedIds[sub.subjectId]}
@@ -347,6 +379,26 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
                       });
                   }}
                   error={errors[sub.subjectId]}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={!!applyTeacherToAllSubjectSlots[sub.subjectId]}
+                      onChange={(e) => {
+                        setApplyTeacherToAllSubjectSlots((prev) => ({
+                          ...prev,
+                          [sub.subjectId]: e.target.checked,
+                        }));
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
+                      Apply teacher to all slots of this subject
+                    </Typography>
+                  }
+                  sx={{ mt: 1.5 }}
                 />
               </Box>
             ))

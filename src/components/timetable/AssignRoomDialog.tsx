@@ -6,11 +6,13 @@ import { useAssignRoomsMutation } from 'src/redux/academicAPI/timetableApi/timet
 import {
   Box,
   Button,
+  Checkbox,
   TextField,
   Typography,
   Autocomplete,
   DialogContent,
   DialogActions,
+  FormControlLabel,
 } from '@mui/material';
 
 import { Iconify } from '../iconify';
@@ -35,7 +37,15 @@ interface AssignRoomDialogProps {
   standardId: string;
   divisionId: string;
   onClose: () => void;
-  onSave: (day: DayOfWeek, slotIndex: number, updatedSubjects: SlotSubject[]) => void;
+  onSave: (
+    day: DayOfWeek,
+    slotIndex: number,
+    updatedSubjects: SlotSubject[],
+    bulkOptions?: {
+      applyToAllSlots: Record<string, boolean>;
+      applyToAllSubjectSlots: Record<string, boolean>;
+    }
+  ) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -98,6 +108,8 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
 
   const [selectedIds, setSelectedIds] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [applyToAllSlots, setApplyToAllSlots] = useState<Record<string, boolean>>({});
+  const [applyToAllSubjectSlots, setApplyToAllSubjectSlots] = useState<Record<string, boolean>>({});
 
   // Reset selections when a new assignment is opened
   const prevRef = React.useRef<RoomAssignment | null>(null);
@@ -109,6 +121,8 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
         if (sub.roomId) initial[sub.subjectId] = sub.roomId;
       });
       setSelectedIds(initial);
+      setApplyToAllSlots({});
+      setApplyToAllSubjectSlots({});
     }
   }
 
@@ -175,6 +189,7 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
     if (standardId && divisionId) {
       const currentSlot = slots[day]?.[slotIndex];
       if (currentSlot) {
+        // Only call API for the current slot to prevent backend lock issues and rate-limiting
         const subjectsPayload = splitSubjects
           .map((sub) => {
             const selectedRoomId = selectedIds[sub.subjectId];
@@ -198,23 +213,35 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
               subjects: subjectsPayload,
             }).unwrap();
           } catch {
-            // API errors are handled globally; local state is still updated
+            // API errors are handled globally
+            return;
           }
         }
       }
     }
 
-    onSave(day, slotIndex, updatedSubjects);
+    onSave(day, slotIndex, updatedSubjects, {
+      applyToAllSlots,
+      applyToAllSubjectSlots,
+    });
     onClose();
   };
 
   return (
     <CustomDialog open={!!open} handleClose={onClose} maxWidth="xs" fullWidth title="Assign Room">
       <DialogContent sx={{ pb: 2 }}>
-        <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
           {splitSubjects.length > 0 ? (
             splitSubjects.map((sub) => (
-              <Box key={sub.subjectId}>
+              <Box
+                key={sub.subjectId}
+                sx={{
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  pb: 2,
+                  '&:last-child': { borderBottom: 'none', pb: 0 },
+                }}
+              >
                 <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
                   For {sub.name} :
                 </Typography>
@@ -247,6 +274,54 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
                     </CustomTooltip>
                   )}
                 />
+                <Box sx={{ display: 'flex', flexDirection: 'column', mt: 1.5, gap: 0.5 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={!!applyToAllSubjectSlots[sub.subjectId]}
+                        onChange={(e) => {
+                          const { checked } = e.target;
+                          setApplyToAllSubjectSlots((prev) => ({
+                            ...prev,
+                            [sub.subjectId]: checked,
+                          }));
+                          if (checked) {
+                            setApplyToAllSlots((prev) => ({ ...prev, [sub.subjectId]: false }));
+                          }
+                        }}
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
+                        Apply room to all slots of this subject
+                      </Typography>
+                    }
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={!!applyToAllSlots[sub.subjectId]}
+                        onChange={(e) => {
+                          const { checked } = e.target;
+                          setApplyToAllSlots((prev) => ({ ...prev, [sub.subjectId]: checked }));
+                          if (checked) {
+                            setApplyToAllSubjectSlots((prev) => ({
+                              ...prev,
+                              [sub.subjectId]: false,
+                            }));
+                          }
+                        }}
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
+                        Apply room to all slots in the timetable
+                      </Typography>
+                    }
+                  />
+                </Box>
               </Box>
             ))
           ) : (

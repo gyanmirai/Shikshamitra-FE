@@ -321,8 +321,17 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     setRoomDialog({ day, slotIndex: parseInt(slotId, 10), subjects: slot.subjects });
   };
 
-  const handleTeacherSave = (day: DayOfWeek, slotIndex: number, updatedSubjects: SlotSubject[]) => {
+  const handleTeacherSave = (
+    day: DayOfWeek,
+    slotIndex: number,
+    updatedSubjects: SlotSubject[],
+    bulkOptions?: {
+      applyTeacherToAllSubjectSlots: Record<string, boolean>;
+    }
+  ) => {
     const newWeeklySlots = { ...slots };
+
+    // Update current slot
     newWeeklySlots[day] = newWeeklySlots[day].map((slot, index) => {
       if (index !== slotIndex) return slot;
       const single = updatedSubjects.length === 1 ? updatedSubjects[0] : null;
@@ -336,11 +345,80 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
           : slot._attachedSubject;
       return { ...slot, subjects: updatedSubjects, _attachedSubject: updatedAttached };
     });
+
+    // Apply bulk options
+    if (bulkOptions?.applyTeacherToAllSubjectSlots) {
+      const { applyTeacherToAllSubjectSlots } = bulkOptions;
+
+      updatedSubjects.forEach((sub) => {
+        const rawSubId = sub.subjectId.includes('_part_')
+          ? sub.subjectId.split('_part_')[0]
+          : sub.subjectId;
+
+        if (applyTeacherToAllSubjectSlots[sub.subjectId]) {
+          Object.keys(newWeeklySlots).forEach((d) => {
+            const dayKey = d as DayOfWeek;
+            newWeeklySlots[dayKey] = newWeeklySlots[dayKey].map((slot) => {
+              if (slot.type !== 'LECTURE' || !slot.subjects || slot.subjects.length === 0) {
+                return slot;
+              }
+
+              let subjectsChanged = false;
+              const updatedSlotSubjects = slot.subjects.map((slotSub) => {
+                const slotSubRawId = slotSub.subjectId.includes('_part_')
+                  ? slotSub.subjectId.split('_part_')[0]
+                  : slotSub.subjectId;
+
+                if (slotSubRawId === rawSubId) {
+                  subjectsChanged = true;
+                  return {
+                    ...slotSub,
+                    teacherId: sub.teacherId,
+                    teacherName: sub.teacherName,
+                  };
+                }
+                return slotSub;
+              });
+
+              if (subjectsChanged) {
+                const single = updatedSlotSubjects.length === 1 ? updatedSlotSubjects[0] : null;
+                const updatedAttached =
+                  single && slot._attachedSubject
+                    ? {
+                        ...slot._attachedSubject,
+                        teacherId: single.teacherId,
+                        teacherName: single.teacherName,
+                      }
+                    : slot._attachedSubject;
+                return {
+                  ...slot,
+                  subjects: updatedSlotSubjects,
+                  _attachedSubject: updatedAttached,
+                };
+              }
+
+              return slot;
+            });
+          });
+        }
+      });
+    }
+
     onChange(newWeeklySlots);
   };
 
-  const handleRoomSave = (day: DayOfWeek, slotIndex: number, updatedSubjects: SlotSubject[]) => {
+  const handleRoomSave = (
+    day: DayOfWeek,
+    slotIndex: number,
+    updatedSubjects: SlotSubject[],
+    bulkOptions?: {
+      applyToAllSlots: Record<string, boolean>;
+      applyToAllSubjectSlots: Record<string, boolean>;
+    }
+  ) => {
     const newWeeklySlots = { ...slots };
+
+    // Update current slot
     newWeeklySlots[day] = newWeeklySlots[day].map((slot, index) => {
       if (index !== slotIndex) return slot;
       const single = updatedSubjects.length === 1 ? updatedSubjects[0] : null;
@@ -350,6 +428,67 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
           : slot._attachedSubject;
       return { ...slot, subjects: updatedSubjects, _attachedSubject: updatedAttached };
     });
+
+    // Apply bulk options
+    if (bulkOptions) {
+      const { applyToAllSlots, applyToAllSubjectSlots } = bulkOptions;
+
+      updatedSubjects.forEach((sub) => {
+        const rawSubId = sub.subjectId.includes('_part_')
+          ? sub.subjectId.split('_part_')[0]
+          : sub.subjectId;
+
+        const shouldApplyToAll = !!applyToAllSlots[sub.subjectId];
+        const shouldApplyToAllSubject = !!applyToAllSubjectSlots[sub.subjectId];
+
+        if (shouldApplyToAll || shouldApplyToAllSubject) {
+          Object.keys(newWeeklySlots).forEach((d) => {
+            const dayKey = d as DayOfWeek;
+            newWeeklySlots[dayKey] = newWeeklySlots[dayKey].map((slot) => {
+              if (slot.type !== 'LECTURE' || !slot.subjects || slot.subjects.length === 0) {
+                return slot;
+              }
+
+              let subjectsChanged = false;
+              const updatedSlotSubjects = slot.subjects.map((slotSub) => {
+                const slotSubRawId = slotSub.subjectId.includes('_part_')
+                  ? slotSub.subjectId.split('_part_')[0]
+                  : slotSub.subjectId;
+
+                const match =
+                  shouldApplyToAll || (shouldApplyToAllSubject && slotSubRawId === rawSubId);
+
+                if (match) {
+                  subjectsChanged = true;
+                  return {
+                    ...slotSub,
+                    roomId: sub.roomId,
+                    roomName: sub.roomName,
+                  };
+                }
+                return slotSub;
+              });
+
+              if (subjectsChanged) {
+                const single = updatedSlotSubjects.length === 1 ? updatedSlotSubjects[0] : null;
+                const updatedAttached =
+                  single && slot._attachedSubject
+                    ? { ...slot._attachedSubject, roomId: single.roomId, roomName: single.roomName }
+                    : slot._attachedSubject;
+                return {
+                  ...slot,
+                  subjects: updatedSlotSubjects,
+                  _attachedSubject: updatedAttached,
+                };
+              }
+
+              return slot;
+            });
+          });
+        }
+      });
+    }
+
     onChange(newWeeklySlots);
   };
 

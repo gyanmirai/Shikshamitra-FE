@@ -633,16 +633,33 @@ const CourseProgressComponent = ({
           updateProgressDialog.onFalse();
         }}
         title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Update Progress for {selectedChapter?.chapterName}</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Update the completion percentage and add notes about the progress made in this chapter"
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
+          <Box display="flex" flexDirection="column" gap={0.5}>
+            <Box display="flex" flexDirection="row" gap={0.75} alignItems="center">
+              <Typography variant="h6" component="span" sx={{ fontWeight: 700 }}>
+                Update Chapter Progress
+              </Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                sx={{ textAlign: 'justify' }}
+                title="Update the completion percentage and add notes about the progress made in this chapter"
+              >
+                <Iconify
+                  icon="lucide:info"
+                  sx={{ display: 'inline-flex', verticalAlign: 'middle', cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                />
+              </CustomTooltip>
+            </Box>
+            {selectedChapter && (
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                {(selectedChapter as any).chapterNumber
+                  ? `Chapter ${(selectedChapter as any).chapterNumber}: `
+                  : ''}
+                {selectedChapter.chapterName}
+              </Typography>
+            )}
           </Box>
         }
       >
@@ -661,16 +678,33 @@ const CourseProgressComponent = ({
         }}
         maxWidth="sm"
         title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">{selectedChapter?.chapterName} Logs</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="View the history of progress updates and changes made to this chapter's completion status"
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
+          <Box display="flex" flexDirection="column" gap={0.5}>
+            <Box display="flex" flexDirection="row" gap={0.75} alignItems="center">
+              <Typography variant="h6" component="span" sx={{ fontWeight: 700 }}>
+                Chapter Logs
+              </Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                sx={{ textAlign: 'justify' }}
+                title="View the history of progress updates and changes made to this chapter's completion status"
+              >
+                <Iconify
+                  icon="lucide:info"
+                  sx={{ display: 'inline-flex', verticalAlign: 'middle', cursor: 'pointer' }}
+                  color="info.main"
+                  width={16}
+                />
+              </CustomTooltip>
+            </Box>
+            {selectedChapter && (
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                {(selectedChapter as any).chapterNumber
+                  ? `Chapter ${(selectedChapter as any).chapterNumber}: `
+                  : ''}
+                {selectedChapter.chapterName}
+              </Typography>
+            )}
           </Box>
         }
       >
