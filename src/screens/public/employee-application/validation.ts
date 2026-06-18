@@ -1,4 +1,5 @@
 import * as Yup from 'yup';
+import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 
 export type EmployeeApplicationLocation = {
   name: string;
@@ -192,12 +193,19 @@ const optionalLocationSchema = (label: string) =>
       }
     );
 
+const normalizeIndianMobile = (value?: string | null): string => {
+  if (!value) return '';
+  // Strip +91 prefix and all whitespace/dashes to get the raw 10-digit number
+  return value.replace(/\s/g, '').replace(/^\+91/, '').replace(/-/g, '');
+};
+
 const indianMobileSchema = (requiredMessage?: string) => {
   const schema = Yup.string()
     .trim()
-    .matches(/^[6-9]\d{9}$/, {
-      message: 'Mobile number must be 10 digits starting with 6-9.',
-      excludeEmptyString: true,
+    .test('indian-mobile', 'Mobile number must be 10 digits starting with 6-9.', (value) => {
+      if (!value) return !requiredMessage; // pass if optional and empty
+      const normalized = normalizeIndianMobile(value);
+      return /^[6-9]\d{9}$/.test(normalized);
     });
 
   return requiredMessage ? schema.required(requiredMessage) : schema.notRequired();
@@ -228,7 +236,8 @@ const dateOfBirthSchema = Yup.string()
     return age >= 18;
   });
 
-const familyMemberSchema = (label: string) =>
+// All family member fields are fully optional — no conditional requirements
+const familyMemberSchema = () =>
   Yup.object({
     name: Yup.string().trim().max(256),
     occupation: Yup.string().trim().max(256),
@@ -236,14 +245,10 @@ const familyMemberSchema = (label: string) =>
     address1: Yup.string().trim().max(512),
     address2: Yup.string().trim().max(512),
     address3: Yup.string().trim().max(512),
-    country: optionalLocationSchema(`${label} country`),
-    state: optionalLocationSchema(`${label} state`),
+    country: optionalLocationSchema('Country'),
+    state: optionalLocationSchema('State'),
     city: Yup.string().trim().max(128),
     pincode: pincodeSchema,
-  }).test('name-when-present', `${label} name is required.`, (value, context) => {
-    if (!value || isEmptyFamilyMember(value as EmployeeApplicationFamilyMemberValues)) return true;
-    if (value.name?.trim()) return true;
-    return context.createError({ path: `${context.path}.name` });
   });
 
 export const employeeApplicationValidationSchema = Yup.object({
@@ -268,7 +273,12 @@ export const employeeApplicationValidationSchema = Yup.object({
     ),
     dateOfBirth: dateOfBirthSchema,
     gender: Yup.string().required('Gender is required.').oneOf(['1', '2']),
-    religion: Yup.string().trim().required('Religion is required.').max(128),
+    religion: Yup.string()
+      .required('Religion is required.')
+      .oneOf(
+        ReligionTypeArray.map((option) => String(option.value)),
+        'Invalid religion selected.'
+      ),
     casteType: Yup.string().required('Category is required.').oneOf(['0', '1', '2', '3']),
     familyCaste: Yup.string().trim().max(128),
     maritalStatus: Yup.string().required('Marital status is required.').oneOf(['0', '1', '2', '3']),
@@ -287,9 +297,9 @@ export const employeeApplicationValidationSchema = Yup.object({
     pincode: pincodeSchema,
   }),
   familyInfo: Yup.object({
-    fatherDetails: familyMemberSchema('Father'),
-    motherDetails: familyMemberSchema('Mother'),
-    spouseDetails: familyMemberSchema('Spouse'),
+    fatherDetails: familyMemberSchema(),
+    motherDetails: familyMemberSchema(),
+    spouseDetails: familyMemberSchema(),
   }),
   additionalInfo: Yup.object({
     personWithDisability: Yup.boolean().required(),
@@ -297,6 +307,7 @@ export const employeeApplicationValidationSchema = Yup.object({
     isLibraryMember: Yup.boolean().required(),
     isTransportMember: Yup.boolean().required(),
   }),
+  // Work experience entries are fully optional — only validate end >= start if both provided
   workExperiences: Yup.array().of(
     Yup.object({
       mediumStageName: Yup.string().trim().max(256),
@@ -315,36 +326,6 @@ export const employeeApplicationValidationSchema = Yup.object({
           return new Date(value) >= new Date(startDate);
         }
       ),
-    }).test('complete-work-row', 'Complete or remove this work experience.', (value, context) => {
-      const row = value as EmployeeApplicationWorkExperienceValues | undefined;
-      if (!row || isEmptyWorkExperience(row)) {
-        return context.createError({
-          path: `${context.path}.mediumStageName`,
-          message:
-            'Remove empty work experience rows or complete organization, designation, and start date.',
-        });
-      }
-
-      if (!row.mediumStageName?.trim()) {
-        return context.createError({
-          path: `${context.path}.mediumStageName`,
-          message: 'Organization is required.',
-        });
-      }
-      if (!row.designation?.trim()) {
-        return context.createError({
-          path: `${context.path}.designation`,
-          message: 'Designation is required.',
-        });
-      }
-      if (!row.startDate) {
-        return context.createError({
-          path: `${context.path}.startDate`,
-          message: 'Start date is required.',
-        });
-      }
-
-      return true;
     })
   ),
 });
@@ -402,6 +383,13 @@ const emptyToNull = (value?: string | null) => {
 
 const nullableNumber = (value: string) => (value === '' ? null : Number(value));
 
+// Strip +91 country code and whitespace (PhoneInput returns "+91 XXXXXXXXXX" format)
+const toRawMobile = (value?: string | null): string | null => {
+  if (!value) return null;
+  const raw = normalizeIndianMobile(value);
+  return raw || null;
+};
+
 const locationPayload = (location: EmployeeApplicationLocation | null) =>
   location && trimString(location.name) && trimString(location.isoCode)
     ? { name: location.name, isoCode: location.isoCode }
@@ -413,7 +401,7 @@ const familyMemberPayload = (member: EmployeeApplicationFamilyMemberValues) =>
     : {
         name: emptyToNull(member.name),
         occupation: emptyToNull(member.occupation),
-        mobileNo: emptyToNull(member.mobileNo),
+        mobileNo: toRawMobile(member.mobileNo),
         address1: emptyToNull(member.address1),
         address2: emptyToNull(member.address2),
         address3: emptyToNull(member.address3),
@@ -430,11 +418,13 @@ export const buildEmployeeApplicationSubmitPayload = (values: EmployeeApplicatio
     shortName: emptyToNull(values.personalInfo.shortName),
     lastName: values.personalInfo.lastName.trim(),
     email: values.personalInfo.email.trim(),
-    mobileNo: values.personalInfo.mobileNo.trim(),
-    secondaryMobileNo: emptyToNull(values.personalInfo.secondaryMobileNo),
+    mobileNo: toRawMobile(values.personalInfo.mobileNo) ?? '',
+    secondaryMobileNo: toRawMobile(values.personalInfo.secondaryMobileNo),
     dateOfBirth: values.personalInfo.dateOfBirth || null,
     gender: nullableNumber(values.personalInfo.gender),
-    religion: values.personalInfo.religion.trim(),
+    religion: values.personalInfo.religion
+      ? (ReligionType[Number(values.personalInfo.religion)] ?? '')
+      : '',
     casteType: nullableNumber(values.personalInfo.casteType),
     familyCaste: emptyToNull(values.personalInfo.familyCaste),
     maritalStatus: nullableNumber(values.personalInfo.maritalStatus),

@@ -6,46 +6,42 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { EmployeeApplication } from 'src/redux/hr/employeeOnboardingApi';
 
 import dayjs from 'dayjs';
+import * as Yup from 'yup';
+import * as React from 'react';
+import { isNaN } from 'lodash';
+import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
+import { DatePicker } from '@mui/x-date-pickers';
+import PhoneInput from 'src/components/phone-input';
+import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import { HrBloodGroupArray } from 'src/enums/blood-group';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
+import CustomTooltip from 'src/components/custom-tooltip';
+import ShakingTextField from 'src/components/shaking-text-field';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
+import { MaritalStatusTypeArray } from 'src/enums/marriatal-status';
+import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useAddAccessControlMutation } from 'src/redux/hr/employeeApi';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
+import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
+import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
+import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
-import {
-  Box,
-  Card,
-  Chip,
-  Grid,
-  Step,
-  Stack,
-  Button,
-  Dialog,
-  Select,
-  Stepper,
-  MenuItem,
-  MenuList,
-  Checkbox,
-  TextField,
-  StepLabel,
-  Typography,
-  InputLabel,
-  DialogTitle,
-  FormControl,
-  Autocomplete,
-  ListItemIcon,
-  ListItemText,
-  DialogActions,
-  DialogContent,
-  FormControlLabel,
-} from '@mui/material';
 import {
   useGetEmployeeApplicationQuery,
   useGetEmployeeApplicationsQuery,
@@ -57,6 +53,38 @@ import {
   useUpdateEmployeeApplicationStatusMutation,
   useRegenerateEmployeeApplicationLinkMutation,
 } from 'src/redux/hr/employeeOnboardingApi';
+import {
+  Box,
+  Card,
+  Chip,
+  Grid,
+  Paper,
+  Radio,
+  Stack,
+  Alert,
+  Avatar,
+  Button,
+  Select,
+  Divider,
+  MenuItem,
+  MenuList,
+  Checkbox,
+  FormLabel,
+  TextField,
+  RadioGroup,
+  Typography,
+  InputLabel,
+  FormControl,
+  Autocomplete,
+  ListItemIcon,
+  ListItemText,
+  DialogActions,
+  DialogContent,
+  InputAdornment,
+  FormHelperText,
+  LinearProgress,
+  FormControlLabel,
+} from '@mui/material';
 
 import {
   EmployeeApplicationStatus,
@@ -83,7 +111,7 @@ type FinalizeFormState = {
   lastName: string;
   dob: string;
   gender: string;
-  religion: string;
+  religion: ReligionType | '';
   casteType: string;
   familyCaste: string;
   maritalStatus: string;
@@ -132,16 +160,16 @@ const defaultInviteForm: InviteFormState = {
   departmentAppliedFor: '',
 };
 
-const onboardingBreadcrumbSx = {
-  flexWrap: { xs: 'wrap', sm: 'nowrap' },
-  alignItems: { xs: 'flex-start', sm: 'center' },
-  rowGap: 1,
-  '& > :last-child': {
-    width: { xs: '100%', sm: 'auto' },
-    display: 'flex',
-    justifyContent: { xs: 'flex-start', sm: 'flex-end' },
-  },
-};
+// const onboardingBreadcrumbSx = {
+//   flexWrap: { xs: 'wrap', sm: 'nowrap' },
+//   alignItems: { xs: 'flex-start', sm: 'center' },
+//   rowGap: 1,
+//   '& > :last-child': {
+//     width: { xs: '100%', sm: 'auto' },
+//     display: 'flex',
+//     justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+//   },
+// };
 
 const onboardingBreadcrumbSlotProps = {
   action: {},
@@ -191,6 +219,82 @@ const buildPublicLink = (path: string) =>
   typeof window === 'undefined' ? path : `${window.location.origin}${path}`;
 
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+const isMobileValid = (value: string) => value && value.replace(/\D/g, '').length >= 10;
+
+// ── Yup validation schema for FinalizeDialog Step 1 ────────────────────────────
+
+const validateIndianMobile = (value?: string | null) => {
+  if (!value) return false;
+  const stripped = value.replace(/\s/g, '');
+  const normalized = stripped.includes('+') ? stripped : `+91${stripped}`;
+  return /^\+91[6-9][0-9]{9}$/.test(normalized);
+};
+
+const finalizeStep1Schema = Yup.object({
+  firstName: Yup.string().required('First Name is required'),
+  lastName: Yup.string().required('Last Name is required'),
+  middleName: Yup.string().nullable(),
+  dob: Yup.string().nullable(),
+  gender: Yup.string().nullable(),
+  religion: Yup.mixed().required('Religion is required'),
+  casteType: Yup.string().nullable(),
+  familyCaste: Yup.string().nullable(),
+  maritalStatus: Yup.string().nullable(),
+  bloodGroup: Yup.string().nullable(),
+  email: Yup.string()
+    .matches(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Please enter a valid email')
+    .required('Email is required'),
+  mobileNo: Yup.string()
+    .test('valid-indian-mobile', 'Primary Contact No. is not valid', (value) =>
+      validateIndianMobile(value)
+    )
+    .required('Primary Contact No. is required'),
+  secondaryMobileNo: Yup.string()
+    .nullable()
+    .test('valid-indian-mobile', 'Secondary Contact No. is not valid', (value) => {
+      if (!value) return true;
+      return validateIndianMobile(value);
+    })
+    // eslint-disable-next-line func-names
+    .test('unique', 'Secondary Contact No. cannot be same as primary', function (value) {
+      const { mobileNo } = this.parent;
+      if (!value || !mobileNo) return true;
+      const strip = (v: string) => v.replace(/\s/g, '').replace(/^\+91/, '');
+      return strip(value) !== strip(mobileNo);
+    }),
+  adharNo: Yup.string()
+    .required('Aadhaar number is required')
+    .matches(/^\d{12}$/, 'Aadhaar number must be exactly 12 digits'),
+  panNo: Yup.string()
+    .required('PAN number is required')
+    .test(
+      'pan-format',
+      'PAN must be in format: AAAAA9999A (5 letters, 4 digits, 1 letter)',
+      (value) => !!value && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)
+    ),
+  doj: Yup.string().required('Date of Joining is required'),
+  isTeaching: Yup.boolean(),
+  department: Yup.string().nullable(),
+  designation: Yup.string().nullable(),
+  qualification: Yup.string().nullable(),
+  identificationMark1: Yup.string().nullable(),
+  roleId: Yup.string().required('Role is required'),
+  shiftId: Yup.string().required('Shift is required'),
+  address1: Yup.string().required('Building No./Flat/House No. is required'),
+  address2: Yup.string().required('Area/Locality/Road Name is required'),
+  address3: Yup.string().nullable(),
+  countryName: Yup.string().required('Country is required'),
+  countryIsoCode: Yup.string().nullable(),
+  stateName: Yup.string().required('State is required'),
+  stateIsoCode: Yup.string().nullable(),
+  city: Yup.string().required('City is required'),
+  pinCode: Yup.string()
+    .nullable()
+    .test('pincode', 'PIN Code must be exactly 6 digits', (v) => !v || /^\d{6}$/.test(v)),
+  academicPermissionStageIds: Yup.string().nullable(),
+  useSubmittedPhoto: Yup.boolean(),
+  attachResumeAsDocument: Yup.boolean(),
+});
 
 const showInviteEmailDeliveryToast = (
   emailDeliverySucceeded: boolean,
@@ -206,9 +310,16 @@ const showInviteEmailDeliveryToast = (
   shikshaMitraToast.warning({ message: emailDeliveryMessage || failureMessage });
 };
 
+const parseReligionToValue = (value: any): ReligionType | '' => {
+  if (value === null || value === undefined || value === '') return '';
+  if (typeof value === 'number') return value;
+  if (!isNaN(Number(value))) return Number(value) as ReligionType;
+  const enumVal = ReligionType[value as keyof typeof ReligionType];
+  return typeof enumVal === 'number' ? enumVal : '';
+};
+
 const buildFinalizeInitialValues = (application: EmployeeApplication): FinalizeFormState => {
   const { personalInfo } = application;
-
   return {
     firstName: personalInfo?.firstName || application.firstName || '',
     middleName: personalInfo?.middleName || application.middleName || '',
@@ -220,7 +331,12 @@ const buildFinalizeInitialValues = (application: EmployeeApplication): FinalizeF
         : application.gender
           ? String(application.gender)
           : '',
-    religion: personalInfo?.religion || application.religion || '',
+    religion:
+      personalInfo?.religion !== null && personalInfo?.religion !== undefined
+        ? parseReligionToValue(personalInfo.religion)
+        : application.religion !== null && application.religion !== undefined
+          ? parseReligionToValue(application.religion)
+          : '',
     casteType:
       personalInfo?.casteType !== null && personalInfo?.casteType !== undefined
         ? String(personalInfo.casteType)
@@ -272,9 +388,9 @@ const toNullableNumber = (value: string) => (value === '' ? null : Number(value)
 
 const parseStageIds = (value: string) =>
   value
-    .split(',')
+    ?.split(',')
     .map((item) => item.trim())
-    .filter(Boolean);
+    .filter(Boolean) || [];
 
 const downloadBlob = (blob: Blob, filename: string) => {
   const url = URL.createObjectURL(blob);
@@ -323,23 +439,40 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
   };
 
   return (
-    <Dialog
+    <CustomDialog
       open={open}
-      onClose={onClose}
+      handleClose={onClose}
       maxWidth="sm"
-      fullWidth
       data-testid="employee-onboarding-invite-dialog"
+      title={
+        <Box display="flex" alignItems="center" gap={1}>
+          Create onboarding invite
+          <CustomTooltip
+            arrow
+            placement="right"
+            sx={{ textAlign: 'justify' }}
+            title="Create an invite link to onboard a new employee."
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </CustomTooltip>
+        </Box>
+      }
     >
-      <DialogTitle>Create onboarding invite</DialogTitle>
       <DialogContent>
-        <Grid container spacing={2} sx={{ pt: 1 }}>
+        <Grid container spacing={2} sx={{ pt: 2 }}>
           <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size="small"
               label="First name"
               value={form.firstName}
-              onChange={(event) => updateField('firstName', event.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                if (/^[A-Za-z ]*$/.test(newName)) {
+                  updateField('firstName', newName);
+                }
+              }}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
@@ -348,7 +481,13 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
               size="small"
               label="Middle name"
               value={form.middleName}
-              onChange={(event) => updateField('middleName', event.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                if (/^[A-Za-z ]*$/.test(newName)) {
+                  updateField('middleName', newName);
+                }
+              }}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
@@ -357,7 +496,13 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
               size="small"
               label="Last name"
               value={form.lastName}
-              onChange={(event) => updateField('lastName', event.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                if (/^[A-Za-z ]*$/.test(newName)) {
+                  updateField('lastName', newName);
+                }
+              }}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -370,15 +515,24 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
               onChange={(event) => updateField('email', event.target.value)}
               error={emailError}
               helperText={emailError ? 'Enter a valid email address.' : ' '}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 0.5 }}>
+                      <Iconify icon="mdi-light:email" width={22} color="text.disabled" />
+                      <Divider orientation="vertical" flexItem sx={{ height: 20, my: 'auto' }} />
+                    </Box>
+                  </InputAdornment>
+                ),
+              }}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Mobile no."
-              value={form.mobileNo}
-              onChange={(event) => updateField('mobileNo', event.target.value)}
+            <PhoneInput
+              name="mobileNo"
+              value={form.mobileNo || ''}
+              onChange={(value) => updateField('mobileNo', value ?? '')}
+              label="Primary Contact No. *"
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -396,23 +550,39 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
               size="small"
               label="Department"
               value={form.departmentAppliedFor}
-              onChange={(event) => updateField('departmentAppliedFor', event.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                if (/^[A-Za-z ]*$/.test(newName)) {
+                  updateField('departmentAppliedFor', newName);
+                }
+              }}
             />
           </Grid>
         </Grid>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+      <Divider sx={{ pb: 2 }} />
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
+          onClick={onClose}
+          variant="outlined"
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
           variant="contained"
           onClick={handleCreate}
-          disabled={isLoading || !canCreateInvite}
+          disabled={!canCreateInvite}
+          loading={isLoading}
+          size="small"
           startIcon={<Iconify icon="mdi:link-plus" />}
         >
           Create link
-        </Button>
+        </LoadingButton>
       </DialogActions>
-    </Dialog>
+    </CustomDialog>
   );
 }
 
@@ -426,15 +596,21 @@ function DetailField({
   multiline?: boolean;
 }) {
   return (
-    <TextField
-      fullWidth
-      size="small"
-      label={label}
-      value={value || '-'}
-      multiline={multiline}
-      minRows={multiline ? 3 : undefined}
-      InputProps={{ readOnly: true }}
-    />
+    <Stack spacing={0.5}>
+      <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+        {label}
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={{
+          whiteSpace: multiline ? 'pre-wrap' : 'normal',
+          wordBreak: 'break-word',
+          color: value ? 'text.primary' : 'text.disabled',
+        }}
+      >
+        {value || '-'}
+      </Typography>
+    </Stack>
   );
 }
 
@@ -448,9 +624,16 @@ function DetailSection({
   testId?: string;
 }) {
   return (
-    <Card sx={{ p: 2 }} data-testid={testId}>
-      <Stack spacing={2}>
-        <Typography variant="subtitle1">{title}</Typography>
+    <Card sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, height: '100%' }} data-testid={testId}>
+      <Stack spacing={1.5}>
+        <Typography
+          variant="subtitle2"
+          fontWeight={600}
+          color="text.secondary"
+          textTransform="uppercase"
+        >
+          {title}
+        </Typography>
         {children}
       </Stack>
     </Card>
@@ -483,7 +666,7 @@ function EmployeeOnboardingDetailView({
   const [updateStatus, { isLoading: statusLoading }] = useUpdateEmployeeApplicationStatusMutation();
   const [downloadResume] = useLazyGetEmployeeApplicationResumeQuery();
   const [downloadPhoto] = useLazyGetEmployeeApplicationPhotoQuery();
-
+  const theme = useTheme();
   useEffect(() => {
     if (application) {
       setStatus(normalizeEmployeeApplicationStatus(application.status));
@@ -505,8 +688,8 @@ function EmployeeOnboardingDetailView({
             { name: 'Employee Onboarding', onClick: onBack },
             { name: 'Application details' },
           ]}
-          sx={onboardingBreadcrumbSx}
-          slotProps={onboardingBreadcrumbSlotProps}
+          // sx={onboardingBreadcrumbSx}
+          // slotProps={onboardingBreadcrumbSlotProps}
           isBack
           onBack={onBack}
         />
@@ -584,7 +767,9 @@ function EmployeeOnboardingDetailView({
         display: 'flex',
         flexDirection: 'column',
         minWidth: 0,
-        overflowX: 'hidden',
+        maxWidth: '1440px',
+        mx: 'auto',
+        width: '100%',
       }}
     >
       <CustomBreadcrumbs
@@ -593,11 +778,10 @@ function EmployeeOnboardingDetailView({
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Employee' },
           { name: 'Employee Onboarding', onClick: onBack },
-          { name: candidateName },
         ]}
         description={application.applicationNumber || 'Candidate onboarding application details.'}
-        sx={onboardingBreadcrumbSx}
-        slotProps={onboardingBreadcrumbSlotProps}
+        // sx={onboardingBreadcrumbSx}
+        // slotProps={onboardingBreadcrumbSlotProps}
         isBack
         onBack={onBack}
         action={
@@ -648,8 +832,8 @@ function EmployeeOnboardingDetailView({
         }
       />
 
-      <Stack spacing={2} sx={{ flex: 1, minHeight: 0, minWidth: 0, overflowX: 'hidden' }}>
-        <Card sx={{ p: 2 }}>
+      <Stack spacing={1} sx={{ flex: 1, minHeight: 0, minWidth: 0, overflowX: 'hidden', p: 1 }}>
+        <Paper sx={{ p: { xs: 2, md: 2 }, borderRadius: 2 }}>
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             spacing={2}
@@ -657,7 +841,9 @@ function EmployeeOnboardingDetailView({
             alignItems={{ xs: 'flex-start', md: 'center' }}
           >
             <Stack spacing={0.5}>
-              <Typography variant="h6">{candidateName}</Typography>
+              <Typography variant="h5" fontWeight={700}>
+                {candidateName}
+              </Typography>
               <Typography variant="body2" color="text.secondary">
                 {[candidateEmail, candidateMobile].filter(Boolean).join(' / ') || '-'}
               </Typography>
@@ -669,178 +855,196 @@ function EmployeeOnboardingDetailView({
               </Typography>
             </Stack>
           </Stack>
-        </Card>
+        </Paper>
 
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, lg: 7 }}>
-            <Stack spacing={2}>
-              <DetailSection title="Application">
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField label="Position" value={submittedPosition} />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField label="Department" value={submittedDepartment} />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField label="Submitted" value={formatDate(application.submittedAt)} />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField
-                      label="Link expires"
-                      value={formatDate(application.tokenExpiresAt)}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField label="Application no." value={application.applicationNumber} />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField label="Mobile" value={candidateMobile} />
-                  </Grid>
-                </Grid>
-              </DetailSection>
-
-              <DetailSection title="Candidate details">
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField label="Email" value={candidateEmail} />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField label="Secondary mobile" value={candidateSecondaryMobile} />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField
-                      label="Date of birth"
-                      value={formatDate(submittedPersonal?.dateOfBirth || application.dateOfBirth)}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12 }}>
-                    <DetailField label="Qualification" value={submittedQualification} multiline />
-                  </Grid>
-                  <Grid size={{ xs: 12 }}>
-                    <DetailField
-                      label="Identification mark"
-                      value={submittedIdentificationMark}
-                      multiline
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12 }}>
-                    <DetailField label="Address" value={address} multiline />
-                  </Grid>
-                </Grid>
-              </DetailSection>
-
-              <DetailSection title="Family information">
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField label="Father name" value={familyInfo?.fatherDetails?.name} />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField
-                      label="Father mobile"
-                      value={familyInfo?.fatherDetails?.mobileNo}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField label="Mother name" value={familyInfo?.motherDetails?.name} />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField
-                      label="Mother mobile"
-                      value={familyInfo?.motherDetails?.mobileNo}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField label="Spouse name" value={familyInfo?.spouseDetails?.name} />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField
-                      label="Spouse mobile"
-                      value={familyInfo?.spouseDetails?.mobileNo}
-                    />
-                  </Grid>
-                </Grid>
-              </DetailSection>
-
-              <DetailSection title="Additional details">
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField
-                      label="Person with disability"
-                      value={formatBoolean(additionalInfo?.personWithDisability)}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField label="Second language" value={additionalInfo?.secondLanguage} />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField
-                      label="Library member"
-                      value={formatBoolean(additionalInfo?.isLibraryMember)}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <DetailField
-                      label="Transport member"
-                      value={formatBoolean(additionalInfo?.isTransportMember)}
-                    />
-                  </Grid>
-                </Grid>
-              </DetailSection>
-
-              <DetailSection
-                title="Work experience"
-                testId="employee-onboarding-work-experience-list"
-              >
-                {(application.workExperiences || []).length ? (
+        <Grid container spacing={1}>
+          <Grid size={{ xs: 12, lg: 8 }}>
+            <Grid container spacing={1}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <DetailSection title="Application">
                   <Grid container spacing={2}>
-                    {application.workExperiences?.map((experience, index) => (
-                      <Grid
-                        key={`${experience.mediumStageName || 'experience'}-${index}`}
-                        size={{ xs: 12, md: 6 }}
-                      >
-                        <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-                          <Stack spacing={0.5}>
-                            <Typography variant="subtitle2">
-                              {experience.mediumStageName || '-'}
-                              {experience.designation ? `, ${experience.designation}` : ''}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {[experience.department, experience.city]
-                                .filter(Boolean)
-                                .join(' - ') || '-'}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {[formatDate(experience.startDate), formatDate(experience.endDate)]
-                                .filter((value) => value !== '-')
-                                .join(' to ') || '-'}
-                            </Typography>
-                          </Stack>
-                        </Card>
-                      </Grid>
-                    ))}
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Position" value={submittedPosition} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Department" value={submittedDepartment} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Submitted" value={formatDate(application.submittedAt)} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField
+                        label="Link expires"
+                        value={formatDate(application.tokenExpiresAt)}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Application no." value={application.applicationNumber} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Mobile" value={candidateMobile} />
+                    </Grid>
                   </Grid>
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    No work experience submitted.
-                  </Typography>
-                )}
-              </DetailSection>
-            </Stack>
+                </DetailSection>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <DetailSection title="Candidate details">
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Email" value={candidateEmail} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Secondary mobile" value={candidateSecondaryMobile} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField
+                        label="Date of birth"
+                        value={formatDate(
+                          submittedPersonal?.dateOfBirth || application.dateOfBirth
+                        )}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Qualification" value={submittedQualification} multiline />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField
+                        label="Identification mark"
+                        value={submittedIdentificationMark}
+                        multiline
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Address" value={address} multiline />
+                    </Grid>
+                  </Grid>
+                </DetailSection>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <DetailSection title="Family information">
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Father name" value={familyInfo?.fatherDetails?.name} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField
+                        label="Father mobile"
+                        value={familyInfo?.fatherDetails?.mobileNo}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Mother name" value={familyInfo?.motherDetails?.name} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField
+                        label="Mother mobile"
+                        value={familyInfo?.motherDetails?.mobileNo}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Spouse name" value={familyInfo?.spouseDetails?.name} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField
+                        label="Spouse mobile"
+                        value={familyInfo?.spouseDetails?.mobileNo}
+                      />
+                    </Grid>
+                  </Grid>
+                </DetailSection>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <DetailSection title="Additional details">
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField
+                        label="Person with disability"
+                        value={formatBoolean(additionalInfo?.personWithDisability)}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField label="Second language" value={additionalInfo?.secondLanguage} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField
+                        label="Library member"
+                        value={formatBoolean(additionalInfo?.isLibraryMember)}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <DetailField
+                        label="Transport member"
+                        value={formatBoolean(additionalInfo?.isTransportMember)}
+                      />
+                    </Grid>
+                  </Grid>
+                </DetailSection>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <DetailSection
+                  title="Work experience"
+                  testId="employee-onboarding-work-experience-list"
+                >
+                  {(application.workExperiences || []).length ? (
+                    <Grid container spacing={2}>
+                      {application.workExperiences?.map((experience, index) => (
+                        <Grid
+                          key={`${experience.mediumStageName || 'experience'}-${index}`}
+                          size={{ xs: 12, md: 6 }}
+                        >
+                          <Card variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+                            <Stack spacing={0.5}>
+                              <Typography variant="subtitle2">
+                                {experience.mediumStageName || '-'}
+                                {experience.designation ? `, ${experience.designation}` : ''}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {[experience.department, experience.city]
+                                  .filter(Boolean)
+                                  .join(' - ') || '-'}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {[formatDate(experience.startDate), formatDate(experience.endDate)]
+                                  .filter((value) => value !== '-')
+                                  .join(' to ') || '-'}
+                              </Typography>
+                            </Stack>
+                          </Card>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No work experience submitted.
+                    </Typography>
+                  )}
+                </DetailSection>
+              </Grid>
+            </Grid>
           </Grid>
 
-          <Grid size={{ xs: 12, lg: 5 }}>
-            <Stack spacing={2}>
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <Stack spacing={1} sx={{ position: { lg: 'sticky' }, top: { lg: 8 } }}>
               <DetailSection title="Documents">
-                <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Stack direction="column" spacing={1.5}>
                   <Button
                     size="small"
                     variant="outlined"
                     disabled={!application.hasResume}
                     onClick={() => handleDownload('resume')}
-                    startIcon={<Iconify icon="mdi:file-download-outline" />}
+                    startIcon={<Iconify icon="mdi:file-document-outline" />}
+                    fullWidth
+                    sx={{
+                      justifyContent: 'flex-start',
+                      color: 'text.secondary',
+                      borderColor: 'divider',
+                    }}
                   >
-                    Resume
+                    Applicant Resume
                   </Button>
                   <Button
                     size="small"
@@ -848,14 +1052,20 @@ function EmployeeOnboardingDetailView({
                     disabled={!application.hasPhoto}
                     onClick={() => handleDownload('photo')}
                     startIcon={<Iconify icon="mdi:image-outline" />}
+                    fullWidth
+                    sx={{
+                      justifyContent: 'flex-start',
+                      color: 'text.secondary',
+                      borderColor: 'divider',
+                    }}
                   >
-                    Photo
+                    Applicant Photo
                   </Button>
                 </Stack>
               </DetailSection>
 
               <DetailSection title="Status action">
-                <Stack spacing={1.5}>
+                <Stack spacing={2}>
                   <FormControl size="small" fullWidth>
                     <InputLabel>Status</InputLabel>
                     <Select
@@ -882,26 +1092,34 @@ function EmployeeOnboardingDetailView({
                     multiline
                     minRows={3}
                   />
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <Stack direction="row" spacing={1} flexWrap="wrap" pt={0.5}>
                     <Button
+                      size="small"
                       variant="contained"
                       onClick={() => handleStatusUpdate()}
                       disabled={statusLoading || !canUpdateStatus}
+                      sx={{ flex: 1 }}
+                      startIcon={<Iconify icon="mdi:check-circle-outline" />}
                     >
                       Update
                     </Button>
                     <Button
+                      size="small"
                       color="error"
                       variant="outlined"
                       onClick={() => handleStatusUpdate(EmployeeApplicationStatus.Rejected)}
                       disabled={statusLoading || !canUpdateStatus}
+                      startIcon={<Iconify icon="mdi:close-circle-outline" />}
                     >
                       Reject
                     </Button>
                     <Button
-                      variant="outlined"
+                      size="small"
+                      variant="text"
+                      color="inherit"
                       onClick={() => handleStatusUpdate(EmployeeApplicationStatus.Withdrawn)}
                       disabled={statusLoading || !canUpdateStatus}
+                      startIcon={<Iconify icon="mdi:minus-circle-outline" />}
                     >
                       Withdraw
                     </Button>
@@ -925,9 +1143,12 @@ function FinalizeDialog({
   open: boolean;
   onClose: () => void;
 }) {
+  const theme = useTheme();
+  console.log('application0000', application);
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState<FinalizeFormState | null>(null);
+  const [maxStepVisited, setMaxStepVisited] = useState(0);
   const [finalizedUserId, setFinalizedUserId] = useState<string | null>(null);
+  const [academicTouched, setAcademicTouched] = useState(false);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { data: rolesData, isLoading: rolesLoading } = useGetRolesQuery(undefined);
   const { data: shiftsData, isLoading: shiftsLoading } = useGetShiftsQuery(undefined);
@@ -939,22 +1160,108 @@ function FinalizeDialog({
   const [finalizeApplication, { isLoading }] = useFinalizeEmployeeApplicationMutation();
   const [addAccessControl, { isLoading: academicPermissionSaving }] = useAddAccessControlMutation();
 
+  const initialValues = useMemo(
+    () => (application ? buildFinalizeInitialValues(application) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [application?.id, open]
+  );
+
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: initialValues || ({} as FinalizeFormState),
+    validationSchema: finalizeStep1Schema,
+    validateOnChange: true,
+    validateOnBlur: true,
+    onSubmit: () => {},
+  });
+
+  // convenience alias
+  const form = formik.values;
+  const updateField = (field: keyof FinalizeFormState, value: string | boolean) =>
+    formik.setFieldValue(field as string, value);
+
   useEffect(() => {
     if (application && open) {
-      setForm(buildFinalizeInitialValues(application));
       setStep(0);
+      setMaxStepVisited(0);
       setFinalizedUserId(null);
+      setAcademicTouched(false);
+      formik.resetForm({ values: buildFinalizeInitialValues(application) });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [application, open]);
 
-  if (!application || !form) {
+  useEffect(() => {
+    if (step > maxStepVisited) {
+      setMaxStepVisited(step);
+    }
+  }, [step, maxStepVisited]);
+
+  if (!application || !initialValues) {
     return null;
   }
 
-  const updateField = (field: keyof FinalizeFormState, value: string | boolean) =>
-    setForm((current) => (current ? { ...current, [field]: value } : current));
+  // ── Step-level validation using Yup + formik ──────────────────────────────
   const selectedStageIds = parseStageIds(form.academicPermissionStageIds);
-  const selectedStages = selectedStageIds.map((id) => {
+
+  const isStep2Valid = Boolean(currentYear?.id && selectedStageIds?.length > 0);
+
+  const handleStepperNext = async (
+    isLastStep: boolean,
+    values: any,
+    formikInstance: any,
+    setIsLoading: (val: boolean) => void
+  ) => {
+    if (step === 1) {
+      // Mark all step-1 fields as touched so Yup errors appear
+      const allFields = Object.keys(finalizeStep1Schema.fields) as (keyof FinalizeFormState)[];
+      const touchedAll = allFields.reduce((acc, k) => ({ ...acc, [k]: true }), {});
+      formik.setTouched(touchedAll as any);
+      const errors = await formik.validateForm();
+      // Only check fields relevant to step 1 (ignore academicPermissionStageIds etc.)
+      const step1Fields = [
+        'firstName',
+        'lastName',
+        'email',
+        'mobileNo',
+        'adharNo',
+        'panNo',
+        'doj',
+        'roleId',
+        'shiftId',
+        'address1',
+        'address2',
+        'countryName',
+        'stateName',
+        'city',
+        'religion',
+      ];
+      const hasErrors = step1Fields.some((f) => !!errors[f as keyof typeof errors]);
+      if (hasErrors) return;
+    }
+    if (step === 2 && !isStep2Valid) {
+      setAcademicTouched(true);
+      return;
+    }
+    setAcademicTouched(false);
+    if (isLastStep) {
+      setIsLoading(true);
+      try {
+        await handleFinalize();
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setStep((current) => current + 1);
+    }
+  };
+
+  const isStepClickable = (index: number) => index <= maxStepVisited;
+  const handleStepClick = (index: number) => {
+    setStep(index);
+  };
+
+  const selectedStages = selectedStageIds?.map((id) => {
     const option = organizationOptionsById.get(id);
     return (
       option || {
@@ -1003,7 +1310,10 @@ function FinalizeDialog({
               lastName: form.lastName,
               dob: form.dob || null,
               gender: toNullableNumber(form.gender),
-              religion: form.religion || null,
+              religion:
+                form.religion !== '' && form.religion !== null && form.religion !== undefined
+                  ? (ReligionType[Number(form.religion) as ReligionType] as any)
+                  : undefined,
               casteType: toNullableNumber(form.casteType),
               familyCaste: form.familyCaste || null,
               maritalStatus: toNullableNumber(form.maritalStatus),
@@ -1069,495 +1379,1293 @@ function FinalizeDialog({
     }
   };
 
+  const steps = ['Review', 'Employee fields', 'Academic Permission', 'Confirm'];
+
   return (
-    <Dialog
+    <CustomDialog
       open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
+      handleClose={onClose}
+      maxWidth="lg"
       data-testid="employee-onboarding-finalize-dialog"
-    >
-      <DialogTitle>Finalize onboarding</DialogTitle>
-      <DialogContent>
-        <Stack spacing={3} sx={{ pt: 1 }}>
-          <Stepper activeStep={step} alternativeLabel>
-            {['Review', 'Employee fields', 'Academic Permission', 'Confirm'].map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
-          {step === 0 && (
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Typography variant="subtitle2">Candidate</Typography>
-                <Typography variant="body2">{application.fullName || '-'}</Typography>
-                <Typography variant="body2">{application.email || '-'}</Typography>
-                <Typography variant="body2">{application.mobileNo || '-'}</Typography>
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Typography variant="subtitle2">Application</Typography>
-                <Typography variant="body2">
-                  Position: {application.positionAppliedFor || '-'}
-                </Typography>
-                <Typography variant="body2">
-                  Department: {application.departmentAppliedFor || '-'}
-                </Typography>
-                <Typography variant="body2">
-                  Submitted: {formatDate(application.submittedAt)}
-                </Typography>
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Typography variant="subtitle2">Experience</Typography>
-                <Typography variant="body2">
-                  {(application.workExperiences || []).length
-                    ? `${application.workExperiences?.length} work experience record(s) will be copied.`
-                    : 'No work experience submitted.'}
-                </Typography>
-              </Grid>
-            </Grid>
-          )}
-
-          {step === 1 && (
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="First name"
-                  value={form.firstName}
-                  onChange={(event) => updateField('firstName', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Middle name"
-                  value={form.middleName}
-                  onChange={(event) => updateField('middleName', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="Last name"
-                  value={form.lastName}
-                  onChange={(event) => updateField('lastName', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Date of birth"
-                  type="date"
-                  value={form.dob}
-                  onChange={(event) => updateField('dob', event.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label="Gender"
-                  value={form.gender}
-                  onChange={(event) => updateField('gender', event.target.value)}
-                >
-                  <MenuItem value="">Not selected</MenuItem>
-                  <MenuItem value="1">Male</MenuItem>
-                  <MenuItem value="2">Female</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Religion"
-                  value={form.religion}
-                  onChange={(event) => updateField('religion', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label="Category"
-                  value={form.casteType}
-                  onChange={(event) => updateField('casteType', event.target.value)}
-                >
-                  <MenuItem value="">Not selected</MenuItem>
-                  <MenuItem value="0">General</MenuItem>
-                  <MenuItem value="1">OBC</MenuItem>
-                  <MenuItem value="2">SC</MenuItem>
-                  <MenuItem value="3">ST</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Family caste"
-                  value={form.familyCaste}
-                  onChange={(event) => updateField('familyCaste', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label="Marital status"
-                  value={form.maritalStatus}
-                  onChange={(event) => updateField('maritalStatus', event.target.value)}
-                >
-                  <MenuItem value="">Not selected</MenuItem>
-                  <MenuItem value="0">Unmarried</MenuItem>
-                  <MenuItem value="1">Married</MenuItem>
-                  <MenuItem value="2">Divorced</MenuItem>
-                  <MenuItem value="3">Widowed</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="Email"
-                  value={form.email}
-                  onChange={(event) => updateField('email', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="Mobile no."
-                  value={form.mobileNo}
-                  onChange={(event) => updateField('mobileNo', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Secondary mobile no."
-                  value={form.secondaryMobileNo}
-                  onChange={(event) => updateField('secondaryMobileNo', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="PAN"
-                  value={form.panNo}
-                  onChange={(event) => updateField('panNo', event.target.value.toUpperCase())}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="Aadhaar no."
-                  value={form.adharNo}
-                  onChange={(event) => updateField('adharNo', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="Joining date"
-                  type="date"
-                  value={form.doj}
-                  onChange={(event) => updateField('doj', event.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label="Employee group"
-                  value={form.isTeaching ? 'teaching' : 'nonTeaching'}
-                  onChange={(event) => updateField('isTeaching', event.target.value === 'teaching')}
-                >
-                  <MenuItem value="teaching">Teaching</MenuItem>
-                  <MenuItem value="nonTeaching">Non-teaching</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Department"
-                  value={form.department}
-                  onChange={(event) => updateField('department', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Designation"
-                  value={form.designation}
-                  onChange={(event) => updateField('designation', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Qualification"
-                  value={form.qualification}
-                  onChange={(event) => updateField('qualification', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Identification mark"
-                  value={form.identificationMark1}
-                  onChange={(event) => updateField('identificationMark1', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  required
-                  label="Role"
-                  value={form.roleId}
-                  onChange={(event) => updateField('roleId', event.target.value)}
-                  disabled={rolesLoading}
-                >
-                  {(rolesData?.items || []).map((role: any) => (
-                    <MenuItem key={role.id} value={role.id}>
-                      {role.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  required
-                  label="Shift"
-                  value={form.shiftId}
-                  onChange={(event) => updateField('shiftId', event.target.value)}
-                  disabled={shiftsLoading}
-                >
-                  {(shiftsData?.items || []).map((shift: any) => (
-                    <MenuItem key={shift.id} value={shift.id}>
-                      {shift.shiftName || shift.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="Address line 1"
-                  value={form.address1}
-                  onChange={(event) => updateField('address1', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="Address line 2"
-                  value={form.address2}
-                  onChange={(event) => updateField('address2', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="Country"
-                  value={form.countryName}
-                  onChange={(event) => updateField('countryName', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 2 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Country code"
-                  value={form.countryIsoCode}
-                  onChange={(event) =>
-                    updateField('countryIsoCode', event.target.value.toUpperCase())
-                  }
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="State"
-                  value={form.stateName}
-                  onChange={(event) => updateField('stateName', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 2 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="State code"
-                  value={form.stateIsoCode}
-                  onChange={(event) =>
-                    updateField('stateIsoCode', event.target.value.toUpperCase())
-                  }
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  required
-                  label="City"
-                  value={form.city}
-                  onChange={(event) => updateField('city', event.target.value)}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Pin code"
-                  value={form.pinCode}
-                  onChange={(event) => updateField('pinCode', event.target.value)}
-                />
-              </Grid>
-            </Grid>
-          )}
-
-          {step === 2 && (
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12 }}>
-                <Typography variant="subtitle2">Academic Permission</Typography>
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Autocomplete
-                  multiple
-                  size="small"
-                  options={organizationOptions}
-                  value={selectedStages}
-                  loading={organizationsLoading}
-                  disabled={organizationsLoading || !currentYear?.id}
-                  getOptionLabel={(option) => option.name || option.label || ''}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  onChange={(_, value) =>
-                    updateField(
-                      'academicPermissionStageIds',
-                      value.map((item) => item.id).join(',')
-                    )
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      required
-                      label="Organization"
-                      error={!currentYear?.id || selectedStageIds.length === 0}
-                      helperText={
-                        !currentYear?.id
-                          ? 'Academic year is required'
-                          : selectedStageIds.length === 0
-                            ? 'Academic Permission organization is required'
-                            : undefined
-                      }
-                    />
-                  )}
-                />
-              </Grid>
-            </Grid>
-          )}
-
-          {step === 3 && (
-            <Stack spacing={2}>
-              <Typography variant="subtitle2">Final review</Typography>
-              <Typography variant="body2">
-                Employee/user creation will happen now for {form.firstName} {form.lastName}.
-              </Typography>
-              <Stack>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={form.useSubmittedPhoto}
-                      disabled={!application.hasPhoto}
-                      onChange={(event) => updateField('useSubmittedPhoto', event.target.checked)}
-                    />
-                  }
-                  label="Use submitted photo as profile picture"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={form.attachResumeAsDocument}
-                      disabled={!application.hasResume}
-                      onChange={(event) =>
-                        updateField('attachResumeAsDocument', event.target.checked)
-                      }
-                    />
-                  }
-                  label="Attach submitted resume to employee documents"
-                />
-              </Stack>
-              {!canSubmit && (
-                <Typography variant="body2" color="error">
-                  Complete required employee fields and Academic Permission before finalizing.
-                </Typography>
-              )}
-            </Stack>
-          )}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button disabled={step === 0} onClick={() => setStep((current) => current - 1)}>
-          Back
-        </Button>
-        {step < 3 ? (
-          <Button variant="contained" onClick={() => setStep((current) => current + 1)}>
-            Next
-          </Button>
-        ) : (
-          <Button
-            variant="contained"
-            color="success"
-            onClick={handleFinalize}
-            disabled={isLoading || academicPermissionSaving || !canSubmit}
-            startIcon={<Iconify icon="mdi:account-check-outline" />}
+      hasForm={false}
+      paperProps={{
+        sx: {
+          height: '85vh',
+          '& #dialog-form': {
+            display: 'flex',
+            flexDirection: 'column',
+            flex: '1 1 auto',
+            minHeight: 0,
+            height: '100%',
+          },
+        },
+      }}
+      title={
+        <Box display="flex" alignItems="center" gap={1}>
+          Finalize onboarding
+          <CustomTooltip
+            arrow
+            placement="right"
+            sx={{ textAlign: 'justify' }}
+            title="Review and complete the onboarding process for this application."
           >
-            {finalizedUserId ? 'Save Academic Permission' : 'Finalize'}
-          </Button>
-        )}
-      </DialogActions>
-    </Dialog>
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </CustomTooltip>
+        </Box>
+      }
+    >
+      <DialogContent
+        sx={{
+          overflow: 'visible',
+          p: 0,
+          flex: '1 1 auto',
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <CustomStepperWithFormik
+          scrollbarHeight="auto"
+          showSaveButton={false}
+          formikInstance={formik}
+          initialValues={initialValues}
+          steps={steps}
+          activeStep={step}
+          handleBack={() => {
+            setAcademicTouched(false);
+            formik.setTouched({});
+            setStep((current) => current - 1);
+          }}
+          isStepClickable={isStepClickable}
+          onStepClick={handleStepClick}
+          handleNext={handleStepperNext}
+          validationSchema={Yup.object({})}
+          finalButtonLabel={finalizedUserId ? 'Save Academic Permission' : 'Finalize'}
+          disableSubmit={!canSubmit}
+          renderItem={({ activeStep: currentStep }) => (
+            <Box sx={{ p: 2 }}>
+              {currentStep === 0 && (
+                <Grid container spacing={1} mb={1}>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        p: 2.5,
+                        borderRadius: 2,
+                        height: '100%',
+                        bgcolor: 'background.paper',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Stack spacing={2}>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Avatar
+                            sx={{
+                              width: 48,
+                              height: 48,
+                              fontSize: '1.125rem',
+                              fontWeight: 600,
+                              bgcolor: 'primary.main',
+                              color: 'primary.contrastText',
+                            }}
+                          >
+                            {(application.fullName || 'C')
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .toUpperCase()
+                              .slice(0, 2)}
+                          </Avatar>
+                          <Stack spacing={0.25}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              fontWeight={500}
+                              textTransform="uppercase"
+                              letterSpacing="0.05em"
+                            >
+                              Candidate
+                            </Typography>
+                            <Typography variant="subtitle1" fontWeight={600}>
+                              {application.fullName || '-'}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+
+                        <Divider />
+
+                        <Stack spacing={1.5}>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Iconify
+                              icon="lucide:mail"
+                              width={16}
+                              sx={{ color: 'text.secondary', flexShrink: 0 }}
+                            />
+                            <Typography
+                              variant="body2"
+                              color="text.primary"
+                              sx={{ wordBreak: 'break-all' }}
+                            >
+                              {application.email || '-'}
+                            </Typography>
+                          </Stack>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Iconify
+                              icon="lucide:phone"
+                              width={16}
+                              sx={{ color: 'text.secondary', flexShrink: 0 }}
+                            />
+                            <Typography variant="body2" color="text.primary">
+                              {application.mobileNo || '-'}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                      </Stack>
+                    </Card>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        p: 2.5,
+                        borderRadius: 2,
+                        height: '100%',
+                        bgcolor: 'background.paper',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Stack spacing={2}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          fontWeight={500}
+                          textTransform="uppercase"
+                          letterSpacing="0.05em"
+                        >
+                          Application Details
+                        </Typography>
+
+                        <Stack spacing={1.5}>
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Box
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                bgcolor: 'action.selected',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <Iconify
+                                icon="lucide:briefcase"
+                                width={16}
+                                sx={{ color: 'text.secondary' }}
+                              />
+                            </Box>
+                            <Stack spacing={0.25}>
+                              <Typography variant="caption" color="text.secondary">
+                                Position
+                              </Typography>
+                              <Typography variant="body2" fontWeight={600}>
+                                {application.positionAppliedFor || '-'}
+                              </Typography>
+                            </Stack>
+                          </Stack>
+
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Box
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                bgcolor: 'action.selected',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <Iconify
+                                icon="lucide:building-2"
+                                width={16}
+                                sx={{ color: 'text.secondary' }}
+                              />
+                            </Box>
+                            <Stack spacing={0.25}>
+                              <Typography variant="caption" color="text.secondary">
+                                Department
+                              </Typography>
+                              <Typography variant="body2" fontWeight={600}>
+                                {application.departmentAppliedFor || '-'}
+                              </Typography>
+                            </Stack>
+                          </Stack>
+
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Box
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                bgcolor: 'action.selected',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <Iconify
+                                icon="lucide:calendar"
+                                width={16}
+                                sx={{ color: 'text.secondary' }}
+                              />
+                            </Box>
+                            <Stack spacing={0.25}>
+                              <Typography variant="caption" color="text.secondary">
+                                Submitted
+                              </Typography>
+                              <Typography variant="body2" fontWeight={600}>
+                                {formatDate(application.submittedAt)}
+                              </Typography>
+                            </Stack>
+                          </Stack>
+                        </Stack>
+                      </Stack>
+                    </Card>
+                  </Grid>
+
+                  <Grid size={{ xs: 12 }}>
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        p: 2.5,
+                        borderRadius: 2,
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Stack spacing={2}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Iconify
+                            icon="lucide:history"
+                            width={18}
+                            sx={{ color: 'text.secondary' }}
+                          />
+                          <Typography variant="subtitle2" fontWeight={600}>
+                            Submitted Experience
+                          </Typography>
+                        </Stack>
+
+                        {(application.workExperiences || []).length ? (
+                          <Grid container spacing={1.5}>
+                            {application.workExperiences?.map((experience, index) => (
+                              <Grid
+                                key={`${experience.mediumStageName || 'exp'}-${index}`}
+                                size={{ xs: 12, sm: 6 }}
+                              >
+                                <Card
+                                  variant="outlined"
+                                  sx={{
+                                    p: 1.5,
+                                    borderRadius: 1.5,
+                                    bgcolor: 'background.neutral',
+                                    borderColor: 'divider',
+                                  }}
+                                >
+                                  <Stack spacing={1}>
+                                    <Stack
+                                      direction="row"
+                                      justifyContent="space-between"
+                                      alignItems="flex-start"
+                                      spacing={1}
+                                    >
+                                      <Typography variant="subtitle2" fontWeight={600}>
+                                        {experience.mediumStageName || '-'}
+                                      </Typography>
+                                      {experience.designation && (
+                                        <Chip
+                                          label={experience.designation}
+                                          size="small"
+                                          variant="outlined"
+                                          color="info"
+                                          sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600 }}
+                                        />
+                                      )}
+                                    </Stack>
+
+                                    <Stack spacing={0.5}>
+                                      {experience.department && (
+                                        <Typography
+                                          variant="caption"
+                                          color="text.secondary"
+                                          display="flex"
+                                          alignItems="center"
+                                          gap={0.5}
+                                        >
+                                          <Iconify icon="lucide:layers" width={12} />
+                                          {experience.department}
+                                        </Typography>
+                                      )}
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        display="flex"
+                                        alignItems="center"
+                                        gap={0.5}
+                                      >
+                                        <Iconify icon="lucide:calendar" width={12} />
+                                        {[
+                                          formatDate(experience.startDate),
+                                          formatDate(experience.endDate),
+                                        ]
+                                          .filter((val) => val !== '-')
+                                          .join(' to ') || '-'}
+                                      </Typography>
+                                    </Stack>
+                                  </Stack>
+                                </Card>
+                              </Grid>
+                            ))}
+                          </Grid>
+                        ) : (
+                          <Stack
+                            alignItems="center"
+                            justifyContent="center"
+                            spacing={1}
+                            sx={{
+                              py: 3,
+                              borderRadius: 1.5,
+                              border: '1px dashed',
+                              borderColor: 'divider',
+                              bgcolor: 'action.hover',
+                            }}
+                          >
+                            <Iconify
+                              icon="lucide:file-text"
+                              width={28}
+                              sx={{ color: 'text.disabled' }}
+                            />
+                            <Typography variant="body2" color="text.secondary" align="center">
+                              No work experience was submitted in the application.
+                            </Typography>
+                          </Stack>
+                        )}
+                      </Stack>
+                    </Card>
+                  </Grid>
+                </Grid>
+              )}
+
+              {currentStep === 1 && (
+                <Box>
+                  {/* ── Basic Details ── */}
+                  <SectionCard title="Basic Details">
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <ShakingTextField
+                        error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+                      >
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="First Name *"
+                          {...formik.getFieldProps('firstName')}
+                          value={form.firstName}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                            if (/^[A-Za-z ]*$/.test(newName))
+                              formik.setFieldValue('firstName', newName);
+                          }}
+                          error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+                          helperText={formik.touched.firstName && formik.errors.firstName}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Middle Name"
+                        {...formik.getFieldProps('middleName')}
+                        value={form.middleName}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                          if (/^[A-Za-z ]*$/.test(newName))
+                            formik.setFieldValue('middleName', newName);
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <ShakingTextField
+                        error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+                      >
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Last Name *"
+                          {...formik.getFieldProps('lastName')}
+                          value={form.lastName}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                            if (/^[A-Za-z ]*$/.test(newName))
+                              formik.setFieldValue('lastName', newName);
+                          }}
+                          error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+                          helperText={formik.touched.lastName && formik.errors.lastName}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <DatePicker
+                        label="Date of Birth"
+                        value={form.dob ? dayjs(form.dob) : null}
+                        onChange={(value) => {
+                          formik.setFieldValue('dob', value ? value.format('YYYY-MM-DD') : '');
+                        }}
+                        disableFuture
+                        minDate={dayjs('1947-01-01')}
+                        format="DD-MM-YYYY"
+                        slotProps={{
+                          textField: { size: 'small', fullWidth: true },
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <ShakingTextField
+                        error={formik.touched.religion && Boolean(formik.errors.religion)}
+                      >
+                        <FormControl
+                          fullWidth
+                          size="small"
+                          error={formik.touched.religion && Boolean(formik.errors.religion)}
+                        >
+                          <InputLabel id="fin-religion-label">Religion *</InputLabel>
+                          <Select
+                            labelId="fin-religion-label"
+                            value={form.religion ?? ''}
+                            onChange={(e) => formik.setFieldValue('religion', e.target.value)}
+                            label="Religion *"
+                          >
+                            {ReligionTypeArray.map((option) => (
+                              <MenuItem key={option.value} value={option.value}>
+                                {option.label}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                          {formik.touched.religion && formik.errors.religion && (
+                            <FormHelperText>{formik.errors.religion}</FormHelperText>
+                          )}
+                        </FormControl>
+                      </ShakingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <Autocomplete
+                        options={EmployeeCastTypeArray.map((_, index) => ({
+                          id: index,
+                          label: EmployeeCastType[index],
+                        }))}
+                        getOptionLabel={(option) => option.label}
+                        value={
+                          EmployeeCastTypeArray.map((_, index) => ({
+                            id: index,
+                            label: EmployeeCastType[index],
+                          })).find((item) => String(item.id) === form.casteType) || null
+                        }
+                        renderInput={(params) => (
+                          <TextField {...params} label="Category *" size="small" fullWidth />
+                        )}
+                        onChange={(_e, value) =>
+                          formik.setFieldValue('casteType', value ? String(value.id) : '')
+                        }
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Family Caste"
+                        value={form.familyCaste}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^A-Za-z\s]/g, '') || '';
+                          const newName = value
+                            ? value.charAt(0).toUpperCase() + value.slice(1)
+                            : '';
+                          formik.setFieldValue('familyCaste', newName);
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel id="fin-marital-label">Marital Status</InputLabel>
+                        <Select
+                          labelId="fin-marital-label"
+                          value={form.maritalStatus}
+                          onChange={(e) => formik.setFieldValue('maritalStatus', e.target.value)}
+                          label="Marital Status"
+                        >
+                          {MaritalStatusTypeArray.map((option) => (
+                            <MenuItem key={option.value} value={String(option.value)}>
+                              {option.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel id="fin-blood-label">Blood Group</InputLabel>
+                        <Select
+                          labelId="fin-blood-label"
+                          value={form.bloodGroup}
+                          onChange={(e) => formik.setFieldValue('bloodGroup', e.target.value)}
+                          label="Blood Group"
+                        >
+                          {HrBloodGroupArray.map((option) => (
+                            <MenuItem key={option.value} value={String(option.value)}>
+                              {option.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <FormControl
+                        fullWidth
+                        sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                      >
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ minWidth: 70, color: 'text.secondary' }}
+                        >
+                          Gender *
+                        </Typography>
+                        <RadioGroup
+                          row
+                          name="gender"
+                          value={form.gender}
+                          onChange={(e) => formik.setFieldValue('gender', e.target.value)}
+                          sx={{ alignItems: 'center' }}
+                        >
+                          <FormControlLabel
+                            value="1"
+                            control={<Radio size="small" />}
+                            label="Male"
+                            sx={{ mr: 2 }}
+                          />
+                          <FormControlLabel
+                            value="2"
+                            control={<Radio size="small" />}
+                            label="Female"
+                          />
+                        </RadioGroup>
+                      </FormControl>
+                    </Grid>
+                  </SectionCard>
+
+                  {/* ── Contact Information ── */}
+                  <SectionCard title="Contact Information">
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <ShakingTextField
+                        error={formik.touched.email && Boolean(formik.errors.email)}
+                      >
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Email *"
+                          {...formik.getFieldProps('email')}
+                          value={form.email}
+                          error={formik.touched.email && Boolean(formik.errors.email)}
+                          helperText={formik.touched.email && formik.errors.email}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Box
+                                  sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 0.5 }}
+                                >
+                                  <Iconify
+                                    icon="mdi-light:email"
+                                    width={22}
+                                    color="text.disabled"
+                                  />
+                                  <Divider
+                                    orientation="vertical"
+                                    flexItem
+                                    sx={{ height: 20, my: 'auto' }}
+                                  />
+                                </Box>
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <ShakingTextField
+                        error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
+                      >
+                        <PhoneInput
+                          name="mobileNo"
+                          value={form.mobileNo || ''}
+                          onChange={(value) => {
+                            formik.setFieldValue('mobileNo', value);
+                            formik.validateField('mobileNo');
+                          }}
+                          onBlur={formik.handleBlur}
+                          label="Primary Contact No. *"
+                          error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
+                          helperText={formik.touched.mobileNo && formik.errors.mobileNo}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <PhoneInput
+                        name="secondaryMobileNo"
+                        value={form.secondaryMobileNo || ''}
+                        onChange={(value) => formik.setFieldValue('secondaryMobileNo', value)}
+                        onBlur={formik.handleBlur}
+                        label="Secondary Contact No."
+                        error={
+                          formik.touched.secondaryMobileNo &&
+                          Boolean(formik.errors.secondaryMobileNo)
+                        }
+                        helperText={
+                          formik.touched.secondaryMobileNo && formik.errors.secondaryMobileNo
+                        }
+                      />
+                    </Grid>
+                  </SectionCard>
+
+                  {/* ── Identification Details ── */}
+                  <SectionCard title="Identification Details">
+                    <Grid size={{ xs: 12, md: 6.5 }}>
+                      <Box sx={{ position: 'relative' }}>
+                        <FormLabel
+                          error={formik.touched.adharNo && Boolean(formik.errors.adharNo)}
+                          sx={{
+                            fontSize: '0.75rem',
+                            display: 'block',
+                            mb: 0.5,
+                            color:
+                              formik.touched.adharNo && formik.errors.adharNo
+                                ? 'error.main'
+                                : 'text.secondary',
+                          }}
+                        >
+                          Aadhaar No. *
+                        </FormLabel>
+                        <OTPInput
+                          maxLength={12}
+                          value={String(formik.values.adharNo || '')}
+                          onChange={(val) => {
+                            formik.setFieldValue('adharNo', val);
+                            formik.setFieldTouched('adharNo', true, false);
+                          }}
+                          pattern={REGEXP_ONLY_DIGITS}
+                          pasteTransformer={(s) => s.replace(/\D/g, '').slice(0, 12)}
+                          containerClassName=""
+                          render={({ slots }) => {
+                            const hasErr = formik.touched.adharNo && Boolean(formik.errors.adharNo);
+                            return (
+                              <Box display="flex" gap={0.75} alignItems="center" flexWrap="nowrap">
+                                {slots.map((slot, i) => (
+                                  <React.Fragment key={i}>
+                                    <Box
+                                      sx={{
+                                        width: 22,
+                                        height: 28,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '0.875rem',
+                                        fontWeight: 400,
+                                        fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+                                        border: '1px solid',
+                                        borderColor: slot.isActive
+                                          ? hasErr
+                                            ? 'error.main'
+                                            : 'primary.main'
+                                          : hasErr
+                                            ? 'error.main'
+                                            : 'grey.400',
+                                        borderRadius: '8px',
+                                        bgcolor: 'background.paper',
+                                        color: 'text.primary',
+                                        boxShadow: slot.isActive
+                                          ? hasErr
+                                            ? '0 0 0 2px #d32f2f33'
+                                            : '0 0 0 2px #1976d233'
+                                          : 'none',
+                                        transition: 'border-color 0.15s, box-shadow 0.15s',
+                                        position: 'relative',
+                                        userSelect: 'none',
+                                      }}
+                                    >
+                                      {slot.char}
+                                      {slot.hasFakeCaret && (
+                                        <Box
+                                          sx={{
+                                            position: 'absolute',
+                                            width: '1px',
+                                            height: '55%',
+                                            bgcolor: 'text.primary',
+                                            animation: 'blink 1s step-end infinite',
+                                            '@keyframes blink': {
+                                              '0%, 100%': { opacity: 1 },
+                                              '50%': { opacity: 0 },
+                                            },
+                                          }}
+                                        />
+                                      )}
+                                    </Box>
+                                    {i < 11 && (i + 1) % 4 === 0 && (
+                                      <Box
+                                        sx={{
+                                          width: 8,
+                                          height: 1,
+                                          bgcolor: 'text.disabled',
+                                          flexShrink: 0,
+                                          alignSelf: 'center',
+                                        }}
+                                      />
+                                    )}
+                                  </React.Fragment>
+                                ))}
+                              </Box>
+                            );
+                          }}
+                        />
+                        {formik.touched.adharNo && formik.errors.adharNo && (
+                          <FormHelperText error sx={{ mx: '12px', mt: '3px' }}>
+                            {formik.errors.adharNo}
+                          </FormHelperText>
+                        )}
+                      </Box>
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 5.5 }}>
+                      <Box sx={{ position: 'relative' }}>
+                        <FormLabel
+                          error={formik.touched.panNo && Boolean(formik.errors.panNo)}
+                          sx={{
+                            fontSize: '0.75rem',
+                            display: 'block',
+                            mb: 0.5,
+                            color:
+                              formik.touched.panNo && formik.errors.panNo
+                                ? 'error.main'
+                                : 'text.secondary',
+                          }}
+                        >
+                          PAN No. *
+                        </FormLabel>
+                        <OTPInput
+                          maxLength={10}
+                          value={String(formik.values.panNo ?? '').toUpperCase()}
+                          onChange={(val) => {
+                            formik.setFieldValue('panNo', val.toUpperCase());
+                            formik.setFieldTouched('panNo', true, false);
+                          }}
+                          pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
+                          pasteTransformer={(s) =>
+                            s
+                              .replace(/[^A-Za-z0-9]/g, '')
+                              .toUpperCase()
+                              .slice(0, 10)
+                          }
+                          containerClassName=""
+                          render={({ slots }) => {
+                            const hasErr = formik.touched.panNo && Boolean(formik.errors.panNo);
+                            return (
+                              <Box display="flex" gap={0.75} alignItems="center" flexWrap="nowrap">
+                                {slots.map((slot, i) => (
+                                  <React.Fragment key={i}>
+                                    <Box
+                                      sx={{
+                                        width: 22,
+                                        height: 28,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '0.875rem',
+                                        fontWeight: 400,
+                                        fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+                                        border: '1px solid',
+                                        borderColor: slot.isActive
+                                          ? hasErr
+                                            ? 'error.main'
+                                            : 'primary.main'
+                                          : hasErr
+                                            ? 'error.main'
+                                            : 'grey.400',
+                                        borderRadius: '8px',
+                                        bgcolor: 'background.paper',
+                                        color: 'text.primary',
+                                        boxShadow: slot.isActive
+                                          ? hasErr
+                                            ? '0 0 0 2px #d32f2f33'
+                                            : '0 0 0 2px #1976d233'
+                                          : 'none',
+                                        transition: 'border-color 0.15s, box-shadow 0.15s',
+                                        position: 'relative',
+                                        userSelect: 'none',
+                                      }}
+                                    >
+                                      {slot.char}
+                                      {slot.hasFakeCaret && (
+                                        <Box
+                                          sx={{
+                                            position: 'absolute',
+                                            width: '1px',
+                                            height: '55%',
+                                            bgcolor: 'text.primary',
+                                            animation: 'blink 1s step-end infinite',
+                                            '@keyframes blink': {
+                                              '0%, 100%': { opacity: 1 },
+                                              '50%': { opacity: 0 },
+                                            },
+                                          }}
+                                        />
+                                      )}
+                                    </Box>
+                                    {i < 9 && (i + 1) % 5 === 0 && (
+                                      <Box
+                                        sx={{
+                                          width: 8,
+                                          height: 1,
+                                          bgcolor: 'text.disabled',
+                                          flexShrink: 0,
+                                          alignSelf: 'center',
+                                        }}
+                                      />
+                                    )}
+                                  </React.Fragment>
+                                ))}
+                              </Box>
+                            );
+                          }}
+                        />
+                        {formik.touched.panNo && formik.errors.panNo && (
+                          <FormHelperText error sx={{ mx: '14px', mt: '3px' }}>
+                            {formik.errors.panNo}
+                          </FormHelperText>
+                        )}
+                      </Box>
+                    </Grid>
+                  </SectionCard>
+
+                  {/* ── Professional Details ── */}
+                  <SectionCard title="Professional Details">
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <DatePicker
+                        label="Date of Joining *"
+                        value={formik.values.doj ? dayjs(formik.values.doj) : null}
+                        onChange={(value) => {
+                          formik.setFieldValue('doj', value ? value.format('YYYY-MM-DD') : '');
+                          formik.setFieldTouched('doj', true, false);
+                        }}
+                        format="DD-MM-YYYY"
+                        maxDate={dayjs().add(1, 'year')}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            fullWidth: true,
+                            error: formik.touched.doj && Boolean(formik.errors.doj),
+                            helperText: formik.touched.doj ? formik.errors.doj : '',
+                          },
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel id="fin-emp-group-label">Employee Group *</InputLabel>
+                        <Select
+                          labelId="fin-emp-group-label"
+                          value={formik.values.isTeaching ? '0' : '1'}
+                          onChange={(e) =>
+                            formik.setFieldValue('isTeaching', e.target.value === '0')
+                          }
+                          label="Employee Group *"
+                        >
+                          {EmployeeGroupTypeArray.map((_, index) => (
+                            <MenuItem key={index} value={String(index)}>
+                              {EmployeeGroupType[index]}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Department"
+                        value={form.department}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                          if (/^[A-Za-z ]*$/.test(newName))
+                            formik.setFieldValue('department', newName);
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Designation"
+                        value={form.designation}
+                        onChange={(e) => formik.setFieldValue('designation', e.target.value)}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Qualification"
+                        value={form.qualification}
+                        onChange={(e) => formik.setFieldValue('qualification', e.target.value)}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Identification Mark"
+                        value={form.identificationMark1}
+                        onChange={(e) =>
+                          formik.setFieldValue('identificationMark1', e.target.value)
+                        }
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <FormControl
+                        fullWidth
+                        size="small"
+                        error={formik.touched.roleId && Boolean(formik.errors.roleId)}
+                      >
+                        <InputLabel id="fin-role-label">Role *</InputLabel>
+                        <Select
+                          labelId="fin-role-label"
+                          value={form.roleId}
+                          onChange={(e) => {
+                            formik.setFieldValue('roleId', e.target.value);
+                            formik.setFieldTouched('roleId', true, false);
+                          }}
+                          label="Role *"
+                          disabled={rolesLoading}
+                        >
+                          {(rolesData?.items || []).map((role: any) => (
+                            <MenuItem key={role.id} value={role.id}>
+                              {role.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {formik.touched.roleId && formik.errors.roleId && (
+                          <FormHelperText>{formik.errors.roleId}</FormHelperText>
+                        )}
+                      </FormControl>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <FormControl
+                        fullWidth
+                        size="small"
+                        error={formik.touched.shiftId && Boolean(formik.errors.shiftId)}
+                      >
+                        <InputLabel id="fin-shift-label">Shift *</InputLabel>
+                        <Select
+                          labelId="fin-shift-label"
+                          value={form.shiftId}
+                          onChange={(e) => {
+                            formik.setFieldValue('shiftId', e.target.value);
+                            formik.setFieldTouched('shiftId', true, false);
+                          }}
+                          label="Shift *"
+                          disabled={shiftsLoading}
+                        >
+                          {(shiftsData?.items || []).map((shift: any) => (
+                            <MenuItem key={shift.id} value={shift.id}>
+                              {shift.shiftName || shift.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {formik.touched.shiftId && formik.errors.shiftId && (
+                          <FormHelperText>{formik.errors.shiftId}</FormHelperText>
+                        )}
+                      </FormControl>
+                    </Grid>
+                  </SectionCard>
+
+                  {/* ── Address Details ── */}
+                  <SectionCard title="Address Details">
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <ShakingTextField
+                        error={formik.touched.address1 && Boolean(formik.errors.address1)}
+                      >
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Building No./Flat/House No. *"
+                          {...formik.getFieldProps('address1')}
+                          value={form.address1}
+                          onBlur={(e) => {
+                            formik.setFieldValue('address1', e.target.value.trim());
+                            formik.handleBlur(e);
+                          }}
+                          error={formik.touched.address1 && Boolean(formik.errors.address1)}
+                          helperText={formik.touched.address1 && formik.errors.address1}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <ShakingTextField
+                        error={formik.touched.address2 && Boolean(formik.errors.address2)}
+                      >
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Area/Locality/Road Name *"
+                          {...formik.getFieldProps('address2')}
+                          value={form.address2}
+                          onBlur={(e) => {
+                            formik.setFieldValue('address2', e.target.value.trim());
+                            formik.handleBlur(e);
+                          }}
+                          error={formik.touched.address2 && Boolean(formik.errors.address2)}
+                          helperText={formik.touched.address2 && formik.errors.address2}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Landmark"
+                        {...formik.getFieldProps('address3')}
+                        value={form.address3}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <CountryComponent
+                        value={{ name: form.countryName, isoCode: form.countryIsoCode }}
+                        onChange={(_e: any, value: any) => {
+                          formik.setFieldValue('stateName', '');
+                          formik.setFieldValue('stateIsoCode', '');
+                          formik.setFieldValue('city', '');
+                          formik.setFieldValue('countryName', value?.name || '');
+                          formik.setFieldValue('countryIsoCode', value?.isoCode || '');
+                          formik.setFieldTouched('countryName', true, false);
+                        }}
+                        error={formik.touched.countryName && Boolean(formik.errors.countryName)}
+                        helperText={formik.touched.countryName && formik.errors.countryName}
+                        textFieldProps={{ label: 'Country *' }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <StateComponent
+                        value={{ name: form.stateName, isoCode: form.stateIsoCode }}
+                        countryValue={{ name: form.countryName, isoCode: form.countryIsoCode }}
+                        onChange={(_e: any, value: any) => {
+                          formik.setFieldValue('city', '');
+                          formik.setFieldValue('stateName', value?.name || '');
+                          formik.setFieldValue('stateIsoCode', value?.isoCode || '');
+                          formik.setFieldTouched('stateName', true, false);
+                        }}
+                        error={formik.touched.stateName && Boolean(formik.errors.stateName)}
+                        helperText={formik.touched.stateName && formik.errors.stateName}
+                        textFieldProps={{ label: 'State *' }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <CityComponent
+                        value={{ name: form.city }}
+                        stateValue={{ name: form.stateName, isoCode: form.stateIsoCode }}
+                        onChange={(_e: any, value: any) => {
+                          formik.setFieldValue('city', value?.name || '');
+                          formik.setFieldTouched('city', true, false);
+                        }}
+                        error={formik.touched.city && Boolean(formik.errors.city)}
+                        helperText={formik.touched.city && formik.errors.city}
+                        textFieldProps={{ label: 'City *' }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="PIN Code"
+                        {...formik.getFieldProps('pinCode')}
+                        value={form.pinCode}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '');
+                          if (value.length <= 6) formik.setFieldValue('pinCode', value);
+                        }}
+                        error={formik.touched.pinCode && Boolean(formik.errors.pinCode)}
+                        helperText={formik.touched.pinCode && formik.errors.pinCode}
+                        inputProps={{ maxLength: 6, inputMode: 'numeric', pattern: '[0-9]*' }}
+                      />
+                    </Grid>
+                  </SectionCard>
+                </Box>
+              )}
+
+              {currentStep === 2 && (
+                <Box>
+                  <SectionCard title="Academic Permission">
+                    <Grid size={{ xs: 12 }}>
+                      {!currentYear?.id ? (
+                        <Alert severity="warning">
+                          Academic year is not set. Please configure an academic year first.
+                        </Alert>
+                      ) : organizationsLoading ? (
+                        <LinearProgress />
+                      ) : organizationOptions.length === 0 ? (
+                        <Alert severity="info">
+                          No organizations found for the current academic year.
+                        </Alert>
+                      ) : (
+                        <Box>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                            Select the organizations this employee should have access to:
+                          </Typography>
+                          {academicTouched && selectedStageIds?.length === 0 && (
+                            <FormHelperText error sx={{ mb: 40, ml: 0 }}>
+                              At least one organization must be selected.
+                            </FormHelperText>
+                          )}
+                          <Box sx={{ maxHeight: 320, overflowY: 'auto', pr: 0.5, mt: 1 }}>
+                            <Grid container spacing={1}>
+                              {organizationOptions.map((option) => {
+                                const isChecked = selectedStageIds?.includes(option.id);
+                                return (
+                                  <Grid key={option.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                                    <Paper
+                                      variant="outlined"
+                                      sx={{
+                                        px: 1.5,
+                                        py: 1,
+                                        borderRadius: 1.5,
+                                        borderColor: isChecked ? 'primary.main' : 'divider',
+                                        bgcolor: isChecked
+                                          ? theme.vars.palette.primary.lightChannel
+                                          : 'background.paper',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        '&:hover': {
+                                          borderColor: 'primary.main',
+                                          bgcolor: theme.vars.palette.primary.lightChannel,
+                                        },
+                                      }}
+                                      onClick={() => {
+                                        const current = selectedStageIds;
+                                        const next = isChecked
+                                          ? current.filter((id) => id !== option.id)
+                                          : [...current, option.id];
+                                        updateField('academicPermissionStageIds', next.join(','));
+                                      }}
+                                    >
+                                      <FormControlLabel
+                                        control={
+                                          <Checkbox
+                                            size="small"
+                                            checked={isChecked}
+                                            onChange={() => {
+                                              const current = selectedStageIds;
+                                              const next = isChecked
+                                                ? current.filter((id) => id !== option.id)
+                                                : [...current, option.id];
+                                              updateField(
+                                                'academicPermissionStageIds',
+                                                next.join(',')
+                                              );
+                                            }}
+                                            onClick={(e) => e.stopPropagation()}
+                                          />
+                                        }
+                                        label={
+                                          <Box>
+                                            <Typography
+                                              variant="body2"
+                                              fontWeight={isChecked ? 600 : 400}
+                                            >
+                                              {option.name || option.label}
+                                            </Typography>
+                                            {option.mediumName && (
+                                              <Typography variant="caption" color="text.secondary">
+                                                {option.mediumName}
+                                                {option.boardName ? ` · ${option.boardName}` : ''}
+                                              </Typography>
+                                            )}
+                                          </Box>
+                                        }
+                                        sx={{ m: 0, width: '100%' }}
+                                      />
+                                    </Paper>
+                                  </Grid>
+                                );
+                              })}
+                            </Grid>
+                          </Box>
+                        </Box>
+                      )}
+                    </Grid>
+                  </SectionCard>
+                </Box>
+              )}
+
+              {currentStep === 3 && (
+                <Stack spacing={2}>
+                  <Typography variant="subtitle2">Final review</Typography>
+                  <Typography variant="body2">
+                    Employee/user creation will happen now for {form.firstName} {form.lastName}.
+                  </Typography>
+                  <Stack>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={form.useSubmittedPhoto}
+                          disabled={!application.hasPhoto}
+                          onChange={(event) =>
+                            updateField('useSubmittedPhoto', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Use submitted photo as profile picture"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={form.attachResumeAsDocument}
+                          disabled={!application.hasResume}
+                          onChange={(event) =>
+                            updateField('attachResumeAsDocument', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Attach submitted resume to employee documents"
+                    />
+                  </Stack>
+                  {!canSubmit && (
+                    <Typography variant="body2" color="error">
+                      Complete required employee fields and Academic Permission before finalizing.
+                    </Typography>
+                  )}
+                </Stack>
+              )}
+            </Box>
+          )}
+        />
+      </DialogContent>
+    </CustomDialog>
   );
 }
 
@@ -1755,13 +2863,11 @@ export default function EmployeeOnboardingScreen() {
       {
         id: 'actions',
         label: 'Actions',
-        align: 'right',
-        width: 120,
-        minWidth: 112,
+        width: 70,
+        minWidth: 60,
+        sticky: true,
         isSort: false,
         isFilter: false,
-        headerSx: { px: 1.5 },
-        cellSx: { px: 1.5 },
         render: (_value, row) => {
           const application = row as EmployeeApplication;
           const canFinalize = canFinalizeEmployeeApplication(application.status);
@@ -1776,19 +2882,9 @@ export default function EmployeeOnboardingScreen() {
               <ThreeDotsActions
                 showViewIcon
                 placement="right-top"
-                sx={{
-                  gap: 1,
-                  '& .MuiIconButton-root': {
-                    p: 0.75,
-                  },
-                  '& svg': {
-                    width: 18,
-                    height: 18,
-                  },
-                }}
                 handleViewClick={() => handleOpenApplication(application.id)}
                 actions={({ popover }) => (
-                  <MenuList dense>
+                  <MenuList>
                     <MenuItem
                       data-testid="employee-onboarding-row-finalize"
                       disabled={!canFinalize}
@@ -1905,8 +3001,8 @@ export default function EmployeeOnboardingScreen() {
           { name: 'Employee' },
           { name: 'Employee Onboarding' },
         ]}
-        sx={onboardingBreadcrumbSx}
-        slotProps={onboardingBreadcrumbSlotProps}
+        // sx={onboardingBreadcrumbSx}
+        // slotProps={onboardingBreadcrumbSlotProps}
         action={
           <Button
             variant="contained"
@@ -1922,14 +3018,14 @@ export default function EmployeeOnboardingScreen() {
         description="Candidate applications and final employee enrollment."
       />
 
-      <Stack spacing={2} sx={{ flex: 1, minHeight: 0, minWidth: 0, overflowX: 'hidden' }}>
+      <Stack sx={{ flex: 1, minHeight: 0, minWidth: 0, overflowX: 'hidden' }}>
         <Card
           data-testid="employee-onboarding-filters"
           sx={{
-            mb: 1,
             p: 1,
             display: 'grid',
             gap: 1,
+            mb: 1,
             gridTemplateColumns: { xs: '1fr', sm: 'minmax(180px, 280px)' },
           }}
         >
