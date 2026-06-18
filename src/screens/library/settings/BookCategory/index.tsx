@@ -82,7 +82,12 @@ const BookCategoryCreation = () => {
   };
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box
+      data-testid="library-settings-book-categories-page"
+      height="100%"
+      display="flex"
+      flexDirection="column"
+    >
       <CustomBreadcrumbs
         heading="Book Categories"
         description="Manage categories of books such as Fiction, Non-fiction, Science, History, etc. Use actions to edit or delete existing categories. Click ‘Add Book Category’ to create a new one."
@@ -93,6 +98,7 @@ const BookCategoryCreation = () => {
         ]}
         action={
           <Button
+            data-testid="library-settings-book-category-add-button"
             onClick={() => addBookCategoryDialog.onTrue()}
             size="small"
             startIcon={<Add />}

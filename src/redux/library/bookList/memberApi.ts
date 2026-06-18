@@ -1,14 +1,17 @@
 import { libraryModuleType } from 'src/redux/tagTypes';
 
 import { libraryModuleApi } from '../libraryModuleApi';
+import { mapLibraryMemberDto, toLibraryPaginatedList } from '../library-adapters';
 
 export const membersApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getAllMembers: builder.query({
-      query: () => ({
-        url: '/libraryMemberManagementData', // endpoint for fetching member list
+      query: (params) => ({
+        url: '/library/members',
         method: 'GET',
+        params,
       }),
+      transformResponse: (response) => toLibraryPaginatedList(response, mapLibraryMemberDto),
       providesTags: [libraryModuleType.members],
     }),
   }),

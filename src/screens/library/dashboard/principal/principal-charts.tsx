@@ -1,78 +1,36 @@
+import type { LibraryDashboardOverview } from 'src/redux/library/library-adapters';
+
 import { useTheme } from '@mui/material/styles';
 import { fNumber } from 'src/utils/format-number';
-import React, { useState, useCallback } from 'react';
-import { Box, Card, Grid, CardHeader } from '@mui/material';
-import { Chart, useChart, ChartSelect } from 'src/components/chart';
+import { Chart, useChart } from 'src/components/chart';
+import { Box, Card, Grid, CardHeader, Typography } from '@mui/material';
 
-// ----------------------------------------------------------------------
-
-// Mock data for Monthly Circulation Trend (Last 12 Months)
-const mockMonthlyCirculation = {
-  series: [
-    {
-      name: '2023',
-      data: [
-        {
-          name: 'Average',
-          data: [2100, 2400, 2200, 2600, 2800, 2500, 2700, 2900, 3100, 3000, 3200, 3450],
-        },
-      ],
-    },
-    {
-      name: '2022',
-      data: [
-        {
-          name: 'Average',
-          data: [1800, 2000, 1900, 2100, 2300, 2200, 2400, 2500, 2600, 2700, 2800, 3000],
-        },
-      ],
-    },
-  ],
-  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-};
-
-// Mock data for Category Distribution (Top 5)
-const mockCategoryData = [
-  { label: 'Fiction', value: 4500 },
-  { label: 'Academic', value: 3800 },
-  { label: 'Science', value: 2100 },
-  { label: 'History', value: 1200 },
-  { label: 'Reference', value: 850 },
-];
-
-export default function PrincipalCharts() {
+export default function PrincipalCharts({ overview }: { overview?: LibraryDashboardOverview }) {
   const theme = useTheme();
-  const [selectedYear, setSelectedYear] = useState('2023');
+  const weeklyPoints = overview?.weeklyCirculation || [];
+  const categories = overview?.categoryDistribution || [];
 
-  const handleChangeYear = useCallback((newValue: string) => {
-    setSelectedYear(newValue);
-  }, []);
-
-  const currentYearSeries =
-    mockMonthlyCirculation.series.find((s) => s.name === selectedYear)?.data[0].data || [];
-
-  const chartOptions = useChart({
+  const lineChartOptions = useChart({
     colors: [theme.palette.primary.main, theme.palette.warning.main],
     stroke: { width: 3, curve: 'smooth' },
     xaxis: {
-      categories: mockMonthlyCirculation.categories,
+      categories: weeklyPoints.length ? weeklyPoints.map((point: any) => point.label) : [],
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
     grid: {
       borderColor: theme.palette.divider,
       strokeDashArray: 3,
-      xaxis: { lines: { show: false } }, // Clean grid like Admin
+      xaxis: { lines: { show: false } },
     },
     tooltip: {
       y: {
         formatter: (value: number) => fNumber(value),
-        title: { formatter: () => 'Books Issued: ' },
+        title: { formatter: () => 'Transactions: ' },
       },
     },
   });
 
-  // Horizontal Bar Chart for Categories
   const barChartOptions = useChart({
     colors: [theme.palette.info.main],
     plotOptions: {
@@ -83,11 +41,11 @@ export default function PrincipalCharts() {
       },
     },
     xaxis: {
-      categories: mockCategoryData.map((c) => c.label),
+      categories: categories.map((category: any) => category.categoryName),
     },
     tooltip: {
       y: {
-        formatter: (val: number) => `${fNumber(val)} books`,
+        formatter: (val: number) => `${fNumber(val)} copies`,
         title: { formatter: () => '' },
       },
     },
@@ -101,7 +59,6 @@ export default function PrincipalCharts() {
 
   return (
     <Grid container spacing={1}>
-      {/* Monthly Circulation Trend */}
       <Grid size={{ xs: 12, md: 8 }}>
         <Card
           sx={{
@@ -112,30 +69,31 @@ export default function PrincipalCharts() {
           }}
         >
           <CardHeader
-            title="Monthly Circulation Trend"
-            subheader="Comparison of books issued over the last 12 months"
-            action={
-              <ChartSelect
-                options={mockMonthlyCirculation.series.map((item) => item.name)}
-                value={selectedYear}
-                onChange={handleChangeYear}
-              />
-            }
+            title="Weekly Circulation Trend"
+            subheader="Books issued and returned over the selected academic week"
             sx={{ mb: 3 }}
           />
 
           <Box sx={{ pb: 3, px: 1 }} dir="ltr">
-            <Chart
-              type="line"
-              series={[{ name: 'Issued', data: currentYearSeries }]}
-              options={chartOptions}
-              height={320}
-            />
+            {weeklyPoints.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" sx={{ p: 3, textAlign: 'center' }}>
+                No circulation trend data available.
+              </Typography>
+            ) : (
+              <Chart
+                type="line"
+                series={[
+                  { name: 'Issued', data: weeklyPoints.map((point: any) => point.issued) },
+                  { name: 'Returned', data: weeklyPoints.map((point: any) => point.returned) },
+                ]}
+                options={lineChartOptions}
+                height={320}
+              />
+            )}
           </Box>
         </Card>
       </Grid>
 
-      {/* Top 5 Categories */}
       <Grid size={{ xs: 12, md: 4 }}>
         <Card
           sx={{
@@ -145,15 +103,23 @@ export default function PrincipalCharts() {
             borderRadius: 2,
           }}
         >
-          <CardHeader title="Top 5 Categories" subheader="By volume" sx={{ mb: 2 }} />
+          <CardHeader title="Top Categories" subheader="By copy volume" sx={{ mb: 2 }} />
 
           <Box sx={{ pb: 3, px: 1 }} dir="ltr">
-            <Chart
-              type="bar"
-              series={[{ name: 'Count', data: mockCategoryData.map((c) => c.value) }]}
-              options={barChartOptions}
-              height={320}
-            />
+            {categories.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" sx={{ p: 3, textAlign: 'center' }}>
+                No category distribution data available.
+              </Typography>
+            ) : (
+              <Chart
+                type="bar"
+                series={[
+                  { name: 'Copies', data: categories.map((category: any) => category.copyCount) },
+                ]}
+                options={barChartOptions}
+                height={320}
+              />
+            )}
           </Box>
         </Card>
       </Grid>

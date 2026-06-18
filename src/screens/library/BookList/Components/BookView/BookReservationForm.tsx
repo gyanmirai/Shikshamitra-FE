@@ -13,7 +13,9 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
+import { buildReservationPayload } from 'src/redux/library/library-adapters';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   useReserveBookMutation,
@@ -63,11 +65,24 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
     validationSchema: getReserveBookSchema(currentYear),
     onSubmit: async (values) => {
       try {
-        await reserveBookMutation({ bookId: editData?.bookId, body: values });
+        const bookId = editData?.id || editData?.bookId;
+        const memberId = selectedMember?.id || selectedMember?.memberId || values.memberId;
+        const result = await reserveBookMutation({
+          bookId,
+          body: buildReservationPayload(values, memberId),
+        });
+
+        if (result?.error) {
+          const parsed = parseApiProblemDetail(result.error);
+          shikshaMitraToast.error({ message: parsed.detail });
+          return;
+        }
+
         shikshaMitraToast.success({ message: `Book reserved successfully for ${values.memberId}` });
         onClose(null, true);
       } catch (error) {
-        shikshaMitraToast.error({ message: 'Failed to reserve book' });
+        const parsed = parseApiProblemDetail(error);
+        shikshaMitraToast.error({ message: parsed.detail });
       }
     },
   });
@@ -83,11 +98,14 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
       try {
         // Safe-guard against missing or invalid memberData
         const safeMemberData = Array.isArray(memberData) ? memberData : [];
-        const foundMember = safeMemberData.find((member: any) => member.memberId === trimmedValue);
+        const foundMember = safeMemberData.find(
+          (member: any) =>
+            member.memberId === trimmedValue || member.memberIdentifier === trimmedValue
+        );
 
         if (foundMember) {
           setSelectedMember(foundMember);
-          formik.setFieldValue('memberId', foundMember.memberId);
+          formik.setFieldValue('memberId', foundMember.memberIdentifier || foundMember.memberId);
         } else {
           setSelectedMember(null);
         }
@@ -105,12 +123,10 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
   const { data: reservationData, isLoading: reservationLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReservationTableViewQuery,
-    params: { bookId: editData?.id, academicYearId: currentYear?.id },
+    params: { bookId: editData?.id || editData?.bookId, academicYearId: currentYear?.id },
   });
 
-  const reservedList = memberData?.filter((member: any) =>
-    editData?.reservationMemberIds.includes(member.memberId)
-  );
+  const reservedList = Array.isArray(reservationData) ? reservationData : [];
 
   const columns: IColumn[] = useMemo(
     () => [

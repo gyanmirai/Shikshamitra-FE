@@ -16,7 +16,17 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { LibraryBookStatus } from 'src/enums/library-book-status';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetSectionManagementQuery } from 'src/redux/library/settingApi';
-import { Box, Button, TextField, IconButton, Typography } from '@mui/material';
+import { useGetBookCopyLabelsQuery } from 'src/redux/library/copy-labels-api';
+import {
+  Box,
+  Alert,
+  Button,
+  TextField,
+  IconButton,
+  Typography,
+  GlobalStyles,
+  CircularProgress,
+} from '@mui/material';
 
 import type { IBookCopy, IBookPayload } from '../Components/type';
 
@@ -89,9 +99,10 @@ const ShelfDropdown = ({ row, copies, setCopies, formik, sectionData }: ShelfDro
 interface BookCopiesStepProps {
   formik: FormikProps<IBookPayload>;
   isEdit?: boolean;
+  bookId?: string;
 }
 
-const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
+const BookCopiesStep = ({ formik, isEdit, bookId }: BookCopiesStepProps) => {
   const [copies, setCopies] = useState<IBookCopy[]>(formik.values.copies || []);
   const [openAccessionDialog, setOpenAccessionDialog] = useState(false);
 
@@ -144,6 +155,39 @@ const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
       value: item.id,
       label: item.sectionName,
     })) || [];
+  const shouldFetchLabels = Boolean(bookId && openAccessionDialog);
+  const {
+    data: labelBatch,
+    isFetching: labelsLoading,
+    isError: labelsError,
+  } = useGetBookCopyLabelsQuery(
+    { bookId },
+    { skip: !shouldFetchLabels, refetchOnMountOrArgChange: true }
+  );
+
+  const resolveSectionName = (sectionId?: string) =>
+    sectionData?.items?.find((item: any) => item.id === sectionId)?.sectionName || '';
+
+  const resolveShelfName = (sectionId?: string, shelfId?: string) => {
+    const section = sectionData?.items?.find((item: any) => item.id === sectionId);
+    return section?.shelfDetails?.find((item: any) => item.id === shelfId)?.shelfName || '';
+  };
+
+  const localLabelRows = copies
+    .filter((copy) => copy.accessionNo)
+    .map((copy) => ({
+      copyNumber: copy.copyNo,
+      accessionNumber: copy.accessionNo,
+      barcodeValue: copy.accessionNo,
+      sectionName: resolveSectionName(copy.section),
+      shelfName: resolveShelfName(copy.section, copy.shelf),
+    }));
+  const labelRows = labelBatch?.labels?.length ? labelBatch.labels : localLabelRows;
+  const hasMissingAccessionNumbers = copies.some((copy) => !copy.accessionNo);
+  const hasLabels = labelRows.length > 0;
+  const handlePrintLabels = () => {
+    window.print();
+  };
 
   return (
     <Box>
@@ -400,7 +444,10 @@ const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
                 isFilter: false,
                 isSort: false,
                 render: (_, row) => (
-                  <IconButton onClick={() => {}}>
+                  <IconButton
+                    onClick={() => setOpenAccessionDialog(true)}
+                    disabled={!row.accessionNo}
+                  >
                     <Iconify icon={GlobalIcons.printer} />
                   </IconButton>
                 ),
@@ -439,7 +486,38 @@ const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
           }}
         >
           {/* Warning Alert for Pending Accession Numbers */}
-          {copies.some((copy) => !copy.accessionNo) && (
+          <GlobalStyles
+            styles={{
+              '@media print': {
+                'body *': { visibility: 'hidden' },
+                '.library-copy-label-print-area, .library-copy-label-print-area *': {
+                  visibility: 'visible',
+                },
+                '.library-copy-label-print-area': {
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  width: '100%',
+                  background: '#ffffff',
+                  padding: '16px',
+                },
+                '.library-copy-label-actions': {
+                  display: 'none !important',
+                },
+              },
+            }}
+          />
+          {labelsError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              Could not load backend copy labels. Local copy rows are shown instead.
+            </Alert>
+          )}
+          {labelsLoading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={24} />
+            </Box>
+          )}
+          {hasMissingAccessionNumbers && (
             <Box
               sx={{
                 p: 2.5,
@@ -487,6 +565,7 @@ const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
 
           {/* Barcode Cards Grid */}
           <Box
+            className="library-copy-label-print-area"
             sx={{
               maxHeight: 450,
               overflowY: 'auto',
@@ -508,9 +587,13 @@ const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
             }}
           >
             <Grid container spacing={3} justifyContent="flex-start" alignItems="stretch">
-              {copies.map((copy, idx) =>
-                copy.accessionNo ? (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={idx} display="flex">
+              {labelRows.map((copy, idx) =>
+                copy.accessionNumber ? (
+                  <Grid
+                    size={{ xs: 12, sm: 6, md: 4 }}
+                    key={`${copy.accessionNumber}-${idx}`}
+                    display="flex"
+                  >
                     <Box
                       sx={{
                         background: '#fff',
@@ -535,7 +618,7 @@ const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
                         }}
                       >
                         <Barcode
-                          value={copy.accessionNo}
+                          value={copy.barcodeValue || copy.accessionNumber}
                           format="CODE128"
                           width={1}
                           height={35}
@@ -544,6 +627,18 @@ const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
                           fontSize={11}
                         />
                       </Box>
+                      <Typography variant="caption" sx={{ fontWeight: 700, textAlign: 'center' }}>
+                        Copy {copy.copyNumber}
+                      </Typography>
+                      {(copy.sectionName || copy.shelfName) && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ textAlign: 'center' }}
+                        >
+                          {[copy.sectionName, copy.shelfName].filter(Boolean).join(' / ')}
+                        </Typography>
+                      )}
                     </Box>
                   </Grid>
                 ) : null
@@ -551,7 +646,7 @@ const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
             </Grid>
 
             {/* Empty State */}
-            {copies.filter((copy) => copy.accessionNo).length === 0 && (
+            {!labelsLoading && !hasLabels && (
               <Box
                 sx={{
                   textAlign: 'center',
@@ -590,8 +685,9 @@ const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
           </Box>
 
           {/* Action Buttons */}
-          {copies.filter((copy) => copy.accessionNo).length > 0 && (
+          {hasLabels && (
             <Box
+              className="library-copy-label-actions"
               sx={{
                 mt: 3,
                 pt: 3,
@@ -602,21 +698,10 @@ const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
               }}
             >
               <Button
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:download" />}
-                onClick={() => {
-                  // TODO: Implement download functionality
-                }}
-              >
-                Download All
-              </Button>
-              <Button
                 variant="contained"
                 startIcon={<Iconify icon="mdi:printer" />}
-                onClick={() => {
-                  // TODO: Implement print functionality
-                  window.print();
-                }}
+                onClick={handlePrintLabels}
+                disabled={labelsLoading}
               >
                 Print All
               </Button>

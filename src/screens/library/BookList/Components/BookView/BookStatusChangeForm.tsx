@@ -19,10 +19,13 @@ interface ChangeStatusFormProps {
   onClose: (e: any, isSubmit: boolean) => void;
 }
 const allowedStatuses = [
-  LibraryBookStatus.Removed,
-  LibraryBookStatus.UnderMaintenance,
-  LibraryBookStatus.Lost,
+  { label: 'Removed', value: 6, sourceStatus: LibraryBookStatus.Removed },
+  { label: 'Under Maintenance', value: 5, sourceStatus: LibraryBookStatus.UnderMaintenance },
+  { label: 'Lost', value: 3, sourceStatus: LibraryBookStatus.Lost },
 ];
+
+const toBackendCopyStatus = (status?: LibraryBookStatus) =>
+  allowedStatuses.find((option) => option.sourceStatus === status)?.value ?? 5;
 
 const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClose }) => {
   const [updateBookCopyStatus, { isLoading: isUpdateLoading }] = useQueryAndMutation({
@@ -31,18 +34,18 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
   });
 
   const options = allowedStatuses.map((status) => ({
-    label: LibraryBookStatus[status],
-    value: status,
+    label: status.label,
+    value: status.value,
     description:
-      status === LibraryBookStatus.Removed
+      status.sourceStatus === LibraryBookStatus.Removed
         ? 'Book has been removed from the library'
-        : status === LibraryBookStatus.UnderMaintenance
+        : status.sourceStatus === LibraryBookStatus.UnderMaintenance
           ? 'Book is currently under maintenance'
           : 'Book has been reported as lost',
   }));
   const formik = useFormik({
     initialValues: {
-      status: editData?.status || 0,
+      status: toBackendCopyStatus(editData?.status),
       remarks: '',
     },
     onSubmit: async (values) => {

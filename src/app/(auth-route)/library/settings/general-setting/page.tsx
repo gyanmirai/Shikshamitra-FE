@@ -1,6 +1,5 @@
-import React from 'react';
-import LibraryGeneralSettingScreen from 'src/screens/library/settings/general-setting/library-general-setting-screen';
+import { redirect } from 'next/navigation';
 
-const LibraryGeneralSetting = () => <LibraryGeneralSettingScreen />;
-
-export default LibraryGeneralSetting;
+export default function LibraryGeneralSettingRedirect() {
+  redirect('/library/settings/borrowing-and-return-rules');
+}

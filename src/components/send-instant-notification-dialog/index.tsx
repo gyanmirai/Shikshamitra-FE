@@ -1,7 +1,8 @@
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
-import { Box, Button, DialogActions } from '@mui/material';
+import { Box, TextField, DialogActions } from '@mui/material';
 import CustomPlaceholderInput from 'src/screens/student/studentNotification/textfiledForMessageWithPlaceholder';
 
 import { Scrollbar } from '../scrollbar';
@@ -16,23 +17,35 @@ const SendInstantNotificationDialog: React.FC<ISendInstantNotificationDialogProp
   onClose,
   data,
   userList,
+  onSend,
+  isSending = false,
 }) => {
   const formik = useFormik({
     initialValues: {
-      communicationChannel: [],
+      communicationChannel: ['InApp'],
       message: '',
-      template: '',
+      subject: '',
     },
 
     onSubmit: async (values) => {
+      if (onSend) {
+        try {
+          await onSend(values);
+        } catch {
+          return;
+        }
+        return;
+      }
+
       onClose();
     },
   });
 
   const CHANNEL_OPTIONS = [
-    { value: 'WhatsApp', label: 'WhatsApp' },
+    { value: 'InApp', label: 'In-App' },
     { value: 'Email', label: 'Email' },
-    { value: 'Message', label: 'Message' },
+    { value: 'Sms', label: 'SMS (coming soon)' },
+    { value: 'WhatsApp', label: 'WhatsApp (coming soon)' },
   ];
 
   const placeHolderOptions = [
@@ -40,15 +53,11 @@ const SendInstantNotificationDialog: React.FC<ISendInstantNotificationDialogProp
     { value: '[Parent Name]', label: 'Parent Name' },
   ];
 
-  const templateOptions = [
-    { value: 'template1', label: 'Template 1' },
-    { value: 'template2', label: 'Template 2' },
-  ];
   return (
     <CustomDialog maxWidth="md" title="Send Instant Notification" handleClose={onClose} open={open}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '400px' }}>
         <Box p={2}>
-          <Box display="flex" gap={2} mt={2} mb={2}>
+          <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={2} mt={2} mb={2}>
             <CustomSelect
               label="Select Communication Channels"
               options={CHANNEL_OPTIONS}
@@ -57,12 +66,12 @@ const SendInstantNotificationDialog: React.FC<ISendInstantNotificationDialogProp
               multiple
               formControlProps={{ sx: { width: '100%', mt: 2 } }}
             />
-            <CustomSelect
-              label="Select Template"
-              options={templateOptions}
-              onChange={(e) => formik.setFieldValue('template', e)}
-              value={formik.values.template}
-              formControlProps={{ sx: { width: '100%', mt: 2 } }}
+            <TextField
+              size="small"
+              label="Subject"
+              value={formik.values.subject}
+              onChange={(event) => formik.setFieldValue('subject', event.target.value)}
+              sx={{ width: '100%', mt: 2 }}
             />
           </Box>
 
@@ -74,16 +83,18 @@ const SendInstantNotificationDialog: React.FC<ISendInstantNotificationDialogProp
         </Box>
       </Scrollbar>
       <DialogActions>
-        <Button
+        <LoadingButton
           startIcon={<Iconify icon={GlobalIcons.sendNotification} />}
           size="small"
           variant="contained"
+          loading={isSending}
+          disabled={isSending}
           onClick={() => {
             formik.handleSubmit();
           }}
         >
           Send
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </CustomDialog>
   );

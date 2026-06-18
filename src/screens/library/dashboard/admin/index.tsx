@@ -1,3 +1,5 @@
+import type { LibraryDashboardOverview } from 'src/redux/library/library-adapters';
+
 import React from 'react';
 import { Box, Grid } from '@mui/material';
 
@@ -13,17 +15,21 @@ import {
   CategoryDistributionChart,
 } from './admin-charts';
 
-const AdminDashboard = () => (
+interface AdminDashboardProps {
+  overview?: LibraryDashboardOverview;
+}
+
+const AdminDashboard = ({ overview }: AdminDashboardProps) => (
   <Box>
     <Grid container spacing={1}>
       {/* Section 1: KPI Cards */}
       <Grid size={{ xs: 12 }}>
-        <AdminKPICards />
+        <AdminKPICards overview={overview} />
       </Grid>
 
       {/* Section 3 & 8: Circulation & Quick Actions */}
       <Grid size={{ xs: 12, md: 8 }}>
-        <WeeklyCirculationChart />
+        <WeeklyCirculationChart overview={overview} />
       </Grid>
       <Grid size={{ xs: 12, md: 4 }}>
         <AdminQuickActions />
@@ -31,26 +37,26 @@ const AdminDashboard = () => (
 
       {/* Section 2 & 4: Alerts & Inventory Intelligence */}
       <Grid size={{ xs: 12, md: 4 }}>
-        <AdminAlerts />
+        <AdminAlerts overview={overview} />
       </Grid>
       <Grid size={{ xs: 12, md: 8 }}>
-        <InventoryIntelligence />
+        <InventoryIntelligence overview={overview} />
       </Grid>
 
       {/* Section 7 & 4/Health: Financials, Category Distribution & Health Score */}
       <Grid size={{ xs: 12, md: 7 }}>
-        <AdminFinancials />
+        <AdminFinancials overview={overview} />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 5 }}>
-        <CategoryDistributionChart />
+        <CategoryDistributionChart overview={overview} />
       </Grid>
 
       {/* Section 5 & 6: Member Activity & Shelf Health */}
       <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
-        <MemberActivityChart />
+        <MemberActivityChart overview={overview} />
       </Grid>
       <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
-        <SectionBooksChart />
+        <SectionBooksChart overview={overview} />
       </Grid>
     </Grid>
   </Box>

@@ -2,6 +2,7 @@
 
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import { toast } from 'sonner';
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -9,8 +10,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Checkbox, MenuItem, MenuList, Typography } from '@mui/material';
+import { useSendLibraryNotificationMutation } from 'src/redux/library/notifications-api';
+import { buildLibraryManualNotificationPayload } from 'src/redux/library/library-adapters';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import CollectFinesDialog from './component/collect-fines-dialog';
@@ -31,6 +35,7 @@ const LibraryFineManagement = () => {
   const [selectedMember, setSelectedMember] = useState(null);
   // State to store array of selected students for fine collection
   const [selectedStudents, setSelectedStudents] = useState<IFineCirculation[]>([]);
+  const [sendNotification, sendNotificationState] = useSendLibraryNotificationMutation();
 
   // Boolean hook to control collect fine dialog visibility
   const {
@@ -70,6 +75,23 @@ const LibraryFineManagement = () => {
   // Handler function to process fine collection
   const handleCollectFine = (values: any) => {
     closeCollectFineDialog();
+  };
+
+  const handleSendNotification = async (values: any) => {
+    try {
+      await sendNotification(
+        buildLibraryManualNotificationPayload(
+          { ...values, eventType: 'fineDueReminder' },
+          selectedStudents
+        )
+      ).unwrap();
+      toast.success('Notification recorded.');
+      closeNotificationDialog();
+    } catch (error) {
+      const parsed = parseApiProblemDetail(error);
+      toast.error(parsed.detail);
+      throw error;
+    }
   };
 
   const tableColumns = [
@@ -193,6 +215,8 @@ const LibraryFineManagement = () => {
           onClose={closeNotificationDialog}
           data={[]}
           userList={selectedStudents}
+          onSend={handleSendNotification}
+          isSending={sendNotificationState.isLoading}
         />
       )}
 

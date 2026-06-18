@@ -1,15 +1,21 @@
 import { libraryModuleType } from 'src/redux/tagTypes';
 
 import { libraryModuleApi } from '../libraryModuleApi';
+import {
+  mapReturnSearchDto,
+  mapIssueReturnItemDto,
+  toLibraryPaginatedList,
+} from '../library-adapters';
 
 export const issueAndReturnApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getIssueReturnList: builder.query({
       query: (params) => ({
-        url: '/library/issue-return',
+        url: '/library/issue-returns',
         method: 'GET',
         params,
       }),
+      transformResponse: (response) => toLibraryPaginatedList(response, mapIssueReturnItemDto),
       providesTags: [libraryModuleType.books],
     }),
 
@@ -30,18 +36,18 @@ export const issueAndReturnApi = libraryModuleApi.injectEndpoints({
     }),
 
     getReturnDetails: builder.query({
-      query: ({ accessionNo, academicYearId }) => ({
-        url: `/library/return/${accessionNo}`,
+      query: ({ accessionNo }) => ({
+        url: `/library/returns/search`,
         method: 'GET',
-        params: { academicYearId },
+        params: { accessionNo },
       }),
+      transformResponse: mapReturnSearchDto,
     }),
 
     returnBook: builder.mutation({
-      query: ({ academicYearId, body }) => ({
-        url: '/library/return',
+      query: ({ body }) => ({
+        url: '/library/returns',
         method: 'POST',
-        params: { academicYearId },
         body,
       }),
       invalidatesTags: [libraryModuleType.books],

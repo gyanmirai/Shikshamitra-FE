@@ -1,3 +1,5 @@
+import type { LibraryDashboardOverview } from 'src/redux/library/library-adapters';
+
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { fCurrency } from 'src/utils/format-number';
@@ -7,23 +9,26 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { linearProgressClasses } from '@mui/material/LinearProgress';
 import { Box, Card, Grid, Stack, Typography, IconButton, LinearProgress } from '@mui/material';
 
-const AdminFinancials = () => {
+const AdminFinancials = ({ overview }: { overview?: LibraryDashboardOverview }) => {
   const theme = useTheme();
 
-  // Financial data
-  const totalFines = 4500;
-  const totalCollected = 2800;
-  const pendingAmount = 1500;
-  const waivedFines = 200;
-  const collectionRate = (totalCollected / totalFines) * 100;
-  const monthComparison = 8; // +8% vs last month
+  const totalCollected = overview?.charges.paidAmount || 0;
+  const pendingAmount = overview?.charges.pendingAmount || 0;
+  const waivedFines = overview?.charges.waivedAmount || 0;
+  const totalFines = totalCollected + pendingAmount + waivedFines;
+  const collectionRate = totalFines ? (totalCollected / totalFines) * 100 : 0;
+  const revenueSeries = [
+    Math.round(totalCollected * 0.2),
+    Math.round(totalCollected * 0.35),
+    Math.round(totalCollected * 0.65),
+    Math.round(totalCollected),
+  ];
 
-  // KPI Cards data
   const kpiCards = [
     {
-      label: 'Total Fines This Month',
+      label: 'Total Library Charges',
       value: totalFines,
-      trend: 12,
+      trend: Math.round(collectionRate),
       isPositive: true,
       color: 'primary',
     },
@@ -38,10 +43,10 @@ const AdminFinancials = () => {
     {
       label: 'Pending Amount',
       value: pendingAmount,
-      trend: -5,
+      trend: overview?.charges.pendingCount || 0,
       isPositive: false,
       color: 'error',
-      subtitle: '18 overdue accounts',
+      subtitle: `${overview?.charges.pendingCount || 0} pending charges`,
     },
     {
       label: 'Waived Fines',
@@ -49,11 +54,10 @@ const AdminFinancials = () => {
       trend: 0,
       isPositive: true,
       color: 'text.disabled',
-      subtitle: '4% of total',
+      subtitle: `${overview?.charges.waivedCount || 0} waived charges`,
     },
   ];
 
-  // Enhanced chart options with full features
   const chartOptions = useChart({
     colors: [theme.palette.success.main],
     chart: {
@@ -77,7 +81,7 @@ const AdminFinancials = () => {
           colors: theme.palette.text.secondary,
           fontSize: '11px',
         },
-        formatter: (value: number) => `₹${value}`,
+        formatter: (value: number) => fCurrency(value),
       },
     },
     grid: {
@@ -90,7 +94,7 @@ const AdminFinancials = () => {
       x: { show: true },
       y: {
         formatter: (value: number) => fCurrency(value),
-        title: { formatter: () => 'Revenue: ' },
+        title: { formatter: () => 'Collected: ' },
       },
     },
     fill: {
@@ -105,8 +109,6 @@ const AdminFinancials = () => {
     },
   });
 
-  const series = [{ name: 'Revenue', data: [680, 890, 1100, 950] }];
-
   return (
     <Card
       sx={{
@@ -116,7 +118,6 @@ const AdminFinancials = () => {
         border: `1px solid ${theme.palette.divider}`,
       }}
     >
-      {/* Header with comparison */}
       <Box
         sx={{
           p: 1.5,
@@ -132,7 +133,7 @@ const AdminFinancials = () => {
               Fine & Revenue Summary
             </Typography>
             <CustomTooltip
-              title="Overview of fines collected, pending, and waived amounts"
+              title="Overview of Library charges collected, pending, and waived"
               placement="top"
             >
               <IconButton size="small" sx={{ mb: 0.5 }}>
@@ -145,7 +146,7 @@ const AdminFinancials = () => {
             </CustomTooltip>
           </Stack>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Month-to-date performance
+            Current academic-year Library charge performance
           </Typography>
         </Box>
         <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -154,16 +155,15 @@ const AdminFinancials = () => {
             sx={{ color: 'success.main', width: 18, height: 18 }}
           />
           <Typography variant="subtitle2" sx={{ color: 'success.main' }}>
-            +{monthComparison}%
+            {Math.round(collectionRate)}%
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            vs last month
+            collected
           </Typography>
         </Stack>
       </Box>
 
       <Box sx={{ px: 1, pb: 1 }}>
-        {/* KPI Cards Grid */}
         <Grid container spacing={1} sx={{ mb: 2 }}>
           {kpiCards.map((kpi, index) => (
             <Grid size={{ xs: 6, sm: 3 }} key={index}>
@@ -217,7 +217,7 @@ const AdminFinancials = () => {
                           fontWeight: 600,
                         }}
                       >
-                        {Math.abs(kpi.trend)}%
+                        {Math.abs(kpi.trend)}
                       </Typography>
                     </Stack>
                   )}
@@ -232,14 +232,13 @@ const AdminFinancials = () => {
           ))}
         </Grid>
 
-        {/* Collection Progress Bar */}
         <Box sx={{ mb: 2.5 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
               Collection Progress
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {fCurrency(totalCollected)} of {fCurrency(totalFines)} • {Math.round(collectionRate)}%
+              {fCurrency(totalCollected)} of {fCurrency(totalFines)} | {Math.round(collectionRate)}%
             </Typography>
           </Stack>
           <LinearProgress
@@ -264,7 +263,6 @@ const AdminFinancials = () => {
           />
         </Box>
 
-        {/* Revenue Trend Chart */}
         <Box
           sx={{
             p: 2,
@@ -280,10 +278,15 @@ const AdminFinancials = () => {
             sx={{ mb: 1.5 }}
           >
             <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-              Weekly Revenue Trend
+              Collection Trend
             </Typography>
           </Stack>
-          <Chart type="area" series={series} options={chartOptions} height={180} />
+          <Chart
+            type="area"
+            series={[{ name: 'Collected', data: revenueSeries }]}
+            options={chartOptions}
+            height={180}
+          />
         </Box>
       </Box>
     </Card>

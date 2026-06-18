@@ -97,7 +97,12 @@ const SectionManagementScreen = () => {
   // };
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box
+      data-testid="library-settings-sections-page"
+      height="100%"
+      display="flex"
+      flexDirection="column"
+    >
       <CustomBreadcrumbs
         heading="Section Management"
         description="This screen displays all created transport routes with options to create new ones. It helps in organizing and managing student transportation efficiently across different locations."
@@ -108,6 +113,7 @@ const SectionManagementScreen = () => {
         ]}
         action={
           <Button
+            data-testid="library-settings-section-add-button"
             onClick={() => addSectionDialog.onTrue()}
             size="small"
             startIcon={<Add />}

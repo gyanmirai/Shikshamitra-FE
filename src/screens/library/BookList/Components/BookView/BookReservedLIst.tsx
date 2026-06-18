@@ -1,36 +1,34 @@
-import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { IBook } from 'src/screens/library/BookManagement/Components/type';
 
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import { Box, Grid, Typography } from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetReservationTableViewQuery } from 'src/redux/library/bookList/bookList-api';
 
 interface ViewReservedMembersTableProps {
   editData: IBook | null; // book data containing reservationMemberIds
-  onDelete: (book: IBook) => void;
+  onDelete: (reservation: any) => void;
 }
 
 const ViewReservedMembersTable: React.FC<ViewReservedMembersTableProps> = ({
   editData,
   onDelete,
 }) => {
-  const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
   // Fetch all members
   const { data: reservationData, isLoading: reservationLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReservationTableViewQuery,
-    params: { bookId: editData?.id, academicYearId: currentAcademicYear },
+    params: { bookId: editData?.id, page: 1, pageSize: 100 },
+    options: { skip: !editData?.id },
   });
 
-  // Match reserved member IDs with member details
-  const reservedList = reservationData?.filter((member: any) =>
-    editData?.reservationMemberIds?.includes(member.memberId)
-  );
+  const reservedList = Array.isArray(reservationData)
+    ? reservationData
+    : reservationData?.items || [];
 
   const columns: IColumn[] = useMemo(
     () => [
@@ -82,15 +80,32 @@ const ViewReservedMembersTable: React.FC<ViewReservedMembersTableProps> = ({
           </Typography>
         ),
       },
+      {
+        id: 'actions',
+        label: 'Actions',
+        minWidth: 80,
+        align: 'center',
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        render: (_value, row) => (
+          <ThreeDotsActions
+            showThreeDots={false}
+            showDeleteIcon
+            deleteLabel="Cancel reservation"
+            handleDeleteClick={() => onDelete(row)}
+          />
+        ),
+      },
     ],
-    []
+    [onDelete]
   );
 
   return (
     <Box p={2}>
       <Grid container spacing={3}>
         <Grid size={12}>
-          {reservedList?.length ? (
+          {reservationLoading || reservedList?.length ? (
             <CustomizableTable
               tableId="reserved-members-table"
               noDataText="No Reserved Members Found"

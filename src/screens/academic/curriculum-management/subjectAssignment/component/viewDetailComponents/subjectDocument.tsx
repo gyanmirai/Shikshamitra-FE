@@ -3,6 +3,8 @@ import DocumentCard from 'src/components/preview-document/DocumentCard';
 
 import type { ISubjectDetail } from '../type';
 
+export const documentsList: Array<{ name: string; url: string; size?: string }> = [];
+
 const getFileNameFromUrl = (file: string): string => {
   if (!file) return '';
 

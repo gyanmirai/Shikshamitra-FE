@@ -15,9 +15,14 @@ import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { booksApi, useDeleteBookMutation } from 'src/redux/library/bookList/bookList-api';
+import {
+  booksApi,
+  useDeleteBookMutation,
+  useDeleteBookReservationMutation,
+} from 'src/redux/library/bookList/bookList-api';
 
 import LibraryMainScreen from './Components/LIbraryMainScreen';
 import IssueBookModal from './Components/BookView/BookIssueForm';
@@ -38,10 +43,12 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteBookMutation,
   });
+  const [deleteBookReservation, { isLoading: isDeleteReservationLoading }] =
+    useDeleteBookReservationMutation();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State to store currently selected book for editing
   const [selectedBook, setSelectedBook] = useState<IBook | null>(null);
-  const [, setSelectedReservation] = useState<any>(null);
+  const [selectedReservation, setSelectedReservation] = useState<any>(null);
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedCopy, setSelectedCopy] = useState<IBookCopyWithBook | null>(null);
@@ -102,7 +109,10 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   const { confirmWithUndo } = useConfirmWithUndo();
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      data-testid="library-books-page"
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       {/* Breadcrumbs */}
       {showBreadCumb && (
         <>
@@ -481,29 +491,55 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete reservation for <strong>{selectedBook?.title}</strong>?
+            Are you sure you want to cancel reservation for{' '}
+            <strong>
+              {selectedReservation?.name || selectedReservation?.memberId || 'this member'}
+            </strong>
+            {selectedBook?.title ? (
+              <>
+                {' '}
+                on <strong>{selectedBook.title}</strong>?
+              </>
+            ) : (
+              '?'
+            )}
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteReservationLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              // TODO: Handle delete API call here
-              shikshaMitraToast.success({
-                message: (
-                  <>
-                    Reservation for <strong>{selectedBook?.title}</strong> deleted successfully
-                  </>
-                ),
-              });
-              reservationDeleteDialog.onFalse();
-              setSelectedReservation(null);
+            onClick={async () => {
+              const bookId = selectedBook?.id;
+              const reservationId = selectedReservation?.id;
+              if (!bookId || !reservationId) {
+                shikshaMitraToast.error({ message: 'Reservation details are missing.' });
+                return;
+              }
+
+              try {
+                await deleteBookReservation({ bookId, reservationId }).unwrap();
+                shikshaMitraToast.success({
+                  message: (
+                    <>
+                      Reservation for <strong>{selectedBook?.title}</strong> cancelled successfully
+                    </>
+                  ),
+                });
+                reservationDeleteDialog.onFalse();
+                setSelectedReservation(null);
+              } catch (error) {
+                const parsed = parseApiProblemDetail(error);
+                shikshaMitraToast.error({
+                  message: parsed.detail || 'Could not cancel reservation.',
+                });
+              }
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
 

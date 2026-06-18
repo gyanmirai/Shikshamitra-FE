@@ -5,25 +5,19 @@ export const assignLibraryChargeValidationSchema = (currentYear: any) =>
   Yup.object().shape({
     memberId: Yup.string().required('Member ID is required'),
 
-    role: Yup.string().required('Role is required'),
+    role: Yup.string().nullable(),
 
     // Student-specific validations
-    class: Yup.string().when('role', (role: unknown, schema) =>
-      (role as string) === 'Student' ? schema.required('Class is required') : schema.nullable()
-    ),
+    class: Yup.string().nullable(),
 
-    division: Yup.string().when('role', (role: unknown, schema) =>
-      (role as string) === 'Student' ? schema.required('Division is required') : schema.nullable()
-    ),
+    division: Yup.string().nullable(),
 
     // Member required only when role ≠ Student
-    member: Yup.string().when('role', (role: unknown, schema) =>
-      (role as string) !== 'Student' ? schema.required('Member is required') : schema.nullable()
-    ),
+    member: Yup.string().nullable(),
 
     // Book details
     bookNumber: Yup.string().required('Book Number is required'),
-    bookTitle: Yup.string().required('Book Title is required'),
+    bookTitle: Yup.string().nullable(),
 
     // Charge details
     chargeCategory: Yup.string().required('Charge Category is required'),

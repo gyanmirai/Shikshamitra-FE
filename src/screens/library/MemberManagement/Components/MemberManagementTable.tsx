@@ -7,7 +7,7 @@ import { Box, Avatar } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetMembersQuery } from 'src/redux/library/libraryMembers/memberManagementApi';
+import { useGetLibraryMembersQuery } from 'src/redux/library/libraryMembers/memberManagementApi';
 
 import type { IMemberTableProps } from './type';
 
@@ -16,7 +16,7 @@ const MemberManagementTable: React.FC<IMemberTableProps> = ({ data, onView }) =>
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: membersData } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetMembersQuery,
+    currentQueryAndMutation: useGetLibraryMembersQuery,
     params: { academicYearId: currentYear?.id },
   });
   const columns: IColumn[] = useMemo(

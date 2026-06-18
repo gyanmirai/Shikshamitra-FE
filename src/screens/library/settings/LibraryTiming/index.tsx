@@ -270,7 +270,10 @@ const LibraryTimingCreation = () => {
   const hasChanges = JSON.stringify(timingData) !== JSON.stringify(originalTimingData);
 
   return (
-    <Box sx={{ flexGrow: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      data-testid="library-settings-library-hours-page"
+      sx={{ flexGrow: 1, height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       <CustomBreadcrumbs
         heading="Library Hours"
         description="Define the working schedule of the library by specifying opening and closing times for each day."
@@ -544,6 +547,7 @@ const LibraryTimingCreation = () => {
             Reset
           </Button>
           <LoadingButton
+            data-testid="library-settings-library-hours-save-button"
             startIcon={<Save />}
             variant="contained"
             onClick={saveDialog.onTrue}

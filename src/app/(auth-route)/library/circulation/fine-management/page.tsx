@@ -1,6 +1,5 @@
-import React from 'react';
-import LibraryFineManagement from 'src/screens/library/circulation/fines-management/library-fines-management';
+import { redirect } from 'next/navigation';
 
-const LibraryFineCiruculation = () => <LibraryFineManagement />;
-
-export default LibraryFineCiruculation;
+export default function LibraryFineCirculationRedirect() {
+  redirect('/library/charges-management');
+}

@@ -1,3 +1,5 @@
+import type { LibraryDashboardOverview } from 'src/redux/library/library-adapters';
+
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { fCurrency } from 'src/utils/format-number';
@@ -7,11 +9,15 @@ import { Box, Card, Stack, Divider, Typography, LinearProgress } from '@mui/mate
 
 // ----------------------------------------------------------------------
 
-export default function PrincipalFinancials() {
+export default function PrincipalFinancials({ overview }: { overview?: LibraryDashboardOverview }) {
   const theme = useTheme();
 
-  // Mock Data
-  const collectionRate = 85;
+  const totalCollected = overview?.charges.paidAmount || 0;
+  const pendingAmount = overview?.charges.pendingAmount || 0;
+  const waivedAmount = overview?.charges.waivedAmount || 0;
+  const totalCharges = totalCollected + pendingAmount + waivedAmount;
+  const collectionRate = Math.round(overview?.utilization.chargeCollectionRate || 0);
+  const pendingRatio = totalCharges ? Math.round((pendingAmount / totalCharges) * 100) : 0;
 
   return (
     <Card
@@ -42,15 +48,15 @@ export default function PrincipalFinancials() {
               Monthly Fine Revenue
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 800, mt: 0.5, letterSpacing: -1 }}>
-              {fCurrency(12500)}
+              {fCurrency(totalCollected)}
             </Typography>
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.5 }}>
               <Iconify icon="solar:arrow-up-bold" width={16} sx={{ color: 'success.main' }} />
               <Typography variant="subtitle2" sx={{ color: 'success.main', fontWeight: 700 }}>
-                +12%
+                {collectionRate}%
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                vs last month
+                collected
               </Typography>
             </Stack>
           </Box>
@@ -65,7 +71,7 @@ export default function PrincipalFinancials() {
           >
             <Box sx={{ textAlign: 'right' }}>
               <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                85%
+                {collectionRate}%
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
                 Collection Rate
@@ -73,7 +79,7 @@ export default function PrincipalFinancials() {
             </Box>
             <Box sx={{ textAlign: 'right' }}>
               <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main' }}>
-                15%
+                {pendingRatio}%
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
                 Pending Ratio

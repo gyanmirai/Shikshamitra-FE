@@ -81,7 +81,12 @@ const ChargeTypeCreation = () => {
   };
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box
+      data-testid="library-settings-charge-categories-page"
+      height="100%"
+      display="flex"
+      flexDirection="column"
+    >
       <CustomBreadcrumbs
         heading="Charges Categories"
         description="This screen displays all the created charge types (such as late return fee, damage fee, etc.) and provides an option to add new Charges Categories."
@@ -92,6 +97,7 @@ const ChargeTypeCreation = () => {
         ]}
         action={
           <Button
+            data-testid="library-settings-charge-category-add-button"
             onClick={() => addChargeTypeDialog.onTrue()}
             size="small"
             startIcon={<Add />}
