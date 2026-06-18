@@ -189,7 +189,7 @@ const LeaveBalanceLedger = ({
                   }}
                 >
                   <LeaveMetric
-                    label="Entitled"
+                    label="Accrued"
                     value={row.isUnlimited ? '-' : formatLeaveDays(row.total)}
                   />
                   <LeaveMetric label="Used" value={formatLeaveDays(row.used)} />
@@ -261,7 +261,7 @@ const LeaveBalanceLedger = ({
             >
               <TableCell>Paid type</TableCell>
               <TableCell align="right">Available</TableCell>
-              <TableCell align="right">Entitled</TableCell>
+              <TableCell align="right">Accrued</TableCell>
               <TableCell align="right">Used</TableCell>
               <TableCell align="right">Pending</TableCell>
               <TableCell sx={{ width: 180 }}>Utilization</TableCell>
@@ -412,7 +412,7 @@ type LeaveBalanceProps = {
   mode?: 'hr' | 'self';
   showBreadcrumbs?: boolean;
   showSelfAccessError?: boolean;
-  /** Leave Center uses its own snapshot; keep the detailed ledger for profile/full balance views. */
+  /** Allows compact embeds to hide the detailed paid/unpaid bucket ledger when needed. */
   showBalanceLedger?: boolean;
   overviewState?: ReturnType<typeof useLeaveOverview>;
   /** When provided, displays leave data for this specific employee instead of the logged-in user. */

@@ -25,12 +25,6 @@ import { useGetPolicyAssignmentPreviewQuery } from 'src/redux/hr/hr-policy-api';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
-  useCreateLeaveRequestMutation,
-  useRejectLeaveRequestMutation,
-  useApproveLeaveRequestMutation,
-  useCreateMyLeaveRequestMutation,
-} from 'src/redux/hr/leaveApi';
-import {
   Grid,
   Chip,
   Stack,
@@ -44,6 +38,14 @@ import {
   CircularProgress,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetMyLeaveBalanceQuery,
+  useGetSelfLeaveBalanceQuery,
+  useCreateLeaveRequestMutation,
+  useRejectLeaveRequestMutation,
+  useApproveLeaveRequestMutation,
+  useCreateMyLeaveRequestMutation,
+} from 'src/redux/hr/leaveApi';
 
 import { normalizeLeaveStatus } from './leave-status.utils';
 import {
@@ -64,6 +66,7 @@ import {
   buildEmployeeSelectOptions,
   getLeaveNoticePeriodMessage,
   isLeaveNoticePeriodSatisfied,
+  getLeaveRequestBalanceWarning,
   shouldEnforceLeaveNoticePeriod,
   LEAVE_TARGET_EMPLOYEE_REQUIRED,
   LEAVE_NO_BUSINESS_DAYS_IN_RANGE,
@@ -312,6 +315,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             );
             return;
           }
+          if (leaveBalanceWarning) {
+            setFieldError('paidType', leaveBalanceWarning);
+            return;
+          }
 
           // --- Create flow: build multipart/form-data body as per API contract ---
           const formData = buildCreateLeaveRequestFormData({
@@ -453,6 +460,29 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     !effectivePolicyError &&
     Boolean(effectivePolicyPreview?.leavePolicy) &&
     visiblePaidTypeOptions.length === 0;
+  const shouldUseSelfBalance = isSelfMode || values.employee?.id === SELF_OPTION.id;
+  const { data: selfLeaveBalanceData, isFetching: isSelfLeaveBalanceFetching } =
+    useGetSelfLeaveBalanceQuery(
+      { academicYearId: catalogAcademicYearId },
+      {
+        skip:
+          Boolean(editData) ||
+          !catalogAcademicYearId ||
+          !effectivePreviewEmployeeId ||
+          !shouldUseSelfBalance,
+      }
+    );
+  const { data: employeeLeaveBalanceData, isFetching: isEmployeeLeaveBalanceFetching } =
+    useGetMyLeaveBalanceQuery(
+      { academicYearId: catalogAcademicYearId, employeeId: effectivePreviewEmployeeId },
+      {
+        skip:
+          Boolean(editData) ||
+          !catalogAcademicYearId ||
+          !effectivePreviewEmployeeId ||
+          shouldUseSelfBalance,
+      }
+    );
 
   useEffect(() => {
     if (editData) return;
@@ -487,6 +517,16 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   }, [setFieldValue, values.endDate, values.halfDay, values.startDate]);
 
   const requestedUnits = countLeaveUnits(values.startDate, values.endDate, values.halfDay);
+  const selectedLeaveBalanceData = shouldUseSelfBalance
+    ? selfLeaveBalanceData
+    : employeeLeaveBalanceData;
+  const isSelectedLeaveBalanceFetching = shouldUseSelfBalance
+    ? isSelfLeaveBalanceFetching
+    : isEmployeeLeaveBalanceFetching;
+  const leaveBalanceWarning =
+    isSelectedLeaveBalanceFetching || editData
+      ? null
+      : getLeaveRequestBalanceWarning(selectedLeaveBalanceData, values.paidType, requestedUnits);
   const isLeaveRequestSubmitting = isSubmitting || isLoading || isApproveLoading || isRejectLoading;
   const enforceLeaveNoticePeriod = shouldEnforceLeaveNoticePeriod(
     mode,
@@ -721,6 +761,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </Stack>
             </Grid>
 
+            {leaveBalanceWarning ? (
+              <Grid size={{ xs: 12 }}>
+                <Alert severity="warning">{leaveBalanceWarning}</Alert>
+              </Grid>
+            ) : null}
+
             <Grid size={{ xs: 12 }}>
               <ShakingTextField error={touched.reason && Boolean(errors.reason)}>
                 <TextField
@@ -888,7 +934,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           <LoadingButton
             loading={isLeaveRequestSubmitting}
             startIcon={<Iconify icon={GlobalIcons.submit} width={20} height={20} />}
-            disabled={isLeaveRequestSubmitting || hasLeaveNoticePeriodError}
+            disabled={
+              isLeaveRequestSubmitting || hasLeaveNoticePeriodError || Boolean(leaveBalanceWarning)
+            }
             onClick={(e: any) => {
               handleSubmit(e);
             }}

@@ -37,7 +37,7 @@ const getOverviewMetrics = (overview: LeaveOverviewData): LeaveOverviewMetric[] 
     bgColor: 'success.lighter',
   },
   {
-    label: 'Entitled',
+    label: 'Accrued',
     value: overview.totalLeaves,
     icon: 'solar:calendar-add-bold-duotone',
     color: 'primary.main',

@@ -14,6 +14,49 @@ type LeaveRequestQueryArgs = {
   employeeId?: string;
 };
 
+export type LeaveYearEndSettlementItem = {
+  id: string;
+  runId: string;
+  sourceAcademicYearId: string;
+  targetAcademicYearId?: string | null;
+  employeeId: string;
+  employeeName?: string;
+  employeeCode?: string;
+  sourceLeavePolicyId: string;
+  sourceLeavePolicyRuleId: string;
+  targetLeavePolicyRuleId?: string | null;
+  accruedDays: number;
+  carryInDays: number;
+  approvedUsedDays: number;
+  pendingDays: number;
+  unusedDays: number;
+  carriedDays: number;
+  encashedDays: number;
+  forfeitedDays: number;
+  payrollMonth?: string | null;
+  amount: number;
+  status: string;
+  issueCodes: string[];
+  payrollAdjustmentId?: string | null;
+};
+
+export type LeaveYearEndSettlementRun = {
+  id: string;
+  academicYearId: string;
+  targetAcademicYearId?: string | null;
+  status: string;
+  previewedAt?: string | null;
+  finalizedAt?: string | null;
+  totalItems: number;
+  finalizedItems: number;
+  blockedItems: number;
+  totalCarriedDays: number;
+  totalEncashedDays: number;
+  totalForfeitedDays: number;
+  totalEncashmentAmount: number;
+  items?: LeaveYearEndSettlementItem[];
+};
+
 export const buildLeaveRequestQueryParams = ({
   academicYearId,
   'month-year': monthYear,
@@ -34,6 +77,22 @@ export const buildLeaveRequestQueryParams = ({
   ...(leavePolicyId ? { leavePolicyId } : {}),
   ...(paidType ? { paidType } : {}),
   ...(employeeId ? { employeeId } : {}),
+});
+
+export const buildLeaveYearEndSettlementQueryParams = ({
+  academicYearId,
+}: {
+  academicYearId?: string;
+} = {}) => ({
+  academicYearId,
+});
+
+export const buildLeaveYearEndSettlementPreviewBody = ({
+  academicYearId,
+}: {
+  academicYearId?: string;
+} = {}) => ({
+  academicYearId,
 });
 
 export const leaveApi = api.injectEndpoints({
@@ -231,6 +290,50 @@ export const leaveApi = api.injectEndpoints({
       }),
       providesTags: [employeeType.employee],
     }),
+
+    // Year-end settlements
+    getLeaveYearEndSettlements: builder.query<
+      LeaveYearEndSettlementRun[],
+      { academicYearId?: string }
+    >({
+      query: ({ academicYearId }) => ({
+        url: '/leave-management/year-end-settlements',
+        method: 'GET',
+        params: buildLeaveYearEndSettlementQueryParams({ academicYearId }),
+      }),
+      providesTags: [employeeType.employeeLeavePolicy, employeeType.runPayroll],
+    }),
+    getLeaveYearEndSettlementById: builder.query<LeaveYearEndSettlementRun, string>({
+      query: (id) => ({
+        url: `/leave-management/year-end-settlements/${id}`,
+        method: 'GET',
+      }),
+      providesTags: [employeeType.employeeLeavePolicy, employeeType.runPayroll],
+    }),
+    previewLeaveYearEndSettlement: builder.mutation<
+      LeaveYearEndSettlementRun,
+      { academicYearId?: string }
+    >({
+      query: ({ academicYearId }) => ({
+        url: '/leave-management/year-end-settlements/preview',
+        method: 'POST',
+        body: buildLeaveYearEndSettlementPreviewBody({ academicYearId }),
+      }),
+      invalidatesTags: [employeeType.employeeLeavePolicy, employeeType.runPayroll],
+    }),
+    finalizeLeaveYearEndSettlement: builder.mutation<LeaveYearEndSettlementRun, string>({
+      query: (id) => ({
+        url: `/leave-management/year-end-settlements/${id}/finalize`,
+        method: 'POST',
+      }),
+      invalidatesTags: [
+        employeeType.employee,
+        employeeType.employeeLeavePolicy,
+        employeeType.hrDashboard,
+        employeeType.runPayroll,
+        employeeType.salarySlip,
+      ],
+    }),
   }),
 });
 
@@ -258,4 +361,8 @@ export const {
   useRejectLeaveRequestMutation,
   useGetMyLeaveBalanceQuery,
   useGetSelfLeaveBalanceQuery,
+  useGetLeaveYearEndSettlementsQuery,
+  useGetLeaveYearEndSettlementByIdQuery,
+  usePreviewLeaveYearEndSettlementMutation,
+  useFinalizeLeaveYearEndSettlementMutation,
 } = leaveApi;

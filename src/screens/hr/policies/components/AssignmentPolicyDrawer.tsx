@@ -54,9 +54,9 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     assignmentPreview,
     assignmentPreviewLoading,
     assignmentPreviewError,
-    payroll,
-    attendance,
-    leavePolicies,
+    payroll = [],
+    attendance = [],
+    leavePolicies = [],
   } = ctx;
 
   return (
@@ -243,9 +243,9 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
     assignmentConflict,
     assignmentDateError,
     setAssignmentDateError,
-    activePayroll,
-    activeAttendance,
-    activeLeavePolicies,
+    activePayroll = [],
+    activeAttendance = [],
+    activeLeavePolicies = [],
     defaultLeavePolicy,
     academicYearId,
     activePolicyOperation,

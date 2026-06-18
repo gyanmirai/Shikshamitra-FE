@@ -25,6 +25,7 @@ import {
   buildEmployeeSelectOptions,
   getLeaveNoticePeriodMessage,
   isLeaveNoticePeriodSatisfied,
+  getLeaveRequestBalanceWarning,
   APPLY_LEAVE_ROW_ACTION_LABELS,
   shouldEnforceLeaveNoticePeriod,
   buildCreateLeaveRequestFormData,
@@ -120,6 +121,64 @@ describe('leave request payload mapping', () => {
   it('formats API leave dates without applying browser timezone offsets', () => {
     expect(formatLeaveCalendarDateForPayload(dayjs('2026-07-06'))).toBe('2026-07-06');
     expect(formatLeaveCalendarDateForDisplay('2026-07-06T00:00:00.000Z')).toBe('06-07-2026');
+  });
+});
+
+describe('leave request balance warning', () => {
+  it('warns when a finite bucket does not have enough remaining balance', () => {
+    expect(
+      getLeaveRequestBalanceWarning(
+        {
+          items: [
+            {
+              paidType: 'Paid',
+              entitlementMode: 'Limited',
+              remainingDays: 0.5,
+              isUnlimited: false,
+              allowNegativeBalance: false,
+            },
+          ],
+        },
+        'Paid',
+        1
+      )
+    ).toContain('Paid leave balance is 0.5 day(s)');
+  });
+
+  it('does not warn for negative-balance or unlimited buckets', () => {
+    expect(
+      getLeaveRequestBalanceWarning(
+        {
+          items: [
+            {
+              paidType: 'Paid',
+              remainingDays: -1,
+              isUnlimited: false,
+              allowNegativeBalance: true,
+            },
+          ],
+        },
+        'Paid',
+        2
+      )
+    ).toBeNull();
+
+    expect(
+      getLeaveRequestBalanceWarning(
+        {
+          items: [
+            {
+              paidType: 'Unpaid',
+              entitlementMode: 'Unlimited',
+              remainingDays: null,
+              isUnlimited: true,
+            },
+          ],
+        },
+        'Unpaid',
+        20
+      )
+    ).toBeNull();
   });
 });
 
@@ -571,6 +630,60 @@ describe('leave overview builder', () => {
         isUnlimited: false,
       },
     ]);
+  });
+
+  it('uses accrued days for finite leave buckets when the balance contract provides them', () => {
+    const overview = buildLeaveOverview({
+      items: [
+        {
+          paidType: 'Paid',
+          entitledDays: 12,
+          accruedDays: 3,
+          usedDays: 1,
+          pendingDays: 0.5,
+          remainingDays: 2,
+        },
+      ],
+    });
+
+    expect(overview.totalLeaves).toBe(3);
+    expect(overview.usedLeaves).toBe(1);
+    expect(overview.remainingLeaves).toBe(2);
+    expect(overview.bucketBreakdown[0]).toMatchObject({
+      bucketId: 'Paid',
+      total: 3,
+      used: 1,
+      pendingDays: 0.5,
+      remaining: 2,
+      isUnlimited: false,
+    });
+  });
+
+  it('keeps negative-balance buckets finite and displays negative remaining days', () => {
+    const overview = buildLeaveOverview({
+      items: [
+        {
+          paidType: 'Paid',
+          entitlementMode: 'Limited',
+          entitledDays: 12,
+          accruedDays: 2,
+          usedDays: 3,
+          pendingDays: 0,
+          remainingDays: -1,
+          allowNegativeBalance: true,
+          isUnlimited: false,
+        },
+      ],
+    });
+
+    expect(overview.totalLeaves).toBe(2);
+    expect(overview.remainingLeaves).toBe(-1);
+    expect(overview.bucketBreakdown[0]).toMatchObject({
+      total: 2,
+      used: 3,
+      remaining: -1,
+      isUnlimited: false,
+    });
   });
 
   it('excludes unlimited unpaid buckets from finite balance totals', () => {

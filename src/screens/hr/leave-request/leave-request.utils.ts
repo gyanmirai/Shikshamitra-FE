@@ -56,6 +56,17 @@ export type PaidTypeOption = {
   color?: string | null;
 };
 
+export type LeaveBalanceBucket = {
+  paidType?: string | null;
+  leaveType?: string | null;
+  leaveTypeName?: string | null;
+  entitlementMode?: string | null;
+  remainingDays?: number | string | null;
+  isUnlimited?: boolean | null;
+  unlimited?: boolean | null;
+  allowNegativeBalance?: boolean | null;
+};
+
 export type EffectiveLeavePolicyPreview = {
   id?: string | null;
   allowedPaidTypes?: Array<string | null | undefined> | null;
@@ -202,6 +213,66 @@ export function isSelectedPaidTypeVisible(
   }
 
   return (visiblePaidTypes || []).some((item) => item?.id === paidTypeLabel(paidType));
+}
+
+function toFiniteNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+
+function isUnlimitedBalanceBucket(bucket: LeaveBalanceBucket): boolean {
+  const remainingDays = toFiniteNumber(bucket.remainingDays);
+  return Boolean(
+    bucket.isUnlimited ||
+    bucket.unlimited ||
+    String(bucket.entitlementMode || '').toLowerCase() === 'unlimited' ||
+    bucket.remainingDays === null ||
+    remainingDays === null
+  );
+}
+
+export function findLeaveBalanceBucket(
+  balanceData: any,
+  paidType: string | null | undefined
+): LeaveBalanceBucket | null {
+  if (!paidType) {
+    return null;
+  }
+
+  const normalizedPaidType = paidTypeLabel(paidType);
+  return (
+    (balanceData?.items || []).find((item: LeaveBalanceBucket) => {
+      const itemPaidType = item.paidType ?? item.leaveTypeName ?? item.leaveType;
+      return paidTypeLabel(String(itemPaidType || '')) === normalizedPaidType;
+    }) || null
+  );
+}
+
+export function getLeaveRequestBalanceWarning(
+  balanceData: any,
+  paidType: string | null | undefined,
+  requestedUnits: number
+): string | null {
+  const bucket = findLeaveBalanceBucket(balanceData, paidType);
+  if (
+    !bucket ||
+    requestedUnits <= 0 ||
+    bucket.allowNegativeBalance ||
+    isUnlimitedBalanceBucket(bucket)
+  ) {
+    return null;
+  }
+
+  const remainingDays = toFiniteNumber(bucket.remainingDays);
+  if (remainingDays === null || requestedUnits <= remainingDays) {
+    return null;
+  }
+
+  return `${paidTypeLabel(String(paidType))} leave balance is ${remainingDays} day(s), but this request is for ${requestedUnits} day(s). Reduce the dates or ask HR to enable negative balance.`;
 }
 
 export function buildCreateLeaveRequestFormData(
