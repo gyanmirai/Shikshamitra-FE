@@ -337,6 +337,9 @@ export const CardActions = ({
 
 const getPolicyName = (item: any) => item?.name || item?.policyTitle || item?.title || '-';
 
+export const EMPLOYEE_CREATION_POLICY_SECTION_TITLE = 'Assigned System Policies';
+export const EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL = 'Default assignment';
+
 export const shouldDisableEmployeeEmailField = (
   isContactDetailsEditable: boolean,
   editData?: { id?: string | null } | null
@@ -970,7 +973,7 @@ const InformationAllFields = ({
       </SectionCard>
 
       {!editData?.id ? (
-        <SectionCard title="Leave Policy Assignment">
+        <SectionCard title={EMPLOYEE_CREATION_POLICY_SECTION_TITLE}>
           <Grid size={{ xs: 12 }}>
             {defaultPolicyAssignment?.missingMessage ? (
               <Alert severity="warning">{defaultPolicyAssignment.missingMessage}</Alert>
@@ -985,7 +988,7 @@ const InformationAllFields = ({
                 }}
               >
                 <Typography variant="body2" fontWeight={700} sx={{ mb: 1 }}>
-                  Employee creation policy assignment
+                  {EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL}
                 </Typography>
                 <Box display="flex" flexWrap="wrap" gap={1}>
                   <Chip

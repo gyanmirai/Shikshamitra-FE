@@ -1,6 +1,5 @@
 'use client';
 
-import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
@@ -21,6 +20,7 @@ import { Box, Grid, Card, Paper, Button, Typography, DialogActions } from '@mui/
 import { RenderComponents } from 'src/screens/hr/employee/employee-form-fields/PayrollFields';
 import {
   isSalaryComponentFixed,
+  toApplicableMonthPayload,
   getSalaryComponentPayloadAmount,
 } from 'src/screens/hr/employee/salary-utils';
 import {
@@ -294,7 +294,7 @@ const SalaryStructureEdit = ({
           amount: getSalaryComponentPayloadAmount(item),
           isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
-          applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
+          applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
         })),
         deductionComponents: values.deductionComponents.map((item: any) => ({
           id: item?.id && item?.id !== item?.componentId ? item.id : null,
@@ -303,7 +303,7 @@ const SalaryStructureEdit = ({
           amount: getSalaryComponentPayloadAmount(item),
           isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
-          applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
+          applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
         })),
       };
 

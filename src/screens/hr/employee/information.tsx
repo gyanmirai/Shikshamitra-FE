@@ -2,7 +2,6 @@
 
 import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
-import { ReligionType } from 'src/enums/religion';
 import { Scrollbar } from 'src/components/scrollbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -33,6 +32,7 @@ import { getSalaryComponentPayloadAmount } from './salary-utils';
 import { FamilyFields } from './employee-form-fields/FamilyFields';
 import { PayrollFields } from './employee-form-fields/PayrollFields';
 import { buildWorkExperiencePayload } from './work-experience-payload';
+import { buildProfilePersonalInfoUpdatePayload } from './personal-info-update-payload';
 import { InformationFields } from './employee-form-fields/InformationFields';
 import { WorkExperienceFields } from './employee-form-fields/WorkExperienceFields';
 import { AssignReportingManager } from './employee-form-fields/AssignReportingManager';
@@ -280,39 +280,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   const handleUpdateEmployee = useCallback(
     async (values: any, formik: any, id: any) => {
       try {
-        const body: Record<string, any> = {
-          lastName: values.lastName,
-          firstName: values.firstName,
-          middleName: values.middleName || '',
-          shortName: values.shortName || '',
-          dob: dateConvertor(values.dob.format(dateFormat)),
-          familyCaste: values.familyCast,
-          casteType: values.castType,
-          gender: values.gender,
-          religion: ReligionType[values.religion],
-          maritalStatus: values.maritalStatus,
-          bloodGroup: values.bloodGroup,
-          mobileNo: toRawMobile(values.mobileNo),
-          email: values.email,
-          department: values.department,
-          doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
-          isTeaching: values.employeeGroup === 0,
-          roleId: values.role,
-          address1: values.addressLine1,
-          address2: values.addressLine2,
-          country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-          state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-          city: values?.city?.name,
-          pinCode: String(values.pincode),
-          shiftId: values.shift,
-        };
-
-        if (values.secondaryMobileNo) {
-          body.secondaryMobileNo = toRawMobile(values.secondaryMobileNo);
-        }
-        if (values.addressLine3) {
-          body.address3 = values.addressLine3;
-        }
+        const body = buildProfilePersonalInfoUpdatePayload(values);
 
         const res = await updateEmployee({
           id,

@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Save, Refresh, ChecklistOutlined } from '@mui/icons-material';
@@ -91,6 +92,7 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
   const [updateStudentGrNumbers, { isLoading: isSaving }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentGrNumberMutation,
+    popupConfig: { error: false },
   });
 
   // Handle automatic GR number generation
@@ -227,6 +229,10 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
       dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (error) {
       console.error('Failed to update GR Numbers:', error);
+      const parsed = parseApiProblemDetail(error);
+      shikshaMitraToast.error({
+        message: parsed.detail || 'Failed to update GR Numbers.',
+      });
     }
   };
 
