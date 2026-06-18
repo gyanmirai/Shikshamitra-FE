@@ -1,6 +1,5 @@
 import React from 'react';
 import dayjs from 'dayjs';
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
@@ -15,22 +14,6 @@ interface ChargeDetailsCardProps {
 
 const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => {
   const detailIconColor = 'success.main';
-
-  // Backend enum: Low=0, Medium=1, High=2
-  const getPriorityLabel = (value?: number) => {
-    switch (value) {
-      case 0:
-        return { label: 'Low', color: 'success' as const };
-      case 1:
-        return { label: 'Medium', color: 'warning' as const };
-      case 2:
-      default:
-        return { label: 'High', color: 'error' as const };
-    }
-  };
-
-  const priority = getPriorityLabel(charge?.priority);
-
   return (
     <Paper
       variant="outlined"
@@ -49,9 +32,6 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
             Charge Details
           </Typography>
         </Stack>
-        <Label variant="soft" color={priority.color}>
-          {priority.label}
-        </Label>
       </Stack>
       <Divider sx={{ mb: 2 }} />
 

@@ -32,6 +32,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
 import { useSensor, DndContext, useSensors, closestCenter, PointerSensor } from '@dnd-kit/core';
 import FeeStructureAssignmentForm from 'src/screens/student/enrollment/admission/FeeStructureAssignmentForm';
@@ -991,7 +992,6 @@ const FeeCollectComponentForm = ({
   }, [chargesData, hasSelectionFilters, selectionFilters.allCharges]);
 
   const totalSelectableCount = allSelectableItems.length + allSelectableChargeIds.length;
-  const selectedCount = formik.values.selectedItems.length + formik.values.charges.length;
 
   const isAllSelected =
     totalSelectableCount > 0 &&
@@ -1001,45 +1001,6 @@ const FeeCollectComponentForm = ({
       )
     ) &&
     allSelectableChargeIds.every((id) => formik.values.charges.includes(id));
-
-  const isIndeterminate =
-    !isAllSelected && (formik.values.selectedItems.length > 0 || formik.values.charges.length > 0);
-
-  const totalSelectableDue =
-    allSelectableItems.reduce((s, i) => s + i.dueAmount, 0) +
-    (chargesData ?? [])
-      .filter((charge) => allSelectableChargeIds.includes(charge.chargeId))
-      .reduce((sum, charge) => sum + charge.amount, 0);
-
-  const handleSelectAll = () => {
-    if (isAllSelected) {
-      // deselect all selectable in current filter
-      const removeKeys = new Set(allSelectableItems.map((i) => `${i.feeHeadId}|${i.period}`));
-      formik.setFieldValue(
-        'selectedItems',
-        formik.values.selectedItems.filter((s) => !removeKeys.has(`${s.feeHeadId}|${s.period}`)),
-        false
-      );
-      const removeChargeIds = new Set(allSelectableChargeIds);
-      formik.setFieldValue(
-        'charges',
-        formik.values.charges.filter((id) => !removeChargeIds.has(id)),
-        false
-      );
-    } else {
-      // merge new selectable items with existing (avoid duplicates)
-      const existingKeys = new Set(
-        formik.values.selectedItems.map((s) => `${s.feeHeadId}|${s.period}`)
-      );
-      const newItems = allSelectableItems.filter(
-        (i) => !existingKeys.has(`${i.feeHeadId}|${i.period}`)
-      );
-      formik.setFieldValue('selectedItems', [...formik.values.selectedItems, ...newItems], false);
-      const existingChargeIds = new Set(formik.values.charges);
-      const newChargeIds = allSelectableChargeIds.filter((id) => !existingChargeIds.has(id));
-      formik.setFieldValue('charges', [...formik.values.charges, ...newChargeIds], false);
-    }
-  };
 
   const prevSelectionFilters = useRef(selectionFilters);
   // ── Auto-apply selection when filter checkboxes are toggled ───────────────
@@ -1279,47 +1240,48 @@ const FeeCollectComponentForm = ({
         bgcolor: 'background.default',
       }}
     >
-      {/* ── Main Content Area: 2-column grid ── */}
-      <Box
-        sx={{
-          overflow: 'hidden',
-          flex: 1,
-          minHeight: 0,
-          px: { xs: 1, md: 1.5 },
-          pt: 1,
-          display: 'grid',
-          gap: { xs: 1.5, md: 1.5, lg: 0 },
-          gridTemplateColumns: { xs: '1fr', md: '1fr', lg: '3fr 2fr' },
-          gridTemplateRows: { xs: 'auto 1fr', md: 'auto 1fr', lg: 'auto' },
-          alignItems: 'start',
-        }}
-      >
-        {/* ═══════════ LEFT HALF: Student Card + Fee Timeline ═══════════ */}
+      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+        {/* ── Main Content Area: 2-column grid ── */}
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            minHeight: 0,
-            height: '100%',
-            pr: { lg: 0.75 },
-            borderRight: (t) => ({ lg: `1px solid ${alpha(t.palette.divider, 0.3)}` }),
-            width: '100%',
             overflow: 'hidden',
+            flex: 1,
+            minHeight: 0,
+            px: { xs: 1, md: 1.5 },
+            pt: 1,
+            display: 'grid',
+            gap: { xs: 1.5, md: 1.5, lg: 0 },
+            gridTemplateColumns: { xs: '1fr', md: '1fr', lg: '3fr 2fr' },
+            gridTemplateRows: { xs: 'auto 1fr', md: 'auto 1fr', lg: 'auto' },
+            alignItems: 'start',
           }}
         >
-          {/* Student Summary Card */}
-          <Box mb={1}>
-            <StudentFeeSummaryCard student={student} />
-          </Box>
+          {/* ═══════════ LEFT HALF: Student Card + Fee Timeline ═══════════ */}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+              height: '100%',
+              pr: { lg: 0.75 },
+              borderRight: (t) => ({ lg: `1px solid ${alpha(t.palette.divider, 0.3)}` }),
+              width: '100%',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Student Summary Card */}
+            <Box mb={1}>
+              <StudentFeeSummaryCard student={student} />
+            </Box>
 
-          <FeeLedgerFilterBar
-            filters={filters}
-            onFilterChange={setFilters}
-            entryCount={entryCount}
-            studentId={String(student?.id ?? '')}
-          />
+            <FeeLedgerFilterBar
+              filters={filters}
+              onFilterChange={setFilters}
+              entryCount={entryCount}
+              studentId={String(student?.id ?? '')}
+            />
 
-          {/* <Box mt={0.85}>
+            {/* <Box mt={0.85}>
             <QuickActionToolbar
               ledgerData={ledgerData}
               chargesData={chargesData ?? []}
@@ -1331,672 +1293,681 @@ const FeeCollectComponentForm = ({
             />
           </Box> */}
 
-          {formik.submitCount > 0 &&
-            formik.values.selectedItems.length === 0 &&
-            formik.values.charges.length === 0 && (
-              <Typography variant="caption" color="error" sx={{ px: 0.5 }}>
-                Select at least one fee item or charge to collect
-              </Typography>
-            )}
+            {formik.submitCount > 0 &&
+              formik.values.selectedItems.length === 0 &&
+              formik.values.charges.length === 0 && (
+                <Typography variant="caption" color="error" sx={{ px: 0.5 }}>
+                  Select at least one fee item or charge to collect
+                </Typography>
+              )}
 
-          <Box mt={0.85} sx={{ flex: 1, minHeight: 0 }}>
-            <Scrollbar sx={{ height: '100%', pr: 0.3 }}>
-              <FeeLedgerList
-                data={filteredLedgerData}
-                activeTab={filters.activeTab}
-                selectedItems={formik.values.selectedItems}
-                charges={formik.values.charges}
-                chargesData={chargesData}
-                onSelectionChange={handleSelectionChange}
-                onChargesChange={handleChargesChange}
-                year={currentYear?.year ?? new Date().getFullYear()}
-              />
-            </Scrollbar>
+            <Box mt={0.85} sx={{ flex: 1, minHeight: 0 }}>
+              <Scrollbar sx={{ height: '100%', pr: 0.3 }}>
+                <FeeLedgerList
+                  data={filteredLedgerData}
+                  activeTab={filters.activeTab}
+                  selectedItems={formik.values.selectedItems}
+                  charges={formik.values.charges}
+                  chargesData={chargesData}
+                  onSelectionChange={handleSelectionChange}
+                  onChargesChange={handleChargesChange}
+                  year={currentYear?.year ?? new Date().getFullYear()}
+                />
+              </Scrollbar>
+            </Box>
           </Box>
-        </Box>
 
-        {/* ═══════════ RIGHT HALF: Selected Fees (top) + Checkout (bottom) ═══════════ */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateRows: { xs: '1fr 1fr', md: '1fr 1fr', lg: '1fr 1fr' },
-            minHeight: { xs: 'auto', md: 'auto', lg: '100%' },
-            height: { lg: '100%' },
-            pl: { lg: 0.75 },
-            gap: 1.5,
-            width: '100%',
-            overflow: 'hidden',
-          }}
-        >
-          {/* ── Selected Fees ── */}
-          <Card
-            component={motion.div}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          {/* ═══════════ RIGHT HALF: Selected Fees (top) + Checkout (bottom) ═══════════ */}
+          <Box
             sx={{
-              borderRadius: 1.5,
-              bgcolor: 'background.paper',
-              display: 'flex',
-              flexDirection: 'column',
-              p: { xs: 1.25, md: 1.5 },
-              boxShadow: (t) => `var(--shadows-4)`,
-              border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
-              minHeight: { xs: 200, md: 200, lg: 0 },
-              maxHeight: { xs: '100%', md: '100%', lg: 'none' },
-              overflow: 'hidden',
+              display: 'grid',
+              gridTemplateRows: { xs: '1fr 1fr', md: '1fr 1fr', lg: '1fr 1fr' },
+              minHeight: { xs: 'auto', md: 'auto', lg: '100%' },
+              height: { lg: '100%' },
+              pl: { lg: 0.75 },
+              gap: 1.5,
               width: '100%',
+              overflow: 'hidden',
             }}
           >
-            {/* Selected Fees header */}
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              px={0.5}
-              pb={0.75}
-              mb={1}
-              sx={{ borderBottom: (t) => `1px solid ${alpha(t.palette.divider, 0.4)}` }}
-            >
-              <Typography
-                variant="overline"
-                color="text.secondary"
-                fontWeight={700}
-                letterSpacing={1.2}
-              >
-                Selected Fees & Adjustments
-              </Typography>
-              {(formik.values.selectedItems.length > 0 || formik.values.charges.length > 0) && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={handleRemoveAll}
-                  sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.75rem' }}
-                >
-                  Clear all
-                </Button>
-              )}
-            </Box>
-
-            {/* ── Staged for collection panel content ── */}
-            <Box
+            {/* ── Selected Fees ── */}
+            <Card
+              component={motion.div}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
               sx={{
+                borderRadius: 1.5,
+                bgcolor: 'background.paper',
                 display: 'flex',
                 flexDirection: 'column',
-                flex: 1,
-                minHeight: 0,
+                p: { xs: 1.25, md: 1.5 },
+                boxShadow: (t) => `var(--shadows-4)`,
+                border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
+                minHeight: { xs: 200, md: 200, lg: 0 },
+                maxHeight: { xs: '100%', md: '100%', lg: 'none' },
                 overflow: 'hidden',
+                width: '100%',
               }}
             >
-              <Scrollbar sx={{ flex: 1, minHeight: 0, pr: 0.3 }}>
-                <Box>
-                  {formik.values.selectedItems.length === 0 &&
-                  formik.values.charges.length === 0 ? (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: 'block', textAlign: 'center', py: 1.5 }}
-                    >
-                      No fee items selected
-                    </Typography>
-                  ) : (
-                    <>
-                      {/* ── Sortable fee items ── */}
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={(event: DragEndEvent) => {
-                          const { active, over } = event;
-                          if (over && active.id !== over.id) {
-                            const oldIdx = formik.values.selectedItems.findIndex(
-                              (i) => `${i.feeHeadId}-${i.period}` === active.id
-                            );
-                            const newIdx = formik.values.selectedItems.findIndex(
-                              (i) => `${i.feeHeadId}-${i.period}` === over.id
-                            );
-                            formik.setFieldValue(
-                              'selectedItems',
-                              arrayMove(formik.values.selectedItems, oldIdx, newIdx),
-                              false
-                            );
-                          }
-                        }}
-                      >
-                        <SortableContext
-                          items={formik.values.selectedItems.map(
-                            (i) => `${i.feeHeadId}-${i.period}`
-                          )}
-                          strategy={verticalListSortingStrategy}
-                        >
-                          {formik.values.selectedItems.map((item, idx) => (
-                            <>
-                              <SortableFeeRow
-                                key={`${item.feeHeadId}-${item.period}`}
-                                id={`${item.feeHeadId}-${item.period}`}
-                                label={feeHeadMap[item.feeHeadId] ?? item.feeHeadId}
-                                sub={dayjs(`${item.period}-01`).format('MMM YYYY')}
-                                amount={item.dueAmount}
-                                onRemove={() => {
-                                  formik.setFieldValue(
-                                    'selectedItems',
-                                    formik.values.selectedItems.filter((_, i) => i !== idx),
-                                    false
-                                  );
-                                }}
-                              />
-                              {idx < formik.values.selectedItems.length - 1 && (
-                                <Divider sx={{ mx: 0.5 }} />
-                              )}
-                            </>
-                          ))}
-                        </SortableContext>
-                      </DndContext>
+              {/* Selected Fees header */}
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                px={0.5}
+                pb={0.75}
+                mb={1}
+                sx={{ borderBottom: (t) => `1px solid ${alpha(t.palette.divider, 0.4)}` }}
+              >
+                <Typography
+                  variant="overline"
+                  color="text.secondary"
+                  fontWeight={700}
+                  letterSpacing={1.2}
+                >
+                  Selected Fees & Adjustments
+                </Typography>
+                {(formik.values.selectedItems.length > 0 || formik.values.charges.length > 0) && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={handleRemoveAll}
+                    sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.75rem' }}
+                  >
+                    Clear all
+                  </Button>
+                )}
+              </Box>
 
-                      {/* ── Sortable charges ── */}
-                      {formik.values.charges.length > 0 && (
+              {/* ── Staged for collection panel content ── */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  minHeight: 0,
+                  overflow: 'hidden',
+                }}
+              >
+                <Scrollbar sx={{ flex: 1, minHeight: 0, pr: 0.3 }}>
+                  <Box>
+                    {formik.values.selectedItems.length === 0 &&
+                    formik.values.charges.length === 0 ? (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', textAlign: 'center', py: 1.5 }}
+                      >
+                        No fee items selected
+                      </Typography>
+                    ) : (
+                      <>
+                        {/* ── Sortable fee items ── */}
                         <DndContext
                           sensors={sensors}
                           collisionDetection={closestCenter}
                           onDragEnd={(event: DragEndEvent) => {
                             const { active, over } = event;
                             if (over && active.id !== over.id) {
-                              const oldIdx = formik.values.charges.indexOf(active.id as string);
-                              const newIdx = formik.values.charges.indexOf(over.id as string);
+                              const oldIdx = formik.values.selectedItems.findIndex(
+                                (i) => `${i.feeHeadId}-${i.period}` === active.id
+                              );
+                              const newIdx = formik.values.selectedItems.findIndex(
+                                (i) => `${i.feeHeadId}-${i.period}` === over.id
+                              );
                               formik.setFieldValue(
-                                'charges',
-                                arrayMove(formik.values.charges, oldIdx, newIdx),
+                                'selectedItems',
+                                arrayMove(formik.values.selectedItems, oldIdx, newIdx),
                                 false
                               );
                             }
                           }}
                         >
                           <SortableContext
-                            items={formik.values.charges}
+                            items={formik.values.selectedItems.map(
+                              (i) => `${i.feeHeadId}-${i.period}`
+                            )}
                             strategy={verticalListSortingStrategy}
                           >
-                            {(chargesData ?? [])
-                              .filter((c) => formik.values.charges.includes(c.chargeId))
-                              .map((charge, idx, arr) => (
-                                <>
-                                  <SortableFeeRow
-                                    key={charge.chargeId}
-                                    id={charge.chargeId}
-                                    label={charge.chargeName}
-                                    amount={charge.amount}
-                                    isCharge
-                                    onRemove={() =>
-                                      formik.setFieldValue(
-                                        'charges',
-                                        formik.values.charges.filter(
-                                          (id) => id !== charge.chargeId
-                                        ),
-                                        false
-                                      )
-                                    }
-                                  />
-                                  {idx < arr.length - 1 && <Divider sx={{ mx: 0.5 }} />}
-                                </>
-                              ))}
+                            {formik.values.selectedItems.map((item, idx) => (
+                              <>
+                                <SortableFeeRow
+                                  key={`${item.feeHeadId}-${item.period}`}
+                                  id={`${item.feeHeadId}-${item.period}`}
+                                  label={feeHeadMap[item.feeHeadId] ?? item.feeHeadId}
+                                  sub={dayjs(`${item.period}-01`).format('MMM YYYY')}
+                                  amount={item.dueAmount}
+                                  onRemove={() => {
+                                    formik.setFieldValue(
+                                      'selectedItems',
+                                      formik.values.selectedItems.filter((_, i) => i !== idx),
+                                      false
+                                    );
+                                  }}
+                                />
+                                {idx < formik.values.selectedItems.length - 1 && (
+                                  <Divider sx={{ mx: 0.5 }} />
+                                )}
+                              </>
+                            ))}
                           </SortableContext>
                         </DndContext>
-                      )}
-                    </>
-                  )}
-                </Box>
-              </Scrollbar>
 
-              <Divider sx={{ my: 0.75 }} />
-              <Box
-                px={0.5}
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-                py={0.5}
-              >
-                <Box>
-                  <Typography variant="subtitle2" fontWeight={700} color="primary.main">
-                    Working Total
-                  </Typography>
-                  <Typography variant="caption" color="primary.main">
-                    {formik.values.selectedItems.length + formik.values.charges.length} items
-                    selected
-                  </Typography>
-                </Box>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  ₹{formatNumber(subtotal)}
-                </Typography>
-              </Box>
-            </Box>
-          </Card>
-          {/* end Selected Fees */}
+                        {/* ── Sortable charges ── */}
+                        {formik.values.charges.length > 0 && (
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={(event: DragEndEvent) => {
+                              const { active, over } = event;
+                              if (over && active.id !== over.id) {
+                                const oldIdx = formik.values.charges.indexOf(active.id as string);
+                                const newIdx = formik.values.charges.indexOf(over.id as string);
+                                formik.setFieldValue(
+                                  'charges',
+                                  arrayMove(formik.values.charges, oldIdx, newIdx),
+                                  false
+                                );
+                              }
+                            }}
+                          >
+                            <SortableContext
+                              items={formik.values.charges}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              {(chargesData ?? [])
+                                .filter((c) => formik.values.charges.includes(c.chargeId))
+                                .map((charge, idx, arr) => (
+                                  <>
+                                    <SortableFeeRow
+                                      key={charge.chargeId}
+                                      id={charge.chargeId}
+                                      label={charge.chargeName}
+                                      amount={charge.amount}
+                                      isCharge
+                                      onRemove={() =>
+                                        formik.setFieldValue(
+                                          'charges',
+                                          formik.values.charges.filter(
+                                            (id) => id !== charge.chargeId
+                                          ),
+                                          false
+                                        )
+                                      }
+                                    />
+                                    {idx < arr.length - 1 && <Divider sx={{ mx: 0.5 }} />}
+                                  </>
+                                ))}
+                            </SortableContext>
+                          </DndContext>
+                        )}
+                      </>
+                    )}
+                  </Box>
+                </Scrollbar>
 
-          {/* ── Checkout ── */}
-          <Card
-            component={motion.div}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            sx={{
-              borderRadius: 1.5,
-              bgcolor: 'background.paper',
-              display: 'flex',
-              flexDirection: 'column',
-              p: { xs: 1.25, md: 1.5 },
-              boxShadow: (t) => `var(--shadows-4)`,
-              border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
-              flex: { xs: 'none', md: 'none', lg: 1 },
-              minHeight: { xs: 'auto', md: 'auto', lg: 0 },
-              maxHeight: { xs: '100%', md: '100%', lg: 'none' },
-              overflow: 'hidden',
-              width: '100%',
-              mb: { xs: 0, md: 0, lg: 1 },
-            }}
-          >
-            {/* Checkout header */}
-            <Box
-              pb={0.75}
-              mb={1.5}
-              sx={{ borderBottom: (t) => `1px solid ${alpha(t.palette.divider, 0.4)}` }}
-            >
-              <Typography
-                variant="overline"
-                color="text.secondary"
-                fontWeight={700}
-                letterSpacing={1.2}
-              >
-                Checkout
-              </Typography>
-            </Box>
-
-            <Box sx={{ flex: 1, minHeight: 0 }}>
-              <Scrollbar sx={{ height: '100%', pr: 0.35 }}>
-                <Box>
-                  {/* ── Payment Summary Header ── */}
-                  <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                    <Iconify
-                      icon="solar:shield-check-bold"
-                      sx={{ color: 'success.main', width: 22 }}
-                    />
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      Payment Summary
+                <Divider sx={{ my: 0.75 }} />
+                <Box
+                  px={0.5}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  py={0.5}
+                >
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={700} color="primary.main">
+                      Working Total
+                    </Typography>
+                    <Typography variant="caption" color="primary.main">
+                      {formik.values.selectedItems.length + formik.values.charges.length} items
+                      selected
                     </Typography>
                   </Box>
-                  <Typography variant="caption" color="text.secondary" mb={1} display="block">
-                    Receipt will be generated on collection
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    ₹{formatNumber(subtotal)}
                   </Typography>
-                  <Divider sx={{ mb: 1.25 }} />
+                </Box>
+              </Box>
+            </Card>
+            {/* end Selected Fees */}
 
-                  {/* ── Summary Rows ── */}
-                  <SummaryRow
-                    label="Items selected"
-                    value={`${formik.values.selectedItems.length + formik.values.charges.length} items`}
-                  />
-                  <SummaryRow label="Subtotal" value={`₹ ${formatNumber(subtotal)}`} />
-                  <Divider sx={{ my: 1 }} />
-                  <SummaryRow
-                    label="Total Payable"
-                    value={`₹ ${formatNumber(finalAmount)}`}
-                    bold
-                    large
-                    color="text.primary"
-                  />
+            {/* ── Checkout ── */}
+            <Card
+              component={motion.div}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              sx={{
+                borderRadius: 1.5,
+                bgcolor: 'background.paper',
+                display: 'flex',
+                flexDirection: 'column',
+                p: { xs: 1.25, md: 1.5 },
+                boxShadow: (t) => `var(--shadows-4)`,
+                border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
+                flex: { xs: 'none', md: 'none', lg: 1 },
+                minHeight: { xs: 'auto', md: 'auto', lg: 0 },
+                maxHeight: { xs: '100%', md: '100%', lg: 'none' },
+                overflow: 'hidden',
+                width: '100%',
+                mb: { xs: 0, md: 0, lg: 1 },
+              }}
+            >
+              {/* Checkout header */}
+              <Box
+                pb={0.75}
+                mb={1.5}
+                sx={{ borderBottom: (t) => `1px solid ${alpha(t.palette.divider, 0.4)}` }}
+              >
+                <Typography
+                  variant="overline"
+                  color="text.secondary"
+                  fontWeight={700}
+                  letterSpacing={1.2}
+                >
+                  Checkout
+                </Typography>
+              </Box>
 
-                  <Divider sx={{ my: 1.5 }} />
+              <Box sx={{ flex: 1, minHeight: 0 }}>
+                <Scrollbar sx={{ height: '100%', pr: 0.35 }}>
+                  <Box>
+                    {/* ── Payment Summary Header ── */}
+                    <Box display="flex" alignItems="center" gap={1} mb={0.5}>
+                      <Iconify
+                        icon="solar:shield-check-bold"
+                        sx={{ color: 'success.main', width: 22 }}
+                      />
+                      <Typography variant="subtitle2" fontWeight={700}>
+                        Payment Summary
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" color="text.secondary" mb={1} display="block">
+                      Receipt will be generated on collection
+                    </Typography>
+                    <Divider sx={{ mb: 1.25 }} />
 
-                  {/* ── Payment Method Dropdown (config-driven, matches refund form) ── */}
-                  <ShakingTextField
-                    error={
-                      !!(
-                        (formik.touched.payment?.paymentMethod || formik.submitCount > 0) &&
-                        formik.errors.payment?.paymentMethod
-                      )
-                    }
-                  >
-                    <TextField
-                      select
-                      fullWidth
-                      size="small"
-                      label="Payment Method *"
-                      name="payment.paymentMethod"
-                      value={formik.values.payment.paymentMethod}
-                      disabled={finalAmount === 0}
-                      onChange={(e) => {
-                        handlePaymentMethodChange(e.target.value);
-                        formik.setFieldTouched('payment.paymentMethod', true);
-                      }}
-                      onBlur={formik.handleBlur}
+                    {/* ── Summary Rows ── */}
+                    <SummaryRow
+                      label="Items selected"
+                      value={`${formik.values.selectedItems.length + formik.values.charges.length} items`}
+                    />
+                    <SummaryRow label="Subtotal" value={`₹ ${formatNumber(subtotal)}`} />
+                    <Divider sx={{ my: 1 }} />
+                    <SummaryRow
+                      label="Total Payable"
+                      value={`₹ ${formatNumber(finalAmount)}`}
+                      bold
+                      large
+                      color="text.primary"
+                    />
+
+                    <Divider sx={{ my: 1.5 }} />
+
+                    {/* ── Payment Method Dropdown (config-driven, matches refund form) ── */}
+                    <ShakingTextField
                       error={
                         !!(
                           (formik.touched.payment?.paymentMethod || formik.submitCount > 0) &&
                           formik.errors.payment?.paymentMethod
                         )
                       }
-                      helperText={
-                        ((formik.touched.payment?.paymentMethod || formik.submitCount > 0) &&
-                          (formik.errors.payment?.paymentMethod as string)) ||
-                        ''
-                      }
-                      sx={{ mb: 1.5 }}
                     >
-                      {Object.keys(paymentMethodsConfig).map((method) => (
-                        <MenuItem key={method} value={method}>
-                          {method.charAt(0).toUpperCase() + method.slice(1)}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  </ShakingTextField>
+                      <TextField
+                        select
+                        fullWidth
+                        size="small"
+                        label="Payment Method *"
+                        name="payment.paymentMethod"
+                        value={formik.values.payment.paymentMethod}
+                        disabled={finalAmount === 0}
+                        onChange={(e) => {
+                          handlePaymentMethodChange(e.target.value);
+                          formik.setFieldTouched('payment.paymentMethod', true);
+                        }}
+                        onBlur={formik.handleBlur}
+                        error={
+                          !!(
+                            (formik.touched.payment?.paymentMethod || formik.submitCount > 0) &&
+                            formik.errors.payment?.paymentMethod
+                          )
+                        }
+                        helperText={
+                          ((formik.touched.payment?.paymentMethod || formik.submitCount > 0) &&
+                            (formik.errors.payment?.paymentMethod as string)) ||
+                          ''
+                        }
+                        sx={{ mb: 1.5 }}
+                      >
+                        {Object.keys(paymentMethodsConfig).map((method) => (
+                          <MenuItem key={method} value={method}>
+                            {method.charAt(0).toUpperCase() + method.slice(1)}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </ShakingTextField>
 
-                  {/* ── Amount Tendered ── */}
-                  {formik.values.payment.paymentMethod && (
-                    <Box
-                      component={motion.div}
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.22 }}
-                      mt={1}
-                    >
-                      <Typography
-                        variant="overline"
-                        fontWeight={700}
-                        color="text.secondary"
-                        mb={2}
-                        display="block"
+                    {/* ── Amount Tendered ── */}
+                    {formik.values.payment.paymentMethod && (
+                      <Box
+                        component={motion.div}
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.22 }}
+                        mt={1}
                       >
-                        Amount Tendered
-                      </Typography>
-                      <ShakingTextField
-                        error={Boolean(
-                          (formik.touched.payment?.amount || formik.submitCount > 0) &&
-                          formik.errors.payment?.amount
-                        )}
-                      >
-                        <NumericFormatCustom
-                          fullWidth
-                          size="small"
-                          label="Amount *"
-                          value={formik.values.payment.amount ?? ''}
-                          onChange={(e: any) => {
-                            const raw = e.target.value.replace(/[₹,\s]/g, '');
-                            updatePayment('amount', raw);
-                          }}
+                        <Typography
+                          variant="overline"
+                          fontWeight={700}
+                          color="text.secondary"
+                          mb={2}
+                          display="block"
+                        >
+                          Amount Tendered
+                        </Typography>
+                        <ShakingTextField
                           error={Boolean(
                             (formik.touched.payment?.amount || formik.submitCount > 0) &&
                             formik.errors.payment?.amount
                           )}
-                          helperText={
-                            formik.touched.payment?.amount || formik.submitCount > 0
-                              ? (formik.errors.payment?.amount as string)
-                              : ''
-                          }
-                        />
-                      </ShakingTextField>
-                      <Grid container spacing={3} mt={3}>
-                        {/* Extra payment details (cheque, upi, etc.) */}
-                        {(
-                          paymentMethodsConfig[
-                            formik.values.payment.paymentMethod as keyof typeof paymentMethodsConfig
-                          ] ?? []
-                        )
-                          .filter((field: IPaymentFieldConfig) => field.name !== 'amount')
-                          .map((field: IPaymentFieldConfig) => {
-                            const fieldPath = `payment.details.${field.name}`;
-                            const isBankAccountField = field.name === 'bankAccount';
-                            const selectOptions = isBankAccountField
-                              ? bankAccountOptions
-                              : (field.options ?? []);
-                            const value = formik.values.payment.details[field.name];
-                            const error = (formik.errors.payment?.details as any)?.[field.name];
-                            const touched = (formik.touched.payment?.details as any)?.[field.name];
+                        >
+                          <NumericFormatCustom
+                            fullWidth
+                            size="small"
+                            label="Amount *"
+                            value={formik.values.payment.amount ?? ''}
+                            onChange={(e: any) => {
+                              const raw = e.target.value.replace(/[₹,\s]/g, '');
+                              updatePayment('amount', raw);
+                            }}
+                            error={Boolean(
+                              (formik.touched.payment?.amount || formik.submitCount > 0) &&
+                              formik.errors.payment?.amount
+                            )}
+                            helperText={
+                              formik.touched.payment?.amount || formik.submitCount > 0
+                                ? (formik.errors.payment?.amount as string)
+                                : ''
+                            }
+                          />
+                        </ShakingTextField>
+                        <Grid container spacing={3} mt={3}>
+                          {/* Extra payment details (cheque, upi, etc.) */}
+                          {(
+                            paymentMethodsConfig[
+                              formik.values.payment
+                                .paymentMethod as keyof typeof paymentMethodsConfig
+                            ] ?? []
+                          )
+                            .filter((field: IPaymentFieldConfig) => field.name !== 'amount')
+                            .map((field: IPaymentFieldConfig) => {
+                              const fieldPath = `payment.details.${field.name}`;
+                              const isBankAccountField = field.name === 'bankAccount';
+                              const selectOptions = isBankAccountField
+                                ? bankAccountOptions
+                                : (field.options ?? []);
+                              const value = formik.values.payment.details[field.name];
+                              const error = (formik.errors.payment?.details as any)?.[field.name];
+                              const touched = (formik.touched.payment?.details as any)?.[
+                                field.name
+                              ];
 
-                            return (
-                              <Grid
-                                size={{ xs: 12, sm: 6 }}
-                                key={`${formik.values.payment.paymentMethod}-${field.name}`}
-                              >
-                                <ShakingTextField
-                                  error={Boolean((touched || formik.submitCount > 0) && error)}
+                              return (
+                                <Grid
+                                  size={{ xs: 12, sm: 6 }}
+                                  key={`${formik.values.payment.paymentMethod}-${field.name}`}
                                 >
-                                  {field.type === 'date' ? (
-                                    <DatePicker
-                                      label={`${field.label} *`}
-                                      format="DD/MM/YYYY"
-                                      value={value ? dayjs(value) : null}
-                                      onChange={(date) => formik.setFieldValue(fieldPath, date)}
-                                      sx={{ width: '100%' }}
-                                      slotProps={{
-                                        textField: {
-                                          size: 'small',
-                                          fullWidth: true,
-                                          error: Boolean(
-                                            (touched || formik.submitCount > 0) && error
-                                          ),
-                                          helperText:
-                                            (touched || formik.submitCount > 0) &&
-                                            typeof error === 'string'
-                                              ? error
-                                              : '',
-                                        },
-                                      }}
-                                      disablePast
-                                    />
-                                  ) : field.type === 'select' ? (
-                                    <TextField
-                                      select
-                                      fullWidth
-                                      label={`${field.label} *`}
-                                      name={fieldPath}
-                                      value={value || ''}
-                                      onChange={formik.handleChange}
-                                      onBlur={formik.handleBlur}
-                                      disabled={isBankAccountField && isBankAccountsBusy}
-                                      size="small"
-                                      error={Boolean((touched || formik.submitCount > 0) && error)}
-                                      helperText={
-                                        (touched || formik.submitCount > 0) &&
-                                        typeof error === 'string'
-                                          ? error
-                                          : isBankAccountField && isBankAccountsBusy
-                                            ? 'Loading bank accounts...'
-                                            : isBankAccountField && selectOptions.length === 0
-                                              ? 'No bank accounts available'
-                                              : ''
-                                      }
-                                    >
-                                      {isBankAccountField && isBankAccountsBusy ? (
-                                        <MenuItem disabled value="">
-                                          Loading bank accounts...
-                                        </MenuItem>
-                                      ) : selectOptions.length === 0 ? (
-                                        <MenuItem disabled value="">
-                                          No options available
-                                        </MenuItem>
-                                      ) : (
-                                        selectOptions.map((opt: any) => (
-                                          <MenuItem key={opt.id} value={opt.id}>
-                                            {opt.name}
+                                  <ShakingTextField
+                                    error={Boolean((touched || formik.submitCount > 0) && error)}
+                                  >
+                                    {field.type === 'date' ? (
+                                      <DatePicker
+                                        label={`${field.label} *`}
+                                        format="DD/MM/YYYY"
+                                        value={value ? dayjs(value) : null}
+                                        onChange={(date) => formik.setFieldValue(fieldPath, date)}
+                                        sx={{ width: '100%' }}
+                                        slotProps={{
+                                          textField: {
+                                            size: 'small',
+                                            fullWidth: true,
+                                            error: Boolean(
+                                              (touched || formik.submitCount > 0) && error
+                                            ),
+                                            helperText:
+                                              (touched || formik.submitCount > 0) &&
+                                              typeof error === 'string'
+                                                ? error
+                                                : '',
+                                          },
+                                        }}
+                                        disablePast
+                                      />
+                                    ) : field.type === 'select' ? (
+                                      <TextField
+                                        select
+                                        fullWidth
+                                        label={`${field.label} *`}
+                                        name={fieldPath}
+                                        value={value || ''}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        disabled={isBankAccountField && isBankAccountsBusy}
+                                        size="small"
+                                        error={Boolean(
+                                          (touched || formik.submitCount > 0) && error
+                                        )}
+                                        helperText={
+                                          (touched || formik.submitCount > 0) &&
+                                          typeof error === 'string'
+                                            ? error
+                                            : isBankAccountField && isBankAccountsBusy
+                                              ? 'Loading bank accounts...'
+                                              : isBankAccountField && selectOptions.length === 0
+                                                ? 'No bank accounts available'
+                                                : ''
+                                        }
+                                      >
+                                        {isBankAccountField && isBankAccountsBusy ? (
+                                          <MenuItem disabled value="">
+                                            Loading bank accounts...
                                           </MenuItem>
-                                        ))
-                                      )}
-                                    </TextField>
-                                  ) : field.type === 'multiline' ? (
-                                    <TextField
-                                      fullWidth
-                                      multiline
-                                      minRows={2}
-                                      size="small"
-                                      label={`${field.label} *`}
-                                      name={fieldPath}
-                                      value={value || ''}
-                                      onChange={(e) => {
-                                        let val = e.target.value.replace(/[<>]/g, '');
-                                        if (
-                                          (field as any).maxLength &&
-                                          val.length > (field as any).maxLength
-                                        ) {
-                                          val = val.slice(0, (field as any).maxLength);
-                                        }
-                                        formik.setFieldValue(fieldPath, val);
-                                      }}
-                                      onBlur={(e) => {
-                                        const val = e.target.value;
-                                        const trimmed = val.trim().replace(/\s+/g, ' ');
-                                        if (trimmed !== val) {
-                                          formik.setFieldValue(fieldPath, trimmed);
-                                        }
-                                        formik.handleBlur(e);
-                                      }}
-                                      error={Boolean((touched || formik.submitCount > 0) && error)}
-                                      helperText={
-                                        (touched || formik.submitCount > 0) &&
-                                        typeof error === 'string'
-                                          ? error
-                                          : ''
-                                      }
-                                    />
-                                  ) : (
-                                    <TextField
-                                      fullWidth
-                                      type={
-                                        field.type === 'text' ||
-                                        field.type === 'numbers' ||
-                                        field.type === 'last4digits' ||
-                                        field.type === 'uppercase' ||
-                                        field.type === 'anytext'
-                                          ? 'text'
-                                          : field.type
-                                      }
-                                      size="small"
-                                      label={`${field.label} *`}
-                                      name={fieldPath}
-                                      value={value || ''}
-                                      onChange={(e) => {
-                                        let newValue = e.target.value;
-
-                                        // Handle text-only fields (letters and spaces only)
-                                        if (field.type === 'text') {
-                                          newValue = newValue.replace(/[^a-zA-Z\s]/g, '');
-                                        }
-
-                                        if (field.type === 'uppercase') {
-                                          newValue = newValue
-                                            .toUpperCase()
-                                            .replace(/[^A-Z0-9]/g, '');
-                                        }
-
-                                        // Handle numbers-only fields (digits only)
-                                        if (field.type === 'numbers') {
-                                          newValue = newValue.replace(/\D/g, '');
-                                        }
-
-                                        // Handle last 4 digits field (4 digits max)
-                                        if (field.type === 'last4digits') {
-                                          newValue = newValue.replace(/\D/g, '');
-                                          if (newValue.length > 4) {
-                                            newValue = newValue.slice(0, 4);
+                                        ) : selectOptions.length === 0 ? (
+                                          <MenuItem disabled value="">
+                                            No options available
+                                          </MenuItem>
+                                        ) : (
+                                          selectOptions.map((opt: any) => (
+                                            <MenuItem key={opt.id} value={opt.id}>
+                                              {opt.name}
+                                            </MenuItem>
+                                          ))
+                                        )}
+                                      </TextField>
+                                    ) : field.type === 'multiline' ? (
+                                      <TextField
+                                        fullWidth
+                                        multiline
+                                        minRows={2}
+                                        size="small"
+                                        label={`${field.label} *`}
+                                        name={fieldPath}
+                                        value={value || ''}
+                                        onChange={(e) => {
+                                          let val = e.target.value.replace(/[<>]/g, '');
+                                          if (
+                                            (field as any).maxLength &&
+                                            val.length > (field as any).maxLength
+                                          ) {
+                                            val = val.slice(0, (field as any).maxLength);
                                           }
-                                        }
-
-                                        // Apply maxLength if specified
-                                        if (
-                                          (field as any).maxLength &&
-                                          newValue.length > (field as any).maxLength
-                                        ) {
-                                          newValue = newValue.slice(0, (field as any).maxLength);
-                                        }
-
-                                        formik.setFieldValue(fieldPath, newValue);
-                                      }}
-                                      onBlur={(e) => {
-                                        const val = e.target.value;
-                                        if (typeof val === 'string') {
+                                          formik.setFieldValue(fieldPath, val);
+                                        }}
+                                        onBlur={(e) => {
+                                          const val = e.target.value;
                                           const trimmed = val.trim().replace(/\s+/g, ' ');
                                           if (trimmed !== val) {
                                             formik.setFieldValue(fieldPath, trimmed);
                                           }
+                                          formik.handleBlur(e);
+                                        }}
+                                        error={Boolean(
+                                          (touched || formik.submitCount > 0) && error
+                                        )}
+                                        helperText={
+                                          (touched || formik.submitCount > 0) &&
+                                          typeof error === 'string'
+                                            ? error
+                                            : ''
                                         }
-                                        formik.handleBlur(e);
-                                      }}
-                                      error={Boolean((touched || formik.submitCount > 0) && error)}
-                                      helperText={
-                                        (touched || formik.submitCount > 0) &&
-                                        typeof error === 'string'
-                                          ? error
-                                          : ''
-                                      }
-                                      inputProps={
-                                        field.type === 'number'
-                                          ? { min: field.min, max: field.max }
-                                          : {}
-                                      }
-                                    />
-                                  )}
-                                </ShakingTextField>
-                              </Grid>
-                            );
-                          })}
-                      </Grid>
-                    </Box>
-                  )}
+                                      />
+                                    ) : (
+                                      <TextField
+                                        fullWidth
+                                        type={
+                                          field.type === 'text' ||
+                                          field.type === 'numbers' ||
+                                          field.type === 'last4digits' ||
+                                          field.type === 'uppercase' ||
+                                          field.type === 'anytext'
+                                            ? 'text'
+                                            : field.type
+                                        }
+                                        size="small"
+                                        label={`${field.label} *`}
+                                        name={fieldPath}
+                                        value={value || ''}
+                                        onChange={(e) => {
+                                          let newValue = e.target.value;
 
-                  {/* ── Change / Balance Box ── */}
-                  {formik.values.payment.paymentMethod && (
-                    <Box
-                      mt={1.5}
-                      p={1.1}
-                      sx={{
-                        borderRadius: 1.25,
-                        border: (t) => `1px solid ${alpha(t.palette.divider, 0.7)}`,
-                        bgcolor:
-                          balancePaise === 0
-                            ? alpha(theme.palette.success.main, 0.08)
-                            : balancePaise > 0
-                              ? alpha(theme.palette.warning.main, 0.08)
-                              : alpha(theme.palette.error.main, 0.08),
-                      }}
-                    >
-                      <Box display="flex" justifyContent="space-between">
-                        <Typography variant="caption" color="text.secondary">
-                          Change / Balance
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          fontWeight={700}
-                          sx={{ fontVariantNumeric: 'tabular-nums' }}
-                          color={
+                                          // Handle text-only fields (letters and spaces only)
+                                          if (field.type === 'text') {
+                                            newValue = newValue.replace(/[^a-zA-Z\s]/g, '');
+                                          }
+
+                                          if (field.type === 'uppercase') {
+                                            newValue = newValue
+                                              .toUpperCase()
+                                              .replace(/[^A-Z0-9]/g, '');
+                                          }
+
+                                          // Handle numbers-only fields (digits only)
+                                          if (field.type === 'numbers') {
+                                            newValue = newValue.replace(/\D/g, '');
+                                          }
+
+                                          // Handle last 4 digits field (4 digits max)
+                                          if (field.type === 'last4digits') {
+                                            newValue = newValue.replace(/\D/g, '');
+                                            if (newValue.length > 4) {
+                                              newValue = newValue.slice(0, 4);
+                                            }
+                                          }
+
+                                          // Apply maxLength if specified
+                                          if (
+                                            (field as any).maxLength &&
+                                            newValue.length > (field as any).maxLength
+                                          ) {
+                                            newValue = newValue.slice(0, (field as any).maxLength);
+                                          }
+
+                                          formik.setFieldValue(fieldPath, newValue);
+                                        }}
+                                        onBlur={(e) => {
+                                          const val = e.target.value;
+                                          if (typeof val === 'string') {
+                                            const trimmed = val.trim().replace(/\s+/g, ' ');
+                                            if (trimmed !== val) {
+                                              formik.setFieldValue(fieldPath, trimmed);
+                                            }
+                                          }
+                                          formik.handleBlur(e);
+                                        }}
+                                        error={Boolean(
+                                          (touched || formik.submitCount > 0) && error
+                                        )}
+                                        helperText={
+                                          (touched || formik.submitCount > 0) &&
+                                          typeof error === 'string'
+                                            ? error
+                                            : ''
+                                        }
+                                        inputProps={
+                                          field.type === 'number'
+                                            ? { min: field.min, max: field.max }
+                                            : {}
+                                        }
+                                      />
+                                    )}
+                                  </ShakingTextField>
+                                </Grid>
+                              );
+                            })}
+                        </Grid>
+                      </Box>
+                    )}
+
+                    {/* ── Change / Balance Box ── */}
+                    {formik.values.payment.paymentMethod && (
+                      <Box
+                        mt={1.5}
+                        p={1.1}
+                        sx={{
+                          borderRadius: 1.25,
+                          border: (t) => `1px solid ${alpha(t.palette.divider, 0.7)}`,
+                          bgcolor:
                             balancePaise === 0
-                              ? 'success.main'
+                              ? alpha(theme.palette.success.main, 0.08)
                               : balancePaise > 0
-                                ? 'warning.main'
-                                : 'error.main'
-                          }
-                        >
-                          ₹ {formatNumber(Math.abs(balance))}
-                        </Typography>
+                                ? alpha(theme.palette.warning.main, 0.08)
+                                : alpha(theme.palette.error.main, 0.08),
+                        }}
+                      >
+                        <Box display="flex" justifyContent="space-between">
+                          <Typography variant="caption" color="text.secondary">
+                            Change / Balance
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            fontWeight={700}
+                            sx={{ fontVariantNumeric: 'tabular-nums' }}
+                            color={
+                              balancePaise === 0
+                                ? 'success.main'
+                                : balancePaise > 0
+                                  ? 'warning.main'
+                                  : 'error.main'
+                            }
+                          >
+                            ₹ {formatNumber(Math.abs(balance))}
+                          </Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between" mt={0.25}>
+                          <Typography variant="caption" color="text.secondary">
+                            Overall Outstanding
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            fontWeight={600}
+                            sx={{ fontVariantNumeric: 'tabular-nums' }}
+                          >
+                            ₹ {formatNumber(student?.pendingFees ?? 0)}
+                          </Typography>
+                        </Box>
                       </Box>
-                      <Box display="flex" justifyContent="space-between" mt={0.25}>
-                        <Typography variant="caption" color="text.secondary">
-                          Overall Outstanding
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          fontWeight={600}
-                          sx={{ fontVariantNumeric: 'tabular-nums' }}
-                        >
-                          ₹ {formatNumber(student?.pendingFees ?? 0)}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  )}
-                </Box>
-              </Scrollbar>
-            </Box>
-          </Card>
-          {/* end Checkout */}
+                    )}
+                  </Box>
+                </Scrollbar>
+              </Box>
+            </Card>
+            {/* end Checkout */}
+          </Box>
+          {/* end Right Half */}
         </Box>
-        {/* end Right Half */}
-      </Box>
-      {/* end 2-col grid */}
-
+        {/* end 2-col grid */}
+      </BackPopUpChecked>
       {/* ── Bottom Actions ── */}
       <DialogActions
         sx={{

@@ -85,6 +85,8 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     type: 'class' | 'division';
     nextStandardIds?: string[];
     nextDivisionIds?: string[];
+    deselectedStandardId?: string;
+    deselectedDivisionId?: string;
   }>(null);
 
   // Query hooks
@@ -199,6 +201,8 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
         type: 'class' | 'division';
         nextStandardIds?: string[];
         nextDivisionIds?: string[];
+        deselectedStandardId?: string;
+        deselectedDivisionId?: string;
       },
       clearStudents = false
     ) => {
@@ -218,16 +222,37 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
       }
 
       if (clearStudents) {
-        setFieldValue('studentIds', []);
-        setFieldValue('selectedStudents', []);
+        if (change.type === 'class' && change.deselectedStandardId) {
+          const newSelectedStudents = values.selectedStudents.filter(
+            (s: any) => s.standardId !== change.deselectedStandardId
+          );
+          setFieldValue(
+            'studentIds',
+            newSelectedStudents.map((s) => s.id)
+          );
+          setFieldValue('selectedStudents', newSelectedStudents);
+        } else if (change.type === 'division' && change.deselectedDivisionId) {
+          const newSelectedStudents = values.selectedStudents.filter(
+            (s: any) => s.divisionId !== change.deselectedDivisionId
+          );
+          setFieldValue(
+            'studentIds',
+            newSelectedStudents.map((s) => s.id)
+          );
+          setFieldValue('selectedStudents', newSelectedStudents);
+        } else {
+          setFieldValue('studentIds', []);
+          setFieldValue('selectedStudents', []);
+        }
       }
     },
-    [setFieldValue, setFieldTouched]
+    [setFieldValue, setFieldTouched, values.selectedStudents]
   );
 
   const {
     students: scopeStudents,
     isLoading: studentsLoading,
+    hasFetched: studentsFetched,
     candidateStudentIds,
   } = useStudentsInScope(
     values.boardId,
@@ -310,6 +335,35 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
       dispatch(setIsChanges(true));
     }
   }, [isDirty, dispatch]);
+
+  // Clean up selected students that are no longer in scope
+  useEffect(() => {
+    if (!studentsLoading && studentsFetched) {
+      if (values.standardId.length === 0 && values.studentIds.length > 0) {
+        setFieldValue('studentIds', []);
+        setFieldValue('selectedStudents', []);
+      } else if (values.standardId.length > 0 && scopeStudents) {
+        const validIds = new Set(candidateStudentIdsRef.current);
+        const needsCleanup = values.studentIds.some((id) => !validIds.has(id));
+        if (needsCleanup) {
+          const newSelectedStudents = values.selectedStudents.filter((s) => validIds.has(s.id));
+          setFieldValue(
+            'studentIds',
+            newSelectedStudents.map((s) => s.id)
+          );
+          setFieldValue('selectedStudents', newSelectedStudents);
+        }
+      }
+    }
+  }, [
+    studentsLoading,
+    studentsFetched,
+    scopeStudents,
+    values.standardId,
+    values.studentIds,
+    values.selectedStudents,
+    setFieldValue,
+  ]);
 
   const handleSubmit = useCallback(async () => {
     const validationErrors = await formik.validateForm();
@@ -659,12 +713,17 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                                         setPendingSelectionChange({
                                           type: 'class',
                                           nextStandardIds: updated,
+                                          deselectedStandardId: cls.id,
                                         });
                                         return;
                                       }
 
                                       applySelectionChange(
-                                        { type: 'class', nextStandardIds: updated },
+                                        {
+                                          type: 'class',
+                                          nextStandardIds: updated,
+                                          deselectedStandardId: cls.id,
+                                        },
                                         isSelected
                                       );
                                     }}
@@ -746,12 +805,17 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                                           setPendingSelectionChange({
                                             type: 'division',
                                             nextDivisionIds: updated,
+                                            deselectedDivisionId: div.id,
                                           });
                                           return;
                                         }
 
                                         applySelectionChange(
-                                          { type: 'division', nextDivisionIds: updated },
+                                          {
+                                            type: 'division',
+                                            nextDivisionIds: updated,
+                                            deselectedDivisionId: div.id,
+                                          },
                                           isSelected
                                         );
                                       }}

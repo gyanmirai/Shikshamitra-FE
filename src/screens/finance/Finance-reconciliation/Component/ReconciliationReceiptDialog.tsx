@@ -3,6 +3,7 @@
 import type { DialogProps } from '@mui/material';
 
 import React from 'react';
+import { Close } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { InfoItem } from 'src/components/info-item';
@@ -17,6 +18,7 @@ import {
   Dialog,
   Divider,
   Typography,
+  IconButton,
   DialogTitle,
   DialogActions,
   DialogContent,
@@ -72,13 +74,30 @@ const ReconciliationReceiptDialog = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth {...props}>
       <DialogTitle>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Typography variant="h6" fontWeight={700}>
-            Receipt Details
-          </Typography>
-          <CustomTooltip title="View or download the receipt for this payment record.">
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
+        <Box display="flex" justifyContent="space-between" alignItems="center" gap={1}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="h6" fontWeight={700}>
+              Receipt Details
+            </Typography>
+            <CustomTooltip title="View or download the receipt for this payment record.">
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <IconButton
+              aria-label="close"
+              onClick={() => onClose()}
+              sx={{
+                transition: 'all 0.2s',
+                '&:hover': {
+                  backgroundColor: theme.palette.action.hover,
+                  transform: 'scale(1.1)',
+                },
+              }}
+            >
+              <Close sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Box>
         </Box>
       </DialogTitle>
       <Divider />

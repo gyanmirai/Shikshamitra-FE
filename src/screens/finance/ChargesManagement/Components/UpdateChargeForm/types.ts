@@ -74,6 +74,8 @@ export interface IStudentOption {
   name: string;
   standardName?: string;
   divisionName?: string;
+  standardId?: string;
+  divisionId?: string;
 }
 
 /**

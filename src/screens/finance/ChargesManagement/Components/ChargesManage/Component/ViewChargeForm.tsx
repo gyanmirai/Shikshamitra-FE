@@ -6,6 +6,7 @@ import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Description } from '@mui/icons-material';
 import { InfoItem } from 'src/components/info-item';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -135,7 +136,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <InfoItem
-                      icon={<Iconify icon="solar:note-bold-duotone" />}
+                      icon={<Description />}
                       label="Approval Notes"
                       value={selectedCharge?.approvalDetails?.approvalNotes || 'N/A'}
                     />

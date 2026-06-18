@@ -146,8 +146,8 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const COLUMNS = [
     { label: '#', size: 0.5, align: 'left' },
-    { label: 'Fee Category', size: 1.5, align: 'left' },
     { label: 'Fee Head', size: 2, align: 'left' },
+    { label: 'Fee Category', size: 1.5, align: 'left' },
     { label: 'Amount', size: 1.5, align: 'left' },
     { label: 'One Time', size: 1.5, align: 'center' },
     { label: 'Payable Month', size: 2.5, align: 'left' },
@@ -723,16 +723,14 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                           {idx + 1}.
                         </Typography>
                       </Grid>
-
-                      <Grid size={1.5} sx={{ pr: 1, pt: 0.75 }}>
-                        <Typography variant="body2" noWrap>
-                          {item.feeCategoryName || (item as any).categoryName || '-'}
-                        </Typography>
-                      </Grid>
-
                       <Grid size={2} sx={{ pr: 1, pt: 0.75 }}>
                         <Typography variant="body2" noWrap>
                           {item.feeHeadName}
+                        </Typography>
+                      </Grid>
+                      <Grid size={1.5} sx={{ pr: 1, pt: 0.75 }}>
+                        <Typography variant="body2" noWrap>
+                          {item.feeCategoryName || (item as any).categoryName || '-'}
                         </Typography>
                       </Grid>
 
