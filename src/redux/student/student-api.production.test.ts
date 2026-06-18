@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { it, expect, describe } from 'vitest';
 
+import { parseStudentDashboardPayload } from '.';
+
 const repoRoot = path.resolve(__dirname, '../../..');
 
 const readSource = (relativePath: string) =>
@@ -34,9 +36,45 @@ describe('student production API wiring', () => {
     expect(source).toContain(['/students/records/', '{studentId}/photo'].join('$'));
     expect(source).toContain('/students/records/dashboard-summary');
     expect(source).toContain('/students/records/attendance-dashboard-summary');
+    expect(source).toContain('/students/dashboard/previews/');
+    expect(source).toContain(['/students/dashboard/previews/', '{dashboardKey}/refresh'].join('$'));
     expect(source).toContain('/students/attendance/history');
     expect(source).toContain('params,');
     expect(source).toContain('invalidatesTags: [studentType.student]');
+  });
+
+  it('parses saved student reporting dashboard previews safely', () => {
+    expect(
+      parseStudentDashboardPayload({
+        dashboardKey: 'Reporting',
+        scopeKey: 'student-wide',
+        status: 'Empty',
+        payloadJson: '{}',
+        payloadVersion: 1,
+        isStale: true,
+      })
+    ).toBeUndefined();
+
+    expect(
+      parseStudentDashboardPayload<{ kpis: Array<{ id: string; value: number }> }>({
+        dashboardKey: 'Reporting',
+        scopeKey: 'student-wide',
+        status: 'Ready',
+        payloadJson: '{"kpis":[{"id":"total-students","value":42}]}',
+        payloadVersion: 1,
+        isStale: false,
+      })
+    ).toEqual({ kpis: [{ id: 'total-students', value: 42 }] });
+  });
+
+  it('polls the reporting dashboard preview only while refresh is active', () => {
+    const source = readSource('src/screens/student/dashboard/index.tsx');
+
+    expect(source).toContain('DASHBOARD_REFRESH_POLLING_INTERVAL = 5000');
+    expect(source).toContain('pollingInterval: dashboardPollingInterval');
+    expect(source).toContain('skipPollingIfUnfocused: true');
+    expect(source).toContain('isDashboardRefreshing(preview?.status)');
+    expect(source).not.toContain('window.setTimeout');
   });
 
   it('keeps student leave list wired to server pagination and sorting params', () => {

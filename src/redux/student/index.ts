@@ -105,6 +105,27 @@ export const StudentApi = api.injectEndpoints({
       }),
       providesTags: [studentType.student],
     }),
+    getStudentDashboardPreview: builder.query<
+      StudentDashboardPreview,
+      StudentDashboardKey | string
+    >({
+      query: (dashboardKey) => ({
+        url: `/students/dashboard/previews/${dashboardKey}`,
+        method: 'GET',
+      }),
+      providesTags: [studentType.student],
+      keepUnusedDataFor: 3600,
+    }),
+    refreshStudentDashboardPreview: builder.mutation<
+      StudentDashboardPreview,
+      StudentDashboardKey | string
+    >({
+      query: (dashboardKey) => ({
+        url: `/students/dashboard/previews/${dashboardKey}/refresh`,
+        method: 'POST',
+      }),
+      invalidatesTags: [studentType.student],
+    }),
     getStudentAttendanceHistory: builder.query({
       query: (params: StudentAttendanceHistoryQuery) => ({
         url: '/students/attendance/history',
@@ -165,6 +186,115 @@ export type StudentAttendanceHistoryQuery = {
   sorting?: string;
 };
 
+export type StudentDashboardKey = 'Reporting';
+
+export type StudentDashboardPreviewStatus = 'Empty' | 'Ready' | 'Refreshing' | 'Failed' | string;
+
+export type StudentDashboardPreview = {
+  dashboardKey: StudentDashboardKey | string;
+  scopeKey?: string;
+  status: StudentDashboardPreviewStatus;
+  payloadJson: string;
+  payloadVersion: number;
+  isStale?: boolean;
+  lastRefreshedAt?: string | null;
+  lastSuccessfulRefreshAt?: string | null;
+  nextScheduledRefreshAt?: string | null;
+  refreshStartedAt?: string | null;
+  refreshRequestedByUserId?: string | null;
+  lastError?: string | null;
+};
+
+export type StudentReportingDashboard = {
+  generatedAt: string;
+  rangeStart: string;
+  rangeEnd: string;
+  kpis: StudentReportingKpi[];
+  categories: StudentReportingCategory[];
+  enrollmentTrend: StudentReportingTrendPoint[];
+  attendanceTrend: StudentReportingAttendanceTrendPoint[];
+  classStrength: StudentReportingClassStrength[];
+  alerts: StudentReportingAlert[];
+  quickLinks: StudentReportingQuickLink[];
+};
+
+export type StudentReportingKpi = {
+  id: string;
+  label: string;
+  value: number;
+  displayValue?: string | null;
+  tone: 'default' | 'success' | 'warning' | 'info' | 'critical' | string;
+  description?: string | null;
+  href?: string | null;
+};
+
+export type StudentReportingCategory = {
+  id: string;
+  title: string;
+  description: string;
+  availableReports: number;
+  href: string;
+  icon: string;
+};
+
+export type StudentReportingTrendPoint = {
+  label: string;
+  inquiries: number;
+  registrations: number;
+  admissions: number;
+  enrolled: number;
+};
+
+export type StudentReportingAttendanceTrendPoint = {
+  date: string;
+  percentage: number;
+  present: number;
+  absent: number;
+};
+
+export type StudentReportingClassStrength = {
+  standardId?: string | null;
+  standard: string;
+  total: number;
+  divisions: StudentReportingDivisionStrength[];
+};
+
+export type StudentReportingDivisionStrength = {
+  divisionId?: string | null;
+  division: string;
+  total: number;
+};
+
+export type StudentReportingAlert = {
+  id: string;
+  severity: 'info' | 'warning' | 'critical' | 'success' | string;
+  title: string;
+  summary: string;
+  count: number;
+  actionLabel: string;
+  actionHref: string;
+};
+
+export type StudentReportingQuickLink = {
+  id: string;
+  label: string;
+  description: string;
+  href: string;
+  icon: string;
+};
+
+export const parseStudentDashboardPayload = <T = StudentReportingDashboard>(
+  preview?: StudentDashboardPreview
+): T | undefined => {
+  if (!preview?.payloadJson || preview.payloadJson === '{}') return undefined;
+
+  try {
+    return JSON.parse(preview.payloadJson) as T;
+  } catch {
+    return undefined;
+  }
+};
+
 export const {
   useGetFilterStudentsQuery,
   useLazyGetFilterStudentsQuery,
@@ -176,6 +306,8 @@ export const {
   useUploadStudentPhotoMutation,
   useGetStudentDashboardSummaryQuery,
   useGetStudentAttendanceDashboardSummaryQuery,
+  useGetStudentDashboardPreviewQuery,
+  useRefreshStudentDashboardPreviewMutation,
   useGetStudentAttendanceHistoryQuery,
   useGetStudentsByScopeQuery,
   useLazyGetStudentsByScopeQuery,
