@@ -17,15 +17,14 @@ import {
 
 interface AdminDashboardProps {
   overview?: LibraryDashboardOverview;
-  isRefreshing?: boolean;
 }
 
-const AdminDashboard = ({ overview, isRefreshing }: AdminDashboardProps) => (
+const AdminDashboard = ({ overview }: AdminDashboardProps) => (
   <Box>
     <Grid container spacing={1}>
       {/* Section 1: KPI Cards */}
       <Grid size={{ xs: 12 }}>
-        <AdminKPICards overview={overview} isRefreshing={isRefreshing} />
+        <AdminKPICards overview={overview} />
       </Grid>
 
       {/* Section 3 & 8: Circulation & Quick Actions */}

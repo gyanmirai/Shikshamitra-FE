@@ -60,13 +60,11 @@ const LibraryDashboard = () => {
 
   return (
     <Box data-testid="library-dashboard-page">
-      {(role === 'Librarian' || role === 'Admin') && (
-        <AdminDashboard overview={overview} isRefreshing={isFetching} />
-      )}
+      {(role === 'Librarian' || role === 'Admin') && <AdminDashboard overview={overview} />}
       {role === 'Principal' && <PrincipalDashboard overview={overview} />}
       {/* Fallback to Principal dashboard if role not recognized */}
       {!['Librarian', 'Admin', 'Principal'].includes(role) && (
-        <AdminDashboard overview={overview} isRefreshing={isFetching} />
+        <AdminDashboard overview={overview} />
       )}
     </Box>
   );
