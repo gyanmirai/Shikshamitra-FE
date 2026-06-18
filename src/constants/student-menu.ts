@@ -46,20 +46,9 @@ export const studentPaths = {
 
 export const studentPermissions = {
   root: `${defaultModulePermissionName}Students`,
-  dashboard: `${defaultModulePermissionName}Students`,
+  dashboard: `${defaultModulePermissionName}${defaultStudentPermissionName}Dashboard`,
   enrollment: {
-    root: [
-      `${defaultStudentPermissionName}Enrollment.Inquiry`,
-      `${defaultStudentPermissionName}Enrollment.RegistrationFormIssued`,
-      `${defaultStudentPermissionName}Enrollment.EntranceExam`,
-      `${defaultStudentPermissionName}Enrollment.Admission`,
-      `${defaultStudentPermissionName}Enrollment.Reports`,
-      `${defaultStudentPermissionName}Enrollment.Settings.DocumentTypes`,
-      `${defaultStudentPermissionName}Enrollment.Settings.InquiryPreference`,
-      `${defaultStudentPermissionName}Enrollment.Settings.EntranceExamSlots`,
-      `${defaultStudentPermissionName}Enrollment.Settings.RegistrationFormAmount`,
-      `${defaultStudentPermissionName}Enrollment.Settings.FormNumberSeries`,
-    ],
+    root: `${defaultModulePermissionName}${defaultStudentPermissionName}Enrollment`,
     inquiry: `${defaultStudentPermissionName}Enrollment.Inquiry`,
     registrationFormIssued: `${defaultStudentPermissionName}Enrollment.RegistrationFormIssued`,
     // Note: registration uses same permission as registrationFormIssued in original file
@@ -68,27 +57,14 @@ export const studentPermissions = {
     admission: `${defaultStudentPermissionName}Enrollment.Admission`,
     reports: `${defaultStudentPermissionName}Enrollment.Reports`,
     settings: {
-      root: [
-        `${defaultStudentPermissionName}Enrollment.Settings.DocumentTypes`,
-        `${defaultStudentPermissionName}Enrollment.Settings.InquiryPreference`,
-        `${defaultStudentPermissionName}Enrollment.Settings.EntranceExamSlots`,
-        `${defaultStudentPermissionName}Enrollment.Settings.RegistrationFormAmount`,
-        `${defaultStudentPermissionName}Enrollment.Settings.FormNumberSeries`,
-      ],
+      root: `${defaultModulePermissionName}${defaultStudentPermissionName}Enrollment.Settings`,
       documentTypes: `${defaultStudentPermissionName}Enrollment.Settings.DocumentTypes`,
       inquiryPreference: `${defaultStudentPermissionName}Enrollment.Settings.InquiryPreference`,
       entranceExamSlots: `${defaultStudentPermissionName}Enrollment.Settings.EntranceExamSlots`,
     },
   },
   records: {
-    root: [
-      `${defaultStudentPermissionName}Records.StudentList`,
-      `${defaultStudentPermissionName}Records.StudentICard`,
-      `${defaultStudentPermissionName}Records.StudentManagement`,
-      `${defaultStudentPermissionName}Records.Certificates`,
-      `${defaultStudentPermissionName}Records.Reports`,
-      `${defaultStudentPermissionName}Records.Settings`,
-    ],
+    root: `${defaultModulePermissionName}${defaultStudentPermissionName}Records`,
     studentList: `${defaultStudentPermissionName}Records.StudentList`,
     studentICard: `${defaultStudentPermissionName}Records.StudentICard`,
     studentManagement: `${defaultStudentPermissionName}Records.StudentManagement`,
@@ -97,27 +73,16 @@ export const studentPermissions = {
     setting: `${defaultStudentPermissionName}Records.Settings`,
   },
   attendance: {
-    root: [
-      `${defaultStudentPermissionName}Attendance.MarkAttendance`,
-      `${defaultStudentPermissionName}Attendance.LeaveAndAbsent`,
-      `${defaultStudentPermissionName}Attendance.Reports`,
-      `${defaultStudentPermissionName}Attendance.Setting.LeaveType`,
-    ],
+    root: `${defaultModulePermissionName}${defaultStudentPermissionName}Attendance`,
     markAttendance: `${defaultStudentPermissionName}Attendance.MarkAttendance`,
     leaveAndAbsent: `${defaultStudentPermissionName}Attendance.LeaveAndAbsent`,
     reports: `${defaultStudentPermissionName}Attendance.Reports`,
     settings: {
-      root: [`${defaultStudentPermissionName}Attendance.Setting.LeaveType`],
+      root: `${defaultModulePermissionName}${defaultStudentPermissionName}Attendance.Settings`,
       leaveType: `${defaultStudentPermissionName}Attendance.Setting.LeaveType`,
     },
   },
-  notification: [
-    `${defaultStudentPermissionName}Notification.InquiryManagement`,
-    `${defaultStudentPermissionName}Notification.RegistrationManagement`,
-    `${defaultStudentPermissionName}Notification.AdmissionManagement`,
-    `${defaultStudentPermissionName}Notification.StudentRecordManagement`,
-    `${defaultStudentPermissionName}Notification.AttendanceManagement`,
-  ],
+  notification: `${defaultModulePermissionName}${defaultStudentPermissionName}Notification`,
 };
 
 const studentModule = (isDdvs: boolean) => ({
