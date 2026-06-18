@@ -1,3 +1,4 @@
+import type { ReligionType } from 'src/enums/religion';
 import type { EmployeeApplicationStatus } from 'src/screens/hr/employee-onboarding/status';
 
 import { api } from 'src/redux/service';
@@ -55,7 +56,7 @@ export type EmployeeApplicationPersonalInfo = {
   secondaryMobileNo?: string | null;
   dateOfBirth?: string | null;
   gender?: number | null;
-  religion?: string | null;
+  religion?: ReligionType;
   casteType?: number | null;
   familyCaste?: string | null;
   maritalStatus?: number | null;
