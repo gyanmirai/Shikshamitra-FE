@@ -57,20 +57,40 @@ const createdPolicy = {
 };
 
 function seedAcademicYear(page: Page) {
-  return page.addInitScript((year) => {
-    window.localStorage.setItem(
-      'persist:root',
-      JSON.stringify({
-        globalState: JSON.stringify({
-          currentYear: year,
-          currentBoard: {},
-          currentMedium: {},
-        }),
-        _persist: JSON.stringify({ version: -1, rehydrated: true }),
-      })
-    );
-    window.localStorage.setItem('onboarding_completed', 'true');
-  }, academicYear);
+  return page.addInitScript(
+    ({ year, authEmployee, permissions }) => {
+      window.localStorage.setItem(
+        'persist:root',
+        JSON.stringify({
+          globalState: JSON.stringify({
+            currentYear: year,
+            currentBoard: {},
+            currentMedium: {},
+          }),
+          auth: JSON.stringify({
+            user: {
+              sub: 'paid-unpaid-user-e2e',
+              name: 'Paid Unpaid HR User',
+              role: 'hr-manager',
+            },
+            isAuthenticated: true,
+            loading: false,
+            permissionsInitialized: true,
+            employee: authEmployee,
+            permissions,
+            mainModuleVisibility: [false, false, false, false, true],
+          }),
+          _persist: JSON.stringify({ version: -1, rehydrated: true }),
+        })
+      );
+      window.localStorage.setItem('onboarding_completed', 'true');
+    },
+    {
+      year: academicYear,
+      authEmployee: employee,
+      permissions: grantedPermissions.map((name) => ({ name, isGranted: true })),
+    }
+  );
 }
 
 async function fulfillJson(route: Route, json: unknown, status = 200) {
@@ -85,15 +105,37 @@ const grantedPermissions = [
   'ShikshaMitra.Module.HR',
   'ShikshaMitra.Module.HR.Policies',
   'ShikshaMitra.Module.HR.AttendanceManagement',
+  'ShikshaMitra.Module.HR.LeaveManagement',
   'HR.LeaveManagement.Setting.LeavePolicy',
   'HR.LeaveManagement.LeaveCenter',
   'HR.Policies.View',
-  'HR.Policies.Create',
+  'HR.Policies.Add',
   'HR.Policies.Edit',
   'HR.Policies.SetDefault',
 ];
 
 async function installPermissionRoutes(page: Page) {
+  await page.route('**/api/auth/session**', (route) =>
+    fulfillJson(route, {
+      accessToken: 'paid-unpaid-token-e2e',
+      expires: '2099-01-01T00:00:00.000Z',
+      profile: {
+        sub: 'paid-unpaid-user-e2e',
+        name: 'Paid Unpaid HR User',
+        role: 'hr-manager',
+      },
+    })
+  );
+  await page.route('**/api/employees/me**', (route) => fulfillJson(route, employee));
+  await page.route('**/api/app/education-board**', (route) =>
+    fulfillJson(route, { items: [], totalCount: 0 })
+  );
+  await page.route('**/api/app/academic-organization-options**', (route) =>
+    fulfillJson(route, { items: [], totalCount: 0 })
+  );
+  await page.route('**/api/app/user-scope/user-scope-hierarchy**', (route) =>
+    fulfillJson(route, { isAdmin: true, accessibleHierarchy: [] })
+  );
   await page.route('**/permission-management/permissions?**', (route) =>
     fulfillJson(route, {
       groups: [

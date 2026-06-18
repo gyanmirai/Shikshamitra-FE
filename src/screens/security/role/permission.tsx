@@ -334,38 +334,62 @@ export default function Permission({
                             const key = `${item.permissionName}.${type}`;
                             const index = newPermissions.findIndex((i) => i.name === key);
                             if (index !== -1) {
-                              newPermissions[index].isGranted = isChecked;
+                              newPermissions[index] = {
+                                ...newPermissions[index],
+                                isGranted: isChecked,
+                              };
 
                               if (isChecked) {
                                 if (type === 'Add') {
                                   const viewIndex = newPermissions.findIndex(
                                     (i) => i.name === `${item.permissionName}.View`
                                   );
-                                  if (viewIndex !== -1) newPermissions[viewIndex].isGranted = true;
+                                  if (viewIndex !== -1) {
+                                    newPermissions[viewIndex] = {
+                                      ...newPermissions[viewIndex],
+                                      isGranted: true,
+                                    };
+                                  }
                                 }
                                 if (type === 'Delete') {
                                   const viewIndex = newPermissions.findIndex(
                                     (i) => i.name === `${item.permissionName}.View`
                                   );
-                                  if (viewIndex !== -1) newPermissions[viewIndex].isGranted = true;
+                                  if (viewIndex !== -1) {
+                                    newPermissions[viewIndex] = {
+                                      ...newPermissions[viewIndex],
+                                      isGranted: true,
+                                    };
+                                  }
                                   const addIndex = newPermissions.findIndex(
                                     (i) => i.name === `${item.permissionName}.Add`
                                   );
-                                  if (addIndex !== -1) newPermissions[addIndex].isGranted = true;
+                                  if (addIndex !== -1) {
+                                    newPermissions[addIndex] = {
+                                      ...newPermissions[addIndex],
+                                      isGranted: true,
+                                    };
+                                  }
                                 }
                               } else if (type === 'View') {
                                 const addIndex = newPermissions.findIndex(
                                   (i) => i.name === `${item.permissionName}.Add`
                                 );
                                 if (addIndex !== -1) {
-                                  newPermissions[addIndex].isGranted = false;
+                                  newPermissions[addIndex] = {
+                                    ...newPermissions[addIndex],
+                                    isGranted: false,
+                                  };
                                 }
 
                                 const deleteIndex = newPermissions.findIndex(
                                   (i) => i.name === `${item.permissionName}.Delete`
                                 );
                                 if (deleteIndex !== -1) {
-                                  newPermissions[deleteIndex].isGranted = false;
+                                  newPermissions[deleteIndex] = {
+                                    ...newPermissions[deleteIndex],
+                                    isGranted: false,
+                                  };
                                 }
                               }
                             }

@@ -65,7 +65,7 @@ const collectPermissionNames = (node: any, type: string): string[] => {
 
   if (base) {
     if (type === 'View') permissions.push(base);
-    else if (type === 'Add') permissions.push(`${base}.Create`);
+    else if (type === 'Add') permissions.push(`${base}.Add`);
     else if (type === 'Edit') permissions.push(`${base}.Edit`);
     else if (type === 'Delete') permissions.push(`${base}.Delete`);
   }
@@ -172,7 +172,7 @@ const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
       let permissionName = null;
       if (base) {
         if (type === 'View') permissionName = base;
-        else if (type === 'Add') permissionName = `${base}.Create`;
+        else if (type === 'Add') permissionName = `${base}.Add`;
         else if (type === 'Edit') permissionName = `${base}.Edit`;
         else if (type === 'Delete') permissionName = `${base}.Delete`;
       }
@@ -187,7 +187,7 @@ const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
 
     if (base) {
       if (type === 'View') permissionName = base;
-      else if (type === 'Add') permissionName = `${base}.Create`;
+      else if (type === 'Add') permissionName = `${base}.Add`;
       else if (type === 'Edit') permissionName = `${base}.Edit`;
       else if (type === 'Delete') permissionName = `${base}.Delete`;
     }

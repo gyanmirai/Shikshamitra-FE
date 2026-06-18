@@ -145,6 +145,7 @@ const grantedPermissions = [
   'ShikshaMitra.Module.HR',
   'ShikshaMitra.Module.HR.Policies',
   'ShikshaMitra.Module.HR.AttendanceManagement',
+  'ShikshaMitra.Module.HR.LeaveManagement',
   'HR.LeaveManagement.Setting.LeavePolicy',
   'HR.LeaveManagement.LeaveCenter',
   'HR.Policies.View',

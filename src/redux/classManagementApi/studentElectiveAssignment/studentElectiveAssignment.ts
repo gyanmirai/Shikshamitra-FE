@@ -21,6 +21,15 @@ export const studentElectiveAssignmentApi = classManagementApi.injectEndpoints({
       }),
       invalidatesTags: [classManagementType.studentElectiveAssignment],
     }),
+
+    lockStudentElectiveAssignments: builder.mutation({
+      query: (body) => ({
+        url: 'class-management/student-elective-assignments/lock',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [classManagementType.studentElectiveAssignment],
+    }),
   }),
   overrideExisting: false,
 });
@@ -28,4 +37,5 @@ export const studentElectiveAssignmentApi = classManagementApi.injectEndpoints({
 export const {
   useGetStudentElectiveAssignmentsQuery,
   useUpdateStudentElectiveAssignmentsMutation,
+  useLockStudentElectiveAssignmentsMutation,
 } = studentElectiveAssignmentApi;
