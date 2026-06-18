@@ -43,6 +43,17 @@ import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'inpu
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
+import {
   Box,
   Card,
   Chip,
@@ -74,17 +85,6 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
 
 import {
   EmployeeApplicationStatus,
@@ -1144,7 +1144,6 @@ function FinalizeDialog({
   onClose: () => void;
 }) {
   const theme = useTheme();
-  console.log('application0000', application);
   const [step, setStep] = useState(0);
   const [maxStepVisited, setMaxStepVisited] = useState(0);
   const [finalizedUserId, setFinalizedUserId] = useState<string | null>(null);
@@ -2488,6 +2487,7 @@ function FinalizeDialog({
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
                       <CityComponent
                         value={{ name: form.city }}
+                        countryValue={{ name: form.countryName, isoCode: form.countryIsoCode }}
                         stateValue={{ name: form.stateName, isoCode: form.stateIsoCode }}
                         onChange={(_e: any, value: any) => {
                           formik.setFieldValue('city', value?.name || '');

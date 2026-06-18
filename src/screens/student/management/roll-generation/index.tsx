@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Save, Refresh, ChecklistOutlined } from '@mui/icons-material';
@@ -26,6 +27,10 @@ import {
 } from 'src/redux/student/roll-number/roll-number-api';
 
 import type { IInquiryData } from '../../enrollment/Inquiry/type';
+import {
+  hasRollNumberValidationErrors,
+  buildRollNumberValidationErrors,
+} from './roll-number-validation';
 
 const RollNoGenerationScreen = ({ division }: { division: string }) => {
   // State for controlling how students are arranged (e.g., boys first, girls first)
@@ -44,9 +49,6 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
   // State to store and manage the student data table
   const [tableData, setTableData] = useState<IInquiryData[]>([]);
   const [initialData, setInitialData] = useState<IInquiryData[]>([]);
-
-  // State to store validation errors for roll numbers
-  const [error, setError] = useState<Record<number, string>>({});
 
   // State for confirmation dialogs
   const autoGenerateConfirmDialog = useBoolean();
@@ -77,6 +79,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
   const [updateRollNumbers, { isLoading: isSaving }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentRollNumberMutation,
+    popupConfig: { error: false },
   });
 
   /**
@@ -121,8 +124,9 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
       }
     } catch (err: any) {
       console.error('Failed to fetch roll number projections:', err);
+      const parsed = parseApiProblemDetail(err);
       shikshaMitraToast.error({
-        message: err?.data?.message || 'Failed to generate roll numbers',
+        message: parsed.detail || 'Failed to generate roll numbers',
       });
     }
   };
@@ -147,6 +151,12 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
     () => tableData.some((student) => student.rollNo === null || student.rollNo === undefined),
     [tableData]
   );
+  const rollNumberLimit = tableData.length;
+  const rollNumberErrors = useMemo(
+    () => buildRollNumberValidationErrors(tableData, rollNumberLimit),
+    [tableData, rollNumberLimit]
+  );
+  const hasRollErrors = hasRollNumberValidationErrors(rollNumberErrors);
 
   // Handle roll number change for a specific student
   const handleRollNoChange = (studentId: string, name: string, newValue: number | null) => {
@@ -154,18 +164,6 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
     const updatedData = tableData.map((item) =>
       item.studentId === studentId ? { ...item, rollNo: newValue } : item
     );
-
-    // Check for duplicate roll numbers
-    const rollNumbers = updatedData.map((item) => item.rollNo);
-    const duplicateRolls = rollNumbers.filter(
-      (num, idx) => num && rollNumbers.indexOf(num) !== idx
-    );
-
-    // Set error message if duplicate roll number is found
-    setError((prevError) => ({
-      ...prevError,
-      [studentId]: duplicateRolls.includes(newValue) ? 'Duplicate Roll No!' : '',
-    }));
 
     setSelectedStudents([{ studentId, name }]);
 
@@ -230,6 +228,12 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
       console.error('Division ID is required.');
       return;
     }
+    if (hasRollErrors) {
+      shikshaMitraToast.error({
+        message: 'Please fix roll number validation errors before saving.',
+      });
+      return;
+    }
 
     // Prepare request body with student IDs and roll numbers
     const requestBody = tableData.map((item) => ({
@@ -253,6 +257,10 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
       dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (err) {
       console.error('Failed to update Roll Numbers:', err);
+      const parsed = parseApiProblemDetail(err);
+      shikshaMitraToast.error({
+        message: parsed.detail || 'Failed to update Roll Numbers.',
+      });
     }
   };
 
@@ -342,7 +350,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
                 variant="contained"
                 onClick={handleSaveClick}
                 loading={isSaving}
-                disabled={!isChanges}
+                disabled={!isChanges || hasRollErrors}
                 size="small"
               >
                 Save
@@ -396,7 +404,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
                           placeholder="Enter Roll No."
                           type="number"
                           value={row.rollNo ?? ''}
-                          inputProps={{ min: 0 }}
+                          inputProps={{ min: 1, max: rollNumberLimit }}
                           onWheel={(e) => (e.target as HTMLInputElement).blur()}
                           onChange={(e) =>
                             handleRollNoChange(
@@ -405,8 +413,8 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
                               e.target.value ? +e.target.value : null
                             )
                           }
-                          error={Boolean(error[row.studentId])}
-                          helperText={error[row.studentId]}
+                          error={Boolean(rollNumberErrors[row.studentId])}
+                          helperText={rollNumberErrors[row.studentId]}
                           sx={{
                             // Fixed width to prevent shake during input
                             width: '100%',

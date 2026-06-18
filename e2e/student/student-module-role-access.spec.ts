@@ -790,6 +790,139 @@ test.describe('Student module bug regression E2E', () => {
     await captureBugScreenshot(page, 'student-4918-duplicate-gr-validation.png');
   });
 
+  test('4291 duplicate house creation is rejected with readable validation', async ({ page }) => {
+    test.setTimeout(180_000);
+
+    await login(page, process.env.E2E_ADMIN_EMAIL || 'admin-ddvs@ddvs.com');
+    const academicMediumId = await resolveAcademicMediumId(page);
+    const houseName = uniqueToken('HouseBug');
+
+    const createResponse = await studentApiRequest(
+      page,
+      `/students/records/academic-mediums/${academicMediumId}/house-settings`,
+      {
+        method: 'POST',
+        body: {
+          name: houseName,
+          color: '#0EA5E9',
+        } as any,
+      }
+    );
+    await expectOk(createResponse, 'create house');
+
+    const duplicateResponse = await studentApiRequest(
+      page,
+      `/students/records/academic-mediums/${academicMediumId}/house-settings`,
+      {
+        method: 'POST',
+        body: {
+          name: ` ${houseName.toLowerCase()} `,
+          color: '#0284C7',
+        } as any,
+      }
+    );
+    expect(duplicateResponse.ok(), 'Duplicate House should be rejected.').toBe(false);
+    const duplicateProblem = await duplicateResponse.json();
+    expect(duplicateProblem.errorCode).toBe('ST:Records:050004');
+    expect(duplicateProblem.detail).toContain('already exists');
+
+    await openStudentPageForEvidence(page, '/student/studentRecords/setting');
+    await captureBugScreenshot(page, 'student-4291-duplicate-house-validation.png');
+  });
+
+  test('4920 roll number save rejects values above division student count', async ({ page }) => {
+    test.setTimeout(180_000);
+
+    await login(page, process.env.E2E_ADMIN_EMAIL || 'admin-ddvs@ddvs.com');
+    const placement = await resolveAcademicPlacement(page);
+    test.skip(!placement.divisionId, 'Need a seeded division for roll number validation.');
+
+    const registration = await createRegistration(page, placement, 'RollMaxBug');
+    await updateFamilyDetails(page, registration.studentId);
+    await updateCommunicationDetails(page, registration.studentId);
+
+    const moveResponse = await studentApiRequest(
+      page,
+      `/student-enrollment/entrance-exam/${registration.studentId}/move-to-admission`,
+      { method: 'POST' }
+    );
+    await expectOk(moveResponse, 'move registration to admission for roll number validation');
+
+    const approveResponse = await studentApiRequest(page, '/students/admissions/status', {
+      method: 'POST',
+      body: {
+        items: [
+          {
+            studentId: registration.studentId,
+            action: 1,
+            remarks: 'Admission approved for roll number validation.',
+          },
+        ],
+      } as any,
+    });
+    await expectOk(approveResponse, 'approve admission for roll number validation');
+    const approval = await approveResponse.json();
+    expect(approval.succeeded).toBe(1);
+    expect(approval.failed).toBe(0);
+
+    const projectionResponse = await studentApiRequest(
+      page,
+      `/students/records/${placement.divisionId}/roll-number-projections`
+    );
+    await expectOk(projectionResponse, 'load roll number projections');
+    const projections = unwrapApiData(await projectionResponse.json());
+    const totalStudents = Array.isArray(projections) ? projections.length : 0;
+    expect(totalStudents).toBeGreaterThan(0);
+
+    const outOfRangeRollNo = totalStudents + 1;
+    const rejectedResponse = await studentApiRequest(
+      page,
+      `/students/records/${placement.divisionId}/roll-numbers`,
+      {
+        method: 'POST',
+        body: [{ studentId: registration.studentId, rollNo: outOfRangeRollNo }] as any,
+      }
+    );
+    expect(rejectedResponse.ok(), 'Out-of-range Roll No. should be rejected.').toBe(false);
+    const problem = await rejectedResponse.json();
+    expect(problem.errorCode).toBe('ST:Records:050006');
+    expect(problem.detail).toContain(`Roll numbers cannot exceed total students (${totalStudents}).`);
+
+    await openStudentPageForEvidence(page, '/student/management?tab=rollGeneration');
+    await captureBugScreenshot(page, 'student-4920-roll-no-max-validation.png');
+  });
+
+  test('4950 duplicate GR validation returns a readable detail message', async ({ page }) => {
+    test.setTimeout(180_000);
+
+    await login(page, process.env.E2E_ADMIN_EMAIL || 'admin-ddvs@ddvs.com');
+    const placement = await resolveAcademicPlacement(page);
+    const first = await createRegistration(page, placement, 'GrReadableA');
+    const second = await createRegistration(page, placement, 'GrReadableB');
+    const grBase = Number(`7${Date.now().toString().slice(-5)}`);
+
+    const validResponse = await studentApiRequest(page, '/students/records/gr-numbers', {
+      method: 'POST',
+      body: [
+        { studentId: first.studentId, grNo: grBase },
+        { studentId: second.studentId, grNo: grBase + 1 },
+      ] as any,
+    });
+    await expectOk(validResponse, 'save unique GR numbers');
+
+    const duplicateResponse = await studentApiRequest(page, '/students/records/gr-numbers', {
+      method: 'POST',
+      body: [{ studentId: first.studentId, grNo: grBase + 1 }] as any,
+    });
+    expect(duplicateResponse.ok(), 'Duplicate GR should be rejected.').toBe(false);
+    const problem = await duplicateResponse.json();
+    expect(problem.errorCode).toBe('ST:Student:010002');
+    expect(problem.detail).toBe(`GR Number ${grBase + 1} is already assigned to another student.`);
+
+    await openStudentPageForEvidence(page, '/student/management?tab=grGeneration');
+    await captureBugScreenshot(page, 'student-4950-duplicate-gr-readable-error.png');
+  });
+
   test('4919 admission approval with student email succeeds', async ({ page }) => {
     test.setTimeout(180_000);
 
@@ -829,7 +962,26 @@ test.describe('Student module bug regression E2E', () => {
     expect(approval.results?.[0]?.success).toBe(true);
     expect(approval.results?.[0]?.message ?? '').not.toMatch(/unexpected error/i);
 
+    const secondApproveResponse = await studentApiRequest(page, '/students/admissions/status', {
+      method: 'POST',
+      body: {
+        items: [
+          {
+            studentId: registration.studentId,
+            action: 1,
+            remarks: 'Admission approval rechecked for idempotency.',
+          },
+        ],
+      } as any,
+    });
+    await expectOk(secondApproveResponse, 'approve already-approved admission');
+    const secondApproval = await secondApproveResponse.json();
+    expect(secondApproval.succeeded).toBe(1);
+    expect(secondApproval.failed).toBe(0);
+    expect(secondApproval.results?.[0]?.success).toBe(true);
+    expect(secondApproval.results?.[0]?.message ?? '').not.toMatch(/unexpected error/i);
+
     await openStudentPageForEvidence(page, '/student/enrollment/admission');
-    await captureBugScreenshot(page, 'student-4919-admission-email-approval.png');
+    await captureBugScreenshot(page, 'student-4919-admission-status-approval.png');
   });
 });

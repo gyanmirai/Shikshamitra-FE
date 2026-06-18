@@ -10,7 +10,45 @@ const apiBaseUrl = () => {
   return url.replace(/\/$/, '');
 };
 
+let directApiAccessToken: string | null = null;
+
+async function getDirectApiAccessToken(page: Page) {
+  if (directApiAccessToken) {
+    return directApiAccessToken;
+  }
+
+  const response = await page.request.post(`${apiBaseUrl()}/connect/token`, {
+    form: {
+      grant_type: 'password',
+      username:
+        process.env.E2E_LIBRARY_EMAIL ||
+        process.env.E2E_HR_EMAIL ||
+        (process.env.E2E_HR_ATTENDANCE_SYNC === '1' ? 'admin-ddvs' : 'hr-manager@ddvs.com'),
+      password: process.env.E2E_LIBRARY_PASSWORD || process.env.E2E_HR_PASSWORD || 'Temp@123',
+      client_id: process.env.NEXT_PUBLIC_CLIENT_ID || 'shikshamitra-nextjs',
+      client_secret: process.env.NEXT_PUBLIC_CLIENT_SECRET || 'frontend-secret',
+      scope:
+        process.env.NEXT_PUBLIC_SCOPE || 'openid profile email roles offline_access ShikshaMitra',
+    },
+    headers: {
+      __tenant: process.env.E2E_TENANT || 'DDVS',
+    },
+  });
+
+  if (!response.ok()) {
+    throw new Error(`Direct API auth failed: ${response.status()} ${await response.text()}`);
+  }
+
+  const body = await response.json();
+  directApiAccessToken = body.access_token;
+  return directApiAccessToken;
+}
+
 export async function getAccessToken(page: Page) {
+  if (process.env.E2E_DIRECT_API_AUTH === '1') {
+    return getDirectApiAccessToken(page);
+  }
+
   const token = await page.evaluate(async () => {
     const response = await fetch('/api/auth/session');
     if (!response.ok) return null;

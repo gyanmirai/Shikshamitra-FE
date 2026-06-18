@@ -20,6 +20,7 @@ import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -323,6 +324,7 @@ const GroupManagementForm = ({
   const [addGroup, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentGroupMutation,
+    popupConfig: { error: false },
   });
   // Custom hook for updating student group data
   // Returns mutation function and loading state
@@ -331,6 +333,7 @@ const GroupManagementForm = ({
   const [updateGroup, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentGroupMutation,
+    popupConfig: { error: false },
   });
 
   // Initialize formik form with initial values and submit handler
@@ -393,6 +396,10 @@ const GroupManagementForm = ({
         handleClose(null, true);
       } catch (error) {
         console.error('House submit error:', error);
+        const parsed = parseApiProblemDetail(error);
+        shikshaMitraToast.error({
+          message: parsed.detail || 'Unable to save House.',
+        });
       }
     },
   });

@@ -39,7 +39,11 @@ import { RenderPfRules } from './RenderPfRules';
 import PayrollComponentDialog from './PayrollComponentDialog';
 import { CardActions, SectionCard } from './InformationFields';
 import PayrollTempComponentDialog from './PayrollTempComponentDialog';
-import { isSalaryComponentFixed, isPercentageSalaryComponent } from '../salary-utils';
+import {
+  isSalaryComponentFixed,
+  formatApplicableMonthLabel,
+  isPercentageSalaryComponent,
+} from '../salary-utils';
 import {
   resolveEmployeePolicyPreviewDate,
   clearEmployeePolicyOverrideValues,
@@ -353,7 +357,7 @@ export const RenderComponents = ({
                         }}
                       >
                         <Today sx={{ fontSize: 14 }} />
-                        {dayjs(row.applicableMonth).format('MMM YYYY')}
+                        {formatApplicableMonthLabel(row.applicableMonth)}
                       </Typography>
                     )}
                   </Box>

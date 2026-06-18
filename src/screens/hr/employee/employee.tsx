@@ -63,7 +63,11 @@ import EmployeeView from './employee-view';
 import EmployeeFrom from './employee-form';
 import ChangeStatusForm from './chnage-status-form';
 import { RenderComponents } from './employee-form-fields/PayrollFields';
-import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
+import {
+  isSalaryComponentFixed,
+  toApplicableMonthPayload,
+  getSalaryComponentPayloadAmount,
+} from './salary-utils';
 
 const HrEmployee = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -717,7 +721,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           amount: getSalaryComponentPayloadAmount(item),
           isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
-          applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
+          applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
         })),
         deductionComponents: values.deductionComponents.map((item: any) => ({
           id: item?.id && item?.id !== item?.componentId ? item.id : null,
@@ -726,7 +730,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           amount: getSalaryComponentPayloadAmount(item),
           isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
-          applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
+          applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
         })),
       };
 
