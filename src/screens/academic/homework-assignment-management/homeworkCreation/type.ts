@@ -22,6 +22,7 @@ export interface DivisionHomeworkMeta {
 export interface IHomework {
   standardId: string;
   chapterId: any;
+  chapterIds?: string[];
   homeworkId: any;
   id: string;
   title: string;

@@ -68,19 +68,21 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
    */
   const formik = useFormik({
     initialValues: {
-      totalMarks: data?.totalMarks || '',
+      marks: typeof data?.marks === 'number' ? data.marks : '',
+      totalMarks: typeof data?.totalMarks === 'number' ? data.totalMarks : '',
       feedback: data?.feedback || '',
     },
     validationSchema: assignGradeValidationSchema,
     async onSubmit(values) {
-      const isUpdate = typeof data?.totalMarks === 'number' || Boolean(data?.feedback);
+      const isUpdate = typeof data?.marks === 'number' || Boolean(data?.feedback);
       try {
         await updateSubmissionFeedback({
           homeworkId: homeworkId || data?.homeworkId,
           studentId: data?.studentId,
           academicMediumId: medium?.id,
           body: {
-            totalMarks: values.totalMarks,
+            marks: values.marks !== '' ? Number(values.marks) : null,
+            totalMarks: values.totalMarks !== '' ? Number(values.totalMarks) : null,
             feedback: values.feedback,
           },
         }).unwrap();
@@ -267,7 +269,7 @@ I have completed all answers according to the given instructions and provided sc
                   </Typography>
 
                   <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, md: 4 }}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <ShakingTextField
                         error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}
                       >
@@ -285,12 +287,30 @@ I have completed all answers according to the given instructions and provided sc
                       </ShakingTextField>
                     </Grid>
 
-                    <Grid size={{ xs: 12, md: 8 }}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <ShakingTextField
+                        error={!!(formik.touched.marks && formik.errors.marks) || false}
+                      >
+                        <TextField
+                          label="Obtained Marks *"
+                          fullWidth
+                          name="marks"
+                          type="number"
+                          value={formik.values.marks}
+                          onChange={formik.handleChange}
+                          error={formik.touched.marks && Boolean(formik.errors.marks)}
+                          helperText={formik.touched.marks && formik.errors.marks}
+                          disabled={!isEdit}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+
+                    <Grid size={{ xs: 12 }}>
                       <ShakingTextField
                         error={!!(formik.touched.feedback && formik.errors.feedback) || false}
                       >
                         <TextField
-                          label="Feedback"
+                          label="Feedback *"
                           multiline
                           rows={3}
                           fullWidth

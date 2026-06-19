@@ -93,6 +93,8 @@ export function useSubjectMutations({
       status: nextStatus,
     }).unwrap();
 
+    refetch();
+
     const label = getSubjectDisplayLabel(selectedSubject);
     const action =
       nextStatus === PublishUnpublishStatusType.Published ? 'published' : 'moved to draft';
@@ -102,7 +104,7 @@ export function useSubjectMutations({
     });
 
     onPublishComplete();
-  }, [selectedSubject, publishSubjectAssignment, onPublishComplete]);
+  }, [selectedSubject, publishSubjectAssignment, refetch, onPublishComplete]);
 
   return { isDeleteLoading, isPublishLoading, handleConfirmDelete, handleConfirmPublish };
 }

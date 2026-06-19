@@ -46,14 +46,14 @@ export function PerformanceSurface({
         bgcolor: 'background.paper',
         borderColor: surfaceBorder,
         boxShadow: 'none',
-        overflow: 'hidden',
+        overflow: 'visible',
         ...sx,
       }}
     >
       {title || action ? (
         <PerformanceSectionHeader title={title || ''} description={description} action={action} />
       ) : null}
-      <Box sx={{ overflow: 'hidden', ...contentSx }}>{children}</Box>
+      <Box sx={{ overflow: 'visible', ...contentSx }}>{children}</Box>
     </Paper>
   );
 }

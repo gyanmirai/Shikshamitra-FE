@@ -25,7 +25,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { useGetHomeworkTypesQuery } from 'src/redux/academics/homeworkAndAssignment/homeworkTypeApi';
+import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   Box,
@@ -35,6 +35,7 @@ import {
   Stack,
   Button,
   Skeleton,
+  Checkbox,
   TextField,
   Typography,
   FormControl,
@@ -190,7 +191,15 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           const updateFormData = new FormData();
           updateFormData.append('StandardId', values.standardId || activeClassId);
           updateFormData.append('SubjectId', values.subjectId || values.subject);
-          if (values.chapterId) updateFormData.append('ChapterId', values.chapterId);
+          if (values.chapterIds && values.chapterIds.length > 0) {
+            values.chapterIds.forEach((id: string) => {
+              updateFormData.append('ChapterIds', id);
+            });
+            updateFormData.append('ChapterId', values.chapterIds[0]);
+          } else if (values.chapterId) {
+            updateFormData.append('ChapterId', values.chapterId);
+            updateFormData.append('ChapterIds', values.chapterId);
+          }
           updateFormData.append('Title', values.title);
           if (values.description) updateFormData.append('Description', values.description);
           updateFormData.append('HomeworkTypeId', values.homeworkTypeId);
@@ -227,7 +236,15 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           const formData = new FormData();
           formData.append('StandardId', values.standardId || activeClassId);
           formData.append('SubjectId', values.subjectId || values.subject);
-          if (values.chapterId) formData.append('ChapterId', values.chapterId);
+          if (values.chapterIds && values.chapterIds.length > 0) {
+            values.chapterIds.forEach((id: string) => {
+              formData.append('ChapterIds', id);
+            });
+            formData.append('ChapterId', values.chapterIds[0]);
+          } else if (values.chapterId) {
+            formData.append('ChapterId', values.chapterId);
+            formData.append('ChapterIds', values.chapterId);
+          }
           formData.append('Title', values.title);
           if (values.description) formData.append('Description', values.description);
           formData.append('HomeworkTypeId', values.homeworkTypeId);
@@ -564,8 +581,12 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField error={!!(formik.touched.chapter && formik.errors.chapter)}>
+                  <ShakingTextField
+                    error={!!(formik.touched.chapterIds && formik.errors.chapterIds)}
+                  >
                     <Autocomplete
+                      multiple
+                      disableCloseOnSelect
                       options={
                         Array.isArray(chapterResponse)
                           ? chapterResponse
@@ -573,32 +594,60 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       }
                       disabled={!(formik.values.subjectId || formik.values.subject)}
                       loading={isChapterLoading || isChapterFetching}
-                      value={
-                        (Array.isArray(chapterResponse)
-                          ? chapterResponse
-                          : chapterResponse?.data?.items || []
-                        ).find(
-                          (c: any) => c.id === (formik.values.chapterId || formik.values.chapter)
-                        ) || null
-                      }
-                      onChange={(event, newValue: any) => {
+                      value={(Array.isArray(chapterResponse)
+                        ? chapterResponse
+                        : chapterResponse?.data?.items || []
+                      ).filter((c: any) => formik.values.chapterIds?.includes(c.id))}
+                      onChange={(event, newValue: any[]) => {
+                        const selectedIds = newValue.map((c: any) => c.id);
+                        formik.setFieldValue('chapterIds', selectedIds);
+                        formik.setFieldValue('chapterId', selectedIds[0] || '');
                         formik.setFieldValue(
                           'chapter',
-                          newValue?.chapterName || newValue?.name || ''
+                          newValue.map((c: any) => c.chapterName || c.name || '').join(', ')
                         );
-                        formik.setFieldValue('chapterId', newValue?.id || '');
                       }}
-                      getOptionLabel={(option: any) => option.chapterName || option.name || ''}
+                      getOptionLabel={(option: any) => {
+                        const no = option.chapterNumber ?? option.chapterNo;
+                        const name = option.chapterName || option.name || '';
+                        return no !== undefined && no !== null ? `Ch ${no} - ${name}` : name;
+                      }}
+                      isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+                      renderOption={(props, option: any, { selected }) => {
+                        const no = option.chapterNumber ?? option.chapterNo;
+                        const name = option.chapterName || option.name || '';
+                        const displayText =
+                          no !== undefined && no !== null ? `Ch ${no} - ${name}` : name;
+                        return (
+                          <li {...props}>
+                            <Checkbox
+                              icon={<Iconify icon="mdi:checkbox-blank-outline" />}
+                              checkedIcon={<Iconify icon="mdi:checkbox-marked" />}
+                              style={{ marginRight: 8 }}
+                              checked={selected}
+                            />
+                            {displayText}
+                          </li>
+                        );
+                      }}
                       renderInput={(params) => (
                         <TextField
                           {...params}
                           label="Chapter"
-                          error={formik.touched.chapter && Boolean(formik.errors.chapter)}
-                          helperText={(formik.touched.chapter && formik.errors.chapter) as string}
+                          error={formik.touched.chapterIds && Boolean(formik.errors.chapterIds)}
+                          helperText={
+                            (formik.touched.chapterIds && formik.errors.chapterIds) as string
+                          }
                           size="small"
                           fullWidth
                         />
                       )}
+                      slotProps={{
+                        chip: {
+                          size: 'small',
+                          variant: 'soft',
+                        },
+                      }}
                     />
                   </ShakingTextField>
                 </Grid>

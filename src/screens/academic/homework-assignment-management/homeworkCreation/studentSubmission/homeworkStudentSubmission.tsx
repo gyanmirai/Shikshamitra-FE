@@ -208,6 +208,36 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             minWidth: 140,
           },
           {
+            id: 'totalMarks',
+            label: 'Total Marks',
+            align: 'left',
+            minWidth: 130,
+            filterType: 'number',
+            render: (value) =>
+              value !== undefined && value !== null && value !== '-' ? (
+                <Typography variant="caption" fontSize="13px">
+                  {value}
+                </Typography>
+              ) : (
+                <Typography variant="caption">-</Typography>
+              ),
+          },
+          {
+            id: 'marks',
+            label: 'Obtained Marks',
+            filterType: 'number',
+            minWidth: 150,
+            align: 'left',
+            render: (value) =>
+              value !== undefined && value !== null && value !== '-' ? (
+                <Typography variant="caption" fontSize="13px">
+                  {value}
+                </Typography>
+              ) : (
+                <Typography variant="caption">-</Typography>
+              ),
+          },
+          {
             id: 'feedback',
             label: 'Feedback',
             render: (value, row) => {
@@ -341,7 +371,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                     sx={{ minWidth: '100px' }}
                     startIcon={
                       <Iconify
-                        icon="mdi:comment-check-outline"
+                        icon="mdi:clipboard-check-outline"
                         sx={{ height: '16px', width: '16px' }}
                       />
                     }
@@ -396,16 +426,18 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedStudent?.feedback ? 'Edit Feedback' : 'Add Feedback'}
+              {selectedStudent?.marks !== undefined && selectedStudent?.marks !== null
+                ? 'Edit Feedback & Marks'
+                : 'Add Feedback & Marks'}
             </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
               title={
-                selectedStudent?.feedback
-                  ? 'You can modify the feedback given to the student for their homework submission.'
-                  : "You can provide feedback for the student's homework submission."
+                selectedStudent?.marks !== undefined && selectedStudent?.marks !== null
+                  ? 'You can modify the feedback & marks given to the student for their homework submission.'
+                  : "You can provide feedback & marks for the student's homework submission."
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

@@ -1580,6 +1580,7 @@ const EmployeeICardBuilder = ({
                       disabled={isSaving || isExporting || state.selectedEmployeeIds.length === 0}
                       onClick={handleExport}
                       startIcon={<Iconify icon="solar:file-download-bold" />}
+                      sx={{ alignSelf: 'flex-start' }}
                     >
                       Export Bulk PDF
                     </Button>
@@ -1675,9 +1676,22 @@ const DesignerCanvas = ({
                 >
                   <Button
                     size="small"
-                    variant={state.selectedElementId === element.id ? 'contained' : 'outlined'}
+                    variant="outlined"
                     onClick={() => onSelect(element.id)}
-                    sx={{ justifyContent: 'flex-start', flex: 1 }}
+                    sx={{
+                      justifyContent: 'flex-start',
+                      flex: 1,
+                      height: 32,
+                      ...(state.selectedElementId === element.id && {
+                        bgcolor: 'common.white',
+                        color: 'common.black',
+                        borderColor: 'common.white',
+                        '&:hover': {
+                          bgcolor: 'rgba(255, 255, 255, 0.9)',
+                          borderColor: 'rgba(255, 255, 255, 0.9)',
+                        },
+                      }),
+                    }}
                   >
                     {element.label || element.fieldKey || element.type}
                   </Button>
@@ -2113,7 +2127,7 @@ const LayoutElementPreview = ({
     <Typography
       noWrap
       sx={{
-        color: style.color || 'text.primary',
+        color: style.color || '#111827',
         fontSize: style.fontSize || 10,
         fontWeight: style.fontWeight || 400,
         textAlign: style.textAlign || 'left',

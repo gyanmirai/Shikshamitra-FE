@@ -1,16 +1,20 @@
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useRef, useMemo, useState } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetGradeScalingByIdQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import { useUpdateStudentMarksMutation } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
 import {
   AttendanceStatus,
@@ -41,9 +45,19 @@ import {
 
 import type { IAssignGradeProps } from '../type';
 
-/** Returns the CBSE-style letter grade for a given percentage */
-function calculateAutoGrade(obtained: number, total: number): string {
+/** Calculates the grade based on custom grading scale, falling back to CBSE rules */
+function calculateAutoGrade(obtained: number, total: number, scale?: any): string {
   if (total <= 0) return '';
+
+  if (scale && Array.isArray(scale.gradingScale) && scale.gradingScale.length > 0) {
+    const scaleTotalMarks = Number(scale.totalMarks) || 100;
+    const scaledMarks = (obtained / total) * scaleTotalMarks;
+
+    const sortedRanges = [...scale.gradingScale].sort((a, b) => b.minMarks - a.minMarks);
+    const match = sortedRanges.find((r) => scaledMarks >= r.minMarks && scaledMarks <= r.maxMarks);
+    if (match) return match.grade;
+  }
+
   const pct = (obtained / total) * 100;
   if (pct >= 91) return 'A1';
   if (pct >= 81) return 'A2';
@@ -64,6 +78,12 @@ const GRADE_COLOR_MAP: Record<string, 'success' | 'info' | 'warning' | 'error' |
   C2: 'warning',
   D: 'warning',
   F: 'error',
+  'A+': 'success',
+  A: 'success',
+  'B+': 'info',
+  B: 'info',
+  'C+': 'warning',
+  C: 'warning',
 };
 
 const FEEDBACK_MAX_LENGTH = 500;
@@ -83,6 +103,23 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
   const templateBtnRef = useRef<HTMLButtonElement>(null);
   const [activeQuickScore, setActiveQuickScore] = useState<string | null>(null);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const { data: gradeScalingDetails } = useGetGradeScalingByIdQuery(
+    {
+      academicMediumId: medium?.id,
+      id: data?.gradeScalingId,
+    },
+    {
+      skip: !medium?.id || !data?.gradeScalingId,
+    }
+  );
+
+  const targetScale = useMemo(() => {
+    if (!gradeScalingDetails) return null;
+    return (gradeScalingDetails as any).data ?? gradeScalingDetails;
+  }, [gradeScalingDetails]);
 
   const [updateStudentMarks, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -157,7 +194,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
     formik.values.attendanceStatus === AttendanceStatus.Present &&
     formik.values.marks !== '' &&
     !Number.isNaN(marksValue)
-      ? calculateAutoGrade(marksValue, totalMarks)
+      ? calculateAutoGrade(marksValue, totalMarks, targetScale)
       : null;
   const isAbsent = formik.values.attendanceStatus !== AttendanceStatus.Present;
 
@@ -463,25 +500,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                           ))}
                         </Stack>
                       </Grid>
-
-                      {/* Auto Grade Preview */}
-                      {autoGrade && (
-                        <Grid size={{ xs: 12 }}>
-                          <Stack direction="row" alignItems="center" spacing={1}>
-                            <Typography variant="caption" color="text.secondary">
-                              Computed Grade:
-                            </Typography>
-                            <Label color={GRADE_COLOR_MAP[autoGrade] ?? 'default'}>
-                              {autoGrade}
-                            </Label>
-                            {totalMarks > 0 && formik.values.marks !== '' && (
-                              <Typography variant="caption" color="text.secondary">
-                                ({((Number(formik.values.marks) / totalMarks) * 100).toFixed(1)}%)
-                              </Typography>
-                            )}
-                          </Stack>
-                        </Grid>
-                      )}
                     </Grid>
                   </Box>
                 </Card>

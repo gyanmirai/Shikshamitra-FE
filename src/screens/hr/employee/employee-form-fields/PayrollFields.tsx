@@ -592,12 +592,17 @@ const RenderPayrollFields = (props: any) => {
       return;
     }
 
-    const hydrated = hydrateEmployeePolicyOverrideFromPreview(policyPreview, policyEffectiveDate);
-    Object.entries(hydrated).forEach(([key, value]) => {
-      if (formik.values[key] !== value) {
-        formik.setFieldValue(key, value, false);
-      }
-    });
+    const isEmployeeOverride =
+      policyPreview?.policySource === 'employee' || policyPreview?.matchedTargetType === 'employee';
+
+    if (isEmployeeOverride || !values.policyOverrideEnabled) {
+      const hydrated = hydrateEmployeePolicyOverrideFromPreview(policyPreview, policyEffectiveDate);
+      Object.entries(hydrated).forEach(([key, value]) => {
+        if (formik.values[key] !== value) {
+          formik.setFieldValue(key, value, false);
+        }
+      });
+    }
   }, [
     formik,
     policyEffectiveDate,

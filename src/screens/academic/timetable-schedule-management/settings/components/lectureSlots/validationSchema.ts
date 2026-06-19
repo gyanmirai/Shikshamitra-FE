@@ -135,25 +135,9 @@ export const getValidationSchema = () =>
                     then: (schema) =>
                       schema
                         .required('Break type is required when slot type is break')
-                        .oneOf(['short', 'lunch'], 'Invalid break type'),
+                        .oneOf(['short'], 'Invalid break type'),
                     otherwise: (schema) => schema.notRequired(),
-                  })
-
-                  .test(
-                    'break-duration-lunch',
-                    'Lunch break should be 20-60 minutes',
-                    // eslint-disable-next-line func-names
-                    function (value) {
-                      const { slotType, startTime, endTime } = this.parent;
-                      if (slotType !== 'break' || value !== 'lunch') return true;
-                      if (!startTime || !endTime) return true;
-                      const startMin = toMinutesOfDay(startTime);
-                      const endMin = toMinutesOfDay(endTime);
-                      if (startMin == null || endMin == null) return true;
-                      const duration = endMin - startMin;
-                      return duration >= 20 && duration <= 60;
-                    }
-                  ),
+                  }),
               })
             )
             .min(1, 'At least one time slot is required')
@@ -254,24 +238,7 @@ export const getValidationSchema = () =>
                 return true;
               }
             )
-            // Single Lunch Break Validation
-            .test(
-              'single-lunch-break',
-              'Only one lunch break is allowed per configuration',
-              // eslint-disable-next-line func-names
-              function (slots) {
-                if (!slots) return true;
-                const lunchBreaks = slots.filter(
-                  (slot) => slot.slotType === 'break' && slot.breakType === 'lunch'
-                );
-                if (lunchBreaks.length > 1) {
-                  return this.createError({
-                    message: 'Only one lunch break is allowed per slot configuration',
-                  });
-                }
-                return true;
-              }
-            )
+
             // Minimum Teaching Time (60% of school hours should be periods)
             .test(
               'minimum-teaching-time',

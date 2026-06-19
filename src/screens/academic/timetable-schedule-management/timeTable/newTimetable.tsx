@@ -1157,6 +1157,7 @@ const TimeTableForm = ({
               selectedDivision={selectedDivision}
               standardId={standardId}
               divisionId={divisionId}
+              timetableStatus={timetableStatus}
             />
           )}
         </Box>

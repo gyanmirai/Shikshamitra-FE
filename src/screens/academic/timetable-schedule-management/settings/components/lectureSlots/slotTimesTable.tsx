@@ -268,7 +268,7 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
                   onChange={(val: any) =>
                     updateSlot(index, {
                       slotType: val,
-                      breakType: val === 'break' ? row.breakType || 'short' : '',
+                      breakType: val === 'break' ? 'short' : '',
                     })
                   }
                   formControlProps={{
@@ -281,19 +281,6 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
                     size: 'small',
                   }}
                 />
-                {slotType === 'break' && (
-                  <CustomSelect
-                    label="Break *"
-                    options={[
-                      { value: 'short', label: 'Short Break' },
-                      { value: 'lunch', label: 'Lunch Break' },
-                    ]}
-                    disabled={pickerDisabled}
-                    value={breakType}
-                    onChange={(val: any) => updateSlot(index, { breakType: val })}
-                    formControlProps={{ sx: { minWidth: '150px' }, size: 'small' }}
-                  />
-                )}
               </Box>
               {slotTypeErr && (
                 <Box

@@ -18,23 +18,40 @@ export const getDefaultStartTime = () =>
  * Generate `count` consecutive slots starting at 7:00 AM, each 30 minutes long.
  * `configKey` is used to namespace the slot ids so they remain unique across configs.
  */
-export const generateSlots = (count: number, configKey: string | number = 0): IGeneratedSlot[] => {
+export const generateSlots = (
+  count: number,
+  configKey: string | number = 0,
+  existingSlots: IGeneratedSlot[] = []
+): IGeneratedSlot[] => {
   if (!Number.isFinite(count) || count < 1) return [];
 
-  let cursor = getDefaultStartTime();
+  // Slice if we are reducing slots
+  const preserved = existingSlots.slice(0, count);
+  if (preserved.length === count) return preserved;
 
-  return Array.from({ length: count }, (_, index) => {
+  let cursor = getDefaultStartTime();
+  if (preserved.length > 0) {
+    const lastSlot = preserved[preserved.length - 1];
+    if (lastSlot.endTime) {
+      cursor = dayjs(lastSlot.endTime);
+    }
+  }
+
+  const addedSlots = Array.from({ length: count - preserved.length }, (_, index) => {
+    const slotIndex = preserved.length + index;
     const startTime = cursor;
     const endTime = cursor.add(DEFAULT_SLOT_DURATION_MIN, 'minute');
     cursor = endTime;
     return {
-      id: `${configKey}-${index}`,
+      id: `${configKey}-${slotIndex}`,
       startTime,
       endTime,
       slotType: 'period',
       breakType: '',
     };
   });
+
+  return [...preserved, ...addedSlots];
 };
 
 export const createDefaultConfig = () => {

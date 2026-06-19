@@ -9,6 +9,6 @@ export const mapSlotConfigurations = (slotConfigurations: any[]) =>
       startTime: slot.startTime ? slot.startTime.format('HH:mm:ss') : null,
       endTime: slot.endTime ? slot.endTime.format('HH:mm:ss') : null,
       slotType: SLOT_TYPE_MAP[slot.slotType] ?? 0,
-      breakType: BREAK_TYPE_MAP[slot.breakType] ?? 0,
+      breakType: slot.slotType === 'break' ? (BREAK_TYPE_MAP.short ?? 0) : 0,
     })),
   }));

@@ -76,7 +76,7 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
       invalidatesTags: [academicType.homeworkType],
     }),
   }),
-  overrideExisting: false,
+  overrideExisting: true,
 });
 
 // RTK query hooks
