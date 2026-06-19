@@ -98,7 +98,9 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   };
 
   const hasSelectable = feeHead.items.some((i) => i.refundable > 0);
-  const visibleItems = feeHead.items.filter((item) => item.paid > 0);
+  const visibleItems = isAdj
+    ? feeHead.items.filter((item) => item.refundable > 0 || item.refunded > 0)
+    : feeHead.items.filter((item) => item.paid > 0);
 
   return (
     <Box

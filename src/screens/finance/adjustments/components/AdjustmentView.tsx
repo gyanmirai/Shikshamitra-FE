@@ -251,7 +251,7 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
           </Box>
         </Card>
 
-        {/* ── Reason / Remarks / Rejection Reason ───────────────── */}
+        {/* ── Remarks / Rejection Reason ───────────────── */}
         <Stack spacing={1.5} mb={2}>
           <Card variant="outlined" sx={{ borderRadius: 2, p: 2 }}>
             <Typography
@@ -263,9 +263,9 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
               display="block"
               mb={0.5}
             >
-              Reason
+              Remarks
             </Typography>
-            <Typography variant="body2">{student.reason || 'N/A'}</Typography>
+            <Typography variant="body2">{student.remarks || student.reason || 'N/A'}</Typography>
           </Card>
 
           {student.rejectionReason && (

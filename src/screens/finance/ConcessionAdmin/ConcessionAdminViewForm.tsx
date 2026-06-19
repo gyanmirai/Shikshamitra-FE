@@ -215,20 +215,13 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        // bgcolor: isApproved
-        //   ? (theme) => varAlpha(theme.palette.success.mainChannel, 0.04)
-        //   : isRejected
-        //     ? (theme) => varAlpha(theme.palette.error.mainChannel, 0.04)
-        //     : isCancelled
-        //       ? (theme) => varAlpha(theme.palette.warning.mainChannel, 0.04)
-        //       : 'background.paper',
-        // borderColor: isApproved
-        //   ? 'success.light'
-        //   : isRejected
-        //     ? 'error.light'
-        //     : isCancelled
-        //       ? 'warning.light'
-        //       : 'divider',
+        borderTop: '4px solid',
+        borderTopColor: (theme) =>
+          isApproved
+            ? theme.vars.palette.success.light
+            : isRejected
+              ? theme.vars.palette.error.light
+              : theme.vars.palette.warning.light,
       }}
     >
       <CardContent sx={{ p: 1.5, flex: 1 }}>
@@ -545,40 +538,6 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
         ) : (
           <StudentInformationAccordion student={data?.studentDetails} />
         )}
-
-        {isFetchingConcessionData || isLoadingConcessionData ? (
-          <Box display="flex" gap={2} mb={3}>
-            {[...Array(4)].map((_, i) => (
-              <Skeleton
-                key={i}
-                variant="rectangular"
-                sx={{ flex: 1, height: 80, borderRadius: 2 }}
-              />
-            ))}
-          </Box>
-        ) : data?.concessionBasicDetail ? (
-          <Box display="flex" gap={2} mb={1} flexWrap="wrap">
-            <StatCard
-              label="Total Applications"
-              value={data?.concessionBasicDetail.totalApplications}
-            />
-            <StatCard
-              label="Pending Review"
-              value={data?.concessionBasicDetail.pendingApplications}
-              color="warning"
-            />
-            <StatCard
-              label="Approved"
-              value={data?.concessionBasicDetail.approvedApplications}
-              color="success"
-            />
-            <StatCard
-              label="Rejected"
-              value={data?.concessionBasicDetail.rejectedApplications}
-              color="error"
-            />
-          </Box>
-        ) : null}
 
         {/* ── Filter Tabs ───────────────────────────────────────────── */}
         <Box mb={1}>

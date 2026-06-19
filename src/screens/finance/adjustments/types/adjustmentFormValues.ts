@@ -1,6 +1,5 @@
 import * as Yup from 'yup';
 
-import type { AdjustmentType } from '../enums/adjustment.enum';
 import type { CreateFeeAdjustmentDto } from './adjustmentApi.types';
 import type { IFeeHeadRefundItem } from '../../feeRefund/NewRefundForm/initialValuesAndValidation';
 
@@ -12,9 +11,7 @@ export interface IAdjustmentFullFormValues {
   studentId: string | number;
   studentName: string;
   feeHeadRefunds: IFeeHeadRefundItem[];
-  adjustmentType: AdjustmentType | '';
-  reason: string;
-  remarks?: string;
+  remarks: string;
 }
 
 export const buildAdjustmentInitialValues = (
@@ -27,8 +24,6 @@ export const buildAdjustmentInitialValues = (
   studentId: initials?.studentId || '',
   studentName: initials?.studentName || '',
   feeHeadRefunds: initials?.feeHeadRefunds || [],
-  adjustmentType: initials?.adjustmentType || '',
-  reason: initials?.reason || '',
   remarks: initials?.remarks || '',
 });
 
@@ -39,10 +34,10 @@ export const buildAdjustmentValidationSchema = (hideStudentInfoForm = false) =>
     standardId: hideStudentInfoForm ? Yup.string() : Yup.string().required('Standard is required'),
     divisionId: hideStudentInfoForm ? Yup.string() : Yup.string().required('Division is required'),
     studentId: Yup.string().required('Student is required'),
-    adjustmentType: Yup.number().required('Adjustment type is required'),
-    reason: Yup.string()
-      .required('Reason is required')
-      .min(5, 'Reason must be at least 5 characters'),
+    // adjustmentType: Yup.number().required('Adjustment type is required'),
+    remarks: Yup.string()
+      .required('Remarks is required')
+      .min(5, 'Remarks must be at least 5 characters'),
     feeHeadRefunds: Yup.mixed().test(
       'at-least-one-adjustment',
       'Enter an adjustment amount for at least one month',
@@ -60,8 +55,7 @@ export const buildAdjustmentApiPayload = (
   values: IAdjustmentFullFormValues
 ): CreateFeeAdjustmentDto => ({
   studentId: values.studentId,
-  adjustmentType: Number(values.adjustmentType),
-  reason: values.reason,
+  reason: values.remarks,
   remarks: values.remarks || undefined,
   sourceLines: (values.feeHeadRefunds || []).flatMap((fh) =>
     fh.months

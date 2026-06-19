@@ -165,6 +165,7 @@ export const {
   useLazyGetFinanceAuditEventsQuery,
   useGetFinanceAuditEventQuery,
   useGetFinanceStudentAuditEventsQuery,
+  useLazyGetFinanceStudentAuditEventsQuery,
   useGetFinanceEntityAuditEventsQuery,
   useGetFinanceAuditCorrelationQuery,
   useLazyGetFinanceAuditStudentLookupQuery,

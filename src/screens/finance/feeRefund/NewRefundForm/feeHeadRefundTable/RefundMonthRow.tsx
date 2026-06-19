@@ -37,7 +37,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
 }): React.ReactElement => {
   const theme = useTheme();
   const isAdj = mode === 'adjustment';
-  const refundable = Math.max(0, item.paid - item.refunded);
+  const refundable = isAdj ? item.refundable : Math.max(0, item.paid - item.refunded);
   const isFullyRefunded = refundable === 0;
 
   // Disable row if not selectable (only check refundable for both modes)

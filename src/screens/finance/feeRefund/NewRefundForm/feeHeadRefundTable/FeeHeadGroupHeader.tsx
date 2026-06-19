@@ -36,7 +36,9 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
 }): React.ReactElement => {
   const theme = useTheme();
   const isAdj = mode === 'adjustment';
-  const selectableItems = feeHead.items.filter((i) => Math.max(0, i.paid - i.refunded) > 0);
+  const selectableItems = isAdj
+    ? feeHead.items.filter((i) => i.refundable > 0)
+    : feeHead.items.filter((i) => Math.max(0, i.paid - i.refunded) > 0);
   const selectedCount = selectableItems.filter((i) => selectedMonths.includes(i.month)).length;
   const isAllSelected = selectableItems.length > 0 && selectedCount === selectableItems.length;
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
@@ -66,7 +68,13 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
     >
       {/* Checkbox */}
       <Tooltip
-        title={!hasSelectable ? 'No refundable months for this fee head' : ''}
+        title={
+          !hasSelectable
+            ? isAdj
+              ? 'No adjustable months for this fee head'
+              : 'No refundable months for this fee head'
+            : ''
+        }
         placement="top"
       >
         <span>
@@ -114,7 +122,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
       {/* Fully refunded badge */}
       {!hasSelectable && (
         <Chip
-          label="Fully Refunded"
+          label={isAdj ? 'Fully Adjusted' : 'Fully Refunded'}
           size="small"
           color="success"
           variant="soft"

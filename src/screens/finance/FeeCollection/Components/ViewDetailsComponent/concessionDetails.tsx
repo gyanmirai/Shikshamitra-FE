@@ -2,8 +2,9 @@ import type { ConcessionDetail } from 'src/redux/feeCollection/feeCollection';
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { varAlpha } from 'src/theme/styles';
+import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
-import { alpha, useTheme } from '@mui/material/styles';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import { Box, Card, Chip, Stack, Avatar, Typography, CardContent } from '@mui/material';
 
@@ -20,48 +21,49 @@ export default function ConcessionsCard({ concessions }: { concessions?: Concess
       sx={{
         height: '100%',
         minHeight: 450,
-        boxShadow: theme.customShadows?.card || theme.shadows[3],
+        boxShadow: 'none',
+        border: `1px solid ${theme.palette.divider}`,
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: 2,
+        borderRadius: 1.5,
         overflow: 'hidden',
+        p: 2,
       }}
     >
       <Box
         sx={{
-          p: 1,
-          pb: 1,
+          pb: 2,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
       >
         <Box>
-          <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
             Concessions
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="caption" color="text.secondary">
             Applied discounts & waivers
           </Typography>
         </Box>
 
         <Chip
           label={`₹ ${total.toLocaleString('en-IN')} Saved`}
-          color="primary"
           variant="soft"
           sx={{
             fontWeight: 700,
             borderRadius: 1,
-            height: 32,
+            height: 28,
             px: 0.5,
-            bgcolor: alpha(theme.palette.primary.main, 0.1),
-            color: 'primary.main',
+            bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.08),
+            color: 'text.primary',
+            fontSize: 11,
           }}
         />
       </Box>
 
       <CardContent sx={{ p: 0, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <Scrollbar sx={{ flexGrow: 1, px: 1, pb: 1, maxHeight: '100%' }}>
+        <Scrollbar sx={{ flexGrow: 1, maxHeight: '100%' }}>
           <Stack spacing={1}>
             {items.map((item, index) => (
               <motion.div
@@ -72,40 +74,38 @@ export default function ConcessionsCard({ concessions }: { concessions?: Concess
               >
                 <Box
                   sx={{
-                    p: 1,
-                    borderRadius: 2,
-                    bgcolor: alpha(
-                      theme.palette.background.neutral || theme.palette.grey[100],
-                      0.5
-                    ),
+                    p: 1.5,
+                    borderRadius: 1.5,
+                    bgcolor: 'background.paper',
                     border: '1px solid',
-                    borderColor: alpha(theme.palette.grey[500], 0.08),
+                    borderColor: theme.palette.divider,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 2,
-                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    gap: 1.5,
+                    transition: 'all 0.2s ease-in-out',
                     '&:hover': {
-                      bgcolor: 'background.paper',
-                      boxShadow: theme.customShadows?.z4 || theme.shadows[4],
-                      borderColor: 'transparent',
-                      transform: 'translateY(-2px)',
+                      borderColor: 'text.disabled',
+                      bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.02),
                     },
                   }}
                 >
                   <Avatar
                     variant="rounded"
                     sx={{
-                      width: 48,
-                      height: 48,
-                      bgcolor: alpha(theme.palette.primary.main, 0.08),
-                      color: 'primary.main',
+                      width: 36,
+                      height: 36,
+                      bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.08),
+                      color: 'text.secondary',
                     }}
                   >
-                    <LocalOfferIcon />
+                    <LocalOfferIcon sx={{ fontSize: 16 }} />
                   </Avatar>
 
                   <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 600, mb: 0.2, color: 'text.primary' }}
+                    >
                       {item.title}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" noWrap display="block">
@@ -113,7 +113,7 @@ export default function ConcessionsCard({ concessions }: { concessions?: Concess
                     </Typography>
                   </Box>
 
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'success.main' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
                     ₹{item.amount.toLocaleString('en-IN')}
                   </Typography>
                 </Box>
