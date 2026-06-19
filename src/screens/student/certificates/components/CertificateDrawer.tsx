@@ -31,7 +31,6 @@ import type { SelectedStudent } from './StudentSearchPanel';
 interface CertConfig {
   label: string;
   icon: string;
-  color: string;
   prefix: string;
   description: string;
 }
@@ -40,7 +39,6 @@ const CERT_CONFIG: Record<CertType, CertConfig> = {
   bonafide: {
     label: 'Bonafide Certificate',
     icon: 'tdesign:certificate',
-    color: '#2065D1',
     prefix: 'BON',
     description:
       'Verifies that the student is officially enrolled in the institution and serves as proof of academic status.',
@@ -48,7 +46,6 @@ const CERT_CONFIG: Record<CertType, CertConfig> = {
   character: {
     label: 'Character Certificate',
     icon: 'la:certificate',
-    color: '#00AB55',
     prefix: 'CHA',
     description:
       "Attests to the student's conduct and behavior during their time at the institution.",
@@ -56,7 +53,6 @@ const CERT_CONFIG: Record<CertType, CertConfig> = {
   leaving: {
     label: 'Leaving Certificate',
     icon: 'streamline-cyber:wedding-certificate',
-    color: '#FF4842',
     prefix: 'LC',
     description:
       'Issued to students upon leaving the institution, confirming their enrollment period and academic details.',
@@ -64,7 +60,6 @@ const CERT_CONFIG: Record<CertType, CertConfig> = {
   firstTrial: {
     label: 'First Trial Certificate',
     icon: 'ph:certificate-light',
-    color: '#FFC107',
     prefix: 'FT',
     description:
       'Documents eligibility for a first examination attempt with relevant examination details.',
@@ -243,8 +238,7 @@ const CertificateDrawer: React.FC<CertificateDrawerProps> = ({
           alignItems: 'center',
           gap: 1.5,
           borderBottom: (t) => `1px solid ${t.palette.divider}`,
-          bgcolor: (t) =>
-            t.palette.mode === 'dark' ? alpha(config.color, 0.15) : alpha(config.color, 0.06),
+          bgcolor: 'background.neutral',
           flexShrink: 0,
         }}
       >
@@ -254,15 +248,15 @@ const CertificateDrawer: React.FC<CertificateDrawerProps> = ({
             width: 40,
             height: 40,
             borderRadius: 1.5,
-            bgcolor: alpha(config.color, 0.12),
+            bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            border: `1px solid ${alpha(config.color, 0.25)}`,
+            border: (t) => `1px solid ${alpha(t.palette.primary.main, 0.15)}`,
             flexShrink: 0,
           }}
         >
-          <Iconify icon={config.icon} width={22} sx={{ color: config.color }} />
+          <Iconify icon={config.icon} width={22} sx={{ color: 'primary.main' }} />
         </Box>
 
         {/* Title */}
@@ -398,10 +392,6 @@ const CertificateDrawer: React.FC<CertificateDrawerProps> = ({
           size="small"
           onClick={handleSubmit}
           startIcon={<Iconify icon="mdi:check" width={16} />}
-          sx={{
-            bgcolor: config.color,
-            '&:hover': { bgcolor: alpha(config.color, 0.85) },
-          }}
         >
           Generate &amp; Submit
         </Button>

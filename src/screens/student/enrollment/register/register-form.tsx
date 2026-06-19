@@ -7,7 +7,6 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
-import { MotherTongueType } from 'src/enums/mother-tongue';
 import { getBase64String } from 'src/utils/get-base64-string';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -294,7 +293,7 @@ const RegisterForm = ({
               birthPlace: values.birthPlace || undefined,
               motherTongue:
                 values.motherTongue != null && values.motherTongue !== ''
-                  ? MotherTongueType[values.motherTongue as keyof typeof MotherTongueType]
+                  ? +values.motherTongue
                   : undefined,
               address1: values.addressLine1,
               address2: values.addressLine2,
@@ -338,7 +337,7 @@ const RegisterForm = ({
             birthPlace: values.birthPlace || undefined,
             motherTongue:
               values.motherTongue != null && values.motherTongue !== ''
-                ? MotherTongueType[values.motherTongue as keyof typeof MotherTongueType]
+                ? +values.motherTongue
                 : undefined,
             address1: values.addressLine1,
             address2: values.addressLine2,

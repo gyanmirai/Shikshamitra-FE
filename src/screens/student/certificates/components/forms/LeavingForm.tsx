@@ -45,15 +45,16 @@ const LeavingForm = forwardRef<FormRef, LeavingFormProps>(({ student, certNo, on
           px: 1.5,
           py: 1,
           borderRadius: 1,
-          bgcolor: 'action.selected',
+          bgcolor: 'background.neutral',
+          border: (t) => `1px solid ${t.palette.divider}`,
           fontFamily: 'monospace',
           fontSize: 13,
           fontWeight: 700,
-          color: 'error.main',
+          color: 'text.secondary',
           letterSpacing: 1,
         }}
       >
-        🚪 {certNo}
+        Certificate No: {certNo}
       </Box>
 
       <Grid container spacing={2}>

@@ -241,6 +241,7 @@ export interface IInquiryData {
   gender: GenderType | string;
   primaryContactNumber: string;
   secondaryContactNumber: string;
+  secondaryContactNo: string;
   dueDate?: string;
   country: ICountry;
   city: string;

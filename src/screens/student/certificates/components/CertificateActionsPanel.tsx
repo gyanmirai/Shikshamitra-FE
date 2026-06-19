@@ -12,7 +12,6 @@ interface CertCardConfig {
   label: string;
   description: string;
   icon: string;
-  color: string;
   numberPrefix: string;
 }
 
@@ -22,7 +21,6 @@ const CERT_CARDS: CertCardConfig[] = [
     label: 'Bonafide',
     description: 'Verifies current enrollment & academic status',
     icon: 'tdesign:certificate',
-    color: '#2065D1',
     numberPrefix: 'BON',
   },
   {
@@ -30,7 +28,6 @@ const CERT_CARDS: CertCardConfig[] = [
     label: 'Character',
     description: 'Attests to conduct & behaviour at institution',
     icon: 'la:certificate',
-    color: '#00AB55',
     numberPrefix: 'CHA',
   },
   {
@@ -38,7 +35,6 @@ const CERT_CARDS: CertCardConfig[] = [
     label: 'Leaving',
     description: 'Issued on leaving institution with enrollment proof',
     icon: 'streamline-cyber:wedding-certificate',
-    color: '#FF4842',
     numberPrefix: 'LC',
   },
   {
@@ -46,7 +42,6 @@ const CERT_CARDS: CertCardConfig[] = [
     label: 'First Trial',
     description: 'Documents first-attempt examination eligibility',
     icon: 'ph:certificate-light',
-    color: '#FFC107',
     numberPrefix: 'FT',
   },
 ];
@@ -101,16 +96,15 @@ const CertificateActionsPanel: React.FC<CertificateActionsPanelProps> = ({
                   variant="outlined"
                   sx={{
                     borderRadius: 1.5,
-                    border: (t) =>
-                      `1px solid ${disabled ? t.palette.divider : alpha(cert.color, 0.35)}`,
+                    border: (t) => `1px solid ${t.palette.divider}`,
                     transition: 'all 0.2s ease',
                     opacity: disabled ? 0.5 : 1,
                     ...(disabled
                       ? {}
                       : {
                           '&:hover': {
-                            borderColor: cert.color,
-                            boxShadow: `0 4px 16px ${alpha(cert.color, 0.2)}`,
+                            borderColor: 'primary.main',
+                            boxShadow: (t) => `0 4px 16px ${alpha(t.palette.primary.main, 0.12)}`,
                             transform: 'translateY(-1px)',
                           },
                         }),
@@ -129,15 +123,15 @@ const CertificateActionsPanel: React.FC<CertificateActionsPanelProps> = ({
                             width: 44,
                             height: 44,
                             borderRadius: 1.5,
-                            bgcolor: alpha(cert.color, 0.1),
+                            bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             flexShrink: 0,
-                            border: `1px solid ${alpha(cert.color, 0.2)}`,
+                            border: (t) => `1px solid ${alpha(t.palette.primary.main, 0.15)}`,
                           }}
                         >
-                          <Iconify icon={cert.icon} width={22} sx={{ color: cert.color }} />
+                          <Iconify icon={cert.icon} width={22} sx={{ color: 'primary.main' }} />
                         </Box>
 
                         {/* Text */}
@@ -164,7 +158,7 @@ const CertificateActionsPanel: React.FC<CertificateActionsPanelProps> = ({
                           <Iconify
                             icon="mdi:chevron-right"
                             width={18}
-                            sx={{ color: cert.color, flexShrink: 0 }}
+                            sx={{ color: 'text.disabled', flexShrink: 0 }}
                           />
                         )}
                       </Box>
@@ -177,16 +171,20 @@ const CertificateActionsPanel: React.FC<CertificateActionsPanelProps> = ({
                             px: 1,
                             py: 0.4,
                             borderRadius: 0.75,
-                            bgcolor: alpha(cert.color, 0.06),
+                            bgcolor: 'background.neutral',
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 0.5,
                           }}
                         >
-                          <Iconify icon="mdi:tag-outline" width={11} sx={{ color: cert.color }} />
+                          <Iconify
+                            icon="mdi:tag-outline"
+                            width={11}
+                            sx={{ color: 'text.secondary' }}
+                          />
                           <Typography
                             variant="caption"
-                            sx={{ color: cert.color, fontFamily: 'monospace', fontSize: 10 }}
+                            sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: 10 }}
                           >
                             {cert.numberPrefix}-2026-
                             {String(Math.floor(Math.random() * 90000) + 10000).padStart(5, '0')}

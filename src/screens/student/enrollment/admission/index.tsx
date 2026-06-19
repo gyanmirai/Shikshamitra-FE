@@ -176,7 +176,7 @@ const AdmissionScreen = () => {
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: item.dateOfInquiry ? dayjs(item.dateOfInquiry).format('DD-MM-YYYY') : '-',
         studentName: [item.lastName, item.firstName, item.middleName].filter(Boolean).join(' '),
-        secondaryContactNo: item.secondaryContactNumber || undefined,
+        secondaryContactNo: item.secondaryContactNo || '-',
         genderValue: GenderType[item?.gender as any],
         remarks: item?.remarks || '-',
       })) || [],
@@ -257,7 +257,7 @@ const AdmissionScreen = () => {
         filterType: 'date',
       },
       {
-        id: 'age',
+        id: 'ageValue',
         label: 'Age',
         align: 'left',
         isFilter: true,
