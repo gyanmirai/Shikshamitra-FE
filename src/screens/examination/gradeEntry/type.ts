@@ -23,6 +23,7 @@ export interface IStudentExamGradeEntry {
   vivaMarks?: number | null;
   internalMarks?: number | null;
   projectMarks?: number | null;
+  gradeScalingId?: string | null;
 }
 
 /** Exam summary panel data */
@@ -90,6 +91,7 @@ export interface IExamMarkItem {
   examType?: string;
   examName?: string;
   examId?: string;
+  gradeScalingId?: string | null;
 }
 
 /** Request body for PATCH */

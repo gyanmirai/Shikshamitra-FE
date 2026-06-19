@@ -30,7 +30,7 @@ const Slot: React.FC<{
           : 'grey.400',
       borderRadius: '8px',
       bgcolor: disabled ? 'action.disabledBackground' : 'background.paper',
-      color: disabled ? 'text.disabled' : 'text.primary',
+      color: 'text.primary',
       boxShadow: isActive ? (error ? '0 0 0 2px #d32f2f33' : '0 0 0 2px #1976d233') : 'none',
       transition: 'border-color 0.15s, box-shadow 0.15s',
       position: 'relative',

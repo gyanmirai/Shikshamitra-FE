@@ -1,6 +1,15 @@
 import dayjs from 'dayjs';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import type { IExamSubject, IRoomDetails, IExamFormValues } from '../type';
+
+function combineDateAndTime(dateObj: any, timeObj: any): string | null {
+  if (!dateObj || !timeObj) return null;
+  const d = dayjs(dateObj);
+  const t = dayjs(timeObj);
+  if (!d.isValid() || !t.isValid()) return null;
+  return d.hour(t.hour()).minute(t.minute()).second(0).millisecond(0).toISOString();
+}
 
 // ---------------------------------------------------------------------------
 // Default empty form values — used for CREATE mode
@@ -362,9 +371,9 @@ export function serializeSchedulePayload(values: IExamFormValues) {
         subjects.push({
           subjectId: s.subjectId || s.id,
           // electiveGroupId: sub.electiveGroupId,
-          examDate: s.examDate?.toISOString?.() ?? null,
-          startTime: s.startTime?.toISOString?.() ?? null,
-          endTime: s.endTime?.toISOString?.() ?? null,
+          examDate: dateConvertor(s.examDate.format(dateFormat)) ?? null,
+          startTime: dateConvertor(s.startTime.format(dateFormat)) ?? null,
+          endTime: dateConvertor(s.endTime.format(dateFormat)) ?? null,
           gradeScalingId: s.gradeScalingId ?? null,
           totalMarks: Number(s.totalMarks),
           passingMarks: Number(s.passingMarks),
@@ -377,8 +386,8 @@ export function serializeSchedulePayload(values: IExamFormValues) {
         subjectId: sub.subjectId,
         // electiveGroupId: sub.electiveGroupId ?? null,
         examDate: sub.examDate?.toISOString() ?? null,
-        startTime: sub.startTime?.toISOString() ?? null,
-        endTime: sub.endTime?.toISOString() ?? null,
+        startTime: combineDateAndTime(sub.examDate, sub.startTime),
+        endTime: combineDateAndTime(sub.examDate, sub.endTime),
         gradeScalingId: sub.gradeScalingId ?? null,
         totalMarks: Number(sub.totalMarks),
         passingMarks: Number(sub.passingMarks),

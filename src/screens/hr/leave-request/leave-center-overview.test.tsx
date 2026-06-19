@@ -59,6 +59,10 @@ describe('LeaveCenterOverviewPanel', () => {
     expect(screen.getByText('No finite leave entitlement')).toBeInTheDocument();
     expect(screen.getByText('Balance will appear after allocation.')).toBeInTheDocument();
     expect(screen.queryByTestId('leave-utilization-chart')).not.toBeInTheDocument();
+    expect(screen.getAllByText('—')).toHaveLength(3);
+    expect(
+      screen.getByText('No leave allocation yet for this year — ask HR to set one up.')
+    ).toBeInTheDocument();
   });
 
   it('handles unlimited or zero-balance buckets without drawing a finite chart', () => {

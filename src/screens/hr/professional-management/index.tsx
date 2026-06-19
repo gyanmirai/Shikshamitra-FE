@@ -237,7 +237,7 @@ function SectionPanel({
       description={description}
       action={action}
       sx={{ flex: 1, width: '100%' }}
-      contentSx={{ minWidth: 0, overflow: 'hidden' }}
+      contentSx={{ minWidth: 0, overflow: 'visible' }}
     >
       {children}
     </PerformanceSurface>
@@ -774,11 +774,15 @@ function GuidedSetupTab() {
                   label="Period start"
                   value={periodStart}
                   onChange={(value) => value && setPeriodStart(value)}
+                  format="DD/MM/YYYY"
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
                 />
                 <DatePicker
                   label="Period end"
                   value={periodEnd}
                   onChange={(value) => value && setPeriodEnd(value)}
+                  format="DD/MM/YYYY"
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
                 />
                 {isDuplicateCycle && <Alert severity="warning">{duplicateCycleMessage}</Alert>}
                 <Button
@@ -2610,11 +2614,15 @@ function CycleDialog({
           label="Period Start"
           value={periodStart}
           onChange={(value) => value && setPeriodStart(value)}
+          format="DD/MM/YYYY"
+          slotProps={{ textField: { size: 'small', fullWidth: true } }}
         />
         <DatePicker
           label="Period End"
           value={periodEnd}
           onChange={(value) => value && setPeriodEnd(value)}
+          format="DD/MM/YYYY"
+          slotProps={{ textField: { size: 'small', fullWidth: true } }}
         />
       </Stack>
       <DialogActions>

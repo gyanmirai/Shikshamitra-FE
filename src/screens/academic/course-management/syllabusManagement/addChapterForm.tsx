@@ -349,8 +349,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       }}
                       value={formik.values.chapterName}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                        formik.setFieldValue('chapterName', value);
+                        // const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                        formik.setFieldValue('chapterName', e.target.value);
                       }}
                       size="small"
                       error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}

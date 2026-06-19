@@ -5,6 +5,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -187,12 +188,18 @@ export function LeavePoliciesPanel() {
           const hasUnpaid = rules.some((rule) => getRuleBucket(rule) === 'Unpaid');
           return (
             <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-              <Chip size="small" label={`${rules.length}/2`} variant="outlined" />
+              <Label color="default" variant="soft">
+                {rules.length}/2
+              </Label>
               {hasPaid ? (
-                <Chip size="small" label="Paid" color="success" variant="outlined" />
+                <Label color="success" variant="soft">
+                  Paid
+                </Label>
               ) : null}
               {hasUnpaid ? (
-                <Chip size="small" label="Unpaid" color="warning" variant="outlined" />
+                <Label color="warning" variant="soft">
+                  Unpaid
+                </Label>
               ) : null}
             </Stack>
           );
@@ -207,12 +214,12 @@ export function LeavePoliciesPanel() {
           const unpaid = getRuleByBucket(row.policyItem, 'Unpaid');
           return (
             <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-              <Chip size="small" label={`Paid: ${formatRuleEntitlement(paid)}`} color="success" />
-              <Chip
-                size="small"
-                label={`Unpaid: ${formatRuleEntitlement(unpaid)}`}
-                color="warning"
-              />
+              <Label color="success" variant="soft">
+                Paid: {formatRuleEntitlement(paid)}
+              </Label>
+              <Label color="warning" variant="soft">
+                Unpaid: {formatRuleEntitlement(unpaid)}
+              </Label>
             </Stack>
           );
         },
@@ -260,23 +267,30 @@ export function LeavePoliciesPanel() {
           );
         },
       },
+      { id: 'updatedAt', label: 'Updated', minWidth: 140 },
       {
         id: 'status',
         label: 'Status',
         minWidth: 120,
+        sticky: true,
         render: (_value, row) => (
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <Chip size="small" label="Active" color="success" />
+          <Stack spacing={0.75}>
+            <Label color="success" variant="soft">
+              Active
+            </Label>
             {row.policyItem?.isDefault ? (
-              <Chip size="small" label="Default" color="primary" variant="outlined" />
+              <Label color="primary" variant="soft">
+                Default
+              </Label>
             ) : null}
             {row.encashmentAllowed ? (
-              <Chip size="small" label="Payroll impact" color="warning" variant="outlined" />
+              <Label color="warning" variant="soft">
+                Payroll impact
+              </Label>
             ) : null}
           </Stack>
         ),
       },
-      { id: 'updatedAt', label: 'Updated', minWidth: 140 },
       {
         id: 'actions',
         label: 'Actions',

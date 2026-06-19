@@ -48,7 +48,12 @@ function DurationCell({ startTime, endTime }: { startTime: any; endTime: any }) 
       </Typography>
     );
   }
-  const diffMins = dayjs(endTime).diff(dayjs(startTime), 'minute');
+  const start = dayjs(startTime);
+  const end = dayjs(endTime);
+  const dummyDate = dayjs('2000-01-01');
+  const dStart = dummyDate.hour(start.hour()).minute(start.minute()).second(0).millisecond(0);
+  const dEnd = dummyDate.hour(end.hour()).minute(end.minute()).second(0).millisecond(0);
+  const diffMins = dEnd.diff(dStart, 'minute');
   if (diffMins <= 0) {
     return (
       <Chip
@@ -316,6 +321,7 @@ const SubjectScheduleRow = memo(
             helperText={
               touched.gradeScalingId && errors.gradeScalingId ? errors.gradeScalingId : ' '
             }
+            helperTextProps={HELPER_TEXT_PROPS}
             onChange={(selectedId) => {
               onFieldChange('gradeScalingId', selectedId || null);
               onFieldBlur('gradeScalingId');
@@ -576,12 +582,41 @@ SectionHeader.displayName = 'SectionHeader';
 // ---------------------------------------------------------------------------
 // Helper: Check if two exam slots overlap on same date
 // ---------------------------------------------------------------------------
-const slotsOverlap = (a: any, b: any) =>
-  a?.examDate &&
-  b?.examDate &&
-  dayjs(a.examDate).format('YYYY-MM-DD') === dayjs(b.examDate).format('YYYY-MM-DD') &&
-  dayjs(a.startTime).isBefore(dayjs(b.endTime)) &&
-  dayjs(a.endTime).isAfter(dayjs(b.startTime));
+const slotsOverlap = (a: any, b: any) => {
+  if (
+    !a?.examDate ||
+    !b?.examDate ||
+    !a?.startTime ||
+    !a?.endTime ||
+    !b?.startTime ||
+    !b?.endTime
+  ) {
+    return false;
+  }
+  const dateA = dayjs(a.examDate).format('YYYY-MM-DD');
+  const dateB = dayjs(b.examDate).format('YYYY-MM-DD');
+  if (dateA !== dateB) return false;
+
+  const tStartA = dayjs(a.startTime);
+  const tEndA = dayjs(a.endTime);
+  const tStartB = dayjs(b.startTime);
+  const tEndB = dayjs(b.endTime);
+
+  const startA = dayjs(a.examDate)
+    .hour(tStartA.hour())
+    .minute(tStartA.minute())
+    .second(0)
+    .millisecond(0);
+  const endA = dayjs(a.examDate).hour(tEndA.hour()).minute(tEndA.minute()).second(0).millisecond(0);
+  const startB = dayjs(b.examDate)
+    .hour(tStartB.hour())
+    .minute(tStartB.minute())
+    .second(0)
+    .millisecond(0);
+  const endB = dayjs(b.examDate).hour(tEndB.hour()).minute(tEndB.minute()).second(0).millisecond(0);
+
+  return startA.isBefore(endB) && endA.isAfter(startB);
+};
 
 // ---------------------------------------------------------------------------
 // Separate-mode inline validator — mirrors validationSchema Step 1 rules
@@ -611,9 +646,13 @@ function validateSepSubject(
   if (!sub?.endTime || !dayjs(sub.endTime).isValid()) {
     errs.endTime = 'End time is required';
   } else if (sub?.startTime && dayjs(sub.startTime).isValid()) {
-    if (!dayjs(sub.endTime).isAfter(dayjs(sub.startTime)))
-      errs.endTime = 'End time must be after start time';
-    else if (dayjs(sub.endTime).diff(dayjs(sub.startTime), 'minute') < 30)
+    const dummyDate = dayjs('2000-01-01');
+    const start = dayjs(sub.startTime);
+    const end = dayjs(sub.endTime);
+    const dStart = dummyDate.hour(start.hour()).minute(start.minute()).second(0).millisecond(0);
+    const dEnd = dummyDate.hour(end.hour()).minute(end.minute()).second(0).millisecond(0);
+    if (!dEnd.isAfter(dStart)) errs.endTime = 'End time must be after start time';
+    else if (dEnd.diff(dStart, 'minute') < 30)
       errs.endTime = 'Exam duration must be at least 30 minutes';
   }
 
@@ -941,7 +980,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                         formik.setFieldValue(`subjects.${index}.${field}`, value);
                       }}
                       onFieldBlur={(field) => {
-                        formik.setFieldTouched(`subjects.${index}.${field}`, false, false);
+                        formik.setFieldTouched(`subjects.${index}.${field}`, true, true);
                       }}
                       gradeScalings={gradeScalingsList}
                       isGradeScalingsLoading={isGradeScalingsLoading}

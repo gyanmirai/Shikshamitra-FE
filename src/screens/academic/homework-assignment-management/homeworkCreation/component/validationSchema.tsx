@@ -68,5 +68,14 @@ export const getValidationSchema = (view: string) =>
   });
 
 export const assignGradeValidationSchema = Yup.object({
+  totalMarks: Yup.number()
+    .typeError('Total Marks must be a number')
+    .required('Total Marks is required')
+    .min(1, 'Total Marks must be at least 1'),
+  marks: Yup.number()
+    .typeError('Obtained Marks must be a number')
+    .required('Obtained Marks is required')
+    .min(0, 'Obtained Marks cannot be negative')
+    .max(Yup.ref('totalMarks'), 'Obtained Marks cannot exceed Total Marks'),
   feedback: Yup.string().required('Feedback is required'),
 });

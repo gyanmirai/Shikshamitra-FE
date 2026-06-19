@@ -6,6 +6,7 @@ import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -421,13 +422,10 @@ function RuleSection({
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1} alignItems="center">
-          <Chip
-            size="small"
-            label={title}
-            color={isPaid ? 'success' : 'warning'}
-            variant="outlined"
-          />
           <Typography variant="subtitle2">{title} leave rule</Typography>
+          <Label color={isPaid ? 'success' : 'warning'} variant="soft">
+            {title}
+          </Label>
         </Stack>
 
         <Grid container spacing={1.5}>
@@ -557,74 +555,67 @@ function RuleSection({
             </Grid>
           ) : null}
 
-          <Grid size={{ xs: 12, md: 3 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rule.requiresApproval}
-                  onChange={(event) =>
-                    setRuleValue(bucket, 'requiresApproval', event.target.checked)
-                  }
-                />
-              }
-              label="Approval"
-            />
+          <Grid size={12}>
+            <Stack direction="row" spacing={3} flexWrap="wrap" sx={{ mt: 1 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={rule.requiresApproval}
+                    onChange={(event) =>
+                      setRuleValue(bucket, 'requiresApproval', event.target.checked)
+                    }
+                  />
+                }
+                label="Approval"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={rule.allowHalfDay}
+                    onChange={(event) => setRuleValue(bucket, 'allowHalfDay', event.target.checked)}
+                  />
+                }
+                label="Half day"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={rule.allowNegativeBalance}
+                    onChange={(event) =>
+                      setRuleValue(bucket, 'allowNegativeBalance', event.target.checked)
+                    }
+                  />
+                }
+                label="Negative balance"
+              />
+              {isPaid ? (
+                <>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={rule.carryForward}
+                        onChange={(event) =>
+                          setRuleValue(bucket, 'carryForward', event.target.checked)
+                        }
+                      />
+                    }
+                    label="Carry forward"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={rule.encashmentAllowed}
+                        onChange={(event) =>
+                          setRuleValue(bucket, 'encashmentAllowed', event.target.checked)
+                        }
+                      />
+                    }
+                    label="Encashable"
+                  />
+                </>
+              ) : null}
+            </Stack>
           </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rule.allowHalfDay}
-                  onChange={(event) => setRuleValue(bucket, 'allowHalfDay', event.target.checked)}
-                />
-              }
-              label="Half day"
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rule.allowNegativeBalance}
-                  onChange={(event) =>
-                    setRuleValue(bucket, 'allowNegativeBalance', event.target.checked)
-                  }
-                />
-              }
-              label="Negative balance"
-            />
-          </Grid>
-
-          {isPaid ? (
-            <>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={rule.carryForward}
-                      onChange={(event) =>
-                        setRuleValue(bucket, 'carryForward', event.target.checked)
-                      }
-                    />
-                  }
-                  label="Carry forward"
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={rule.encashmentAllowed}
-                      onChange={(event) =>
-                        setRuleValue(bucket, 'encashmentAllowed', event.target.checked)
-                      }
-                    />
-                  }
-                  label="Encashable"
-                />
-              </Grid>
-            </>
-          ) : null}
         </Grid>
       </Stack>
     </Paper>

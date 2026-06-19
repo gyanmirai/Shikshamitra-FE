@@ -230,7 +230,7 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
 
       formik.setFieldValue(
         `slotConfigurations[${configIndex}].timeSlots`,
-        generateSlots(value, configIndex)
+        generateSlots(value, configIndex, formik.values.slotConfigurations[configIndex]?.timeSlots)
       );
     },
     [formik]

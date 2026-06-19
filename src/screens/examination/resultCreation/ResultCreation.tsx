@@ -238,22 +238,24 @@ function StudentDetailsDialog({
           flexDirection: 'column',
           overflow: 'hidden',
           bgcolor: 'background.default',
+          position: 'relative',
         },
       }}
     >
-      {/* Main Marksheet container */}
-      {/* <Box
-        id="student-marksheet-card"
+      <IconButton
+        aria-label="close"
+        onClick={onClose}
         sx={{
-          bgcolor: 'background.default',
-          color: 'text.primary',
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
-          minHeight: 0,
-          overflow: 'hidden',
+          position: 'absolute',
+          right: 16,
+          top: 16,
+          color: (theme) => theme.palette.grey[500],
+          zIndex: 1100,
         }}
-      > */}
+      >
+        <Iconify icon="mdi:close" width={24} />
+      </IconButton>
+
       {/* Content Body */}
       <DialogScrollContent
         sx={{
@@ -274,9 +276,20 @@ function StudentDetailsDialog({
           sx={{ borderBottom: (theme) => `1px dashed ${theme.palette.divider}` }}
         >
           <Box>
-            <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.primary' }}>
-              {examName || 'Result Details'}
-            </Typography>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.primary' }}>
+                {examName || 'Result Details'}
+              </Typography>
+              <Tooltip title="View exam and grade information details">
+                <IconButton size="small" sx={{ p: 0.5 }}>
+                  <Iconify
+                    icon="mdi:information-outline"
+                    width={20}
+                    sx={{ color: 'primary.main' }}
+                  />
+                </IconButton>
+              </Tooltip>
+            </Stack>
             <Typography
               variant="subtitle2"
               sx={{ color: 'text.secondary', mt: 0.5, fontWeight: 600 }}
@@ -285,14 +298,14 @@ function StudentDetailsDialog({
             </Typography>
           </Box>
           {cleanSchoolName && (
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'primary.main' }}>
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'primary.main', mr: 5 }}>
               {cleanSchoolName}
             </Typography>
           )}
         </Box>
 
         {/* Top Grid: Student Info, Result Summary */}
-        <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1.4fr 1.2fr' }} gap={3}>
+        <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1.2fr 1.4fr' }} gap={3}>
           {/* Student Info Card */}
           <Card
             sx={{
@@ -313,45 +326,58 @@ function StudentDetailsDialog({
                 Student Information
               </Typography>
             </Box>
-            <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={1.5}>
-              <Box sx={{ gridColumn: 'span 2' }}>
-                <Typography variant="caption" color="text.secondary">
+
+            <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2}>
+              <Box
+                sx={{
+                  gridColumn: 'span 2',
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.02),
+                  p: 1.25,
+                  borderRadius: 1,
+                  border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.05)}`,
+                }}
+              >
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
                   Student Name
                 </Typography>
-                <Typography variant="body2" fontWeight="bold">
+                <Typography variant="body1" fontWeight="700" color="primary.main">
                   {studentName}
                 </Typography>
               </Box>
+
               <Box>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
                   Gr. No.
                 </Typography>
-                <Typography variant="body2" fontWeight="bold">
+                <Typography variant="body2" fontWeight="700">
                   {grNo}
                 </Typography>
               </Box>
+
               <Box>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
                   Roll No.
                 </Typography>
-                <Typography variant="body2" fontWeight="bold">
+                <Typography variant="body2" fontWeight="700">
                   {rollNo}
                 </Typography>
               </Box>
+
               <Box>
-                <Typography variant="caption" color="text.secondary">
-                  Date of Birth
-                </Typography>
-                <Typography variant="body2" fontWeight="bold">
-                  {dob}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
                   Class & Division
                 </Typography>
-                <Typography variant="body2" fontWeight="bold">
-                  {className} {divisionName}
+                <Typography variant="body2" fontWeight="700">
+                  {className} - {divisionName}
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                  Date of Birth
+                </Typography>
+                <Typography variant="body2" fontWeight="700">
+                  {dob}
                 </Typography>
               </Box>
             </Box>
@@ -381,154 +407,238 @@ function StudentDetailsDialog({
               </Typography>
             </Box>
 
-            {/* Radial circle chart */}
+            {/* Overall Status Banner */}
             <Box
               sx={{
-                position: 'relative',
-                width: 90,
-                height: 90,
+                width: '100%',
+                py: 1.25,
+                px: 2,
+                borderRadius: 1,
+                mb: 2,
                 display: 'flex',
                 alignItems: 'center',
-                justifyItems: 'center',
-                mb: 1.5,
+                justifyContent: 'space-between',
+                bgcolor: isPassing ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                border: `1px solid ${isPassing ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
               }}
             >
-              <svg width="90" height="90" viewBox="0 0 90 90">
-                <circle
-                  cx="45"
-                  cy="45"
-                  r={radius}
-                  fill="transparent"
-                  stroke="rgba(0,0,0,0.05)"
-                  strokeWidth="6"
-                />
-                <circle
-                  cx="45"
-                  cy="45"
-                  r={radius}
-                  fill="transparent"
-                  stroke={isPassing ? '#10b981' : '#ef4444'}
-                  strokeWidth="6"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  transform="rotate(-90 45 45)"
-                />
-              </svg>
+              <Typography variant="subtitle2" fontWeight="700" color="text.secondary">
+                OVERALL RESULT
+              </Typography>
+              <Label
+                variant="filled"
+                color={isPassing ? 'success' : 'error'}
+                sx={{ fontSize: '0.85rem', fontWeight: 800, px: 2 }}
+                startIcon={<Iconify icon={isPassing ? 'mdi:check-decagram' : 'mdi:alert-circle'} />}
+              >
+                {status || '—'}
+              </Label>
+            </Box>
+
+            {/* Visual Indicators: Radial Chart & Grade/Rank Cards */}
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={3}
+              mb={3}
+              width="100%"
+              justifyContent="center"
+            >
+              {/* Radial circle chart */}
               <Box
                 sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
+                  position: 'relative',
+                  width: 100,
+                  height: 100,
                   display: 'flex',
-                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Typography variant="body2" fontWeight="800">
-                  {pctRaw}
-                </Typography>
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r={radius}
+                    fill="transparent"
+                    stroke="rgba(0,0,0,0.04)"
+                    strokeWidth="8"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r={radius}
+                    fill="transparent"
+                    stroke={isPassing ? '#10b981' : '#ef4444'}
+                    strokeWidth="8"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    transform="rotate(-90 50 50)"
+                    style={{
+                      filter: `drop-shadow(0px 2px 4px ${isPassing ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'})`,
+                    }}
+                  />
+                </svg>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Typography variant="h6" fontWeight="800">
+                    {pctRaw}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: 9, fontWeight: 600 }}
+                  >
+                    PERCENTAGE
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
 
-            <Box display="flex" gap={1} alignItems="center" mb={2}>
-              <Box
-                sx={{
-                  px: 1.5,
-                  py: 0.3,
-                  bgcolor: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
-                  color: '#10b981',
-                  borderRadius: 3,
-                  fontSize: '0.75rem',
-                  fontWeight: 'bold',
-                }}
-              >
-                Grade: {gradeValue}
-              </Box>
-              <Box
-                sx={{
-                  px: 1.5,
-                  py: 0.3,
-                  bgcolor: 'rgba(251, 140, 0, 0.1)',
-                  border: '1px solid rgba(251, 140, 0, 0.3)',
-                  color: '#fb8c00',
-                  borderRadius: 3,
-                  fontSize: '0.75rem',
-                  fontWeight: 'bold',
-                }}
-              >
-                Rank #{rank} of {totalStudentsInClass}
-              </Box>
+              {/* Grade & Rank Badges Stacked */}
+              <Stack spacing={1.5} sx={{ minWidth: 140 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 1.5,
+                    py: 1,
+                    bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
+                    border: (theme) => `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+                    borderRadius: 1,
+                  }}
+                >
+                  <Iconify icon="mdi:medal-outline" width={18} sx={{ color: 'success.main' }} />
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                      sx={{ fontSize: 9, fontWeight: 600 }}
+                    >
+                      GRADE
+                    </Typography>
+                    <Typography variant="subtitle2" fontWeight="bold" color="success.main">
+                      {gradeValue || '—'}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 1.5,
+                    py: 1,
+                    bgcolor: (theme) => alpha(theme.palette.warning.main, 0.08),
+                    border: (theme) => `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+                    borderRadius: 1,
+                  }}
+                >
+                  <Iconify icon="mdi:trophy-outline" width={18} sx={{ color: 'warning.main' }} />
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                      sx={{ fontSize: 9, fontWeight: 600 }}
+                    >
+                      CLASS RANK
+                    </Typography>
+                    <Typography variant="subtitle2" fontWeight="bold" color="warning.main">
+                      #{rank} of {totalStudentsInClass}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Stack>
             </Box>
 
             {/* Sub-stats grid */}
-            <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={1.25} width="100%">
+            <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={1.5} width="100%">
               <Box
                 sx={{
+                  bgcolor: (theme) => alpha(theme.palette.text.primary, 0.02),
                   border: (theme) => `1px solid ${theme.palette.divider}`,
                   borderRadius: 1,
-                  p: 0.75,
+                  p: 1.25,
                   textAlign: 'center',
                 }}
               >
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Total Marks
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                  sx={{ fontWeight: 600 }}
+                >
+                  Obtained Marks
                 </Typography>
-                <Typography variant="body2" fontWeight="bold">
-                  {totalMaxMarksStr}
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                  borderRadius: 1,
-                  p: 0.75,
-                  textAlign: 'center',
-                }}
-              >
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Obtained
-                </Typography>
-                <Typography variant="body2" fontWeight="bold">
+                <Typography
+                  variant="body1"
+                  fontWeight="800"
+                  sx={{ color: 'primary.main', mt: 0.5 }}
+                >
                   {totalValueStr}
                 </Typography>
               </Box>
+
               <Box
                 sx={{
+                  bgcolor: (theme) => alpha(theme.palette.text.primary, 0.02),
                   border: (theme) => `1px solid ${theme.palette.divider}`,
                   borderRadius: 1,
-                  p: 0.75,
+                  p: 1.25,
                   textAlign: 'center',
                 }}
               >
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Attendance
-                </Typography>
-                <Typography variant="body2" fontWeight="bold">
-                  {attendancePercentage}
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                  borderRadius: 1,
-                  p: 0.75,
-                  textAlign: 'center',
-                }}
-              >
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Status
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                  sx={{ fontWeight: 600 }}
+                >
+                  Max Marks
                 </Typography>
                 <Typography
-                  variant="body2"
-                  fontWeight="bold"
-                  sx={{ color: isPassing ? 'success.main' : 'error.main' }}
+                  variant="body1"
+                  fontWeight="800"
+                  sx={{ color: 'text.primary', mt: 0.5 }}
                 >
-                  {status}
+                  {totalMaxMarksStr}
+                </Typography>
+              </Box>
+
+              <Box
+                sx={{
+                  bgcolor: (theme) => alpha(theme.palette.text.primary, 0.02),
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                  borderRadius: 1,
+                  p: 1.25,
+                  textAlign: 'center',
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                  sx={{ fontWeight: 600 }}
+                >
+                  Attendance
+                </Typography>
+                <Typography variant="body1" fontWeight="800" sx={{ color: 'info.main', mt: 0.5 }}>
+                  {attendancePercentage}
                 </Typography>
               </Box>
             </Box>
@@ -559,17 +669,20 @@ function StudentDetailsDialog({
             <Table size="medium">
               <TableHead>
                 <TableRow sx={{ bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04) }}>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 13, py: 1.25 }}>Subject</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700, fontSize: 13, py: 1.25 }}>
+                  <TableCell sx={{ fontWeight: 700, fontSize: 13, py: 1.5 }}>Subject</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, fontSize: 13, py: 1.5 }}>
                     Max Marks
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 13, py: 1.25, width: '40%' }}>
+                  <TableCell sx={{ fontWeight: 700, fontSize: 13, py: 1.5, width: '35%' }}>
                     Score & Progress
                   </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700, fontSize: 13, py: 1.25 }}>
+                  <TableCell align="center" sx={{ fontWeight: 700, fontSize: 13, py: 1.5 }}>
                     Grade
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 13, py: 1.25 }}>Remarks</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, fontSize: 13, py: 1.5 }}>
+                    Pass/Fail
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700, fontSize: 13, py: 1.5 }}>Remarks</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -584,12 +697,20 @@ function StudentDetailsDialog({
                     maxMarks > 0 ? Math.min((marksObtained / maxMarks) * 100, 100) : 0;
                   const subjectGrade = sub.grade ?? '—';
                   const subjectRemarks = sub.remarks ?? (isSubjectAbsent ? 'Absent' : '—');
+                  const isSubjectPassed =
+                    sub.isPassed !== undefined
+                      ? sub.isPassed
+                      : subjectGrade !== 'F' && !isSubjectAbsent;
 
                   const themeInfo = getSubjectTheme(sub.subjectName ?? '');
 
                   return (
-                    <TableRow key={idx} hover>
-                      <TableCell sx={{ py: 1.25 }}>
+                    <TableRow
+                      key={idx}
+                      hover
+                      sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                    >
+                      <TableCell sx={{ py: 1.5 }}>
                         <Box display="flex" alignItems="center" gap={1.25}>
                           <Box
                             sx={{
@@ -610,10 +731,10 @@ function StudentDetailsDialog({
                           </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell align="center" sx={{ py: 1.25, fontWeight: 500 }}>
+                      <TableCell align="center" sx={{ py: 1.5, fontWeight: 500 }}>
                         {maxMarksStr}
                       </TableCell>
-                      <TableCell sx={{ py: 1.25 }}>
+                      <TableCell sx={{ py: 1.5 }}>
                         {isSubjectAbsent ? (
                           <Typography variant="body2" color="error.main" fontWeight="bold">
                             ABSENT
@@ -633,7 +754,7 @@ function StudentDetailsDialog({
                                 sx={{
                                   width: `${progressPct}%`,
                                   height: '100%',
-                                  bgcolor: themeInfo.color,
+                                  bgcolor: isSubjectPassed ? 'success.main' : 'error.main',
                                   borderRadius: 3,
                                 }}
                               />
@@ -641,29 +762,62 @@ function StudentDetailsDialog({
                             <Typography
                               variant="body2"
                               fontWeight="bold"
-                              sx={{ minWidth: 40, textAlign: 'right' }}
+                              sx={{
+                                minWidth: 40,
+                                textAlign: 'right',
+                                color: isSubjectPassed ? 'text.primary' : 'error.main',
+                              }}
                             >
                               {marksObtainedStr}
                             </Typography>
                           </Box>
                         )}
                       </TableCell>
-                      <TableCell align="center" sx={{ py: 1.25 }}>
+                      <TableCell align="center" sx={{ py: 1.5 }}>
                         <Label
                           variant="soft"
                           color={
-                            subjectGrade === 'A+' || subjectGrade === 'A'
-                              ? 'success'
-                              : subjectGrade === 'F'
-                                ? 'error'
-                                : 'warning'
+                            !isSubjectPassed
+                              ? 'error'
+                              : ['A+', 'A', 'A1', 'A2'].includes(subjectGrade)
+                                ? 'success'
+                                : ['B+', 'B', 'B1', 'B2'].includes(subjectGrade)
+                                  ? 'info'
+                                  : 'warning'
                           }
                           sx={{ fontWeight: 'bold' }}
                         >
                           {subjectGrade}
                         </Label>
                       </TableCell>
-                      <TableCell sx={{ py: 1.25, color: 'text.secondary', fontWeight: 500 }}>
+                      <TableCell align="center" sx={{ py: 1.5 }}>
+                        {isSubjectAbsent ? (
+                          <Label
+                            variant="soft"
+                            color="default"
+                            startIcon={<Iconify icon="mdi:account-off-outline" />}
+                          >
+                            ABSENT
+                          </Label>
+                        ) : (
+                          <Label
+                            variant="soft"
+                            color={isSubjectPassed ? 'success' : 'error'}
+                            startIcon={
+                              <Iconify
+                                icon={
+                                  isSubjectPassed
+                                    ? 'mdi:check-circle-outline'
+                                    : 'mdi:close-circle-outline'
+                                }
+                              />
+                            }
+                          >
+                            {isSubjectPassed ? 'PASS' : 'FAIL'}
+                          </Label>
+                        )}
+                      </TableCell>
+                      <TableCell sx={{ py: 1.5, color: 'text.secondary', fontWeight: 500 }}>
                         {subjectRemarks}
                       </TableCell>
                     </TableRow>
@@ -1026,62 +1180,124 @@ const ResultCreation = (_props: TabComponentType) => {
   const tableColumns = useMemo(() => {
     if (!previewResult?.columns?.length) return [];
 
-    const dataCols: any[] = previewResult.columns
+    // First map all the columns from API
+    const mappedCols = previewResult.columns
       .filter((col) => col.id && col.label && !col.id.startsWith('subj_'))
-      .map((col) => ({
-        ...col,
-        id: col.id as string,
-        label: col.label as string,
-        minWidth: col.id?.startsWith('subj_') ? 110 : 130,
-        align: 'left' as const,
-        sticky: col.id === 'RollNo' || col.id === 'StudentName',
-        render: (value: any, row: any) => {
-          if (value == null || value === '') {
-            return (
-              <Typography variant="caption" color="text.disabled">
-                —
-              </Typography>
-            );
-          }
-          if (col.id === 'Total' || col.id === 'total') {
-            const maxMarks = row.TotalMaxMarks || row.totalMaxMarks || '—';
-            return (
-              <Typography variant="caption" fontWeight={600}>
-                {value} / {maxMarks}
-              </Typography>
-            );
-          }
-          if (isStatusColumn(col.id)) {
-            return (
-              <Label variant="soft" color={getStatusColor(String(value))}>
-                {value}
-              </Label>
-            );
-          }
-          if (isPercentageColumn(col.id)) {
-            return (
-              <Label variant="soft" color={getPercentageColor(String(value))}>
-                {value}
-              </Label>
-            );
-          }
-          if (col.id === 'Grade') {
-            return (
-              <Typography
-                variant="caption"
-                fontWeight={700}
-                color={String(value) === 'F' ? 'error.main' : 'text.primary'}
-              >
-                {value}
-              </Typography>
-            );
-          }
-          return <Typography variant="caption">{value}</Typography>;
-        },
-      }));
+      .map((col) => {
+        const colId = col.id as string;
+        let label = col.label as string;
+
+        // Rename "Total" to "Marks"
+        if (colId === 'Total' || colId === 'total') {
+          label = 'Marks';
+        }
+
+        return {
+          id: colId,
+          label,
+          minWidth: 130,
+          align: 'left' as const,
+          sticky: colId === 'RollNo' || colId === 'StudentName',
+          render: (value: any, row: any) => {
+            if (value == null || value === '') {
+              return (
+                <Typography variant="caption" color="text.disabled">
+                  —
+                </Typography>
+              );
+            }
+            if (colId === 'Total' || colId === 'total') {
+              const maxMarks = row.TotalMaxMarks || row.totalMaxMarks || '—';
+              return (
+                <Typography variant="caption" fontWeight={600}>
+                  {value} / {maxMarks}
+                </Typography>
+              );
+            }
+            if (isStatusColumn(colId)) {
+              return (
+                <Label variant="soft" color={getStatusColor(String(value))}>
+                  {value}
+                </Label>
+              );
+            }
+            if (isPercentageColumn(colId)) {
+              return (
+                <Label variant="soft" color={getPercentageColor(String(value))}>
+                  {value}
+                </Label>
+              );
+            }
+            if (colId === 'Grade' || colId === 'grade') {
+              return (
+                <Typography
+                  variant="caption"
+                  fontWeight={700}
+                  color={String(value) === 'F' ? 'error.main' : 'text.primary'}
+                >
+                  {value}
+                </Typography>
+              );
+            }
+            return <Typography variant="caption">{value}</Typography>;
+          },
+        };
+      });
+
+    // Create the final ordered list of columns
+    const finalCols: any[] = [];
+
+    // 1. Roll No and Student Name first
+    const rollNoCol = mappedCols.find((c) => c.id === 'RollNo' || c.id === 'rollNo');
+    const nameCol = mappedCols.find((c) => c.id === 'StudentName' || c.id === 'studentName');
+    if (rollNoCol) finalCols.push(rollNoCol);
+    if (nameCol) finalCols.push(nameCol);
+
+    // 2. Marks (Total) column
+    const marksCol = mappedCols.find((c) => c.id === 'Total' || c.id === 'total');
+    if (marksCol) finalCols.push(marksCol);
+
+    // 3. Grade column
+    const gradeCol = mappedCols.find((c) => c.id === 'Grade' || c.id === 'grade');
+    if (gradeCol) finalCols.push(gradeCol);
+
+    // 4. Percentage column
+    const pctCol = mappedCols.find((c) => c.id === 'Percentage' || c.id === 'percentage');
+    if (pctCol) finalCols.push(pctCol);
+
+    // 5. Add new Pass/Fail column
+    finalCols.push({
+      id: 'pass_fail',
+      label: 'Pass/Fail',
+      minWidth: 120,
+      align: 'left' as const,
+      render: (_value: any, row: any) => {
+        const grade = row.Grade || row.grade;
+        if (!grade || grade === '—') {
+          return (
+            <Typography variant="caption" color="text.disabled">
+              —
+            </Typography>
+          );
+        }
+        const isPass = grade !== 'F';
+        return (
+          <Label variant="soft" color={isPass ? 'success' : 'error'}>
+            {isPass ? 'PASS' : 'FAIL'}
+          </Label>
+        );
+      },
+    });
+
+    // Add any other columns that we didn't explicitly place (in case there are any)
+    mappedCols.forEach((col) => {
+      if (!finalCols.some((fc) => fc.id === col.id)) {
+        finalCols.push(col);
+      }
+    });
 
     // Action column — view student details
-    dataCols.push({
+    finalCols.push({
       id: '_action',
       label: 'Details',
       minWidth: 50,
@@ -1103,11 +1319,12 @@ const ResultCreation = (_props: TabComponentType) => {
       ),
     });
 
-    return dataCols;
+    return finalCols;
   }, [previewResult?.columns, handleViewStudent]);
 
   const placeholderColumns = useMemo(
     () => [
+      { id: 'rollNo', label: 'Roll No.', minWidth: 90, align: 'left' as const, sticky: true },
       {
         id: 'studentName',
         label: 'Student Name',
@@ -1115,8 +1332,8 @@ const ResultCreation = (_props: TabComponentType) => {
         align: 'left' as const,
         sticky: true,
       },
-      { id: 'rollNo', label: 'Roll No.', minWidth: 90, align: 'left' as const, sticky: true },
-      { id: 'total', label: 'Total', minWidth: 110, align: 'left' as const },
+      { id: 'total', label: 'Marks', minWidth: 110, align: 'left' as const },
+      { id: 'grade', label: 'Grade', minWidth: 80, align: 'left' as const },
       {
         id: 'percentage',
         label: 'Percentage',
@@ -1124,7 +1341,12 @@ const ResultCreation = (_props: TabComponentType) => {
         align: 'left' as const,
         sticky: true,
       },
-      { id: 'grade', label: 'Grade', minWidth: 80, align: 'left' as const },
+      {
+        id: 'pass_fail',
+        label: 'Pass/Fail',
+        minWidth: 120,
+        align: 'left' as const,
+      },
     ],
     []
   );
