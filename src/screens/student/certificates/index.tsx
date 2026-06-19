@@ -1,55 +1,42 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import { Iconify } from 'src/components/iconify';
-import { Box, Grid, Card, Button } from '@mui/material';
-import { useNewSearchParam } from 'src/hooks/use-search-param';
+import { Box, Grid } from '@mui/material';
+import React, { useState, useCallback } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import LeavingCertificate from './leaving-certificate';
-import BonofiedCertificate from './bonofied-certificate';
-import CharacterCertificate from './character-certificate';
-import FirstTrialCertificate from './first-trial-certificate';
+import DashboardMetrics from './components/DashboardMetrics';
+import CertificateDrawer from './components/CertificateDrawer';
+import StudentSearchPanel from './components/StudentSearchPanel';
+import StudentSummaryPanel from './components/StudentSummaryPanel';
+import CertificateActionsPanel from './components/CertificateActionsPanel';
 
-const TABS = [
-  {
-    value: 'bonafiedCertificates',
-    label: 'Bonafide',
-    component: () => <BonofiedCertificate />,
-    icon: <Iconify icon="tdesign:certificate" width={20} />,
-  },
-  {
-    value: 'firstTrialCertificates',
-    label: 'First Trial',
-    component: () => <FirstTrialCertificate />,
-    icon: <Iconify icon="ph:certificate-light" width={20} />,
-  },
-  {
-    value: 'leavingCertificates',
-    label: 'Leaving',
-    component: () => <LeavingCertificate />,
-    icon: <Iconify icon="streamline-cyber:wedding-certificate" width={20} />,
-  },
-  {
-    value: 'characterCertificates',
-    label: 'Character',
-    component: () => <CharacterCertificate />,
-    icon: <Iconify icon="la:certificate" width={20} />,
-  },
-];
+import type { CertType } from './components/CertificateActionsPanel';
+import type { SelectedStudent } from './components/StudentSearchPanel';
+
+// ── Main Screen ────────────────────────────────────────────────────────────────
 
 const StudentCertificatesScreen = () => {
-  const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
-  const activeTab = searchParams?.tab || 'bonafiedCertificates';
+  const [selectedStudent, setSelectedStudent] = useState<SelectedStudent | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeCertType, setActiveCertType] = useState<CertType | null>(null);
 
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === activeTab),
-    [activeTab]
-  );
+  const handleSelectStudent = useCallback((student: SelectedStudent) => {
+    setSelectedStudent(student);
+  }, []);
 
-  // const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
+  const handleGenerate = useCallback((certType: CertType) => {
+    setActiveCertType(certType);
+    setDrawerOpen(true);
+  }, []);
+
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerOpen(false);
+  }, []);
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Breadcrumbs */}
       <CustomBreadcrumbs
         heading="Certificates"
         links={[
@@ -57,105 +44,73 @@ const StudentCertificatesScreen = () => {
           { name: 'Student Records', href: '/student/dashboard/' },
           { name: 'Certificates' },
         ]}
-        description="Generate certificates like Bonafide, Leaving, and others here."
+        description="Search a student and generate certificates in seconds — student details are pre-filled automatically."
       />
 
-      <Grid
-        container
-        spacing={1}
-        sx={{
-          mt: 0,
-          flexGrow: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          minHeight: '0',
-        }}
-      >
-        {/* Left Section - Navigation List */}
-        <Grid size={{ xs: 12, md: 3, lg: 2 }} sx={{ height: '100%' }}>
-          <Card sx={{ height: '100%', p: 1 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1,
-              }}
-            >
-              {TABS.map((tab) => {
-                const isSelected = activeTab === tab.value;
-                return (
-                  <Button
-                    key={tab.value}
-                    onClick={() => setSearchParams({ tab: tab.value })}
-                    variant="text"
-                    color="inherit"
-                    startIcon={tab.icon}
-                    sx={{
-                      position: 'relative',
-                      justifyContent: 'flex-start',
-                      px: 2,
-                      py: 1.5,
+      <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minHeight: '100%' }}>
+          {/* Dashboard Metrics */}
+          <DashboardMetrics />
 
-                      textAlign: 'left',
-                      backgroundColor: (theme) =>
-                        isSelected ? theme.palette.action.hover : 'transparent',
-                      color: isSelected ? 'inherit' : 'text.secondary',
-                      // '&:hover': {
-                      //   backgroundColor: (theme) =>
-                      //     isSelected ? theme.palette.primary.light : theme.palette.action.hover,
-                      // },
-
-                      ...(isSelected
-                        ? {
-                            '&::before': {
-                              content: '""',
-                              position: 'absolute',
-                              left: '2px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              width: '4px',
-                              height: '80%',
-                              borderLeft: (theme) =>
-                                isSelected ? `4px solid ${theme.palette.primary.main}` : 'none',
-                            },
-                          }
-                        : {}),
-                    }}
-                  >
-                    {tab.label}
-                  </Button>
-                );
-              })}
-            </Box>
-          </Card>
-        </Grid>
-
-        {/* Right Section - Content */}
-        <Grid size={{ xs: 12, md: 9, lg: 10 }} sx={{ height: '100%' }}>
-          <Box
+          {/* 3-Panel Layout */}
+          <Grid
+            container
+            spacing={1}
             sx={{
-              gap: 1,
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              minHeight: '0',
+              flex: 1,
+              alignItems: 'stretch',
             }}
           >
-            {/* Component Render Section */}
-            <Card sx={{ p: 1, flexGrow: 1 }}>
-              {currentActiveComponent?.component && (
-                <currentActiveComponent.component
-                // addSubjectDialog={addSubjectDialog}
-                // addElectiveGroupDialog={addElectiveGroupDialog}
-                // searchParams={searchParams}
-                // setSearchParams={setSearchParams}
-                />
-              )}{' '}
-            </Card>
-          </Box>
-        </Grid>
-      </Grid>
+            {/* ── Left Panel: Student Search ──────────────────────────────── */}
+            <Grid
+              size={{ xs: 12, md: 3, lg: 2.5 }}
+              sx={{ display: 'flex', flexDirection: 'column' }}
+            >
+              <StudentSearchPanel
+                selectedStudent={selectedStudent}
+                onSelectStudent={handleSelectStudent}
+              />
+            </Grid>
+
+            {/* ── Center Panel: Student Summary ───────────────────────────── */}
+            <Grid
+              size={{ xs: 12, md: 6, lg: 6.5 }}
+              sx={{ display: 'flex', flexDirection: 'column' }}
+            >
+              <StudentSummaryPanel
+                selectedStudent={selectedStudent}
+                onDuplicate={(row) => {
+                  // Map history row type to certType and open drawer for duplicate
+                  const typeMap: Record<string, CertType> = {
+                    Bonafide: 'bonafide',
+                    Character: 'character',
+                    Leaving: 'leaving',
+                    'First Trial': 'firstTrial',
+                  };
+                  const certType = typeMap[row.type];
+                  if (certType) handleGenerate(certType);
+                }}
+              />
+            </Grid>
+
+            {/* ── Right Panel: Certificate Actions ────────────────────────── */}
+            <Grid size={{ xs: 12, md: 3, lg: 3 }} sx={{ display: 'flex', flexDirection: 'column' }}>
+              <CertificateActionsPanel
+                selectedStudent={selectedStudent}
+                onGenerate={handleGenerate}
+              />
+            </Grid>
+          </Grid>
+        </Box>
+      </Scrollbar>
+
+      {/* Certificate Drawer */}
+      <CertificateDrawer
+        open={drawerOpen}
+        onClose={handleCloseDrawer}
+        certType={activeCertType}
+        student={selectedStudent}
+      />
     </Box>
   );
 };

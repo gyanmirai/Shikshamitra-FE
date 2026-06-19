@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -10,29 +10,13 @@ import sortQueryString from 'src/utils/sort-query-string';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Chip, Button, IconButton, Typography } from '@mui/material';
+import { StudentRecordsReportTitle } from 'src/enums/studentRecordsReports';
 
-import AgewiseList from './components/AgewiseList';
-import BirthdayReport from './components/BirthdayReport';
-import AgeWiseSummary from './components/AgeWiseSummary';
-import LeftStudentList from './components/LeftStudentList';
-import StudentRegister from './components/StudentRegister';
-import GenderWiseReport from './components/GenderWiseReport';
-import StudentDetailList from './components/StudentDetailList';
-import StudentListReport from './components/StudentListReport';
+// ── Other categories — existing standalone components (unchanged) ──────────────
 import VerifyStudentData from './components/VerifyStudentData';
-import GenderwiseSummary from './components/GenderwiseSummary';
-import AddressLabelReport from './components/AddressLabelReport';
-import StudentContactList from './components/StudentContactList';
-import ReligionWiseReport from './components/ReligionWiseReport';
-import StudentListIDNoWise from './components/StudentListIDNoWise';
-import AllBirthdayWishListReport from './components/AllBirthdayWishListReport';
-import NewStudentAdmissionReport from './components/NewStudentAdmissionReport';
+// ── Student Lists — centralized form (Student Enrollment Reports pattern) ──────
+import StudentRecordsReportForm from './components/StudentRecordsReportForm';
 import AdmissionCategorywiseList from './components/AdmissionCategorywiseList';
-import StudentRegisterWithAddress from './components/StudentRegisterWithAddress';
-import StudentDetailInformationForm from './components/StudentDetailInformationForm';
-import StudentListDivisionWiseSerialNo from './components/StudentListDivisionWiseSerialNo';
-import GenderwiseStudentStrengthSummary from './components/GenderwiseStudentStrengthSummary';
-import StudentStrengthDivisionWiseSummary from './components/StudentStrengthDivisionWiseSummary';
 
 const StudentReportsScreen = () => {
   const openGenerateReport = useBoolean();
@@ -94,12 +78,14 @@ const StudentReportsScreen = () => {
             },
           ]}
           subCategories={[
-            // Student Lists
+            // ── Student Lists — centralized form (Student Enrollment Reports pattern) ──
             {
               name: 'Address Label Report',
               id: 'address-label-report',
               icon: '',
-              render: () => <AddressLabelReport />,
+              render: () => (
+                <StudentRecordsReportForm report={StudentRecordsReportTitle.AddressLabelReport} />
+              ),
               description: 'Generate address labels for students',
               categoryId: 'Student Lists',
             },
@@ -107,7 +93,9 @@ const StudentReportsScreen = () => {
               name: 'Student Contact List',
               id: 'student-contact-list',
               icon: '',
-              render: () => <StudentContactList />,
+              render: () => (
+                <StudentRecordsReportForm report={StudentRecordsReportTitle.StudentContactList} />
+              ),
               description: 'View student contact information',
               categoryId: 'Student Lists',
             },
@@ -115,39 +103,33 @@ const StudentReportsScreen = () => {
               name: 'Student Detail Information Form',
               id: 'student-detail-information-form',
               icon: '',
-              render: () => <StudentDetailInformationForm />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.StudentDetailInformationForm}
+                />
+              ),
               description: 'Detailed student information form',
               categoryId: 'Student Lists',
             },
             {
-              name: 'Student Detail List',
-              id: 'student-detail-list',
-              icon: '',
-              render: () => <StudentDetailList />,
-              description: 'Comprehensive student details list',
-              categoryId: 'Student Lists',
-            },
-            {
-              name: 'Student List Report',
-              id: 'student-list-report',
-              icon: '',
-              render: () => <StudentListReport />,
-              description: 'General student list report',
-              categoryId: 'Student Lists',
-            },
-            {
-              name: 'Student List - Division Wise Serial No',
+              name: 'Student List – Division Wise Serial No',
               id: 'student-list-division-wise',
               icon: '',
-              render: () => <StudentListDivisionWiseSerialNo />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.StudentListDivisionWiseSerialNo}
+                />
+              ),
               description: 'Student list organized by division serial numbers',
               categoryId: 'Student Lists',
             },
             {
-              name: 'Student List - ID No Wise',
+              name: 'Student List – ID No Wise',
               id: 'student-list-id-wise',
               icon: '',
-              render: () => <StudentListIDNoWise />,
+              render: () => (
+                <StudentRecordsReportForm report={StudentRecordsReportTitle.StudentListIDNoWise} />
+              ),
               description: 'Student list sorted by ID numbers',
               categoryId: 'Student Lists',
             },
@@ -155,7 +137,9 @@ const StudentReportsScreen = () => {
               name: 'Student Register',
               id: 'student-register',
               icon: '',
-              render: () => <StudentRegister />,
+              render: () => (
+                <StudentRecordsReportForm report={StudentRecordsReportTitle.StudentRegister} />
+              ),
               description: 'Official student register',
               categoryId: 'Student Lists',
             },
@@ -163,7 +147,11 @@ const StudentReportsScreen = () => {
               name: 'Student Register With Address',
               id: 'student-register-with-address',
               icon: '',
-              render: () => <StudentRegisterWithAddress />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.StudentRegisterWithAddress}
+                />
+              ),
               description: 'Student register including addresses',
               categoryId: 'Student Lists',
             },
@@ -171,7 +159,11 @@ const StudentReportsScreen = () => {
               name: 'New Student Admission Report',
               id: 'new-student-admission-report',
               icon: '',
-              render: () => <NewStudentAdmissionReport />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.NewStudentAdmissionReport}
+                />
+              ),
               description: 'Report of newly admitted students',
               categoryId: 'Student Lists',
             },
@@ -181,23 +173,21 @@ const StudentReportsScreen = () => {
               name: 'All Birthday Wish List Report',
               id: 'all-birthday-wish-list',
               icon: '',
-              render: () => <AllBirthdayWishListReport />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.AllBirthdayWishListReport}
+                />
+              ),
               description: 'Complete birthday wish list for students',
-              categoryId: 'Birthday & Dates',
-            },
-            {
-              name: 'Birthday Report',
-              id: 'birthday-report',
-              icon: '',
-              render: () => <BirthdayReport />,
-              description: 'Student birthdays by month',
               categoryId: 'Birthday & Dates',
             },
             {
               name: 'Left Student List',
               id: 'left-student-list',
               icon: '',
-              render: () => <LeftStudentList />,
+              render: () => (
+                <StudentRecordsReportForm report={StudentRecordsReportTitle.LeftStudentList} />
+              ),
               description: 'List of students who have left',
               categoryId: 'Birthday & Dates',
             },
@@ -207,7 +197,11 @@ const StudentReportsScreen = () => {
               name: 'Student Strength Division Wise Summary',
               id: 'student-strength-division-wise',
               icon: '',
-              render: () => <StudentStrengthDivisionWiseSummary />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.StudentStrengthDivisionWiseSummary}
+                />
+              ),
               description: 'Student strength summary by division',
               categoryId: 'Summaries',
             },
@@ -215,7 +209,9 @@ const StudentReportsScreen = () => {
               name: 'Age Wise Summary',
               id: 'age-wise-summary',
               icon: '',
-              render: () => <AgeWiseSummary />,
+              render: () => (
+                <StudentRecordsReportForm report={StudentRecordsReportTitle.AgeWiseSummary} />
+              ),
               description: 'Student distribution by age',
               categoryId: 'Summaries',
             },
@@ -223,7 +219,9 @@ const StudentReportsScreen = () => {
               name: 'Agewise List',
               id: 'agewise-list',
               icon: '',
-              render: () => <AgewiseList />,
+              render: () => (
+                <StudentRecordsReportForm report={StudentRecordsReportTitle.AgewiseList} />
+              ),
               description: 'Detailed age-wise student list',
               categoryId: 'Summaries',
             },
@@ -231,7 +229,11 @@ const StudentReportsScreen = () => {
               name: 'Genderwise Student Strength Summary',
               id: 'genderwise-student-strength',
               icon: '',
-              render: () => <GenderwiseStudentStrengthSummary />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.GenderwiseStudentStrengthSummary}
+                />
+              ),
               description: 'Student strength by gender',
               categoryId: 'Summaries',
             },
@@ -239,7 +241,9 @@ const StudentReportsScreen = () => {
               name: 'Genderwise Summary',
               id: 'genderwise-summary',
               icon: '',
-              render: () => <GenderwiseSummary />,
+              render: () => (
+                <StudentRecordsReportForm report={StudentRecordsReportTitle.GenderwiseSummary} />
+              ),
               description: 'Gender distribution summary',
               categoryId: 'Summaries',
             },
@@ -247,7 +251,11 @@ const StudentReportsScreen = () => {
               name: 'Admission Categorywise List',
               id: 'admission-categorywise-list',
               icon: '',
-              render: () => <AdmissionCategorywiseList />,
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.AdmissionCategorywiseList}
+                />
+              ),
               description: 'Students by admission category',
               categoryId: 'Summaries',
             },
@@ -255,26 +263,56 @@ const StudentReportsScreen = () => {
               name: 'Verify Student Data',
               id: 'verify-student-data',
               icon: '',
-              render: () => <VerifyStudentData />,
+              render: () => (
+                <StudentRecordsReportForm report={StudentRecordsReportTitle.VerifyStudentData} />
+              ),
               description: 'Verify and validate student data',
               categoryId: 'Summaries',
             },
 
             // Demographics
             {
-              name: 'Gender Wise Report',
-              id: 'gender-wise-report',
-              icon: '',
-              render: () => <GenderWiseReport />,
-              description: 'Student distribution by gender',
-              categoryId: 'Demographics',
-            },
-            {
               name: 'Religion Wise Report',
               id: 'religion-wise-report',
               icon: '',
-              render: () => <ReligionWiseReport />,
+              render: () => (
+                <StudentRecordsReportForm report={StudentRecordsReportTitle.ReligionWiseReport} />
+              ),
               description: 'Student distribution by religion',
+              categoryId: 'Demographics',
+            },
+            {
+              name: 'Caste Category Wise Report',
+              id: 'caste-category-wise-report',
+              icon: '',
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.CasteCategoryWiseReport}
+                />
+              ),
+              description: 'Student distribution by caste category',
+              categoryId: 'Demographics',
+            },
+            {
+              name: 'Blood Group Wise Report',
+              id: 'blood-group-wise-report',
+              icon: '',
+              render: () => (
+                <StudentRecordsReportForm report={StudentRecordsReportTitle.BloodGroupWiseReport} />
+              ),
+              description: 'Student distribution by blood group',
+              categoryId: 'Demographics',
+            },
+            {
+              name: 'Mother Tongue Wise Report',
+              id: 'mother-tongue-wise-report',
+              icon: '',
+              render: () => (
+                <StudentRecordsReportForm
+                  report={StudentRecordsReportTitle.MotherTongueWiseReport}
+                />
+              ),
+              description: 'Student distribution by mother tongue',
               categoryId: 'Demographics',
             },
             {
