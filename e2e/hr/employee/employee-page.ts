@@ -132,7 +132,9 @@ export async function openFirstRowProfile(page: Page) {
 
 export async function openFirstRowEdit(page: Page) {
   const row = await firstDataRow(page);
-  await row.getByTestId(testIds.editAction).click();
+  const editButton = row.getByTestId(testIds.editAction);
+  await editButton.scrollIntoViewIfNeeded();
+  await editButton.evaluate((element) => (element as HTMLElement).click());
   await expect(page.getByTestId(testIds.employeeForm)).toBeVisible();
 }
 

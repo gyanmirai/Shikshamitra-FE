@@ -209,7 +209,7 @@ const AttendancePolicyBridge = () => (
     <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
       Most schools can run HR attendance with one active default policy: 75% full day, 50% half day,
       missing punches sent for review, manual correction enabled, and payroll impact visible.
-      Detailed late, overtime, holiday, and sandwich rules stay inside Advanced Settings.
+      Detailed late, overtime, and holiday rules stay inside Advanced Settings.
     </Typography>
     <Box>
       <Button

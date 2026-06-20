@@ -22,6 +22,7 @@ type LeaveOverviewMetric = {
   icon: string;
   color: 'success' | 'grey' | 'warning';
   bgColor: string;
+  useLogo?: boolean;
 };
 
 const getPaletteMainColor = (theme: any, colorKey: 'success' | 'grey' | 'warning'): string => {
@@ -79,6 +80,7 @@ const getOverviewMetrics = (overview: LeaveOverviewData): LeaveOverviewMetric[] 
     icon: 'solar:calendar-check-bold-duotone',
     color: 'success',
     bgColor: 'success.lighter',
+    useLogo: true,
   },
   {
     label: 'Accrued',

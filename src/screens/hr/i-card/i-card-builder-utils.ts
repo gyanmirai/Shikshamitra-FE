@@ -97,6 +97,38 @@ export const DEFAULT_PRINT_SETTINGS: ICardPrintSettings = {
   gap: 10,
   showCutMarks: true,
 };
+export const DEFAULT_ICARD_TEXT_COLOR = '#111827';
+
+const normalizeTextElementStyle = (element: ICardLayoutElement): ICardLayoutElement =>
+  element.type === 'text'
+    ? {
+        ...element,
+        style: {
+          color: DEFAULT_ICARD_TEXT_COLOR,
+          ...element.style,
+        },
+      }
+    : element;
+
+const normalizeLayoutTextStyles = (layout: ICardLayout): ICardLayout => {
+  const { back, ...frontLayout } = layout;
+  const normalized: ICardLayout = {
+    ...frontLayout,
+    front: {
+      ...layout.front,
+      elements: layout.front.elements.map(normalizeTextElementStyle),
+    },
+  };
+
+  if (back && Array.isArray(back.elements)) {
+    normalized.back = {
+      ...back,
+      elements: back.elements.map(normalizeTextElementStyle),
+    };
+  }
+
+  return normalized;
+};
 
 export const snapToGrid = (value: number, grid = 4) => Math.round(value / grid) * grid;
 
@@ -115,7 +147,7 @@ export const parseLayoutJson = (value?: string | null): ICardLayout | null => {
   try {
     const parsed = JSON.parse(value) as ICardLayout;
     if (!parsed?.front || !Array.isArray(parsed.front.elements)) return null;
-    return parsed;
+    return normalizeLayoutTextStyles(parsed);
   } catch {
     return null;
   }
@@ -202,7 +234,13 @@ const element = (
   h,
   z,
   visible: true,
-  style,
+  style:
+    type === 'text'
+      ? {
+          color: DEFAULT_ICARD_TEXT_COLOR,
+          ...style,
+        }
+      : style,
   label,
   value,
 });

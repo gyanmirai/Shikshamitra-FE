@@ -2613,15 +2613,15 @@ function CycleDialog({
         <DatePicker
           label="Period Start"
           value={periodStart}
-          onChange={(value) => value && setPeriodStart(value)}
           format="DD/MM/YYYY"
+          onChange={(value) => value && setPeriodStart(value)}
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
         />
         <DatePicker
           label="Period End"
           value={periodEnd}
-          onChange={(value) => value && setPeriodEnd(value)}
           format="DD/MM/YYYY"
+          onChange={(value) => value && setPeriodEnd(value)}
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
         />
       </Stack>

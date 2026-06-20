@@ -8,6 +8,7 @@ import {
   clampElementDimension,
   migrateFieldsToLayout,
   parsePrintSettingsJson,
+  DEFAULT_ICARD_TEXT_COLOR,
   createICardLayoutPreset,
   canNavigateEmployeeICardStep,
   updateICardLayoutElementStyle,
@@ -163,5 +164,97 @@ describe('Employee I-Card builder utilities', () => {
     expect(parsed?.front.elements.find((element) => element.id === 'name')?.style?.color).toBe(
       '#B91C1C'
     );
+  });
+
+  it('defaults ordinary text to a visible card color while preserving explicit colors', () => {
+    const layout = createICardLayoutPreset('formal-staff');
+
+    expect(layout.front.elements.find((element) => element.id === 'name')?.style?.color).toBe(
+      DEFAULT_ICARD_TEXT_COLOR
+    );
+    expect(layout.front.elements.find((element) => element.id === 'school')?.style?.color).toBe(
+      layout.themeColor
+    );
+  });
+
+  it('normalizes legacy layout json so text without color is visible on white cards', () => {
+    const parsed = parseLayoutJson(
+      JSON.stringify({
+        orientation: 'Horizontal',
+        width: 420,
+        height: 260,
+        backgroundColor: '#FFFFFF',
+        themeColor: '#1D4ED8',
+        front: {
+          elements: [
+            {
+              id: 'name',
+              type: 'text',
+              fieldKey: 'name',
+              x: 12,
+              y: 12,
+              w: 120,
+              h: 24,
+              z: 1,
+              visible: true,
+              style: { fontSize: 12 },
+            },
+            {
+              id: 'school',
+              type: 'text',
+              fieldKey: 'schoolName',
+              x: 12,
+              y: 40,
+              w: 120,
+              h: 24,
+              z: 2,
+              visible: true,
+              style: { color: '#FFFFFF' },
+            },
+          ],
+        },
+      })
+    );
+
+    expect(parsed?.front.elements.find((element) => element.id === 'name')?.style?.color).toBe(
+      DEFAULT_ICARD_TEXT_COLOR
+    );
+    expect(parsed?.front.elements.find((element) => element.id === 'school')?.style?.color).toBe(
+      '#FFFFFF'
+    );
+  });
+
+  it('preserves a valid front layout when legacy back data is malformed', () => {
+    const parsed = parseLayoutJson(
+      JSON.stringify({
+        orientation: 'Horizontal',
+        width: 420,
+        height: 260,
+        backgroundColor: '#FFFFFF',
+        themeColor: '#1D4ED8',
+        front: {
+          elements: [
+            {
+              id: 'name',
+              type: 'text',
+              fieldKey: 'name',
+              x: 12,
+              y: 12,
+              w: 120,
+              h: 24,
+              z: 1,
+              visible: true,
+              style: { fontSize: 12 },
+            },
+          ],
+        },
+        back: {},
+      })
+    );
+
+    expect(parsed?.front.elements.find((element) => element.id === 'name')?.style?.color).toBe(
+      DEFAULT_ICARD_TEXT_COLOR
+    );
+    expect(parsed?.back).toBeUndefined();
   });
 });

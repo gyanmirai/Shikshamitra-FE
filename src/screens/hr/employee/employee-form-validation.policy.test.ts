@@ -153,6 +153,30 @@ describe('employee form contract validation', () => {
     ).resolves.toBeTruthy();
   });
 
+  it('allows blank PAN and Aadhaar numbers when editing existing employees', async () => {
+    const editSchema = getPersonalInformationValidationSchema({
+      requirePhoto: false,
+      requireIdentity: false,
+    });
+
+    await expect(editSchema.validateAt('panNo', { panNo: '' })).resolves.toBe('');
+    await expect(editSchema.validateAt('adharNo', { adharNo: '' })).resolves.toBe('');
+  });
+
+  it('rejects invalid nonblank PAN and Aadhaar numbers when editing existing employees', async () => {
+    const editSchema = getPersonalInformationValidationSchema({
+      requirePhoto: false,
+      requireIdentity: false,
+    });
+
+    await expect(editSchema.validateAt('panNo', { panNo: 'BADPAN' })).rejects.toThrow(
+      'PAN must be in format: AAAAA9999A (5 letters, 4 digits, 1 letter)'
+    );
+    await expect(editSchema.validateAt('adharNo', { adharNo: '123' })).rejects.toThrow(
+      'Aadhaar number must be 12 digits'
+    );
+  });
+
   it('allows ongoing work experience without an end date', async () => {
     await expect(
       workExperienceValidationSchema.validateAt('experiences[0].endDate', {

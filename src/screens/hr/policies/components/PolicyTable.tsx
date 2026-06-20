@@ -12,7 +12,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { Card, Chip, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
 
 import { InfoTooltipIcon } from './HRPolicySharedUI';
-import { formatDate, getErrorMessage } from '../hr-policy-workspace-utils';
+import {
+  formatDate,
+  getErrorMessage,
+  selectSingleActiveDefaultPolicy,
+} from '../hr-policy-workspace-utils';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 
@@ -93,6 +97,9 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
   const isLoading = type === 'payroll' ? payrollLoading : attendanceLoading;
   const archivedCount = type === 'payroll' ? archivedPayrollCount : archivedAttendanceCount;
   const isCurrent = policyArchiveView[type] === 'current';
+  const currentDefaultPolicyId = selectSingleActiveDefaultPolicy(
+    items as Array<{ id: string; status?: string; isDefault?: boolean }>
+  )?.id;
 
   const columns: IColumn[] = [
     { id: 'name', label: 'Name', minWidth: 160, sticky: true, stickyPosition: 'left' },
@@ -154,7 +161,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         return (
           <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
             <Label color={color}>{statusValue}</Label>
-            {row.isDefault ? (
+            {row.isCurrentDefault ? (
               <Chip size="small" label="Default" color="primary" variant="outlined" />
             ) : null}
           </Stack>
@@ -172,6 +179,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
       render: (_, row) => {
         const item = row.policyItem as PayrollPolicy | AttendancePolicy;
         const isPayroll = type === 'payroll';
+        const isCurrentDefault = row.isCurrentDefault;
         return (
           <ThreeDotsActions
             showViewIcon={canPreviewImpact}
@@ -201,7 +209,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
                 {canSetDefaultPolicy && (
                   <MenuItem
                     disabled={
-                      item.isDefault ||
+                      isCurrentDefault ||
                       item.status !== 'active' ||
                       payrollDefaultState.isLoading ||
                       attendanceDefaultState.isLoading
@@ -212,7 +220,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
                     }}
                   >
                     <Iconify icon="mdi:star-check-outline" />
-                    {item.isDefault ? 'Current Default' : 'Set as Default'}
+                    {isCurrentDefault ? 'Current Default' : 'Set as Default'}
                   </MenuItem>
                 )}
                 {canViewAudit && (
@@ -277,7 +285,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
     policyItem: item,
     name: item.name,
     status: item.status,
-    isDefault: item.isDefault,
+    isCurrentDefault: currentDefaultPolicyId === item.id,
     calendar: calendars.find((c) => c.id === item.workCalendarPolicyId)?.name || '-',
     modeOrThresholds:
       'dayCalculationType' in item

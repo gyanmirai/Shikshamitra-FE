@@ -9,6 +9,7 @@ export type AttendanceNumericField =
   | 'graceTime'
   | 'maxLateAllowedPerMonth'
   | 'penaltyCountThreshold'
+  | 'penaltyDeductionAmount'
   | 'earlyExitGraceTime'
   | 'minOvertimeMinutes';
 
@@ -37,6 +38,13 @@ export const attendanceNumericRules: Record<AttendanceNumericField, AttendanceNu
     label: 'Monthly Late Allowance',
   },
   penaltyCountThreshold: { min: 0, max: 31, maxLength: 2, label: 'Apply Penalty After' },
+  penaltyDeductionAmount: {
+    min: 1,
+    max: 1000000,
+    maxLength: 7,
+    label: 'Penalty deduction amount',
+    allowEmpty: true,
+  },
   earlyExitGraceTime: { min: 0, max: 240, maxLength: 3, label: 'Early exit grace minutes' },
   minOvertimeMinutes: {
     min: 0,

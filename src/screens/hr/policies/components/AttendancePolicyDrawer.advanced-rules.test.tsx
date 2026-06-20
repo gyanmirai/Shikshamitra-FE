@@ -31,13 +31,13 @@ const baseAttendanceForm: AttendanceForm = {
   maxLateAllowedPerMonth: '3',
   penaltyType: 'none',
   penaltyCountThreshold: '3',
+  penaltyDeductionAmount: '',
   earlyExitEnabled: false,
   earlyExitGraceTime: '0',
   overtimeEnabled: false,
   overtimeRate: '',
   minOvertimeMinutes: '',
   holidayWorkBehavior: 'comp_off',
-  sandwichRuleEnabled: false,
   payrollPreviewEnabled: true,
 };
 
@@ -84,8 +84,9 @@ describe('AttendancePolicyDrawer advanced rules', () => {
     expect(screen.getByText('Late Arrival Policy')).toBeInTheDocument();
     expect(screen.getByText('Early Exit Policy')).toBeInTheDocument();
     expect(screen.getByText('Overtime Policy')).toBeInTheDocument();
-    expect(screen.getByText('Holiday & Leave Rules')).toBeInTheDocument();
+    expect(screen.getByText('Holiday Rules')).toBeInTheDocument();
     expect(screen.queryByText('Apply Penalty After')).not.toBeInTheDocument();
+    expect(screen.queryByText('Deduction Amount')).not.toBeInTheDocument();
     expect(screen.queryByText('Minimum Overtime Minutes')).not.toBeInTheDocument();
     expect(screen.getByText('Penalty Action')).toBeInTheDocument();
     expect(screen.getByText('Track Early Exit')).toBeInTheDocument();
@@ -111,6 +112,22 @@ describe('AttendancePolicyDrawer advanced rules', () => {
     expect(screen.getByText('Minimum Overtime Minutes')).toBeInTheDocument();
     expect(screen.getByText('Calculation Method')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Multiplier (1.5x)')).toBeInTheDocument();
+  });
+
+  it('shows deduction amount only for salary deduction penalty', () => {
+    renderWithProviders(
+      <AttendancePolicyDrawerHarness
+        initialForm={{
+          ...baseAttendanceForm,
+          penaltyType: 'salary_deduction',
+          penaltyDeductionAmount: '250',
+        }}
+      />
+    );
+
+    expect(screen.getByText('Deduction Amount')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('250')).toBeInTheDocument();
+    expect(screen.getByText(/Salary Deduction applies after 3 violations at INR 250 each/i)).toBeInTheDocument();
   });
 
   it('updates the summary from form state', () => {

@@ -136,6 +136,18 @@ const getRuleFromPolicy = (policy: ILeavePolicy | null | undefined, paidType: Le
     (rule) => rule?.isActive !== false && normalizePaidType(rule?.paidType) === paidType
   );
 
+const ruleCheckboxSx = {
+  m: 0,
+  width: '100%',
+  minHeight: 40,
+  alignItems: 'center',
+  '& .MuiFormControlLabel-label': {
+    fontSize: 14,
+    lineHeight: 1.25,
+    overflowWrap: 'anywhere',
+  },
+};
+
 const validateRule = (rule: LeavePolicyRuleFormValue) => {
   const label = rule.paidType;
   if (rule.entitlementMode === 'Limited' && Number(rule.leaveCount) < 0) {
@@ -428,7 +440,7 @@ function RuleSection({
           </Label>
         </Stack>
 
-        <Grid container spacing={1.5}>
+        <Grid container spacing={1.5} alignItems="stretch">
           {!isPaid ? (
             <Grid size={{ xs: 12, md: 3 }}>
               <FormControl fullWidth size="small">
@@ -555,67 +567,79 @@ function RuleSection({
             </Grid>
           ) : null}
 
-          <Grid size={12}>
-            <Stack direction="row" spacing={3} flexWrap="wrap" sx={{ mt: 1 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={rule.requiresApproval}
-                    onChange={(event) =>
-                      setRuleValue(bucket, 'requiresApproval', event.target.checked)
-                    }
-                  />
-                }
-                label="Approval"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={rule.allowHalfDay}
-                    onChange={(event) => setRuleValue(bucket, 'allowHalfDay', event.target.checked)}
-                  />
-                }
-                label="Half day"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={rule.allowNegativeBalance}
-                    onChange={(event) =>
-                      setRuleValue(bucket, 'allowNegativeBalance', event.target.checked)
-                    }
-                  />
-                }
-                label="Negative balance"
-              />
-              {isPaid ? (
-                <>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={rule.carryForward}
-                        onChange={(event) =>
-                          setRuleValue(bucket, 'carryForward', event.target.checked)
-                        }
-                      />
-                    }
-                    label="Carry forward"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={rule.encashmentAllowed}
-                        onChange={(event) =>
-                          setRuleValue(bucket, 'encashmentAllowed', event.target.checked)
-                        }
-                      />
-                    }
-                    label="Encashable"
-                  />
-                </>
-              ) : null}
-            </Stack>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <FormControlLabel
+              sx={ruleCheckboxSx}
+              control={
+                <Checkbox
+                  checked={rule.requiresApproval}
+                  onChange={(event) =>
+                    setRuleValue(bucket, 'requiresApproval', event.target.checked)
+                  }
+                />
+              }
+              label="Approval"
+            />
           </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <FormControlLabel
+              sx={ruleCheckboxSx}
+              control={
+                <Checkbox
+                  checked={rule.allowHalfDay}
+                  onChange={(event) => setRuleValue(bucket, 'allowHalfDay', event.target.checked)}
+                />
+              }
+              label="Half day"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <FormControlLabel
+              sx={ruleCheckboxSx}
+              control={
+                <Checkbox
+                  checked={rule.allowNegativeBalance}
+                  onChange={(event) =>
+                    setRuleValue(bucket, 'allowNegativeBalance', event.target.checked)
+                  }
+                />
+              }
+              label="Negative balance"
+            />
+          </Grid>
+
+          {isPaid ? (
+            <>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <FormControlLabel
+                  sx={ruleCheckboxSx}
+                  control={
+                    <Checkbox
+                      checked={rule.carryForward}
+                      onChange={(event) =>
+                        setRuleValue(bucket, 'carryForward', event.target.checked)
+                      }
+                    />
+                  }
+                  label="Carry forward"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <FormControlLabel
+                  sx={ruleCheckboxSx}
+                  control={
+                    <Checkbox
+                      checked={rule.encashmentAllowed}
+                      onChange={(event) =>
+                        setRuleValue(bucket, 'encashmentAllowed', event.target.checked)
+                      }
+                    />
+                  }
+                  label="Encashable"
+                />
+              </Grid>
+            </>
+          ) : null}
         </Grid>
       </Stack>
     </Paper>

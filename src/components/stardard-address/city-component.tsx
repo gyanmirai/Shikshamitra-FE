@@ -2,8 +2,33 @@ import type { ICity, IState, ICountry } from 'country-state-city';
 import type { TextFieldProps, AutocompleteProps } from '@mui/material';
 
 import React, { useMemo } from 'react';
-import { City } from 'country-state-city';
+import { City, State } from 'country-state-city';
 import { TextField, Typography, Autocomplete } from '@mui/material';
+
+export const resolveCityComponentStateCode = (
+  stateValue?: Partial<IState>,
+  countryValue?: Partial<ICountry>
+) => {
+  const countryCode = stateValue?.countryCode || countryValue?.isoCode || '';
+  if (!countryCode) {
+    return '';
+  }
+
+  if (stateValue?.isoCode) {
+    return stateValue.isoCode;
+  }
+
+  const stateName = stateValue?.name?.trim().toLowerCase();
+  if (!stateName) {
+    return '';
+  }
+
+  return (
+    State.getStatesOfCountry(countryCode).find(
+      (state) => state.name.trim().toLowerCase() === stateName
+    )?.isoCode || ''
+  );
+};
 
 const CityComponent = ({
   onChange,
@@ -23,15 +48,17 @@ const CityComponent = ({
       textFieldProps?: Partial<TextFieldProps>;
     }
 >) => {
+  const countryCode = stateValue?.countryCode || countryValue?.isoCode || '';
+  const stateCode = useMemo(
+    () => resolveCityComponentStateCode(stateValue, countryValue),
+    [countryValue, stateValue]
+  );
   const allCities = useMemo(
     () =>
-      stateValue
-        ? City.getCitiesOfState(
-            (stateValue?.countryCode || countryValue?.isoCode) as string,
-            stateValue?.isoCode as string
-          )
+      stateValue?.name && countryCode && stateCode
+        ? City.getCitiesOfState(countryCode, stateCode)
         : [],
-    [stateValue, countryValue]
+    [countryCode, stateCode, stateValue?.name]
   );
   return (
     <Autocomplete
@@ -56,7 +83,7 @@ const CityComponent = ({
           </li>
         );
       }}
-      disabled={!stateValue?.name}
+      disabled={!stateValue?.name || !countryCode || !stateCode}
       options={allCities || []}
       getOptionLabel={(option: any) => `${option?.name || ''}`}
       renderInput={(params) => (

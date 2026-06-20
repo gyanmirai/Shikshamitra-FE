@@ -106,6 +106,7 @@ export async function findEmployeeBySearch(page: Page, search: string) {
 
 type EmployeeDefaultOverrides = {
   dateOfJoining?: string;
+  roleId?: string;
   shiftId?: string;
 };
 
@@ -173,7 +174,11 @@ export async function createEmployeeFromExistingDefaults(
         typeof value === 'string' &&
         value.trim() &&
         value !== '00000000-0000-0000-0000-000000000000';
-      const roleId = isUsableId(defaults.roleId) ? defaults.roleId : fallbackRole?.id;
+      const roleId = isUsableId(evaluatedOverrides.roleId)
+        ? evaluatedOverrides.roleId
+        : isUsableId(defaults.roleId)
+          ? defaults.roleId
+          : fallbackRole?.id;
       const shiftId = isUsableId(defaults.shiftId) ? defaults.shiftId : fallbackShift?.id;
       const body = {
         firstName: evaluatedFixture.firstName,

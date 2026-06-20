@@ -86,13 +86,13 @@ const baseAttendance: AttendancePolicy = {
   maxLateAllowedPerMonth: 0,
   penaltyType: 'none',
   penaltyCountThreshold: 0,
+  penaltyDeductionAmount: null,
   earlyExitEnabled: false,
   earlyExitGraceTime: 0,
   overtimeEnabled: false,
   overtimeRate: null,
   minOvertimeMinutes: null,
   holidayWorkBehavior: 'paid',
-  sandwichRuleEnabled: false,
   payrollPreviewEnabled: true,
   version: 1,
 };
@@ -113,13 +113,13 @@ const baseAttendancePayload: CreateUpdateAttendancePolicy = {
   maxLateAllowedPerMonth: 0,
   penaltyType: 'none',
   penaltyCountThreshold: 0,
+  penaltyDeductionAmount: null,
   earlyExitEnabled: false,
   earlyExitGraceTime: 0,
   overtimeEnabled: false,
   overtimeRate: null,
   minOvertimeMinutes: null,
   holidayWorkBehavior: 'paid',
-  sandwichRuleEnabled: false,
   payrollPreviewEnabled: true,
 };
 
@@ -195,7 +195,6 @@ describe('hr policy change utilities', () => {
         overtimeRate: '',
         minOvertimeMinutes: null,
         holidayWorkBehavior: 'paid',
-        sandwichRuleEnabled: false,
         payrollPreviewEnabled: true,
       })
     ).toBe(true);
@@ -220,13 +219,13 @@ describe('hr policy change utilities', () => {
       ...baseAttendance,
       penaltyType: 'deduct_half_day',
       penaltyCountThreshold: 2,
+      penaltyDeductionAmount: null,
       earlyExitEnabled: true,
       earlyExitGraceTime: 5,
       overtimeEnabled: true,
       overtimeRate: '1.5x',
       minOvertimeMinutes: 30,
       holidayWorkBehavior: 'ot_payout',
-      sandwichRuleEnabled: true,
     };
 
     expect(
@@ -234,13 +233,13 @@ describe('hr policy change utilities', () => {
         ...baseAttendancePayload,
         penaltyType: 'deduct_half_day',
         penaltyCountThreshold: 2,
+        penaltyDeductionAmount: null,
         earlyExitEnabled: true,
         earlyExitGraceTime: 5,
         overtimeEnabled: true,
         overtimeRate: '1.5x',
         minOvertimeMinutes: 30,
         holidayWorkBehavior: 'ot_payout',
-        sandwichRuleEnabled: true,
       })
     ).toBe(true);
   });
@@ -258,6 +257,40 @@ describe('hr policy change utilities', () => {
         overtimeEnabled: true,
         overtimeRate: 'flat',
       })
+    ).toBe(true);
+  });
+
+  it('compares salary deduction amount only for salary deduction penalties', () => {
+    const salaryDeductionAttendance: AttendancePolicy = {
+      ...baseAttendance,
+      penaltyType: 'salary_deduction',
+      penaltyCountThreshold: 1,
+      penaltyDeductionAmount: 250,
+    };
+
+    expect(
+      isAttendancePolicyUnchanged(salaryDeductionAttendance, {
+        ...baseAttendancePayload,
+        penaltyType: 'salary_deduction',
+        penaltyCountThreshold: 1,
+        penaltyDeductionAmount: 250,
+      })
+    ).toBe(true);
+
+    expect(
+      isAttendancePolicyUnchanged(salaryDeductionAttendance, {
+        ...baseAttendancePayload,
+        penaltyType: 'salary_deduction',
+        penaltyCountThreshold: 1,
+        penaltyDeductionAmount: 300,
+      })
+    ).toBe(false);
+
+    expect(
+      isAttendancePolicyUnchanged(
+        { ...baseAttendance, penaltyDeductionAmount: 250 },
+        { ...baseAttendancePayload, penaltyDeductionAmount: 999 }
+      )
     ).toBe(true);
   });
 });

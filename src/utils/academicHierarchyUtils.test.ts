@@ -1,37 +1,41 @@
 import { it, expect, describe } from 'vitest';
 
 import {
+  hasAccessSelection,
   getScopedAcademicData,
   getScopedAcademicYears,
   expandAccessibleHierarchy,
+  emptyAccessSelection,
   getGlobalAcademicSearchOptions,
+  compressExplicitAcademicSelection,
   getValidGlobalAcademicSelection,
   getScopedSelectedAcademicOption,
 } from './academicHierarchyUtils';
 
 describe('expandAccessibleHierarchy', () => {
+  const allBoards = [
+    {
+      id: 'board-1',
+      educationMediums: [
+        {
+          id: 'medium-english',
+          educationMediumStages: [
+            {
+              id: 'stage-primary',
+              standards: [
+                {
+                  id: 'std-1',
+                  divisions: [{ id: 'div-a' }, { id: 'div-b' }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
   it('expands a parent medium selection into all child stages, standards, and divisions', () => {
-    const allBoards = [
-      {
-        id: 'board-1',
-        educationMediums: [
-          {
-            id: 'medium-english',
-            educationMediumStages: [
-              {
-                id: 'stage-primary',
-                standards: [
-                  {
-                    id: 'std-1',
-                    divisions: [{ id: 'div-a' }, { id: 'div-b' }],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    ];
     const accessControl = {
       accessibleHierarchy: [
         {
@@ -59,6 +63,55 @@ describe('expandAccessibleHierarchy', () => {
       organizations: ['stage-primary'],
       standards: ['std-1'],
       divisions: ['div-a', 'div-b'],
+    });
+  });
+
+  it('compresses expanded parent access back to the explicit parent payload', () => {
+    expect(
+      compressExplicitAcademicSelection(
+        {
+          boards: [],
+          mediums: ['medium-english'],
+          organizations: ['stage-primary'],
+          standards: ['std-1'],
+          divisions: ['div-a', 'div-b'],
+        },
+        allBoards
+      )
+    ).toEqual({
+      boards: [],
+      mediums: ['medium-english'],
+      organizations: [],
+      standards: [],
+      divisions: [],
+    });
+  });
+
+  it('returns empty arrays for empty selections without marking access present', () => {
+    const compressed = compressExplicitAcademicSelection(emptyAccessSelection(), allBoards);
+
+    expect(compressed).toEqual(emptyAccessSelection());
+    expect(hasAccessSelection(compressed)).toBe(false);
+  });
+
+  it('does not escalate child-only selections to a parent payload', () => {
+    expect(
+      compressExplicitAcademicSelection(
+        {
+          boards: [],
+          mediums: [],
+          organizations: ['stage-primary'],
+          standards: ['std-1'],
+          divisions: ['div-a', 'div-b'],
+        },
+        allBoards
+      )
+    ).toEqual({
+      boards: [],
+      mediums: [],
+      organizations: ['stage-primary'],
+      standards: [],
+      divisions: [],
     });
   });
 });

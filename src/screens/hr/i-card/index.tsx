@@ -37,6 +37,7 @@ import {
   Stack,
   Button,
   Checkbox,
+  IconButton,
   TextField,
   Typography,
   ToggleButton,
@@ -62,6 +63,7 @@ import {
   clampElementDimension,
   migrateFieldsToLayout,
   DEFAULT_PRINT_SETTINGS,
+  DEFAULT_ICARD_TEXT_COLOR,
   parsePrintSettingsJson,
   type ICardLayoutElement,
   type ICardPrintSettings,
@@ -1667,42 +1669,53 @@ const DesignerCanvas = ({
             {state.layout.front.elements
               .filter((element) => element.type !== 'shape' && element.type !== 'line')
               .map((element) => (
-                <Stack
+                <Paper
                   key={element.id}
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  spacing={1}
+                  variant="outlined"
+                  onClick={() => onSelect(element.id)}
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 1fr) 34px',
+                    alignItems: 'center',
+                    minHeight: 36,
+                    px: 1,
+                    py: 0.25,
+                    borderRadius: 1,
+                    cursor: 'pointer',
+                    borderColor:
+                      state.selectedElementId === element.id ? 'primary.main' : 'divider',
+                    bgcolor:
+                      state.selectedElementId === element.id
+                        ? 'action.selected'
+                        : 'background.paper',
+                  }}
                 >
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => onSelect(element.id)}
+                  <Typography
+                    variant="caption"
+                    title={String(element.label || element.fieldKey || element.type)}
                     sx={{
-                      justifyContent: 'flex-start',
-                      flex: 1,
-                      height: 32,
-                      ...(state.selectedElementId === element.id && {
-                        bgcolor: 'common.white',
-                        color: 'common.black',
-                        borderColor: 'common.white',
-                        '&:hover': {
-                          bgcolor: 'rgba(255, 255, 255, 0.9)',
-                          borderColor: 'rgba(255, 255, 255, 0.9)',
-                        },
-                      }),
+                      minWidth: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      fontWeight: state.selectedElementId === element.id ? 800 : 600,
+                      color: 'text.primary',
                     }}
                   >
                     {element.label || element.fieldKey || element.type}
-                  </Button>
+                  </Typography>
                   <Checkbox
                     size="small"
                     checked={element.visible}
+                    inputProps={{
+                      'aria-label': `Toggle ${element.label || element.fieldKey || element.type}`,
+                    }}
+                    onClick={(event) => event.stopPropagation()}
                     onChange={(event) =>
                       onElementChange(element.id, { visible: event.target.checked })
                     }
                   />
-                </Stack>
+                </Paper>
               ))}
           </Stack>
         </Paper>
@@ -1792,27 +1805,36 @@ const DesignerCanvas = ({
                 />
               </Stack>
               <Stack direction="row" spacing={1}>
-                <Button size="small" onClick={() => onElementChange(selected.id, { x: 16 })}>
-                  Left
-                </Button>
-                <Button
-                  size="small"
-                  onClick={() =>
-                    onElementChange(selected.id, {
-                      x: Math.round((state.layout.width - selected.w) / 2),
-                    })
-                  }
-                >
-                  Center
-                </Button>
-                <Button
-                  size="small"
-                  onClick={() =>
-                    onElementChange(selected.id, { x: state.layout.width - selected.w - 16 })
-                  }
-                >
-                  Right
-                </Button>
+                <CustomTooltip title="Align left">
+                  <IconButton
+                    size="small"
+                    onClick={() => onElementChange(selected.id, { x: 16 })}
+                  >
+                    <Iconify icon="mdi:format-align-left" width={18} />
+                  </IconButton>
+                </CustomTooltip>
+                <CustomTooltip title="Align center">
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      onElementChange(selected.id, {
+                        x: Math.round((state.layout.width - selected.w) / 2),
+                      })
+                    }
+                  >
+                    <Iconify icon="mdi:format-align-center" width={18} />
+                  </IconButton>
+                </CustomTooltip>
+                <CustomTooltip title="Align right">
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      onElementChange(selected.id, { x: state.layout.width - selected.w - 16 })
+                    }
+                  >
+                    <Iconify icon="mdi:format-align-right" width={18} />
+                  </IconButton>
+                </CustomTooltip>
               </Stack>
               {selected.type === 'text' && (
                 <>
@@ -1829,7 +1851,7 @@ const DesignerCanvas = ({
                     label="Text color"
                     type="color"
                     size="small"
-                    value={selected.style?.color || '#111827'}
+                    value={selected.style?.color || DEFAULT_ICARD_TEXT_COLOR}
                     onChange={(event) => onElementStyleChange({ color: event.target.value })}
                   />
                   <FormControlLabel
@@ -2127,7 +2149,7 @@ const LayoutElementPreview = ({
     <Typography
       noWrap
       sx={{
-        color: style.color || '#111827',
+        color: style.color || DEFAULT_ICARD_TEXT_COLOR,
         fontSize: style.fontSize || 10,
         fontWeight: style.fontWeight || 400,
         textAlign: style.textAlign || 'left',

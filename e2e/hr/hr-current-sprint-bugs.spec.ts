@@ -296,7 +296,6 @@ async function createLateArrivalSalaryDeductionPolicy(page: Page, effectivePolic
       overtimeRate: attendancePolicy?.overtimeRate || '1.0x',
       minOvertimeMinutes: attendancePolicy?.minOvertimeMinutes ?? 0,
       holidayWorkBehavior: attendancePolicy?.holidayWorkBehavior || 'paid',
-      sandwichRuleEnabled: attendancePolicy?.sandwichRuleEnabled ?? false,
       payrollPreviewEnabled: true,
     }),
   });

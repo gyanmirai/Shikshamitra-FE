@@ -396,7 +396,6 @@ const HrEmployee = () => {
         width: 92,
         minWidth: 84,
         align: 'left',
-        sticky: true,
         render(value, row) {
           const color = EmployeeStatusTypeColor[row.status as EmployeeStatusType] as LabelColor;
           return <Label color={color}>{EmployeeStatusType[value]}</Label>;

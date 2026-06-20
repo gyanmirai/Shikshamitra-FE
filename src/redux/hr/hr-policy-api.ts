@@ -96,13 +96,13 @@ export type AttendancePolicy = {
   maxLateAllowedPerMonth: number;
   penaltyType: string;
   penaltyCountThreshold: number;
+  penaltyDeductionAmount?: number | null;
   earlyExitEnabled: boolean;
   earlyExitGraceTime: number;
   overtimeEnabled: boolean;
   overtimeRate?: string | null;
   minOvertimeMinutes?: number | null;
   holidayWorkBehavior: string;
-  sandwichRuleEnabled: boolean;
   payrollPreviewEnabled: boolean;
   version: number;
   creationTime?: string | null;

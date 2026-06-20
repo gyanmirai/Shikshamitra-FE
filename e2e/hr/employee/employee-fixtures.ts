@@ -1,6 +1,9 @@
 export type EmployeeFixture = ReturnType<typeof createEmployeeFixture>;
 
-const randomSuffix = () => `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+const randomSuffix = () =>
+  `${Date.now()}${Math.floor(Math.random() * 1_000_000_000)
+    .toString()
+    .padStart(9, '0')}`;
 
 const alphaSuffix = (value: string) =>
   value
@@ -11,7 +14,7 @@ const alphaSuffix = (value: string) =>
 export function createEmployeeFixture(prefix = 'Automation Employee') {
   const suffix = randomSuffix();
   const nameSuffix = alphaSuffix(suffix);
-  const panLetters = nameSuffix.padEnd(6, 'A');
+  const panLetters = nameSuffix.slice(-6).padEnd(6, 'A');
 
   return {
     suffix,
