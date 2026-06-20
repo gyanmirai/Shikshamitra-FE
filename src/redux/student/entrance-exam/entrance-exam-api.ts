@@ -4,9 +4,10 @@ import { entranceExamType } from 'src/redux/tagTypes';
 export const EntranceExamApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getEntranceExam: builder.query({
-      query: ({ startDate, endDate, educationMediumId }) => ({
-        url: `/student-enrollment/entrance-exam?StartDate=${startDate}&EndDate=${endDate}&EducationMediumId=${educationMediumId}`,
+      query: (params) => ({
+        url: `/student-enrollment/entrance-exam`,
         method: 'GET',
+        params,
       }),
       providesTags: [entranceExamType.entranceExam],
     }),

@@ -45,7 +45,6 @@ import {
   useGetEntranceExamQuery,
   useAddEntranceExamMutation,
   useUpdateEntranceExamMutation,
-  useLazyGetStudentForSlotByDateQuery,
 } from 'src/redux/student/entrance-exam/entrance-exam-api';
 import {
   Box,
@@ -112,8 +111,8 @@ const EntranceExamScreen = () => {
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamQuery,
     params: {
-      startDate: dateConvertor(startDate?.format(dateFormat) || '', true),
-      endDate: dateConvertor(endDate?.format(dateFormat) || '', true),
+      startDate: dateConvertor(startDate?.format(dateFormat) || ''),
+      endDate: dateConvertor(endDate?.format(dateFormat) || ''),
       educationMediumId: currentMedium.id,
       ...query,
     },
@@ -842,8 +841,6 @@ export const ExamForm = ({
   studentEnrollmentId: string;
   handleClose: (_e: any, isSubmit: boolean) => void;
 }) => {
-  // State to store all available exam slots
-  const [allSlots, setAllSlots] = useState<any[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Dialog state for slot management
@@ -862,9 +859,8 @@ export const ExamForm = ({
   // Query hook to fetch exam slots
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-
   const formik = useFormik({
-    initialValues: { examDate: dayjs(), isConfirmed: false, slots: allSlots || [], slot: '' },
+    initialValues: { examDate: dayjs(), isConfirmed: false, slots: [] as any[], slot: '' },
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -891,8 +887,8 @@ export const ExamForm = ({
     currentQueryAndMutation: useGetEntranceExamSlotQuery,
     params: {
       academicYearId: currentYear?.id || '',
-      startDate: dateConvertor(dayjs(formik.values.examDate).format(dateFormat), true),
-      endDate: dateConvertor(dayjs(formik.values.examDate).format(dateFormat), true),
+      StartDateTime: dateConvertor(dayjs(formik.values.examDate).startOf('day').format(dateFormat)),
+      EndDateTime: dateConvertor(dayjs(formik.values.examDate).endOf('day').format(dateFormat)),
     },
   });
 
@@ -902,52 +898,9 @@ export const ExamForm = ({
     currentQueryAndMutation: useAddEntranceExamMutation,
   });
 
-  // Query hook to get student count for slots
-  const [getStudentCountByDate, { isLoading: isStudentCountLoading }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useLazyGetStudentForSlotByDateQuery,
-  });
-
-  // Callback function to fetch student count for a specific slot and date
-  const getStudentCount = useCallback(
-    async (slotId: string, date: string) => {
-      try {
-        const res = await getStudentCountByDate({ slotId, examDate: date }).unwrap();
-        return res.studentCount;
-      } catch (e) {
-        return 0;
-      }
-    },
-    [getStudentCountByDate]
-  );
-
   // Formik instance for form handling
 
-  const handleGetAllStudentCount = useCallback(
-    async (date: string) => {
-      if (!slots?.items?.length) return;
-
-      try {
-        const formattedDate = dateConvertor(dayjs(date).format(dateFormat), true);
-
-        const updatedSlots = await Promise.all(
-          slots.items.map(async (slot: any) => {
-            const label = `${dayjs(slot.startDate).format('hh:mm A')} to ${dayjs(slot.endDate).format('hh:mm A')}`;
-            const studentCount = await getStudentCount(slot.id, formattedDate);
-
-            return { ...slot, label, value: slot.id, studentCount };
-          })
-        );
-
-        setAllSlots(updatedSlots);
-      } catch (error) {
-        console.error('Failed to fetch student counts:', error);
-      }
-    },
-    [getStudentCount, slots?.items]
-  );
-
-  // Effect to update form slots when allSlots changes
+  // Effect to update form slots when slots changes
   useEffect(() => {
     formik.setFieldValue('slots', slots?.items || []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1037,9 +990,6 @@ export const ExamForm = ({
               value={formik.values.examDate}
               onChange={(value) => {
                 formik.setFieldValue('examDate', value);
-                if (value) {
-                  handleGetAllStudentCount(dayjs(value).format('YYYY-MM-DD'));
-                }
               }}
               disablePast
               slots={{
@@ -1188,7 +1138,7 @@ export const ExamForm = ({
               </Box>
 
               {/* Slot cards */}
-              {isStudentCountLoading || isSlotsLoading ? (
+              {isSlotsLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                   <Box className="loader" height={24} />
                 </Box>

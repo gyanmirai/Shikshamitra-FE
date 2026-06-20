@@ -435,8 +435,8 @@ const IdentificationSection: React.FC<SectionProps> = ({
             formik.setFieldValue('motherTongue', value);
           }}
           onBlur={formik.handleBlur}
-          options={MotherTongueTypeArray.map((tongue) => ({
-            value: tongue,
+          options={MotherTongueTypeArray.map((tongue, index) => ({
+            value: index,
             label: tongue,
           }))}
           valueKey="value"

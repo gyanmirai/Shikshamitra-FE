@@ -83,8 +83,8 @@ const EntranceExamSlots = () => {
     currentQueryAndMutation: useGetEntranceExamSlotQuery,
     params: {
       academicYearId: currentYear?.id,
-      startDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
-      endDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
+      StartDateTime: dateConvertor(selectedDate?.startOf('day').format(dateFormat) || ''),
+      EndDateTime: dateConvertor(selectedDate?.endOf('day').format(dateFormat) || ''),
       ...query,
     },
     options: {
@@ -221,8 +221,12 @@ const EntranceExamSlots = () => {
                       'getEntranceExamSlot',
                       {
                         academicYearId: currentYear?.id,
-                        startDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
-                        endDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
+                        StartDateTime: dateConvertor(
+                          selectedDate?.startOf('day').format(dateFormat) || ''
+                        ),
+                        EndDateTime: dateConvertor(
+                          selectedDate?.endOf('day').format(dateFormat) || ''
+                        ),
                         ...query,
                       },
                       (draft: any) => {

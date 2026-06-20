@@ -33,7 +33,6 @@ interface CertificateHistoryRow {
 interface CertificateStat {
   label: string;
   icon: string;
-  color: string;
   count: number;
 }
 
@@ -79,10 +78,10 @@ const MOCK_HISTORY: CertificateHistoryRow[] = [
 // ── Stats config ───────────────────────────────────────────────────────────────
 
 const CERT_STATS: CertificateStat[] = [
-  { label: 'Bonafide', icon: 'tdesign:certificate', color: '#2065D1', count: 5 },
-  { label: 'Character', icon: 'la:certificate', color: '#00AB55', count: 2 },
-  { label: 'Leaving', icon: 'streamline-cyber:wedding-certificate', color: '#FF4842', count: 0 },
-  { label: 'First Trial', icon: 'ph:certificate-light', color: '#FFC107', count: 1 },
+  { label: 'Bonafide', icon: 'tdesign:certificate', count: 5 },
+  { label: 'Character', icon: 'la:certificate', count: 2 },
+  { label: 'Leaving', icon: 'streamline-cyber:wedding-certificate', count: 0 },
+  { label: 'First Trial', icon: 'ph:certificate-light', count: 1 },
 ];
 
 // ── Status color map ───────────────────────────────────────────────────────────
@@ -278,57 +277,62 @@ const StudentSummaryPanel: React.FC<StudentSummaryPanelProps> = ({
           borderBottom: (t) => `1px solid ${t.palette.divider}`,
         }}
       >
-        <Stack direction="row" spacing={1.5} alignItems="flex-start">
-          <Avatar
-            src={selectedStudent.photo}
-            sx={{
-              width: 52,
-              height: 52,
-              bgcolor: 'primary.main',
-              fontSize: 20,
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
+        <Stack direction="row" spacing={1.5} alignItems="flex-start" justifyContent="space-between">
+          <Stack
+            direction="row"
+            spacing={1.5}
+            alignItems="flex-start"
+            sx={{ minWidth: 0, flex: 1 }}
           >
-            {selectedStudent.name.charAt(0)}
-          </Avatar>
+            <Avatar
+              src={selectedStudent.photo}
+              sx={{
+                width: 52,
+                height: 52,
+                bgcolor: 'primary.main',
+                fontSize: 20,
+                fontWeight: 700,
+                flexShrink: 0,
+              }}
+            >
+              {selectedStudent.name.charAt(0)}
+            </Avatar>
 
-          <Box flex={1} minWidth={0}>
-            <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
+            <Box flex={1} minWidth={0}>
               <Typography variant="subtitle1" fontWeight={700} noWrap>
                 {selectedStudent.name}
               </Typography>
-              <Label variant="soft" color="success" sx={{ flexShrink: 0 }}>
-                Active
-              </Label>
-            </Stack>
 
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: 0.25,
-                mt: 0.5,
-              }}
-            >
-              <InfoRow label="GR No" value={selectedStudent.grNo} />
-              <InfoRow label="Admission" value={selectedStudent.admissionNo} />
-              <InfoRow
-                label="Class"
-                value={`${selectedStudent.className} ${selectedStudent.divisionName}`}
-              />
-              <InfoRow label="Gender" value={selectedStudent.gender} />
-              <InfoRow
-                label="DOB"
-                value={
-                  selectedStudent.dateOfBirth
-                    ? dayjs(selectedStudent.dateOfBirth).format('DD-MMM-YYYY')
-                    : undefined
-                }
-              />
-              <InfoRow label="Org" value={selectedStudent.organizationName} />
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: 0.25,
+                  mt: 0.5,
+                }}
+              >
+                <InfoRow label="GR No" value={selectedStudent.grNo} />
+                <InfoRow label="Admission" value={selectedStudent.admissionNo} />
+                <InfoRow
+                  label="Class"
+                  value={`${selectedStudent.className} ${selectedStudent.divisionName}`}
+                />
+                <InfoRow label="Gender" value={selectedStudent.gender} />
+                <InfoRow
+                  label="DOB"
+                  value={
+                    selectedStudent.dateOfBirth
+                      ? dayjs(selectedStudent.dateOfBirth).format('DD-MMM-YYYY')
+                      : undefined
+                  }
+                />
+                <InfoRow label="Org" value={selectedStudent.organizationName} />
+              </Box>
             </Box>
-          </Box>
+          </Stack>
+          <Label variant="soft" color="success" sx={{ flexShrink: 0, mt: 0.5 }}>
+            Active
+          </Label>
         </Stack>
       </Box>
 
@@ -352,16 +356,24 @@ const StudentSummaryPanel: React.FC<StudentSummaryPanelProps> = ({
                 px: 1,
                 py: 0.5,
                 borderRadius: 1,
-                bgcolor: alpha(stat.color, 0.08),
-                border: `1px solid ${alpha(stat.color, 0.2)}`,
+                bgcolor: 'background.neutral',
+                border: (t) => `1px solid ${t.palette.divider}`,
                 minWidth: 0,
               }}
             >
-              <Iconify icon={stat.icon} width={14} sx={{ color: stat.color, flexShrink: 0 }} />
+              <Iconify
+                icon={stat.icon}
+                width={14}
+                sx={{ color: 'text.secondary', flexShrink: 0 }}
+              />
               <Typography variant="caption" color="text.secondary" noWrap>
                 {stat.label}
               </Typography>
-              <Typography variant="caption" fontWeight={700} sx={{ color: stat.color, ml: 0.25 }}>
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                sx={{ color: 'text.primary', ml: 0.25 }}
+              >
                 {stat.count}
               </Typography>
             </Box>

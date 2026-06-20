@@ -57,7 +57,7 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [searchText, setSearchText] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
 
   const [filters, setFilters] = useState({
     organization: medium?.educationMediumStages?.[0]?.id || '',

@@ -4,9 +4,10 @@ import { entranceExamSlotType } from 'src/redux/tagTypes';
 export const EntranceExamSlotApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getEntranceExamSlot: builder.query({
-      query: ({ academicYearId, startDate, endDate }) => ({
-        url: `/student-enrollment/settings/entrance-exam-slots?AcademicYearId=${academicYearId}&StartDate=${startDate}&EndDate=${endDate}`,
+      query: (params) => ({
+        url: `/student-enrollment/settings/entrance-exam-slots`,
         method: 'GET',
+        params,
       }),
       providesTags: [entranceExamSlotType.entranceExamSlot],
     }),
