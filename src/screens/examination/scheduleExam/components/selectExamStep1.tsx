@@ -336,6 +336,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                             totalMarks: sub?.totalMarks ?? '',
                             passingMarks: sub?.passingMarks ?? '',
                             notes: sub?.notes || '',
+                            gradeScalingId: sub?.gradeScalingId || null,
                             // Elective groups have no meaningful single subjectCode
                             subjectCode: isElective
                               ? ''
@@ -345,11 +346,18 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                             // Ensure schedulingMode is always initialized for elective groups
                             schedulingMode:
                               sub.schedulingMode ?? (isElective ? 'separate' : undefined),
-                            // Normalize nested subjects array: ensure each subject has subjectColor
+                            // Normalize nested subjects array: ensure each subject has subjectColor and default schedule values
                             subjects: isElective
                               ? (sub.subjects ?? []).map((s: any) => ({
                                   ...s,
                                   subjectColor: s.color || s.subjectColor || '#9E9E9E',
+                                  examDate: s.examDate || null,
+                                  startTime: s.startTime || null,
+                                  endTime: s.endTime || null,
+                                  totalMarks: s.totalMarks ?? '',
+                                  passingMarks: s.passingMarks ?? '',
+                                  notes: s.notes || '',
+                                  gradeScalingId: s.gradeScalingId || null,
                                 }))
                               : sub.subjects,
                           };

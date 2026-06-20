@@ -20,6 +20,7 @@ import {
 import { Scrollbar } from '../scrollbar';
 import CustomDialog from '../customDialog';
 import { TableBody } from './components/TableBody';
+import { extractTextFromReactNode } from './utils';
 import { ComponentBlock } from '../component-block';
 import { useTableData } from './hooks/useTableData';
 import { TableHeader } from './components/TableHeader';
@@ -292,9 +293,16 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               }
 
               // Exclude action columns and hidden columns
-              const exportCols = memoizedColumns.filter(
-                (col) => columnVisibility[col.id] && col.id !== 'action' && col.id !== 'actions'
-              );
+              const exportCols = memoizedColumns.filter((col) => {
+                const isVisible = columnVisibility[col.id];
+                const isActionCol =
+                  col.id?.toLowerCase() === 'action' ||
+                  col.id?.toLowerCase() === 'actions' ||
+                  (typeof col.label === 'string' &&
+                    (col.label.toLowerCase() === 'action' ||
+                      col.label.toLowerCase() === 'actions'));
+                return isVisible && !isActionCol;
+              });
 
               const title = typeof tableTitle === 'string' ? tableTitle : 'Table_Export';
 
@@ -334,14 +342,29 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 return str || '-';
               };
 
+              const getCellValueForExport = (row: any, col: any): string => {
+                const rawVal = _.get(row, col.id);
+                if (col.render) {
+                  try {
+                    const rendered = col.render(rawVal, row);
+                    const text = extractTextFromReactNode(rendered);
+                    if (text !== '') {
+                      return text;
+                    }
+                  } catch (e) {
+                    console.error('Error rendering cell for export:', col.id, e);
+                  }
+                }
+                return formatCellValue(rawVal);
+              };
+
               if (format === 'excel') {
                 import('xlsx').then((XLSX) => {
                   const dataObjects = sortedData.map((row) => {
                     const obj: Record<string, any> = {};
                     exportCols.forEach((col) => {
-                      const rawVal = _.get(row, col.id);
                       const label = typeof col.label === 'string' ? col.label : col.id;
-                      obj[label] = formatCellValue(rawVal);
+                      obj[label] = getCellValueForExport(row, col);
                     });
                     return obj;
                   });
@@ -365,7 +388,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
                     // Build 2D body array — values are resolved directly, no key mapping
                     const pdfBody = sortedData.map((row) =>
-                      exportCols.map((col) => formatCellValue(_.get(row, col.id)))
+                      exportCols.map((col) => getCellValueForExport(row, col))
                     );
 
                     autoTable(
