@@ -12,9 +12,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Save, Refresh, ChecklistOutlined } from '@mui/icons-material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -26,11 +26,13 @@ import {
   useLazyGetRollNumberProjectionsQuery,
 } from 'src/redux/student/roll-number/roll-number-api';
 
-import type { IInquiryData } from '../../enrollment/Inquiry/type';
+import { extractRollNumberProjectionItems } from './roll-number-projections';
 import {
   hasRollNumberValidationErrors,
   buildRollNumberValidationErrors,
 } from './roll-number-validation';
+
+import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 const RollNoGenerationScreen = ({ division }: { division: string }) => {
   // State for controlling how students are arranged (e.g., boys first, girls first)
@@ -93,22 +95,23 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
         arrangementType: arrangementType === 'mix' ? 0 : arrangementType === 'boysFirst' ? 1 : 2,
         arrangementBy: arrangeBy === 'firstName' ? 0 : 1,
       }).unwrap();
+      const projectedStudents = extractRollNumberProjectionItems(result);
 
-      if (result?.data && Array.isArray(result.data)) {
+      if (projectedStudents) {
         const studentsWithoutRollNo = tableData.filter(
           (s) => s.rollNo === null || s.rollNo === undefined
         ).length;
 
         // Track newly generated roll numbers
         const newModifiedIds = new Set(modifiedRowIds);
-        result.data.forEach((student: any) => {
+        projectedStudents.forEach((student: any) => {
           const original = initialData.find((item) => item.studentId === student.studentId);
           if (original && original.rollNo !== student.rollNo) {
             newModifiedIds.add(student.studentId);
           }
         });
 
-        setTableData(result.data);
+        setTableData(projectedStudents);
         setModifiedRowIds(newModifiedIds);
 
         // Show success toast with smart message
