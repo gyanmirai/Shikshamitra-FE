@@ -134,6 +134,12 @@ export const communicationType = {
   notificationHistory: 'NotificationHistory',
   sentNotificationHistory: 'SentNotificationHistory',
   notifications: 'Notifications',
+  communicationDashboard: 'CommunicationDashboard',
+  communicationProviderSettings: 'CommunicationProviderSettings',
+  communicationDeliveryAttempts: 'CommunicationDeliveryAttempts',
+  communicationReplies: 'CommunicationReplies',
+  communicationUsageLedger: 'CommunicationUsageLedger',
+  communicationApprovalRules: 'CommunicationApprovalRules',
 } as const;
 
 // ===== Meeting Type Options API (reducerPath: MeetingTypeOptionsApi) =====

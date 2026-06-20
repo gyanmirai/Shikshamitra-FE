@@ -87,6 +87,12 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
                     valueKey="levelName"
                     labelKey="label"
                     formControlProps={{ fullWidth: true }}
+                    inputProps={{ 'aria-label': 'Importance Level' }}
+                    SelectDisplayProps={
+                      {
+                        'data-testid': 'importance-level-select',
+                      } as React.HTMLAttributes<HTMLDivElement> & { 'data-testid': string }
+                    }
                     error={
                       formik.touched.selectedTemplate?.importance_level &&
                       Boolean(formik.errors.selectedTemplate?.importance_level)

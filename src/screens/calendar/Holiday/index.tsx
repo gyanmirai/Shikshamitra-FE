@@ -17,10 +17,12 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
 import {
   holidayApi,
   useGetHolidaysQuery,
   useDeleteHolidayMutation,
+  useAnnounceHolidayMutation,
 } from 'src/redux/communication/holiday/holidayDataApi';
 
 import HolidayForm from './Components/HolidayForm';
@@ -61,6 +63,10 @@ const HolidayManagement = (props: TabComponentType) => {
   const [deleteHoliday, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteHolidayMutation,
+  });
+  const [announceHoliday, { isLoading: isPublishLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAnnounceHolidayMutation,
   });
 
   const { confirmWithUndo } = useConfirmWithUndo();
@@ -211,19 +217,42 @@ const HolidayManagement = (props: TabComponentType) => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {
-              publish_modal.onFalse();
-              shikshaMitraToast.success({
-                message: `Holiday "${publishingHoliday?.holidayName}" published successfully.`,
-              });
+            loading={isPublishLoading}
+            onClick={async () => {
+              if (!publishingHoliday?.id) return;
+
+              try {
+                const result = await announceHoliday({
+                  id: publishingHoliday.id,
+                  body: {
+                    campaignType: 'Announcement',
+                    channels: [CommunicationChannelType.InApp],
+                    fallbackOrder: [CommunicationChannelType.InApp],
+                    includeSourceAudience: true,
+                    publishImmediately: true,
+                  },
+                }).unwrap();
+
+                publish_modal.onFalse();
+                setPublishingHoliday(null);
+                refetch();
+                shikshaMitraToast.success({
+                  message:
+                    result.approvalRequired && !result.published
+                      ? `Holiday "${publishingHoliday.holidayName}" sent for communication approval.`
+                      : `Holiday "${publishingHoliday.holidayName}" announcement queued successfully.`,
+                });
+              } catch {
+                // Error toast is handled by the shared RTK Query wrapper.
+              }
             }}
             size="small"
           >
             Publish
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

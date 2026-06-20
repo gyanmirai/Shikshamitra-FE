@@ -20,10 +20,12 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { CommunicationChannelType } from 'src/redux/communication/communicationTypes';
 import {
   eventApi,
   useGetEventsQuery,
   useDeleteEventMutation,
+  useAnnounceEventMutation,
 } from 'src/redux/calendar/events/eventApi';
 
 import AddEvent from './addeventForm';
@@ -87,6 +89,10 @@ const Events = (props: TabComponentType) => {
   const [deleteEvent, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteEventMutation,
+  });
+  const [announceEvent, { isLoading: isPublishLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAnnounceEventMutation,
   });
   return (
     <Box height="100%" display="flex" flexDirection="column">
@@ -225,27 +231,50 @@ const Events = (props: TabComponentType) => {
           publish_modal.onFalse();
           setEditingEvent(null);
         }}
-        title="Active"
+        title="Publish"
         content={
           <>
-            Are you sure you want to active <strong>&apos;{editingEvent?.title}&apos;</strong>{' '}
+            Are you sure you want to publish <strong>&apos;{editingEvent?.title}&apos;</strong>{' '}
             Event?
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {
-              publish_modal.onFalse();
-              shikshaMitraToast.success({
-                message: `Event "${editingEvent?.title}" published successfully.`,
-              });
+            loading={isPublishLoading}
+            onClick={async () => {
+              if (!editingEvent?.id) return;
+
+              try {
+                const result = await announceEvent({
+                  id: editingEvent.id,
+                  body: {
+                    campaignType: 'Announcement',
+                    channels: [CommunicationChannelType.InApp],
+                    fallbackOrder: [CommunicationChannelType.InApp],
+                    includeSourceAudience: true,
+                    publishImmediately: true,
+                  },
+                }).unwrap();
+
+                publish_modal.onFalse();
+                shikshaMitraToast.success({
+                  message:
+                    result.approvalRequired && !result.published
+                      ? `Event "${editingEvent.title}" sent for communication approval.`
+                      : `Event "${editingEvent.title}" announcement queued successfully.`,
+                });
+                setEditingEvent(null);
+                refetchEventTableData();
+              } catch {
+                // Error toast is handled by the shared RTK Query wrapper.
+              }
             }}
             size="small"
           >
-            Active
-          </Button>
+            Publish
+          </LoadingButton>
         }
       />
 

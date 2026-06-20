@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import CustomizableView from 'src/components/customizable-view';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetCommunicationDashboardQuery } from 'src/redux/communication/communicationApi';
 import { SummaryCard } from 'src/screens/finance/dashboard/Components/FinanceDashboardOverview';
 
 // ----------------------------------------------------------------------
@@ -19,51 +21,67 @@ interface ICardItem {
   width?: number;
 }
 
+const formatCount = (value?: number) => new Intl.NumberFormat('en-IN').format(value || 0);
+
+const buildCards = (dashboard?: any): ICardItem[] => [
+  {
+    id: 'CARD_TOTAL_ANNOUNCEMENTS',
+    icon: 'mdi:bullhorn',
+    title: 'Total Campaigns',
+    count: formatCount(dashboard?.totalCampaigns),
+    color: 'primary.main',
+    bgColor: 'primary',
+    href: '/communication/notification-history',
+    labels: [
+      { name: `Draft ${formatCount(dashboard?.draftCampaigns)}`, color: 'info' },
+      {
+        name: `Pending ${formatCount(dashboard?.pendingApprovalCampaigns)}`,
+        color: 'warning',
+      },
+    ],
+    width: 4,
+  },
+  {
+    id: 'CARD_ACTIVE_ANNOUNCEMENTS',
+    icon: 'mdi:broadcast',
+    title: 'Delivery Attempts',
+    count: formatCount(dashboard?.deliveryAttemptCount),
+    color: 'info.main',
+    bgColor: 'info',
+    href: '/communication/notification-history',
+    labels: [
+      { name: `Sent ${formatCount(dashboard?.sentCampaigns)}`, color: 'success' },
+      { name: `Failed ${formatCount(dashboard?.deliveryFailureCount)}`, color: 'error' },
+    ],
+    width: 4,
+  },
+  {
+    id: 'CARD_NOTIFICATIONS_SENT',
+    icon: 'mdi:message-cog-outline',
+    title: 'Operational Status',
+    count: formatCount(dashboard?.enabledProviders),
+    color: 'success.main',
+    bgColor: 'success',
+    href: '/communication/settings/deliveryChannelType',
+    labels: [
+      { name: `Replies ${formatCount(dashboard?.openReplies)}`, color: 'secondary' },
+      { name: `Opt-outs ${formatCount(dashboard?.consentOptOutCount)}`, color: 'warning' },
+    ],
+    width: 4,
+  },
+];
+
 const CommunicationDashboardOverview = () => {
-  const [cards, setCards] = useState<ICardItem[]>([
-    {
-      id: 'CARD_TOTAL_ANNOUNCEMENTS',
-      icon: 'mdi:bullhorn',
-      title: 'Total Announcements',
-      count: '1,250',
-      color: 'primary.main',
-      bgColor: 'primary',
-      href: '#',
-      labels: [
-        { name: 'School 10', color: 'info' },
-        { name: 'Class 25', color: 'secondary' },
-      ],
-      width: 4,
-    },
-    {
-      id: 'CARD_ACTIVE_ANNOUNCEMENTS',
-      icon: 'mdi:broadcast',
-      title: 'Active Announcements',
-      count: '45',
-      color: 'info.main',
-      bgColor: 'info',
-      href: '#',
-      labels: [
-        { name: 'Academic 20', color: 'success' },
-        { name: 'Events 15', color: 'warning' },
-      ],
-      width: 4,
-    },
-    {
-      id: 'CARD_NOTIFICATIONS_SENT',
-      icon: 'mdi:send-circle',
-      title: 'Notifications Sent Today',
-      count: '320',
-      color: 'success.main',
-      bgColor: 'success',
-      href: '#',
-      labels: [
-        { name: 'sent 200', color: 'success' },
-        { name: 'failed 120', color: 'error' },
-      ],
-      width: 4,
-    },
-  ]);
+  const { data: dashboard } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetCommunicationDashboardQuery,
+  });
+  const dashboardCards = useMemo(() => buildCards(dashboard), [dashboard]);
+  const [cards, setCards] = useState<ICardItem[]>(dashboardCards);
+
+  useEffect(() => {
+    setCards(dashboardCards);
+  }, [dashboardCards]);
 
   const dashBoardSections = cards.reduce((acc: { [key: string]: React.JSX.Element }, card) => {
     acc[card.id] = <SummaryCard {...card} />;

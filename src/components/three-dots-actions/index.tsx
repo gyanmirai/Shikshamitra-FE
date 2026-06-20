@@ -20,6 +20,7 @@ interface IThreeDotesActionsType {
   showEditIcon?: boolean;
   showDeleteIcon?: boolean;
   showThreeDots?: boolean;
+  viewIcon?: string;
   viewLabel?: string;
   editLabel?: string;
   deleteLabel?: string;
@@ -56,6 +57,7 @@ const ThreeDotsActions = ({
   showEditIcon = false,
   showDeleteIcon = false,
   showThreeDots = true,
+  viewIcon = 'carbon:view-filled',
   viewLabel = 'View',
   editLabel = 'Edit',
   deleteLabel = 'Delete',
@@ -85,10 +87,7 @@ const ThreeDotsActions = ({
               disabled={disableViewIcon}
               sx={{ p: 0 }}
             >
-              <Iconify
-                icon="carbon:view-filled"
-                sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-              />
+              <Iconify icon={viewIcon} sx={{ height: '16px', width: '16px', cursor: 'pointer' }} />
             </IconButton>
           </span>
         </Tooltip>

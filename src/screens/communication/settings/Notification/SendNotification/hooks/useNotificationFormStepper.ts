@@ -7,12 +7,18 @@ import { useSelector } from 'react-redux';
 import { useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import {
+  mapNotificationDraftPayload,
+  mapNotificationMessagePayload,
+  mapNotificationChannelsPayload,
+} from 'src/redux/communication/communicationMappers';
 import {
   useGetNotificationStepOneQuery,
   useGetNotificationStepTwoQuery,
   useGetNotificationStepThreeQuery,
   useCreateNotificationDraftMutation,
-  // useComposeMessageAndPublishMutation,
+  useComposeMessageAndPublishMutation,
   useUpdateNotificationChannelsMutation,
 } from 'src/redux/communication/notification/send-notification-api';
 
@@ -46,6 +52,11 @@ export const useNotificationFormStepper = ({ onBack }: UseNotificationFormSteppe
   const [updateNotificationChannels] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateNotificationChannelsMutation,
+  });
+
+  const [composeMessageAndPublish] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useComposeMessageAndPublishMutation,
   });
 
   // Queries
@@ -97,30 +108,42 @@ export const useNotificationFormStepper = ({ onBack }: UseNotificationFormSteppe
         if (activeStep === 0) {
           // STEP 1: Audience -> Create Draft
           if (!notificationId) {
-            // const res = await createNotificationDraft({
-            //   academicMediumId: mediumId,
-            //   data: {
-            //     role: values.audience?.role,
-            //     classes: values.audience?.classes,
-            //     divisions: values.audience?.divisions,
-            //     memberIds: values.members?.filter((m) => m.isSelect).map((m) => m.id),
-            //   },
-            // }).unwrap();
-            // setNotificationId(res?.id);
+            const res = await createNotificationDraft({
+              academicMediumId: mediumId,
+              data: mapNotificationDraftPayload(values),
+            }).unwrap();
+            setNotificationId(res?.id);
             shikshaMitraToast.success({ message: 'Audience saved successfully' });
           } else {
             shikshaMitraToast.success({ message: 'Audience saved successfully' });
           }
         } else if (activeStep === 1) {
           // STEP 2: Channels -> Update Channels
-          // await updateNotificationChannels({
-          //   academicMediumId: mediumId,
-          //   id: notificationId,
-          //   data: { channels: values.channels },
-          // }).unwrap();
+          if (!notificationId) {
+            shikshaMitraToast.error({ message: 'Please save audience before choosing channels' });
+            return;
+          }
+
+          await updateNotificationChannels({
+            academicMediumId: mediumId,
+            id: notificationId,
+            data: mapNotificationChannelsPayload(values.channels),
+          }).unwrap();
           shikshaMitraToast.success({ message: 'Channels chosen successfully' });
         } else if (activeStep === 2) {
           // STEP 3: Message -> Compose & Publish
+          if (!notificationId) {
+            shikshaMitraToast.error({
+              message: 'Please save notification draft before publishing',
+            });
+            return;
+          }
+
+          await composeMessageAndPublish({
+            academicMediumId: mediumId,
+            id: notificationId,
+            data: mapNotificationMessagePayload(values),
+          }).unwrap();
           shikshaMitraToast.success({ message: 'Notification sent successfully' });
           onBack?.(null, true);
         }
@@ -130,14 +153,23 @@ export const useNotificationFormStepper = ({ onBack }: UseNotificationFormSteppe
         }
       } catch (error: any) {
         console.error(error);
+        const parsed = parseApiProblemDetail(error);
         shikshaMitraToast.error({
-          message: error?.data?.message || 'Something went wrong. Please try again.',
+          message: parsed.detail || 'Something went wrong. Please try again.',
         });
       } finally {
         setIsLoading(false);
       }
     },
-    [activeStep, onBack, currentMedium, notificationId]
+    [
+      activeStep,
+      onBack,
+      currentMedium,
+      notificationId,
+      createNotificationDraft,
+      updateNotificationChannels,
+      composeMessageAndPublish,
+    ]
   );
 
   const handleBack = useCallback(() => {

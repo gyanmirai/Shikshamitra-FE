@@ -13,58 +13,87 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetDeliveryChannelTypeOptionsQuery } from 'src/redux/communication/setting/deliveryChannelApi';
+import { channelLabel } from 'src/redux/communication/communicationMappers';
+import {
+  useGetProviderSettingsQuery,
+  useDeleteProviderSettingMutation,
+} from 'src/redux/communication/setting/deliveryChannelApi';
 
 import DeliveryChannelTable from './Components/DelieveryChannelTypeTable';
 import DeliveryChannelTypeForm from './Components/DeliveryChannelTypeForm';
 
-import type { IDeliveryChannel } from './type';
+import type { IProviderSetting } from './type';
 
 const DeliveryChannelTypeCreation = () => {
-  // Dialog control states
   const deleteDialog = useBoolean();
   const addDialog = useBoolean();
-  const { data: deliveryChannelData } = useQueryAndMutation({
+  const { data: providerSettings, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetDeliveryChannelTypeOptionsQuery,
+    currentQueryAndMutation: useGetProviderSettingsQuery,
+    params: { maxResultCount: 200 },
   });
-  // State management
+  const [deleteProviderSetting, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteProviderSettingMutation,
+  });
+
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const [selectedDeliveryChannelType, setSelectedDeliveryChannelType] =
-    useState<IDeliveryChannel | null>(null);
+  const [selectedProviderSetting, setSelectedProviderSetting] = useState<IProviderSetting | null>(
+    null
+  );
   const dispatch = useDispatch();
 
-  // Close handler
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedDeliveryChannelType(null);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
+  const resetState = () => {
+    setTimeout(() => {
+      setSelectedProviderSetting(null);
+      dispatch(setIsChanges(false));
+    }, 200);
+  };
 
+  const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       addDialog.onFalse();
       resetState();
     } else if (!isChanges) {
       addDialog.onFalse();
       setTimeout(() => {
-        setSelectedDeliveryChannelType(null);
+        setSelectedProviderSetting(null);
       }, 200);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedProviderSetting) {
+      return;
+    }
+
+    try {
+      await deleteProviderSetting(selectedProviderSetting.id).unwrap();
+      shikshaMitraToast.success({
+        message: `${selectedProviderSetting.providerName} provider setting deleted successfully`,
+      });
+    } catch (error: any) {
+      shikshaMitraToast.error({
+        message: parseApiProblemDetail(error).detail || 'Failed to delete provider setting',
+      });
+    } finally {
+      setSelectedProviderSetting(null);
+      deleteDialog.onFalse();
     }
   };
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Delivery Channel Type"
-        description="Manage delivery channel types such as Email, SMS, Push Notification, etc. Use actions to edit or delete existing types. Click ‘Add Delivery Channel Type’ to create a new one."
+        heading="Provider Settings"
+        description="Manage channel providers, sender IDs, compliance requirements, fallback order, quotas, and provider status for Communication."
         links={[
           { name: 'Communication', href: '/communication/dashboard' },
           { name: 'Settings', href: '/communication/setting' },
-          { name: 'Delivery Channel Type', href: '/communication/delivery-channel-type' },
+          { name: 'Provider Settings', href: '/communication/settings/deliveryChannelType' },
         ]}
         action={
           <Button
@@ -73,7 +102,7 @@ const DeliveryChannelTypeCreation = () => {
             startIcon={<Add />}
             variant="contained"
           >
-            Delivery Channel Type
+            Provider Setting
           </Button>
         }
         sx={{ px: 1 }}
@@ -81,41 +110,35 @@ const DeliveryChannelTypeCreation = () => {
 
       <DeliveryChannelTable
         onDelete={(data) => {
-          setSelectedDeliveryChannelType(data);
+          setSelectedProviderSetting(data);
           deleteDialog.onTrue();
         }}
         onEdit={(data) => {
-          setSelectedDeliveryChannelType(data);
+          setSelectedProviderSetting(data);
           addDialog.onTrue();
         }}
-        onAddDeliveryChannel={addDialog}
-        setEditData={setSelectedDeliveryChannelType}
-        data={deliveryChannelData} // Replace with actual data
+        onAddProvider={addDialog}
+        setEditData={setSelectedProviderSetting}
+        data={providerSettings?.items || []}
+        isLoading={isLoading}
       />
 
       <CustomDialog
         open={addDialog.value}
-        handleClose={() => {
-          addDialog.onFalse();
-          setTimeout(() => {
-            setSelectedDeliveryChannelType(null);
-          }, 200);
-        }}
+        handleClose={() => handleClose(null, false)}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedDeliveryChannelType
-                ? 'Update Delivery Channel Type'
-                : 'Add Delivery Channel Type'}
+              {selectedProviderSetting ? 'Update Provider Setting' : 'Add Provider Setting'}
             </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
               title={
-                selectedDeliveryChannelType
-                  ? 'Update the delivery channel type details including name and description.'
-                  : 'Create a new delivery channel type by entering its name and description.'
+                selectedProviderSetting
+                  ? 'Update provider configuration and compliance controls.'
+                  : 'Create a provider setting for WhatsApp, SMS, email, or in-app delivery.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -126,21 +149,25 @@ const DeliveryChannelTypeCreation = () => {
         <DeliveryChannelTypeForm
           open={addDialog}
           onClose={handleClose}
-          editData={selectedDeliveryChannelType}
+          editData={selectedProviderSetting}
         />
       </CustomDialog>
 
       <ConfirmDialog
         open={deleteDialog.value}
         onClose={() => {
-          setSelectedDeliveryChannelType(null);
+          setSelectedProviderSetting(null);
           deleteDialog.onFalse();
         }}
         title="Delete"
         content={
           <>
-            Are you sure you want to delete delivery channel type{' '}
-            <strong>{selectedDeliveryChannelType?.deliveryChannel}</strong>?
+            Are you sure you want to delete{' '}
+            <strong>
+              {selectedProviderSetting?.providerName} (
+              {channelLabel(selectedProviderSetting?.channel)})
+            </strong>
+            ?
           </>
         }
         action={
@@ -148,14 +175,8 @@ const DeliveryChannelTypeCreation = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              deleteDialog.onFalse();
-              setSelectedDeliveryChannelType(null);
-              shikshaMitraToast.success({
-                message: `Delivery Channel Type : ${selectedDeliveryChannelType?.deliveryChannel} deleted successfully`,
-              });
-              // handle delete API call here
-            }}
+            disabled={isDeleteLoading}
+            onClick={handleDelete}
           >
             Yes
           </Button>

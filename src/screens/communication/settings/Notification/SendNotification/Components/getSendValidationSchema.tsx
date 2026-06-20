@@ -41,9 +41,14 @@ export const notificationValidationSchema = [
         then: (schema) => schema.required('Message is required'),
         otherwise: (schema) => schema,
       }),
-      importance_level: yup.string().when('templateName', {
+      importance_level: yup.mixed().when('templateName', {
         is: (templateName: string) => !templateName,
-        then: (schema) => schema.required('Importance level is required'),
+        then: (schema) =>
+          schema.test(
+            'importance-level-required',
+            'Importance level is required',
+            (value) => value !== undefined && value !== null && value !== ''
+          ),
         otherwise: (schema) => schema,
       }),
     }),

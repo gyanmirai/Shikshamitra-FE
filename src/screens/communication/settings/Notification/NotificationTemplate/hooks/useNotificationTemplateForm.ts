@@ -8,6 +8,8 @@ import { useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { mapTemplateFormToPayload } from 'src/redux/communication/communicationMappers';
 import {
   useAddNotificationTemplateMutation,
   useUpdateNotificationTemplateMutation,
@@ -55,19 +57,12 @@ export const useNotificationTemplateForm = ({
 
   const handleSubmit = async (values: INotificationTemplateFormValues) => {
     try {
-      const roleId = roleOptions?.items?.find((r: any) => r.name === values.targetRole)?.id;
-
-      const payloadData = {
-        templateName: values.templateName,
-        role: roleId,
-        subject: values.subject,
-        message: values.message,
-        tags: values.hashtags,
-      };
+      const academicMediumId = (currentMedium as Medium)?.id;
+      const payloadData = mapTemplateFormToPayload(values, academicMediumId);
 
       if (editData) {
         const payload = {
-          academicMediumId: (currentMedium as Medium).id,
+          academicMediumId,
           id: editData.id,
           data: payloadData,
         };
@@ -86,10 +81,10 @@ export const useNotificationTemplateForm = ({
         });
       }
       onClose(null, true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save template', error);
       shikshaMitraToast.error({
-        message: 'Failed to save template',
+        message: parseApiProblemDetail(error).detail || 'Failed to save template',
       });
     }
   };

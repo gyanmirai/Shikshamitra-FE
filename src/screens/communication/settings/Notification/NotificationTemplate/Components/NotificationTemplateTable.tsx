@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { channelLabel } from 'src/redux/communication/communicationMappers';
 
 import type { ITemplateTableProps, INotificationTemplate } from '../types';
 
@@ -46,9 +47,21 @@ const NotificationTemplateTable: React.FC<ITemplateTableProps> = ({
         align: 'left',
       },
       {
-        id: 'message',
+        id: 'body',
         label: 'Message',
         align: 'left',
+        render: (value, row) => row.message || value || '--',
+      },
+      {
+        id: 'languageCode',
+        label: 'Language',
+        align: 'left',
+      },
+      {
+        id: 'channels',
+        label: 'Channels',
+        align: 'left',
+        render: (value) => (Array.isArray(value) ? value.map(channelLabel).join(', ') : '--'),
       },
       {
         id: 'action',

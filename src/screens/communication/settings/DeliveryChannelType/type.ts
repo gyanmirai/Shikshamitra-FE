@@ -1,22 +1,24 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type {
+  ProviderSettingFormValues,
+  ChannelProviderSettingDto,
+} from 'src/redux/communication/communicationTypes';
 
-// type.ts
-export interface IDeliveryChannel {
-  deliveryChannel: string;
-  description?: string;
-  color: string;
+export type IProviderSetting = ChannelProviderSettingDto;
+
+export interface IProviderSettingTableProps {
+  data: IProviderSetting[];
+  isLoading?: boolean;
+  onAddProvider: UseBooleanReturn;
+  setEditData: (val: IProviderSetting | null) => void;
+  onDelete: (row: IProviderSetting) => void;
+  onEdit: (row: IProviderSetting) => void;
 }
 
-export interface IDeliveryChannelTableProps {
-  data: IDeliveryChannel[];
-  onAddDeliveryChannel: UseBooleanReturn;
-  setEditData: (val: IDeliveryChannel | null) => void;
-  onDelete: (row: IDeliveryChannel) => void;
-  onEdit: (row: IDeliveryChannel) => void;
-}
-
-export interface IDeliveryChannelFormProps {
+export interface IProviderSettingFormProps {
   open: { value: boolean; onTrue: () => void; onFalse: () => void };
   onClose: (event: any, isSubmit?: boolean) => void;
-  editData?: IDeliveryChannel | null;
+  editData?: IProviderSetting | null;
 }
+
+export type IProviderSettingFormValues = ProviderSettingFormValues;
