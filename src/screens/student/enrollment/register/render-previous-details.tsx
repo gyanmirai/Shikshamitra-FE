@@ -83,7 +83,7 @@ const RenderPreviousSchoolFields = (props: any) => {
       <Grid size={{ xs: 12 }}>
         <Typography variant="subtitle1">School Info</Typography>
       </Grid>
-      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
+      {/* <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"
           fullWidth
@@ -101,7 +101,38 @@ const RenderPreviousSchoolFields = (props: any) => {
           }}
           disabled={!isEditable.value}
         />
+      </Grid> */}
+
+      <Grid size={{ xs: 12, md: 3 }}>
+        <ShakingTextField
+          error={
+            (formik.touched as any).previousSchool && Boolean((formik.errors as any).previousSchool)
+          }
+        >
+          <TextField
+            key="previousSchool"
+            size="small"
+            label="Previous School"
+            name="previousSchool"
+            value={(formik.values as any).previousSchool}
+            onBlur={formik.handleBlur}
+            error={
+              (formik.touched as any).previousSchool &&
+              Boolean((formik.errors as any).previousSchool)
+            }
+            helperText={
+              (formik.touched as any).previousSchool && (formik.errors as any).previousSchool
+            }
+            fullWidth
+            onChange={(e) => {
+              formik.setFieldValue('previousSchool', toAlphanumericTitleCase(e.target.value));
+              formik.setFieldTouched('previousSchool', true, true);
+            }}
+            disabled={!isEditable.value}
+          />
+        </ShakingTextField>
       </Grid>
+
       <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"
@@ -187,36 +218,6 @@ const RenderPreviousSchoolFields = (props: any) => {
       <Grid size={{ xs: 12, md: 3 }}>
         <ShakingTextField
           error={
-            (formik.touched as any).previousSchool && Boolean((formik.errors as any).previousSchool)
-          }
-        >
-          <TextField
-            key="previousSchool"
-            size="small"
-            label="Previous School"
-            name="previousSchool"
-            value={(formik.values as any).previousSchool}
-            onBlur={formik.handleBlur}
-            error={
-              (formik.touched as any).previousSchool &&
-              Boolean((formik.errors as any).previousSchool)
-            }
-            helperText={
-              (formik.touched as any).previousSchool && (formik.errors as any).previousSchool
-            }
-            fullWidth
-            onChange={(e) => {
-              formik.setFieldValue('previousSchool', toAlphanumericTitleCase(e.target.value));
-              formik.setFieldTouched('previousSchool', true, true);
-            }}
-            disabled={!isEditable.value}
-          />
-        </ShakingTextField>
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 3 }}>
-        <ShakingTextField
-          error={
             (formik.touched as any).lastClassPassed &&
             Boolean((formik.errors as any).lastClassPassed)
           }
@@ -249,7 +250,7 @@ const RenderPreviousSchoolFields = (props: any) => {
       <Grid size={{ xs: 12 }}>
         <Typography variant="subtitle1">Academic Info</Typography>
       </Grid>
-      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
+      {/* <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"
           fullWidth
@@ -262,7 +263,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           }}
           disabled={!isEditable.value}
         />
-      </Grid>
+      </Grid> */}
       <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"

@@ -7,23 +7,14 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CommonReport from 'src/components/common-report';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
+import { StudentReportTitle } from 'src/enums/student-reports';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Chip, Button, IconButton, Typography } from '@mui/material';
 
-import DateOfBirthReport from './components/DateOfBirthReport';
-import PreviousSchoolReport from './components/PreviousSchoolReport';
-import StudentEnrollmentList from './components/StudentEnrollmentList';
-import AdmissionSourceReport from './components/AdmissionSourceReport';
+import StudentReportForm from './components/StudentReportForm';
 import CasteCategoryWiseReport from './components/CasteCategoryWiseReport';
 import AadharVerificationReport from './components/AadharVerificationReport';
-import ContactInformationReport from './components/ContactInformationReport';
-import ReligionWiseStudentReport from './components/ReligionWiseStudentReport';
-import MonthlyAdmissionTrendReport from './components/MonthlyAdmissionTrendReport';
-import AcademicYearComparisonReport from './components/AcademicYearComparisonReport';
-import PinCodeWiseStudentDistribution from './components/PinCodeWiseStudentDistribution';
-import ClassWiseStudentEnrollmentReport from './components/ClassWiseStudentEnrollmentReport';
-import GenderWiseStudentDistributionReport from './components/GenderWiseStudentDistributionReport';
 
 const EnrollmentReportScreen = () => {
   const openGenerateReport = useBoolean();
@@ -85,117 +76,187 @@ const EnrollmentReportScreen = () => {
             },
           ]}
           subCategories={[
-            // Student List
+            // ── Student List ──────────────────────────────────────────────────
             {
-              name: 'Class Wise Enrollment',
-              id: 'class-wise-enrollment',
+              name: 'Student List',
+              id: 'student-list',
               icon: '',
-              render: () => <ClassWiseStudentEnrollmentReport />,
-              description: 'View student enrollment summary by class',
+              description: 'View the complete list of enrolled students',
               categoryId: 'Student List',
+              render: () => <StudentReportForm report={StudentReportTitle.StudentList} />,
             },
             {
-              name: 'Student Enrollment List',
-              id: 'student-enrollment-list',
+              name: 'Student Directory',
+              id: 'student-directory',
               icon: '',
-              render: () => <StudentEnrollmentList />,
-              description: 'View detailed list of enrolled students',
+              description: 'Browse student profiles with contact and class details',
               categoryId: 'Student List',
+              render: () => <StudentReportForm report={StudentReportTitle.StudentDirectory} />,
+            },
+            {
+              name: 'Class-wise Student List',
+              id: 'class-wise-student-list',
+              icon: '',
+              description: 'View students grouped by class and division',
+              categoryId: 'Student List',
+              render: () => <StudentReportForm report={StudentReportTitle.ClassWiseStudentList} />,
+            },
+            {
+              name: 'Active Student Report',
+              id: 'active-student-report',
+              icon: '',
+              description: 'List all currently active students',
+              categoryId: 'Student List',
+              render: () => <StudentReportForm report={StudentReportTitle.ActiveStudentReport} />,
+            },
+            {
+              name: 'Inactive Student Report',
+              id: 'inactive-student-report',
+              icon: '',
+              description: 'List students who are inactive, transferred, or withdrawn',
+              categoryId: 'Student List',
+              render: () => <StudentReportForm report={StudentReportTitle.InactiveStudentReport} />,
             },
 
-            // Demographics
+            // ── Demographics ──────────────────────────────────────────────────
             {
               name: 'Religion Wise Report',
               id: 'religion-wise-report',
               icon: '',
-              render: () => <ReligionWiseStudentReport />,
               description: 'View student distribution by religion',
               categoryId: 'Demographics',
+              render: () => <StudentReportForm report={StudentReportTitle.ReligionWiseReport} />,
             },
             {
               name: 'Caste Category Wise Report',
               id: 'caste-category-wise-report',
               icon: '',
-              render: () => <CasteCategoryWiseReport />,
               description: 'View student distribution by caste category',
               categoryId: 'Demographics',
+              render: () => (
+                <StudentReportForm report={StudentReportTitle.CasteCategoryWiseReport} />
+              ),
             },
             {
-              name: 'Pin Code Wise Distribution',
-              id: 'pincode-wise-distribution',
+              name: 'Gender Wise Distribution Report',
+              id: 'gender-wise-distribution-report',
               icon: '',
-              render: () => <PinCodeWiseStudentDistribution />,
-              description: 'View student distribution by pin code',
+              description: 'View student distribution by gender',
               categoryId: 'Demographics',
+              render: () => (
+                <StudentReportForm report={StudentReportTitle.GenderWiseDistributionReport} />
+              ),
             },
             {
               name: 'Date of Birth Report',
               id: 'dob-report',
               icon: '',
-              render: () => <DateOfBirthReport />,
               description: 'View student list by date of birth',
               categoryId: 'Demographics',
+              render: () => <StudentReportForm report={StudentReportTitle.DateOfBirthReport} />,
             },
             {
-              name: 'Gender Wise Distribution',
-              id: 'gender-wise-distribution',
+              name: 'Blood Group Distribution Report',
+              id: 'blood-group-distribution-report',
               icon: '',
-              render: () => <GenderWiseStudentDistributionReport />,
-              description: 'View student distribution by gender',
+              description: 'View student distribution by blood group',
               categoryId: 'Demographics',
+              render: () => (
+                <StudentReportForm report={StudentReportTitle.BloodGroupDistributionReport} />
+              ),
+            },
+            {
+              name: 'Pin Code Wise Distribution Report',
+              id: 'pincode-wise-distribution-report',
+              icon: '',
+              description: 'View student distribution by residential pin code',
+              categoryId: 'Demographics',
+              render: () => (
+                <StudentReportForm report={StudentReportTitle.PinCodeWiseDistributionReport} />
+              ),
             },
 
-            // Admission
-            {
-              name: 'Previous School Report',
-              id: 'previous-school-report',
-              icon: '',
-              render: () => <PreviousSchoolReport />,
-              description: 'View students by previous school',
-              categoryId: 'Admission',
-            },
+            // ── Admission ─────────────────────────────────────────────────────
             {
               name: 'Admission Source Report',
               id: 'admission-source-report',
               icon: '',
-              render: () => <AdmissionSourceReport />,
-              description: 'View admission source statistics',
+              description: 'Analyze admissions by the source through which students were referred',
               categoryId: 'Admission',
+              render: () => <StudentReportForm report={StudentReportTitle.AdmissionSourceReport} />,
             },
             {
-              name: 'Monthly Admission Trend',
-              id: 'monthly-admission-trend',
+              name: 'Previous School Report',
+              id: 'previous-school-report',
               icon: '',
-              render: () => <MonthlyAdmissionTrendReport />,
-              description: 'View monthly admission trends',
+              description: 'Analyze students based on their previous schools',
               categoryId: 'Admission',
+              render: () => <StudentReportForm report={StudentReportTitle.PreviousSchoolReport} />,
             },
             {
-              name: 'Academic Year Comparison',
-              id: 'academic-year-comparison',
+              name: 'Monthly Admission Trend Report',
+              id: 'monthly-admission-trend-report',
               icon: '',
-              render: () => <AcademicYearComparisonReport />,
-              description: 'Compare admissions across academic years',
+              description: 'Track admission growth trends month over month',
               categoryId: 'Admission',
+              render: () => (
+                <StudentReportForm report={StudentReportTitle.MonthlyAdmissionTrendReport} />
+              ),
+            },
+            {
+              name: 'Admission Comparison Report',
+              id: 'admission-comparison-report',
+              icon: '',
+              description: 'Compare admissions across classes and periods',
+              categoryId: 'Admission',
+              render: () => (
+                <StudentReportForm report={StudentReportTitle.AdmissionComparisonReport} />
+              ),
+            },
+            {
+              name: 'Class-wise Admission Report',
+              id: 'class-wise-admission-report',
+              icon: '',
+              description: 'Analyze admissions broken down by class',
+              categoryId: 'Admission',
+              render: () => (
+                <StudentReportForm report={StudentReportTitle.ClassWiseAdmissionReport} />
+              ),
             },
 
-            // Verification
+            // ── Verification ──────────────────────────────────────────────────
             {
-              name: 'Aadhar Verification Report',
-              id: 'aadhar-verification-report',
+              name: 'Aadhaar Verification Report',
+              id: 'aadhaar-verification-report',
               icon: '',
-              render: () => <AadharVerificationReport />,
-              description: 'View students with/without Aadhar verification',
+              description: 'Track Aadhaar verification status of students',
               categoryId: 'Verification',
+              render: () => (
+                <StudentReportForm report={StudentReportTitle.AadhaarVerificationReport} />
+              ),
             },
             {
               name: 'Contact Information Report',
               id: 'contact-information-report',
               icon: '',
-              render: () => <ContactInformationReport />,
-              description: 'View student contact information',
+              description: 'Review and validate student and parent contact information',
               categoryId: 'Verification',
+              render: () => (
+                <StudentReportForm report={StudentReportTitle.ContactInformationReport} />
+              ),
             },
+            {
+              name: 'Document Verification Report',
+              id: 'document-verification-report',
+              icon: '',
+              description: 'Track verification status of submitted admission documents',
+              categoryId: 'Verification',
+              render: () => (
+                <StudentReportForm report={StudentReportTitle.DocumentVerificationReport} />
+              ),
+            },
+
+            // ── Compliance (standalone — unchanged) ───────────────────────────
             {
               name: 'Generic UDISE+ Student Export',
               id: 'generic-udise-student-export',

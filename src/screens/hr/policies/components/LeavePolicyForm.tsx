@@ -6,6 +6,7 @@ import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -433,13 +434,10 @@ function RuleSection({
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1} alignItems="center">
-          <Chip
-            size="small"
-            label={title}
-            color={isPaid ? 'success' : 'warning'}
-            variant="outlined"
-          />
           <Typography variant="subtitle2">{title} leave rule</Typography>
+          <Label color={isPaid ? 'success' : 'warning'} variant="soft">
+            {title}
+          </Label>
         </Stack>
 
         <Grid container spacing={1.5} alignItems="stretch">

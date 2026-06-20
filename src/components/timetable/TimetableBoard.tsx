@@ -34,6 +34,7 @@ export interface TimetableBoardProps {
   selectedDivision: string;
   standardId?: string;
   divisionId?: string;
+  timetableStatus?: number | null;
 }
 
 const TimetableBoard: React.FC<TimetableBoardProps> = ({
@@ -45,6 +46,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   selectedDivision,
   standardId = '',
   divisionId = '',
+  timetableStatus,
 }) => {
   const { timelineStartHour, timelineEndHour, timelineStamps } = useMemo(() => {
     let minMin = Infinity;
@@ -81,6 +83,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   const createSlotsDialog = useBoolean();
   const [teacherDialog, setTeacherDialog] = useState<TeacherAssignment | null>(null);
   const [roomDialog, setRoomDialog] = useState<RoomAssignment | null>(null);
+  const [isWarningDismissed, setIsWarningDismissed] = useState(false);
 
   // --- Actions ---
 
@@ -550,6 +553,11 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     return [...new Set(warnings)]; // deduplicate
   }, [slots]);
 
+  const conflictsKey = useMemo(() => conflicts.join('|'), [conflicts]);
+  React.useEffect(() => {
+    setIsWarningDismissed(false);
+  }, [conflictsKey]);
+
   const content = (
     <Box
       sx={{
@@ -685,6 +693,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
         slots={slots}
         standardId={standardId}
         divisionId={divisionId}
+        timetableStatus={timetableStatus}
         onClose={() => setTeacherDialog(null)}
         onSave={handleTeacherSave}
       />
@@ -693,6 +702,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
         slots={slots}
         standardId={standardId}
         divisionId={divisionId}
+        timetableStatus={timetableStatus}
         onClose={() => setRoomDialog(null)}
         onSave={handleRoomSave}
       />
@@ -709,12 +719,12 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
 
   return (
     <DndProvider backend={HTML5Backend}>
-      {conflicts.length > 0 && !readOnly && (
+      {conflicts.length > 0 && !readOnly && !isWarningDismissed && (
         <Alert
           severity="warning"
           sx={{ mb: 1, borderRadius: 1 }}
           onClose={() => {
-            /* dismissed visually — conflicts persist until resolved */
+            setIsWarningDismissed(true);
           }}
         >
           <AlertTitle sx={{ fontWeight: 700 }}>Scheduling Conflicts Detected</AlertTitle>

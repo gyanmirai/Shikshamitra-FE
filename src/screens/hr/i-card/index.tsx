@@ -1582,6 +1582,7 @@ const EmployeeICardBuilder = ({
                       disabled={isSaving || isExporting || state.selectedEmployeeIds.length === 0}
                       onClick={handleExport}
                       startIcon={<Iconify icon="solar:file-download-bold" />}
+                      sx={{ alignSelf: 'flex-start' }}
                     >
                       Export Bulk PDF
                     </Button>

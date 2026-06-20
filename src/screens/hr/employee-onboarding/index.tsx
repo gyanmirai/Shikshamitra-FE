@@ -1890,21 +1890,25 @@ function FinalizeDialog({
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Family Caste *"
-                        value={form.familyCaste}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/[^A-Za-z\s]/g, '') || '';
-                          const newName = value
-                            ? value.charAt(0).toUpperCase() + value.slice(1)
-                            : '';
-                          formik.setFieldValue('familyCaste', newName);
-                        }}
+                      <ShakingTextField
                         error={formik.touched.familyCaste && Boolean(formik.errors.familyCaste)}
-                        helperText={formik.touched.familyCaste && formik.errors.familyCaste}
-                      />
+                      >
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Family Caste *"
+                          value={form.familyCaste}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^A-Za-z\s]/g, '') || '';
+                            const newName = value
+                              ? value.charAt(0).toUpperCase() + value.slice(1)
+                              : '';
+                            formik.setFieldValue('familyCaste', newName);
+                          }}
+                          error={formik.touched.familyCaste && Boolean(formik.errors.familyCaste)}
+                          helperText={formik.touched.familyCaste && formik.errors.familyCaste}
+                        />
+                      </ShakingTextField>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
                       <FormControl fullWidth size="small">

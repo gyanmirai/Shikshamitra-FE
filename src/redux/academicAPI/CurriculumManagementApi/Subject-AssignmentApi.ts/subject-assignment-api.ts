@@ -57,7 +57,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
       query: ({ assignmentId, status }) => ({
         url: `/academics/curriculum/subject-assignments/${assignmentId}/status`,
         method: 'PATCH',
-        data: { status },
+        body: { status },
       }),
       invalidatesTags: [academicType.subjectAssignment],
     }),

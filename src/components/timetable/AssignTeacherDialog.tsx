@@ -36,6 +36,7 @@ interface AssignTeacherDialogProps {
   slots: Record<DayOfWeek, TimeSlot[]>;
   standardId: string;
   divisionId: string;
+  timetableStatus?: number | null;
   onClose: () => void;
   onSave: (
     day: DayOfWeek,
@@ -213,6 +214,7 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
   slots,
   standardId,
   divisionId,
+  timetableStatus,
   onClose,
   onSave,
 }) => {
@@ -302,7 +304,11 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
       teacherName: selectedNames[sub.subjectId] || undefined,
     }));
 
-    if (standardId && divisionId) {
+    // Only call API if the timetable already exists in the database
+    const timetableExists =
+      timetableStatus !== 0 && timetableStatus !== null && timetableStatus !== undefined;
+
+    if (timetableExists && standardId && divisionId) {
       const currentSlot = slots[day]?.[slotIndex];
       if (currentSlot) {
         // Only call API for the current slot to prevent backend lock issues and rate-limiting

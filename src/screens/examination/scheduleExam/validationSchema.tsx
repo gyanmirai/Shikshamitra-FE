@@ -85,21 +85,47 @@ export const validationSchema = [
                 if (!value || !examDate || !endTime || !allSubjects) return true;
 
                 const currentDate = dayjs(examDate as any).format('YYYY-MM-DD');
-                const currentStart = dayjs(value as any);
-                const currentEnd = dayjs(endTime as any);
+                const tStart = dayjs(value as any);
+                const tEnd = dayjs(endTime as any);
+                const currentStart = dayjs(examDate as any)
+                  .hour(tStart.hour())
+                  .minute(tStart.minute())
+                  .second(0)
+                  .millisecond(0);
+                const currentEnd = dayjs(examDate as any)
+                  .hour(tEnd.hour())
+                  .minute(tEnd.minute())
+                  .second(0)
+                  .millisecond(0);
                 const currentIndex = parseInt(this.path.match(/\[(\d+)\]/)?.[1] || '0', 10);
 
                 const conflicting = allSubjects
-                  .filter(
-                    (other: any, i: number) =>
-                      i !== currentIndex &&
-                      other?.examDate &&
-                      other?.startTime &&
-                      other?.endTime &&
-                      dayjs(other.examDate as any).format('YYYY-MM-DD') === currentDate &&
-                      currentStart.isBefore(dayjs(other.endTime)) &&
-                      currentEnd.isAfter(dayjs(other.startTime))
-                  )
+                  .filter((other: any, i: number) => {
+                    if (
+                      i === currentIndex ||
+                      !other?.examDate ||
+                      !other?.startTime ||
+                      !other?.endTime
+                    )
+                      return false;
+                    const otherDateStr = dayjs(other.examDate as any).format('YYYY-MM-DD');
+                    if (otherDateStr !== currentDate) return false;
+
+                    const oStart = dayjs(other.startTime as any);
+                    const oEnd = dayjs(other.endTime as any);
+                    const otherStart = dayjs(other.examDate as any)
+                      .hour(oStart.hour())
+                      .minute(oStart.minute())
+                      .second(0)
+                      .millisecond(0);
+                    const otherEnd = dayjs(other.examDate as any)
+                      .hour(oEnd.hour())
+                      .minute(oEnd.minute())
+                      .second(0)
+                      .millisecond(0);
+
+                    return currentStart.isBefore(otherEnd) && currentEnd.isAfter(otherStart);
+                  })
                   .find(
                     (other: any) =>
                       !electiveGroupId ||
@@ -143,7 +169,16 @@ export const validationSchema = [
               const { startTime, electiveGroupId, schedulingMode } = this.parent;
               if (electiveGroupId && schedulingMode === 'separate') return true;
               if (!value || !startTime) return true;
-              return dayjs(value as any).isAfter(dayjs(startTime as any));
+              const dummyDate = dayjs('2000-01-01');
+              const start = dayjs(startTime as any);
+              const end = dayjs(value as any);
+              const dStart = dummyDate
+                .hour(start.hour())
+                .minute(start.minute())
+                .second(0)
+                .millisecond(0);
+              const dEnd = dummyDate.hour(end.hour()).minute(end.minute()).second(0).millisecond(0);
+              return dEnd.isAfter(dStart);
             })
             .test(
               'minimum-duration',
@@ -153,7 +188,20 @@ export const validationSchema = [
                 const { startTime, electiveGroupId, schedulingMode } = this.parent;
                 if (electiveGroupId && schedulingMode === 'separate') return true;
                 if (!value || !startTime) return true;
-                return dayjs(value as any).diff(dayjs(startTime as any), 'minute') >= 30;
+                const dummyDate = dayjs('2000-01-01');
+                const start = dayjs(startTime as any);
+                const end = dayjs(value as any);
+                const dStart = dummyDate
+                  .hour(start.hour())
+                  .minute(start.minute())
+                  .second(0)
+                  .millisecond(0);
+                const dEnd = dummyDate
+                  .hour(end.hour())
+                  .minute(end.minute())
+                  .second(0)
+                  .millisecond(0);
+                return dEnd.diff(dStart, 'minute') >= 30;
               }
             ),
           totalMarks: yup

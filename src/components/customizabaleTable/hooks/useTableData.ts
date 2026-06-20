@@ -83,17 +83,45 @@ export const useTableData = ({
                 return false;
             }
           } else {
+            const d = dayjs(value);
+            const isISO =
+              typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value);
+            const formattedDate = isISO && d.isValid() ? d.format('DD-MM-YYYY').toLowerCase() : '';
+            const formattedTime = isISO && d.isValid() ? d.format('hh:mm A').toLowerCase() : '';
+            const formattedTimeNoZero =
+              isISO && d.isValid() ? d.format('h:mm A').toLowerCase() : '';
+
             const safeValue = (value ?? '').toString().toLowerCase();
             const safeFilterValue = (filter.value ?? '').toString().toLowerCase();
             switch (filter.type) {
               case 'contains':
-                return safeValue.includes(safeFilterValue);
+                return (
+                  safeValue.includes(safeFilterValue) ||
+                  formattedDate.includes(safeFilterValue) ||
+                  formattedTime.includes(safeFilterValue) ||
+                  formattedTimeNoZero.includes(safeFilterValue)
+                );
               case 'equals':
-                return safeValue === safeFilterValue;
+                return (
+                  safeValue === safeFilterValue ||
+                  formattedDate === safeFilterValue ||
+                  formattedTime === safeFilterValue ||
+                  formattedTimeNoZero === safeFilterValue
+                );
               case 'startsWith':
-                return safeValue.startsWith(safeFilterValue);
+                return (
+                  safeValue.startsWith(safeFilterValue) ||
+                  formattedDate.startsWith(safeFilterValue) ||
+                  formattedTime.startsWith(safeFilterValue) ||
+                  formattedTimeNoZero.startsWith(safeFilterValue)
+                );
               case 'endsWith':
-                return safeValue.endsWith(safeFilterValue);
+                return (
+                  safeValue.endsWith(safeFilterValue) ||
+                  formattedDate.endsWith(safeFilterValue) ||
+                  formattedTime.endsWith(safeFilterValue) ||
+                  formattedTimeNoZero.endsWith(safeFilterValue)
+                );
               case 'greaterThan':
                 return valueAsNumber > filterValueAsNumber;
               case 'lessThan':
@@ -118,15 +146,26 @@ export const useTableData = ({
       return data;
     }
     return data.filter((row) => {
-      const searchMatch = Object.entries(row).some(
-        ([key]) =>
-          columnVisibility[key] &&
-          _.get(row, columns.find((col) => col.id === key)?.id || '') &&
-          _.get(row, columns.find((col) => col.id === key)?.id || '')
-            .toString()
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())
-      );
+      const searchMatch = Object.entries(row).some(([key]) => {
+        if (!columnVisibility[key]) return false;
+        const colId = columns.find((col) => col.id === key)?.id;
+        if (!colId) return false;
+        const val = _.get(row, colId);
+        if (val === undefined || val === null) return false;
+
+        const rawValStr = val.toString().toLowerCase();
+        const d = dayjs(val);
+        const isISO = typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val);
+        if (isISO && d.isValid()) {
+          return (
+            rawValStr.includes(searchTerm.toLowerCase()) ||
+            d.format('DD-MM-YYYY').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            d.format('hh:mm A').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            d.format('h:mm A').toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        }
+        return rawValStr.includes(searchTerm.toLowerCase());
+      });
 
       return searchMatch && applyFilter(row);
     });

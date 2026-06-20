@@ -38,6 +38,9 @@ export const getHomeworkInitialValues = (
   content: editData?.content || '',
   submission: editData?.submission || '',
   chapterId: (editData as any)?.chapterId || undefined,
+  chapterIds:
+    (editData as any)?.chapterIds ||
+    ((editData as any)?.chapterId ? [(editData as any).chapterId] : []),
   homeworkId: undefined,
   standardId: (editData as any)?.standardId || '',
 });

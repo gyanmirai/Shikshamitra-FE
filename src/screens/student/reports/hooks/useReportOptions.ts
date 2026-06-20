@@ -3,6 +3,8 @@ import type { RootState } from 'src/redux/store';
 import { useMemo } from 'react';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
+import { BloodGroupArray } from 'src/enums/blood-group';
+import { MotherTongueTypeArray } from 'src/enums/mother-tongue';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 
 export const useReportOptions = () => {
@@ -63,6 +65,44 @@ export const useReportOptions = () => {
     []
   );
 
+  const bloodGroupOptions = useMemo(
+    () =>
+      BloodGroupArray.map((bg) => ({
+        id: bg.value,
+        name: bg.label,
+      })),
+    []
+  );
+
+  const motherTongueOptions = useMemo(
+    () =>
+      MotherTongueTypeArray.map((mt, index) => ({
+        id: index.toString(),
+        name: mt,
+      })),
+    []
+  );
+
+  const admissionCategoryOptions = useMemo(
+    () => [
+      { id: 'General', name: 'General' },
+      { id: 'RTE', name: 'RTE' },
+      { id: 'Management Quota', name: 'Management Quota' },
+      { id: 'Scholarship', name: 'Scholarship' },
+      { id: 'Reserved Category', name: 'Reserved Category' },
+    ],
+    []
+  );
+
+  const verificationStatusOptions = useMemo(
+    () => [
+      { id: 'Complete', name: 'Complete' },
+      { id: 'Incomplete', name: 'Incomplete' },
+      { id: 'Needs Review', name: 'Needs Review' },
+    ],
+    []
+  );
+
   const allClasses = useMemo(() => {
     const classes =
       currentMedium?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [];
@@ -87,6 +127,10 @@ export const useReportOptions = () => {
     genderOptions,
     religionOptions,
     categoryOptions,
+    bloodGroupOptions,
+    motherTongueOptions,
+    admissionCategoryOptions,
+    verificationStatusOptions,
     currentMedium,
   };
 };

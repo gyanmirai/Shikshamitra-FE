@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
@@ -19,9 +20,52 @@ type LeaveOverviewMetric = {
   label: string;
   value: number;
   icon: string;
-  color: string;
+  color: 'success' | 'grey' | 'warning';
   bgColor: string;
   useLogo?: boolean;
+};
+
+const getPaletteMainColor = (theme: any, colorKey: 'success' | 'grey' | 'warning'): string => {
+  if (colorKey === 'grey') {
+    return theme.vars?.palette?.grey?.[500] || theme.palette?.grey?.[500] || '#919EAB';
+  }
+  return theme.vars?.palette?.[colorKey]?.main || theme.palette?.[colorKey]?.main || '';
+};
+
+const getPaletteChannel = (theme: any, colorKey: 'success' | 'grey' | 'warning'): string => {
+  if (colorKey === 'grey') {
+    return getGreyChannel(theme);
+  }
+  if (theme.vars?.palette?.[colorKey]?.mainChannel) {
+    return theme.vars.palette[colorKey].mainChannel;
+  }
+  const hex = theme.palette?.[colorKey]?.main;
+  if (hex && hex.startsWith('#')) {
+    const r = parseInt(hex.substring(1, 3), 16);
+    const g = parseInt(hex.substring(3, 5), 16);
+    const b = parseInt(hex.substring(5, 7), 16);
+    return `${r} ${g} ${b}`;
+  }
+  const fallbacks = {
+    success: '76 175 80',
+    grey: '145 158 171',
+    warning: '255 193 7',
+  };
+  return fallbacks[colorKey];
+};
+
+const getGreyChannel = (theme: any): string => {
+  if (theme.vars?.palette?.grey?.['500Channel']) {
+    return theme.vars.palette.grey['500Channel'];
+  }
+  const hex = theme.palette?.grey?.[500] || '#919EAB';
+  if (hex.startsWith('#')) {
+    const r = parseInt(hex.substring(1, 3), 16);
+    const g = parseInt(hex.substring(3, 5), 16);
+    const b = parseInt(hex.substring(5, 7), 16);
+    return `${r} ${g} ${b}`;
+  }
+  return '145 158 171';
 };
 
 export const getLeaveUtilizationPercent = (overview: LeaveOverviewData) =>
@@ -34,22 +78,22 @@ const getOverviewMetrics = (overview: LeaveOverviewData): LeaveOverviewMetric[] 
     label: 'Available',
     value: overview.remainingLeaves,
     icon: 'solar:calendar-check-bold-duotone',
-    color: 'success.main',
+    color: 'success',
     bgColor: 'success.lighter',
     useLogo: true,
   },
   {
     label: 'Accrued',
     value: overview.totalLeaves,
-    icon: 'solar:calendar-add-bold-duotone',
-    color: 'primary.main',
-    bgColor: 'primary.lighter',
+    icon: 'solar:clock-circle-bold-duotone',
+    color: 'grey',
+    bgColor: 'grey.lighter',
   },
   {
     label: 'Used',
     value: overview.usedLeaves,
-    icon: 'solar:calendar-mark-bold-duotone',
-    color: 'warning.main',
+    icon: 'solar:calendar-minus-bold-duotone',
+    color: 'warning',
     bgColor: 'warning.lighter',
   },
 ];
@@ -60,6 +104,8 @@ export function LeaveCenterOverviewPanel({ overview, isLoading }: LeaveCenterOve
   const hasFiniteEntitlement = overview.totalLeaves > 0;
   const hasUnlimitedLeave = overview.bucketBreakdown.some((row) => row.isUnlimited);
   const metrics = useMemo(() => getOverviewMetrics(overview), [overview]);
+  const hasAllocation = overview.bucketBreakdown && overview.bucketBreakdown.length > 0;
+
   const chartSeries = useMemo(
     () =>
       hasFiniteEntitlement
@@ -99,92 +145,165 @@ export function LeaveCenterOverviewPanel({ overview, isLoading }: LeaveCenterOve
       sx={{
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 280px' },
-        gap: 1,
+        gap: 2,
       }}
     >
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
-          gap: 1,
-          minWidth: 0,
-        }}
-      >
-        {metrics.map((metric) => (
-          <Card
-            key={metric.label}
-            variant="outlined"
+      <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+            gap: 2,
+            minWidth: 0,
+          }}
+        >
+          {metrics.map((metric) => {
+            const colorChannel = hasAllocation
+              ? getPaletteChannel(theme, metric.color)
+              : getGreyChannel(theme);
+            const mainColor = hasAllocation
+              ? getPaletteMainColor(theme, metric.color)
+              : theme.palette?.text?.disabled || '#919EAB';
+
+            return (
+              <Card
+                key={metric.label}
+                variant="outlined"
+                sx={{
+                  p: 2.25,
+                  borderRadius: 2,
+                  boxShadow: 'none',
+                  minHeight: 104,
+                  display: 'flex',
+                  alignItems: 'center',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  bgcolor: varAlpha(colorChannel, 0.04),
+                  borderColor: varAlpha(colorChannel, 0.16),
+                  transition: theme.transitions.create(
+                    ['transform', 'box-shadow', 'border-color'],
+                    {
+                      duration: theme.transitions.duration.shorter,
+                    }
+                  ),
+                  ...(hasAllocation && {
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      borderColor: mainColor,
+                      boxShadow: `0 12px 24px -4px ${varAlpha(colorChannel, 0.16)}`,
+                      '& .metric-icon-box': {
+                        transform: 'scale(1.08)',
+                        bgcolor: varAlpha(colorChannel, 0.2),
+                      },
+                    },
+                  }),
+                }}
+              >
+                {isLoading ? (
+                  <Stack
+                    data-testid={`leave-overview-${metric.label.toLowerCase()}-loading`}
+                    direction="row"
+                    spacing={2}
+                    alignItems="center"
+                    sx={{ width: 1 }}
+                  >
+                    <Skeleton variant="rounded" width={48} height={48} sx={{ borderRadius: 1.5 }} />
+                    <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
+                      <Skeleton width={40} height={28} />
+                      <Skeleton width="60%" height={16} />
+                    </Stack>
+                  </Stack>
+                ) : (
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    alignItems="center"
+                    sx={{ minWidth: 0, width: 1 }}
+                  >
+                    <Box
+                      className="metric-icon-box"
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        flexShrink: 0,
+                        borderRadius: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: mainColor,
+                        bgcolor: varAlpha(colorChannel, 0.12),
+                        transition: theme.transitions.create(['transform', 'background-color'], {
+                          duration: theme.transitions.duration.shorter,
+                        }),
+                      }}
+                    >
+                      <Iconify icon={metric.icon} width={24} />
+                    </Box>
+                    <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+                      <Typography
+                        variant="h4"
+                        sx={{
+                          fontWeight: 800,
+                          lineHeight: 1.1,
+                          mb: 0.5,
+                          color: hasAllocation ? 'text.primary' : 'text.disabled',
+                        }}
+                      >
+                        {hasAllocation ? formatLeaveDays(metric.value) : '—'}
+                      </Typography>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          display: 'block',
+                          fontWeight: 700,
+                          color: hasAllocation ? 'text.secondary' : 'text.disabled',
+                        }}
+                      >
+                        {metric.label}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                )}
+              </Card>
+            );
+          })}
+        </Box>
+
+        {!hasAllocation && !isLoading && (
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
             sx={{
-              p: 1.5,
+              p: 1.25,
               borderRadius: 1,
-              boxShadow: 'none',
-              minHeight: 100,
-              display: 'flex',
-              alignItems: 'center',
+              bgcolor: varAlpha(getGreyChannel(theme), 0.04),
+              border: '1px dashed',
+              borderColor: varAlpha(getGreyChannel(theme), 0.16),
             }}
           >
-            {isLoading ? (
-              <Stack
-                data-testid={`leave-overview-${metric.label.toLowerCase()}-loading`}
-                spacing={1}
-                sx={{ width: 1 }}
-              >
-                <Skeleton width={44} height={26} />
-                <Skeleton width="64%" height={18} />
-              </Stack>
-            ) : (
-              <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
-                <Box
-                  sx={{
-                    width: 38,
-                    height: 38,
-                    flexShrink: 0,
-                    borderRadius: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: metric.color,
-                    bgcolor: metric.bgColor,
-                  }}
-                >
-                  {metric.useLogo ? (
-                    <Box
-                      component="img"
-                      src="/logo/logo-single.svg"
-                      alt=""
-                      sx={{ width: 24, height: 24, objectFit: 'contain' }}
-                    />
-                  ) : (
-                    <Iconify icon={metric.icon} width={22} />
-                  )}
-                </Box>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="h5" sx={{ fontWeight: 800, lineHeight: 1.1 }}>
-                    {formatLeaveDays(metric.value)}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: 'block', fontWeight: 800 }}
-                  >
-                    {metric.label}
-                  </Typography>
-                </Box>
-              </Stack>
-            )}
-          </Card>
-        ))}
-      </Box>
+            <Iconify
+              icon="solar:info-circle-bold-duotone"
+              sx={{ color: 'text.secondary', width: 18, height: 18, flexShrink: 0 }}
+            />
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+              No leave allocation yet for this year — ask HR to set one up.
+            </Typography>
+          </Stack>
+        )}
+      </Stack>
 
       <Card
         variant="outlined"
         sx={{
-          p: 1.5,
-          borderRadius: 1,
+          p: 2.25,
+          borderRadius: 2,
           boxShadow: 'none',
           minHeight: 176,
           display: 'flex',
           flexDirection: 'column',
+          bgcolor: theme.vars?.palette?.background?.paper || theme.palette?.background?.paper,
+          borderColor: varAlpha(getGreyChannel(theme), 0.16),
         }}
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>

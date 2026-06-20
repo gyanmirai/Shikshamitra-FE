@@ -26,6 +26,10 @@ import { validationSchema } from './validationSchema';
 
 import type { IGrade, IGradingScale, IGradeFormProps } from './type';
 
+const HELPER_TEXT_PROPS = {
+  sx: { margin: 0, position: 'static' as const, whiteSpace: 'normal' as const },
+};
+
 const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnly = false }) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const [addGradeScaling, { isLoading: isAddLoading }] = useQueryAndMutation({
@@ -204,6 +208,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                                 ?.minMarks
                             : undefined
                         }
+                        FormHelperTextProps={HELPER_TEXT_PROPS}
                       />
                     </ShakingTextField>
                   </Grid>
@@ -254,6 +259,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                                 ?.maxMarks
                             : undefined
                         }
+                        FormHelperTextProps={HELPER_TEXT_PROPS}
                       />
                     </ShakingTextField>
                   </Grid>
@@ -309,6 +315,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                                 ?.grade
                             : undefined
                         }
+                        helperTextProps={HELPER_TEXT_PROPS}
                       />
                     </ShakingTextField>
                   </Grid>

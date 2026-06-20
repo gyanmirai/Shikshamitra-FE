@@ -1,6 +1,6 @@
-import React from 'react';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import React, { useMemo } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -22,11 +22,6 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
     options: { skip: !examData?.examId },
   });
 
-  if (!examData) return null;
-
-  // Normalize subjects from the schedule API response.
-  // Elective group entries: expand each electiveGroupSubject into its own row,
-  // falling back to group-level schedule data (backend stores schedule at group level).
   const normalizedSubjects = (scheduleDetails?.subjects || []).flatMap((s: any) => {
     if (
       s.electiveGroupId &&
@@ -51,6 +46,24 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
     // Core subject
     return [{ ...s, subjectColor: s.color || s.subjectColor || '#9E9E9E' }];
   });
+
+  const sortedSubjects = useMemo(
+    () =>
+      [...normalizedSubjects].sort((a: any, b: any) => {
+        const getVal = (s: any) => {
+          if (!s.startTime) return 0;
+          const d = dayjs(s.examDate || '2000-01-01');
+          const t = dayjs(s.startTime);
+          return d.hour(t.hour()).minute(t.minute()).second(0).millisecond(0).valueOf();
+        };
+        const timeA = getVal(a);
+        const timeB = getVal(b);
+        return timeA - timeB;
+      }),
+    [normalizedSubjects]
+  );
+
+  if (!examData) return null;
 
   return (
     <CustomizableTable
@@ -107,6 +120,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           isSort: true,
           render: (value) => {
             const d = dayjs(value);
+            console.log(value);
             return (
               <Typography variant="caption" gutterBottom>
                 {d.isValid() ? d.format('DD-MM-YYYY') : '-'}
@@ -169,7 +183,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           render: (value: any) => <Typography variant="caption">{value || '-'}</Typography>,
         },
       ]}
-      data={normalizedSubjects}
+      data={sortedSubjects}
     />
   );
 };

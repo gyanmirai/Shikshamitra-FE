@@ -1,4 +1,4 @@
-import type { SxProps, SelectProps, FormControlProps } from '@mui/material';
+import type { SxProps, SelectProps, FormControlProps, FormHelperTextProps } from '@mui/material';
 
 import React from 'react';
 import {
@@ -25,6 +25,7 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   onChange: (value: J extends true ? string[] | number[] : string | number) => void;
   error?: boolean;
   helperText?: string;
+  helperTextProps?: FormHelperTextProps;
   isLoading?: boolean;
   disabled?: boolean;
   noOptionsMessage?: React.ReactNode;
@@ -47,6 +48,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   onChange,
   error = false,
   helperText,
+  helperTextProps,
   isLoading = false,
   disabled = false,
   noOptionsMessage = 'No data available',
@@ -178,7 +180,7 @@ const CustomSelect = <T extends string, J extends boolean>({
               })
             )}
           </Select>
-          {helperText && <FormHelperText>{helperText}</FormHelperText>}
+          {helperText && <FormHelperText {...helperTextProps}>{helperText}</FormHelperText>}
 
           {addOtherItemText !== '' && (
             <Typography
