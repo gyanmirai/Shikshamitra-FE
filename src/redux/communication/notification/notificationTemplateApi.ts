@@ -5,12 +5,10 @@ import { communicationApi } from '../communicationApi';
 export const notificationTemplateApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
     getNotificationTemplates: builder.query({
-      query: ({ academicMediumId }) => ({
-        url: '/notification-templates', // <-- update with your backend endpoint
+      query: (params = {}) => ({
+        url: '/notification-templates',
         method: 'GET',
-        params: {
-          academicMediumId,
-        },
+        params,
       }),
       providesTags: [communicationType.notificationTemplates],
     }),
@@ -26,8 +24,8 @@ export const notificationTemplateApi = communicationApi.injectEndpoints({
       invalidatesTags: [communicationType.notificationTemplates],
     }),
     updateNotificationTemplate: builder.mutation({
-      query: ({ academicMediumId, data }) => ({
-        url: `/notification-templates/${data.id}`,
+      query: ({ academicMediumId, id, data }) => ({
+        url: `/notification-templates/${id}`,
         method: 'PUT',
         body: data,
         params: {
@@ -37,13 +35,46 @@ export const notificationTemplateApi = communicationApi.injectEndpoints({
       invalidatesTags: [communicationType.notificationTemplates],
     }),
     deleteNotificationTemplate: builder.mutation({
-      query: ({ academicMediumId, data }) => ({
-        url: `/notification-templates/${data.id}`,
-        method: 'DELETE',
+      query: (arg) => {
+        const id = typeof arg === 'string' ? arg : arg?.id || arg?.data?.id;
+        return {
+          url: `/notification-templates/${id}`,
+          method: 'DELETE',
+          params: {
+            academicMediumId: typeof arg === 'string' ? undefined : arg?.academicMediumId,
+          },
+        };
+      },
+      invalidatesTags: [communicationType.notificationTemplates],
+    }),
+    getCommunicationTemplates: builder.query({
+      query: (params = {}) => ({
+        url: '/communication/templates',
+        method: 'GET',
+        params,
+      }),
+      providesTags: [communicationType.notificationTemplates],
+    }),
+    addCommunicationTemplate: builder.mutation({
+      query: (data) => ({
+        url: '/communication/templates',
+        method: 'POST',
         body: data,
-        params: {
-          academicMediumId,
-        },
+      }),
+      invalidatesTags: [communicationType.notificationTemplates],
+    }),
+    updateCommunicationTemplate: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/communication/templates/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: [communicationType.notificationTemplates],
+    }),
+    deleteCommunicationTemplate: builder.mutation({
+      query: (id) => ({
+        url: `/communication/templates/${id}`,
+        method: 'DELETE',
       }),
       invalidatesTags: [communicationType.notificationTemplates],
     }),
@@ -67,4 +98,8 @@ export const {
   useUpdateNotificationTemplateMutation,
   useDeleteNotificationTemplateMutation,
   useGetNotificationTemplateByIdQuery,
+  useGetCommunicationTemplatesQuery,
+  useAddCommunicationTemplateMutation,
+  useUpdateCommunicationTemplateMutation,
+  useDeleteCommunicationTemplateMutation,
 } = notificationTemplateApi;

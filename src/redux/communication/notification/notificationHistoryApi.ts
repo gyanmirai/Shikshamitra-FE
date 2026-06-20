@@ -1,15 +1,24 @@
 import { communicationType } from 'src/redux/tagTypes';
 
 import { communicationApi } from '../communicationApi';
+import { mapDeliveryAttemptToHistoryRow } from '../communicationMappers';
+
+import type { PagedResultDto, DeliveryAttemptDto } from '../communicationTypes';
 
 export const notificationHistoryApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
     getNotificationHistory: builder.query({
-      query: () => ({
-        url: '/notificationHistoryData', // <-- update with your backend endpoint
+      query: (params) => ({
+        url: '/communication/delivery-attempts',
         method: 'GET',
+        params,
       }),
-      providesTags: [communicationType.notificationHistory],
+      transformResponse: (response: PagedResultDto<DeliveryAttemptDto>) =>
+        response?.items?.map(mapDeliveryAttemptToHistoryRow) || [],
+      providesTags: [
+        communicationType.notificationHistory,
+        communicationType.communicationDeliveryAttempts,
+      ],
     }),
   }),
   overrideExisting: false,

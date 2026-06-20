@@ -15,9 +15,12 @@ export const communicationPaths = {
     setting: '/communication/notification/notificationSetting',
   },
   history: '/communication/notification-history',
+  inbox: '/communication/messages',
   settings: {
     root: '/communication/settings',
     announcementType: '/communication/settings/announcementType',
+    deliveryChannelType: '/communication/settings/deliveryChannelType',
+    importanceLevel: '/communication/settings/importanceLevel',
   },
 };
 
@@ -31,10 +34,12 @@ export const communicationPermissions = {
     templates: `${defaultCommunicationPermissionName}Notification.Templates`,
     setting: `${defaultCommunicationPermissionName}Notification.NotificationSetting`,
   },
-  history: `${defaultModulePermissionName}${defaultCommunicationPermissionName}NotificationHistory`,
+  history: `${defaultCommunicationPermissionName}History.View`,
+  inbox: `${defaultCommunicationPermissionName}Inbox.View`,
   settings: {
     root: `${defaultModulePermissionName}${defaultCommunicationPermissionName}Settings`,
     announcementType: `${defaultCommunicationPermissionName}Settings.AnnouncementType`,
+    providerSettings: `${defaultCommunicationPermissionName}Settings.ProviderSettings.View`,
   },
 };
 
@@ -100,6 +105,24 @@ const communicationModule = {
           ],
         },
         {
+          title: 'History',
+          path: communicationPaths.history,
+          _action: 'history',
+          shortcutKey: 'Alt+C+H',
+          shortcutKeyName: 'Alt+C+H',
+          permissionName: communicationPermissions.history,
+          icon: menuIconView('mdi:history'),
+        },
+        {
+          title: 'Inbox',
+          path: communicationPaths.inbox,
+          _action: 'inbox',
+          shortcutKey: 'Alt+C+I',
+          shortcutKeyName: 'Alt+C+I',
+          permissionName: communicationPermissions.inbox,
+          icon: menuIconView('mdi:inbox-outline'),
+        },
+        {
           title: 'Settings',
           path: communicationPaths.settings.root,
           _action: 'settings',
@@ -116,6 +139,24 @@ const communicationModule = {
               shortcutKeyName: 'Alt+C+S+5',
               permissionName: communicationPermissions.settings.announcementType,
               icon: menuIconView('mdi:format-list-bulleted'),
+            },
+            {
+              title: 'Provider Settings',
+              path: communicationPaths.settings.deliveryChannelType,
+              _action: 'settings-deliveryChannelType',
+              shortcutKey: 'Alt+C+S+1',
+              shortcutKeyName: 'Alt+C+S+1',
+              permissionName: communicationPermissions.settings.providerSettings,
+              icon: menuIconView('mdi:message-cog-outline'),
+            },
+            {
+              title: 'Importance Levels',
+              path: communicationPaths.settings.importanceLevel,
+              _action: 'settings-importanceLevel',
+              shortcutKey: 'Alt+C+S+2',
+              shortcutKeyName: 'Alt+C+S+2',
+              permissionName: communicationPermissions.settings.providerSettings,
+              icon: menuIconView('mdi:priority-high'),
             },
           ],
         },

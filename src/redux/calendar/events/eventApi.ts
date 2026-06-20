@@ -1,4 +1,9 @@
-import { calendarModuleType } from 'src/redux/tagTypes';
+import type {
+  CalendarCommunicationResultDto,
+  CalendarCommunicationRequestDto,
+} from 'src/redux/communication/communicationTypes';
+
+import { communicationType, calendarModuleType } from 'src/redux/tagTypes';
 
 import { calendarModuleApi } from '../calendarApi';
 
@@ -50,6 +55,23 @@ export const eventApi = calendarModuleApi.injectEndpoints({
       }),
       invalidatesTags: [calendarModuleType.events],
     }),
+
+    announceEvent: builder.mutation<
+      CalendarCommunicationResultDto,
+      { id: string; body: CalendarCommunicationRequestDto }
+    >({
+      query: ({ id, body }) => ({
+        url: `/calendar/events/${id}/communication/announcement`,
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: [
+        communicationType.notificationHistory,
+        communicationType.communicationDashboard,
+        communicationType.communicationDeliveryAttempts,
+        communicationType.communicationUsageLedger,
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -60,4 +82,5 @@ export const {
   useGetEventByIdQuery,
   useUpdateEventMutation,
   useDeleteEventMutation,
+  useAnnounceEventMutation,
 } = eventApi;

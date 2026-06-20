@@ -20,6 +20,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
   onPublish,
 }) => {
   const { tabs, TABS, tableData, getColumns }: any = useAnnouncementTable({
+    data,
     onRemove,
     onEdit,
     onDelete,

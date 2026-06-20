@@ -3,7 +3,7 @@
 import type { FormikProps } from 'formik';
 
 import { Box } from '@mui/system';
-import React, { useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Checkbox, Typography, FormHelperText, FormControlLabel } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -21,11 +21,26 @@ import type { INotificationSendSchema } from './type';
  * - Handling channel toggle logic with memoization
  */
 const ChooseChannelsStep = ({ formik }: { formik: FormikProps<INotificationSendSchema> }) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: deliveryChannelData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDeliveryChannelTypeOptionsQuery,
   });
+
+  const channelOptions = useMemo(() => {
+    const fallbackChannels = ['WhatsApp', 'SMS', 'Email', 'In-App'];
+    const source = Array.isArray(deliveryChannelData)
+      ? deliveryChannelData
+      : deliveryChannelData?.items || deliveryChannelData?.data;
+
+    if (!Array.isArray(source) || source.length === 0) {
+      return fallbackChannels;
+    }
+
+    return source
+      .map((item: any) => item?.label || item?.name || item)
+      .filter(Boolean)
+      .map((channel: string) => (channel === 'Sms' ? 'SMS' : channel));
+  }, [deliveryChannelData]);
 
   /**
    * Memoization Justification:
@@ -54,7 +69,7 @@ const ChooseChannelsStep = ({ formik }: { formik: FormikProps<INotificationSendS
       <SectionCard title="Select Channels">
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-            {['Email', 'SMS', 'Push Notification']?.map((channel: string) => {
+            {channelOptions.map((channel: string) => {
               const isSelected = formik.values.channels?.includes(channel);
               return (
                 <FormControlLabel

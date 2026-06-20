@@ -4,8 +4,13 @@ import React from 'react';
 import { Editor } from 'src/components/editor';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Grid, Chip, TextField, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { CommunicationTemplateApprovalStatus } from 'src/redux/communication/communicationTypes';
+import { Box, Grid, Chip, Checkbox, TextField, Typography, FormControlLabel } from '@mui/material';
+import {
+  channelLabel,
+  communicationChannelOptions,
+} from 'src/redux/communication/communicationMappers';
 
 import type { INotificationTemplateFormValues } from '../types';
 
@@ -77,6 +82,32 @@ const NotificationTemplateFormFields: React.FC<NotificationTemplateFormFieldsPro
         />
       </Grid>
 
+      <Grid size={{ xs: 12, md: 6 }}>
+        <TextField
+          fullWidth
+          label="Category *"
+          name="category"
+          size="small"
+          value={formik.values.category}
+          onChange={formik.handleChange}
+          error={formik.touched.category && Boolean(formik.errors.category)}
+          helperText={(formik.touched.category && formik.errors.category) as string}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <TextField
+          fullWidth
+          label="Language *"
+          name="languageCode"
+          size="small"
+          value={formik.values.languageCode}
+          onChange={(e) => formik.setFieldValue('languageCode', e.target.value.toLowerCase())}
+          error={formik.touched.languageCode && Boolean(formik.errors.languageCode)}
+          helperText={(formik.touched.languageCode && formik.errors.languageCode) as string}
+        />
+      </Grid>
+
       {/* Subject */}
       <Grid size={{ xs: 12 }}>
         <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject) || false}>
@@ -102,6 +133,40 @@ const NotificationTemplateFormFields: React.FC<NotificationTemplateFormFieldsPro
         </ShakingTextField>
       </Grid>
 
+      <Grid size={{ xs: 12 }}>
+        <Typography variant="caption" sx={{ mb: 1, display: 'block', color: 'text.secondary' }}>
+          Channels *
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {communicationChannelOptions.map((option) => {
+            const checked = formik.values.channels?.includes(option.value);
+
+            return (
+              <FormControlLabel
+                key={option.value}
+                control={
+                  <Checkbox
+                    checked={checked}
+                    onChange={(event) => {
+                      const nextChannels = event.target.checked
+                        ? [...formik.values.channels, option.value]
+                        : formik.values.channels.filter((channel) => channel !== option.value);
+                      formik.setFieldValue('channels', nextChannels);
+                    }}
+                  />
+                }
+                label={channelLabel(option.value)}
+              />
+            );
+          })}
+        </Box>
+        {formik.touched.channels && formik.errors.channels && (
+          <Typography variant="caption" color="error">
+            {formik.errors.channels as string}
+          </Typography>
+        )}
+      </Grid>
+
       {/* Message Body */}
       <Grid size={{ xs: 12 }}>
         <Typography variant="caption" sx={{ mb: 1, display: 'block', color: 'text.secondary' }}>
@@ -118,7 +183,7 @@ const NotificationTemplateFormFields: React.FC<NotificationTemplateFormFieldsPro
             onChange={handleEditorChange}
             placeholder="Type your message here..."
             error={!!(formik.touched.message && formik.errors.message)}
-            editable={!formik.values.templateName}
+            editable
             helperText={(formik.touched.message && formik.errors.message) || ''}
           />
         </ShakingTextField>
@@ -167,6 +232,25 @@ const NotificationTemplateFormFields: React.FC<NotificationTemplateFormFieldsPro
               minWidth: '80px',
             },
           }}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
+        <CustomSelect
+          options={[
+            { label: 'Draft', value: CommunicationTemplateApprovalStatus.Draft },
+            {
+              label: 'Pending Approval',
+              value: CommunicationTemplateApprovalStatus.PendingApproval,
+            },
+            { label: 'Approved', value: CommunicationTemplateApprovalStatus.Approved },
+          ]}
+          value={formik.values.approvalStatus}
+          name="approvalStatus"
+          label="Approval Status"
+          valueKey="value"
+          labelKey="label"
+          onChange={(val: any) => formik.setFieldValue('approvalStatus', val)}
         />
       </Grid>
     </Grid>

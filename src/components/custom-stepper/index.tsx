@@ -234,6 +234,25 @@ const ModernConnector = styled(StepConnector)(({ theme }) => ({
     borderColor: theme.palette.primary.main,
   },
 }));
+
+const markTouchedFromErrors = (errors: any): any => {
+  if (Array.isArray(errors)) {
+    return errors.map(markTouchedFromErrors);
+  }
+
+  if (errors && typeof errors === 'object') {
+    return Object.keys(errors).reduce(
+      (acc, key) => ({
+        ...acc,
+        [key]: markTouchedFromErrors(errors[key]),
+      }),
+      {}
+    );
+  }
+
+  return true;
+};
+
 export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = ({
   scrollbarHeight = 'auto',
   activeStep,
@@ -277,6 +296,19 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
 
   const isVertical = viewMode === 'vertical' && !isMobile;
   const hasExplicitCompletedSteps = Array.isArray(completedSteps);
+  const submitCurrentStep = async () => {
+    setIsBackClick(false);
+
+    const validationErrors = await formik.validateForm();
+    const hasValidationErrors = Object.keys(validationErrors).length > 0;
+
+    if (hasValidationErrors) {
+      formik.setTouched(markTouchedFromErrors(validationErrors), true);
+      return;
+    }
+
+    handleNext(activeStep === steps.length - 1, formik.values, formik, setIsLoading);
+  };
 
   const renderStepper = () => (
     <Stepper
@@ -409,12 +441,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (formikInstance) {
-          setIsBackClick(false);
-          handleNext(activeStep === steps.length - 1, formik.values, formik, setIsLoading);
-          return;
-        }
-        formik.handleSubmit(e);
+        submitCurrentStep();
       }}
     >
       <Scrollbar
@@ -515,9 +542,10 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           )}
           <LoadingButton
             variant="contained"
-            type="submit"
+            type="button"
             size="small"
             loading={isLoading}
+            onClick={submitCurrentStep}
             startIcon={
               activeStep === steps.length - 1 ? <Iconify icon={GlobalIcons.submit} /> : null
             }

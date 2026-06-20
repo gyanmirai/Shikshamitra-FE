@@ -1,24 +1,31 @@
-// DeliveryChannelTable.tsx
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import { channelLabel, providerStatusLabel } from 'src/redux/communication/communicationMappers';
 
-import type { IDeliveryChannel, IDeliveryChannelTableProps } from '../type';
+import type { IProviderSetting, IProviderSettingTableProps } from '../type';
 
-const DeliveryChannelTable: React.FC<IDeliveryChannelTableProps> = ({
+const YesNo = ({ value }: { value: boolean }) => (
+  <Typography variant="caption" color={value ? 'success.main' : 'text.secondary'}>
+    {value ? 'Yes' : 'No'}
+  </Typography>
+);
+
+const DeliveryChannelTable: React.FC<IProviderSettingTableProps> = ({
   data,
-  onAddDeliveryChannel,
+  isLoading,
+  onAddProvider,
   setEditData,
   onDelete,
   onEdit,
 }) => (
   <CustomizableTable
-    tableId="delivery-channel-data-table"
+    tableId="provider-settings-data-table"
+    isLoading={isLoading}
     noDataText={
-      <>
-        No delivery channel type data found.{' '}
+      <Box display="flex" flexDirection="column">
+        No provider settings found.
         <Typography
           component="span"
           color="primary.main"
@@ -30,37 +37,73 @@ const DeliveryChannelTable: React.FC<IDeliveryChannelTableProps> = ({
             },
           }}
           onClick={() => {
-            onAddDeliveryChannel.onTrue();
+            onAddProvider.onTrue();
             setEditData(null);
           }}
         >
-          Add Delivery Channel
+          Add Provider Setting
         </Typography>
-      </>
+      </Box>
     }
     columns={[
       {
-        id: 'deliveryChannel',
-        label: 'Name',
+        id: 'channel',
+        label: 'Channel',
         align: 'left',
-        render: (value, row) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <SubjectColorIndicator color={row.color} />
-            <Typography variant="caption" fontSize="13px">
-              {value}
-            </Typography>
-          </Box>
-        ),
+        render: (value) => channelLabel(value),
       },
       {
-        id: 'description',
-        label: 'Description',
+        id: 'providerName',
+        label: 'Provider',
         align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value || '--'}
-          </Typography>
-        ),
+      },
+      {
+        id: 'senderId',
+        label: 'Sender ID',
+        align: 'left',
+        render: (value) => value || '--',
+      },
+      {
+        id: 'isEnabled',
+        label: 'Enabled',
+        align: 'left',
+        render: (value) => <YesNo value={Boolean(value)} />,
+      },
+      {
+        id: 'isDefault',
+        label: 'Default',
+        align: 'left',
+        render: (value) => <YesNo value={Boolean(value)} />,
+      },
+      {
+        id: 'consentRequired',
+        label: 'Consent',
+        align: 'left',
+        render: (value) => <YesNo value={Boolean(value)} />,
+      },
+      {
+        id: 'templateApprovalRequired',
+        label: 'Template Approval',
+        align: 'left',
+        render: (value) => <YesNo value={Boolean(value)} />,
+      },
+      {
+        id: 'fallbackOrder',
+        label: 'Fallback',
+        align: 'left',
+        render: (value) => (Array.isArray(value) ? value.map(channelLabel).join(' -> ') : '--'),
+      },
+      {
+        id: 'dailyQuota',
+        label: 'Daily Quota',
+        align: 'left',
+        render: (value) => value || '--',
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        align: 'left',
+        render: (value) => providerStatusLabel(value),
       },
       {
         id: 'action',
@@ -78,10 +121,10 @@ const DeliveryChannelTable: React.FC<IDeliveryChannelTableProps> = ({
               showDeleteIcon
               showEditIcon
               handleDeleteClick={() => {
-                onDelete(row as IDeliveryChannel);
+                onDelete(row as IProviderSetting);
               }}
               handleEditClick={() => {
-                onEdit(row as IDeliveryChannel);
+                onEdit(row as IProviderSetting);
               }}
             />
           );

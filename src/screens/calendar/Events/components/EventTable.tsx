@@ -66,7 +66,18 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
         >
           <RemoveCircle sx={{ width: '20px', height: '20px', color: 'error.main' }} /> Remove
         </MenuItem>
-        {row.status === 2 && (
+        {row.status !== EventStatus.Completed && (
+          <MenuItem
+            onClick={() => {
+              onPublish(row as IEventAnnouncement);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon={GlobalIcons.publish} width={16} height={16} />
+            Publish
+          </MenuItem>
+        )}
+        {row.status === EventStatus.Completed && (
           <>
             <MenuItem
               onClick={() => {
@@ -88,7 +99,7 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
         )}
       </MenuList>
     ),
-    [onDelete, onUploadPhotoVideo, onViewGallery]
+    [onDelete, onPublish, onUploadPhotoVideo, onViewGallery]
   );
 
   const tabs = useTabs(status);

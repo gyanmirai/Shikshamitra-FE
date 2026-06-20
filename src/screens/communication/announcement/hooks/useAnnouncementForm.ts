@@ -46,25 +46,22 @@ export const useAnnouncementForm = ({
     onSubmit: async (values, { setSubmitting }) => {
       try {
         const payloadData = {
+          id: initialValues?.id,
           title: values.title,
           description: values.description,
+          body: values.description,
+          message: values.description,
           audience: values.audience.map((a) => a.value),
-          type: values.type?.[0]?.announcementType || '',
-          importanceLevel:
-            values.importance_level?.levelName === 'urgent'
-              ? 2
-              : values.importance_level?.levelName === 'critical'
-                ? 3
-                : 1,
+          type: values.type || [],
+          importance_level: values.importance_level,
           startDate: values.startDate ? dayjs(values.startDate).toISOString() : null,
           endDate: values.endDate ? dayjs(values.endDate).toISOString() : null,
           duration: Number(values.duration),
           durationUnit: values.durationUnit === 'days' ? 'DAY' : 'HOUR',
           documents: values.attachment ? ['string'] : [], // Mocking file upload for now as per original
-          notificationPreferences: values.notification_preferences.map((pref) => {
-            if (pref === 'In-App') return 'IN_APP';
-            return pref.toUpperCase();
-          }),
+          channels: values.notification_preferences,
+          notification_preferences: values.notification_preferences,
+          isAllowAcknoledgement: values.isAllowAcknoledgement,
         };
 
         if (initialValues) {

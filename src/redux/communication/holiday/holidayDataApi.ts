@@ -1,3 +1,8 @@
+import type {
+  CalendarCommunicationResultDto,
+  CalendarCommunicationRequestDto,
+} from 'src/redux/communication/communicationTypes';
+
 import { calendarModuleApi } from 'src/redux/calendar/calendarApi';
 import { communicationType, calendarModuleType } from 'src/redux/tagTypes';
 
@@ -64,6 +69,23 @@ export const holidayApi = calendarModuleApi.injectEndpoints({
       invalidatesTags: [communicationType.holiday],
     }),
 
+    announceHoliday: builder.mutation<
+      CalendarCommunicationResultDto,
+      { id: string; body: CalendarCommunicationRequestDto }
+    >({
+      query: ({ id, body }) => ({
+        url: `/calendar/holidays/${id}/communication/announcement`,
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: [
+        communicationType.notificationHistory,
+        communicationType.communicationDashboard,
+        communicationType.communicationDeliveryAttempts,
+        communicationType.communicationUsageLedger,
+      ],
+    }),
+
     deleteHolidayType: builder.mutation({
       query: (holidayTypeId) => ({
         url: `/calendar/holiday-types/${holidayTypeId}`,
@@ -84,4 +106,5 @@ export const {
   useUpdateHolidayMutation,
   useDeleteHolidayTypeMutation,
   useDeleteHolidayMutation,
+  useAnnounceHolidayMutation,
 } = holidayApi;

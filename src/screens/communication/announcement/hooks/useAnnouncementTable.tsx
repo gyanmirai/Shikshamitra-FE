@@ -12,7 +12,6 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { Box, MenuList, MenuItem, Typography, IconButton } from '@mui/material';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import communicationData from 'src/json/communication/dummy-data/communicationData.json';
 import {
   AnnouncementStatus,
   AnnouncementStatusColor,
@@ -30,33 +29,29 @@ interface UseAnnouncementTableProps {
 }
 
 export const useAnnouncementTable = ({
+  data,
   onRemove,
   onEdit,
   onDelete,
   onView,
   onPublish,
-}: UseAnnouncementTableProps) => {
+}: UseAnnouncementTableProps & { data?: ISchoolWiseAnnouncement[] }) => {
   const theme = useTheme();
   const tabs = useTabs('All');
+  const announcements = useMemo(() => data || [], [data]);
 
   // Memoization Justification: Expensive filtering operation on large dataset
   const announcementCounts = useMemo(
     () => ({
-      all: communicationData?.schoolWiseAnnouncementData?.length || 0,
+      all: announcements.length,
       draft:
-        communicationData?.schoolWiseAnnouncementData?.filter(
-          (i: any) => i.status === AnnouncementStatus.Upcoming
-        )?.length || 0,
+        announcements.filter((i: any) => i.status === AnnouncementStatus.Upcoming)?.length || 0,
       published:
-        communicationData?.schoolWiseAnnouncementData?.filter(
-          (i: any) => i.status === AnnouncementStatus.Published
-        )?.length || 0,
+        announcements.filter((i: any) => i.status === AnnouncementStatus.Published)?.length || 0,
       completed:
-        communicationData?.schoolWiseAnnouncementData?.filter(
-          (i: any) => i.status === AnnouncementStatus.Completed
-        )?.length || 0,
+        announcements.filter((i: any) => i.status === AnnouncementStatus.Completed)?.length || 0,
     }),
-    []
+    [announcements]
   );
 
   const TABS = useMemo(
@@ -93,11 +88,9 @@ export const useAnnouncementTable = ({
   const tableData = useMemo(
     () =>
       tabs.value === 'All'
-        ? communicationData?.schoolWiseAnnouncementData || []
-        : communicationData?.schoolWiseAnnouncementData?.filter(
-            (i: any) => i.status === tabs.value
-          ),
-    [tabs.value]
+        ? announcements
+        : announcements.filter((i: any) => i.status === tabs.value),
+    [announcements, tabs.value]
   );
 
   // Memoization Justification: Function passed as prop to memoized child components

@@ -27,7 +27,7 @@ const SelectedMembersSummary = ({ formik }: SelectedMembersSummaryProps) => {
 
   return (
     <SectionCard title="Selected Members">
-      <Typography variant="body2" color="text.secondary">
+      <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
         {count > 0 ? (
           <Box
             sx={{
@@ -49,7 +49,7 @@ const SelectedMembersSummary = ({ formik }: SelectedMembersSummaryProps) => {
         ) : (
           'Please select members to send notifications'
         )}
-      </Typography>
+      </Box>
     </SectionCard>
   );
 };

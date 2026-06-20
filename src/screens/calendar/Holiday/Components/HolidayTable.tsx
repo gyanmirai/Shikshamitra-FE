@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
+import { GlobalIcons } from 'src/utils/icons';
 import { formatDateOnly } from 'src/utils/date-only';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -150,7 +151,12 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
             placement="right-top"
             showEditIcon
             showDeleteIcon
+            showViewIcon
             showThreeDots={false}
+            viewLabel="Publish"
+            viewIcon={GlobalIcons.publish}
+            disableViewIcon={row.status === HolidayStatus.Completed}
+            handleViewClick={() => onPublish(row as IHoliday)}
             handleEditClick={() => onEdit(row as IHoliday)}
             handleDeleteClick={() => {
               onDelete(row as IHoliday);
@@ -160,7 +166,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [onDelete, onEdit, onPublish]
   );
 
   return (
@@ -377,7 +383,11 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
                   placement="right-top"
                   showEditIcon
                   showDeleteIcon
+                  showViewIcon
                   showThreeDots={false}
+                  viewLabel="Publish"
+                  viewIcon={GlobalIcons.publish}
+                  handleViewClick={() => onPublish(row as IHoliday)}
                   handleEditClick={() => onEdit(row as IHoliday)}
                   handleDeleteClick={() => onDelete(row as IHoliday)}
                 />

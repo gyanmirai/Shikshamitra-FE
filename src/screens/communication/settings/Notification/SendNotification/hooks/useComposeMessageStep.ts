@@ -18,7 +18,7 @@ import type { INotificationSendSchema } from '../Components/type';
  * - Providing a debounced editor change handler
  */
 export const useComposeMessageStep = (formik: FormikProps<INotificationSendSchema>) => {
-  const { data: templateData, isLoading: isTemplatesLoading } = useQueryAndMutation({
+  const { data: rawTemplateData, isLoading: isTemplatesLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetNotificationTemplatesQuery,
   });
@@ -29,6 +29,12 @@ export const useComposeMessageStep = (formik: FormikProps<INotificationSendSchem
   });
 
   const { setFieldValue } = formik;
+
+  const templateData = useMemo(() => {
+    if (Array.isArray(rawTemplateData)) return rawTemplateData;
+    if (Array.isArray((rawTemplateData as any)?.items)) return (rawTemplateData as any).items;
+    return [];
+  }, [rawTemplateData]);
 
   /**
    * Memoization Justification:
@@ -55,7 +61,13 @@ export const useComposeMessageStep = (formik: FormikProps<INotificationSendSchem
       formik.setFieldValue('selectedTemplate.id', value?.id ?? '');
       formik.setFieldValue('selectedTemplate.templateName', value?.templateName ?? '');
       formik.setFieldValue('selectedTemplate.subject', value?.subject ?? '');
-      formik.setFieldValue('selectedTemplate.message', value?.message ?? '');
+      formik.setFieldValue('selectedTemplate.message', value?.message ?? value?.body ?? '');
+      if (value?.importance_level || value?.importanceLevel) {
+        formik.setFieldValue(
+          'selectedTemplate.importance_level',
+          value.importance_level ?? value.importanceLevel
+        );
+      }
     },
     [formik]
   );
