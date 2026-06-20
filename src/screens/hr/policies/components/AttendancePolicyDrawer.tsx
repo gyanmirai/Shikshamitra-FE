@@ -72,18 +72,20 @@ function buildAttendanceSummary(form: HRPolicyWorkspaceContext['attendanceForm']
     form.holidayWorkBehavior === 'paid'
       ? 'Holiday work is paid as regular work'
       : `Holiday work grants ${holidayLabel}`;
+  const penaltyAmount = Number(form.penaltyDeductionAmount || 0);
+  const penaltySummary =
+    form.penaltyType === 'salary_deduction' && penaltyAmount > 0
+      ? `${penaltyLabel} applies after ${Number(form.penaltyCountThreshold || 0)} violations at INR ${penaltyAmount} each`
+      : `${penaltyLabel} applies after ${Number(form.penaltyCountThreshold || 0)} violations`;
   const summary = [
     `Employees receive ${Number(form.graceTime || 0)} minutes grace period`,
     `${Number(form.maxLateAllowedPerMonth || 0)} late arrivals allowed per month`,
-    form.penaltyType === 'none'
-      ? 'No late-arrival penalty configured'
-      : `${penaltyLabel} applies after ${Number(form.penaltyCountThreshold || 0)} violations`,
+    form.penaltyType === 'none' ? 'No late-arrival penalty configured' : penaltySummary,
     earlyExitSummary,
     form.overtimeEnabled
       ? `Overtime enabled from ${Number(form.minOvertimeMinutes || 0)} minutes`
       : 'Overtime disabled',
     holidaySummary,
-    form.sandwichRuleEnabled ? 'Sandwich rule enabled' : 'Sandwich rule disabled',
   ];
 
   return summary;
@@ -98,13 +100,13 @@ function applyAttendanceAdvancedDefaults(
     'maxLateAllowedPerMonth',
     'penaltyType',
     'penaltyCountThreshold',
+    'penaltyDeductionAmount',
     'earlyExitEnabled',
     'earlyExitGraceTime',
     'overtimeEnabled',
     'overtimeRate',
     'minOvertimeMinutes',
     'holidayWorkBehavior',
-    'sandwichRuleEnabled',
     'payrollPreviewEnabled',
   ];
   return ADVANCED_KEYS.reduce((current, key) => ({ ...current, [key]: defaults[key] }), form);
@@ -307,13 +309,13 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                       maxLateAllowedPerMonth: '0',
                       penaltyType: 'none',
                       penaltyCountThreshold: '0',
+                      penaltyDeductionAmount: '',
                       earlyExitEnabled: false,
                       earlyExitGraceTime: '0',
                       overtimeEnabled: false,
                       overtimeRate: '',
                       minOvertimeMinutes: '',
                       holidayWorkBehavior: 'comp_off',
-                      sandwichRuleEnabled: false,
                       payrollPreviewEnabled: true,
                     })
                   );
@@ -374,6 +376,10 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                       setAttendanceForm((current) => ({
                         ...current,
                         penaltyType: event.target.value,
+                        penaltyDeductionAmount:
+                          event.target.value === 'salary_deduction'
+                            ? current.penaltyDeductionAmount
+                            : '',
                       }))
                     }
                   >
@@ -389,6 +395,14 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                       help="Number of qualifying late instances required before the selected action is applied."
                     >
                       <TextField {...getAttendanceNumericFieldProps('penaltyCountThreshold')} />
+                    </DrawerField>
+                  ) : null}
+                  {attendanceForm.penaltyType === 'salary_deduction' ? (
+                    <DrawerField
+                      label="Deduction Amount"
+                      help="Payroll deduction amount charged for each qualifying late arrival."
+                    >
+                      <TextField {...getAttendanceNumericFieldProps('penaltyDeductionAmount')} />
                     </DrawerField>
                   ) : null}
                 </Stack>
@@ -480,7 +494,7 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
 
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 1, height: '100%' }}>
                 <Stack spacing={2}>
-                  <Typography variant="subtitle2">Holiday & Leave Rules</Typography>
+                  <Typography variant="subtitle2">Holiday Rules</Typography>
                   <DrawerSelectField
                     label="Holiday Compensation"
                     help="Defines how work on holidays should be compensated."
@@ -498,22 +512,6 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                       </MenuItem>
                     ))}
                   </DrawerSelectField>
-                  <DrawerSwitchField
-                    compact
-                    label="Enable Sandwich Rule"
-                    help="Counts leave or absence between non-working days according to the organization's sandwich policy."
-                    checked={attendanceForm.sandwichRuleEnabled}
-                    onChange={(checked) =>
-                      setAttendanceForm((current) => ({
-                        ...current,
-                        sandwichRuleEnabled: checked,
-                      }))
-                    }
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    If leave is taken before and after a holiday/weekend, those days may also be
-                    counted as leave.
-                  </Typography>
                 </Stack>
               </Paper>
             </DrawerFormGrid>

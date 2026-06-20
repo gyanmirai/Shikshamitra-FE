@@ -21,6 +21,7 @@ type LeaveOverviewMetric = {
   icon: string;
   color: string;
   bgColor: string;
+  useLogo?: boolean;
 };
 
 export const getLeaveUtilizationPercent = (overview: LeaveOverviewData) =>
@@ -35,6 +36,7 @@ const getOverviewMetrics = (overview: LeaveOverviewData): LeaveOverviewMetric[] 
     icon: 'solar:calendar-check-bold-duotone',
     color: 'success.main',
     bgColor: 'success.lighter',
+    useLogo: true,
   },
   {
     label: 'Accrued',
@@ -145,7 +147,16 @@ export function LeaveCenterOverviewPanel({ overview, isLoading }: LeaveCenterOve
                     bgcolor: metric.bgColor,
                   }}
                 >
-                  <Iconify icon={metric.icon} width={22} />
+                  {metric.useLogo ? (
+                    <Box
+                      component="img"
+                      src="/logo/logo-single.svg"
+                      alt=""
+                      sx={{ width: 24, height: 24, objectFit: 'contain' }}
+                    />
+                  ) : (
+                    <Iconify icon={metric.icon} width={22} />
+                  )}
                 </Box>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="h5" sx={{ fontWeight: 800, lineHeight: 1.1 }}>

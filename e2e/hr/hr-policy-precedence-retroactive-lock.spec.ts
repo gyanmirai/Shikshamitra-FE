@@ -263,7 +263,6 @@ function attendancePolicyUpdatePayload(policy: any, overrides: Record<string, un
     overtimeRate: policy.overtimeRate ?? null,
     minOvertimeMinutes: policy.minOvertimeMinutes ?? null,
     holidayWorkBehavior: policy.holidayWorkBehavior || 'comp_off',
-    sandwichRuleEnabled: Boolean(policy.sandwichRuleEnabled),
     payrollPreviewEnabled: Boolean(firstDefined(policy.payrollPreviewEnabled, true)),
     ...overrides,
   };

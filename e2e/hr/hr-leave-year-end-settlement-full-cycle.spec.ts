@@ -187,7 +187,6 @@ async function createAttendancePolicy(
         overtimeRate: null,
         minOvertimeMinutes: null,
         holidayWorkBehavior: 'comp_off',
-        sandwichRuleEnabled: false,
         payrollPreviewEnabled: true,
       }),
     }),

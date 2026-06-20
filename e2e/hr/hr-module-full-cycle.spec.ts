@@ -241,7 +241,6 @@ async function createOvertimeAttendancePolicy(
       overtimeRate: '2.0x',
       minOvertimeMinutes: 30,
       holidayWorkBehavior: attendancePolicy?.holidayWorkBehavior || 'paid',
-      sandwichRuleEnabled: attendancePolicy?.sandwichRuleEnabled ?? false,
       payrollPreviewEnabled: true,
     }),
   });

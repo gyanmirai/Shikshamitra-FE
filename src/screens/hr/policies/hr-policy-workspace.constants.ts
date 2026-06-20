@@ -94,13 +94,13 @@ export const ATTENDANCE_ADVANCED_KEYS: AttendanceAdvancedKey[] = [
   'maxLateAllowedPerMonth',
   'penaltyType',
   'penaltyCountThreshold',
+  'penaltyDeductionAmount',
   'earlyExitEnabled',
   'earlyExitGraceTime',
   'overtimeEnabled',
   'overtimeRate',
   'minOvertimeMinutes',
   'holidayWorkBehavior',
-  'sandwichRuleEnabled',
   'payrollPreviewEnabled',
 ];
 // Default form factories
@@ -142,13 +142,13 @@ export const defaultAttendanceForm = (calendarId = ''): AttendanceForm => ({
   maxLateAllowedPerMonth: '0',
   penaltyType: 'none',
   penaltyCountThreshold: '0',
+  penaltyDeductionAmount: '',
   earlyExitEnabled: false,
   earlyExitGraceTime: '0',
   overtimeEnabled: false,
   overtimeRate: '',
   minOvertimeMinutes: '',
   holidayWorkBehavior: 'comp_off',
-  sandwichRuleEnabled: false,
   payrollPreviewEnabled: true,
 });
 

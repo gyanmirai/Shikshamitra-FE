@@ -18,8 +18,12 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { expandAccessibleHierarchy } from 'src/utils/academicHierarchyUtils';
 import { Box, Grid, Slide, Button, TextField, Typography } from '@mui/material';
+import {
+  hasAccessSelection,
+  expandAccessibleHierarchy,
+  compressExplicitAcademicSelection,
+} from 'src/utils/academicHierarchyUtils';
 import {
   hrPolicyApi,
   policyInvalidationTags,
@@ -49,6 +53,7 @@ import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
 import { buildWorkExperiencePayload } from './work-experience-payload';
 import { applyEmployeeCreateResponseToFormValues } from './employee-form-state';
+import { buildProfilePersonalInfoUpdatePayload } from './personal-info-update-payload';
 import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
 import {
   validations,
@@ -154,6 +159,8 @@ export const personalInformationInitialValues = (
 
   adharNo: editData?.adharNo ?? '',
   panNo: editData?.panNo ?? '',
+  initialAdharNo: editData?.adharNo ?? '',
+  initialPanNo: editData?.panNo ?? '',
 });
 
 export const familyInformationInitialValues = (editData?: IFamilyInformationResponse) => ({
@@ -375,6 +382,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const [pendingStep, setPendingStep] = useState<number | null>(null);
   const [policyImpactPreview, setPolicyImpactPreview] = useState<any | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [academicPermissionSubmitReady, setAcademicPermissionSubmitReady] = useState(false);
   const formikRef = React.useRef<any>(null);
   const resetCurrentStepRef = React.useRef<(() => void) | null>(null);
   const policyImpactConfirmationRef = React.useRef<((confirmed: boolean) => void) | null>(null);
@@ -500,6 +508,25 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     type: 'mutation',
     currentQueryAndMutation: useAddAccessControlMutation,
   });
+  const {
+    data: academicPermissionBoardsData,
+    currentData: currentAcademicPermissionBoardsData,
+    isFetching: academicPermissionBoardsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+    options: { skip: activeStep !== 7 },
+  });
+  const activeAcademicPermissionBoardsData =
+    currentAcademicPermissionBoardsData ??
+    (!academicPermissionBoardsFetching ? academicPermissionBoardsData : undefined);
+  const allBoardsForAcademicPermission = useMemo(
+    () =>
+      activeAcademicPermissionBoardsData?.items?.filter(
+        (board: any) => board.academicYearId === currentYear?.id
+      ),
+    [activeAcademicPermissionBoardsData?.items, currentYear?.id]
+  );
 
   const initialValues = useMemo(
     () => ({
@@ -521,6 +548,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     () => [
       getPersonalInformationValidationSchema({
         requirePhoto: !(editData?.id || initialValues.employeeId),
+        requireIdentity: !(editData?.id || initialValues.employeeId),
       }),
       ...validations.slice(1, 6),
       reportingManagerValidationSchema,
@@ -821,41 +849,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
   const handelUpdateEmployee = useCallback(
     async (values: any, formik: any, id: any) => {
-      const body: Record<string, any> = {
-        lastName: values.lastName,
-        firstName: values.firstName,
-        middleName: values.middleName || '',
-        shortName: values.shortName || '',
-        dob: dateConvertor(values.dob.format(dateFormat)),
-        familyCaste: values.familyCast,
-        casteType: values.castType,
-        gender: values.gender,
-        religion: ReligionType[values.religion],
-        maritalStatus: values.maritalStatus,
-        bloodGroup: values.bloodGroup,
-        mobileNo: toRawMobile(values.mobileNo),
-        email: values.email,
-        department: values.department,
-        doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
-        isTeaching: values.employeeGroup === 0,
-        roleId: values.role,
-        address1: values.addressLine1,
-        address2: values.addressLine2,
-        country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-        state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-        city: values?.city?.name,
-        pinCode: String(values.pincode),
-        shiftId: values.shift,
-        adharNo: values.adharNo || '',
-        panNo: (values.panNo || '').toUpperCase(),
-      };
-
-      if (values.secondaryMobileNo) {
-        body.secondaryMobileNo = toRawMobile(values.secondaryMobileNo);
-      }
-      if (values.addressLine3) {
-        body.address3 = values.addressLine3;
-      }
+      const body = buildProfilePersonalInfoUpdatePayload(values, {
+        initialValues: formik.initialValues,
+      });
 
       const res = await updateEmployee({
         id,
@@ -897,19 +893,29 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       if (!currentYear?.id) {
         throw new Error('Academic year is required to save academic permissions.');
       }
+      if (!allBoardsForAcademicPermission?.length) {
+        throw new Error('Academic hierarchy is required to save academic permissions.');
+      }
+
+      const normalizedSelection = compressExplicitAcademicSelection(
+        values.academicPermission,
+        allBoardsForAcademicPermission
+      );
+      formik.setFieldValue('academicPermissionSelectedData', normalizedSelection, false);
 
       const res = await addAccessControl({
         academicYearIds: [currentYear.id],
         userIds: [userId],
-        educationBoardIds: values.academicPermissionSelectedData.boards,
-        educationMediumIds: values.academicPermissionSelectedData.mediums,
-        educationMediumStageIds: values.academicPermissionSelectedData.organizations,
-        standardIds: values.academicPermissionSelectedData.standards,
-        divisionIds: values.academicPermissionSelectedData.divisions,
+        educationBoardIds: normalizedSelection.boards,
+        educationMediumIds: normalizedSelection.mediums,
+        educationMediumStageIds: normalizedSelection.organizations,
+        standardIds: normalizedSelection.standards,
+        divisionIds: normalizedSelection.divisions,
+        clearExisting: !hasAccessSelection(normalizedSelection),
       }).unwrap();
       return res;
     },
-    [addAccessControl, currentYear?.id, editData]
+    [addAccessControl, allBoardsForAcademicPermission, currentYear?.id, editData]
   );
 
   const handleSave = useCallback(
@@ -1073,12 +1079,24 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     },
     [activeStep, completedSteps, editData]
   );
+  const academicPermissionHierarchyReady =
+    activeStep === 7 &&
+    Boolean(
+      currentYear?.id &&
+        Array.isArray(allBoardsForAcademicPermission) &&
+        allBoardsForAcademicPermission.length > 0 &&
+        !academicPermissionBoardsFetching
+    );
+  const disableStepperSubmit =
+    activeStep === 7
+      ? !(academicPermissionSubmitReady && academicPermissionHierarchyReady)
+      : !isChanges;
 
   return (
     <>
       <CustomStepperWithFormik
         showSaveButton={isChanges}
-        disableSubmit={!isChanges}
+        disableSubmit={disableStepperSubmit}
         key={editData?.id || 'new'}
         initialValues={initialValues}
         steps={steps}
@@ -1127,6 +1145,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
                   defaultPolicyAssignment={defaultPolicyAssignment}
                   resetCurrentStepRef={resetCurrentStepRef}
                   isSubmitted={isSubmitted}
+                  onAcademicPermissionReadyChange={setAcademicPermissionSubmitReady}
                 />
               )}
             </>
@@ -1223,6 +1242,7 @@ const FormSlider = ({
   defaultPolicyAssignment,
   resetCurrentStepRef,
   isSubmitted,
+  onAcademicPermissionReadyChange,
 }: any) => {
   const containerRef = React.useRef<HTMLElement>(null);
   const initialAccessControlUserId = getEmployeeUserId(formik.values, editData);
@@ -1302,6 +1322,7 @@ const FormSlider = ({
 
   const {
     data: accessControl,
+    currentData: currentAccessControl,
     isLoading: accessControlLoading,
     isFetching: accessControlFetching,
   } = useQueryAndMutation({
@@ -1310,11 +1331,14 @@ const FormSlider = ({
     params: { userId: accessControlUserId, academicYearId: currentYear?.id },
     options: { skip: !(accessControlUserId && currentYear?.id && step === 7) },
   });
+  const activeAccessControl =
+    currentAccessControl ?? (!accessControlFetching ? accessControl : undefined);
 
   // Full boards tree for the current academic year, needed to expand the
   // BE access-control response when it compresses branches via `hasFull*Access`.
   const {
     data: boardsData,
+    currentData: currentBoardsData,
     isLoading: boardsLoading,
     isFetching: boardsFetching,
   } = useQueryAndMutation({
@@ -1322,10 +1346,34 @@ const FormSlider = ({
     currentQueryAndMutation: useGetBoardsQuery,
     options: { skip: step !== 7 },
   });
+  const activeBoardsData = currentBoardsData ?? (!boardsFetching ? boardsData : undefined);
   const allBoardsForYear = useMemo(
-    () => boardsData?.items?.filter((b: any) => b.academicYearId === currentYear?.id),
-    [boardsData?.items, currentYear?.id]
+    () => activeBoardsData?.items?.filter((b: any) => b.academicYearId === currentYear?.id),
+    [activeBoardsData?.items, currentYear?.id]
   );
+  const isAcademicPermissionInitialLoading =
+    step === 7 &&
+    ((Boolean(accessControlUserId && currentYear?.id) &&
+      !activeAccessControl &&
+      (accessControlLoading || accessControlFetching)) ||
+      (!activeBoardsData && (boardsLoading || boardsFetching)));
+  const isAcademicPermissionSubmitReady =
+    step === 7 &&
+    Boolean(
+      accessControlUserId &&
+        currentYear?.id &&
+        Array.isArray(allBoardsForYear) &&
+        allBoardsForYear.length > 0 &&
+        !isAcademicPermissionInitialLoading
+    );
+  useEffect(() => {
+    onAcademicPermissionReadyChange?.(isAcademicPermissionSubmitReady);
+    return () => {
+      if (step === 7) {
+        onAcademicPermissionReadyChange?.(false);
+      }
+    };
+  }, [isAcademicPermissionSubmitReady, onAcademicPermissionReadyChange, step]);
   useEffect(() => {
     if (initializedStepsRef.current[step]) return;
     if (!editData?.id) return;
@@ -1387,16 +1435,19 @@ const FormSlider = ({
         },
       });
       initializedStepsRef.current[step] = true;
-    } else if (accessControl && step === 7) {
+    } else if (activeAccessControl && step === 7 && allBoardsForYear) {
       // Need full boards tree to expand BE-compressed `hasFull*Access` branches.
-      if (accessControl?.accessibleHierarchy && allBoardsForYear?.length) {
-        const data = expandAccessibleHierarchy(accessControl, allBoardsForYear);
-        const updatedFields = academicPermissionInitialValues(data);
+      if (activeAccessControl?.accessibleHierarchy) {
+        const data = expandAccessibleHierarchy(activeAccessControl, allBoardsForYear);
+        const updatedFields = academicPermissionInitialValues(
+          compressExplicitAcademicSelection(data, allBoardsForYear)
+        );
 
         formikRef.current.resetForm({
           values: {
             ...formikRef.current.values,
             ...updatedFields,
+            academicPermission: data,
           },
         });
         initializedStepsRef.current[step] = true;
@@ -1410,7 +1461,7 @@ const FormSlider = ({
     workExperience,
     bankDetails,
     reportingManagerDetails,
-    accessControl,
+    activeAccessControl,
     allBoardsForYear,
     step,
   ]);
@@ -1456,8 +1507,7 @@ const FormSlider = ({
                     workExperienceLoading ||
                     bankDetailsLoading ||
                     reportingManagerDetailsLoading ||
-                    accessControlLoading ||
-                    boardsLoading ? (
+                    isAcademicPermissionInitialLoading ? (
                       <StepSkeleton step={step} />
                     ) : (
                       <>

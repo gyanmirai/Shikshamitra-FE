@@ -2609,11 +2609,13 @@ function CycleDialog({
         <DatePicker
           label="Period Start"
           value={periodStart}
+          format="DD/MM/YYYY"
           onChange={(value) => value && setPeriodStart(value)}
         />
         <DatePicker
           label="Period End"
           value={periodEnd}
+          format="DD/MM/YYYY"
           onChange={(value) => value && setPeriodEnd(value)}
         />
       </Stack>

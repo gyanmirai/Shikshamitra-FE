@@ -278,9 +278,14 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // Handler for updateEmployee
   const handleUpdateEmployee = useCallback(
-    async (values: any, formik: any, id: any) => {
+    async (values: any, _formik: any, id: any) => {
       try {
-        const body = buildProfilePersonalInfoUpdatePayload(values);
+        const body = buildProfilePersonalInfoUpdatePayload(values, {
+          initialValues: {
+            initialPanNo: values.initialPanNo,
+            initialAdharNo: values.initialAdharNo,
+          },
+        });
 
         const res = await updateEmployee({
           id,

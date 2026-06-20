@@ -238,7 +238,7 @@ const finalizeStep1Schema = Yup.object({
   gender: Yup.string().nullable(),
   religion: Yup.mixed().required('Religion is required'),
   casteType: Yup.string().nullable(),
-  familyCaste: Yup.string().nullable(),
+  familyCaste: Yup.string().trim().required('Family Caste is required'),
   maritalStatus: Yup.string().nullable(),
   bloodGroup: Yup.string().nullable(),
   email: Yup.string()
@@ -1893,7 +1893,7 @@ function FinalizeDialog({
                       <TextField
                         fullWidth
                         size="small"
-                        label="Family Caste"
+                        label="Family Caste *"
                         value={form.familyCaste}
                         onChange={(e) => {
                           const value = e.target.value.replace(/[^A-Za-z\s]/g, '') || '';
@@ -1902,6 +1902,8 @@ function FinalizeDialog({
                             : '';
                           formik.setFieldValue('familyCaste', newName);
                         }}
+                        error={formik.touched.familyCaste && Boolean(formik.errors.familyCaste)}
+                        helperText={formik.touched.familyCaste && formik.errors.familyCaste}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>

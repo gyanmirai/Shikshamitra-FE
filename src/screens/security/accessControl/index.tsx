@@ -14,10 +14,16 @@ import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { expandAccessibleHierarchy } from 'src/utils/academicHierarchyUtils';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetAccessControlQuery, useAddAccessControlMutation } from 'src/redux/hr/employeeApi';
+import type { AccessSelection } from 'src/utils/academicHierarchyUtils';
+import {
+  emptyAccessSelection,
+  hasAccessSelection,
+  expandAccessibleHierarchy,
+  compressExplicitAcademicSelection,
+} from 'src/utils/academicHierarchyUtils';
 import {
   Box,
   Card,
@@ -66,6 +72,39 @@ const AccessControlScreen = () => {
   );
 };
 
+export const submitAccessControlForm = async ({
+  addAccessControl,
+  userId,
+  currentYearId,
+  checkedItem,
+  allBoards,
+  handleClose,
+}: {
+  addAccessControl: (body: Record<string, unknown>) => { unwrap: () => Promise<unknown> };
+  userId?: string;
+  currentYearId?: string;
+  checkedItem: AccessSelection;
+  allBoards?: Board[];
+  handleClose?: () => void;
+}) => {
+  if (!userId || !currentYearId || !allBoards?.length) return false;
+
+  const normalizedSelection = compressExplicitAcademicSelection(checkedItem, allBoards);
+
+  await addAccessControl({
+    academicYearIds: [currentYearId],
+    userIds: [userId],
+    educationBoardIds: normalizedSelection.boards,
+    educationMediumIds: normalizedSelection.mediums,
+    educationMediumStageIds: normalizedSelection.organizations,
+    standardIds: normalizedSelection.standards,
+    divisionIds: normalizedSelection.divisions,
+    clearExisting: !hasAccessSelection(normalizedSelection),
+  }).unwrap();
+  handleClose?.();
+  return true;
+};
+
 // Form component for managing access control settings
 export const AccessControlForm = ({
   user,
@@ -75,27 +114,9 @@ export const AccessControlForm = ({
   handleClose?: () => void;
 }) => {
   // State for tracking selected items across different categories
-  const [checkedItem, setCheckedItem] = useState<{
-    boards: string[];
-    mediums: string[];
-    organizations: string[];
-    standards: string[];
-    divisions: string[];
-  }>({ boards: [], mediums: [], organizations: [], standards: [], divisions: [] });
+  const [checkedItem, setCheckedItem] = useState<AccessSelection>(emptyAccessSelection());
 
-  const [selectedData, setSelectedData] = useState<{
-    boards: string[];
-    mediums: string[];
-    organizations: string[];
-    standards: string[];
-    divisions: string[];
-  }>({
-    boards: [],
-    mediums: [],
-    organizations: [],
-    standards: [],
-    divisions: [],
-  });
+  const [selectedData, setSelectedData] = useState<AccessSelection>(emptyAccessSelection());
 
   // Get current academic year from global state
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -108,48 +129,64 @@ export const AccessControlForm = ({
   });
 
   // Query hook for fetching existing access control data
-  const { data: accessControl, isLoading } = useQueryAndMutation({
+  const {
+    data: accessControl,
+    currentData: currentAccessControl,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAccessControlQuery,
     params: { userId: user?.id, academicYearId: currentYear?.id },
     options: { skip: !(user?.id && currentYear?.id) },
   });
+  const activeAccessControl =
+    currentAccessControl ?? (!isFetching ? accessControl : undefined);
 
   // Full boards tree for the current academic year — needed to expand the
   // BE response when it compresses branches via `hasFull*Access` flags.
-  const { data: boardsData } = useQueryAndMutation({
+  const {
+    data: boardsData,
+    currentData: currentBoardsData,
+    isLoading: boardsLoading,
+    isFetching: boardsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
+  const activeBoardsData = currentBoardsData ?? (!boardsFetching ? boardsData : undefined);
   const allBoards = useMemo(
-    () => boardsData?.items?.filter((b: Board) => b.academicYearId === currentYear?.id),
-    [boardsData?.items, currentYear?.id]
+    () => activeBoardsData?.items?.filter((b: Board) => b.academicYearId === currentYear?.id),
+    [activeBoardsData?.items, currentYear?.id]
   );
+  const isHierarchyLoading = isLoading || isFetching || boardsLoading || boardsFetching;
+  const canSubmit = Boolean(user?.id && currentYear?.id && allBoards?.length && !isHierarchyLoading);
 
   // Effect to populate form with existing access control data
   useEffect(() => {
-    if (!accessControl?.accessibleHierarchy || !allBoards?.length) return;
-    const expanded = expandAccessibleHierarchy(accessControl, allBoards);
+    if (!user?.id || !currentYear?.id) {
+      setCheckedItem(emptyAccessSelection());
+      setSelectedData(emptyAccessSelection());
+      return;
+    }
+
+    if (!activeAccessControl?.accessibleHierarchy || !allBoards?.length) return;
+    const expanded = expandAccessibleHierarchy(activeAccessControl, allBoards);
     setCheckedItem(expanded);
-    // Seed the API payload too so a submit-without-changes still sends the
-    // currently-granted set. The first user toggle will recompute it via
-    // the all-or-null compression in BoardScreenStep.generateFinalSelection.
-    setSelectedData(expanded);
-  }, [accessControl, allBoards]);
+    setSelectedData(compressExplicitAcademicSelection(expanded, allBoards));
+  }, [activeAccessControl, allBoards, currentYear?.id, user?.id]);
 
   // Handler for form submission
   const handleSubmit = async () => {
     try {
-      await addAccessControl({
-        academicYearIds: [currentYear.id],
-        userIds: [user.id],
-        educationBoardIds: selectedData.boards,
-        educationMediumIds: selectedData.mediums,
-        educationMediumStageIds: selectedData.organizations,
-        standardIds: selectedData.standards,
-        divisionIds: selectedData.divisions,
+      await submitAccessControlForm({
+        addAccessControl,
+        userId: user?.id,
+        currentYearId: currentYear?.id,
+        checkedItem,
+        allBoards,
+        handleClose,
       });
-      handleClose?.();
     } catch (error) {
       console.error(error);
     }
@@ -168,8 +205,20 @@ export const AccessControlForm = ({
         }}
       >
         <Box sx={{ flex: 1, overflow: 'hidden', p: 2, height: '100%' }}>
-          {isLoading ? (
+          {!user?.id ? (
+            <Typography variant="body2" color="text.secondary">
+              Select an employee before saving access control.
+            </Typography>
+          ) : !currentYear?.id ? (
+            <Typography variant="body2" color="text.secondary">
+              Select an academic year before saving access control.
+            </Typography>
+          ) : isHierarchyLoading ? (
             <Box className="loader" />
+          ) : !allBoards?.length ? (
+            <Typography variant="body2" color="text.secondary">
+              Academic hierarchy is not available for the selected year.
+            </Typography>
           ) : (
             <BoardScreenStep
               checkedItem={checkedItem}
@@ -194,6 +243,7 @@ export const AccessControlForm = ({
           size="small"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           loading={isAddAccessControlLoading}
+          disabled={!canSubmit}
           variant="contained"
           onClick={handleSubmit}
         >
@@ -428,34 +478,10 @@ export const BoardScreenStep = ({
   selectedData,
   setSelectedData,
 }: {
-  checkedItem: {
-    boards: string[];
-    mediums: string[];
-    organizations: string[];
-    standards: string[];
-    divisions: string[];
-  };
-  setCheckedItem: (checkedItem: {
-    boards: string[];
-    mediums: string[];
-    organizations: string[];
-    standards: string[];
-    divisions: string[];
-  }) => void;
-  selectedData: {
-    boards: string[];
-    mediums: string[];
-    organizations: string[];
-    standards: string[];
-    divisions: string[];
-  };
-  setSelectedData: (selectedData: {
-    boards: string[];
-    mediums: string[];
-    organizations: string[];
-    standards: string[];
-    divisions: string[];
-  }) => void;
+  checkedItem: AccessSelection;
+  setCheckedItem: (checkedItem: AccessSelection) => void;
+  selectedData: AccessSelection;
+  setSelectedData: (selectedData: AccessSelection) => void;
 }) => {
   // Get current academic year from global state
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -519,31 +545,19 @@ export const BoardScreenStep = ({
     [nodeData, checkedItem]
   );
 
-  // Build the API payload using the "all-or-null" compression rule:
-  // walk the tree top-down; if a node is fully selected, push only its id and
-  // skip recursion (children are implied by the parent at the API layer).
+  // Build the API payload using explicit parent compression: if the user
+  // selected a parent node, send that parent id and let the API imply children.
+  // Do not escalate to a higher parent just because all children are checked.
   const generateFinalSelection = useCallback(
-    (map: Map<string, SelectionStatus>) => {
-      const output: CheckedItemMap = {
-        boards: [],
-        mediums: [],
-        organizations: [],
-        standards: [],
-        divisions: [],
-      };
+    (map: Map<string, SelectionStatus>, sourceCheckedItem: CheckedItemMap) => {
+      if (!map.size) {
+        setSelectedData(emptyAccessSelection());
+        return;
+      }
 
-      const processNode = (node: any) => {
-        if (map.get(node.id) === 'full') {
-          (output[node.type as keyof CheckedItemMap] as string[]).push(node.id);
-          return;
-        }
-        node.children?.forEach(processNode);
-      };
-
-      nodeData.forEach(processNode);
-      setSelectedData(output);
+      setSelectedData(compressExplicitAcademicSelection(sourceCheckedItem, allBoards));
     },
-    [nodeData, setSelectedData]
+    [allBoards, setSelectedData]
   );
 
   // Handler for node selection/deselection.
@@ -600,7 +614,7 @@ export const BoardScreenStep = ({
       setCheckedItem(updated);
       // Recompute payload using the same fast selection-map logic.
       const nextMap = buildSelectionMap(nd, toCheckedItemSets(updated));
-      generateFinalSelectionRef.current(nextMap);
+      generateFinalSelectionRef.current(nextMap, updated);
     },
     [setCheckedItem]
   );

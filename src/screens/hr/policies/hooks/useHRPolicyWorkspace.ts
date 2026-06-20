@@ -869,6 +869,10 @@ export function useHRPolicyWorkspace({
     const formToSave = attendanceAdvancedMode
       ? attendanceForm
       : applyAttendanceAdvancedDefaults(attendanceForm);
+    const penaltyDeductionAmount =
+      formToSave.penaltyType === 'salary_deduction'
+        ? numberOrNull(formToSave.penaltyDeductionAmount)
+        : null;
     return {
       academicYearId,
       workCalendarPolicyId: formToSave.workCalendarPolicyId,
@@ -885,13 +889,13 @@ export function useHRPolicyWorkspace({
       maxLateAllowedPerMonth: Number(formToSave.maxLateAllowedPerMonth || 0),
       penaltyType: formToSave.penaltyType,
       penaltyCountThreshold: Number(formToSave.penaltyCountThreshold || 0),
+      penaltyDeductionAmount,
       earlyExitEnabled: formToSave.earlyExitEnabled,
       earlyExitGraceTime: Number(formToSave.earlyExitGraceTime || 0),
       overtimeEnabled: formToSave.overtimeEnabled,
       overtimeRate: formToSave.overtimeEnabled ? formToSave.overtimeRate || 'flat' : null,
       minOvertimeMinutes: numberOrNull(formToSave.minOvertimeMinutes),
       holidayWorkBehavior: formToSave.holidayWorkBehavior,
-      sandwichRuleEnabled: formToSave.sandwichRuleEnabled,
       payrollPreviewEnabled: formToSave.payrollPreviewEnabled,
     };
   }, [academicYearId, attendanceAdvancedMode, attendanceForm]);
@@ -1055,6 +1059,8 @@ export function useHRPolicyWorkspace({
             maxLateAllowedPerMonth: String(item.maxLateAllowedPerMonth),
             penaltyType: item.penaltyType,
             penaltyCountThreshold: String(item.penaltyCountThreshold),
+            penaltyDeductionAmount:
+              item.penaltyDeductionAmount == null ? '' : String(item.penaltyDeductionAmount),
             earlyExitEnabled: item.earlyExitEnabled,
             earlyExitGraceTime: String(item.earlyExitGraceTime),
             overtimeEnabled: item.overtimeEnabled,
@@ -1062,7 +1068,6 @@ export function useHRPolicyWorkspace({
             minOvertimeMinutes:
               item.minOvertimeMinutes == null ? '' : String(item.minOvertimeMinutes),
             holidayWorkBehavior: item.holidayWorkBehavior,
-            sandwichRuleEnabled: item.sandwichRuleEnabled,
             payrollPreviewEnabled: item.payrollPreviewEnabled,
           }
         : defaultAttendanceForm(activeCalendars[0]?.id || '');
@@ -1555,6 +1560,14 @@ export function useHRPolicyWorkspace({
     });
     if (overtimeValidationError) {
       setFormError(overtimeValidationError);
+      return;
+    }
+    if (
+      formToSave.penaltyType === 'salary_deduction' &&
+      (!numberOrNull(formToSave.penaltyDeductionAmount) ||
+        Number(formToSave.penaltyDeductionAmount) <= 0)
+    ) {
+      setFormError('Penalty deduction amount is required when penalty action is Salary Deduction.');
       return;
     }
     const invalidRule = (Object.keys(attendanceNumericRules) as AttendanceNumericField[]).find(

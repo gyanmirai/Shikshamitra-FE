@@ -115,13 +115,134 @@ export type GlobalAcademicSelection<TAcademicYear = any, TBoard = any, TMedium =
   clearYear: boolean;
 };
 
-const emptySelection = (): AccessSelection => ({
+export const emptyAccessSelection = (): AccessSelection => ({
   boards: [],
   mediums: [],
   organizations: [],
   standards: [],
   divisions: [],
 });
+
+const accessSelectionKeys: Array<keyof AccessSelection> = [
+  'boards',
+  'mediums',
+  'organizations',
+  'standards',
+  'divisions',
+];
+
+const emptySelection = emptyAccessSelection;
+
+export const dedupeAccessSelection = (selection: AccessSelection): AccessSelection => {
+  const out = emptyAccessSelection();
+
+  accessSelectionKeys.forEach((key) => {
+    out[key] = Array.from(new Set(selection[key] || []));
+  });
+
+  return out;
+};
+
+export const hasAccessSelection = (selection?: Partial<AccessSelection> | null) =>
+  !!selection && accessSelectionKeys.some((key) => (selection[key]?.length ?? 0) > 0);
+
+type AccessTreeNode = {
+  id: string;
+  type: keyof AccessSelection;
+  children?: AccessTreeNode[];
+};
+
+type AccessSelectionSets = Record<keyof AccessSelection, Set<string>>;
+
+type AccessSelectionStatus = 'full' | 'partial' | 'none';
+
+const toAccessTree = (allBoards: any[] | undefined): AccessTreeNode[] =>
+  (allBoards || []).map((board: any) => ({
+    id: board.id,
+    type: 'boards',
+    children: board.educationMediums?.map((medium: any) => ({
+      id: medium.id,
+      type: 'mediums',
+      children: medium.educationMediumStages?.map((stage: any) => ({
+        id: stage.id,
+        type: 'organizations',
+        children: stage.standards?.map((standard: any) => ({
+          id: standard.id,
+          type: 'standards',
+          children: standard.divisions?.map((division: any) => ({
+            id: division.id,
+            type: 'divisions',
+          })),
+        })),
+      })),
+    })),
+  }));
+
+const toAccessSelectionSets = (selection: AccessSelection): AccessSelectionSets => ({
+  boards: new Set(selection.boards || []),
+  mediums: new Set(selection.mediums || []),
+  organizations: new Set(selection.organizations || []),
+  standards: new Set(selection.standards || []),
+  divisions: new Set(selection.divisions || []),
+});
+
+const buildAccessSelectionStatusMap = (
+  roots: AccessTreeNode[],
+  sourceSets: AccessSelectionSets
+): Map<string, AccessSelectionStatus> => {
+  const map = new Map<string, AccessSelectionStatus>();
+
+  const visit = (node: AccessTreeNode): AccessSelectionStatus => {
+    if (!node.children?.length) {
+      const status = sourceSets[node.type].has(node.id) ? 'full' : 'none';
+      map.set(node.id, status);
+      return status;
+    }
+
+    let fullCount = 0;
+    let noneCount = 0;
+    node.children.forEach((child) => {
+      const childStatus = visit(child);
+      if (childStatus === 'full') fullCount += 1;
+      if (childStatus === 'none') noneCount += 1;
+    });
+
+    let status: AccessSelectionStatus;
+    if (fullCount === node.children.length) status = 'full';
+    else if (noneCount === node.children.length) status = 'none';
+    else status = 'partial';
+
+    map.set(node.id, status);
+    return status;
+  };
+
+  roots.forEach(visit);
+  return map;
+};
+
+export const compressExplicitAcademicSelection = (
+  checkedItem: AccessSelection,
+  allBoards: any[] | undefined
+): AccessSelection => {
+  if (!allBoards?.length) return emptyAccessSelection();
+
+  const roots = toAccessTree(allBoards);
+  const sourceSets = toAccessSelectionSets(checkedItem || emptyAccessSelection());
+  const statusMap = buildAccessSelectionStatusMap(roots, sourceSets);
+  const output = emptyAccessSelection();
+
+  const visit = (node: AccessTreeNode) => {
+    if (statusMap.get(node.id) === 'full' && sourceSets[node.type].has(node.id)) {
+      output[node.type].push(node.id);
+      return;
+    }
+
+    node.children?.forEach(visit);
+  };
+
+  roots.forEach(visit);
+  return dedupeAccessSelection(output);
+};
 
 // Add every id within a board (from the full boards tree) into `out`.
 const addAllFromBoardTree = (board: any, out: AccessSelection) => {
@@ -236,11 +357,7 @@ export const expandAccessibleHierarchy = (
   });
 
   // De-duplicate (defensive — overlapping branches shouldn't normally occur).
-  (Object.keys(out) as Array<keyof AccessSelection>).forEach((k) => {
-    out[k] = Array.from(new Set(out[k]));
-  });
-
-  return out;
+  return dedupeAccessSelection(out);
 };
 
 const hasNodeAccess = (node: any, fullAccessKey?: string) =>

@@ -129,13 +129,13 @@ export type AttendanceAdvancedKey =
   | 'maxLateAllowedPerMonth'
   | 'penaltyType'
   | 'penaltyCountThreshold'
+  | 'penaltyDeductionAmount'
   | 'earlyExitEnabled'
   | 'earlyExitGraceTime'
   | 'overtimeEnabled'
   | 'overtimeRate'
   | 'minOvertimeMinutes'
   | 'holidayWorkBehavior'
-  | 'sandwichRuleEnabled'
   | 'payrollPreviewEnabled';
 
 export type AttendanceForm = {
@@ -153,13 +153,13 @@ export type AttendanceForm = {
   maxLateAllowedPerMonth: string;
   penaltyType: string;
   penaltyCountThreshold: string;
+  penaltyDeductionAmount: string;
   earlyExitEnabled: boolean;
   earlyExitGraceTime: string;
   overtimeEnabled: boolean;
   overtimeRate: string;
   minOvertimeMinutes: string;
   holidayWorkBehavior: string;
-  sandwichRuleEnabled: boolean;
   payrollPreviewEnabled: boolean;
 };
 

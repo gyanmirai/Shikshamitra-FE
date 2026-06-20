@@ -24,6 +24,7 @@ const isValidPincode = (value?: string | null) => !value || /^\d{6}$/.test(value
 
 type PersonalInformationValidationOptions = {
   requirePhoto?: boolean;
+  requireIdentity?: boolean;
 };
 
 const profilePhotoValidation = ({
@@ -40,6 +41,34 @@ const profilePhotoValidation = ({
 
   return requirePhoto ? schema.required('Profile Photo is required') : schema.nullable();
 };
+
+const aadhaarValidation = ({ requireIdentity = true }: PersonalInformationValidationOptions = {}) =>
+  Yup.string()
+    .nullable()
+    .test('aadhaar-required', 'Aadhaar number is required', (value) => {
+      if (!requireIdentity) return true;
+      return !!value;
+    })
+    .test('aadhaar-format', 'Aadhaar number must be 12 digits', (value) => {
+      if (!value) return !requireIdentity;
+      return /^\d{12}$/.test(value);
+    });
+
+const panValidation = ({ requireIdentity = true }: PersonalInformationValidationOptions = {}) =>
+  Yup.string()
+    .nullable()
+    .test('pan-required', 'PAN number is required', (value) => {
+      if (!requireIdentity) return true;
+      return !!value;
+    })
+    .test(
+      'pan-format',
+      'PAN must be in format: AAAAA9999A (5 letters, 4 digits, 1 letter)',
+      (value) => {
+        if (!value) return !requireIdentity;
+        return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value);
+      }
+    );
 
 export const getPersonalInformationValidationSchema = (
   options: PersonalInformationValidationOptions = {}
@@ -78,16 +107,8 @@ export const getPersonalInformationValidationSchema = (
     religion: Yup.string().required('Religion is required'),
     maritalStatus: Yup.string().required('Marital Status is required'),
     bloodGroup: Yup.string().nullable(),
-    adharNo: Yup.string()
-      .required('Aadhaar number is required')
-      .matches(/^\d{12}$/, 'Aadhaar number must be 12 digits'),
-    panNo: Yup.string()
-      .required('PAN number is required')
-      .test(
-        'pan-format',
-        'PAN must be in format: AAAAA9999A (5 letters, 4 digits, 1 letter)',
-        (value) => !!value && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)
-      ),
+    adharNo: aadhaarValidation(options),
+    panNo: panValidation(options),
     mobileNo: Yup.string()
       .test('valid-indian-mobile', 'Primary Contact No. is not valid', (value) => {
         if (!value) return false;
@@ -158,6 +179,7 @@ export const getPersonalInformationValidationSchema = (
 
 export const personalInformationValidationSchema = getPersonalInformationValidationSchema({
   requirePhoto: true,
+  requireIdentity: true,
 });
 
 const familyInformationValidationSchema = Yup.object({
@@ -396,7 +418,10 @@ export const validations = [
   Yup.object({}),
 ];
 export const infoValidations = [
-  personalInformationValidationSchema,
+  getPersonalInformationValidationSchema({
+    requirePhoto: false,
+    requireIdentity: false,
+  }),
   familyInformationValidationSchema,
   additionalDetailsValidationSchema,
   workExperienceValidationSchema,

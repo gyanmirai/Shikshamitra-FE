@@ -26,6 +26,9 @@ const normalizeNumberOrNull = (value: unknown) => {
 const normalizeOvertimeRate = (enabled: boolean, value?: string | null) =>
   enabled ? normalizeText(value) || 'flat' : '';
 
+const normalizePenaltyDeductionAmount = (penaltyType?: string | null, value?: unknown) =>
+  penaltyType === 'salary_deduction' ? normalizeNumberOrNull(value) : null;
+
 const sortNumbers = (items?: number[] | null) =>
   [...new Set(items || [])].sort((left, right) => left - right);
 
@@ -169,6 +172,8 @@ export function isAttendancePolicyUnchanged(
     policy.maxLateAllowedPerMonth === normalizeNumberOrNull(payload.maxLateAllowedPerMonth) &&
     policy.penaltyType === payload.penaltyType &&
     policy.penaltyCountThreshold === normalizeNumberOrNull(payload.penaltyCountThreshold) &&
+    normalizePenaltyDeductionAmount(policy.penaltyType, policy.penaltyDeductionAmount) ===
+      normalizePenaltyDeductionAmount(payload.penaltyType, payload.penaltyDeductionAmount) &&
     policy.earlyExitEnabled === payload.earlyExitEnabled &&
     policy.earlyExitGraceTime === normalizeNumberOrNull(payload.earlyExitGraceTime) &&
     policy.overtimeEnabled === payload.overtimeEnabled &&
@@ -177,7 +182,6 @@ export function isAttendancePolicyUnchanged(
     normalizeNumberOrNull(policy.minOvertimeMinutes) ===
       normalizeNumberOrNull(payload.minOvertimeMinutes) &&
     policy.holidayWorkBehavior === payload.holidayWorkBehavior &&
-    policy.sandwichRuleEnabled === payload.sandwichRuleEnabled &&
     policy.payrollPreviewEnabled === payload.payrollPreviewEnabled
   );
 }
