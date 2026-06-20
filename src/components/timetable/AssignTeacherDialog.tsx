@@ -1,7 +1,6 @@
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useAssignTeachersMutation } from 'src/redux/academicAPI/timetableApi/timetableManagementApi';
 import { useGetSubjectAssignmentByIdQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
@@ -224,12 +223,6 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
   const [applyTeacherToAllSubjectSlots, setApplyTeacherToAllSubjectSlots] = useState<
     Record<string, boolean>
   >({});
-
-  const [assignTeachers, { isLoading: isAssigningTeachers }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAssignTeachersMutation,
-  });
-
   // Reset selections when a new assignment is opened
   const prevRef = React.useRef<TeacherAssignment | null>(null);
   if (open !== prevRef.current) {
@@ -303,46 +296,6 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
       teacherId: selectedIds[sub.subjectId] || undefined,
       teacherName: selectedNames[sub.subjectId] || undefined,
     }));
-
-    // Only call API if the timetable already exists in the database
-    const timetableExists =
-      timetableStatus !== 0 && timetableStatus !== null && timetableStatus !== undefined;
-
-    if (timetableExists && standardId && divisionId) {
-      const currentSlot = slots[day]?.[slotIndex];
-      if (currentSlot) {
-        // Only call API for the current slot to prevent backend lock issues and rate-limiting
-        const subjectsPayload = splitSubjects
-          .map((sub) => {
-            const selectedTeacherId = selectedIds[sub.subjectId];
-            const rawSubjectId = sub.subjectId.includes('_part_')
-              ? sub.subjectId.split('_part_')[0]
-              : sub.subjectId;
-            return selectedTeacherId
-              ? { subjectId: rawSubjectId, teacherId: selectedTeacherId }
-              : null;
-          })
-          .filter(Boolean) as { subjectId: string; teacherId: string }[];
-
-        if (subjectsPayload.length > 0) {
-          try {
-            await assignTeachers({
-              standardId,
-              divisionId,
-              day: DAY_NAME_MAP[day],
-              startTime: currentSlot.startTime,
-              endTime: currentSlot.endTime,
-              subjectType: currentSlot.subjectType ?? 0,
-              electiveGroupId: currentSlot.electiveGroupId ?? null,
-              subjects: subjectsPayload,
-            }).unwrap();
-          } catch {
-            // API errors are handled globally
-            return;
-          }
-        }
-      }
-    }
 
     onSave(day, slotIndex, updatedSubjects, {
       applyTeacherToAllSubjectSlots,
@@ -430,8 +383,6 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
           variant="contained"
           size="small"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
-          disabled={isAssigningTeachers}
-          loading={isAssigningTeachers}
         >
           Submit
         </Button>

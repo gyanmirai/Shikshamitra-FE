@@ -275,6 +275,11 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   });
   const formik = formikInstance ?? internalFormik;
 
+  React.useEffect(() => {
+    formik.setTouched({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStep]);
+
   const isVertical = viewMode === 'vertical' && !isMobile;
   const hasExplicitCompletedSteps = Array.isArray(completedSteps);
 

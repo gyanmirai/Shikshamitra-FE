@@ -73,3 +73,51 @@ export const parseTableDate = (value: unknown): Dayjs | null => {
   const parsedNative = dayjs(stringValue);
   return parsedNative.isValid() ? parsedNative : null;
 };
+
+export function extractTextFromReactNode(node: any): string {
+  if (node === null || node === undefined) {
+    return '';
+  }
+
+  // Handle primitives
+  if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
+    return String(node).trim();
+  }
+
+  // Handle arrays of nodes
+  if (Array.isArray(node)) {
+    return node
+      .map(extractTextFromReactNode)
+      .filter((str) => str !== '')
+      .join(' ')
+      .trim();
+  }
+
+  // Handle React elements
+  if (typeof node === 'object') {
+    // If it has children, recurse into children
+    if (node.props && node.props.children !== undefined) {
+      return extractTextFromReactNode(node.props.children);
+    }
+
+    // Check for common label/value/text props if children are not present
+    if (node.props) {
+      if (typeof node.props.label === 'string' || typeof node.props.label === 'number') {
+        return String(node.props.label).trim();
+      }
+      if (typeof node.props.value === 'string' || typeof node.props.value === 'number') {
+        return String(node.props.value).trim();
+      }
+      if (typeof node.props.text === 'string' || typeof node.props.text === 'number') {
+        return String(node.props.text).trim();
+      }
+    }
+
+    // Check if it's a Date object
+    if (node instanceof Date) {
+      return node.toString();
+    }
+  }
+
+  return '';
+}

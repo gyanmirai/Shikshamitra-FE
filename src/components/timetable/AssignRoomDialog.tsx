@@ -2,7 +2,6 @@ import { GlobalIcons } from 'src/utils/icons';
 import React, { useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
-import { useAssignRoomsMutation } from 'src/redux/academicAPI/timetableApi/timetableManagementApi';
 import {
   Box,
   Button,
@@ -102,12 +101,6 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
     type: 'query',
     currentQueryAndMutation: useGetRoomsQuery,
   });
-
-  const [assignRooms, { isLoading: isAssigningRooms }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAssignRoomsMutation,
-  });
-
   const [selectedIds, setSelectedIds] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [applyToAllSlots, setApplyToAllSlots] = useState<Record<string, boolean>>({});
@@ -187,44 +180,6 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
         roomName: selectedItem?.roomName || selectedItem?.name || undefined,
       };
     });
-
-    // Only call API if the timetable already exists in the database
-    const timetableExists =
-      timetableStatus !== 0 && timetableStatus !== null && timetableStatus !== undefined;
-
-    if (timetableExists && standardId && divisionId) {
-      const currentSlot = slots[day]?.[slotIndex];
-      if (currentSlot) {
-        // Only call API for the current slot to prevent backend lock issues and rate-limiting
-        const subjectsPayload = splitSubjects
-          .map((sub) => {
-            const selectedRoomId = selectedIds[sub.subjectId];
-            const rawSubjectId = sub.subjectId.includes('_part_')
-              ? sub.subjectId.split('_part_')[0]
-              : sub.subjectId;
-            return selectedRoomId ? { subjectId: rawSubjectId, roomId: selectedRoomId } : null;
-          })
-          .filter(Boolean) as { subjectId: string; roomId: string }[];
-
-        if (subjectsPayload.length > 0) {
-          try {
-            await assignRooms({
-              standardId,
-              divisionId,
-              day: DAY_NAME_MAP[day],
-              startTime: currentSlot.startTime,
-              endTime: currentSlot.endTime,
-              subjectType: currentSlot.subjectType ?? 0,
-              electiveGroupId: currentSlot.electiveGroupId ?? null,
-              subjects: subjectsPayload,
-            }).unwrap();
-          } catch {
-            // API errors are handled globally
-            return;
-          }
-        }
-      }
-    }
 
     onSave(day, slotIndex, updatedSubjects, {
       applyToAllSlots,
@@ -352,8 +307,6 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
           variant="contained"
           size="small"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
-          disabled={isAssigningRooms}
-          loading={isAssigningRooms}
         >
           Submit
         </Button>

@@ -157,7 +157,7 @@ interface SubjectScheduleRowProps {
   values: SubjectRowValues;
   errors?: Record<string, string>;
   touched?: Record<string, boolean>;
-  onFieldChange: (field: string, value: any) => void;
+  onFieldChange: (field: string, value: any) => Promise<any> | void;
   onFieldBlur: (field: string) => void;
   gradeScalings: any[];
   isGradeScalingsLoading: boolean;
@@ -229,8 +229,8 @@ const SubjectScheduleRow = memo(
             value={values.examDate || null}
             format="DD/MM/YYYY"
             label="Date *"
-            onChange={(v) => {
-              onFieldChange('examDate', v);
+            onChange={async (v) => {
+              await onFieldChange('examDate', v);
               onFieldBlur('examDate');
             }}
             minDate={dayjs()}
@@ -243,6 +243,7 @@ const SubjectScheduleRow = memo(
                 helperText: touched.examDate && errors.examDate ? errors.examDate : ' ',
                 FormHelperTextProps: HELPER_TEXT_PROPS,
                 InputLabelProps: LABEL_PROPS,
+                onBlur: () => onFieldBlur('examDate'),
               },
             }}
           />
@@ -256,8 +257,8 @@ const SubjectScheduleRow = memo(
             value={values.startTime || null}
             format="hh:mm a"
             label="Start Time *"
-            onChange={(v) => {
-              onFieldChange('startTime', v);
+            onChange={async (v) => {
+              await onFieldChange('startTime', v);
               onFieldBlur('startTime');
             }}
             viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
@@ -282,8 +283,8 @@ const SubjectScheduleRow = memo(
             value={values.endTime || null}
             format="hh:mm a"
             label="End Time *"
-            onChange={(v) => {
-              onFieldChange('endTime', v);
+            onChange={async (v) => {
+              await onFieldChange('endTime', v);
               onFieldBlur('endTime');
             }}
             viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
@@ -322,12 +323,12 @@ const SubjectScheduleRow = memo(
               touched.gradeScalingId && errors.gradeScalingId ? errors.gradeScalingId : ' '
             }
             helperTextProps={HELPER_TEXT_PROPS}
-            onChange={(selectedId) => {
-              onFieldChange('gradeScalingId', selectedId || null);
+            onChange={async (selectedId) => {
+              await onFieldChange('gradeScalingId', selectedId || null);
               onFieldBlur('gradeScalingId');
               const selected = gradeScalings.find((s: any) => s.id === selectedId);
               if (selected?.totalMarks !== undefined) {
-                onFieldChange('totalMarks', selected.totalMarks ?? '');
+                await onFieldChange('totalMarks', selected.totalMarks ?? '');
                 onFieldBlur('totalMarks');
               }
             }}
@@ -619,99 +620,6 @@ const slotsOverlap = (a: any, b: any) => {
 };
 
 // ---------------------------------------------------------------------------
-// Separate-mode inline validator — mirrors validationSchema Step 1 rules
-// ---------------------------------------------------------------------------
-function validateSepSubject(
-  sub: any,
-  allSubjects?: any[],
-  currentGroupId?: string
-): Record<string, string> {
-  const errs: Record<string, string> = {};
-
-  if (!sub?.examDate || !dayjs(sub.examDate).isValid()) {
-    errs.examDate = 'Exam date is required';
-  } else if (!dayjs(sub.examDate).isSameOrAfter(dayjs().startOf('day'))) {
-    errs.examDate = 'Exam date cannot be in the past';
-  }
-
-  if (!sub?.startTime || !dayjs(sub.startTime).isValid()) {
-    errs.startTime = 'Start time is required';
-  } else if (sub?.examDate && dayjs(sub.examDate).isSame(dayjs(), 'day')) {
-    const startDT = dayjs(sub.examDate)
-      .hour(dayjs(sub.startTime).hour())
-      .minute(dayjs(sub.startTime).minute());
-    if (startDT.isBefore(dayjs())) errs.startTime = 'Start time cannot be in the past for today';
-  }
-
-  if (!sub?.endTime || !dayjs(sub.endTime).isValid()) {
-    errs.endTime = 'End time is required';
-  } else if (sub?.startTime && dayjs(sub.startTime).isValid()) {
-    const dummyDate = dayjs('2000-01-01');
-    const start = dayjs(sub.startTime);
-    const end = dayjs(sub.endTime);
-    const dStart = dummyDate.hour(start.hour()).minute(start.minute()).second(0).millisecond(0);
-    const dEnd = dummyDate.hour(end.hour()).minute(end.minute()).second(0).millisecond(0);
-    if (!dEnd.isAfter(dStart)) errs.endTime = 'End time must be after start time';
-    else if (dEnd.diff(dStart, 'minute') < 30)
-      errs.endTime = 'Exam duration must be at least 30 minutes';
-  }
-
-  // Check for time conflicts with Core subjects and other elective groups
-  if (allSubjects && sub?.examDate && sub?.startTime && sub?.endTime && !errs.startTime) {
-    const conflicting = allSubjects
-      .filter((other: any) => other.electiveGroupId !== currentGroupId) // Skip same group
-      .find((other: any) => {
-        const nestedSubs =
-          other.schedulingMode === 'separate' && Array.isArray(other.subjects)
-            ? other.subjects
-            : [other];
-        return nestedSubs.some((s: any) => slotsOverlap(sub, s));
-      });
-
-    if (conflicting) {
-      errs.startTime = !conflicting.electiveGroupId
-        ? 'Conflicts with a Core subject exam'
-        : 'Conflicts with another elective group exam';
-    }
-  }
-
-  const totalN = Number(sub?.totalMarks);
-  if (sub?.totalMarks === '' || sub?.totalMarks === null || sub?.totalMarks === undefined) {
-    errs.totalMarks = 'Total Marks is required';
-  } else if (Number.isNaN(totalN) || totalN < 1) {
-    errs.totalMarks = 'Total marks must be at least 1';
-  } else if (totalN > 1000) {
-    errs.totalMarks = 'Total marks cannot exceed 1000';
-  } else if (!Number.isInteger(totalN)) {
-    errs.totalMarks = 'Total marks must be a whole number';
-  }
-
-  const passingN = Number(sub?.passingMarks);
-  if (sub?.passingMarks === '' || sub?.passingMarks === null || sub?.passingMarks === undefined) {
-    errs.passingMarks = 'Passing Marks is required';
-  } else if (Number.isNaN(passingN) || passingN < 1) {
-    errs.passingMarks = 'Passing marks must be at least 1';
-  } else if (!Number.isNaN(totalN) && totalN > 0 && passingN > totalN) {
-    errs.passingMarks = 'Passing marks cannot exceed total marks';
-  }
-
-  if (!sub?.gradeScalingId) {
-    errs.gradeScalingId = 'Grade Scale is required';
-  }
-
-  return errs;
-}
-
-const ALL_FIELDS_TOUCHED: Record<string, boolean> = {
-  examDate: true,
-  startTime: true,
-  endTime: true,
-  gradeScalingId: true,
-  totalMarks: true,
-  passingMarks: true,
-};
-
-// ---------------------------------------------------------------------------
 // ElectiveGroupCard
 // ---------------------------------------------------------------------------
 interface ElectiveGroupCardProps {
@@ -735,31 +643,48 @@ const ElectiveGroupCard = memo(
     const individualSubjects: any[] = group?.subjects || [];
 
     const handleSubjectFieldChange = useCallback(
-      (subjectIdx: number, field: string, value: any) => {
-        formik.setFieldValue(`subjects.${groupIndex}.subjects.${subjectIdx}.${field}`, value);
+      (subjectIdx: number, field: string, value: any) =>
+        formik.setFieldValue(`subjects.${groupIndex}.subjects.${subjectIdx}.${field}`, value),
+      [formik, groupIndex]
+    );
+
+    const handleSepFieldBlur = useCallback(
+      (subjectIdx: number, field: string) => {
+        formik.setFieldTouched(
+          `subjects.${groupIndex}.subjects.${subjectIdx}.${field}`,
+          true,
+          true
+        );
       },
       [formik, groupIndex]
     );
 
-    const [sepTouched, setSepTouched] = useState<Record<number, Record<string, boolean>>>({});
-
-    const handleSepFieldBlur = useCallback((subjectIdx: number, field: string) => {
-      setSepTouched((prev) => ({
-        ...prev,
-        [subjectIdx]: { ...(prev[subjectIdx] || {}), [field]: true },
-      }));
-    }, []);
-
-    const showAllSepErrors = Boolean(formik.errors?.subjects);
-
     const handleApplyToGroup = useCallback(
-      (values: ApplyToAllValues) => {
+      async (values: ApplyToAllValues) => {
         if (!Object.keys(values).length) return;
         const updated = formik.values.subjects.map((sub: any, idx: number) => {
           if (idx !== groupIndex) return sub;
           return { ...sub, subjects: (sub.subjects || []).map((s: any) => ({ ...s, ...values })) };
         });
-        formik.setValues({ ...formik.values, subjects: updated }, true);
+        await formik.setValues({ ...formik.values, subjects: updated }, true);
+
+        // Set touched so errors show up immediately
+        const updatedTouched = { ...formik.touched };
+        if (!updatedTouched.subjects) updatedTouched.subjects = [];
+        if (!updatedTouched.subjects[groupIndex]) updatedTouched.subjects[groupIndex] = {};
+        if (!updatedTouched.subjects[groupIndex].subjects) {
+          updatedTouched.subjects[groupIndex].subjects = [];
+        }
+        const groupObj = formik.values.subjects[groupIndex];
+        (groupObj.subjects || []).forEach((s: any, subjectIdx: number) => {
+          if (!updatedTouched.subjects[groupIndex].subjects[subjectIdx]) {
+            updatedTouched.subjects[groupIndex].subjects[subjectIdx] = {};
+          }
+          Object.keys(values).forEach((key) => {
+            updatedTouched.subjects[groupIndex].subjects[subjectIdx][key] = true;
+          });
+        });
+        formik.setTouched(updatedTouched);
       },
       [formik, groupIndex]
     );
@@ -837,12 +762,8 @@ const ElectiveGroupCard = memo(
               <TableBody>
                 {individualSubjects.map((sub: any, j: number) => {
                   const subSchedule = group.subjects?.[j] || sub;
-                  const subErrors = validateSepSubject(
-                    subSchedule,
-                    formik.values.subjects,
-                    group.electiveGroupId
-                  );
-                  const subTouched = showAllSepErrors ? ALL_FIELDS_TOUCHED : (sepTouched[j] ?? {});
+                  const subErrors = formik.errors.subjects?.[groupIndex]?.subjects?.[j] ?? {};
+                  const subTouched = formik.touched.subjects?.[groupIndex]?.subjects?.[j] ?? {};
                   return (
                     <SubjectScheduleRow
                       key={`sep-${groupIndex}-${j}-${sub.subjectId || j}`}
@@ -913,12 +834,25 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
   );
 
   const handleApplyAllCore = useCallback(
-    (values: ApplyToAllValues) => {
+    async (values: ApplyToAllValues) => {
       if (!Object.keys(values).length) return;
       const updated = formik.values.subjects.map((sub: any) =>
         sub.electiveGroupId ? sub : { ...sub, ...values }
       );
-      formik.setValues({ ...formik.values, subjects: updated }, true);
+      await formik.setValues({ ...formik.values, subjects: updated }, true);
+
+      // Set touched so errors show up immediately
+      const updatedTouched = { ...formik.touched };
+      if (!updatedTouched.subjects) updatedTouched.subjects = [];
+      formik.values.subjects.forEach((sub: any, index: number) => {
+        if (!sub.electiveGroupId) {
+          if (!updatedTouched.subjects[index]) updatedTouched.subjects[index] = {};
+          Object.keys(values).forEach((key) => {
+            updatedTouched.subjects[index][key] = true;
+          });
+        }
+      });
+      formik.setTouched(updatedTouched);
     },
     [formik]
   );
@@ -976,9 +910,9 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                       values={subject}
                       errors={subErrors}
                       touched={subTouched}
-                      onFieldChange={(field, value) => {
-                        formik.setFieldValue(`subjects.${index}.${field}`, value);
-                      }}
+                      onFieldChange={(field, value) =>
+                        formik.setFieldValue(`subjects.${index}.${field}`, value)
+                      }
                       onFieldBlur={(field) => {
                         formik.setFieldTouched(`subjects.${index}.${field}`, true, true);
                       }}

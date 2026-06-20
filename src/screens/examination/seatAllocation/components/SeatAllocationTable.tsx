@@ -2,14 +2,13 @@
 import type { RootState } from 'src/redux/store';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import React from 'react';
 import { useSelector } from 'react-redux';
-import React, { useCallback } from 'react';
+import { Box, Button } from '@mui/material';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, MenuItem, MenuList } from '@mui/material';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -53,30 +52,6 @@ const SeatAllocationTable = ({
       skip: !classId, // Skip the query if classId is not provided
     },
   });
-
-  const actions = useCallback(
-    ({ popover: pop, row }: any) =>
-      canAdd ? (
-        <MenuList>
-          <MenuItem
-            onClick={() => {
-              onSeatAllocate(row);
-              openSeatAllocation.onTrue();
-              pop.onClose();
-            }}
-          >
-            <>
-              <Iconify
-                icon={row.status === 0 ? 'clarity:form-line' : GlobalIcons.edit}
-                sx={{ mr: 1 }}
-              />
-              {row.status === 0 ? 'Allocate Seats' : 'Update Seats'}
-            </>
-          </MenuItem>
-        </MenuList>
-      ) : null,
-    [onSeatAllocate, openSeatAllocation, canAdd]
-  );
 
   return (
     // <Box
@@ -145,13 +120,27 @@ const SeatAllocationTable = ({
           isSort: false,
           sticky: true,
           isFilter: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                actions={(prop) => actions({ ...prop, row })}
-                placement="right-top"
-              />
-            );
+          minWidth: '150px',
+          render(value, row: any) {
+            return canAdd ? (
+              <Button
+                size="small"
+                variant="outlined"
+                sx={{ minWidth: '100px' }}
+                startIcon={
+                  <Iconify
+                    icon={row.status === 0 ? 'clarity:form-line' : GlobalIcons.edit}
+                    sx={{ height: '16px', width: '16px' }}
+                  />
+                }
+                onClick={() => {
+                  onSeatAllocate(row);
+                  openSeatAllocation.onTrue();
+                }}
+              >
+                {row.status === 0 ? 'Allocate Seats' : 'Update Seats'}
+              </Button>
+            ) : null;
           },
         },
       ]}
