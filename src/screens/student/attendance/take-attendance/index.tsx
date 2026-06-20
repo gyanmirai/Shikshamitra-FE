@@ -147,6 +147,16 @@ const TakeAttendanceScreen = () => {
     }
   };
 
+  const isValidSelection = React.useMemo(() => {
+    const selectedOrg = allOrganization.find((org: any) => org?.id === organization);
+    if (!selectedOrg) return false;
+    const selectedClass = selectedOrg.standards?.find((c: any) => c.id === classes);
+    if (!selectedClass) return false;
+    const selectedDivision = selectedClass.divisions?.find((d: any) => d.id === division);
+    if (!selectedDivision) return false;
+    return true;
+  }, [allOrganization, organization, classes, division]);
+
   const { data, isLoading, isFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAttendanceByFilterQuery,
@@ -156,7 +166,7 @@ const TakeAttendanceScreen = () => {
       DivisionId: division,
       Date: dateConvertor(dayjs(date).format(dateFormat)),
     },
-    options: { skip: !(date && organization && classes && division) },
+    options: { skip: !(date && isValidSelection) },
   });
 
   // Derived from API response
@@ -222,6 +232,21 @@ const TakeAttendanceScreen = () => {
   //   setStudentData([]);
   // }, [date, organization, classes, division]);
 
+  const hasUnsavedChanges = React.useMemo(() => {
+    if (!data?.students) return false;
+    if (studentData.length !== data.students.length) return true;
+
+    // eslint-disable-next-line no-plusplus
+    for (let i = 0; i < data.students.length; i++) {
+      const original = data.students[i];
+      const current = studentData.find((s: any) => s.studentId === original.studentId);
+      if (!current) return true;
+      if (current.isPresent !== original.status) return true;
+      if (current.remarks !== (original.remarks || '')) return true;
+    }
+    return false;
+  }, [data?.students, studentData]);
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -263,10 +288,32 @@ const TakeAttendanceScreen = () => {
             <DatePicker
               label="Date"
               value={date}
+              disableFuture
               minDate={dayjs(currentYear?.startDate)}
               maxDate={dayjs(currentYear?.endDate)}
               onChange={(val) => {
-                setDate(val);
+                if (val && val.isValid()) {
+                  if (val.isAfter(dayjs(), 'day')) {
+                    shikshaMitraToast.error({ message: 'Future dates are not allowed' });
+                    setDate(
+                      dayjs().isAfter(dayjs(currentYear?.endDate))
+                        ? dayjs(currentYear?.endDate)
+                        : dayjs()
+                    );
+                  } else if (
+                    currentYear?.startDate &&
+                    val.isBefore(dayjs(currentYear.startDate), 'day')
+                  ) {
+                    shikshaMitraToast.error({
+                      message: 'Date cannot be before academic year start date',
+                    });
+                    setDate(dayjs(currentYear.startDate));
+                  } else {
+                    setDate(val);
+                  }
+                } else {
+                  setDate(val);
+                }
               }}
               format="DD-MM-YYYY"
               slotProps={{ textField: { size: 'small', sx: { maxWidth: '200px', width: '100%' } } }}
@@ -379,7 +426,8 @@ const TakeAttendanceScreen = () => {
                 isUnlockLoading ||
                 !canMarkAttendance ||
                 studentData.length === 0 ||
-                studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
+                studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending) ||
+                !hasUnsavedChanges
               }
               sx={{
                 minWidth: '90px',
@@ -546,13 +594,13 @@ const ListView = ({
             ),
           },
           {
-            id: 'presentDay',
+            id: 'presentDays',
             label: 'Present Days',
             align: 'left',
             minWidth: '100px',
             isFilter: false,
           },
-          { id: 'percentage', label: 'Attendance %', align: 'left', minWidth: '100px' },
+          { id: 'attendancePercentage', label: 'Attendance %', align: 'left', minWidth: '100px' },
           {
             id: 'remarks',
             label: 'Remarks',
