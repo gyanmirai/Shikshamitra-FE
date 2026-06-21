@@ -22,6 +22,31 @@ import {
 
 import { DocumentForm } from '../setting/document-type';
 
+const formatAcceptedFormat = (format: unknown) => {
+  if (typeof format === 'string' && format.trim()) {
+    return format.trim();
+  }
+
+  if (typeof format === 'number') {
+    return String(format);
+  }
+
+  if (format && typeof format === 'object') {
+    const item = format as { label?: unknown; name?: unknown; value?: unknown };
+    return formatAcceptedFormat(item.label ?? item.name ?? item.value);
+  }
+
+  return '';
+};
+
+const formatAcceptedFormats = (formats: unknown) => {
+  if (Array.isArray(formats)) {
+    return formats.map(formatAcceptedFormat).filter(Boolean).join(', ');
+  }
+
+  return typeof formats === 'string' && formats.trim() ? formats.trim() : '';
+};
+
 export const RenderDocuments = (props: any) => {
   // Get the student ID from props
   const { id } = props;
@@ -32,6 +57,7 @@ export const RenderDocuments = (props: any) => {
   // State to store the selected document name for dialog title
   const [selectedDocName, setSelectedDocName] = useState<string>('');
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
+  const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
 
   // Dialog state for adding documents
   const addDocumentDialog = useBoolean();
@@ -50,6 +76,13 @@ export const RenderDocuments = (props: any) => {
     params: { studentId: id },
     options: { skip: !id },
   });
+
+  useEffect(() => {
+    setDocId(null);
+    setSelectedDocName('');
+    setUploadingDocId(null);
+    setUploadErrors({});
+  }, [id]);
 
   // Get the isChanges state from the Redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -82,14 +115,25 @@ export const RenderDocuments = (props: any) => {
             isSort: false,
             align: 'left',
             render(value, row) {
+              const uploadError = uploadErrors[row.documentTypeId];
+              const statusIcon = uploadError
+                ? 'mdi:alert-circle'
+                : value
+                  ? 'mdi:approve'
+                  : 'mage:file-cross-fill';
               return (
-                <Tooltip title={value ? 'Uploaded' : 'Not Uploaded'}>
+                <Tooltip title={uploadError || (value ? 'Uploaded' : 'Not Uploaded')}>
                   <Iconify
-                    icon={value ? 'mdi:approve' : 'mage:file-cross-fill'}
+                    icon={statusIcon}
                     height={20}
                     width={20}
                     sx={{
-                      color: (theme) => (value ? 'success.main' : theme.vars.palette.grey[500]),
+                      color: (theme) =>
+                        uploadError
+                          ? 'error.main'
+                          : value
+                            ? 'success.main'
+                            : theme.vars.palette.grey[500],
                       cursor: 'pointer',
                     }}
                   />
@@ -106,55 +150,83 @@ export const RenderDocuments = (props: any) => {
             isSort: false,
             render(value, row) {
               const isUploading = uploadingDocId === row.documentTypeId;
+              const uploadError = uploadErrors[row.documentTypeId];
               if (isUploading) {
                 return <Skeleton variant="rounded" width={80} height={24} />;
               }
               return (
-                <UploadButton
-                  disableRipple
-                  disableElevation
-                  disableFocusRipple
-                  disableTouchRipple
-                  sx={{
-                    textAlign: 'left',
-                    marginLeft: '0px',
-                    paddingLeft: '0px',
-                    justifyContent: 'flex-start',
-                    display: 'flex',
-                    '&:hover': { backgroundColor: 'transparent' },
-                  }}
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setUploadingDocId(row.documentTypeId);
-                    const formData = new FormData();
-                    formData.append('documentTypeId', row.documentTypeId);
-                    formData.append('file', file);
-
-                    try {
-                      await uploadDocument({ studentId: id, body: formData }).unwrap();
-                      shikshaMitraToast.success({
-                        message: `${row.documentTypeName} uploaded successfully`,
+                <Box>
+                  <UploadButton
+                    disableRipple
+                    disableElevation
+                    disableFocusRipple
+                    disableTouchRipple
+                    sx={{
+                      textAlign: 'left',
+                      marginLeft: '0px',
+                      paddingLeft: '0px',
+                      justifyContent: 'flex-start',
+                      display: 'flex',
+                      '&:hover': { backgroundColor: 'transparent' },
+                    }}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploadingDocId(row.documentTypeId);
+                      setUploadErrors((current) => {
+                        const next = { ...current };
+                        delete next[row.documentTypeId];
+                        return next;
                       });
-                    } catch (error: any) {
-                      const errorData = error?.data?.error;
-                      if (errorData?.code === 'Document:InvalidFormat') {
-                        shikshaMitraToast.error({
-                          message: `Invalid format. Accepted formats are: ${errorData?.data?.AcceptedFormats}`,
+                      const formData = new FormData();
+                      formData.append('documentTypeId', row.documentTypeId);
+                      formData.append('file', file);
+
+                      try {
+                        await uploadDocument({ studentId: id, body: formData }).unwrap();
+                        shikshaMitraToast.success({
+                          message: `${row.documentTypeName} uploaded successfully`,
                         });
-                      } else {
-                        shikshaMitraToast.error({
-                          message: errorData?.message || `Failed to upload ${row.documentTypeName}`,
-                        });
+                      } catch (error: any) {
+                        const errorData = error?.data?.error || error?.data;
+                        const acceptedFormats = formatAcceptedFormats(
+                          errorData?.data?.AcceptedFormats ?? errorData?.data?.acceptedFormats
+                        );
+                        const message =
+                          errorData?.code === 'Document:InvalidFormat'
+                            ? acceptedFormats
+                              ? `Invalid format. Accepted formats: ${acceptedFormats}`
+                              : 'Invalid document format.'
+                            : errorData?.message || `Failed to upload ${row.documentTypeName}`;
+
+                        setUploadErrors((current) => ({
+                          ...current,
+                          [row.documentTypeId]: message,
+                        }));
+                        shikshaMitraToast.error({ message });
+                      } finally {
+                        setUploadingDocId(null);
+                        e.target.value = '';
                       }
-                    } finally {
-                      setUploadingDocId(null);
-                      e.target.value = '';
-                    }
-                  }}
-                >
-                  <Iconify icon="ci:file-upload" />
-                </UploadButton>
+                    }}
+                  >
+                    <Iconify icon="ci:file-upload" />
+                  </UploadButton>
+                  {uploadError && (
+                    <Typography
+                      variant="caption"
+                      color="error.main"
+                      sx={{
+                        display: 'block',
+                        maxWidth: 220,
+                        whiteSpace: 'normal',
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      {uploadError}
+                    </Typography>
+                  )}
+                </Box>
               );
             },
           },

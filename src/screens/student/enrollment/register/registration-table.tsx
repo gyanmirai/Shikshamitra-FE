@@ -22,6 +22,11 @@ import {
 
 import type { IInquiryData } from '../Inquiry/type';
 
+const ENTRANCE_EXAM_LIFECYCLE_STATE = 3;
+
+const isEntranceExamRow = (row: any) =>
+  Number(row?.studentEnrollmentState ?? row?.enrollmentState) === ENTRANCE_EXAM_LIFECYCLE_STATE;
+
 const RegistrationTable = ({
   dialog,
   followUpDialog,
@@ -86,7 +91,7 @@ const RegistrationTable = ({
             }}
           >
             <Iconify icon="mdi:calendar-clock" />
-            Schedule Exam
+            {isEntranceExamRow(row) ? 'Reschedule / Override Exam' : 'Schedule Exam'}
           </MenuItem>
           <MenuItem
             onClick={() => {

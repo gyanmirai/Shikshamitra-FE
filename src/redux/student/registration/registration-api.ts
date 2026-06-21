@@ -8,8 +8,9 @@ export const StudentRegistrationApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentRegistration: builder.query({
       query: (params) => ({
-        url: `/student/enrollment/registrations?academicMediumId=${params.academicMediumId}`,
+        url: '/student/enrollment/registrations',
         method: 'GET',
+        params,
       }),
       providesTags: [studentRegistrationType.studentRegistration],
     }),

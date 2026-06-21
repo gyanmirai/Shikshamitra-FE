@@ -94,6 +94,19 @@ describe('student production API wiring', () => {
     expect(screenSource).toContain('skipCount: (page - 1) * rowsPerPage');
   });
 
+  it('keeps registration list wired to server pagination params', () => {
+    const apiSource = readSource('src/redux/student/registration/registration-api.ts');
+    const screenSource = readSource(
+      'src/screens/student/enrollment/register/registration-table.tsx'
+    );
+
+    expect(apiSource).toContain("url: '/student/enrollment/registrations'");
+    expect(apiSource).toContain('params,');
+    expect(apiSource).not.toContain('registrations?academicMediumId=');
+    expect(screenSource).toContain('serverSide');
+    expect(screenSource).toContain('onServerPagination');
+  });
+
   it('does not keep stale student document endpoints or multipart headers', () => {
     const studentIdPlaceholder = `$${'{studentId}'}`;
     const documentIdPlaceholder = `$${'{documentId}'}`;
