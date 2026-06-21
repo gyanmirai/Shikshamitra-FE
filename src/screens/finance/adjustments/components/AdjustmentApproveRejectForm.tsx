@@ -2,8 +2,13 @@
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Button, Divider, TextField, Typography, DialogActions } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { DialogScrollContent } from 'src/components/customDialog';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IAdjustmentApproveRejectProps } from '../types/adjustment.types';
 
@@ -14,9 +19,9 @@ const AdjustmentApproveRejectForm: React.FC<IAdjustmentApproveRejectProps> = ({
   const isReject = mode === 'Reject';
 
   const formik = useFormik({
-    initialValues: { notes: '' },
-    validationSchema: Yup.object({
-      notes: isReject
+    initialValues: { reason: '' },
+    validationSchema: Yup.object().shape({
+      reason: isReject
         ? Yup.string()
             .required('Rejection reason is required')
             .min(5, 'Provide a meaningful reason')
@@ -24,60 +29,62 @@ const AdjustmentApproveRejectForm: React.FC<IAdjustmentApproveRejectProps> = ({
     }),
     enableReinitialize: true,
     onSubmit: (values) => {
-      onClose(null, true, values.notes);
+      onClose(null, true, values.reason);
     },
   });
 
   return (
-    <form onSubmit={formik.handleSubmit}>
-      <Box sx={{ px: 0.5, pb: 1 }}>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {isReject
-            ? 'Please provide a reason for rejecting this adjustment request.'
-            : 'Add any notes or remarks before approving this adjustment request.'}
-        </Typography>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
+        <Grid container spacing={2}>
+          <Grid size={12}>
+            <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
+              <TextField
+                fullWidth
+                label={isReject ? 'Rejection Reason *' : 'Approval Notes'}
+                name="reason"
+                size="small"
+                multiline
+                rows={3}
+                placeholder={
+                  isReject ? 'Enter reason for rejection...' : 'Optional remarks for approval...'
+                }
+                value={formik.values.reason}
+                onChange={(e) => {
+                  formik.setFieldValue('reason', e.target.value);
+                  formik.setFieldTouched('reason', true);
+                }}
+                error={formik.touched.reason && Boolean(formik.errors.reason)}
+                helperText={formik.touched.reason && formik.errors.reason}
+              />
+            </ShakingTextField>
+          </Grid>
+        </Grid>
+      </DialogScrollContent>
 
-        <TextField
-          fullWidth
-          multiline
-          rows={3}
-          label={isReject ? 'Rejection Reason *' : 'Approval Notes'}
-          name="notes"
-          placeholder={
-            isReject ? 'Enter reason for rejection...' : 'Optional remarks for approval...'
-          }
-          value={formik.values.notes}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          error={formik.touched.notes && Boolean(formik.errors.notes)}
-          helperText={formik.touched.notes ? formik.errors.notes : ''}
-        />
-      </Box>
-
-      <Divider />
-
-      <DialogActions sx={{ px: 0, pt: 2, justifyContent: 'flex-end', gap: 1 }}>
+      <DialogActions>
         <Button
+          onClick={() => onClose(null, false)}
           variant="outlined"
-          color="inherit"
-          onClick={(e) => onClose(e, false)}
-          startIcon={<Iconify icon="mdi:close" />}
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
           Cancel
         </Button>
-        <Button
-          variant="contained"
-          type="submit"
+
+        <LoadingButton
+          type="button"
+          variant="soft"
           color={isReject ? 'error' : 'success'}
-          disabled={formik.isSubmitting}
-          startIcon={
-            <Iconify icon={isReject ? 'mdi:close-circle-outline' : 'mdi:check-circle-outline'} />
-          }
+          size="small"
+          loading={formik.isSubmitting}
+          startIcon={<Iconify icon={isReject ? GlobalIcons.cancel : GlobalIcons.tick} />}
+          onClick={() => formik.handleSubmit()}
         >
-          {isReject ? 'Reject' : 'Approve'}
-        </Button>
+          {mode}
+        </LoadingButton>
       </DialogActions>
-    </form>
+    </BackPopUpChecked>
   );
 };
 

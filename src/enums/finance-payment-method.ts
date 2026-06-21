@@ -4,9 +4,8 @@ export enum PaymentMethod {
   DEMAND_DRAFT = 2,
   BANK_TRANSFER = 3,
   CREDIT_CARD = 4,
-  UPI = 5,
-  ONLINE_PAYMENT_GATEWAY = 6,
-  WALLET = 7,
+  DEBIT_CARD = 5,
+  UPI = 6,
 }
 
 export const PaymentMethodLabels: Record<PaymentMethod, string> = {
@@ -15,7 +14,6 @@ export const PaymentMethodLabels: Record<PaymentMethod, string> = {
   [PaymentMethod.DEMAND_DRAFT]: 'Demand Draft (DD)',
   [PaymentMethod.BANK_TRANSFER]: 'Bank Transfer (NEFT/RTGS/IMPS)',
   [PaymentMethod.CREDIT_CARD]: 'Credit Card',
+  [PaymentMethod.DEBIT_CARD]: 'Debit Card',
   [PaymentMethod.UPI]: 'UPI',
-  [PaymentMethod.ONLINE_PAYMENT_GATEWAY]: 'Online Payment Gateway',
-  [PaymentMethod.WALLET]: 'Wallet / Prepaid Card',
 };

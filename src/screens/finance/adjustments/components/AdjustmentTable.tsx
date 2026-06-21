@@ -3,15 +3,16 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
+import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useCallback } from 'react';
-import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Tab, Card, Tabs, Typography, IconButton } from '@mui/material';
 import { useGetAdjustmentApplicationsQuery } from 'src/redux/finance/adjustments/adjustmentApi';
 
 import { mapAdjustmentApplicationItem } from '../utils/mapAdjustmentApplication';
@@ -33,6 +34,8 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   tabCounts,
   onCreateAdjustment,
   onView,
+  onApprove,
+  onReject,
   academicFilters,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -103,40 +106,69 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   const renderActions = useCallback(
     (params: { row: any }) => {
       const { row } = params;
+      const isPending = row.status === AdjustmentStatusEnum.Pending;
       return (
-        <ThreeDotsActions
-          showThreeDots={false}
-          showViewIcon
-          handleViewClick={() => onView(row)}
-          placement="right-top"
-          actions={({ popover }: any) => (
-            <Box onClick={popover.onClose}>
-              <Box
-                component="li"
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 1.5,
-                  py: 1,
-                  cursor: 'pointer',
-                  '&:hover': { bgcolor: 'action.hover' },
-                  listStyle: 'none',
-                }}
-                onClick={() => {
-                  onCreateAdjustment();
-                  popover.onClose();
-                }}
-              >
-                <Iconify icon="mdi:pencil-plus-outline" sx={{ width: 16, height: 16 }} />
-                Create Adjustment
+        <Box display="flex" gap={0.5} alignItems="center">
+          <ThreeDotsActions
+            showThreeDots={false}
+            showViewIcon
+            handleViewClick={() => onView(row)}
+            placement="right-top"
+            actions={({ popover }: any) => (
+              <Box onClick={popover.onClose}>
+                <Box
+                  component="li"
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 1.5,
+                    py: 1,
+                    cursor: 'pointer',
+                    '&:hover': { bgcolor: 'action.hover' },
+                    listStyle: 'none',
+                  }}
+                  onClick={() => {
+                    onCreateAdjustment();
+                    popover.onClose();
+                  }}
+                >
+                  <Iconify icon="mdi:pencil-plus-outline" sx={{ width: 16, height: 16 }} />
+                  Create Adjustment
+                </Box>
               </Box>
-            </Box>
+            )}
+          />
+          {isPending && onApprove && (
+            <IconButton
+              size="small"
+              onClick={() => onApprove(row)}
+              sx={{
+                color: 'success.main',
+                '&:hover': { backgroundColor: 'success.lighter' },
+              }}
+              title="Approve"
+            >
+              <Iconify icon="mdi:approve" width={20} height={20} />
+            </IconButton>
           )}
-        />
+          {isPending && onReject && (
+            <IconButton
+              size="small"
+              onClick={() => onReject(row)}
+              sx={{
+                color: 'error.main',
+                '&:hover': { backgroundColor: 'error.lighter' },
+              }}
+              title="Reject"
+            >
+              <Iconify icon="entypo:cross" width={20} height={20} />
+            </IconButton>
+          )}
+        </Box>
       );
     },
-    [onCreateAdjustment, onView]
+    [onCreateAdjustment, onView, onApprove, onReject]
   );
 
   return (
@@ -234,17 +266,6 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             maxWidth: 130,
           },
           {
-            id: 'totalPaidFees',
-            label: 'Total Paid Fees',
-            align: 'left',
-            isFilter: true,
-            filterType: 'number' as any,
-            width: 150,
-            minWidth: 120,
-            maxWidth: 170,
-            render: (value: any) => (value != null ? `₹ ${Number(value).toLocaleString()}` : '-'),
-          },
-          {
             id: 'adjustmentAmount',
             label: 'Adj. Amount',
             align: 'left',
@@ -254,15 +275,6 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             minWidth: 110,
             maxWidth: 160,
             render: (value: any) => (value != null ? `₹ ${Number(value).toLocaleString()}` : '-'),
-          },
-          {
-            id: 'adjustmentType',
-            label: 'Adjustment Type',
-            align: 'left',
-            isFilter: true,
-            width: 170,
-            minWidth: 150,
-            maxWidth: 200,
           },
           {
             id: 'requestedBy',
@@ -281,14 +293,11 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             width: 180,
             minWidth: 130,
             maxWidth: 180,
-            render: (value: any) =>
-              value
-                ? new Date(value).toLocaleDateString('en-IN', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                  })
-                : '-',
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+              </Typography>
+            ),
           },
           {
             id: 'status',
@@ -315,8 +324,8 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             isFilter: false,
             isSort: false,
             align: 'left',
-            width: 96,
-            minWidth: 80,
+            width: 140,
+            minWidth: 120,
             sticky: true,
             render: (_v: any, row: any) => renderActions({ row }),
           },

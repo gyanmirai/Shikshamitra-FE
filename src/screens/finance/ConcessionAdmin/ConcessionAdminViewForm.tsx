@@ -21,34 +21,42 @@ import { Cancel, Visibility, CheckCircle } from '@mui/icons-material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { ConcessionStatusType, ConcessionStatusTypeColors } from 'src/enums/concession-status-type';
-import {
-  useRejectConcessionRequestMutation,
-  useGetStudentConcessionDetailsQuery,
-  useDeleteConcessionApplicationMutation,
-} from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
   Tab,
   Tabs,
   Card,
   Grid,
+  Chip,
   Stack,
   Paper,
   Button,
   Divider,
+  Tooltip,
   Skeleton,
   TextField,
   Typography,
   IconButton,
   CardContent,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
+import {
+  useRejectConcessionRequestMutation,
+  useGetStudentConcessionDetailsQuery,
+  useUploadConcessionDocumentsMutation,
+  useDeleteConcessionApplicationMutation,
+} from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import StudentInformationAccordion from './StucentConcessionCard';
-import DocumentDialog from '../Concession/Components/DocumentDialog';
 import ConcessionFeeHeadApprovalView from './ConcessionFeeHeadApprovalView';
 
-import type { IConcessionRequestItem, IViewConcessionRequestProps } from './type';
+import type {
+  IRequiredDocument,
+  IConcessionRequestItem,
+  IViewConcessionRequestProps,
+} from './type';
 
 // ─── Reject Reason Dialog ─────────────────────────────────────────────────────
 
@@ -177,10 +185,263 @@ const StatCard: React.FC<IStatCardProps> = ({ label, value, color = 'default' })
   );
 };
 
-// ─── Document Dialog ──────────────────────────────────────────────────────────
-// Shared component used from ../Concession/Components/DocumentDialog
+// ─── Admin Document Dialog ────────────────────────────────────────────────────
+// Shows ALL required documents with upload option for pending ones and preview for uploaded ones
 
-// ─── Shared Document Dialog component used ────────────────────────────────────
+interface IAdminDocumentDialogProps {
+  open: boolean;
+  onClose: () => void;
+  item: IConcessionRequestItem;
+  /** Used as {id} in PUT /concession-request/{id}/documents */
+  studentConcessionTypeRequestId: string;
+  onRefresh?: () => void;
+}
+
+const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
+  open,
+  onClose,
+  item,
+  studentConcessionTypeRequestId,
+  onRefresh,
+}) => {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
+
+  // Local docs state - initialised from requiredDocuments
+  const [localDocs, setLocalDocs] = useState<IRequiredDocument[]>([]);
+
+  React.useEffect(() => {
+    if (open) {
+      setLocalDocs(item.requiredDocuments || []);
+    }
+  }, [open, item.requiredDocuments]);
+
+  const [uploadFile, { isLoading: isUploading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
+
+  const [saveDocuments, { isLoading: isSaving }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadConcessionDocumentsMutation,
+  });
+
+  // true when file upload is in progress (save only happens on Submit)
+  const isBusy = isUploading || isSaving;
+  // track if any local doc was modified vs original (enables Submit)
+  const hasChanges = JSON.stringify(localDocs) !== JSON.stringify(item.requiredDocuments || []);
+
+  const handleUploadClick = (docId: string) => {
+    setUploadingDocId(docId);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !uploadingDocId) return;
+
+    const formData = new FormData();
+    formData.append('FileName', file.name);
+    formData.append('File', file);
+
+    try {
+      const response = await uploadFile(formData).unwrap();
+      const uploadedUrl = response.data;
+
+      // Only update local state — user must click Submit to persist
+      setLocalDocs((prev) =>
+        prev.map((d) =>
+          d.documentId === uploadingDocId ? { ...d, url: uploadedUrl, isUploaded: true } : d
+        )
+      );
+
+      shikshaMitraToast.success({ message: 'File selected. Click Submit to save.' });
+    } catch (error) {
+      console.error('Upload failed:', error);
+      shikshaMitraToast.error({ message: 'Upload failed' });
+    } finally {
+      setUploadingDocId(null);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const payloadDocs = localDocs.map((d) => ({
+        documentId: d.documentId,
+        url: d.url || '',
+        status: d.isUploaded ? 1 : 0,
+      }));
+
+      await saveDocuments({
+        concessionRequestId: studentConcessionTypeRequestId,
+        documents: payloadDocs,
+      }).unwrap();
+
+      shikshaMitraToast.success({ message: 'Documents saved successfully' });
+      if (onRefresh) onRefresh();
+      onClose();
+    } catch (error) {
+      console.error('Save failed:', error);
+      shikshaMitraToast.error({ message: 'Failed to save documents' });
+    }
+  };
+
+  const allUploaded = localDocs.length > 0 && localDocs.every((d) => d.isUploaded);
+
+  return (
+    <>
+      <CustomDialog
+        open={open}
+        handleClose={onClose}
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            {item.concessionTypeName} — Documents
+          </Box>
+        }
+        maxWidth="sm"
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+          accept="image/*,.pdf"
+        />
+        <Box sx={{ p: 2, minHeight: 150 }}>
+          <Stack spacing={1.5}>
+            {localDocs.length === 0 && (
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
+                No documents required for this concession.
+              </Typography>
+            )}
+            {localDocs.map((doc) => (
+              <Box
+                key={doc.documentId}
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1.5,
+                  border: '1px solid',
+                  borderColor: doc.isUploaded ? 'success.light' : 'divider',
+                  bgcolor: (theme) =>
+                    doc.isUploaded
+                      ? varAlpha(theme.palette.success.mainChannel, 0.06)
+                      : varAlpha(theme.palette.grey['500Channel'], 0.04),
+                }}
+              >
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      {doc.documentName}
+                    </Typography>
+                    {doc.isUploaded ? (
+                      <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
+                        <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
+                        <Typography variant="caption" color="success.main" fontWeight={600}>
+                          Uploaded
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant="caption" color="warning.main" fontWeight={500}>
+                        Pending upload
+                      </Typography>
+                    )}
+                  </Box>
+                  <Box display="flex" gap={1} alignItems="center">
+                    {doc.isUploaded && doc.url && (
+                      <IconButton
+                        size="small"
+                        disabled={isBusy}
+                        onClick={() => setPreviewDoc({ url: doc.url!, name: doc.documentName })}
+                      >
+                        <Iconify icon="carbon:view-filled" />
+                      </IconButton>
+                    )}
+                    <LoadingButton
+                      size="small"
+                      variant="outlined"
+                      color={doc.isUploaded ? 'inherit' : 'primary'}
+                      // show spinner on THIS doc's button while uploading it;
+                      // show generic disabled state while saving or uploading another doc
+                      loading={
+                        (isUploading && uploadingDocId === doc.documentId) ||
+                        (isSaving && uploadingDocId === doc.documentId)
+                      }
+                      disabled={isBusy && uploadingDocId !== doc.documentId}
+                      onClick={() => handleUploadClick(doc.documentId)}
+                      startIcon={<Iconify icon="eva:cloud-upload-outline" />}
+                    >
+                      {doc.isUploaded ? 'Replace' : 'Upload'}
+                    </LoadingButton>
+                  </Box>
+                </Box>
+              </Box>
+            ))}
+          </Stack>
+
+          {!allUploaded && localDocs.length > 0 && (
+            <Box
+              mt={2}
+              px={1.5}
+              py={1}
+              sx={{
+                borderRadius: 1,
+                bgcolor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.08),
+                border: '1px solid',
+                borderColor: 'warning.light',
+              }}
+            >
+              <Typography variant="caption" color="warning.dark" fontWeight={600}>
+                ⚠ Upload all pending documents before the application can be approved.
+              </Typography>
+            </Box>
+          )}
+        </Box>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+          {isBusy && (
+            <Box display="flex" alignItems="center" gap={1} mr="auto">
+              <CircularProgress size={14} />
+              <Typography variant="caption" color="text.secondary">
+                {isSaving ? 'Saving…' : 'Uploading…'}
+              </Typography>
+            </Box>
+          )}
+          <Button
+            variant="outlined"
+            size="small"
+            disabled={isBusy}
+            onClick={onClose}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Close
+          </Button>
+          <LoadingButton
+            variant="contained"
+            size="small"
+            color="primary"
+            loading={isSaving}
+            disabled={isUploading || !hasChanges}
+            onClick={handleSubmit}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+          >
+            Submit
+          </LoadingButton>
+        </DialogActions>
+      </CustomDialog>
+
+      <DocumentPreviewDialog
+        open={!!previewDoc}
+        onClose={() => setPreviewDoc(null)}
+        url={previewDoc?.url || ''}
+        documentName={previewDoc?.name}
+      />
+    </>
+  );
+};
+
 // ─── Concession Item Card ──────────────────────────────────────────────────────
 
 interface IConcessionCardProps {
@@ -206,6 +467,19 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   const isCancelled = item.status === ConcessionStatusType.Cancelled;
   const statusLabel = ConcessionStatusType[item.status] as keyof typeof ConcessionStatusType;
   const statusColor = ConcessionStatusTypeColors[item.status as ConcessionStatusType] as LabelColor;
+
+  // Use requiredDocuments if available, otherwise fall back to submittedDocuments
+  const requiredDocs = item.requiredDocuments || [];
+  const uploadedDocs = requiredDocs.filter((d) => d.isUploaded && d.url);
+  const allDocsUploaded = requiredDocs.length === 0 || requiredDocs.every((d) => d.isUploaded);
+  const pendingCount = requiredDocs.filter((d) => !d.isUploaded).length;
+
+  // For cards with no requiredDocuments, fall back to checking submittedDocuments
+  const hasRequiredDocs = requiredDocs.length > 0;
+  const displayDocs = hasRequiredDocs ? uploadedDocs : (item.submittedDocuments || []).slice(0, 1);
+
+  // Approve should be disabled if any required document is not uploaded
+  const approveDisabled = isApproved || isRejected || isCancelled || !allDocsUploaded;
 
   return (
     <Card
@@ -264,17 +538,27 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           </Typography>
         </Box>
 
-        {/* Submitted Documents */}
-        {item.submittedDocuments?.length > 0 && (
-          <Box mb={2}>
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+        {/* Documents section - only show uploaded docs + See All */}
+        <Box mb={1.5}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.75}>
+            <Box display="flex" alignItems="center" gap={1}>
               <Typography
                 variant="overline"
                 color="text.secondary"
                 sx={{ letterSpacing: 1, fontWeight: 700 }}
               >
-                Submitted Documents
+                Documents
               </Typography>
+              {hasRequiredDocs && (
+                <Chip
+                  size="small"
+                  label={`${uploadedDocs.length}/${requiredDocs.length}`}
+                  color={allDocsUploaded ? 'success' : 'warning'}
+                  sx={{ height: 18, fontSize: '10px' }}
+                />
+              )}
+            </Box>
+            {hasRequiredDocs && (
               <Button
                 size="small"
                 onClick={() => onOpenDocs(item)}
@@ -282,9 +566,13 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
               >
                 See All
               </Button>
-            </Box>
-            <Stack spacing={0.75}>
-              {item.submittedDocuments.map((doc) => (
+            )}
+          </Box>
+
+          {/* Show only uploaded docs (max 1) in the card */}
+          {displayDocs.length > 0 ? (
+            <Stack spacing={0.5}>
+              {(hasRequiredDocs ? displayDocs.slice(0, 1) : displayDocs).map((doc: any) => (
                 <Box
                   key={doc.documentId}
                   display="flex"
@@ -294,15 +582,13 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
                     px: 1.5,
                     py: 0.75,
                     borderRadius: 1,
-                    bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                    bgcolor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.06),
+                    border: '1px solid',
+                    borderColor: 'success.light',
                   }}
                 >
                   <Box display="flex" alignItems="center" gap={1}>
-                    <Iconify
-                      icon="mdi:file-document-outline"
-                      width={16}
-                      sx={{ color: 'text.disabled' }}
-                    />
+                    <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
                     <Typography variant="caption" fontWeight={500}>
                       {doc.documentName}
                     </Typography>
@@ -315,13 +601,59 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
                       setPreviewDoc({ url: doc.url, name: doc.documentName });
                     }}
                   >
-                    <Visibility sx={{ fontSize: 18 }} />
+                    <Visibility sx={{ fontSize: 16 }} />
                   </IconButton>
                 </Box>
               ))}
+              {/* Show pending count hint */}
+              {hasRequiredDocs && pendingCount > 0 && (
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={0.5}
+                  sx={{
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 1,
+                    bgcolor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.08),
+                  }}
+                >
+                  <Iconify
+                    icon="mdi:clock-outline"
+                    width={13}
+                    sx={{ color: 'warning.main', flexShrink: 0 }}
+                  />
+                  <Typography variant="caption" color="warning.dark" fontWeight={500}>
+                    {pendingCount} document{pendingCount > 1 ? 's' : ''} pending — click{' '}
+                    <strong>See All</strong> to upload
+                  </Typography>
+                </Box>
+              )}
             </Stack>
-          </Box>
-        )}
+          ) : hasRequiredDocs ? (
+            // No uploaded docs yet
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={0.5}
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                borderRadius: 1,
+                bgcolor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.08),
+              }}
+            >
+              <Iconify icon="mdi:file-alert-outline" width={14} sx={{ color: 'warning.main' }} />
+              <Typography variant="caption" color="warning.dark" fontWeight={500}>
+                No documents uploaded — click <strong>See All</strong> to upload
+              </Typography>
+            </Box>
+          ) : (
+            <Typography variant="caption" color="text.disabled">
+              No documents required
+            </Typography>
+          )}
+        </Box>
 
         <DocumentPreviewDialog
           open={!!previewDoc}
@@ -386,17 +718,31 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           alignItems: 'flex-start',
         }}
       >
-        <LoadingButton
-          fullWidth
-          size="small"
-          variant={isApproved ? 'soft' : 'contained'}
-          color="success"
-          disabled={isApproved || isRejected || isCancelled}
-          startIcon={<CheckCircle fontSize="small" />}
-          onClick={() => onApprove(item)}
+        {/* Approve button with tooltip when docs are missing */}
+        <Tooltip
+          title={
+            !allDocsUploaded && !isApproved && !isRejected && !isCancelled
+              ? `Upload all documents first — click "See All" to upload pending documents`
+              : ''
+          }
+          placement="top"
+          arrow
         >
-          Approve
-        </LoadingButton>
+          {/* span needed so tooltip works on disabled button */}
+          <span style={{ flex: 1 }}>
+            <LoadingButton
+              fullWidth
+              size="small"
+              variant={isApproved ? 'soft' : 'contained'}
+              color="success"
+              disabled={approveDisabled}
+              startIcon={<CheckCircle fontSize="small" />}
+              onClick={() => onApprove(item)}
+            >
+              Approve
+            </LoadingButton>
+          </span>
+        </Tooltip>
         <LoadingButton
           fullWidth
           size="small"
@@ -777,14 +1123,12 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
         />
       </CustomDialog>
 
-      {/* ── Document Dialog ────────────────────────────────────────────── */}
-      {selectedItem && (
-        <DocumentDialog
+      {/* ── Admin Document Dialog ────────────────────────────────────────────── */}
+      {selectedItem && docDialog.value && (
+        <AdminDocumentDialog
           open={docDialog.value}
-          concessionId={selectedItem.concessionTypeId}
-          concessionName={selectedItem.concessionTypeName}
-          studentConcessionRequestId={student?.concessionRequestId}
-          submittedDocuments={selectedItem.submittedDocuments}
+          item={selectedItem}
+          studentConcessionTypeRequestId={selectedItem.studentConcessionTypeRequestId}
           onClose={() => {
             docDialog.onFalse();
             setSelectedItem(null);

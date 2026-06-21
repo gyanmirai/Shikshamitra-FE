@@ -1,9 +1,8 @@
-import { Iconify } from 'src/components/iconify';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EmptyContent } from 'src/components/empty-content';
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { Box, Stack, Skeleton, Typography, CircularProgress } from '@mui/material';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
-import { Box, Stack, Button, Skeleton, Typography, CircularProgress } from '@mui/material';
 
 import IndependentFeeStructureCard from './IndependentFeeStructureCard';
 import { useFetchStandardFeeStructures } from '../hooks/useClassWiseFeeStructureHooks';
@@ -18,10 +17,15 @@ interface ClassAccordionPanelProps {
   feeStructureMetaDataId: string;
   /** Called whenever unsaved-changes state changes for any card in this panel */
   onDirtyChange?: (dirty: boolean) => void;
+  /**
+   * Registers the panel's "add new draft" handler with the parent so the
+   * parent's sticky header button can trigger it without prop-drilling.
+   */
+  onRegisterAddNew?: (fn: () => void) => void;
 }
 
 // ---------------------------------------------------------------------------
-// Map API response â†’ card model
+// Map API response → card model
 // ---------------------------------------------------------------------------
 const mapToCardModel = (
   raw: any,
@@ -47,7 +51,7 @@ const mapToCardModel = (
 });
 
 // ---------------------------------------------------------------------------
-// Component â€” renders fee structures for the currently selected class.
+// Component — renders fee structures for the currently selected class.
 // No outer class accordion; the class strip is handled by FeeStructureEditForm.
 // Each individual fee structure is an accordion (inside IndependentFeeStructureCard).
 // ---------------------------------------------------------------------------
@@ -55,6 +59,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
   classId,
   feeStructureMetaDataId,
   onDirtyChange,
+  onRegisterAddNew,
 }) => {
   type DraftCard = IClassWiseFeeStructureCard & { __draftId: string };
 
@@ -84,6 +89,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
   const serverCards: IClassWiseFeeStructureCard[] = rawServerStructures
     .map((raw: any) => mapToCardModel(raw, classId, feeStructureMetaDataId))
     .filter((card) => !card._id || !deletedServerIds.has(card._id));
+
   const allCards = [
     ...serverCards.map((card) => ({
       card,
@@ -97,7 +103,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
     })),
   ];
 
-  const handleAddNew = () => {
+  const handleAddNew = useCallback(() => {
     draftCounterRef.current += 1;
     setLocalDrafts((prev) => [
       ...prev,
@@ -111,7 +117,12 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
         feeStructureMetaDataId,
       },
     ]);
-  };
+  }, [classId, feeStructureMetaDataId]);
+
+  // Register the add handler with the parent whenever it changes
+  useEffect(() => {
+    onRegisterAddNew?.(handleAddNew);
+  }, [handleAddNew, onRegisterAddNew]);
 
   if (isLoading) {
     return (
@@ -150,18 +161,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-      {/* Add Fee Structure CTA */}
-      <Box display="flex" justifyContent="flex-end">
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<Iconify icon="lucide:plus" />}
-          onClick={handleAddNew}
-        >
-          Add Fee Structure
-        </Button>
-      </Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {allCards.length === 0 && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -171,7 +171,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
           <EmptyContent
             filled
             title="No Fee Structures"
-            description="Click 'Add Fee Structure' below to create one for this class."
+            description="Click '+ Add Fee Structure' to create one for this class."
             sx={{ py: 8 }}
           />
         </motion.div>

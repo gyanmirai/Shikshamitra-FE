@@ -499,8 +499,8 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                               {chargeCategories?.items?.find(
                                 (item: any) => item.id === values.chargeCategoryId
                               )?.isApprovalRequired
-                                ? 'This charge need the approval from the authority'
-                                : 'This charge does not need the approval from the authority'}
+                                ? 'Need the approval from the authority'
+                                : 'Does not need the approval from the authority'}
                             </Typography>
                           )}
                         </ShakingTextField>

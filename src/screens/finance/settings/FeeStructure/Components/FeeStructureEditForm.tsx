@@ -3,23 +3,40 @@ import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import React, { useRef, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import { Box, Card, Button, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Button,
+  Skeleton,
+  Typography,
+  ListItemText,
+  DialogActions,
+  ListItemButton,
+} from '@mui/material';
 
-import FeeGeneralInfoCard from './GeneralFeeInfoCard';
 import ClassAccordionPanel from './ClassAccordionPanel';
 
 import type { IFeeStructureEditFormProps } from '../type';
 
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, onClose }) => {
   const theme = useTheme();
   const [classList, setClassList] = useState<any[]>([]);
   const [selectedClassId, setSelectedClassId] = useState('');
   const [pendingClassId, setPendingClassId] = useState<string | null>(null);
   const isDirtyRef = useRef(false);
+
+  // Ref to the panel's "add new draft" handler — registered by ClassAccordionPanel
+  const addNewFnRef = useRef<(() => void) | null>(null);
+
+  const handleRegisterAddNew = useCallback((fn: () => void) => {
+    addNewFnRef.current = fn;
+  }, []);
 
   const [
     getClassByMedium,
@@ -42,6 +59,16 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
     }
   }, [classes]);
 
+  // Helper to switch class (with dirty guard)
+  const handleClassClick = (classId: string) => {
+    if (classId === selectedClassId) return;
+    if (isDirtyRef.current) {
+      setPendingClassId(classId);
+    } else {
+      setSelectedClassId(classId);
+    }
+  };
+
   return (
     <motion.div
       key="edit-form"
@@ -51,190 +78,266 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
       style={{ height: '100%' }}
     >
-      <Box display="flex" flexDirection="column" height="100%">
-        <Box
-          sx={{
-            p: 2,
-            flex: 1,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            overscrollBehavior: 'contain',
-            minHeight: 0,
-          }}
-        >
-          {/* General info summary */}
-          <Box mb={2}>
-            <FeeGeneralInfoCard feeStructure={editData} />
-          </Box>
-
-          {/* ── Horizontal Class Strip ────────────────────────────────── */}
-          {classList.length > 0 && (
-            <Card
-              elevation={0}
+      {/* ── Outer flex column: fills the card height ─────────────────────── */}
+      <Box display="flex" flexDirection="column" height="100%" overflow="hidden">
+        {/* ── Main two-panel area (fills all remaining space) ───────────── */}
+        <Box display="flex" flex={1} minHeight={0} overflow="hidden">
+          {/* ══════════════════════════════════════════════════════════════
+              LEFT SIDEBAR — clean class navigation (Report panel style)
+          ══════════════════════════════════════════════════════════════ */}
+          <Box
+            sx={{
+              width: 150,
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+              borderRight: `1px solid ${theme.palette.divider}`,
+              bgcolor: 'background.paper',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Sidebar heading */}
+            <Box
               sx={{
-                mb: 2,
-                border: `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
-                borderRadius: 2,
-                overflow: 'hidden',
+                px: 2,
+                py: 1.5,
+                borderBottom: `1px solid ${theme.palette.divider}`,
               }}
             >
-              {/* strip header */}
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.25,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  borderBottom: `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.1)}`,
-                  bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.03),
-                }}
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                letterSpacing={0.6}
+                textTransform="uppercase"
+                color="text.secondary"
               >
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Iconify
-                    icon="solar:buildings-3-bold-duotone"
-                    width={18}
-                    color="text.secondary"
-                  />
-                  <Typography
-                    variant="caption"
-                    fontWeight={600}
-                    color="text.secondary"
-                    letterSpacing={0.5}
-                    textTransform="uppercase"
-                  >
-                    Classes Overview
+                Classes
+              </Typography>
+            </Box>
+
+            {/* Scrollable class list — matches Report LeftPanel pattern */}
+            <Box
+              sx={{
+                flex: 1,
+                overflowY: 'auto',
+                px: 1,
+                py: 0.75,
+                '&::-webkit-scrollbar': { width: 4 },
+                '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+                '&::-webkit-scrollbar-thumb': {
+                  bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.16),
+                  borderRadius: 4,
+                },
+              }}
+            >
+              {isLoadingClasses || isFetchingClasses
+                ? [1, 2, 3, 4, 5].map((i) => (
+                    <Box key={i} sx={{ px: 1, py: 0.5 }}>
+                      <Skeleton variant="text" width="75%" height={32} />
+                    </Box>
+                  ))
+                : classList.map((cls: any) => {
+                    const isActive = selectedClassId === cls.id;
+                    return (
+                      <ListItemButton
+                        key={cls.id}
+                        selected={isActive}
+                        onClick={() => handleClassClick(cls.id)}
+                        sx={{
+                          borderRadius: 1,
+                          mb: 0.25,
+                          py: 0.75,
+                          px: 1.5,
+                          borderLeft: '3px solid transparent',
+                          '&.Mui-selected': {
+                            bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.08),
+                            borderLeftColor: 'primary.main',
+                            '&:hover': {
+                              bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.12),
+                            },
+                          },
+                          '&:not(.Mui-selected):hover': {
+                            bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.05),
+                            borderLeftColor: varAlpha(theme.palette.primary.mainChannel, 0.3),
+                          },
+                          transition: 'background-color 0.15s ease, color 0.15s ease',
+                        }}
+                      >
+                        <ListItemText
+                          primary={cls.name}
+                          primaryTypographyProps={{
+                            variant: 'body2',
+                            fontWeight: isActive ? 700 : 500,
+                            color: isActive ? 'primary.main' : 'text.secondary',
+                            noWrap: true,
+                          }}
+                        />
+                        {isActive && (
+                          <Box
+                            sx={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: '50%',
+                              bgcolor: 'primary.main',
+                              flexShrink: 0,
+                              ml: 1,
+                            }}
+                          />
+                        )}
+                      </ListItemButton>
+                    );
+                  })}
+
+              {/* Empty state */}
+              {!isLoadingClasses && !isFetchingClasses && classList.length === 0 && (
+                <Box sx={{ px: 2, py: 3, textAlign: 'center' }}>
+                  <Typography variant="caption" color="text.disabled">
+                    No classes found
                   </Typography>
                 </Box>
-                <Typography variant="caption">
-                  {classList.length} class{classList.length !== 1 ? 'es' : ''}
+              )}
+            </Box>
+          </Box>
+
+          {/* ══════════════════════════════════════════════════════════════
+              RIGHT CONTENT AREA
+          ══════════════════════════════════════════════════════════════ */}
+          <Box
+            sx={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              minWidth: 0,
+              height: '100%',
+              overflow: 'hidden',
+            }}
+          >
+            {/* ── Sticky right-panel header ─────────────────────────────── */}
+            <Box
+              sx={{
+                flexShrink: 0,
+                px: 2.5,
+                py: 1.25,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderBottom: `1px solid ${theme.palette.divider}`,
+                bgcolor: 'background.paper',
+                zIndex: 2,
+              }}
+            >
+              {/* Left: fee structure name */}
+              <Box>
+                <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3}>
+                  {editData?.name || 'Fee Structure'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {editData?.academicYearName
+                    ? `Academic Year: ${editData.academicYearName}`
+                    : 'Configure fee structures by class'}
                 </Typography>
               </Box>
 
-              {/* horizontal scrollable class buttons */}
-              <Box
+              {/* Right: Add Fee Structure button */}
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="lucide:plus" />}
+                onClick={() => addNewFnRef.current?.()}
+                disabled={!selectedClassId}
                 sx={{
+                  borderRadius: 1.5,
+                  fontWeight: 700,
                   px: 2,
-                  py: 1.5,
-                  display: 'flex',
-                  gap: 1,
-                  overflowX: 'auto',
-                  flexWrap: 'nowrap',
-                  '&::-webkit-scrollbar': { height: 4 },
-                  '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
-                  '&::-webkit-scrollbar-thumb': {
-                    bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.2),
-                    borderRadius: 4,
-                  },
+                  bgcolor: 'grey.900',
+                  color: '#fff',
+                  flexShrink: 0,
+                  '&:hover': { bgcolor: 'grey.800' },
+                  '&.Mui-disabled': { opacity: 0.45 },
                 }}
               >
-                {classList.map((cls: any) => {
-                  const isActive = selectedClassId === cls.id;
-                  return (
-                    <Box
-                      key={cls.id}
-                      component="button"
-                      type="button"
-                      onClick={() => {
-                        if (cls.id === selectedClassId) return;
-                        if (isDirtyRef.current) {
-                          setPendingClassId(cls.id);
-                        } else {
-                          setSelectedClassId(cls.id);
-                        }
-                      }}
-                      sx={{
-                        flexShrink: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 0.25,
-                        py: 1,
-                        minWidth: 110,
-                        borderRadius: 1.5,
-                        cursor: 'pointer',
-                        border: '1.5px solid',
-                        borderColor: isActive
-                          ? 'primary.main'
-                          : varAlpha(theme.palette.grey['500Channel'], 0.15),
-                        bgcolor: isActive
-                          ? varAlpha(theme.palette.primary.mainChannel, 0.06)
-                          : 'background.paper',
-                        transition: 'all 0.18s ease',
-                        '&:hover': {
-                          borderColor: 'primary.light',
-                          bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.04),
-                        },
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        fontWeight={isActive ? 700 : 600}
-                        color={isActive ? 'primary.main' : 'text.primary'}
-                        noWrap
-                      >
-                        {cls.name}
-                      </Typography>
-                    </Box>
-                  );
-                })}
-              </Box>
-            </Card>
-          )}
+                Add Fee Structure
+              </Button>
+            </Box>
 
-          {/* ── Fee Structures for selected class ────────────────────── */}
-          {isLoadingClasses || isFetchingClasses ? (
+            {/* ── Scrollable content ────────────────────────────────────── */}
             <Box
-              display="flex"
-              alignItems="center"
-              gap={1}
-              sx={{ color: 'text.disabled', py: 4, justifyContent: 'center' }}
+              sx={{
+                flex: 1,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                overscrollBehavior: 'contain',
+                minHeight: 0,
+                px: 2.5,
+                pt: 2,
+                pb: 3,
+                '&::-webkit-scrollbar': { width: 5 },
+                '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+                '&::-webkit-scrollbar-thumb': {
+                  bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.16),
+                  borderRadius: 4,
+                },
+              }}
             >
-              <Iconify icon="svg-spinners:3-dots-fade" width={20} />
-              <Typography variant="body2">Loading classes…</Typography>
+              {/* Fee Structures for selected class */}
+              {isLoadingClasses || isFetchingClasses ? (
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={1}
+                  sx={{ color: 'text.disabled', py: 6, justifyContent: 'center' }}
+                >
+                  <Iconify icon="svg-spinners:3-dots-fade" width={20} />
+                  <Typography variant="body2">Loading classes…</Typography>
+                </Box>
+              ) : classes?.length === 0 ? (
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={1}
+                  sx={{ color: 'text.disabled', py: 6, justifyContent: 'center' }}
+                >
+                  <Typography variant="body2">No classes available.</Typography>
+                </Box>
+              ) : (
+                selectedClassId && (
+                  <ClassAccordionPanel
+                    key={selectedClassId}
+                    classId={selectedClassId}
+                    feeStructureMetaDataId={editData.id}
+                    onDirtyChange={(dirty) => {
+                      isDirtyRef.current = dirty;
+                    }}
+                    onRegisterAddNew={handleRegisterAddNew}
+                  />
+                )
+              )}
             </Box>
-          ) : classes?.length === 0 ? (
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={1}
-              sx={{ color: 'text.disabled', py: 4, justifyContent: 'center' }}
+
+            {/* ── Footer close action ───────────────────────────────────── */}
+            <DialogActions
+              sx={{
+                px: 2.5,
+                py: 1.25,
+                gap: 1,
+                flexShrink: 0,
+                borderTop: `1px solid ${theme.palette.divider}`,
+                bgcolor: 'background.paper',
+              }}
             >
-              <Typography variant="body2">No classes available.</Typography>
-            </Box>
-          ) : (
-            selectedClassId && (
-              <ClassAccordionPanel
-                key={selectedClassId}
-                classId={selectedClassId}
-                feeStructureMetaDataId={editData.id}
-                onDirtyChange={(dirty) => {
-                  isDirtyRef.current = dirty;
-                }}
-              />
-            )
-          )}
+              <Button
+                startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                onClick={() => onClose(null, false)}
+                variant="outlined"
+                size="small"
+                color="inherit"
+              >
+                Close
+              </Button>
+            </DialogActions>
+          </Box>
         </Box>
-
-        <DialogActions
-          sx={{
-            p: 2,
-            gap: 1,
-            borderTop: `1px solid ${theme.palette.divider}`,
-            boxShadow: '0 -2px 12px rgba(0,0,0,0.06)',
-            bgcolor: 'background.paper',
-          }}
-        >
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={() => onClose(null, false)}
-            variant="outlined"
-            size="small"
-            color="inherit"
-          >
-            Close
-          </Button>
-        </DialogActions>
       </Box>
 
       {/* Confirm discard changes when switching classes */}

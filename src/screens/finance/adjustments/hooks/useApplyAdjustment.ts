@@ -166,23 +166,37 @@ export const useApplyAdjustment = ({ open, adjustment }: UseApplyAdjustmentArgs)
   );
 
   const autoApply = useCallback(() => {
-    let remaining = approvedAmount;
+    const remaining = approvedAmount;
 
-    setItems((prev) =>
-      [...prev]
-        .sort((a, b) => a.monthOrder - b.monthOrder)
-        .map((item) => {
-          const appliedAmount = Math.min(item.pendingAmount, remaining);
-          remaining -= appliedAmount;
+    // Compute allocations in chronological order (monthOrder priority),
+    // but store the result in a map so the original display order is preserved.
+    const allocationMap = new Map<
+      string,
+      { isSelected: boolean; appliedAmount: number; finalPendingAmount: number }
+    >();
 
-          return {
-            ...item,
-            isSelected: appliedAmount > 0,
-            appliedAmount,
-            finalPendingAmount: Math.max(item.pendingAmount - appliedAmount, 0),
-          };
-        })
-    );
+    setItems((prev) => {
+      // 1. Sort a shallow copy to determine allocation order — don't mutate prev
+      const sorted = [...prev].sort((a, b) => a.monthOrder - b.monthOrder);
+      let rem = remaining;
+
+      sorted.forEach((item) => {
+        const applied = Math.min(item.pendingAmount, rem);
+        rem -= applied;
+        allocationMap.set(item.installmentId, {
+          isSelected: applied > 0,
+          appliedAmount: applied,
+          finalPendingAmount: Math.max(item.pendingAmount - applied, 0),
+        });
+      });
+
+      // 2. Apply the allocation back in the ORIGINAL order (no reordering)
+      return prev.map((item) => {
+        const allocation = allocationMap.get(item.installmentId);
+        if (!allocation) return item;
+        return { ...item, ...allocation };
+      });
+    });
 
     setErrorText('');
   }, [approvedAmount]);

@@ -20,6 +20,13 @@ export interface IConcessionSubmittedDocument {
   status?: number;
 }
 
+export interface IRequiredDocument {
+  documentId: string;
+  documentName: string;
+  url: string | null;
+  isUploaded: boolean;
+}
+
 export interface IConcessionRequestItem {
   id?: string;
   studentConcessionTypeRequestId: string;
@@ -29,6 +36,7 @@ export interface IConcessionRequestItem {
   totalAmount: number;
   feeHeads: IConcessionFeeHead[];
   submittedDocuments: IConcessionSubmittedDocument[];
+  requiredDocuments?: IRequiredDocument[];
   createdAt: string;
   updatedAt: string;
   message: string;
