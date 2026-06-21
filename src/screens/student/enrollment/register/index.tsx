@@ -20,6 +20,11 @@ import RegistrationTable from './registration-table';
 
 import type { IInquiryData } from '../Inquiry/type';
 
+const ENTRANCE_EXAM_LIFECYCLE_STATE = 3;
+
+const isEntranceExamRow = (row: any) =>
+  Number(row?.studentEnrollmentState ?? row?.enrollmentState) === ENTRANCE_EXAM_LIFECYCLE_STATE;
+
 const RegisterScreen = () => {
   // State to store and manage the selected inquiry data for editing
   const [editData, setEditData] = useState<any>(null);
@@ -90,6 +95,7 @@ const RegisterScreen = () => {
       editData.educationMedium?.name ||
       'N/A'
     : 'N/A';
+  const isRescheduleExam = isEntranceExamRow(editData);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -140,12 +146,18 @@ const RegisterScreen = () => {
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Schedule Exam</Typography>
+            <Typography variant="h5">
+              {isRescheduleExam ? 'Reschedule / Override Exam' : 'Schedule Exam'}
+            </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Schedule an entrance exam for the selected student."
+              title={
+                isRescheduleExam
+                  ? 'Reschedule the selected student into a new entrance exam slot.'
+                  : 'Schedule an entrance exam for the selected student.'
+              }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
