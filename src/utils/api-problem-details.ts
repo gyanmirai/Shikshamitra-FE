@@ -3,13 +3,20 @@ export interface ParsedApiProblemDetail {
   errorCode?: string;
 }
 
+const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'Academic:Timetable:020004':
+    'This class already has generated timetable assignments. Remove or update those timetable assignments before changing lecture slot timings.',
+};
+
 const GENERIC_MESSAGES = new Set([
   'one or more business rules were violated',
   'one or more validation errors occurred',
   'something went wrong',
 ]);
 
-const isGenericMessage = (value: string) => GENERIC_MESSAGES.has(value.trim().toLowerCase());
+const normalizeMessage = (value: string) => value.trim().toLowerCase().replace(/[.]+$/, '');
+
+const isGenericMessage = (value: string) => GENERIC_MESSAGES.has(normalizeMessage(value));
 
 const addCandidate = (candidates: string[], value: unknown) => {
   if (typeof value === 'string' && value.trim()) {
@@ -58,6 +65,9 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   addCandidate(candidates, data?.data?.Message);
   addCandidate(candidates, data?.data?.message);
   addCandidate(candidates, data?.data?.detail);
+  addCandidate(candidates, data?.error?.data?.Message);
+  addCandidate(candidates, data?.error?.data?.message);
+  addCandidate(candidates, data?.error?.data?.detail);
   addCandidate(candidates, data?.error?.details);
   addCandidate(candidates, data?.details);
   addValidationErrorCandidates(candidates, data?.error?.validationErrors);
@@ -68,13 +78,14 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   addCandidate(candidates, data?.title);
   addCandidate(candidates, error?.error);
 
-  const detail =
-    candidates.find((candidate) => !isGenericMessage(candidate)) ||
-    candidates[0] ||
-    'Something went wrong';
+  const errorCode = data?.errorCode || data?.error?.code || data?.code;
+  const knownMessage = typeof errorCode === 'string' ? KNOWN_ERROR_MESSAGES[errorCode] : undefined;
+  const specificCandidate = candidates.find((candidate) => !isGenericMessage(candidate));
+
+  const detail = specificCandidate || knownMessage || candidates[0] || 'Something went wrong';
 
   return {
     detail: String(detail),
-    errorCode: data?.errorCode || data?.error?.code || data?.code,
+    errorCode,
   };
 }
