@@ -259,7 +259,7 @@ const SortableFeeRow = ({
             fontWeight: 700,
           }}
         >
-          ₹{formatNumber(amount)}
+          {formatNumber(amount, 'INR')}
         </Typography>
         <IconButton
           size="small"

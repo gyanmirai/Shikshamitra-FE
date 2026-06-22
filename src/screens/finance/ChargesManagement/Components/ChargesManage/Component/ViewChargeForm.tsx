@@ -80,7 +80,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
   }
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} height="100%">
+    <Box display="flex" flexDirection="column" height="100%">
       <Scrollbar sx={{ height: '100%', p: 2 }}>
         <Grid container spacing={2}>
           {/* Charge Details and Requestor Info */}

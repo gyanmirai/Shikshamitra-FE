@@ -13,15 +13,13 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useLazyGetFeeAdjustmentQuery } from 'src/redux/finance/adjustments/adjustmentApi';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import { useAdjustment } from './hooks/useAdjustment';
 import AdjustmentForm from './components/AdjustmentForm';
 import AdjustmentView from './components/AdjustmentView';
 import AdjustmentTable from './components/AdjustmentTable';
-import ApplyAdjustmentDialog from './components/ApplyAdjustmentDialog';
-import { mapDetailToAdjustmentRequest } from './utils/mapAdjustmentDetail';
+import ApplyAdjustmentScreen from './components/ApplyAdjustmentScreen';
 import { AdjustmentTabEnum, AdjustmentStatusEnum } from './enums/adjustment.enum';
 import AdjustmentApproveRejectForm from './components/AdjustmentApproveRejectForm';
 
@@ -32,11 +30,14 @@ const Adjustments = () => {
   const academicFilters = useFinanceAcademicFilters();
   const [activeTab, setActiveTab] = useState(AdjustmentTabEnum.Pending);
   const [selectedAdjustment, setSelectedAdjustment] = useState<AdjustmentRequest | null>(null);
+  // Tracks whether the Apply screen was opened from View screen (true) or list table (false)
+  const [applyFromView, setApplyFromView] = useState(false);
 
   const addDialog = useBoolean();
   const viewDialog = useBoolean();
   const confirmDialog = useBoolean();
-  const applyDialog = useBoolean();
+  // applyScreen replaces applyDialog — Approve now opens a full-page screen
+  const applyScreen = useBoolean();
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { user } = useSelector((state: RootState) => state.auth);
@@ -46,8 +47,6 @@ const Adjustments = () => {
   const currentUserName = user?.name ?? user?.userName ?? 'User';
 
   const { tabCounts, createAdjustment, rejectAdjustment, refetch } = useAdjustment(activeTab);
-
-  const [fetchDetail] = useLazyGetFeeAdjustmentQuery();
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure to leave this page?'))) {
@@ -94,16 +93,21 @@ const Adjustments = () => {
     }
   };
 
-  const handleView = async (row: AdjustmentRequest) => {
-    try {
-      const detail = await fetchDetail(row.id).unwrap();
-      setSelectedAdjustment(mapDetailToAdjustmentRequest(detail));
+  const handleView = (row: AdjustmentRequest) => {
+    setSelectedAdjustment(row);
+    viewDialog.onTrue();
+  };
+
+  // Navigate back from the approval screen — respects entry point
+  const handleApproveScreenBack = () => {
+    applyScreen.onFalse();
+    if (applyFromView) {
       viewDialog.onTrue();
-    } catch (err: any) {
-      shikshaMitraToast.error({
-        message: err?.data?.error?.message || 'Failed to load adjustment details.',
-      });
+    } else {
+      // Came from the list table — just show the table
+      setSelectedAdjustment(null);
     }
+    setApplyFromView(false);
   };
 
   const canApprove =
@@ -131,6 +135,37 @@ const Adjustments = () => {
           ]}
           isBack={addDialog.value}
           onBack={() => handleClose(null, false)}
+        />
+      );
+    }
+
+    if (applyScreen.value && selectedAdjustment) {
+      return (
+        <CustomBreadcrumbs
+          heading="Apply Adjustment"
+          description="Distribute approved adjustment amount across the student's pending fees."
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            {
+              name: 'Adjustments',
+              href: '/finance/adjustments',
+              onClick() {
+                applyScreen.onFalse();
+                viewDialog.onFalse();
+                setSelectedAdjustment(null);
+              },
+            },
+            {
+              name: 'View Adjustment',
+              onClick() {
+                applyScreen.onFalse();
+                viewDialog.onTrue();
+              },
+            },
+            { name: 'Apply Adjustment' },
+          ]}
+          isBack={applyScreen.value}
+          onBack={handleApproveScreenBack}
         />
       );
     }
@@ -187,13 +222,22 @@ const Adjustments = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {renderBreadcrumbs()}
 
-      {!addDialog.value && !viewDialog.value && (
+      {!addDialog.value && !viewDialog.value && !applyScreen.value && (
         <AdjustmentTable
           activeTab={activeTab}
           onTabChange={setActiveTab}
           tabCounts={tabCounts}
           onCreateAdjustment={() => addDialog.onTrue()}
           onView={handleView}
+          onApprove={(row) => {
+            setSelectedAdjustment(row);
+            setApplyFromView(false);
+            applyScreen.onTrue();
+          }}
+          onReject={(row) => {
+            setSelectedAdjustment(row);
+            confirmDialog.onTrue();
+          }}
           academicFilters={academicFilters}
         />
       )}
@@ -222,13 +266,21 @@ const Adjustments = () => {
       {viewDialog.value && selectedAdjustment && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AdjustmentView
-            student={selectedAdjustment}
+            adjustmentId={selectedAdjustment.id}
+            viewMeta={{
+              id: selectedAdjustment.id,
+              status: selectedAdjustment.status,
+              requestedByUserId: selectedAdjustment.requestedByUserId,
+            }}
             onClose={() => {
               viewDialog.onFalse();
               setSelectedAdjustment(null);
             }}
             onApprove={() => {
-              applyDialog.onTrue();
+              // Navigate to the approval screen instead of opening a dialog
+              viewDialog.onFalse();
+              setApplyFromView(true);
+              applyScreen.onTrue();
             }}
             onReject={() => {
               confirmDialog.onTrue();
@@ -239,20 +291,22 @@ const Adjustments = () => {
         </Card>
       )}
 
-      <ApplyAdjustmentDialog
-        open={applyDialog.value}
-        approvedBy={currentUserName}
-        adjustment={selectedAdjustment}
-        onClose={() => {
-          applyDialog.onFalse();
-        }}
-        onApplied={async () => {
-          applyDialog.onFalse();
-          viewDialog.onFalse();
-          setSelectedAdjustment(null);
-          refetch();
-        }}
-      />
+      {/* ── Approval Screen (replaces ApplyAdjustmentDialog) ── */}
+      {applyScreen.value && selectedAdjustment && (
+        <ApplyAdjustmentScreen
+          approvedBy={currentUserName}
+          adjustment={selectedAdjustment}
+          fromView={applyFromView}
+          onBack={handleApproveScreenBack}
+          onApplied={async () => {
+            applyScreen.onFalse();
+            viewDialog.onFalse();
+            setSelectedAdjustment(null);
+            setApplyFromView(false);
+            refetch();
+          }}
+        />
+      )}
 
       <CustomDialog
         open={confirmDialog.value}

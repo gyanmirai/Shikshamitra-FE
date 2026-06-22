@@ -1,4 +1,3 @@
-// import { useTheme } from '@mui/material/styles';
 import type { FeeHeadSummary, FeeChargeDetail } from 'src/redux/feeCollection/feeCollection';
 
 import { motion } from 'framer-motion';
@@ -61,25 +60,27 @@ export const ConsolidatedFeeDetails = ({
       <Card
         sx={{
           p: 0,
-          borderRadius: 2,
-          boxShadow: theme.shadows[2],
-          border: 'none',
+          borderRadius: 1.5,
+          boxShadow: 'none',
+          border: `1px solid ${theme.palette.divider}`,
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          bgcolor: 'background.paper',
         }}
       >
         <Box
           sx={{
-            p: 1.5,
+            p: 2,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: `1px dashed ${theme.palette.divider}`,
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            bgcolor: alpha(theme.palette.grey[500], 0.02),
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
             Fee Breakdown
           </Typography>
         </Box>
@@ -99,12 +100,12 @@ export const ConsolidatedFeeDetails = ({
                 elevation={0}
                 sx={{
                   borderRadius: 1.5,
-                  border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+                  border: `1px solid ${theme.palette.divider}`,
                   overflow: 'hidden',
                 }}
               >
                 <Table size="small">
-                  <TableHead sx={{ bgcolor: 'background.neutral' }}>
+                  <TableHead sx={{ bgcolor: alpha(theme.palette.grey[500], 0.04) }}>
                     <TableRow>
                       <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
                         Fee Head
@@ -131,21 +132,23 @@ export const ConsolidatedFeeDetails = ({
                         hover
                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                       >
-                        <TableCell sx={{ fontWeight: 500 }}>{head.name}</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600 }}>
-                          ₹ {formatNumber(head.total)}
+                        <TableCell sx={{ fontWeight: 500, color: 'text.primary' }}>
+                          {head.name}
                         </TableCell>
-                        <TableCell align="right" sx={{ color: 'success.dark', fontWeight: 600 }}>
-                          ₹ {formatNumber(head.paid)}
+                        <TableCell align="right" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                          {formatNumber(head.total, 'INR')}
                         </TableCell>
-                        <TableCell align="right" sx={{ color: 'warning.dark', fontWeight: 600 }}>
-                          ₹ {formatNumber(head.pending)}
+                        <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                          {formatNumber(head.paid, 'INR')}
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 600 }}>
+                          {formatNumber(head.pending, 'INR')}
                         </TableCell>
                         <TableCell align="center">
                           <Label
                             variant="soft"
                             color={FeeCollectionStatusTypeColors[head.status] as LabelColor}
-                            sx={{ fontSize: 11, height: 20 }}
+                            sx={{ fontSize: 10, height: 18 }}
                           >
                             {FeeCollectionStatusType[head.status]}
                           </Label>
@@ -172,12 +175,12 @@ export const ConsolidatedFeeDetails = ({
                   elevation={0}
                   sx={{
                     borderRadius: 1.5,
-                    border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+                    border: `1px solid ${theme.palette.divider}`,
                     overflow: 'hidden',
                   }}
                 >
                   <Table size="small">
-                    <TableHead sx={{ bgcolor: 'background.neutral' }}>
+                    <TableHead sx={{ bgcolor: alpha(theme.palette.grey[500], 0.04) }}>
                       <TableRow>
                         <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
                           Charge Name
@@ -204,21 +207,26 @@ export const ConsolidatedFeeDetails = ({
                           hover
                           sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                         >
-                          <TableCell sx={{ fontWeight: 500 }}>{charge.name}</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600 }}>
-                            ₹ {formatNumber(charge.total)}
+                          <TableCell sx={{ fontWeight: 500, color: 'text.primary' }}>
+                            {charge.name}
                           </TableCell>
-                          <TableCell align="right" sx={{ color: 'success.dark', fontWeight: 600 }}>
-                            ₹ {formatNumber(charge.paid)}
+                          <TableCell align="right" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            {formatNumber(charge.total, 'INR')}
                           </TableCell>
-                          <TableCell align="right" sx={{ color: 'warning.dark', fontWeight: 600 }}>
-                            ₹ {formatNumber(charge.pending)}
+                          <TableCell
+                            align="right"
+                            sx={{ color: 'text.secondary', fontWeight: 600 }}
+                          >
+                            {formatNumber(charge.paid, 'INR')}
+                          </TableCell>
+                          <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 600 }}>
+                            {formatNumber(charge.pending, 'INR')}
                           </TableCell>
                           <TableCell align="center">
                             <Label
                               variant="soft"
                               color={FeeCollectionStatusTypeColors[charge?.status] as LabelColor}
-                              sx={{ fontSize: 11, height: 20 }}
+                              sx={{ fontSize: 10, height: 18 }}
                             >
                               {FeeCollectionStatusType[charge?.status]}
                             </Label>

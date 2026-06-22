@@ -2,8 +2,8 @@ import type { RootState } from 'src/redux/store';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import { motion } from 'framer-motion';
-import { Box, Grid } from '@mui/material';
 import { useSelector } from 'react-redux';
+import { Box, Grid, Stack } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentFeeDetailsQuery } from 'src/redux/feeCollection/feeCollection';
@@ -32,7 +32,11 @@ const ViewFeeDetails = ({
   viewDialog: UseBooleanReturn;
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data: feeDetails } = useQueryAndMutation({
+  const {
+    data: feeDetails,
+    isLoading: isFeeDetailsLoading,
+    isFetching: isFeeDetailsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeDetailsQuery,
     params: {
@@ -50,48 +54,46 @@ const ViewFeeDetails = ({
     <Box display="flex" flexDirection="column" height="100%" pb={1}>
       <Scrollbar sx={{ height: '100%' }}>
         <Grid container spacing={1}>
-          {/* Student header */}
-          <Grid size={{ xs: 12 }}>
-            <motion.div {...slideUp(0)}>
-              <StudentFeesSummaryView student={feeDetails?.student} />
-            </motion.div>
-          </Grid>
-
-          {/* Fee head breakdown */}
+          {/* Left Column (Student Info + Details + History) */}
           <Grid size={{ xs: 12, md: 8 }}>
-            <motion.div {...slideUp(0.08)} style={{ height: '100%' }}>
-              <ConsolidatedFeeDetails
-                feeHeads={feeDetails?.feeHeads}
-                charges={feeDetails?.charges}
-              />
-            </motion.div>
+            <Stack spacing={1}>
+              <motion.div {...slideUp(0)}>
+                <StudentFeesSummaryView student={feeDetails?.student} />
+              </motion.div>
+
+              <motion.div {...slideUp(0.08)}>
+                <ConsolidatedFeeDetails
+                  feeHeads={feeDetails?.feeHeads}
+                  charges={feeDetails?.charges}
+                />
+              </motion.div>
+
+              <motion.div {...slideUp(0.18)}>
+                <PaymentHistory student={student} payments={feeDetails?.payments} />
+              </motion.div>
+            </Stack>
           </Grid>
 
-          {/* Fee overview */}
+          {/* Right Column (Overview + Concessions) */}
           <Grid size={{ xs: 12, md: 4 }}>
-            <motion.div {...slideUp(0.13)} style={{ height: '100%' }}>
-              <FeeOverview
-                total={overview?.totalFee ?? 0}
-                paid={overview?.paidFee ?? 0}
-                pending={overview?.pendingFee ?? 0}
-                overdue={overview?.overdueFee ?? 0}
-                concession={overview?.concessionAmount ?? 0}
-              />
-            </motion.div>
-          </Grid>
+            <Stack spacing={1} sx={{ height: '100%' }}>
+              <motion.div {...slideUp(0.13)}>
+                <FeeOverview
+                  total={overview?.totalFee ?? 0}
+                  paid={overview?.paidFee ?? 0}
+                  pending={overview?.pendingFee ?? 0}
+                  overdue={overview?.overdueFee ?? 0}
+                  concession={overview?.concessionAmount ?? 0}
+                />
+              </motion.div>
 
-          {/* Payment history */}
-          <Grid size={{ xs: 12, md: 8 }}>
-            <motion.div {...slideUp(0.18)}>
-              <PaymentHistory student={student} payments={feeDetails?.payments} />
-            </motion.div>
-          </Grid>
-
-          {/* Concessions */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <motion.div {...slideUp(0.23)} style={{ height: '100%' }}>
-              <ConcessionsCard concessions={feeDetails?.concessions} />
-            </motion.div>
+              <motion.div
+                {...slideUp(0.23)}
+                style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+              >
+                <ConcessionsCard concessions={feeDetails?.concessions} />
+              </motion.div>
+            </Stack>
           </Grid>
         </Grid>
       </Scrollbar>

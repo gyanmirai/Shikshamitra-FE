@@ -3,11 +3,12 @@ import type { PaymentHistoryItem } from 'src/redux/feeCollection/feeCollection';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Paper, Stack, Tooltip, IconButton, Typography } from '@mui/material';
+import { Box, Paper, Tooltip, IconButton, Typography } from '@mui/material';
 import { ReconciliationStatusType } from 'src/enums/reconciliation-status-type';
 
 import type { IStudentFee } from '../type';
@@ -39,96 +40,112 @@ const PaymentHistory = ({
       <Paper
         elevation={0}
         sx={{
-          borderRadius: 2,
+          borderRadius: 1.5,
           height: '450px',
-          p: 1,
           display: 'flex',
           flexDirection: 'column',
           border: (theme) => `1px solid ${theme.palette.divider}`,
+          bgcolor: 'background.paper',
+          overflow: 'hidden',
         }}
       >
-        <Stack spacing={0.5}>
-          <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+        <Box
+          sx={{
+            p: 2,
+            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+            bgcolor: (theme) => alpha(theme.palette.grey[500], 0.02),
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0.5,
+          }}
+        >
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
             Payment History
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
             View and download past transaction receipts
           </Typography>
-        </Stack>
+        </Box>
 
-        <CustomizableTable
-          tableId="student-receipt-details"
-          noDataText="Data Not Found"
-          columns={[
-            {
-              id: 'receiptNo',
-              label: 'Receipt No.',
-              align: 'left',
-              render: (value) => (
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                  {value}
-                </Typography>
-              ),
-            },
-            {
-              id: 'date',
-              label: 'Date',
-              align: 'left',
-              filterType: 'date',
-              render: (value) => (
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  {value}
-                </Typography>
-              ),
-            },
-            {
-              id: 'amount',
-              label: 'Amount',
-              filterType: 'number',
-              align: 'left',
-              render: (value) => (
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'success.main' }}>
-                  ₹ {value.toLocaleString()}
-                </Typography>
-              ),
-            },
-            {
-              id: 'paymentMethod',
-              label: 'Payment Method',
-              align: 'left',
-              sticky: true,
-              width: 100,
-              minWidth: 84,
-              maxWidth: 130,
-              render(value) {
-                return <Label color="default">{ReconciliationStatusType[value[0]]}</Label>;
+        <Box sx={{ p: 2, flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <CustomizableTable
+            tableId="student-receipt-details"
+            noDataText="Data Not Found"
+            columns={[
+              {
+                id: 'receiptNo',
+                label: 'Receipt No.',
+                align: 'left',
+                render: (value) => (
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                    {value}
+                  </Typography>
+                ),
               },
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              align: 'left',
-              sticky: true,
-              isSort: false,
-              isFilter: false,
-              minWidth: 50,
-              render: () => (
-                <Tooltip title="Download Receipt" arrow>
-                  <IconButton
-                    size="small"
-                    sx={{
-                      color: 'text.secondary',
-                      '&:hover': { color: 'primary.main', bgcolor: 'action.hover' },
-                    }}
-                  >
-                    <Iconify icon={GlobalIcons.download} width={20} />
-                  </IconButton>
-                </Tooltip>
-              ),
-            },
-          ]}
-          data={tableData}
-        />
+              {
+                id: 'date',
+                label: 'Date',
+                align: 'left',
+                filterType: 'date',
+                render: (value) => (
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {value}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'amount',
+                label: 'Amount',
+                filterType: 'number',
+                align: 'left',
+                render: (value) => (
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                    ₹ {value.toLocaleString('en-IN')}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'paymentMethod',
+                label: 'Payment Method',
+                align: 'left',
+                sticky: true,
+                width: 100,
+                minWidth: 84,
+                maxWidth: 130,
+                render(value) {
+                  return (
+                    <Label variant="soft" color="default" sx={{ fontSize: 10, height: 18 }}>
+                      {ReconciliationStatusType[value[0]]}
+                    </Label>
+                  );
+                },
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                align: 'left',
+                sticky: true,
+                isSort: false,
+                isFilter: false,
+                minWidth: 50,
+                render: () => (
+                  <Tooltip title="Download Receipt" arrow>
+                    <IconButton
+                      size="small"
+                      sx={{
+                        color: 'text.secondary',
+                        '&:hover': { color: 'text.primary', bgcolor: 'action.hover' },
+                      }}
+                    >
+                      <Iconify icon={GlobalIcons.download} width={18} />
+                    </IconButton>
+                  </Tooltip>
+                ),
+              },
+            ]}
+            data={tableData}
+          />
+        </Box>
       </Paper>
     </motion.div>
   );

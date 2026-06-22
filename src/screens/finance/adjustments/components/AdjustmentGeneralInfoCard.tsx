@@ -208,21 +208,21 @@ const AdjustmentGeneralInfoCard: React.FC<{ formik: any }> = ({ formik }) => {
         </ShakingTextField>
       </Grid>
 
-      {/* Reason */}
+      {/* Remarks */}
       <Grid size={{ xs: 12 }}>
-        <ShakingTextField error={!!(touched.reason && errors.reason)}>
+        <ShakingTextField error={!!(touched.remarks && errors.remarks)}>
           <TextField
             fullWidth
             multiline
             rows={3}
-            label="Reason *"
-            name="reason"
-            placeholder="Provide a clear reason for the adjustment..."
-            value={values.reason}
-            onChange={(e) => setFieldValue('reason', e.target.value)}
-            onBlur={(e) => setFieldValue('reason', e.target.value)}
-            error={!!(touched.reason && errors.reason)}
-            helperText={(touched.reason && errors.reason) as string}
+            label="Remarks *"
+            name="remarks"
+            placeholder="Provide clear remarks for the adjustment..."
+            value={values.remarks}
+            onChange={(e) => setFieldValue('remarks', e.target.value)}
+            onBlur={(e) => setFieldValue('remarks', e.target.value)}
+            error={!!(touched.remarks && errors.remarks)}
+            helperText={(touched.remarks && errors.remarks) as string}
             size="small"
           />
         </ShakingTextField>

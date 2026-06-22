@@ -1,3 +1,4 @@
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
@@ -5,16 +6,16 @@ import type {
   GetFeeReceiptListParams,
 } from 'src/redux/invoiceAndReceipt/feeReceiptApi';
 
+import dayjs from 'dayjs';
 import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
+import { DatePicker } from '@mui/x-date-pickers';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
-import { FeeMonth } from 'src/enums/fee-collection-type';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
@@ -41,14 +42,6 @@ const RECEIPT_KIND_OPTIONS = [
 
 const DEFAULT_PAGE_SIZE = 20;
 
-const getAcademicYearMonthOptions = (data: { month: number; year: number }[] | undefined) => [
-  { label: 'All', value: 'All' },
-  ...(data?.map((item) => ({
-    label: `${FeeMonth[item.month]}-${item.year}`,
-    value: `${item.month}-${item.year}`,
-  })) ?? []),
-];
-
 const ReceiptManagement = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -71,31 +64,19 @@ const ReceiptManagement = () => {
     classesLoading,
   } = useFinanceAcademicFilters();
 
-  const [selectedMonth, setSelectedMonth] = useState<string>('All');
+  const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
   const [selectedKind, setSelectedKind] = useState<string>('All');
+
+  React.useEffect(() => {
+    if (currentYear?.startDate) {
+      setDate(dayjs(currentYear.startDate));
+    }
+  }, [currentYear?.startDate]);
 
   // ── Pagination state ──────────────────────────────────────────────────────
 
   const [skipCount, setSkipCount] = useState(0);
   const [maxResultCount, setMaxResultCount] = useState(DEFAULT_PAGE_SIZE);
-
-  // ── Academic year months from API ─────────────────────────────────────────
-
-  const {
-    data: academicYearMonthsData,
-    isLoading: isMonthsLoading,
-    isFetching: isMonthsFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAcademicYearMonthsQuery,
-    params: { academicYearId: currentYear?.id },
-    options: { skip: !currentYear?.id },
-  });
-
-  const monthOptions = useMemo(
-    () => getAcademicYearMonthOptions(academicYearMonthsData),
-    [academicYearMonthsData]
-  );
 
   // ── Preview state ──────────────────────────────────────────────────────────
 
@@ -145,8 +126,7 @@ const ReceiptManagement = () => {
       educationMediumId: filterPayload.educationMediumId,
       standardId: filterPayload.standardId,
       divisionId: filterPayload.divisionId,
-      month:
-        selectedMonth && selectedMonth !== 'All' ? Number(selectedMonth.split('-')[0]) : undefined,
+      month: date ? date.month() : undefined,
       receiptKind:
         selectedKind && selectedKind !== 'All'
           ? (Number(selectedKind) as FeeReceiptKind)
@@ -154,15 +134,7 @@ const ReceiptManagement = () => {
       skipCount,
       maxResultCount,
     };
-  }, [
-    currentYear?.id,
-    isReady,
-    filterPayload,
-    selectedMonth,
-    selectedKind,
-    skipCount,
-    maxResultCount,
-  ]);
+  }, [currentYear?.id, isReady, filterPayload, date, selectedKind, skipCount, maxResultCount]);
 
   const {
     data,
@@ -301,18 +273,21 @@ const ReceiptManagement = () => {
           onDivisionChange={handleDivisionChange}
           classesLoading={classesLoading}
         />
-        <CustomSelect
-          options={monthOptions}
-          label="Month"
-          value={selectedMonth}
-          onChange={(val) => {
-            setSelectedMonth(val as string);
+        <DatePicker
+          label="Month-Year"
+          format="MMM-YYYY"
+          value={date}
+          views={['year', 'month']}
+          slotProps={{
+            textField: {
+              size: 'small',
+            },
+          }}
+          onChange={(newDate) => {
+            setDate(newDate);
             resetPagination();
           }}
-          labelKey="label"
-          valueKey="value"
-          isLoading={isMonthsLoading || isMonthsFetching}
-          formControlProps={{ sx: { maxWidth: 160, width: '100%' } }}
+          sx={{ maxWidth: 160, width: '100%' }}
         />
         <CustomSelect
           options={RECEIPT_KIND_OPTIONS}

@@ -205,14 +205,27 @@ const ConcessionFeeRow: React.FC<ConcessionFeeRowProps> = ({
       >
         ₹{formatNumber(item.due)}
       </Typography>
-      <Typography
-        variant="body2"
-        fontWeight={600}
-        color={isSelected ? 'success.main' : 'text.disabled'}
-        sx={{ width: 80, textAlign: 'right' }}
+      <Tooltip
+        title={
+          isSelected && distributedConcession > item.due ? 'Concession exceeds payable amount' : ''
+        }
+        placement="top"
       >
-        {isSelected ? `₹${formatNumber(distributedConcession)}` : '—'}
-      </Typography>
+        <Typography
+          variant="body2"
+          fontWeight={600}
+          color={
+            isSelected && distributedConcession > item.due
+              ? 'error.main'
+              : isSelected
+                ? 'success.main'
+                : 'text.disabled'
+          }
+          sx={{ width: 80, textAlign: 'right' }}
+        >
+          {isSelected ? `₹${formatNumber(distributedConcession)}` : '—'}
+        </Typography>
+      </Tooltip>
       <Typography
         variant="body2"
         fontWeight={600}
@@ -348,9 +361,9 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   const [open, setOpen] = useState(true);
   const theme = useTheme();
 
-  const distributedConcession = distributeMonthConcession(
-    group.concessionAmount,
-    selectedDueFeeIds.length
+  const allocations = useMemo(
+    () => distributeConcessionAcrossDueFees(selectedDueFeeIds, group.concessionAmount),
+    [selectedDueFeeIds, group.concessionAmount]
   );
 
   return (
@@ -377,13 +390,15 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
         {group.items.map((item, idx) => {
           const isSelected = selectedDueFeeIds.includes(item.dueFeeId);
           const isDisabled = item.isSelectable === false;
+          const allocation = allocations.find((a) => a.dueFeeId === item.dueFeeId);
+          const currentConcession = isSelected && allocation ? allocation.concessionAmount : 0;
           return (
             <React.Fragment key={item.dueFeeId}>
               <ConcessionFeeRow
                 item={item}
                 isSelected={isSelected}
                 isDisabled={isDisabled}
-                distributedConcession={distributedConcession}
+                distributedConcession={currentConcession}
                 onToggle={() => onToggleDueFee(item.dueFeeId)}
               />
               {idx < group.items.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.4 }} />}
@@ -448,22 +463,7 @@ const ApprovalSkeleton = () => (
   </Stack>
 );
 
-// ─── Validation Schema ─────────────────────────────────────────────────────────
-
-const validationSchema = Yup.object({
-  description: Yup.string().trim().required('Description / Reason is required'),
-  feeHeads: Yup.array()
-    .of(
-      Yup.object({
-        feeHeadId: Yup.string().required(),
-        selectedDueFeeIds: Yup.array().of(Yup.string().required()).required(),
-      })
-    )
-    .test('at-least-one-line', 'Please select at least one due fee line to proceed.', (feeHeads) =>
-      (feeHeads ?? []).some((fh) => (fh.selectedDueFeeIds ?? []).length > 0)
-    ),
-});
-
+// (Validation Schema is defined inside the component using useMemo to access groups/isApprove)
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
@@ -502,6 +502,67 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
   );
 
   const isLoading = isFetchingFeeHeads || isFetching;
+
+  // ── Validation Schema ─────────────────────────────────────────────────────────
+
+  const validationSchema = useMemo(
+    () =>
+      Yup.object({
+        description: Yup.string().trim().required('Description / Reason is required'),
+        feeHeads: Yup.array()
+          .of(
+            Yup.object({
+              feeHeadId: Yup.string().required(),
+              selectedDueFeeIds: Yup.array().of(Yup.string().required()).required(),
+            })
+          )
+          .test(
+            'at-least-one-line',
+            'Please select at least one due fee line to proceed.',
+            (feeHeads) => (feeHeads ?? []).some((fh) => (fh.selectedDueFeeIds ?? []).length > 0)
+          )
+          .test(
+            'concession-limit',
+            'Concession amount cannot exceed payable amount',
+            function (feeHeads) {
+              if (!isApprove) return true;
+              if (!feeHeads) return true;
+
+              // eslint-disable-next-line no-restricted-syntax
+              for (const fh of feeHeads) {
+                // eslint-disable-next-line no-continue
+                if (!fh.selectedDueFeeIds || fh.selectedDueFeeIds.length === 0) continue;
+                const group = groups.find((g) => g.feeHeadId === fh.feeHeadId);
+                // eslint-disable-next-line no-continue
+                if (!group) continue;
+
+                const allocations = distributeConcessionAcrossDueFees(
+                  fh.selectedDueFeeIds,
+                  group.concessionAmount
+                );
+
+                // eslint-disable-next-line no-restricted-syntax
+                for (const alloc of allocations) {
+                  const item = group.items.find((i) => i.dueFeeId === alloc.dueFeeId);
+                  if (item && alloc.concessionAmount > item.due) {
+                    // eslint-disable-next-line react/no-this-in-sfc
+                    return this.createError({
+                      message: `For ${group.feeHeadName}, concession amount (₹${formatNumber(
+                        alloc.concessionAmount
+                      )}) allocated to ${item.month}-${item.year} cannot exceed the payable amount (₹${formatNumber(
+                        item.due
+                      )}).`,
+                      path: 'feeHeads',
+                    });
+                  }
+                }
+              }
+              return true;
+            }
+          ),
+      }),
+    [groups, isApprove]
+  );
 
   // ── Formik ────────────────────────────────────────────────────────────────────
 

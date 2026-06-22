@@ -65,7 +65,7 @@ const AdjustmentForm: React.FC<
   });
 
   const { values, touched, errors, setFieldValue } = formik;
-
+  console.log('errie----', errors);
   // ── Derived totals for sticky footer ────────────────────────────────────────
   const { totalSelectedMonths, totalAdjustmentAmount } = useMemo(() => {
     let months = 0;

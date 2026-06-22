@@ -182,7 +182,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   const toggleAll = useCallback(
     (feeHead: IFeeHeadPayment): void => {
       const refundableItems = feeHead.items.filter(
-        (i) => Math.max(0, i.refundable ?? i.paid - i.refunded) > 0
+        (i) => Math.max(0, isAdj ? i.refundable : (i.refundable ?? i.paid - i.refunded)) > 0
       );
       const refundableMonths = refundableItems.map((i) => i.month);
       const refunds = formik.values.feeHeadRefunds;
@@ -216,7 +216,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       formik.setFieldValue('feeHeadRefunds', updated);
       formik.setFieldTouched('feeHeadRefunds', true, false);
     },
-    [formik]
+    [formik, isAdj]
   );
 
   /**
@@ -319,7 +319,9 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   if (!studentId) return null;
   if (isLoading || isFetching) return <RefundTableSkeleton />;
 
-  const feeHeadsWithPayments = feeHeads.filter((fh) => fh.items.some((m) => m.paid > 0));
+  const feeHeadsWithPayments = feeHeads.filter((fh) =>
+    fh.items.some((m) => (isAdj ? m.refundable > 0 || m.refunded > 0 : m.paid > 0))
+  );
 
   // Notify parent whether any payment records exist
   onHasRecords?.(feeHeadsWithPayments.length > 0);
@@ -327,8 +329,9 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   if (feeHeadsWithPayments.length === 0) {
     return (
       <Alert severity="info" sx={{ borderRadius: 3 }}>
-        No fee payment records found for this student. Refunds can only be raised for students with
-        existing fee payments.
+        {isAdj
+          ? 'No adjustable fee records found for this student. Adjustments can only be raised for students with adjustable fees.'
+          : 'No fee payment records found for this student. Refunds can only be raised for students with existing fee payments.'}
       </Alert>
     );
   }

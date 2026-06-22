@@ -60,7 +60,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
     approveConcessionRequest: builder.mutation({
       query: ({ studentConcessionTypeRequestId, body }) => ({
-        url: `/concession-request/${studentConcessionTypeRequestId}/approve`,
+        url: `/concession-requests/${studentConcessionTypeRequestId}/approve`,
         method: 'POST',
         body,
       }),
@@ -69,7 +69,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
     rejectConcessionRequest: builder.mutation({
       query: ({ studentConcessionTypeRequestId, body }) => ({
-        url: `/concession-request/${studentConcessionTypeRequestId}/reject`,
+        url: `/concession-requests/${studentConcessionTypeRequestId}/reject`,
         method: 'POST',
         body,
       }),

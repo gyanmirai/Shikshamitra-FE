@@ -26,9 +26,9 @@ import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStruc
 import {
   Box,
   Chip,
-  Grid,
   Stack,
   Tooltip,
+  Divider,
   Accordion,
   TextField,
   IconButton,
@@ -143,22 +143,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   ];
 
   const totalAmount = formik.values.feeHeads.reduce((sum, fh) => sum + (fh.amount || 0), 0);
-
-  const COLUMNS = [
-    { label: '#', size: 0.5, align: 'left' },
-    { label: 'Fee Head', size: 2, align: 'left' },
-    { label: 'Fee Category', size: 1.5, align: 'left' },
-    { label: 'Amount', size: 1.5, align: 'left' },
-    { label: 'One Time', size: 1.5, align: 'center' },
-    { label: 'Payable Month', size: 2.5, align: 'left' },
-    {
-      label: 'Optional',
-      size: 1.5,
-      align: 'center',
-      desc: 'This is an optional fee head, it may or may not be applicable to all students. Select applicable students accordingly when you assign fee structures.',
-    },
-    { label: '', size: 1, align: 'left' },
-  ];
 
   useEffect(() => {
     onDirtyChange?.(isEditing && (isNew || formik.dirty));
@@ -276,6 +260,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       setIsSaving(false);
     }
   };
+
   const handleDelete = async () => {
     if (isNew) {
       onDeleted?.();
@@ -311,6 +296,18 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     }
   };
 
+  // ── Column definitions for the fee heads table ─────────────────────────────
+  // widths as flex proportions (total ≈ 12 units)
+  const COL_WIDTHS = {
+    serial: 36, // #
+    feeHead: '22%', // Fee Head
+    category: '18%', // Category
+    amount: '15%', // Amount
+    type: '14%', // Type (Recurring / One-Time toggle)
+    month: '20%', // Payable Month
+    actions: 40, // remove button
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -329,48 +326,50 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
           '&.Mui-expanded': { mb: 1.5 },
         }}
       >
+        {/* ── Accordion Header ─────────────────────────────────────────────── */}
         <AccordionSummary
           component="div"
           expandIcon={<ExpandMoreIcon />}
           sx={{
             px: 2,
-            minHeight: 52,
+            minHeight: 56,
             borderRadius: '10px',
             bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.03),
             '&.Mui-expanded': {
               borderBottom: `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.08)}`,
               borderRadius: '10px 10px 0 0',
             },
-            '& .MuiAccordionSummary-content-expanded': {
+            '& .MuiAccordionSummary-content': {
               alignItems: 'center',
-              gap: 1.5,
-              my: 0.75,
-              m: 0,
+              my: 0,
               overflow: 'visible',
             },
           }}
         >
+          {/* Left side: index badge + name + chips */}
           <Box display="flex" alignItems="center" gap={1.5} flex={1} minWidth={0}>
+            {/* Index badge */}
             <Box
               sx={{
                 width: 28,
                 height: 28,
-                borderRadius: 1,
-                bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.1),
-                color: 'primary.main',
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+                color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 700,
-                fontSize: 12,
+                fontSize: 13,
                 flexShrink: 0,
               }}
             >
               {index + 1}
             </Box>
 
+            {/* Name – editable text field OR static text */}
             {isEditing && !isLocked ? (
-              <Box sx={{ width: 220, flexShrink: 0, overflow: 'visible', pt: '6px' }}>
+              <Box sx={{ width: 220, flexShrink: 0, overflow: 'visible' }}>
                 <TextField
                   size="small"
                   name="name"
@@ -384,12 +383,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                   helperText={formik.touched.name && formik.errors.name}
                   sx={{
                     width: '100%',
-                    mb: 1.5,
-                    '& .MuiFormHelperText-root': {
-                      mr: 0,
-                      ml: 0,
-                      overflow: 'visible',
-                    },
+                    '& .MuiFormHelperText-root': { mr: 0, ml: 0 },
                   }}
                   autoFocus={isNew}
                 />
@@ -399,12 +393,13 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 variant="subtitle2"
                 fontWeight={700}
                 noWrap
-                sx={{ maxWidth: 260, flexShrink: 0 }}
+                sx={{ maxWidth: 240, flexShrink: 0 }}
               >
                 {formik.values.name || `Fee Structure ${index + 1}`}
               </Typography>
             )}
 
+            {/* Total chip */}
             <Chip
               label={`Total: ${formatNumber(totalAmount, 'INR')}`}
               color="success"
@@ -413,6 +408,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               sx={{ fontWeight: 600, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
             />
 
+            {/* Fee heads count chip */}
             {formik.values.feeHeads.length > 0 && (
               <Chip
                 label={`${formik.values.feeHeads.length} fee head${formik.values.feeHeads.length !== 1 ? 's' : ''}`}
@@ -423,6 +419,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               />
             )}
 
+            {/* Fee heads array validation error */}
             {formik.touched.feeHeads && typeof formik.errors.feeHeads === 'string' && (
               <Tooltip title={formik.errors.feeHeads}>
                 <Iconify
@@ -434,6 +431,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               </Tooltip>
             )}
 
+            {/* Lock status chip */}
             {isLocked && (
               <Chip
                 icon={<Iconify icon="mdi:lock" width={12} />}
@@ -444,159 +442,130 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 sx={{ fontWeight: 500, borderRadius: 1, fontSize: 11, flexShrink: 0 }}
               />
             )}
-
-            <Box flex={1} display="flex" alignItems="center" minWidth={0} mr={1}>
-              {isLocked ? (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    bgcolor: varAlpha(theme.palette.warning.mainChannel, 0.05),
-                    border: `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.25)}`,
-                    borderRadius: 1,
-                    px: 1,
-                    py: 1.2,
-                    gap: 1.2,
-                  }}
-                >
-                  <Iconify
-                    icon="mdi:lock"
-                    color={theme.palette.warning.main}
-                    width={15}
-                    flexShrink={0}
-                  />
-                  <Typography
-                    variant="caption"
-                    color="warning.main"
-                    fontWeight="bold"
-                    sx={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    This fee structure is locked. Changes are restricted.
-                  </Typography>
-                </Box>
-              ) : (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    bgcolor: varAlpha(theme.palette.info.mainChannel, 0.01),
-                    border: `1px solid ${varAlpha(theme.palette.info.mainChannel, 0.18)}`,
-                    borderRadius: 1,
-                    px: 1,
-                    py: 1.2,
-                    gap: 1.2,
-                  }}
-                >
-                  <Iconify
-                    icon="solar:info-circle-bold"
-                    color={theme.palette.info.main}
-                    width={15}
-                    flexShrink={0}
-                  />
-                  <Typography
-                    variant="caption"
-                    color="info.main"
-                    fontWeight="bold"
-                    sx={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    Lock this fee structure for assigning it to students. Changes will be restricted
-                    after locking.
-                  </Typography>
-                </Box>
-              )}
-            </Box>
           </Box>
 
+          {/* Right side: info banner + action buttons */}
           <Box
             display="flex"
             alignItems="center"
-            gap={0.7}
+            gap={1}
             flexShrink={0}
             onClick={(e) => e.stopPropagation()}
-            mr={2}
+            mr={1}
           >
-            {isEditing && !isLocked && (
-              <Tooltip title="Add Fee Head">
-                <IconButton
-                  size="small"
-                  color="primary"
-                  onClick={addFeeHeadDialog.onTrue}
-                  sx={{
-                    borderRadius: 1,
-                    border: `1px solid ${varAlpha(theme.palette.primary.mainChannel, 0.2)}`,
-                    '&:hover': {
-                      bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.16),
-                    },
-                  }}
-                >
-                  <Iconify icon="lucide:plus" width={16} />
-                </IconButton>
-              </Tooltip>
+            {/* Info banner */}
+            {isLocked ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  bgcolor: varAlpha(theme.palette.warning.mainChannel, 0.05),
+                  border: `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.25)}`,
+                  borderRadius: 1,
+                  px: 1,
+                  py: 0.6,
+                  gap: 0.75,
+                  maxWidth: 240,
+                }}
+              >
+                <Iconify
+                  icon="solar:info-circle-bold"
+                  color={theme.palette.warning.main}
+                  width={14}
+                  sx={{ flexShrink: 0 }}
+                />
+                <Typography variant="caption" color="warning.main" fontWeight={600} noWrap>
+                  Changes restricted after locking
+                </Typography>
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  bgcolor: varAlpha(theme.palette.info.mainChannel, 0.04),
+                  border: `1px solid ${varAlpha(theme.palette.info.mainChannel, 0.18)}`,
+                  borderRadius: 1,
+                  px: 1,
+                  py: 0.6,
+                  gap: 0.75,
+                  maxWidth: 240,
+                }}
+              >
+                <Iconify
+                  icon="solar:info-circle-bold"
+                  color={theme.palette.info.main}
+                  width={14}
+                  sx={{ flexShrink: 0 }}
+                />
+                <Typography variant="caption" color="info.main" fontWeight={600} noWrap>
+                  Changes restricted after locking
+                </Typography>
+              </Box>
             )}
 
+            {/* Edit button (view mode only) */}
             {!isNew && !isLocked && !isEditing && (
               <Tooltip title="Edit Fee Structure">
-                <IconButton size="small" onClick={enterEdit} sx={{ borderRadius: 1 }}>
+                <IconButton
+                  size="small"
+                  onClick={enterEdit}
+                  sx={{
+                    borderRadius: 1,
+                    border: `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.2)}`,
+                    '&:hover': { bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.08) },
+                  }}
+                >
                   <Iconify icon={GlobalIcons.edit} width={16} />
                 </IconButton>
               </Tooltip>
             )}
 
-            {isEditing && !isLocked && (
-              <>
-                {!isNew && (
-                  <Tooltip title="Discard Changes">
-                    <IconButton
-                      size="small"
-                      color="warning"
-                      onClick={discardEdit}
-                      sx={{
-                        borderRadius: 1,
-                        border: `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.2)}`,
-                        '&:hover': {
-                          bgcolor: varAlpha(theme.palette.warning.mainChannel, 0.16),
-                        },
-                      }}
-                    >
-                      <Iconify icon={GlobalIcons.cancel} width={16} />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                <Tooltip title={isNew ? 'Save' : 'Update'}>
-                  <span>
-                    <LoadingButton
-                      size="small"
-                      color="success"
-                      loading={isSaving}
-                      onClick={handleSave}
-                      disabled={!isNew && !formik.dirty}
-                      sx={{
-                        minWidth: 0,
-                        p: 0.6,
-                        borderRadius: 1,
-                        border: `1px solid ${varAlpha(theme.palette.success.mainChannel, 0.2)}`,
-                        '&:hover': {
-                          border: `1px solid ${varAlpha(theme.palette.success.mainChannel, 0.5)}`,
-                        },
-                      }}
-                    >
-                      <Iconify icon={GlobalIcons.submit} width={16} />
-                    </LoadingButton>
-                  </span>
-                </Tooltip>
-              </>
+            {/* Discard button (edit mode) */}
+            {isEditing && !isLocked && !isNew && (
+              <Tooltip title="Discard Changes">
+                <IconButton
+                  size="small"
+                  color="warning"
+                  onClick={discardEdit}
+                  sx={{
+                    borderRadius: 1,
+                    border: `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.2)}`,
+                    '&:hover': { bgcolor: varAlpha(theme.palette.warning.mainChannel, 0.12) },
+                  }}
+                >
+                  <Iconify icon={GlobalIcons.cancel} width={16} />
+                </IconButton>
+              </Tooltip>
             )}
 
+            {/* Save / Update button (edit mode) */}
+            {isEditing && !isLocked && (
+              <Tooltip title={isNew ? 'Save' : 'Update'}>
+                <span>
+                  <LoadingButton
+                    size="small"
+                    color="success"
+                    loading={isSaving}
+                    onClick={handleSave}
+                    disabled={!isNew && !formik.dirty}
+                    sx={{
+                      minWidth: 0,
+                      p: 0.6,
+                      borderRadius: 1,
+                      border: `1px solid ${varAlpha(theme.palette.success.mainChannel, 0.2)}`,
+                      '&:hover': {
+                        border: `1px solid ${varAlpha(theme.palette.success.mainChannel, 0.5)}`,
+                      },
+                    }}
+                  >
+                    <Iconify icon={GlobalIcons.submit} width={16} />
+                  </LoadingButton>
+                </span>
+              </Tooltip>
+            )}
+
+            {/* Delete button */}
             <Tooltip title="Delete Fee Structure">
               <span>
                 <LoadingButton
@@ -609,6 +578,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                     minWidth: 0,
                     p: 0.6,
                     borderRadius: 1,
+                    border: `1px solid ${varAlpha(theme.palette.error.mainChannel, 0.15)}`,
                     '&:hover': {
                       bgcolor: varAlpha(theme.palette.error.mainChannel, 0.08),
                     },
@@ -619,13 +589,15 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               </span>
             </Tooltip>
 
+            {/* Lock button */}
             {!isNew && (
               <Tooltip title={isLocked ? 'Cannot Unlock Fee Structure' : 'Lock Fee Structure'}>
-                <span style={{ marginRight: 1 }}>
+                <span>
                   <LoadingButton
                     loading={isLocking}
                     onClick={handleLockToggle}
                     size="small"
+                    disabled={isLocked}
                     sx={{
                       minWidth: 0,
                       p: 0.8,
@@ -637,11 +609,10 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                           : theme.vars.palette.success.dark,
                       },
                     }}
-                    disabled={isLocked}
                   >
                     <Iconify
                       icon={isLocked ? 'mdi:lock-open-outline' : 'mdi:lock-outline'}
-                      sx={{ width: 18, height: 18, color: '#fff' }}
+                      sx={{ width: 16, height: 16, color: '#fff' }}
                     />
                   </LoadingButton>
                 </span>
@@ -650,91 +621,137 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
           </Box>
         </AccordionSummary>
 
+        {/* ── Accordion Details ─────────────────────────────────────────────── */}
         <AccordionDetails sx={{ p: 0 }}>
           {formik.values.feeHeads && formik.values.feeHeads.length > 0 ? (
-            <Box
-              sx={{
-                maxHeight: 320,
-                overflowY: 'auto',
-                px: 2,
-                pt: 1,
-                pb: 1,
-              }}
-            >
-              <Stack spacing={0.5}>
-                <Grid
-                  container
+            <Box sx={{ overflowX: 'auto' }}>
+              {/* ── Table header row ─────────────────────────────────────── */}
+              <Box
+                display="flex"
+                alignItems="center"
+                sx={{
+                  px: 2,
+                  py: 1,
+                  bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.04),
+                  borderBottom: `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.1)}`,
+                  minWidth: 640,
+                }}
+              >
+                <Box sx={{ width: COL_WIDTHS.serial, flexShrink: 0 }}>
+                  <Typography variant="caption" color="text.disabled" fontWeight={600}>
+                    #
+                  </Typography>
+                </Box>
+                <Box sx={{ width: COL_WIDTHS.feeHead, flexShrink: 0 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.disabled"
+                    fontWeight={600}
+                    textTransform="uppercase"
+                    letterSpacing={0.4}
+                  >
+                    Fee Head
+                  </Typography>
+                </Box>
+                <Box sx={{ width: COL_WIDTHS.category, flexShrink: 0 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.disabled"
+                    fontWeight={600}
+                    textTransform="uppercase"
+                    letterSpacing={0.4}
+                  >
+                    Category
+                  </Typography>
+                </Box>
+                <Box sx={{ width: COL_WIDTHS.amount, flexShrink: 0 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.disabled"
+                    fontWeight={600}
+                    textTransform="uppercase"
+                    letterSpacing={0.4}
+                  >
+                    Amount
+                  </Typography>
+                </Box>
+                <Box
                   sx={{
-                    px: 1.5,
-                    py: 0.5,
-                    bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.05),
-                    borderRadius: 1,
+                    width: COL_WIDTHS.type,
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
                   }}
                 >
-                  {COLUMNS.map((col) => (
-                    <Grid key={col.label} size={col.size as any} sx={{ textAlign: col.align }}>
-                      <Box
-                        display="flex"
-                        alignItems="center"
-                        justifyContent={col.align === 'center' ? 'center' : 'flex-start'}
-                        gap={0.5}
-                      >
-                        <Typography variant="caption" color="text.disabled" fontWeight={600}>
-                          {col.label}
-                        </Typography>
-                        {col.desc && (
-                          <CustomTooltip title={col.desc} placement="top">
-                            <Iconify
-                              icon="lucide:info"
-                              sx={{ cursor: 'pointer', width: 16, height: 16 }}
-                              color="info.main"
-                            />
-                          </CustomTooltip>
-                        )}
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
+                  <Typography
+                    variant="caption"
+                    color="text.disabled"
+                    fontWeight={600}
+                    textTransform="uppercase"
+                    letterSpacing={0.4}
+                  >
+                    Type
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.disabled"
+                    fontWeight={600}
+                    textTransform="uppercase"
+                    letterSpacing={0.4}
+                  >
+                    Payable Month
+                  </Typography>
+                </Box>
+                <Box sx={{ width: COL_WIDTHS.actions, flexShrink: 0 }} />
+              </Box>
 
+              {/* ── Table body rows ──────────────────────────────────────── */}
+              <Stack
+                divider={
+                  <Divider sx={{ borderColor: varAlpha(theme.palette.grey['500Channel'], 0.08) }} />
+                }
+                sx={{ maxHeight: 340, overflowY: 'auto', minWidth: 640 }}
+              >
                 {formik.values.feeHeads.map((item, idx) => {
                   const paybleMonthError = getFeeHeadError(idx, 'paybleMonth');
                   const amountError = getFeeHeadError(idx, 'amount');
                   return (
-                    <Grid
-                      container
+                    <Box
                       key={`${item.feeHeadId}-${idx}`}
+                      display="flex"
+                      alignItems="center"
                       sx={{
-                        border: '1px dashed',
-                        borderColor: paybleMonthError ? 'error.main' : 'text.disabled',
-                        borderRadius: 1,
-                        alignItems: 'center',
-                        px: 1.5,
-                        py: 0.5,
-                        pb: paybleMonthError || amountError ? 1.5 : 0.5,
-                        transition: 'border-color 0.2s, background-color 0.2s',
-                        '&:hover': {
-                          bgcolor: 'action.hover',
-                          borderColor: paybleMonthError ? 'error.dark' : 'primary.main',
-                        },
+                        px: 2,
+                        py: 0.75,
+                        transition: 'background-color 0.15s',
+                        '&:hover': { bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.04) },
                       }}
                     >
-                      <Grid size={0.5} sx={{ pt: 0.75 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          {idx + 1}.
+                      {/* Serial */}
+                      <Box sx={{ width: COL_WIDTHS.serial, flexShrink: 0 }}>
+                        <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                          {String(idx + 1).padStart(2, '0')}
                         </Typography>
-                      </Grid>
-                      <Grid size={2} sx={{ pr: 1, pt: 0.75 }}>
-                        <Typography variant="body2" noWrap>
+                      </Box>
+
+                      {/* Fee Head name */}
+                      <Box sx={{ width: COL_WIDTHS.feeHead, flexShrink: 0, pr: 1 }}>
+                        <Typography variant="body2" fontWeight={600} noWrap>
                           {item.feeHeadName}
                         </Typography>
-                      </Grid>
-                      <Grid size={1.5} sx={{ pr: 1, pt: 0.75 }}>
-                        <Typography variant="body2" noWrap>
+                      </Box>
+
+                      {/* Category */}
+                      <Box sx={{ width: COL_WIDTHS.category, flexShrink: 0, pr: 1 }}>
+                        <Typography variant="body2" color="text.secondary" noWrap>
                           {item.feeCategoryName || (item as any).categoryName || '-'}
                         </Typography>
-                      </Grid>
+                      </Box>
 
-                      <Grid size={1.5} sx={{ pr: 1 }}>
+                      {/* Amount input */}
+                      <Box sx={{ width: COL_WIDTHS.amount, flexShrink: 0, pr: 1 }}>
                         <NumericFormatCustom
                           size="small"
                           fullWidth
@@ -748,13 +765,14 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                           error={Boolean(amountError)}
                           helperText={amountError}
                           sx={{
-                            '& .MuiInputBase-root': { height: 36 },
+                            '& .MuiInputBase-root': { height: 34 },
                             '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent' },
                           }}
                         />
-                      </Grid>
+                      </Box>
 
-                      <Grid size={1.5} display="flex" justifyContent="center" sx={{ pt: 0.5 }}>
+                      {/* Type toggle: Recurring / One-Time */}
+                      <Box sx={{ width: COL_WIDTHS.type, flexShrink: 0, pr: 1 }}>
                         <Box
                           component="div"
                           onClick={() => {
@@ -767,39 +785,44 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                             });
                           }}
                           sx={{
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
                             gap: 0.5,
                             cursor: isEditing && !isLocked ? 'pointer' : 'default',
-                            color: item.isOneTime ? 'primary.main' : 'text.disabled',
-                            bgcolor: item.isOneTime
-                              ? varAlpha(theme.palette.primary.mainChannel, 0.08)
-                              : 'transparent',
                             px: 1,
-                            py: 0.5,
+                            py: 0.4,
                             borderRadius: 1,
                             border: '1px solid',
-                            borderColor: item.isOneTime
-                              ? varAlpha(theme.palette.primary.mainChannel, 0.2)
-                              : 'transparent',
-                            transition: 'all 0.2s',
+                            ...(item.isOneTime
+                              ? {
+                                  color: 'primary.main',
+                                  bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.08),
+                                  borderColor: varAlpha(theme.palette.primary.mainChannel, 0.25),
+                                }
+                              : {
+                                  color: 'success.main',
+                                  bgcolor: varAlpha(theme.palette.success.mainChannel, 0.08),
+                                  borderColor: varAlpha(theme.palette.success.mainChannel, 0.25),
+                                }),
+                            transition: 'all 0.18s',
                           }}
                         >
                           <Iconify
                             icon={
                               item.isOneTime
                                 ? 'solar:calendar-date-bold'
-                                : 'solar:calendar-date-outline'
+                                : 'solar:refresh-circle-bold'
                             }
-                            width={16}
+                            width={14}
                           />
-                          <Typography variant="caption" fontWeight={600}>
-                            One Time
+                          <Typography variant="caption" fontWeight={600} noWrap>
+                            {item.isOneTime ? 'One-Time' : 'Recurring'}
                           </Typography>
                         </Box>
-                      </Grid>
+                      </Box>
 
-                      <Grid size={2.5} sx={{ pr: 2, display: 'flex', flexDirection: 'column' }}>
+                      {/* Payable Month select */}
+                      <Box sx={{ flex: 1, pr: 1 }}>
                         <CustomSelect
                           label="Month"
                           options={monthOptions}
@@ -828,50 +851,17 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                           helperText={paybleMonthError}
                           size="small"
                         />
-                      </Grid>
+                      </Box>
 
-                      <Grid size={1.5} display="flex" justifyContent="center" sx={{ pt: 0.5 }}>
-                        <Box
-                          component="div"
-                          onClick={() =>
-                            isEditing &&
-                            !isLocked &&
-                            updateFeeHead(idx, 'isOptional', !item.isOptional)
-                          }
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                            cursor: isEditing && !isLocked ? 'pointer' : 'default',
-                            color: item.isOptional ? 'info.main' : 'text.disabled',
-                            bgcolor: item.isOptional
-                              ? varAlpha(theme.palette.info.mainChannel, 0.08)
-                              : 'transparent',
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: 1,
-                            border: '1px solid',
-                            borderColor: item.isOptional
-                              ? varAlpha(theme.palette.info.mainChannel, 0.2)
-                              : 'transparent',
-                            transition: 'all 0.2s',
-                          }}
-                        >
-                          <Iconify
-                            icon={
-                              item.isOptional
-                                ? 'solar:check-circle-bold'
-                                : 'solar:check-circle-outline'
-                            }
-                            width={16}
-                          />
-                          <Typography variant="caption" fontWeight={600}>
-                            Optional
-                          </Typography>
-                        </Box>
-                      </Grid>
-
-                      <Grid size={1} display="flex" justifyContent="flex-end" sx={{ pt: 0.25 }}>
+                      {/* Remove row action */}
+                      <Box
+                        sx={{
+                          width: COL_WIDTHS.actions,
+                          flexShrink: 0,
+                          display: 'flex',
+                          justifyContent: 'flex-end',
+                        }}
+                      >
                         {isEditing && !isLocked && (
                           <IconButton
                             color="error"
@@ -888,8 +878,8 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                             <Iconify icon={GlobalIcons.delete} width={16} />
                           </IconButton>
                         )}
-                      </Grid>
-                    </Grid>
+                      </Box>
+                    </Box>
                   );
                 })}
               </Stack>
@@ -900,7 +890,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 <Typography
                   variant="caption"
                   color="error"
-                  sx={{ display: 'flex', justifyContent: 'center', fontWeight: 600 }}
+                  sx={{ display: 'flex', justifyContent: 'center', fontWeight: 600, pt: 1 }}
                 >
                   {formik.errors.feeHeads}
                 </Typography>
@@ -911,9 +901,45 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               />
             </Box>
           )}
+
+          {/* ── Add Fee Head row ─────────────────────────────────────────── */}
+          {isEditing && !isLocked && (
+            <Box
+              sx={{
+                borderTop: `1px dashed ${varAlpha(theme.palette.grey['500Channel'], 0.18)}`,
+                px: 2,
+                py: 1,
+              }}
+            >
+              <Box
+                component="button"
+                type="button"
+                onClick={addFeeHeadDialog.onTrue}
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  border: 'none',
+                  bgcolor: 'transparent',
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  fontFamily: 'inherit',
+                  '&:hover': {
+                    opacity: 0.75,
+                  },
+                }}
+              >
+                <Iconify icon="solar:add-circle-bold-duotone" width={20} color="primary.main" />
+                <Typography variant="body2" color="primary.main" fontWeight={600}>
+                  Add Fee Head
+                </Typography>
+              </Box>
+            </Box>
+          )}
         </AccordionDetails>
       </Accordion>
 
+      {/* ── Dialogs ──────────────────────────────────────────────────────────── */}
       <CustomDialog
         open={addFeeHeadDialog.value}
         handleClose={addFeeHeadDialog.onFalse}

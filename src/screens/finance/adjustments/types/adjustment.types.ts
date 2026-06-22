@@ -82,6 +82,8 @@ export interface IAdjustmentTableProps {
   tabCounts: Record<import('../enums/adjustment.enum').AdjustmentTabEnum, number>;
   onCreateAdjustment: () => void;
   onView: (row: AdjustmentRequest) => void;
+  onApprove?: (row: AdjustmentRequest) => void;
+  onReject?: (row: AdjustmentRequest) => void;
   academicFilters?: import('src/screens/finance/hooks/useFinanceAcademicFilters').UseFinanceAcademicFiltersResult;
 }
 
@@ -94,8 +96,15 @@ export interface IAdjustmentFormProps {
   defaultDivisionId?: string;
 }
 
+export interface IAdjustmentViewMeta {
+  id: string;
+  status: AdjustmentStatusEnum;
+  requestedByUserId?: string;
+}
+
 export interface IAdjustmentViewProps {
-  student: AdjustmentRequest;
+  adjustmentId: string;
+  viewMeta: IAdjustmentViewMeta;
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;

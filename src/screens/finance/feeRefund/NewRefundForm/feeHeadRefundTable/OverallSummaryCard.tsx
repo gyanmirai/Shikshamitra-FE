@@ -52,9 +52,9 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
         const fhEntry = refunds.find((r) => r.feeHeadId === fh.feeHeadId);
         const selectedMonthNames = (fhEntry?.months ?? []).map((m) => m.month);
         fh.items
-          .filter((m) => m.paid > 0)
+          .filter((m) => (isAdj ? m.refundable > 0 || m.refunded > 0 : m.paid > 0))
           .forEach((m) => {
-            const refundable = Math.max(0, m.paid - m.refunded);
+            const refundable = isAdj ? m.refundable : Math.max(0, m.paid - m.refunded);
             tPaid += m.paid;
             tRefunded += m.refunded;
             tRefundable += refundable;
@@ -72,7 +72,7 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
         totalRefundInput: tInput,
         totalSelectedMonths: tMonths,
       };
-    }, [feeHeads, formik.values.feeHeadRefunds]);
+    }, [feeHeads, formik.values.feeHeadRefunds, isAdj]);
 
   // ── Stat card definitions ──────────────────────────────────────────────────
   const statCards = [
