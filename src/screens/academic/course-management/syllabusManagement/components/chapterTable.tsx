@@ -3,7 +3,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -80,9 +80,33 @@ const ChapterTable = ({
           const htmlContent = row.descriptionHtml;
           return (
             <CustomTooltip
-              title={htmlContent && <div dangerouslySetInnerHTML={{ __html: htmlContent }} />}
+              title={
+                htmlContent && (
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      maxWidth: { xs: 'calc(100vw - 48px)', sm: 420 },
+                      maxHeight: 'min(360px, 50vh)',
+                      overflow: 'auto',
+                      textAlign: 'left',
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'anywhere',
+                      lineHeight: 1.45,
+                      '& p': { m: 0 },
+                      '& p + p': { mt: 1 },
+                    }}
+                    dangerouslySetInnerHTML={{ __html: htmlContent }}
+                  />
+                )
+              }
               arrow
-              sx={{ textAlign: 'justify' }}
+              placement="left-start"
+              sx={{
+                '& .MuiTooltip-tooltip': {
+                  maxWidth: { xs: 'calc(100vw - 48px)', sm: 420 },
+                },
+              }}
             >
               <Typography
                 variant="inherit"

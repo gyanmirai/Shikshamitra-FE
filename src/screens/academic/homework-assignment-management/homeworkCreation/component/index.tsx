@@ -8,13 +8,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Box, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
@@ -133,6 +133,17 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   const selectedClassData = allClass.find((c: any) => c?.id === classes);
   const selectedDivisionData = allDivision.find((d: any) => d?.id === division);
 
+  const homeworkQueryParams = useMemo(
+    () => ({
+      academicMediumId: (medium as Medium)?.id,
+      StandardId: selectedClassData?.id,
+      DivisionId: selectedDivisionData?.id,
+      SubjectId: subject,
+      HomeworkDate: isValidDate ? date!.toISOString() : undefined,
+    }),
+    [date, isValidDate, medium, selectedClassData?.id, selectedDivisionData?.id, subject]
+  );
+
   // Fetch full homework details when a specific homework is selected for viewing
   const {
     data: homeworkDetailData,
@@ -156,13 +167,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetHomeworksQuery,
-    params: {
-      academicMediumId: (medium as Medium)?.id,
-      StandardId: selectedClassData?.id,
-      DivisionId: selectedDivisionData?.id,
-      SubjectId: subject,
-      HomeworkDate: isValidDate ? date!.toISOString() : undefined,
-    },
+    params: homeworkQueryParams,
     options: {
       skip: !(medium as Medium)?.id || !classes || !division || !subject || !isValidDate,
     },
@@ -398,11 +403,46 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             loading={isPublishLoading}
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={async () => {
+              if (!selectedHomework?.id) {
+                publishHomeworkDialog.onFalse();
+                setSelectedHomework(null);
+                return;
+              }
+
               try {
                 await updateHomeworkStatus({
-                  homeworkId: selectedHomework?.id,
+                  homeworkId: selectedHomework.id,
                   status: 1,
                 }).unwrap();
+
+                dispatch(
+                  // @ts-ignore
+                  homeworkApi.util.updateQueryData(
+                    'getHomeworks',
+                    homeworkQueryParams,
+                    (draft: any) => {
+                      const homework = draft.items?.find(
+                        (item: any) => item.id === selectedHomework.id
+                      );
+
+                      if (!homework) return;
+
+                      homework.status = 1;
+
+                      const schedules = homework.divisionSchedules || homework.divisions || [];
+                      const currentDivisionId =
+                        (selectedHomework as any).currentDivisionId || division;
+
+                      schedules.forEach((schedule: any) => {
+                        if (!currentDivisionId || schedule.divisionId === currentDivisionId) {
+                          schedule.status = 1;
+                          schedule.isPublished = true;
+                        }
+                      });
+                    }
+                  )
+                );
+
                 shikshaMitraToast.success({
                   message: `Homework "${selectedHomework?.title}" has been successfully published.`,
                 });
@@ -439,7 +479,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             size="small"
             loading={isDeleteLoading}
             onClick={async () => {
-              const homeworkQueryParams = {
+              const homeworkQueryParam = {
                 academicMediumId: (medium as Medium)?.id,
                 StandardId: selectedClassData?.id,
                 DivisionId: selectedDivisionData?.id,
@@ -453,7 +493,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
                   dispatchFn(
                     homeworkApi.util.updateQueryData(
                       'getHomeworks',
-                      homeworkQueryParams,
+                      homeworkQueryParam,
                       (draft: any) => {
                         const index = draft.items?.findIndex(
                           (hw: any) => hw.id === selectedHomework?.id

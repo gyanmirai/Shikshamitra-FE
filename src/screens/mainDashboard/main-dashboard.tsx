@@ -1,20 +1,8 @@
 'use client';
 
-import type { SelectChangeEvent } from '@mui/material';
-
+import React from 'react';
 import { useSession } from 'next-auth/react';
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  Stack,
-  Select,
-  MenuItem,
-  Typography,
-  InputLabel,
-  FormControl,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Stack, Typography, CircularProgress } from '@mui/material';
 
 import UserDashboard from './userDashboard/UserDashboard';
 import MainDashboardAdmin from './admin/main-dashboard-admin';
@@ -23,15 +11,7 @@ import MainDashboardPrincipal from './principal/main-dashboard-principal';
 
 const MainDashboard = () => {
   const { data: session, status } = useSession() as any;
-  const actualRole = session?.profile?.role?.toLowerCase() || 'admin';
-
-  const [selectedRole, setSelectedRole] = useState<string>('');
-
-  useEffect(() => {
-    if (actualRole && !selectedRole) {
-      setSelectedRole(actualRole);
-    }
-  }, [actualRole, selectedRole]);
+  const currentRole = session?.profile?.role?.toLowerCase() || 'admin';
 
   if (status === 'loading') {
     return (
@@ -42,12 +22,6 @@ const MainDashboard = () => {
       </Box>
     );
   }
-
-  const currentRole = selectedRole || actualRole;
-
-  const handleRoleChange = (event: SelectChangeEvent) => {
-    setSelectedRole(event.target.value);
-  };
 
   const renderDashboard = () => {
     switch (currentRole) {
@@ -71,30 +45,7 @@ const MainDashboard = () => {
     }
   };
 
-  return (
-    <Box sx={{ width: '100%' }}>
-      {/* Role View Filter */}
-      <Card sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1, p: 1 }}>
-        <FormControl size="small" sx={{ minWidth: 150, bgcolor: 'background.paper' }}>
-          <InputLabel id="role-view-filter-label">Role View</InputLabel>
-          <Select
-            labelId="role-view-filter-label"
-            id="role-view-filter"
-            value={currentRole}
-            label="Role View"
-            onChange={handleRoleChange}
-          >
-            <MenuItem value="admin">Admin</MenuItem>
-            <MenuItem value="principal">Principal</MenuItem>
-            <MenuItem value="teacher">Teacher</MenuItem>
-            <MenuItem value="user">User</MenuItem>
-          </Select>
-        </FormControl>
-      </Card>
-
-      {renderDashboard()}
-    </Box>
-  );
+  return <Box sx={{ width: '100%' }}>{renderDashboard()}</Box>;
 };
 
 export default MainDashboard;

@@ -42,4 +42,37 @@ describe('parseApiProblemDetail', () => {
 
     expect(parsed.detail).toBe('Document type name already exists.');
   });
+
+  it('uses timetable lecture-slot message when only generic detail and error code are returned', () => {
+    const parsed = parseApiProblemDetail({
+      data: {
+        errorCode: 'Academic:Timetable:020004',
+        detail: 'One or more business rules were violated.',
+      },
+    });
+
+    expect(parsed.detail).toBe(
+      'This class already has generated timetable assignments. Remove or update those timetable assignments before changing lecture slot timings.'
+    );
+    expect(parsed.errorCode).toBe('Academic:Timetable:020004');
+  });
+
+  it('extracts ABP exception data messages before generic business-rule text', () => {
+    const parsed = parseApiProblemDetail({
+      data: {
+        error: {
+          code: 'Academic:Timetable:020004',
+          message: 'One or more business rules were violated.',
+          data: {
+            message:
+              'This class already has generated timetable assignments. Remove or update those timetable assignments before changing lecture slot timings.',
+          },
+        },
+      },
+    });
+
+    expect(parsed.detail).toBe(
+      'This class already has generated timetable assignments. Remove or update those timetable assignments before changing lecture slot timings.'
+    );
+  });
 });

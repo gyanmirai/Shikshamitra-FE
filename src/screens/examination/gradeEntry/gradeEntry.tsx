@@ -868,19 +868,57 @@ const GradeEntry = (props: TabComponentType) => {
           </motion.div>
         )}
 
-        <GradeEntryTable
-          selectedStudents={selectedStudents}
-          handleSelectStudent={handleSelectStudent}
-          actions={actions}
-          classId={classes}
-          divisionId={division}
-          subjectId={subject}
-          examId={examId}
-          isLocked={workflowStatus === GradeEntryWorkflowStatus.Published}
-          onAllAssignedChange={setAllMarksAssigned}
-          onStatsChange={setAnalyticsStats}
-          onWorkflowFlagsChange={handleWorkflowFlagsChange}
-        />
+        {examId ? (
+          <GradeEntryTable
+            selectedStudents={selectedStudents}
+            handleSelectStudent={handleSelectStudent}
+            actions={actions}
+            classId={classes}
+            divisionId={division}
+            subjectId={subject}
+            examId={examId}
+            isLocked={workflowStatus === GradeEntryWorkflowStatus.Published}
+            onAllAssignedChange={setAllMarksAssigned}
+            onStatsChange={setAnalyticsStats}
+            onWorkflowFlagsChange={handleWorkflowFlagsChange}
+          />
+        ) : (
+          <Card
+            sx={{
+              minHeight: 420,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              border: (theme) => `1px dashed ${theme.palette.divider}`,
+              bgcolor: (theme) => `rgba(${theme.palette.grey['500Channel']} / 0.03)`,
+              boxShadow: 'var(--shadows-2)',
+            }}
+          >
+            <Stack spacing={2} alignItems="center" sx={{ px: 3, maxWidth: 460 }}>
+              <Box
+                sx={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: '50%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: 'primary.main',
+                  bgcolor: (theme) => `rgba(${theme.palette.primary.mainChannel} / 0.12)`,
+                }}
+              >
+                <Iconify icon="solar:clipboard-list-bold" width={36} />
+              </Box>
+              <Stack spacing={0.75}>
+                <Typography variant="h6">Please select an exam</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Choose an exam title from the filters above to view students and start entering
+                  marks.
+                </Typography>
+              </Stack>
+            </Stack>
+          </Card>
+        )}
 
         <CustomDialog
           open={viewSubmissionDialog.value}

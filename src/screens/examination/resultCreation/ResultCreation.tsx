@@ -1265,13 +1265,21 @@ const ResultCreation = (_props: TabComponentType) => {
     const pctCol = mappedCols.find((c) => c.id === 'Percentage' || c.id === 'percentage');
     if (pctCol) finalCols.push(pctCol);
 
-    // 5. Add new Pass/Fail column
+    // 5. Status column
     finalCols.push({
       id: 'pass_fail',
-      label: 'Pass/Fail',
+      label: 'Status',
       minWidth: 120,
       align: 'left' as const,
       render: (_value: any, row: any) => {
+        const apiStatus = row.Status || row.status;
+        if (apiStatus) {
+          return (
+            <Label variant="soft" color={getStatusColor(String(apiStatus))}>
+              {apiStatus}
+            </Label>
+          );
+        }
         const grade = row.Grade || row.grade;
         if (!grade || grade === '—') {
           return (
@@ -1283,7 +1291,7 @@ const ResultCreation = (_props: TabComponentType) => {
         const isPass = grade !== 'F';
         return (
           <Label variant="soft" color={isPass ? 'success' : 'error'}>
-            {isPass ? 'PASS' : 'FAIL'}
+            {isPass ? 'Passed' : 'Failed'}
           </Label>
         );
       },
@@ -1291,6 +1299,9 @@ const ResultCreation = (_props: TabComponentType) => {
 
     // Add any other columns that we didn't explicitly place (in case there are any)
     mappedCols.forEach((col) => {
+      if (col.id === 'Status' || col.id === 'status') {
+        return;
+      }
       if (!finalCols.some((fc) => fc.id === col.id)) {
         finalCols.push(col);
       }
@@ -1300,7 +1311,7 @@ const ResultCreation = (_props: TabComponentType) => {
     finalCols.push({
       id: '_action',
       label: 'Details',
-      minWidth: 50,
+      minWidth: '80px',
       sticky: true,
       align: 'center' as const,
       render: (_: any, row: any) => (
@@ -1313,7 +1324,7 @@ const ResultCreation = (_props: TabComponentType) => {
               '&:hover': { bgcolor: (theme) => alpha(theme.palette.action.selected, 0.18) },
             }}
           >
-            <Iconify icon="mdi:eye-outline" width={17} sx={{ color: 'text.secondary' }} />
+            <Iconify icon="carbon:view-filled" width={17} sx={{ color: 'text.secondary' }} />
           </IconButton>
         </Tooltip>
       ),
@@ -1342,8 +1353,8 @@ const ResultCreation = (_props: TabComponentType) => {
         sticky: true,
       },
       {
-        id: 'pass_fail',
-        label: 'Pass/Fail',
+        id: 'status',
+        label: 'Status',
         minWidth: 120,
         align: 'left' as const,
       },
