@@ -10,7 +10,6 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { sliderClasses } from '@mui/material/Slider';
 import { useSelector, useDispatch } from 'react-redux';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -803,7 +802,6 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
               step={10}
               valueLabelDisplay="auto"
               marks={marks}
-              sx={{ [`& .${sliderClasses.mark}[data-index="3"]`]: { display: 'none' } }}
             />
             {formik.touched.completePercentage && formik.errors.completePercentage && (
               <Typography variant="caption" color="error">
