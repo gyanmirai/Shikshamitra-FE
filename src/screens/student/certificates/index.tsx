@@ -1,9 +1,15 @@
 'use client';
 
 import { Box, Grid } from '@mui/material';
+import { pdf } from '@react-pdf/renderer';
 import React, { useState, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import BonofiedCertificateTemplate1, {
+  CertificateDocument,
+} from 'src/templates/student-certificates/bonofied-certificate-1';
 
 import DashboardMetrics from './components/DashboardMetrics';
 import CertificateDrawer from './components/CertificateDrawer';
@@ -21,6 +27,10 @@ const StudentCertificatesScreen = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeCertType, setActiveCertType] = useState<CertType | null>(null);
 
+  // View Dialog State
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewingCert, setViewingCert] = useState<any>(null);
+
   const handleSelectStudent = useCallback((student: SelectedStudent) => {
     setSelectedStudent(student);
   }, []);
@@ -33,6 +43,23 @@ const StudentCertificatesScreen = () => {
   const handleCloseDrawer = useCallback(() => {
     setDrawerOpen(false);
   }, []);
+
+  const handleDownload = async (row: any) => {
+    try {
+      shikshaMitraToast.info({ message: `Generating PDF for ${row.certNo}...` });
+      const blob = await pdf(<CertificateDocument />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${row.certNo}_${row.type}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      shikshaMitraToast.success({ message: 'Downloaded successfully!' });
+    } catch (error) {
+      shikshaMitraToast.error({ message: 'Failed to generate PDF' });
+      console.error(error);
+    }
+  };
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -58,7 +85,8 @@ const StudentCertificatesScreen = () => {
             spacing={1}
             sx={{
               flex: 1,
-              alignItems: 'stretch',
+              alignItems: { xs: 'flex-start', lg: 'stretch' },
+              alignContent: { xs: 'flex-start', lg: 'stretch' },
             }}
           >
             {/* ── Left Panel: Student Search ──────────────────────────────── */}
@@ -90,6 +118,16 @@ const StudentCertificatesScreen = () => {
                   const certType = typeMap[row.type];
                   if (certType) handleGenerate(certType);
                 }}
+                onView={(row) => {
+                  setViewingCert(row);
+                  setViewDialogOpen(true);
+                }}
+                onDownload={handleDownload}
+                onPrint={(row) =>
+                  shikshaMitraToast.info({
+                    message: `Printing ${row.type} certificate: ${row.certNo}`,
+                  })
+                }
               />
             </Grid>
 
@@ -111,6 +149,22 @@ const StudentCertificatesScreen = () => {
         certType={activeCertType}
         student={selectedStudent}
       />
+
+      {/* View PDF Dialog */}
+      <CustomDialog
+        open={viewDialogOpen}
+        handleClose={() => setViewDialogOpen(false)}
+        title={
+          viewingCert
+            ? `View ${viewingCert.type} Certificate (${viewingCert.certNo})`
+            : 'View Certificate'
+        }
+        maxWidth="lg"
+      >
+        <Box sx={{ width: '100%', height: 600 }}>
+          <BonofiedCertificateTemplate1 />
+        </Box>
+      </CustomDialog>
     </Box>
   );
 };

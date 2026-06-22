@@ -328,7 +328,12 @@ const EntranceExamSlots = () => {
           setEditData(null);
         }}
       >
-        <SlotsForm handleClose={handleClose} editData={editData} date={selectedDate} />
+        <SlotsForm
+          handleClose={handleClose}
+          editData={editData}
+          date={selectedDate}
+          existingSlots={slots?.items || []}
+        />
       </CustomDialog>
     </Box>
   );
@@ -355,10 +360,12 @@ export const SlotsForm = ({
   handleClose,
   editData,
   date,
+  existingSlots,
 }: {
   handleClose?: (e: any, isSubmit: boolean) => void;
   editData: ISlot | null;
   date: Dayjs | null;
+  existingSlots: ISlot[];
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -436,7 +443,17 @@ export const SlotsForm = ({
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
-      slotName: Yup.string().trim('Slot Name is required').required('Slot Name is required'),
+      slotName: Yup.string()
+        .trim('Slot Name is required')
+        .required('Slot Name is required')
+        .test('unique-slot-name', 'A slot with this name already exists', (value) => {
+          if (!value) return true;
+          return !existingSlots.some(
+            (slot) =>
+              (slot.slotName || '').toLowerCase() === value.toLowerCase() &&
+              slot.id !== editData?.id
+          );
+        }),
       startDateTime: Yup.date()
         .required('Start Time is required')
         .test('startDateTime', 'Start time must be before end time', (value, context) => {
@@ -445,6 +462,35 @@ export const SlotsForm = ({
             return false;
           }
           return true;
+        })
+        .test('overlap', 'Time overlaps with another slot', (value, context) => {
+          const { endDateTime, roomId, roomNo } = context.parent;
+          if (!value || !endDateTime || !roomId) return true;
+
+          const start = dayjs(value);
+          const end = dayjs(endDateTime);
+          const startMinutes = start.hour() * 60 + start.minute();
+          const endMinutes = end.hour() * 60 + end.minute();
+
+          return !existingSlots.some((slot) => {
+            if (slot.id === editData?.id) return false;
+
+            const parentRoomNoStr = String(roomNo || '').replace(/\D/g, '');
+            const slotRoomNoStr = String(slot.roomNo || '').replace(/\D/g, '');
+            const isSameRoom =
+              (slot.roomId && slot.roomId === roomId) ||
+              (parentRoomNoStr && slotRoomNoStr && parentRoomNoStr === slotRoomNoStr);
+            if (!isSameRoom) return false;
+
+            if (!slot.startDateTime || !slot.endDateTime) return false;
+
+            const existingStart = dayjs(slot.startDateTime);
+            const existingEnd = dayjs(slot.endDateTime);
+            const exStartMin = existingStart.hour() * 60 + existingStart.minute();
+            const exEndMin = existingEnd.hour() * 60 + existingEnd.minute();
+
+            return startMinutes < exEndMin && endMinutes > exStartMin;
+          });
         }),
 
       endDateTime: Yup.date()
@@ -467,7 +513,37 @@ export const SlotsForm = ({
       studentLimit: Yup.number()
         .min(1, 'Student Limit must be greater than 0')
         .required('Student Limit is required'),
-      roomId: Yup.string().required('Room is required'),
+      roomId: Yup.string()
+        .required('Room is required')
+        .test('overlap', 'Room already booked for this time', (value, context) => {
+          const { startDateTime, endDateTime, roomNo } = context.parent;
+          if (!value || !startDateTime || !endDateTime) return true;
+
+          const start = dayjs(startDateTime);
+          const end = dayjs(endDateTime);
+          const startMinutes = start.hour() * 60 + start.minute();
+          const endMinutes = end.hour() * 60 + end.minute();
+
+          return !existingSlots.some((slot) => {
+            if (slot.id === editData?.id) return false;
+
+            const parentRoomNoStr = String(roomNo || '').replace(/\D/g, '');
+            const slotRoomNoStr = String(slot.roomNo || '').replace(/\D/g, '');
+            const isSameRoom =
+              (slot.roomId && slot.roomId === value) ||
+              (parentRoomNoStr && slotRoomNoStr && parentRoomNoStr === slotRoomNoStr);
+            if (!isSameRoom) return false;
+
+            if (!slot.startDateTime || !slot.endDateTime) return false;
+
+            const existingStart = dayjs(slot.startDateTime);
+            const existingEnd = dayjs(slot.endDateTime);
+            const exStartMin = existingStart.hour() * 60 + existingStart.minute();
+            const exEndMin = existingEnd.hour() * 60 + existingEnd.minute();
+
+            return startMinutes < exEndMin && endMinutes > exStartMin;
+          });
+        }),
     }),
     onSubmit: async (values, formikHelpers) => {
       const newDate = date?.format('DD/MM/YYYY');
