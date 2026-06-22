@@ -102,6 +102,19 @@ export function LeavePoliciesPanel() {
     setDialogOpen(true);
   };
 
+  const openDuplicateDialog = (policy: ILeavePolicy) => {
+    // Strip the id so the form treats it as a brand-new creation (same pattern as FeeHeadForm).
+    // Pre-fill all fields from the source policy; prefix the title so the user can distinguish it.
+    setEditData({
+      ...policy,
+      id: undefined as any,
+      policyTitle: `Copy of ${policy.policyTitle || policy.title || ''}`.trim(),
+      title: `Copy of ${policy.policyTitle || policy.title || ''}`.trim(),
+      isDefault: false,
+    });
+    setDialogOpen(true);
+  };
+
   const closeDialog = (_e?: unknown, isSubmit?: boolean) => {
     setDialogOpen(false);
     window.setTimeout(() => setEditData(null), 200);
@@ -326,6 +339,15 @@ export function LeavePoliciesPanel() {
                     </MenuItem>
                   ) : null}
                   <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      openDuplicateDialog(policy);
+                    }}
+                  >
+                    <Iconify icon="mdi:content-copy" />
+                    Duplicate
+                  </MenuItem>
+                  <MenuItem
                     disabled={policy.isDefault}
                     onClick={() => {
                       popover.onClose();
@@ -410,10 +432,10 @@ export function LeavePoliciesPanel() {
             alignItems="center"
             display="inline-flex"
           >
-            <span>{editData ? 'Update Leave Policy' : 'Add Leave Policy'}</span>
+            <span>{editData?.id ? 'Update Leave Policy' : 'Add Leave Policy'}</span>
             <InfoTooltipIcon
               title={
-                editData
+                editData?.id
                   ? 'Update the rules for leave entitlement, accrual type, carry forward options, and approval workflows.'
                   : 'Define new rules for leave entitlement, accrual type, carry forward options, and approval workflows.'
               }

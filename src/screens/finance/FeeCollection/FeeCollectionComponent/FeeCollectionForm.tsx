@@ -29,6 +29,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
@@ -705,7 +706,10 @@ const FeeCollectComponentForm = ({
       details: Object.fromEntries(
         Object.entries(formik.values.payment.details)
           .filter(([, v]) => v != null && v !== '')
-          .map(([k, v]) => [k, dayjs.isDayjs(v) ? v.format('YYYY-MM-DD') : String(v)])
+          .map(([k, v]) => [
+            k,
+            dayjs.isDayjs(v) ? dateConvertor(v.format(dateFormat) || '') || '' : String(v),
+          ])
       ),
     },
   ];
