@@ -94,42 +94,42 @@ export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse 
   fatherOrganization: editData?.fatherDetails?.organization || '',
   fatherAadharNo: editData?.fatherDetails?.aadharNo || '',
   fatherRemarks: editData?.fatherDetails?.remarks || '',
-  fatherAddress1: editData?.fatherDetails?.localAddress.address1 || '',
-  fatherAddress2: editData?.fatherDetails?.localAddress.address2 || '',
-  fatherAddress3: editData?.fatherDetails?.localAddress.address3 || '',
-  fatherOfficeAddress1: editData?.fatherDetails?.officeAddress.address1 || '',
-  fatherOfficeAddress2: editData?.fatherDetails?.officeAddress.address2 || '',
-  fatherOfficeAddress3: editData?.fatherDetails?.officeAddress.address3 || '',
-  fatherLocalCountry: editData?.fatherDetails?.localAddress.country?.name
+  fatherAddress1: editData?.fatherDetails?.localAddress?.address1 || '',
+  fatherAddress2: editData?.fatherDetails?.localAddress?.address2 || '',
+  fatherAddress3: editData?.fatherDetails?.localAddress?.address3 || '',
+  fatherOfficeAddress1: editData?.fatherDetails?.officeAddress?.address1 || '',
+  fatherOfficeAddress2: editData?.fatherDetails?.officeAddress?.address2 || '',
+  fatherOfficeAddress3: editData?.fatherDetails?.officeAddress?.address3 || '',
+  fatherLocalCountry: editData?.fatherDetails?.localAddress?.country?.name
     ? {
-        name: editData?.fatherDetails?.localAddress.country?.name || '',
-        isoCode: editData?.fatherDetails?.localAddress.country?.isoCode || '',
+        name: editData?.fatherDetails?.localAddress?.country?.name || '',
+        isoCode: editData?.fatherDetails?.localAddress?.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
-  fatherLocalState: editData?.fatherDetails?.localAddress.state?.name
+  fatherLocalState: editData?.fatherDetails?.localAddress?.state?.name
     ? {
-        name: editData?.fatherDetails?.localAddress.state?.name || '',
-        isoCode: editData?.fatherDetails?.localAddress.state?.isoCode || '',
+        name: editData?.fatherDetails?.localAddress?.state?.name || '',
+        isoCode: editData?.fatherDetails?.localAddress?.state?.isoCode || '',
       }
     : { name: '', isoCode: '' },
   fatherLocalCity: {
-    name: editData?.fatherDetails?.localAddress.city || '',
+    name: editData?.fatherDetails?.localAddress?.city || '',
   },
-  fatherLocalPincode: editData?.fatherDetails?.localAddress.pincode || '',
-  fatherOfficeCountry: editData?.fatherDetails?.officeAddress.country?.name
+  fatherLocalPincode: editData?.fatherDetails?.localAddress?.pincode || '',
+  fatherOfficeCountry: editData?.fatherDetails?.officeAddress?.country?.name
     ? {
-        name: editData?.fatherDetails?.officeAddress.country?.name || '',
-        isoCode: editData?.fatherDetails?.officeAddress.country?.isoCode || '',
+        name: editData?.fatherDetails?.officeAddress?.country?.name || '',
+        isoCode: editData?.fatherDetails?.officeAddress?.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
   fatherOfficeState: {
-    name: editData?.fatherDetails?.officeAddress.state?.name || '',
-    isoCode: editData?.fatherDetails?.officeAddress.state?.isoCode || '',
+    name: editData?.fatherDetails?.officeAddress?.state?.name || '',
+    isoCode: editData?.fatherDetails?.officeAddress?.state?.isoCode || '',
   },
   fatherOfficeCity: {
-    name: editData?.fatherDetails?.officeAddress.city || '',
+    name: editData?.fatherDetails?.officeAddress?.city || '',
   },
-  fatherOfficePincode: editData?.fatherDetails?.officeAddress.pincode || '',
+  fatherOfficePincode: editData?.fatherDetails?.officeAddress?.pincode || '',
 
   motherName: editData?.motherDetails?.fullName || '',
   motherDob: editData?.motherDetails?.dateOfBirth
@@ -143,46 +143,46 @@ export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse 
   motherEmail: editData?.motherDetails?.email || '',
   motherPassOutYear: editData?.motherDetails?.yearOfPassing || '',
   motherOfficeNo: editData?.motherDetails?.officeNo || '',
-  motherOfficeAddress1: editData?.motherDetails?.officeAddress.address1 || '',
-  motherOfficeAddress2: editData?.motherDetails?.officeAddress.address2 || '',
-  motherOfficeAddress3: editData?.motherDetails?.officeAddress.address3 || '',
+  motherOfficeAddress1: editData?.motherDetails?.officeAddress?.address1 || '',
+  motherOfficeAddress2: editData?.motherDetails?.officeAddress?.address2 || '',
+  motherOfficeAddress3: editData?.motherDetails?.officeAddress?.address3 || '',
   motherDesignation: editData?.motherDetails?.designation || '',
   motherOrganization: editData?.motherDetails?.organization || '',
   motherAadharNo: editData?.motherDetails?.aadharNo || '',
   motherRemarks: editData?.motherDetails?.remarks || '',
-  motherAddress1: editData?.motherDetails?.localAddress.address1 || '',
-  motherAddress2: editData?.motherDetails?.localAddress.address2 || '',
-  motherAddress3: editData?.motherDetails?.localAddress.address3 || '',
-  motherLocalCountry: editData?.motherDetails?.localAddress.country?.name
+  motherAddress1: editData?.motherDetails?.localAddress?.address1 || '',
+  motherAddress2: editData?.motherDetails?.localAddress?.address2 || '',
+  motherAddress3: editData?.motherDetails?.localAddress?.address3 || '',
+  motherLocalCountry: editData?.motherDetails?.localAddress?.country?.name
     ? {
-        name: editData?.motherDetails?.localAddress.country?.name || '',
-        isoCode: editData?.motherDetails?.localAddress.country?.isoCode || '',
+        name: editData?.motherDetails?.localAddress?.country?.name || '',
+        isoCode: editData?.motherDetails?.localAddress?.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
-  motherLocalState: editData?.motherDetails?.localAddress.state?.name
+  motherLocalState: editData?.motherDetails?.localAddress?.state?.name
     ? {
-        name: editData?.motherDetails?.localAddress.state?.name || '',
-        isoCode: editData?.motherDetails?.localAddress.state?.isoCode || '',
+        name: editData?.motherDetails?.localAddress?.state?.name || '',
+        isoCode: editData?.motherDetails?.localAddress?.state?.isoCode || '',
       }
     : { name: '', isoCode: '' },
   motherLocalCity: {
-    name: editData?.motherDetails?.localAddress.city || '',
+    name: editData?.motherDetails?.localAddress?.city || '',
   },
-  motherLocalPincode: editData?.motherDetails?.localAddress.pincode || '',
-  motherOfficeCountry: editData?.motherDetails?.officeAddress.country?.name
+  motherLocalPincode: editData?.motherDetails?.localAddress?.pincode || '',
+  motherOfficeCountry: editData?.motherDetails?.officeAddress?.country?.name
     ? {
-        name: editData?.motherDetails?.officeAddress.country?.name || '',
-        isoCode: editData?.motherDetails?.officeAddress.country?.isoCode || '',
+        name: editData?.motherDetails?.officeAddress?.country?.name || '',
+        isoCode: editData?.motherDetails?.officeAddress?.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
   motherOfficeState: {
-    name: editData?.motherDetails?.officeAddress.state?.name || '',
-    isoCode: editData?.motherDetails?.officeAddress.state?.isoCode || '',
+    name: editData?.motherDetails?.officeAddress?.state?.name || '',
+    isoCode: editData?.motherDetails?.officeAddress?.state?.isoCode || '',
   },
   motherOfficeCity: {
-    name: editData?.motherDetails?.officeAddress.city || '',
+    name: editData?.motherDetails?.officeAddress?.city || '',
   },
-  motherOfficePincode: editData?.motherDetails?.officeAddress.pincode || '',
+  motherOfficePincode: editData?.motherDetails?.officeAddress?.pincode || '',
   guardianName: editData?.guardianDetails?.fullName || '',
   guardianDob: editData?.guardianDetails?.dateOfBirth
     ? dayjs(editData?.guardianDetails.dateOfBirth)
@@ -195,45 +195,45 @@ export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse 
   guardianEmail: editData?.guardianDetails?.email || '',
   guardianPassOutYear: editData?.guardianDetails?.yearOfPassing || '',
   guardianOfficeNo: editData?.guardianDetails?.officeNo || '',
-  guardianOfficeAddress1: editData?.guardianDetails?.officeAddress.address1 || '',
-  guardianOfficeAddress2: editData?.guardianDetails?.officeAddress.address2 || '',
-  guardianOfficeAddress3: editData?.guardianDetails?.officeAddress.address3 || '',
+  guardianOfficeAddress1: editData?.guardianDetails?.officeAddress?.address1 || '',
+  guardianOfficeAddress2: editData?.guardianDetails?.officeAddress?.address2 || '',
+  guardianOfficeAddress3: editData?.guardianDetails?.officeAddress?.address3 || '',
   guardianDesignation: editData?.guardianDetails?.designation || '',
   guardianOrganization: editData?.guardianDetails?.organization || '',
   guardianAadharNo: editData?.guardianDetails?.aadharNo || '',
   guardianRemarks: editData?.guardianDetails?.remarks || '',
-  guardianAddress1: editData?.guardianDetails?.localAddress.address1 || '',
-  guardianAddress2: editData?.guardianDetails?.localAddress.address2 || '',
-  guardianAddress3: editData?.guardianDetails?.localAddress.address3 || '',
-  guardianLocalCountry: editData?.guardianDetails?.localAddress.country?.name
+  guardianAddress1: editData?.guardianDetails?.localAddress?.address1 || '',
+  guardianAddress2: editData?.guardianDetails?.localAddress?.address2 || '',
+  guardianAddress3: editData?.guardianDetails?.localAddress?.address3 || '',
+  guardianLocalCountry: editData?.guardianDetails?.localAddress?.country?.name
     ? {
-        name: editData?.guardianDetails?.localAddress.country?.name || '',
-        isoCode: editData?.guardianDetails?.localAddress.country?.isoCode || '',
+        name: editData?.guardianDetails?.localAddress?.country?.name || '',
+        isoCode: editData?.guardianDetails?.localAddress?.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
   guardianLocalState: {
-    name: editData?.guardianDetails?.localAddress.state?.name || '',
-    isoCode: editData?.guardianDetails?.localAddress.state?.isoCode || '',
+    name: editData?.guardianDetails?.localAddress?.state?.name || '',
+    isoCode: editData?.guardianDetails?.localAddress?.state?.isoCode || '',
   },
   guardianLocalCity: {
-    name: editData?.guardianDetails?.localAddress.city || '',
+    name: editData?.guardianDetails?.localAddress?.city || '',
   },
-  guardianLocalPincode: editData?.guardianDetails?.localAddress.pincode || '',
+  guardianLocalPincode: editData?.guardianDetails?.localAddress?.pincode || '',
 
-  guardianOfficeCountry: editData?.guardianDetails?.officeAddress.country?.name
+  guardianOfficeCountry: editData?.guardianDetails?.officeAddress?.country?.name
     ? {
-        name: editData?.guardianDetails?.officeAddress.country?.name || '',
-        isoCode: editData?.guardianDetails?.officeAddress.country?.isoCode || '',
+        name: editData?.guardianDetails?.officeAddress?.country?.name || '',
+        isoCode: editData?.guardianDetails?.officeAddress?.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
   guardianOfficeState: {
-    name: editData?.guardianDetails?.officeAddress.state?.name || '',
-    isoCode: editData?.guardianDetails?.officeAddress.state?.isoCode || '',
+    name: editData?.guardianDetails?.officeAddress?.state?.name || '',
+    isoCode: editData?.guardianDetails?.officeAddress?.state?.isoCode || '',
   },
   guardianOfficeCity: {
-    name: editData?.guardianDetails?.officeAddress.city || '',
+    name: editData?.guardianDetails?.officeAddress?.city || '',
   },
-  guardianOfficePincode: editData?.guardianDetails?.officeAddress.pincode || '',
+  guardianOfficePincode: editData?.guardianDetails?.officeAddress?.pincode || '',
   siblingStudents: (editData?.siblingStudents ?? []).map((s) => ({
     id: s.studentId,
     label: s.fullName,
