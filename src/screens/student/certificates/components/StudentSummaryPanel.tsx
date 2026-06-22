@@ -40,6 +40,9 @@ interface StudentSummaryPanelProps {
   selectedStudent: SelectedStudent | null;
   isLoading?: boolean;
   onDuplicate?: (row: CertificateHistoryRow) => void;
+  onView?: (row: CertificateHistoryRow) => void;
+  onDownload?: (row: CertificateHistoryRow) => void;
+  onPrint?: (row: CertificateHistoryRow) => void;
 }
 
 // ── Mock history data ──────────────────────────────────────────────────────────
@@ -94,7 +97,12 @@ const STATUS_COLOR: Record<string, 'success' | 'warning' | 'error'> = {
 
 // ── Table columns ──────────────────────────────────────────────────────────────
 
-const buildColumns = (onDuplicate?: (row: CertificateHistoryRow) => void): IColumn[] => [
+const buildColumns = (
+  onDuplicate?: (row: CertificateHistoryRow) => void,
+  onView?: (row: CertificateHistoryRow) => void,
+  onDownload?: (row: CertificateHistoryRow) => void,
+  onPrint?: (row: CertificateHistoryRow) => void
+): IColumn[] => [
   {
     label: 'Cert No',
     id: 'certNo',
@@ -147,17 +155,17 @@ const buildColumns = (onDuplicate?: (row: CertificateHistoryRow) => void): IColu
     render: (_v, row) => (
       <Stack direction="row" spacing={0.5}>
         <Tooltip title="View">
-          <IconButton size="small">
+          <IconButton size="small" onClick={() => onView?.(row as CertificateHistoryRow)}>
             <Iconify icon="mdi:eye-outline" width={16} />
           </IconButton>
         </Tooltip>
         <Tooltip title="Download PDF">
-          <IconButton size="small">
+          <IconButton size="small" onClick={() => onDownload?.(row as CertificateHistoryRow)}>
             <Iconify icon="mdi:download-outline" width={16} />
           </IconButton>
         </Tooltip>
         <Tooltip title="Print">
-          <IconButton size="small">
+          <IconButton size="small" onClick={() => onPrint?.(row as CertificateHistoryRow)}>
             <Iconify icon="mdi:printer-outline" width={16} />
           </IconButton>
         </Tooltip>
@@ -252,11 +260,14 @@ const StudentSummaryPanel: React.FC<StudentSummaryPanelProps> = ({
   selectedStudent,
   isLoading,
   onDuplicate,
+  onView,
+  onDownload,
+  onPrint,
 }) => {
   if (isLoading) return <ProfileSkeleton />;
   if (!selectedStudent) return <EmptyState />;
 
-  const columns = buildColumns(onDuplicate);
+  const columns = buildColumns(onDuplicate, onView, onDownload, onPrint);
 
   return (
     <Card

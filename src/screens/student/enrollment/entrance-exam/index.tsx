@@ -1368,7 +1368,12 @@ export const ExamForm = ({
         open={dialog.value}
         handleClose={dialog.onFalse}
       >
-        <SlotsForm handleClose={dialog.onFalse} editData={null} date={null} />
+        <SlotsForm
+          handleClose={dialog.onFalse}
+          editData={null}
+          date={dayjs(formik.values.examDate)}
+          existingSlots={slots?.items || []}
+        />
       </CustomDialog>
 
       <CustomDialog

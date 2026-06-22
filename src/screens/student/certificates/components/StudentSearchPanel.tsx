@@ -1,19 +1,16 @@
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useEffect } from 'react';
-import { useGetStudentsByDivisionQuery } from 'src/redux/student';
+import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
 import {
   Box,
   Card,
   List,
   Avatar,
   Divider,
-  Collapse,
   TextField,
   Typography,
   ListItemText,
@@ -51,19 +48,13 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
   selectedStudent,
   onSelectStudent,
 }) => {
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const {
+    currentMedium: medium,
+    currentYear,
+    currentBoard,
+  } = useSelector((state: RootState) => state.globalState);
 
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [searchText, setSearchText] = useState('');
-  const [showFilters, setShowFilters] = useState(true);
-
-  const [filters, setFilters] = useState({
-    organization: medium?.educationMediumStages?.[0]?.id || '',
-    classes: medium?.educationMediumStages?.[0]?.standards?.[0]?.id || '',
-    division: medium?.educationMediumStages?.[0]?.standards?.[0]?.divisions?.[0]?.id || '',
-  });
 
   const [tableParams, setTableParams] = useState({
     page: 1,
@@ -76,17 +67,25 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
     isLoading,
     isFetching,
     isError,
-  } = useGetStudentsByDivisionQuery(
+  } = useGetFeeCollectionListQuery(
     {
-      divisionId: filters.division,
+      academicYearId: currentYear?.id,
+      boardId: currentBoard?.id,
+      educationMediumId: medium?.id,
       skipCount: (tableParams.page - 1) * tableParams.rowsPerPage,
       maxResultCount: tableParams.rowsPerPage,
-      searchTerm: tableParams.searchTerm,
+      search: tableParams.searchTerm || undefined,
     },
-    { skip: !filters.division }
+    { skip: !currentYear?.id || !currentBoard?.id || !medium?.id || !tableParams.searchTerm }
   );
 
   const [allStudents, setAllStudents] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!searchText) {
+      setAllStudents([]);
+    }
+  }, [searchText]);
 
   useEffect(() => {
     if (studentsData?.items) {
@@ -102,7 +101,8 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
     }
   }, [studentsData, tableParams.page]);
 
-  const hasMore = studentsData?.totalCount ? allStudents.length < studentsData.totalCount : false;
+  const hasMore =
+    searchText && studentsData?.totalCount ? allStudents.length < studentsData.totalCount : false;
 
   const loadMore = React.useCallback(() => {
     setTableParams((prev) => ({ ...prev, page: prev.page + 1 }));
@@ -126,20 +126,6 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
   }, [hasMore, loadMore, isFetching]);
 
   useEffect(() => {
-    setAllOrganization(medium?.educationMediumStages || []);
-  }, [medium]);
-
-  useEffect(() => {
-    setAllClass(
-      allOrganization.find((org: any) => org?.id === filters.organization)?.standards || []
-    );
-  }, [filters.organization, allOrganization]);
-
-  useEffect(() => {
-    setAllDivision(allClass.find((cls: any) => cls?.id === filters.classes)?.divisions || []);
-  }, [filters.classes, allClass]);
-
-  useEffect(() => {
     const handler = setTimeout(() => {
       setTableParams((prev) => ({
         ...prev,
@@ -151,21 +137,8 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
     return () => clearTimeout(handler);
   }, [searchText]);
 
-  useEffect(() => {
-    setTableParams((prev) => ({
-      ...prev,
-      page: 1,
-      searchTerm: '',
-    }));
-    setSearchText('');
-  }, [filters.division]);
-
-  const students: SelectedStudent[] = useMemo(() => {
-    const orgName = allOrganization.find((o: any) => o.id === filters.organization)?.name || '';
-    const className = allClass.find((c: any) => c.id === filters.classes)?.name || '';
-    const divisionName = allDivision.find((d: any) => d.id === filters.division)?.name || '';
-
-    return (
+  const students: SelectedStudent[] = useMemo(
+    () =>
       allStudents.map((item: any) => ({
         id: item.id || item.studentId || '',
         name:
@@ -176,18 +149,18 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
         middleName: item.middleName || '',
         grNo: item.grNo || item.grNumber || '',
         admissionNo: item.admissionNo || item.admissionNumber || '',
-        className,
-        divisionName,
+        className: item.standardDivision || '',
+        divisionName: '',
         gender: item.gender || '',
         dateOfBirth: item.dateOfBirth || item.dob || '',
-        organizationId: filters.organization,
-        standardId: filters.classes,
-        divisionId: filters.division,
-        organizationName: orgName,
+        organizationId: '',
+        standardId: '',
+        divisionId: '',
+        organizationName: '',
         photo: item.photo || item.photoUrl || '',
-      })) || []
-    );
-  }, [allStudents, filters, allOrganization, allClass, allDivision]);
+      })) || [],
+    [allStudents]
+  );
 
   const filtered = useMemo(() => {
     if (!searchText.trim()) return students;
@@ -250,79 +223,6 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
           }}
           sx={{ mb: 0.75 }}
         />
-
-        {/* Filter toggle */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            cursor: 'pointer',
-            px: 0.5,
-            py: 0.25,
-            borderRadius: 1,
-            '&:hover': { bgcolor: 'action.hover' },
-          }}
-          onClick={() => setShowFilters((v) => !v)}
-        >
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-          >
-            <Iconify icon="mdi:filter-outline" width={14} />
-            Filters
-          </Typography>
-          <Iconify
-            icon={showFilters ? 'mdi:chevron-up' : 'mdi:chevron-down'}
-            width={16}
-            sx={{ color: 'text.secondary' }}
-          />
-        </Box>
-
-        <Collapse in={showFilters}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
-            <CustomSelect
-              options={allOrganization}
-              label="Organization"
-              value={filters.organization}
-              onChange={(val) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  organization: val as string,
-                  classes: '',
-                  division: '',
-                }))
-              }
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              disabled={!medium}
-            />
-            <CustomSelect
-              options={allClass}
-              label="Class"
-              value={filters.classes}
-              onChange={(val) =>
-                setFilters((prev) => ({ ...prev, classes: val as string, division: '' }))
-              }
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              disabled={!filters.organization}
-            />
-            <CustomSelect
-              options={allDivision}
-              label="Division"
-              value={filters.division}
-              onChange={(val) => setFilters((prev) => ({ ...prev, division: val as string }))}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset', width: '100%' } }}
-              disabled={!filters.classes}
-            />
-          </Box>
-        </Collapse>
       </Box>
 
       {/* Student count */}
@@ -336,7 +236,7 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
 
       {/* Student list */}
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-        {isLoading ? (
+        {isLoading && searchText ? (
           <Box
             sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 120 }}
           >
@@ -373,7 +273,7 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
           >
             <Iconify icon="mdi:account-search-outline" width={40} sx={{ color: 'text.disabled' }} />
             <Typography variant="caption" color="text.disabled" textAlign="center">
-              {filters.division ? 'No students found' : 'Select filters to load students'}
+              {searchText ? 'No students found' : 'Search to load students'}
             </Typography>
           </Box>
         ) : (
