@@ -438,6 +438,9 @@ const FeeCollectComponentForm = ({
           paid: item.paid,
           due: item.due,
           reconciliationAmount: item.reconciliationAmount,
+          concessionAmount: item.concessionAmount,
+          refundAmount: item.refundAmount,
+          refundDescription: item.refundDescription,
           status: normalizeStatus(item.status, item.paid, item.due),
         })),
       })) as FeeLedgerData['monthWise'],
@@ -453,6 +456,9 @@ const FeeCollectComponentForm = ({
               paid: item.paid,
               due: item.due,
               reconciliationAmount: item.reconciliationAmount,
+              concessionAmount: item.concessionAmount,
+              refundAmount: item.refundAmount,
+              refundDescription: item.refundDescription,
               status: normalizeStatus(item.status, item.paid, item.due),
             }))
           )
@@ -475,6 +481,9 @@ const FeeCollectComponentForm = ({
               paid: line.paid,
               due: line.due,
               reconciliationAmount: line.reconciliationAmount,
+              concessionAmount: line.concessionAmount,
+              refundAmount: line.refundAmount,
+              refundDescription: line.refundDescription,
               status: line.status,
             });
             return acc;
@@ -2146,6 +2155,7 @@ const FeeCollectComponentForm = ({
         academicYear={
           currentYear?.name || (currentYear?.year ? String(currentYear.year) : undefined)
         }
+        bankAccounts={bankAccountOptions}
       />
 
       {/* ── Final Payment Review Dialog ── */}
@@ -2157,6 +2167,7 @@ const FeeCollectComponentForm = ({
         loading={collectLoading}
         formValues={formik.values}
         student={student}
+        bankAccounts={bankAccountOptions}
       />
     </Box>
   );

@@ -34,6 +34,7 @@ export interface FeeCollectionPreviewDialogProps {
   feeHeadMap: Record<string, string>;
   academicYear?: string;
   feeStructureName?: string;
+  bankAccounts?: { id: string; name: string }[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -180,6 +181,7 @@ const FeeCollectionPreviewDialog = ({
   feeHeadMap,
   academicYear,
   feeStructureName,
+  bankAccounts,
 }: FeeCollectionPreviewDialogProps) => {
   const theme = useTheme();
 
@@ -241,7 +243,11 @@ const FeeCollectionPreviewDialog = ({
           <AllocationPreviewTable allocatedRows={allocatedRows} />
 
           {/* ── Payment Method & Remarks ── */}
-          <PaymentInfoPreview payment={formValues.payment} remarks={formValues.remarks} />
+          <PaymentInfoPreview
+            payment={formValues.payment}
+            remarks={formValues.remarks}
+            bankAccounts={bankAccounts}
+          />
         </Stack>
       </Scrollbar>
 

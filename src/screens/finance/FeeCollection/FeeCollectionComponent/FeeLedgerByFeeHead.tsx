@@ -143,6 +143,9 @@ const FeeHeadGroup = ({
                 paid={item.paid}
                 due={item.due}
                 reconciliationAmount={item.reconciliationAmount}
+                concessionAmount={item.concessionAmount}
+                refundAmount={item.refundAmount}
+                refundDescription={item.refundDescription}
                 status={item.status}
                 isSelected={isSelected}
                 isDisabled={item.due === 0}

@@ -2,6 +2,7 @@ import React from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { formatNumber } from 'src/utils/formate_number';
 import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
 import { FeeRefundStatusType, FeeRefundStatusTypeColors } from 'src/enums/feeRefund-status-type';
 
@@ -166,7 +167,7 @@ export default function StudentRefundInfo({
           <InfoItem
             icon={<Iconify icon="solar:hand-money-bold" />}
             label="Total Paid Fees"
-            value={student?.totalPaidFees ? `₹ ${student.totalPaidFees.toLocaleString()}` : '₹ 0'}
+            value={student?.totalPaidFees ? formatNumber(student.totalPaidFees, 'INR') : '₹ 0'}
           />
         </Grid>
 
@@ -176,7 +177,7 @@ export default function StudentRefundInfo({
             icon={<Iconify icon="solar:wad-of-money-bold" />}
             label="Total Pending Fees"
             value={
-              student?.totalPendingFees ? `₹ ${student.totalPendingFees.toLocaleString()}` : '₹ 0'
+              student?.totalPendingFees ? formatNumber(student.totalPendingFees, 'INR') : '₹ 0'
             }
           />
         </Grid>

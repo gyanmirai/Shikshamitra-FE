@@ -172,6 +172,9 @@ export interface MonthWiseFeeItem {
   paid: number;
   due: number;
   reconciliationAmount?: number;
+  concessionAmount?: number;
+  refundAmount?: number;
+  refundDescription?: string;
   status: FeeCollectionStatusType;
 }
 
@@ -189,6 +192,9 @@ export interface FeeHeadWiseFeeItem {
   paid: number;
   due: number;
   reconciliationAmount?: number;
+  concessionAmount?: number;
+  refundAmount?: number;
+  refundDescription?: string;
   status: FeeCollectionStatusType;
 }
 

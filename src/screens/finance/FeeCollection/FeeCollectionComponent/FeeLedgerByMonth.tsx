@@ -142,6 +142,9 @@ const MonthGroup = ({
                 paid={item.paid}
                 due={item.due}
                 reconciliationAmount={item.reconciliationAmount}
+                concessionAmount={item.concessionAmount}
+                refundAmount={item.refundAmount}
+                refundDescription={item.refundDescription}
                 status={item.status}
                 showStatus
                 isSelected={isSelected}

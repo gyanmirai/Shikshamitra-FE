@@ -1,5 +1,6 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
@@ -25,6 +26,7 @@ export interface FinalPaymentReviewDialogProps {
   loading?: boolean;
   formValues: FeeCollectionFormValues;
   student: IStudentFee | null;
+  bankAccounts?: { id: string; name: string }[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -45,6 +47,28 @@ const isChequeOrDemandDraft = (method: string): boolean => {
   );
 };
 
+const formatDetailValue = (
+  key: string,
+  value: any,
+  bankAccounts?: { id: string; name: string }[]
+): string => {
+  if (!value) return '';
+  if (key === 'bankAccount' && bankAccounts) {
+    const found = bankAccounts.find((acc) => acc.id === value);
+    if (found) return found.name;
+  }
+  if (dayjs.isDayjs(value)) return dayjs(value).format('DD/MM/YYYY');
+  if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/))
+    return dayjs(value).format('DD/MM/YYYY');
+  if (key.toLowerCase().includes('date')) {
+    const d = dayjs(value);
+    if (d.isValid()) {
+      return d.format('DD/MM/YYYY');
+    }
+  }
+  return String(value);
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const FinalPaymentReviewDialog = ({
@@ -55,6 +79,7 @@ const FinalPaymentReviewDialog = ({
   loading = false,
   formValues,
   student,
+  bankAccounts,
 }: FinalPaymentReviewDialogProps) => {
   const theme = useTheme();
 
@@ -192,7 +217,7 @@ const FinalPaymentReviewDialog = ({
                         {key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())}
                       </Typography>
                       <Typography variant="caption" fontWeight={600}>
-                        {String(value)}
+                        {formatDetailValue(key, value, bankAccounts)}
                       </Typography>
                     </Box>
                   ))}
