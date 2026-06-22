@@ -105,7 +105,9 @@ const ACTIVITY_ICON: Record<ActivityType, string> = {
 
 // ----------------------------------------------------------------------
 
-export default function RecentActivities() {
+export default function RecentActivities({ activities }: { activities?: ActivityItem[] }) {
+  const displayActivities = activities && activities.length > 0 ? activities : ACTIVITIES;
+
   return (
     <Card
       sx={{
@@ -127,7 +129,7 @@ export default function RecentActivities() {
 
       <Scrollbar sx={{ maxHeight: 380 }}>
         <Stack spacing={1}>
-          {ACTIVITIES.map((activity) => (
+          {displayActivities.map((activity) => (
             <Stack
               key={activity.id}
               direction="row"
@@ -148,12 +150,15 @@ export default function RecentActivities() {
                     borderRadius: 1,
                     display: 'grid',
                     placeItems: 'center',
-                    color: `${CHIP_COLOR[activity.type]}.main`,
-                    bgcolor: `${CHIP_COLOR[activity.type]}.lighter`,
+                    color: `${CHIP_COLOR[activity.type] || 'primary'}.main`,
+                    bgcolor: `${CHIP_COLOR[activity.type] || 'primary'}.lighter`,
                     flexShrink: 0,
                   }}
                 >
-                  <Iconify icon={ACTIVITY_ICON[activity.type]} width={16} />
+                  <Iconify
+                    icon={ACTIVITY_ICON[activity.type] || 'solar:info-circle-bold'}
+                    width={16}
+                  />
                 </Box>
                 <Box>
                   <Typography variant="body2" fontWeight={500} sx={{ lineHeight: 1.4 }}>
@@ -165,8 +170,8 @@ export default function RecentActivities() {
                 </Box>
               </Stack>
               <Chip
-                label={activityTypeLabel[activity.type]}
-                color={CHIP_COLOR[activity.type]}
+                label={activityTypeLabel[activity.type] || 'Info'}
+                color={CHIP_COLOR[activity.type] || 'primary'}
                 variant="soft"
                 size="small"
                 sx={{ flexShrink: 0, ml: 1 }}

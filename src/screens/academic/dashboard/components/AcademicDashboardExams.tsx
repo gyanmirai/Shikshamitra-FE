@@ -54,25 +54,48 @@ const staticExams = [
   },
 ];
 
-const AcademicDashboardExams = () => {
+interface AcademicDashboardExamsProps {
+  list?: Array<{
+    id: string;
+    examName: string;
+    date: string;
+    time: string;
+    className: string;
+    roomName: string;
+  }>;
+}
+
+const AcademicDashboardExams = ({ list }: AcademicDashboardExamsProps) => {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamsQuery,
     params: { AcademicMediumId: medium?.id, pageSize: 5, page: 1 },
-    options: { skip: !medium?.id },
+    options: { skip: !medium?.id || !!list },
   });
 
-  const exams = (data?.items ?? []).slice(0, 5).map((e: any) => ({
-    examName: e.examName ?? e.name ?? '—',
-    subject: Array.isArray(e.subjects)
-      ? e.subjects.map((s: any) => s.subjectName ?? s.name).join(', ')
-      : (e.subjectName ?? '—'),
-    class: e.standardName ?? e.className ?? e.class ?? '—',
-    date: e.examDate ?? e.startDate ?? e.date ?? '—',
-    status: e.status ?? ScheduleExamStatus.Pending,
-  }));
+  const parsedExams = list
+    ? list.map((e) => ({
+        examName: e.examName,
+        subject: `Room: ${e.roomName || 'N/A'}`,
+        class: e.className || 'N/A',
+        date: `${e.date} (${e.time})`,
+        status: ScheduleExamStatus.Pending,
+      }))
+    : [];
+
+  const exams = list
+    ? parsedExams
+    : (data?.items ?? []).slice(0, 5).map((e: any) => ({
+        examName: e.examName ?? e.name ?? '—',
+        subject: Array.isArray(e.subjects)
+          ? e.subjects.map((s: any) => s.subjectName ?? s.name).join(', ')
+          : (e.subjectName ?? '—'),
+        class: e.standardName ?? e.className ?? e.class ?? '—',
+        date: e.examDate ?? e.startDate ?? e.date ?? '—',
+        status: e.status ?? ScheduleExamStatus.Pending,
+      }));
 
   const tableData = exams.length ? exams : staticExams;
 

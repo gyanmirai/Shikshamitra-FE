@@ -11,8 +11,26 @@ import { Card } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
 
-const AcademicDashbordAnalysisChart = () => {
+type AnalysisChartProps = {
+  chartData?: {
+    excellent: number;
+    good: number;
+    average: number;
+    needsImprovement: number;
+  };
+};
+
+const AcademicDashbordAnalysisChart = ({ chartData }: AnalysisChartProps) => {
   const theme = useTheme();
+
+  const excellentVal = chartData?.excellent ?? 30;
+  const goodVal = chartData?.good ?? 40;
+  const averageVal = chartData?.average ?? 20;
+  const needsImprovementVal = chartData?.needsImprovement ?? 10;
+
+  const total = excellentVal + goodVal + averageVal + needsImprovementVal;
+  const getPct = (val: number) => (total > 0 ? Math.round((val / total) * 100) : 0);
+
   return (
     <Card sx={{ height: '100%', p: 2 }}>
       <div>
@@ -26,10 +44,13 @@ const AcademicDashbordAnalysisChart = () => {
       <AnalyticsCurrentVisits
         chart={{
           series: [
-            { label: 'Excellent (30%)', value: 30 },
-            { label: 'Good (40%)', value: 40 },
-            { label: 'Average (20%)', value: 20 },
-            { label: 'Needs Improvement (10%)', value: 10 },
+            { label: `Excellent (${getPct(excellentVal)}%)`, value: excellentVal },
+            { label: `Good (${getPct(goodVal)}%)`, value: goodVal },
+            { label: `Average (${getPct(averageVal)}%)`, value: averageVal },
+            {
+              label: `Needs Improvement (${getPct(needsImprovementVal)}%)`,
+              value: needsImprovementVal,
+            },
           ],
           colors: [
             theme.vars.palette.success.main, // Green for Excellent

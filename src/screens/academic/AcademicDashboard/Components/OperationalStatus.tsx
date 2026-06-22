@@ -72,7 +72,9 @@ const ACCENT: Record<StatusLevel, string> = {
 
 // ----------------------------------------------------------------------
 
-export default function OperationalStatus() {
+export default function OperationalStatus({ items }: { items?: OperationItem[] }) {
+  const displayItems = items && items.length > 0 ? items : OPERATIONS;
+
   return (
     <Card
       sx={{
@@ -101,7 +103,7 @@ export default function OperationalStatus() {
 
       <Scrollbar sx={{ flexGrow: 1 }}>
         <Stack spacing={1} sx={{ pb: 1 }}>
-          {OPERATIONS.map((item) => (
+          {displayItems.map((item) => (
             <Box
               key={item.module}
               sx={{
@@ -124,7 +126,7 @@ export default function OperationalStatus() {
                   width: 4,
                   height: 48,
                   borderRadius: 0.5,
-                  bgcolor: ACCENT[item.level],
+                  bgcolor: ACCENT[item.level] || 'info.main',
                   flexShrink: 0,
                 }}
               />

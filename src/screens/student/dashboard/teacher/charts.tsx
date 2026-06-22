@@ -326,7 +326,11 @@ export const SubjectPerformance = () => {
   );
 };
 
-export const HomeworkStatus = () => {
+export const HomeworkStatus = ({
+  data,
+}: {
+  data?: { completed: number; pending: number; graded: number };
+}) => {
   const theme = useTheme();
 
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -357,6 +361,8 @@ export const HomeworkStatus = () => {
     { id: 'science', name: 'Science' },
     { id: 'history', name: 'History' },
   ];
+
+  const totalCount = data ? data.completed + data.pending + data.graded : 45;
 
   const homeworkOptions = useChart({
     labels: ['Submitted', 'Pending', 'Overdue'],
@@ -393,7 +399,7 @@ export const HomeworkStatus = () => {
               show: true,
               label: 'Total',
               color: theme.vars.palette.text.primary,
-              formatter: () => '45',
+              formatter: () => `${totalCount}`,
             },
           },
         },
@@ -401,7 +407,7 @@ export const HomeworkStatus = () => {
     },
   });
 
-  const homeworkSeries = [30, 10, 5];
+  const homeworkSeries = data ? [data.completed, data.pending, data.graded] : [30, 10, 5];
 
   return (
     <Card

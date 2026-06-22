@@ -19,7 +19,17 @@ const remainingData = completedData.map((v) => 100 - v);
 
 // -----------------------------------------------------------------------
 
-const PlannedVsActualProgressChart = () => {
+interface PlannedVsActualProgressChartData {
+  intervals: string[];
+  plannedPercentages: number[];
+  actualPercentages: number[];
+}
+
+const PlannedVsActualProgressChart = ({
+  chartData,
+}: {
+  chartData?: PlannedVsActualProgressChartData;
+}) => {
   const theme = useTheme();
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [classes, setClasses] = useState<string>('');
@@ -72,15 +82,49 @@ const PlannedVsActualProgressChart = () => {
     },
   });
 
+  const lineChartOptions = useChart({
+    chart: {
+      toolbar: { show: false },
+    },
+    stroke: {
+      curve: 'smooth',
+      width: 3,
+    },
+    xaxis: {
+      categories: chartData?.intervals || [],
+    },
+    yaxis: {
+      max: 100,
+      labels: {
+        formatter: (val: number) => `${val}%`,
+      },
+    },
+    colors: [theme.palette.info.main, theme.palette.success.main],
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val}%`,
+      },
+    },
+    legend: {
+      position: 'top',
+    },
+  });
+
   const series = [
     { name: 'Completed', data: completedData },
     { name: 'Remaining', data: remainingData },
+  ];
+
+  const lineSeries = [
+    { name: 'Planned Progress', data: chartData?.plannedPercentages || [] },
+    { name: 'Actual Progress', data: chartData?.actualPercentages || [] },
   ];
 
   return (
     <Card
       sx={{
         height: '100%',
+        p: 2,
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: theme.shadows[8],
@@ -89,35 +133,42 @@ const PlannedVsActualProgressChart = () => {
       }}
     >
       <CardHeader
-        sx={{ mt: -1, ml: -1 }}
-        title="Chapter Completion"
-        subheader="Progress by Subject"
+        sx={{ p: 0, mb: 2 }}
+        title={chartData ? 'Syllabus Progress (Planned vs Actual)' : 'Chapter Completion'}
+        subheader={chartData ? 'Progress curve over time' : 'Progress by Subject'}
         action={
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <CustomSelect
-              options={allClass}
-              label="Class"
-              value={classes}
-              onChange={(val) => setClasses(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { minWidth: '150px' } }}
-            />
-            <CustomSelect
-              options={allDivision}
-              label="Division"
-              value={division}
-              onChange={(val) => setDivision(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { minWidth: '150px' } }}
-              disabled={!classes}
-            />
-          </Box>
+          !chartData && (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <CustomSelect
+                options={allClass}
+                label="Class"
+                value={classes}
+                onChange={(val) => setClasses(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { minWidth: '150px' } }}
+              />
+              <CustomSelect
+                options={allDivision}
+                label="Division"
+                value={division}
+                onChange={(val) => setDivision(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { minWidth: '150px' } }}
+                disabled={!classes}
+              />
+            </Box>
+          )
         }
       />
-      <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-        <Chart dir="ltr" type="bar" series={series} options={chartOptions} />
+      <Box sx={{ pt: chartData ? 1 : 3, pb: 1 }} dir="ltr">
+        <Chart
+          dir="ltr"
+          type={chartData ? 'line' : 'bar'}
+          series={chartData ? lineSeries : series}
+          options={chartData ? lineChartOptions : chartOptions}
+        />
       </Box>
     </Card>
   );

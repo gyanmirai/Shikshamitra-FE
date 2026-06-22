@@ -2,8 +2,12 @@ import { Card } from '@mui/material';
 import React, { useState } from 'react';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-const CHAPTERS = ['Numbers', 'Algebra', 'Geometry', 'Data and Statistics', 'Problem Solving'];
-const PROGRESS = [90, 20, 80, 65, 45];
+type ChapterProgressProps = {
+  chartData?: {
+    standardNames: string[];
+    completionPercentages: number[];
+  };
+};
 
 const getBarColor = (value: number): string => {
   if (value >= 80) return '#22c55e'; // Green  80–100%
@@ -17,19 +21,30 @@ const getEmoji = (value: number): string => {
   return '🔴';
 };
 
-const AcademicDashboardChapterProgress = () => {
+const AcademicDashboardChapterProgress = ({ chartData }: ChapterProgressProps) => {
   const [selectedSubject, setSelectedSubject] = useState('mathematics');
+
+  const chapters =
+    chartData?.standardNames && chartData.standardNames.length > 0
+      ? chartData.standardNames
+      : ['Numbers', 'Algebra', 'Geometry', 'Data and Statistics', 'Problem Solving'];
+
+  const progress =
+    chartData?.completionPercentages && chartData.completionPercentages.length > 0
+      ? chartData.completionPercentages
+      : [90, 20, 80, 65, 45];
+
   return (
     <Card sx={{ height: '100%', p: 2 }}>
       <AnalyticsWebsiteVisits
         title="Chapter Progress Tracking"
         chart={{
-          categories: CHAPTERS,
-          colors: PROGRESS.map(getBarColor),
+          categories: chapters,
+          colors: progress.map(getBarColor),
           series: [
             {
               name: 'Progress',
-              data: PROGRESS,
+              data: progress,
             },
           ],
           options: {
@@ -47,10 +62,10 @@ const AcademicDashboardChapterProgress = () => {
             },
             tooltip: {
               custom: ({ dataPointIndex }: { dataPointIndex: number }) => {
-                const value = PROGRESS[dataPointIndex];
+                const value = progress[dataPointIndex];
                 return `
                   <div style="padding:8px;font-size:13px;">
-                    <strong>${CHAPTERS[dataPointIndex]}</strong><br/>
+                    <strong>${chapters[dataPointIndex]}</strong><br/>
                     ${getEmoji(value)} Progress: <strong>${value}%</strong>
                   </div>
                 `;

@@ -7,7 +7,16 @@ import React, { useState, useEffect } from 'react';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 
-const TeacherPerformanceComparisonChart = () => {
+interface TeacherPerformanceItem {
+  teacherName: string;
+  averageScore: number;
+}
+
+const TeacherPerformanceComparisonChart = ({
+  chartData,
+}: {
+  chartData?: TeacherPerformanceItem[];
+}) => {
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -35,6 +44,7 @@ const TeacherPerformanceComparisonChart = () => {
     setAllDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
+
   const series = [
     {
       name: 'Syllabus Completion',
@@ -46,6 +56,26 @@ const TeacherPerformanceComparisonChart = () => {
     },
   ];
 
+  const dynamicCategories = chartData
+    ? chartData.map((t) => t.teacherName)
+    : [
+        'Mr. Sharma (Math)',
+        'Ms. Verma (Science)',
+        'Mrs. Gupta (English)',
+        'Mr. Singh (History)',
+        'Ms. Patel (Geography)',
+        'Mr. Das (Physics)',
+      ];
+
+  const dynamicSeries = chartData
+    ? [
+        {
+          name: 'Avg Student Score',
+          data: chartData.map((t) => Number(t.averageScore)),
+        },
+      ]
+    : series;
+
   const chartOptions = useChart({
     chart: {
       type: 'bar',
@@ -53,7 +83,7 @@ const TeacherPerformanceComparisonChart = () => {
     plotOptions: {
       bar: {
         horizontal: false,
-        columnWidth: '55%',
+        columnWidth: chartData ? '35%' : '55%',
         borderRadius: 4,
       },
     },
@@ -66,14 +96,7 @@ const TeacherPerformanceComparisonChart = () => {
       colors: ['transparent'],
     },
     xaxis: {
-      categories: [
-        'Mr. Sharma (Math)',
-        'Ms. Verma (Science)',
-        'Mrs. Gupta (English)',
-        'Mr. Singh (History)',
-        'Ms. Patel (Geography)',
-        'Mr. Das (Physics)',
-      ],
+      categories: dynamicCategories,
       labels: {
         rotate: -45, // <-- slanted (cross) text
         rotateAlways: true,
@@ -94,7 +117,7 @@ const TeacherPerformanceComparisonChart = () => {
         formatter: (val: number) => `${val}%`,
       },
     },
-    colors: ['#00AB55', '#FFAB00'], // Green for Completion, Yellow/Orange for Score
+    colors: chartData ? ['#FFAB00'] : ['#00AB55', '#FFAB00'], // Green for Completion, Yellow/Orange for Score
     legend: {
       position: 'top',
     },
@@ -113,37 +136,41 @@ const TeacherPerformanceComparisonChart = () => {
         <Box>
           <Box sx={{ fontSize: '18px', fontWeight: 600 }}>Teacher Performance Comparison</Box>
           <Box sx={{ fontSize: '14px', color: 'text.secondary' }}>
-            Syllabus Completion vs. Student Performance
+            {chartData
+              ? 'Average student score per teacher'
+              : 'Syllabus Completion vs. Student Performance'}
           </Box>
         </Box>
 
         {/* Dropdowns */}
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <CustomSelect
-            options={allClass}
-            label="Class"
-            value={classes}
-            onChange={(val) => setClasses(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '150px', width: '100%' } }}
-          />
+        {!chartData && (
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val) => setClasses(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '150px', width: '100%' } }}
+            />
 
-          <CustomSelect
-            options={allDivision}
-            label="Division"
-            value={division}
-            onChange={(val) => setDivision(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '150px', width: '100%' } }}
-            disabled={!classes}
-          />
-        </Box>
+            <CustomSelect
+              options={allDivision}
+              label="Division"
+              value={division}
+              onChange={(val) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '150px', width: '100%' } }}
+              disabled={!classes}
+            />
+          </Box>
+        )}
       </Box>
 
       <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-        <Chart type="bar" series={series} options={chartOptions} />
+        <Chart type="bar" series={dynamicSeries} options={chartOptions} />
       </Box>
     </Card>
   );
