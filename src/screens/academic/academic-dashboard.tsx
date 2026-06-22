@@ -1,8 +1,20 @@
 'use client';
 
-import React from 'react';
+import type { SelectChangeEvent } from '@mui/material';
+
 import { useSession } from 'next-auth/react';
-import { Box, Stack, Typography, CircularProgress } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Card,
+  Stack,
+  Select,
+  MenuItem,
+  InputLabel,
+  Typography,
+  FormControl,
+  CircularProgress,
+} from '@mui/material';
 
 import AcademicTeacherDashboardScreen from './dashboard';
 import AcademicDashboardScreen from './AcademicDashboard';
@@ -10,7 +22,15 @@ import AcademicPrincipalDashboardScreen from './AcademicPrincipalDashboard';
 
 const AcademicDashboard = () => {
   const { data: session, status } = useSession() as any;
-  const currentRole = session?.profile?.role?.toLowerCase() || 'teacher';
+  const actualRole = session?.profile?.role?.toLowerCase() || 'teacher';
+
+  const [selectedRole, setSelectedRole] = useState<string>('');
+
+  useEffect(() => {
+    if (actualRole && !selectedRole) {
+      setSelectedRole(actualRole);
+    }
+  }, [actualRole, selectedRole]);
 
   if (status === 'loading') {
     return (
@@ -21,6 +41,12 @@ const AcademicDashboard = () => {
       </Box>
     );
   }
+
+  const currentRole = selectedRole || actualRole;
+
+  const handleRoleChange = (event: SelectChangeEvent) => {
+    setSelectedRole(event.target.value);
+  };
 
   const renderDashboard = () => {
     switch (currentRole) {
@@ -42,7 +68,38 @@ const AcademicDashboard = () => {
     }
   };
 
-  return <Box sx={{ width: '100%' }}>{renderDashboard()}</Box>;
+  return (
+    <Box sx={{ width: '100%' }}>
+      {/* Role View Filter */}
+      <Card
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          mb: 1.5,
+          p: 1,
+          boxShadow: 'none',
+          border: (theme) => `1px solid ${theme.palette.divider}`,
+        }}
+      >
+        <FormControl size="small" sx={{ minWidth: 150, bgcolor: 'background.paper' }}>
+          <InputLabel id="role-view-filter-label">Role View</InputLabel>
+          <Select
+            labelId="role-view-filter-label"
+            id="role-view-filter"
+            value={currentRole}
+            label="Role View"
+            onChange={handleRoleChange}
+          >
+            <MenuItem value="admin">Admin</MenuItem>
+            <MenuItem value="principal">Principal</MenuItem>
+            <MenuItem value="teacher">Teacher</MenuItem>
+          </Select>
+        </FormControl>
+      </Card>
+
+      <Box sx={{ width: '100%' }}>{renderDashboard()}</Box>
+    </Box>
+  );
 };
 
 export default AcademicDashboard;

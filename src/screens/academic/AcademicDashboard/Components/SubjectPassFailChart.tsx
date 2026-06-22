@@ -10,6 +10,7 @@ import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 import { fNumber, fPercent } from 'src/utils/format-number';
 import { Box, Card, CardHeader, Typography } from '@mui/material';
+import { useGetSubjectPassFailChartFilteredQuery } from 'src/redux/academicAPI/academicDashboardApi';
 
 // -----------------------------------------------------------------------
 
@@ -27,7 +28,13 @@ const toRate = (passed: number, failed: number) => {
 
 // -----------------------------------------------------------------------
 
-const SubjectPassFailChart = () => {
+interface PassFailChartData {
+  subjectNames: string[];
+  passCounts: number[];
+  failCounts: number[];
+}
+
+const SubjectPassFailChart = ({ chartData }: { chartData?: PassFailChartData }) => {
   const theme = useTheme();
   const metricCardSx = {
     p: 2,
@@ -53,8 +60,14 @@ const SubjectPassFailChart = () => {
   const examOptions = EXAM_DATA.map((exam) => ({ label: exam.label, value: exam.label }));
   const selectedExamData =
     EXAM_DATA.find((exam) => exam.label === selectedExam) || EXAM_DATA[EXAM_DATA.length - 1];
-  const selectedPassed = selectedExamData?.passed || 0;
-  const selectedFailed = selectedExamData?.failed || 0;
+
+  const { data: filteredData } = useGetSubjectPassFailChartFilteredQuery(
+    { standardId: classes, divisionId: division, examName: selectedExam },
+    { skip: !!chartData || !classes || !division || !selectedExam }
+  );
+
+  const selectedPassed = filteredData ? filteredData.passed : selectedExamData?.passed || 0;
+  const selectedFailed = filteredData ? filteredData.failed : selectedExamData?.failed || 0;
   const totalStudents = selectedPassed + selectedFailed;
   const passRate = toRate(selectedPassed, selectedFailed);
   const failRate = toRate(selectedFailed, selectedPassed);
@@ -133,10 +146,42 @@ const SubjectPassFailChart = () => {
     },
   });
 
+  const barChartOptions = useChart({
+    chart: {
+      stacked: true,
+      toolbar: { show: false },
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: '40%',
+        borderRadius: 4,
+      },
+    },
+    xaxis: {
+      categories: chartData?.subjectNames || [],
+    },
+    colors: [theme.palette.success.main, theme.palette.error.main],
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val} Students`,
+      },
+    },
+    legend: {
+      position: 'top',
+    },
+  });
+
+  const barSeries = [
+    { name: 'Passed', data: chartData?.passCounts || [] },
+    { name: 'Failed', data: chartData?.failCounts || [] },
+  ];
+
   return (
     <Card
       sx={{
         height: '100%',
+        p: 2,
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: theme.shadows[8],
@@ -145,95 +190,109 @@ const SubjectPassFailChart = () => {
       }}
     >
       <CardHeader
-        sx={{ mt: -1, ml: -1, mb: 1, flexShrink: 0 }}
+        sx={{ p: 0, mb: 2, flexShrink: 0 }}
         title="Exam Pass / Fail Rate"
         subheader={
           <Typography variant="body2" color="text.secondary">
-            Selected exam: {selectedExamData?.label || 'N/A'}
+            {chartData
+              ? 'Pass vs Fail count by subject'
+              : `Selected exam: ${selectedExamData?.label || 'N/A'}`}
           </Typography>
         }
         action={
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <CustomSelect
-              options={allClass}
-              label="Class"
-              value={classes}
-              onChange={(val) => setClasses(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { minWidth: '120px' } }}
-            />
-            <CustomSelect
-              options={allDivision}
-              label="Division"
-              value={division}
-              onChange={(val) => setDivision(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { minWidth: '120px' } }}
-              disabled={!classes}
-            />
-            <CustomSelect
-              options={examOptions}
-              label="Exam"
-              value={selectedExam}
-              onChange={(val) => setSelectedExam(val as string)}
-              labelKey="label"
-              valueKey="value"
-              formControlProps={{ sx: { minWidth: '120px' } }}
-            />
-          </Box>
+          !chartData && (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <CustomSelect
+                options={allClass}
+                label="Class"
+                value={classes}
+                onChange={(val) => setClasses(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { minWidth: '120px' } }}
+              />
+              <CustomSelect
+                options={allDivision}
+                label="Division"
+                value={division}
+                onChange={(val) => setDivision(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { minWidth: '120px' } }}
+                disabled={!classes}
+              />
+              <CustomSelect
+                options={examOptions}
+                label="Exam"
+                value={selectedExam}
+                onChange={(val) => setSelectedExam(val as string)}
+                labelKey="label"
+                valueKey="value"
+                formControlProps={{ sx: { minWidth: '120px' } }}
+              />
+            </Box>
+          )
         }
       />
-      <Box sx={{ px: 3 }}>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-            gap: 1.5,
-          }}
-        >
-          <Box sx={metricCardSx}>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-              Total Students
-            </Typography>
-            <Typography variant="h4" sx={{ lineHeight: 1 }}>
-              {fNumber(totalStudents)}
-            </Typography>
-          </Box>
 
-          <Box sx={metricCardSx}>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-              Pass Rate
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="h4" sx={{ lineHeight: 1 }}>
-                {Math.round(passRate)}%
-              </Typography>
-            </Box>
-          </Box>
-
-          <Box sx={metricCardSx}>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-              Fail Rate
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="h4" sx={{ lineHeight: 1 }}>
-                {Math.round(failRate)}%
-              </Typography>
-            </Box>
-          </Box>
+      {chartData ? (
+        <Box sx={{ pt: 1 }} dir="ltr">
+          <Chart dir="ltr" type="bar" series={barSeries} options={barChartOptions} height={320} />
         </Box>
-      </Box>
+      ) : (
+        <>
+          <Box>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+                gap: 1.5,
+              }}
+            >
+              <Box sx={metricCardSx}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                  Total Students
+                </Typography>
+                <Typography variant="h4" sx={{ lineHeight: 1 }}>
+                  {fNumber(totalStudents)}
+                </Typography>
+              </Box>
 
-      <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-        <Chart
-          dir="ltr"
-          type="pie"
-          series={[selectedPassed, selectedFailed]}
-          options={chartOptions}
-        />
-      </Box>
+              <Box sx={metricCardSx}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                  Pass Rate
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="h4" sx={{ lineHeight: 1 }}>
+                    {Math.round(passRate)}%
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Box sx={metricCardSx}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                  Fail Rate
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="h4" sx={{ lineHeight: 1 }}>
+                    {Math.round(failRate)}%
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+
+          <Box sx={{ p: 3, pb: 1, display: 'flex', justifyContent: 'center' }} dir="ltr">
+            <Chart
+              dir="ltr"
+              type="donut"
+              series={[selectedPassed, selectedFailed]}
+              options={chartOptions}
+              width="80%"
+            />
+          </Box>
+        </>
+      )}
     </Card>
   );
 };

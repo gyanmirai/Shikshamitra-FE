@@ -92,8 +92,9 @@ const STATUS_COLOR: Record<ConfigStatus, LabelColor> = {
 
 // ----------------------------------------------------------------------
 
-export default function ConfigurationStatus() {
+export default function ConfigurationStatus({ items }: { items?: ConfigItem[] }) {
   const router = useRouter();
+  const displayItems = items && items.length > 0 ? items : CONFIG_ITEMS;
 
   return (
     <Card
@@ -111,8 +112,8 @@ export default function ConfigurationStatus() {
       />
 
       <Grid container spacing={1}>
-        {CONFIG_ITEMS.map((item) => {
-          const color = STATUS_COLOR[item.status];
+        {displayItems.map((item) => {
+          const color = STATUS_COLOR[item.status] || 'info';
           return (
             <Grid key={item.label} size={{ xs: 6 }}>
               <Stack
@@ -141,7 +142,7 @@ export default function ConfigurationStatus() {
                     flexShrink: 0,
                   }}
                 >
-                  <Iconify icon={item.icon} width={16} />
+                  <Iconify icon={item.icon || 'solar:info-circle-bold'} width={16} />
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography variant="caption" fontWeight={600} noWrap display="block">

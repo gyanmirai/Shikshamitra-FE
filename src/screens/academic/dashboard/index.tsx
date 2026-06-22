@@ -2,16 +2,33 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { RouterLink } from 'src/routes/components';
+import { alpha, useTheme } from '@mui/material/styles';
+import { Chart, useChart } from 'src/components/chart';
 import { academicPaths } from 'src/constants/academic-menu';
-import CustomizableView from 'src/components/customizable-view';
 import { HomeworkStatus } from 'src/screens/student/dashboard/teacher/charts';
 import { UpcomingExams } from 'src/screens/student/dashboard/teacher/OperationsTasks';
-import { Box, Card, Grid, Stack, Avatar, Button, Divider, Typography } from '@mui/material';
 import { DashboardWidgetWrapper } from 'src/screens/mainDashboard/component/dashboard-widget-wrapper';
+import {
+  Box,
+  Card,
+  Grid,
+  Chip,
+  Stack,
+  Alert,
+  Avatar,
+  Button,
+  Skeleton,
+  Typography,
+  CardHeader,
+  LinearProgress,
+} from '@mui/material';
+import {
+  type TeacherAcademicDashboardData,
+  useGetTeacherAcademicDashboardQuery,
+  useRefreshAcademicDashboardMutation,
+} from 'src/redux/academicAPI/academicDashboardApi';
 
 import AcademicDashbordAnalysisChart from './components/AcademicDashbordAnalysisChart';
 import AcademicDashboardChapterProgress from './components/AcademicDashboardChapterProgress';
@@ -25,198 +42,604 @@ const metricColor = {
   secondary: '#8B5CF6',
 } as const;
 
-type TeacherSummaryCardItem = {
-  id: string;
-  icon: string;
-  title: string;
-  value: string;
-  status: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
-  helper?: string;
-  path?: string;
-  width?: number;
+type TopSummaryTone = 'primary' | 'success' | 'info' | 'warning' | 'error' | 'secondary';
+
+const formatCount = (value?: number | null) => new Intl.NumberFormat('en-IN').format(value || 0);
+
+const getToneMain = (theme: any, tone: TopSummaryTone) => {
+  if (tone === 'primary') return theme.palette.primary.main;
+  if (tone === 'success') return theme.palette.success.main;
+  if (tone === 'info') return theme.palette.info.main;
+  if (tone === 'warning') return theme.palette.warning.main;
+  if (tone === 'error') return theme.palette.error.main;
+  if (tone === 'secondary') return theme.palette.secondary.main;
+  return theme.palette.info.main;
 };
 
-const SummaryCard = ({
+const getToneContrast = (theme: any, tone: TopSummaryTone) => {
+  if (tone === 'primary') return theme.palette.primary.dark || theme.palette.primary.main;
+  if (tone === 'success') return theme.palette.success.dark || theme.palette.success.main;
+  if (tone === 'info') return theme.palette.info.dark || theme.palette.info.main;
+  if (tone === 'warning') return theme.palette.warning.dark || theme.palette.warning.main;
+  if (tone === 'error') return theme.palette.error.dark || theme.palette.error.main;
+  if (tone === 'secondary') return theme.palette.secondary.dark || theme.palette.secondary.main;
+  return theme.palette.info.main;
+};
+
+const dashboardSurfaceSx = {
+  bgcolor: 'background.paper',
+  boxShadow: (theme: any) => `0 8px 20px ${alpha(theme.palette.common.black, 0.08)}`,
+  border: (theme: any) => `1px solid ${theme.palette.divider}`,
+};
+
+const DashboardSectionCard = ({
   title,
-  value,
-  icon,
-  status = 'info',
-  path,
-  helper,
-}: Omit<TeacherSummaryCardItem, 'id' | 'width'>) => (
+  subheader,
+  action,
+  minHeight,
+  height,
+  contentSx,
+  children,
+}: {
+  title: string;
+  subheader?: string;
+  action?: React.ReactNode;
+  minHeight?: number | string;
+  height?: number | string;
+  contentSx?: any;
+  children: React.ReactNode;
+}) => (
   <Card
-    component={path ? RouterLink : 'div'}
-    href={path || undefined}
     sx={{
-      p: 0,
-      minHeight: 92,
-      textDecoration: 'none',
-      color: 'text.primary',
-      overflow: 'hidden',
-      display: 'flex',
-      alignItems: 'center',
-      borderRadius: 2,
-      border: (theme) => `1px solid ${theme.palette.divider}`,
-      boxShadow: 'none',
-      transition: (theme) =>
-        theme.transitions.create(['border-color', 'box-shadow', 'transform'], {
-          duration: theme.transitions.duration.shorter,
-        }),
-      '&:focus, &:focus-visible': {
-        outline: 'none',
-      },
-      '&:hover': path
-        ? {
-            transform: 'translateY(-2px)',
-            boxShadow: (theme) => theme.shadows[4],
-          }
-        : undefined,
+      height,
+      minHeight,
+      p: 2,
+      overflow: 'visible',
+      position: 'relative',
+      ...dashboardSurfaceSx,
     }}
   >
-    <Box sx={{ width: 4, alignSelf: 'stretch', bgcolor: metricColor[status], flexShrink: 0 }} />
-    <Box
-      sx={{
-        p: 1.5,
-        gap: 1.25,
-        flex: 1,
-        minWidth: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}
-    >
+    <CardHeader sx={{ p: 0, mb: 1.5 }} title={title} subheader={subheader} action={action} />
+    <Box sx={contentSx}>{children}</Box>
+  </Card>
+);
+
+const TopMetricTile = ({
+  label,
+  value,
+  icon,
+  helper,
+  tone = 'primary',
+  href,
+  onClick,
+}: {
+  label: string;
+  value: string | number;
+  icon: string;
+  helper?: string;
+  tone?: TopSummaryTone;
+  href?: string;
+  onClick?: () => void;
+}) => {
+  const tileSx = {
+    width: '100%',
+    p: 1.25,
+    minHeight: 86,
+    borderRadius: 1,
+    textAlign: 'left' as const,
+    color: 'text.primary',
+    textDecoration: 'none',
+    bgcolor: (theme: any) => alpha(getToneMain(theme, tone), 0.06),
+    border: (theme: any) => `1px solid ${alpha(getToneMain(theme, tone), 0.18)}`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 1,
+    cursor: href || onClick ? 'pointer' : 'default',
+    transition: (theme: any) =>
+      theme.transitions.create(['background-color', 'border-color', 'transform'], {
+        duration: theme.transitions.duration.shorter,
+      }),
+    ...(href || onClick
+      ? {
+          '&:hover': {
+            transform: 'translateY(-1px)',
+            bgcolor: (theme: any) => alpha(getToneMain(theme, tone), 0.1),
+            borderColor: (theme: any) => alpha(getToneMain(theme, tone), 0.28),
+          },
+        }
+      : {}),
+  };
+
+  const content = (
+    <>
       <Box sx={{ minWidth: 0 }}>
         <Typography
           variant="caption"
           color="text.secondary"
-          sx={{ fontWeight: 700, lineHeight: 1.2, display: 'block' }}
+          sx={{ display: 'block', fontWeight: 700, lineHeight: 1.2 }}
           noWrap
         >
-          {title}
+          {label}
         </Typography>
-        <Typography variant="h4" sx={{ mt: 0.25, mb: 0.25, lineHeight: 1.05 }}>
+        <Typography variant="h5" sx={{ mt: 0.25, lineHeight: 1.08 }}>
           {value}
         </Typography>
         {helper ? (
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }} noWrap>
+          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
             {helper}
           </Typography>
         ) : null}
       </Box>
-
       <Box
         sx={{
-          width: 40,
-          height: 40,
+          width: 34,
+          height: 34,
+          borderRadius: 1,
+          flexShrink: 0,
+          display: 'grid',
+          placeItems: 'center',
+          color: (theme: any) => getToneMain(theme, tone),
+          bgcolor: (theme: any) => alpha(getToneMain(theme, tone), 0.1),
+        }}
+      >
+        <Iconify icon={icon} width={19} />
+      </Box>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Box component={Link} href={href} sx={tileSx}>
+        {content}
+      </Box>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <Box component="button" type="button" onClick={onClick} sx={tileSx}>
+        {content}
+      </Box>
+    );
+  }
+
+  return <Box sx={tileSx}>{content}</Box>;
+};
+
+const CommandMetricRow = ({
+  label,
+  value,
+  icon,
+  tone = 'primary',
+  helper,
+  emphasis = false,
+}: {
+  label: string;
+  value: string | number;
+  icon: string;
+  tone?: TopSummaryTone;
+  helper?: string;
+  emphasis?: boolean;
+}) => (
+  <Box
+    sx={{
+      px: 1.25,
+      py: 1,
+      borderRadius: 1,
+      bgcolor: (theme: any) => alpha(getToneMain(theme, tone), emphasis ? 0.1 : 0.045),
+      border: (theme: any) =>
+        `1px solid ${alpha(getToneMain(theme, tone), emphasis ? 0.26 : 0.14)}`,
+    }}
+  >
+    <Stack direction="row" spacing={1} alignItems="center">
+      <Box
+        sx={{
+          width: 30,
+          height: 30,
           borderRadius: 1,
           display: 'grid',
           placeItems: 'center',
-          color: metricColor[status],
-          bgcolor: `${metricColor[status]}14`,
+          color: (theme: any) => getToneMain(theme, tone),
+          bgcolor: (theme: any) => alpha(getToneMain(theme, tone), 0.1),
           flexShrink: 0,
         }}
       >
-        <Iconify icon={icon} width={22} />
+        <Iconify icon={icon} width={17} />
       </Box>
-    </Box>
-  </Card>
+      <Box sx={{ minWidth: 0, flex: 1 }}>
+        <Typography variant="body2" sx={{ fontWeight: emphasis ? 700 : 600 }} noWrap>
+          {label}
+        </Typography>
+        {helper ? (
+          <Typography variant="caption" color="text.secondary" noWrap>
+            {helper}
+          </Typography>
+        ) : null}
+      </Box>
+      <Typography
+        variant="h6"
+        sx={{ lineHeight: 1, color: (theme: any) => getToneContrast(theme, tone) }}
+      >
+        {value}
+      </Typography>
+    </Stack>
+  </Box>
 );
 
-function TeacherSummaryCards() {
-  const [cards, setCards] = React.useState<TeacherSummaryCardItem[]>([
-    {
-      id: 'CARD_TODAYS_LECTURES',
-      icon: 'solar:book-2-bold',
-      title: "Today's Lectures",
-      value: '6',
-      status: 'primary',
-      helper: '2 completed, 1 ongoing',
-      path: academicPaths.timetable.management,
-      width: 3,
-    },
-    {
-      id: 'CARD_PENDING_ATTENDANCE',
-      icon: 'solar:user-check-rounded-bold',
-      title: 'Pending Attendance',
-      value: '2',
-      status: 'success',
-      helper: 'For 2 classes today',
-      path: academicPaths.timetable.management,
-      width: 3,
-    },
-    {
-      id: 'CARD_PENDING_EVALUATIONS',
-      icon: 'solar:clipboard-check-bold',
-      title: 'Pending Evaluations',
-      value: '12',
-      status: 'warning',
-      helper: 'Homework and assignments',
-      path: academicPaths.homework.assessment,
-      width: 3,
-    },
-    {
-      id: 'CARD_HOMEWORK_DUE',
-      icon: 'solar:notebook-bookmark-bold',
-      title: 'Homework Due',
-      value: '7',
-      status: 'secondary',
-      helper: '3 due today',
-      path: academicPaths.homework.learningTasks,
-      width: 3,
-    },
-    {
-      id: 'CARD_UPCOMING_EXAMS',
-      icon: 'solar:medal-star-bold',
-      title: 'Upcoming Exams',
-      value: '4',
-      status: 'info',
-      helper: 'Next in 2 days',
-      path: academicPaths.examination.schedule,
-      width: 3,
-    },
-    {
-      id: 'CARD_ASSIGNED_SUBJECTS',
-      icon: 'solar:book-bookmark-bold',
-      title: 'Assigned Subjects',
-      value: '5',
-      status: 'success',
-      helper: 'Across 3 grades',
-      path: academicPaths.curriculum.chaptersManagement,
-      width: 3,
-    },
-    {
-      id: 'CARD_STUDENTS_ATTENTION',
-      icon: 'solar:danger-circle-bold',
-      title: 'Students Needing Attention',
-      value: '9',
-      status: 'error',
-      helper: 'Low attendance or performance',
-      width: 3,
-    },
-    {
-      id: 'CARD_SYSTEM_ALERTS',
-      icon: 'solar:bell-bing-bold',
-      title: 'System Alerts',
-      value: '3',
-      status: 'error',
-      helper: '1 urgent action pending',
-      width: 3,
-    },
-  ]);
+const TeacherLecturesSnapshotCard = ({ data }: { data: TeacherAcademicDashboardData }) => {
+  const theme = useTheme();
+  const { attendanceRate } = data;
 
-  const dashBoardSections = cards.reduce((acc: { [key: string]: React.JSX.Element }, card) => {
-    acc[card.id] = <SummaryCard {...card} />;
-    return acc;
-  }, {});
+  const lecturesChartOptions = useChart({
+    labels: ['Marked', 'Pending'],
+    colors: [theme.palette.success.main, theme.palette.warning.main],
+    stroke: { width: 0 },
+    legend: { show: false },
+    tooltip: { y: { formatter: (value: number) => `${value}%` } },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '74%',
+          labels: {
+            show: false,
+          },
+        },
+      },
+    },
+  });
 
   return (
-    <CustomizableView
-      sections={cards}
-      setSections={setCards}
-      dashBoardSections={dashBoardSections}
-    />
+    <DashboardSectionCard
+      title="Today's Lecture & Attendance"
+      subheader="My daily timetable schedule status"
+      height="100%"
+      minHeight={236}
+      action={
+        <Button component={Link} href={academicPaths.timetable.management} size="small">
+          Timetable
+        </Button>
+      }
+    >
+      <Stack spacing={1.25}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row', lg: 'column', xl: 'row' }}
+          spacing={1.25}
+          alignItems="center"
+        >
+          <Box
+            sx={{
+              width: { xs: '100%', sm: 170, lg: '100%', xl: 170 },
+              height: 158,
+              position: 'relative',
+              display: 'grid',
+              placeItems: 'center',
+              borderRadius: 1,
+              bgcolor: (muiTheme) => alpha(muiTheme.palette.success.main, 0.035),
+              border: (muiTheme) => `1px solid ${alpha(muiTheme.palette.success.main, 0.14)}`,
+            }}
+          >
+            <Chart
+              type="donut"
+              series={[attendanceRate, 100 - attendanceRate]}
+              options={lecturesChartOptions}
+              sx={{ width: 138, height: 138 }}
+            />
+            <Box
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                display: 'grid',
+                placeItems: 'center',
+                pointerEvents: 'none',
+              }}
+            >
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" sx={{ lineHeight: 1 }}>
+                  {attendanceRate}%
+                </Typography>
+                <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                  Att Marked
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          <Stack spacing={1} sx={{ width: 1, minWidth: 0 }}>
+            <CommandMetricRow
+              label="Today's Lectures"
+              value={formatCount(data.todaysLecturesCount)}
+              helper={`${data.lecturesDone} completed, ${data.lecturesOngoing} ongoing`}
+              icon="solar:book-2-bold"
+              tone="primary"
+            />
+            <CommandMetricRow
+              label="Pending Attendance"
+              value={`${formatCount(data.pendingAttendanceClasses)} classes`}
+              helper="Requires marking today"
+              icon="solar:user-check-rounded-bold"
+              tone="warning"
+              emphasis={data.pendingAttendanceClasses > 0}
+            />
+          </Stack>
+        </Stack>
+
+        <Grid container spacing={1}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TopMetricTile
+              label="Assigned Classes"
+              value={`${data.assignedClassesCount} Grades`}
+              helper={`Across ${data.assignedSubjectsCount} subjects`}
+              icon="solar:book-bookmark-bold"
+              tone="info"
+              href={academicPaths.curriculum.chaptersManagement}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TopMetricTile
+              label="System Alerts"
+              value={formatCount(data.systemAlertsCount)}
+              helper="Action required"
+              icon="solar:bell-bing-bold"
+              tone="error"
+            />
+          </Grid>
+        </Grid>
+      </Stack>
+    </DashboardSectionCard>
   );
-}
+};
+
+const TeacherEvaluationsPulseCard = ({ data }: { data: TeacherAcademicDashboardData }) => {
+  const { evaluationsRate } = data;
+
+  return (
+    <DashboardSectionCard
+      title="Evaluations & Homework Pulse"
+      subheader="Grading & feedback status"
+      height="100%"
+      minHeight={236}
+      action={
+        <Button component={Link} href={academicPaths.homework.assessment} size="small">
+          Evaluations
+        </Button>
+      }
+    >
+      <Stack spacing={1.25}>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 1,
+            bgcolor: (theme) => alpha(theme.palette.success.main, 0.07),
+            border: (theme) => `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+          }}
+        >
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1.25}
+            alignItems={{ xs: 'stretch', sm: 'center' }}
+            justifyContent="space-between"
+          >
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                Grading Completeness Ratio
+              </Typography>
+              <Typography variant="h2" sx={{ lineHeight: 1 }}>
+                {evaluationsRate}%
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {formatCount(data.pendingEvaluations)} pending review evaluations
+              </Typography>
+            </Box>
+            <Chip label="On Track" color="success" size="small" sx={{ fontWeight: 700 }} />
+          </Stack>
+
+          <Box sx={{ mt: 1.5 }}>
+            <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
+              <Typography variant="caption" color="text.secondary">
+                Grading Progress
+              </Typography>
+              <Typography variant="caption" fontWeight={700}>
+                {evaluationsRate}%
+              </Typography>
+            </Stack>
+            <Box
+              sx={{
+                height: 10,
+                borderRadius: 1,
+                overflow: 'hidden',
+                bgcolor: (theme) => alpha(theme.palette.success.main, 0.14),
+              }}
+            >
+              <Box sx={{ width: `${evaluationsRate}%`, height: 1, bgcolor: 'success.main' }} />
+            </Box>
+          </Box>
+        </Box>
+
+        <Grid container spacing={1}>
+          <Grid size={{ xs: 12, sm: 6, xl: 4 }}>
+            <CommandMetricRow
+              label="Pending Homework"
+              value={formatCount(data.pendingHomework)}
+              helper="Due soon"
+              icon="solar:notebook-bookmark-bold"
+              tone="warning"
+              emphasis={data.pendingHomework > 0}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, xl: 4 }}>
+            <CommandMetricRow
+              label="Pending Evaluations"
+              value={formatCount(data.pendingEvaluations)}
+              helper="HW & Assignments"
+              icon="solar:clipboard-check-bold"
+              tone="info"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, xl: 4 }}>
+            <CommandMetricRow
+              label="Upcoming Exams"
+              value={formatCount(data.upcomingExams)}
+              helper="In next 2 days"
+              icon="solar:medal-star-bold"
+              tone="secondary"
+            />
+          </Grid>
+        </Grid>
+      </Stack>
+    </DashboardSectionCard>
+  );
+};
+
+const TeacherStudentAttentionCard = ({ data }: { data: TeacherAcademicDashboardData }) => (
+  <DashboardSectionCard
+    title="Student Performance"
+    subheader="Attention & class summary"
+    height="100%"
+    minHeight={236}
+  >
+    <Stack spacing={1.25}>
+      <Box
+        sx={{
+          p: 1.5,
+          borderRadius: 1,
+          color: 'text.primary',
+          textDecoration: 'none',
+          bgcolor: (theme) => alpha(theme.palette.error.main, 0.06),
+          border: (theme) => `1px solid ${alpha(theme.palette.error.main, 0.18)}`,
+        }}
+      >
+        <Stack spacing={1}>
+          <Stack direction="row" justifyContent="space-between" spacing={1}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                Support Needed
+              </Typography>
+              <Typography variant="h3" sx={{ lineHeight: 1.05 }}>
+                {formatCount(data.studentsAttentionCount)} Students
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: 1,
+                display: 'grid',
+                placeItems: 'center',
+                color: 'error.main',
+                bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+                flexShrink: 0,
+              }}
+            >
+              <Iconify icon="solar:danger-circle-bold" width={24} />
+            </Box>
+          </Stack>
+
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+              Low attendance or critical performance drop
+            </Typography>
+          </Box>
+        </Stack>
+      </Box>
+
+      <Grid container spacing={1}>
+        <Grid size={{ xs: 12 }}>
+          <TopMetricTile
+            label="Students Attention"
+            value={`${data.studentsAttentionCount} Students`}
+            icon="solar:danger-circle-bold"
+            tone="error"
+          />
+        </Grid>
+      </Grid>
+    </Stack>
+  </DashboardSectionCard>
+);
+
+const TeacherInsightsCard = ({ data }: { data: TeacherAcademicDashboardData }) => (
+  <DashboardSectionCard
+    title="Smart Teacher Insights & Alerts"
+    subheader="Actionable alerts regarding student performance & teaching deliverables"
+    height="100%"
+    minHeight={200}
+  >
+    <Stack spacing={1}>
+      {data.insights.map((insight, index) => (
+        <Box
+          key={`${insight.source}-${index}`}
+          sx={{
+            p: 1.5,
+            borderRadius: 1,
+            bgcolor: 'background.neutral',
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            alignItems={{ xs: 'stretch', sm: 'flex-start' }}
+            justifyContent="space-between"
+            spacing={1}
+          >
+            <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ minWidth: 0 }}>
+              <Box
+                sx={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 1,
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: (theme: any) =>
+                    insight.severity === 'critical'
+                      ? theme.palette.error.main
+                      : insight.severity === 'warning'
+                        ? theme.palette.warning.main
+                        : theme.palette.info.main,
+                  bgcolor: (theme: any) =>
+                    alpha(
+                      insight.severity === 'critical'
+                        ? theme.palette.error.main
+                        : insight.severity === 'warning'
+                          ? theme.palette.warning.main
+                          : theme.palette.info.main,
+                      0.08
+                    ),
+                  flexShrink: 0,
+                }}
+              >
+                <Iconify
+                  icon={
+                    insight.severity === 'critical'
+                      ? 'solar:danger-triangle-bold'
+                      : 'solar:info-circle-bold'
+                  }
+                  width={18}
+                />
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="subtitle2">{insight.title}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {insight.summary}
+                </Typography>
+              </Box>
+            </Stack>
+            {insight.actionHref ? (
+              <Button
+                component={Link}
+                href={insight.actionHref}
+                size="small"
+                variant="text"
+                sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, flexShrink: 0 }}
+              >
+                {insight.actionLabel || 'Open'}
+              </Button>
+            ) : null}
+          </Stack>
+        </Box>
+      ))}
+    </Stack>
+  </DashboardSectionCard>
+);
 
 type ScheduleStatus = 'completed' | 'ongoing' | 'upcoming';
 
@@ -308,104 +731,6 @@ const pendingTasks = [
   },
 ];
 
-const topPerformers = [
-  {
-    id: 'tp-1',
-    name: 'Aarav Sharma',
-    classDivision: '10-A',
-    score: 94,
-    attendance: 96,
-    trend: 'up',
-    avatarUrl: '/static/images/avatars/avatar_1.png',
-  },
-  {
-    id: 'tp-2',
-    name: 'Anaya Verma',
-    classDivision: '9-A',
-    score: 92,
-    attendance: 94,
-    trend: 'up',
-    avatarUrl: '/static/images/avatars/avatar_2.png',
-  },
-  {
-    id: 'tp-3',
-    name: 'Rohan Patel',
-    classDivision: '11-B',
-    score: 90,
-    attendance: 95,
-    trend: 'steady',
-    avatarUrl: '/static/images/avatars/avatar_3.png',
-  },
-];
-
-const bottomPerformers = [
-  {
-    id: 'bp-1',
-    name: 'Nikhil Singh',
-    classDivision: '10-B',
-    score: 41,
-    attendance: 71,
-    trend: 'down',
-    avatarUrl: '/static/images/avatars/avatar_4.png',
-  },
-  {
-    id: 'bp-2',
-    name: 'Isha Gupta',
-    classDivision: '9-B',
-    score: 45,
-    attendance: 74,
-    trend: 'down',
-    avatarUrl: '/static/images/avatars/avatar_5.png',
-  },
-  {
-    id: 'bp-3',
-    name: 'Yash Mehta',
-    classDivision: '11-A',
-    score: 48,
-    attendance: 76,
-    trend: 'steady',
-    avatarUrl: '/static/images/avatars/avatar_6.png',
-  },
-];
-
-const recentActivities = [
-  {
-    id: 'ra-1',
-    title: 'Homework uploaded for Class 10-A (Algebra Set 4)',
-    time: '15 min ago',
-    icon: 'solar:notebook-bold',
-    type: 'info' as const,
-  },
-  {
-    id: 'ra-2',
-    title: 'Attendance marked for Class 11-B',
-    time: '35 min ago',
-    icon: 'solar:user-check-rounded-bold',
-    type: 'success' as const,
-  },
-  {
-    id: 'ra-3',
-    title: 'Assignment created: Physics Numerical Practice',
-    time: '1 hour ago',
-    icon: 'solar:clipboard-text-bold',
-    type: 'secondary' as const,
-  },
-  {
-    id: 'ra-4',
-    title: 'Grades entered for Unit Test - Class 9-A',
-    time: '2 hours ago',
-    icon: 'solar:document-text-bold',
-    type: 'warning' as const,
-  },
-  {
-    id: 'ra-5',
-    title: 'Chapter completion updated: Quadratic Equations',
-    time: 'Yesterday',
-    icon: 'solar:checklist-minimalistic-bold',
-    type: 'primary' as const,
-  },
-];
-
 const studentsNeedingAttention = [
   {
     id: 'sa-1',
@@ -479,7 +804,9 @@ const priorityColor = {
   low: 'success',
 } as const;
 
-function CompactSchedule() {
+function CompactSchedule({ schedule }: { schedule?: TodayScheduleItem[] }) {
+  const displaySchedule = schedule && schedule.length > 0 ? schedule : todaySchedule;
+
   return (
     <DashboardWidgetWrapper
       title="Today's Schedule"
@@ -496,7 +823,7 @@ function CompactSchedule() {
       }
     >
       <Stack spacing={1.25}>
-        {todaySchedule.map((lecture) => (
+        {displaySchedule.map((lecture) => (
           <Stack
             key={lecture.id}
             direction="row"
@@ -543,19 +870,34 @@ function CompactSchedule() {
   );
 }
 
-function PendingTaskCenter() {
+interface PendingTaskItem {
+  id: string;
+  title: string;
+  count: number;
+  priority: 'high' | 'medium' | 'low';
+  action: string;
+  icon: string;
+  path: string;
+}
+
+function PendingTaskCenter({ tasks }: { tasks?: PendingTaskItem[] }) {
+  const displayTasks = tasks && tasks.length > 0 ? tasks : pendingTasks;
+  const urgentCount = displayTasks.filter((t) => t.priority === 'high').length;
+
   return (
     <DashboardWidgetWrapper
       title="Pending Task Center"
       subheader="Actionable tasks requiring attention today"
       action={
-        <Label color="error" variant="soft">
-          1 Urgent
-        </Label>
+        urgentCount > 0 ? (
+          <Label color="error" variant="soft">
+            {urgentCount} Urgent
+          </Label>
+        ) : null
       }
     >
       <Stack spacing={1}>
-        {pendingTasks.map((task) => (
+        {displayTasks.map((task) => (
           <Stack
             key={task.id}
             direction="row"
@@ -565,7 +907,7 @@ function PendingTaskCenter() {
               p: 1.25,
               borderRadius: 1.5,
               border: (theme) =>
-                `1px solid ${alpha(theme.palette[priorityColor[task.priority]].main, 0.2)}`,
+                `1px solid ${alpha(theme.palette[priorityColor[task.priority] || 'info'].main, 0.2)}`,
             }}
           >
             <Box
@@ -575,11 +917,11 @@ function PendingTaskCenter() {
                 borderRadius: 1,
                 display: 'grid',
                 placeItems: 'center',
-                color: `${priorityColor[task.priority]}.main`,
+                color: `${priorityColor[task.priority] || 'info'}.main`,
                 flexShrink: 0,
               }}
             >
-              <Iconify icon={task.icon} width={18} />
+              <Iconify icon={task.icon || 'solar:info-circle-bold'} width={18} />
             </Box>
 
             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -589,7 +931,7 @@ function PendingTaskCenter() {
                   {task.title}
                 </Typography>
               </Stack>
-              <Label variant="soft" color={priorityColor[task.priority]}>
+              <Label variant="soft" color={priorityColor[task.priority] || 'info'}>
                 {task.priority} priority
               </Label>
             </Box>
@@ -610,93 +952,26 @@ function PendingTaskCenter() {
   );
 }
 
-function PerformerCard({
-  title,
-  rows,
-  color,
-}: {
-  title: string;
-  rows: typeof topPerformers;
-  color: 'success' | 'error';
-}) {
-  return (
-    <DashboardWidgetWrapper title={title}>
-      <Stack spacing={1}>
-        {rows.map((student) => (
-          <Stack
-            key={student.id}
-            direction="row"
-            spacing={1.25}
-            alignItems="center"
-            sx={{ p: 1, borderRadius: 1.5, bgcolor: 'background.neutral' }}
-          >
-            <Avatar src={student.avatarUrl} alt={student.name} sx={{ width: 38, height: 38 }} />
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle2" noWrap>
-                {student.name}
-              </Typography>
-            </Box>
-          </Stack>
-        ))}
-      </Stack>
-    </DashboardWidgetWrapper>
-  );
+interface AttentionStudentItem {
+  id: string;
+  name: string;
+  classDivision: string;
+  attendance: number;
+  performance: number;
+  warning: string;
+  avatarUrl: string;
 }
 
-function RecentActivitiesPanel() {
-  return (
-    <DashboardWidgetWrapper
-      title="Recent Activities"
-      subheader="Latest teaching workflow updates"
-      action={
-        <Button size="small" endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={16} />}>
-          View All
-        </Button>
-      }
-    >
-      <Stack spacing={1}>
-        {recentActivities.map((activity, index) => (
-          <React.Fragment key={activity.id}>
-            <Stack direction="row" spacing={1.25} alignItems="center" sx={{ py: 0.5 }}>
-              <Box
-                sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 1,
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: `${activity.type}.main`,
-                  bgcolor: `${activity.type}.lighter`,
-                  flexShrink: 0,
-                }}
-              >
-                <Iconify icon={activity.icon} width={16} />
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="body2" sx={{ lineHeight: 1.35 }}>
-                  {activity.title}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {activity.time}
-                </Typography>
-              </Box>
-            </Stack>
-            {index < recentActivities.length - 1 && <Divider sx={{ borderStyle: 'dashed' }} />}
-          </React.Fragment>
-        ))}
-      </Stack>
-    </DashboardWidgetWrapper>
-  );
-}
+function StudentsAttentionPanel({ students }: { students?: AttentionStudentItem[] }) {
+  const displayStudents = students && students.length > 0 ? students : studentsNeedingAttention;
 
-function StudentsAttentionPanel() {
   return (
     <DashboardWidgetWrapper
       title="Students Needing Attention"
       subheader="Low attendance and weak performance flags"
     >
       <Stack spacing={1}>
-        {studentsNeedingAttention.map((student) => (
+        {displayStudents.map((student) => (
           <Stack
             key={student.id}
             direction="row"
@@ -759,7 +1034,13 @@ function QuickActionsPanel() {
                 },
               }}
             >
-              <Iconify icon={action.icon} width={20} sx={{ color: `${action.color}.main` }} />
+              <Iconify
+                icon={action.icon}
+                width={20}
+                sx={{
+                  color: `${metricColor[action.color as keyof typeof metricColor] || 'info'}.main`,
+                }}
+              />
               <Typography
                 variant="caption"
                 sx={{ fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}
@@ -774,61 +1055,183 @@ function QuickActionsPanel() {
   );
 }
 
-const AcademicTeacherDashboardScreen = () => (
-  <Box>
-    <Grid container spacing={1} sx={{ mb: 2 }}>
-      <Grid size={{ xs: 12 }}>
-        <TeacherSummaryCards />
-      </Grid>
-
-      <Grid size={{ xs: 12 }}>
-        <QuickActionsPanel />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 7 }}>
-        <AcademicDashbordAnalysisChart />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 5 }}>
-        <CompactSchedule />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 7 }}>
-        <AcademicDashboardChapterProgress />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 5 }}>
-        <PendingTaskCenter />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 6 }}>
-        <HomeworkStatus />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 6 }}>
-        <UpcomingExams />
-      </Grid>
-
-      {/* <Grid size={{ xs: 12, md: 6 }}>
-        <Stack spacing={1} sx={{ height: '100%' }}>
-          <PerformerCard title="Top Performers"  rows={topPerformers} color="success" />
-        </Stack>
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Stack spacing={1} sx={{ height: '100%' }}>
-          <PerformerCard title="Bottom Performers" rows={bottomPerformers} color="error" />
-        </Stack>
-      </Grid> */}
-      {/* 
-      <Grid size={{ xs: 12, md: 4 }}>
-        <RecentActivitiesPanel />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 4 }}>
-        <StudentsAttentionPanel />
-      </Grid> */}
+const DashboardSkeleton = () => (
+  <Stack spacing={1.5}>
+    <Grid container spacing={1.5}>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <Grid key={index} size={{ xs: 12, lg: index === 1 ? 5 : index === 2 ? 3 : 4 }}>
+          <Skeleton variant="rounded" height={260} />
+        </Grid>
+      ))}
     </Grid>
-  </Box>
+    <Grid container spacing={1.5}>
+      <Grid size={{ xs: 12 }}>
+        <Skeleton variant="rounded" height={200} />
+      </Grid>
+    </Grid>
+    <Grid container spacing={1.5}>
+      <Grid size={{ xs: 12 }}>
+        <Skeleton variant="rounded" height={100} />
+      </Grid>
+      <Grid size={{ xs: 12, md: 7 }}>
+        <Skeleton variant="rounded" height={320} />
+      </Grid>
+      <Grid size={{ xs: 12, md: 5 }}>
+        <Skeleton variant="rounded" height={320} />
+      </Grid>
+    </Grid>
+  </Stack>
 );
+
+const AcademicTeacherDashboardScreen = () => {
+  const { data, isLoading, isFetching, isError, refetch } = useGetTeacherAcademicDashboardQuery();
+  const [refresh, { isLoading: isRefreshing }] = useRefreshAcademicDashboardMutation();
+
+  const handleRefresh = async () => {
+    try {
+      await refresh().unwrap();
+      refetch();
+    } catch {
+      // Ignored fallback
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h4" sx={{ mb: 2 }}>
+          Teacher Dashboard
+        </Typography>
+        <DashboardSkeleton />
+      </Box>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Teacher academic dashboard data could not be loaded.
+        </Alert>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pb: 2 }}>
+      {/* Header */}
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        alignItems={{ xs: 'stretch', md: 'flex-start' }}
+        justifyContent="space-between"
+        spacing={1.25}
+        sx={{ mb: 0.5 }}
+      >
+        <Box>
+          <Typography variant="h4">Teacher Dashboard</Typography>
+          <Typography variant="body2" color="text.secondary">
+            My daily curriculum, deliverables & student status snapshot
+          </Typography>
+        </Box>
+        <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" justifyContent="flex-end">
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={handleRefresh}
+            disabled={isRefreshing || isFetching}
+            startIcon={<Iconify icon="solar:refresh-linear" />}
+            sx={{ minHeight: 34 }}
+          >
+            {isRefreshing ? 'Refreshing' : 'Refresh'}
+          </Button>
+          <Button
+            component={Link}
+            href={academicPaths.homework.learningTasks}
+            variant="outlined"
+            size="small"
+            startIcon={<Iconify icon="solar:notebook-linear" />}
+            sx={{ minHeight: 34 }}
+          >
+            Add Homework
+          </Button>
+          <Button
+            component={Link}
+            href={academicPaths.examination.recordMarks}
+            variant="contained"
+            size="small"
+            startIcon={<Iconify icon="solar:clipboard-text-linear" />}
+            sx={{ minHeight: 34 }}
+          >
+            Record Marks
+          </Button>
+        </Stack>
+      </Stack>
+
+      {isRefreshing || isFetching ? <LinearProgress /> : null}
+
+      {/* Snapshot Cards */}
+      <Grid container spacing={1.5}>
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <TeacherLecturesSnapshotCard data={data} />
+        </Grid>
+        <Grid size={{ xs: 12, lg: 5 }}>
+          <TeacherEvaluationsPulseCard data={data} />
+        </Grid>
+        <Grid size={{ xs: 12, lg: 3 }}>
+          <TeacherStudentAttentionCard data={data} />
+        </Grid>
+      </Grid>
+
+      {/* Smart Alerts & Insights */}
+      <Grid container spacing={1.5}>
+        <Grid size={{ xs: 12 }}>
+          <TeacherInsightsCard data={data} />
+        </Grid>
+      </Grid>
+
+      {/* Rest of the Dashboard Panels */}
+      <Grid container spacing={1.5}>
+        <Grid size={{ xs: 12 }}>
+          <QuickActionsPanel />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 7 }}>
+          <AcademicDashbordAnalysisChart chartData={data.performanceDistribution} />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 5 }}>
+          <CompactSchedule schedule={data.todaySchedule} />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 7 }}>
+          <AcademicDashboardChapterProgress chartData={data.chapterProgressChart} />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 5 }}>
+          <PendingTaskCenter tasks={data.pendingTasks} />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <HomeworkStatus data={data.homeworkStatus} />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <UpcomingExams exams={data.upcomingExamsList} />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <StudentsAttentionPanel students={data.studentsAttention} />
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
 
 export default AcademicTeacherDashboardScreen;

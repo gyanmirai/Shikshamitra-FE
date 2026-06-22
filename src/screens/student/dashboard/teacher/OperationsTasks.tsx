@@ -123,7 +123,18 @@ export const QuickActions = () => (
   </Card>
 );
 
-export const UpcomingExams = () => {
+interface UpcomingExamsProps {
+  exams?: Array<{
+    id: string;
+    examName: string;
+    date: string;
+    time: string;
+    className: string;
+    roomName: string;
+  }>;
+}
+
+export const UpcomingExams = ({ exams }: UpcomingExamsProps) => {
   const [openDialog, setOpenDialog] = useState(false);
 
   // Class & Division state (same pattern as SubjectPassFailChart)
@@ -147,6 +158,38 @@ export const UpcomingExams = () => {
     setDivision(currentClass?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
+  const parsedExamRows =
+    exams && exams.length > 0
+      ? exams.map((e) => ({
+          id: e.id || e.examName,
+          details: `${e.examName} (${e.className || '—'})`,
+          students: 30,
+          date: e.date,
+          time: `${e.time} • Room ${e.roomName || '—'}`,
+          type: 'Internal',
+          status: 'Pending',
+        }))
+      : [
+          {
+            id: 'ex-1',
+            details: 'Mathematics UT-1 (Class 10-A)',
+            students: 30,
+            date: '23 Jun 2026',
+            time: '08:00 AM • Room 204',
+            type: 'Internal',
+            status: 'Pending',
+          },
+          {
+            id: 'ex-2',
+            details: 'Oral Math Test (Class 9-A)',
+            students: 24,
+            date: '24 Jun 2026',
+            time: '10:00 AM • Room 110',
+            type: 'Internal',
+            status: 'Pending',
+          },
+        ];
+
   // Table columns for exams dialog
   const examColumns: any[] = [
     { id: 'details', label: 'Exam Name', align: 'left' },
@@ -159,7 +202,7 @@ export const UpcomingExams = () => {
       align: 'left',
       render: (value: string) => (
         <Label variant="soft" color={value === 'Internal' ? 'info' : 'warning'}>
-          {value}
+          {value || 'Internal'}
         </Label>
       ),
     },
@@ -170,7 +213,7 @@ export const UpcomingExams = () => {
       align: 'left',
       render: (value: string) => (
         <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
-          {value}
+          {value || 'Pending'}
         </Label>
       ),
     },
@@ -198,27 +241,29 @@ export const UpcomingExams = () => {
           )}
           action={
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <Box sx={{ display: 'flex', gap: 2, mr: 1 }}>
-                <CustomSelect
-                  options={allClass}
-                  label="Class"
-                  value={classes}
-                  onChange={(val) => setClasses(val as string)}
-                  labelKey="name"
-                  valueKey="id"
-                  formControlProps={{ sx: { minWidth: '90px' } }}
-                />
-                <CustomSelect
-                  options={allDivision}
-                  label="Division"
-                  value={division}
-                  onChange={(val) => setDivision(val as string)}
-                  labelKey="name"
-                  valueKey="id"
-                  formControlProps={{ sx: { minWidth: '90px' } }}
-                  disabled={!classes}
-                />
-              </Box>
+              {!exams && (
+                <Box sx={{ display: 'flex', gap: 2, mr: 1 }}>
+                  <CustomSelect
+                    options={allClass}
+                    label="Class"
+                    value={classes}
+                    onChange={(val) => setClasses(val as string)}
+                    labelKey="name"
+                    valueKey="id"
+                    formControlProps={{ sx: { minWidth: '90px' } }}
+                  />
+                  <CustomSelect
+                    options={allDivision}
+                    label="Division"
+                    value={division}
+                    onChange={(val) => setDivision(val as string)}
+                    labelKey="name"
+                    valueKey="id"
+                    formControlProps={{ sx: { minWidth: '90px' } }}
+                    disabled={!classes}
+                  />
+                </Box>
+              )}
               <Button
                 size="small"
                 color="inherit"
@@ -233,12 +278,12 @@ export const UpcomingExams = () => {
         />
         <Scrollbar>
           <Stack spacing={1} sx={{ p: 1 }}>
-            {examRows.length === 0 && (
+            {parsedExamRows.length === 0 && (
               <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 8 }}>
                 No upcoming exams found.
               </Typography>
             )}
-            {examRows.map((exam) => (
+            {parsedExamRows.map((exam) => (
               <Box
                 key={exam.id}
                 sx={{
@@ -338,7 +383,7 @@ export const UpcomingExams = () => {
       >
         <CustomizableTable
           columns={examColumns}
-          data={examRows}
+          data={parsedExamRows}
           tableId="upcoming-exams-table"
           noDataText="No upcoming exams found."
           isSearch={false}
