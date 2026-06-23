@@ -375,7 +375,7 @@ const AdmissionScreen = () => {
       },
       {
         id: 'inquiryPreference',
-        label: 'Inquiry Preference',
+        label: 'Inquiry Source',
         minWidth: '200px',
         align: 'left',
       },

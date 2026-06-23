@@ -27,9 +27,9 @@ const TABS = [
   },
   {
     value: 'inquiryPreferenceDialog',
-    label: 'Inquiry Preference',
+    label: 'Inquiry Source',
     icon: <Iconify icon="ix:inquiry" width={20} />,
-    buttonText: 'Inquiry Preference',
+    buttonText: 'Inquiry Source',
     component: (props: any) => <InquiryPreference {...props} />,
   },
   {
@@ -60,7 +60,7 @@ const StudentEnrollmentSettingScreen = () => {
 
   // Controls visibility of document types configuration dialog
   const defaultDocumentTypes = useBoolean();
-  // Controls visibility of inquiry preference settings dialog
+  // Controls visibility of inquiry source settings dialog
   const inquiryPreferenceDialog = useBoolean();
   // Controls visibility of entrance exam time slots dialog
   const entranceExamSlotsDialog = useBoolean();
@@ -92,7 +92,7 @@ const StudentEnrollmentSettingScreen = () => {
           variant="contained"
           size="small"
         >
-          Inquiry Preference
+          Inquiry Source
         </Button>
       ),
       entranceExamSlots: (

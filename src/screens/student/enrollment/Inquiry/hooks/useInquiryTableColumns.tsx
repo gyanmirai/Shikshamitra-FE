@@ -171,7 +171,7 @@ export const useInquiryTableColumns = ({
       },
       {
         id: 'inquiryPreference',
-        label: 'Inquiry Preference',
+        label: 'Inquiry Source',
         minWidth: '11vw',
         align: 'left',
         filterType: 'string',

@@ -173,7 +173,7 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
       },
       {
         id: 'inquiryPreference',
-        label: 'Inquiry Preference',
+        label: 'Inquiry Source',
         minWidth: '170px',
         align: 'left',
       },
