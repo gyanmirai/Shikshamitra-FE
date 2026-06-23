@@ -105,6 +105,7 @@ export const classType = {
 
 // ===== Class Management API (reducerPath: classManagementApi) =====
 export const classManagementType = {
+  dashboard: 'ClassManagementDashboard',
   class: 'Class',
   division: 'Division',
   standard: 'Standard',
