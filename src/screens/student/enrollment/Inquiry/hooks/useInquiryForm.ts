@@ -22,6 +22,10 @@ import {
 
 import { inquiryInitialValues } from '../initialvalues';
 import { inquiryValidationSchema } from '../validationSchema';
+import {
+  buildInquirySourceOptions,
+  resolveInquirySourceAcademicYearId,
+} from '../../setting/inquiry-source-utils';
 
 import type { IInquiryResponse, IInquiryFormValues } from '../type';
 
@@ -42,7 +46,7 @@ export const useInquiryForm = (
   editData: IInquiryResponse | null
 ) => {
   const { currentYear } = useSelector((state: any) => state.globalState);
-  const dialog = useBoolean(); // For "Add new Inquiry Preference" modal if needed
+  const dialog = useBoolean(); // For "Add new Inquiry Source" modal if needed
   const isSaveAndNewRef = useRef(false);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('');
   const [boards, setBoards] = useState<Board[]>([]);
@@ -61,19 +65,7 @@ export const useInquiryForm = (
     currentQueryAndMutation: useGetBoardsQuery,
   });
 
-  // 3. Inquiry Preferences
-  const { data: inquiryPreference, isLoading: inquiryPrefrenceLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetInquiryPreferenceQuery,
-    params: {
-      academicYearId: currentYear?.id,
-    },
-    options: {
-      skip: !currentYear?.id,
-    },
-  });
-
-  // 4. Classes (Lazy Fetch)
+  // 3. Classes (Lazy Fetch)
   const [
     getClassByMedium,
     { data: classes, isLoading: classIsLoading, isFetching: classIsFetching },
@@ -83,19 +75,19 @@ export const useInquiryForm = (
   });
   const classLoading = classIsLoading || classIsFetching;
 
-  // 5. Add Mutation
+  // 4. Add Mutation
   const [addInquiry, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentInquiryMutation,
   });
 
-  // 6. Update Mutation
+  // 5. Update Mutation
   const [updateInquiry, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentInquiryMutation,
   });
 
-  // 7. Get Single Inquiry (for Edit, usually if editData has partial info or needing fresh fetch)
+  // 6. Get Single Inquiry (for Edit, usually if editData has partial info or needing fresh fetch)
   const { data: inquiryData, isLoading: isGetLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentInquiryByIdQuery,
@@ -158,7 +150,7 @@ export const useInquiryForm = (
     }
 
     return inquiryInitialValues(editData, latestYearId);
-  }, [academicYear.items, editData]);
+  }, [academicYear?.items, editData]);
 
   const formik = useFormik({
     initialValues,
@@ -201,6 +193,24 @@ export const useInquiryForm = (
 
   const { values, resetForm } = formik;
 
+  const inquirySourceAcademicYearId = resolveInquirySourceAcademicYearId(
+    values.academicYear,
+    currentYear?.id
+  );
+
+  const { data: inquiryPreference, isLoading: inquiryPrefrenceLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetInquiryPreferenceQuery,
+    params: {
+      academicYearId: inquirySourceAcademicYearId,
+      isActive: true,
+      maxResultCount: 1000,
+    },
+    options: {
+      skip: !inquirySourceAcademicYearId,
+    },
+  });
+
   // --- Side Effects ---
 
   // 1. Sync data when fetched by ID (detailed edit data)
@@ -234,6 +244,33 @@ export const useInquiryForm = (
     // Note: We also trigger this in the onChange of the Medium dropdown in UI.
   }, [editData?.academicMediumId, getClassByMedium]);
 
+  const currentInquirySourceId =
+    inquiryData?.data?.inquiryPreferenceId || editData?.inquiryPreferenceId || '';
+  const currentInquirySourceName =
+    inquiryData?.data?.inquiryPreference || editData?.inquiryPreference || '';
+  const inquirySourceItems = useMemo(
+    () =>
+      buildInquirySourceOptions(
+        inquiryPreference?.items || [],
+        currentInquirySourceId,
+        currentInquirySourceName
+      ),
+    [currentInquirySourceId, currentInquirySourceName, inquiryPreference?.items]
+  );
+  const inquirySourceOptions = useMemo(
+    () => ({
+      ...(inquiryPreference || {}),
+      items: inquirySourceItems,
+    }),
+    [inquiryPreference, inquirySourceItems]
+  );
+  const selectedInquirySourceInactive = Boolean(
+    values.inquiryPreferences &&
+    inquirySourceOptions?.items?.some(
+      (item: any) => item.id === values.inquiryPreferences && item.isActive === false
+    )
+  );
+
   return {
     formik,
     data: {
@@ -241,8 +278,9 @@ export const useInquiryForm = (
       board,
       boards, // Filtered boards
       classes,
-      inquiryPreference,
+      inquiryPreference: inquirySourceOptions,
       inquiryData,
+      selectedInquirySourceInactive,
     },
     loading: {
       yearLoading,

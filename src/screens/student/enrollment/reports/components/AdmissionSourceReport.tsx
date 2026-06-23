@@ -20,7 +20,7 @@ export default function AdmissionSourceReport() {
     validationSchema: Yup.object({
       class: Yup.array().min(1, 'Class is required'),
       studentName: Yup.string().required('Student Name is required'),
-      inquiryPreference: Yup.string().required('Inquiry Preference is required'),
+      inquiryPreference: Yup.string().required('Inquiry Source is required'),
     }),
     onSubmit: (values) => {
       console.info('Generate Admission Source Report', values);
@@ -99,7 +99,7 @@ export default function AdmissionSourceReport() {
           >
             <TextField
               name="inquiryPreference"
-              label="Inquiry Preference *"
+              label="Inquiry Source *"
               value={formik.values.inquiryPreference}
               onChange={formik.handleChange}
               onBlur={() => formik.setFieldTouched('inquiryPreference', true)}

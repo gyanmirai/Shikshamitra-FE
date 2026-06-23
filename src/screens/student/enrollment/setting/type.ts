@@ -30,6 +30,12 @@ export interface IExamType {
 export interface IInquiryPreference {
   id: string;
   preferenceName: string;
+  description?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  deactivationReason?: string | null;
+  assignedStudentsCount: number;
+  canDelete: boolean;
 }
 
 export interface IRegistrationAmount {

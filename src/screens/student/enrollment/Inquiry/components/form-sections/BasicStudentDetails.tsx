@@ -128,6 +128,8 @@ export const BasicStudentDetails = ({
                   setFieldValue('medium', '');
                   setFieldValue('class', '');
                   setFieldValue('academicYear', value);
+                  setFieldValue('inquiryPreferences', '');
+                  setFieldTouched('inquiryPreferences', false, false);
                 }}
                 error={!!(touched.academicYear && errors.academicYear)}
                 helperText={(touched.academicYear && errors.academicYear) || ''}

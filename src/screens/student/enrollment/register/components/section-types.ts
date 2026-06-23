@@ -48,6 +48,7 @@ export interface GeneralFormValues {
   addressLine3: string;
   pinCode: string;
   inquiryPreference: string | null;
+  inquiryPreferenceName?: string;
   apparId: string;
   panNo: string;
   lastClassPassed: string;

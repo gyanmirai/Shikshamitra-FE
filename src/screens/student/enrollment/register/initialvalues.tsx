@@ -62,6 +62,7 @@ export const generalFieldsInitialValues = (editData?: IGeneralInformationRespons
   addressLine3: editData?.address3 || '',
   pinCode: editData?.pincode || '',
   inquiryPreference: editData?.inquiryPreferenceId || null,
+  inquiryPreferenceName: editData?.inquiryPreference || '',
   apparId: editData?.apparId || '',
   apaarConsentStatus: editData?.apaarConsentStatus ?? '',
   apaarVerificationStatus: editData?.apaarVerificationStatus ?? '',

@@ -12,6 +12,7 @@ interface InquiryDetailsProps {
   formik: FormikProps<IInquiryFormValues>;
   data: {
     inquiryPreference: any;
+    selectedInquirySourceInactive?: boolean;
   };
   loading: {
     inquiryPrefrenceLoading: boolean;
@@ -24,7 +25,7 @@ interface InquiryDetailsProps {
 
 export const InquiryDetails = ({ formik, data, loading, actions }: InquiryDetailsProps) => {
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
-  const { inquiryPreference } = data;
+  const { inquiryPreference, selectedInquirySourceInactive } = data;
   const { inquiryPrefrenceLoading, isGetLoading } = loading;
 
   if (isGetLoading) {
@@ -87,7 +88,7 @@ export const InquiryDetails = ({ formik, data, loading, actions }: InquiryDetail
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <CustomSelect
-            label="Inquiry Preference"
+            label="Inquiry Source"
             name="inquiryPreferences"
             isLoading={inquiryPrefrenceLoading}
             options={inquiryPreference?.items || []}
@@ -99,6 +100,12 @@ export const InquiryDetails = ({ formik, data, loading, actions }: InquiryDetail
               setFieldTouched('inquiryPreferences', true);
             }}
             formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+            helperText={
+              selectedInquirySourceInactive
+                ? 'This inquiry source is inactive. Keep it unchanged or choose an active source.'
+                : undefined
+            }
+            helperTextProps={{ sx: { color: 'warning.main' } }}
             addOtherItemOnClick={actions.dialog.onTrue}
           />
         </Grid>

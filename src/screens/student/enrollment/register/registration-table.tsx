@@ -239,7 +239,7 @@ const RegistrationTable = ({
       { id: 'previousSchool', label: 'Previous School', minWidth: '150px', align: 'left' },
       {
         id: 'inquiryPreference',
-        label: 'Inquiry Preference',
+        label: 'Inquiry Source',
         minWidth: '175px',
         align: 'left',
       },
