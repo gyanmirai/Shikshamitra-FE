@@ -29,6 +29,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
@@ -438,6 +439,9 @@ const FeeCollectComponentForm = ({
           paid: item.paid,
           due: item.due,
           reconciliationAmount: item.reconciliationAmount,
+          concessionAmount: item.concessionAmount,
+          refundAmount: item.refundAmount,
+          refundDescription: item.refundDescription,
           status: normalizeStatus(item.status, item.paid, item.due),
         })),
       })) as FeeLedgerData['monthWise'],
@@ -453,6 +457,9 @@ const FeeCollectComponentForm = ({
               paid: item.paid,
               due: item.due,
               reconciliationAmount: item.reconciliationAmount,
+              concessionAmount: item.concessionAmount,
+              refundAmount: item.refundAmount,
+              refundDescription: item.refundDescription,
               status: normalizeStatus(item.status, item.paid, item.due),
             }))
           )
@@ -475,6 +482,9 @@ const FeeCollectComponentForm = ({
               paid: line.paid,
               due: line.due,
               reconciliationAmount: line.reconciliationAmount,
+              concessionAmount: line.concessionAmount,
+              refundAmount: line.refundAmount,
+              refundDescription: line.refundDescription,
               status: line.status,
             });
             return acc;
@@ -696,7 +706,10 @@ const FeeCollectComponentForm = ({
       details: Object.fromEntries(
         Object.entries(formik.values.payment.details)
           .filter(([, v]) => v != null && v !== '')
-          .map(([k, v]) => [k, dayjs.isDayjs(v) ? v.format('YYYY-MM-DD') : String(v)])
+          .map(([k, v]) => [
+            k,
+            dayjs.isDayjs(v) ? dateConvertor(v.format(dateFormat) || '') || '' : String(v),
+          ])
       ),
     },
   ];
@@ -2146,6 +2159,7 @@ const FeeCollectComponentForm = ({
         academicYear={
           currentYear?.name || (currentYear?.year ? String(currentYear.year) : undefined)
         }
+        bankAccounts={bankAccountOptions}
       />
 
       {/* ── Final Payment Review Dialog ── */}
@@ -2157,6 +2171,7 @@ const FeeCollectComponentForm = ({
         loading={collectLoading}
         formValues={formik.values}
         student={student}
+        bankAccounts={bankAccountOptions}
       />
     </Box>
   );

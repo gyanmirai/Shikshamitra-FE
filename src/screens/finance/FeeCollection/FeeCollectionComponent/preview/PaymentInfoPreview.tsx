@@ -11,6 +11,7 @@ import type { FeeCollectionPayment } from '../../Components/type';
 interface Props {
   payment: FeeCollectionPayment;
   remarks?: string;
+  bankAccounts?: { id: string; name: string }[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -31,11 +32,25 @@ const getPaymentIcon = (method: string): string => {
   );
 };
 
-const formatDetailValue = (key: string, value: any): string => {
+const formatDetailValue = (
+  key: string,
+  value: any,
+  bankAccounts?: { id: string; name: string }[]
+): string => {
   if (!value) return '';
+  if (key === 'bankAccount' && bankAccounts) {
+    const found = bankAccounts.find((acc) => acc.id === value);
+    if (found) return found.name;
+  }
   if (dayjs.isDayjs(value)) return dayjs(value).format('DD/MM/YYYY');
   if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/))
     return dayjs(value).format('DD/MM/YYYY');
+  if (key.toLowerCase().includes('date')) {
+    const d = dayjs(value);
+    if (d.isValid()) {
+      return d.format('DD/MM/YYYY');
+    }
+  }
   return String(value);
 };
 
@@ -66,7 +81,7 @@ const DetailRow = ({ label, value }: { label: string; value?: string | null }) =
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const PaymentInfoPreview = ({ payment, remarks }: Props) => {
+const PaymentInfoPreview = ({ payment, remarks, bankAccounts }: Props) => {
   const theme = useTheme();
   const amount = Number(String(payment.amount || 0).replace(/[₹,\s]/g, ''));
   const detailEntries = Object.entries(payment.details ?? {}).filter(([, v]) => Boolean(v));
@@ -161,7 +176,7 @@ const PaymentInfoPreview = ({ payment, remarks }: Props) => {
               <Grid size={{ xs: 6, sm: 4 }} key={key}>
                 <DetailRow
                   label={key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())}
-                  value={formatDetailValue(key, value)}
+                  value={formatDetailValue(key, value, bankAccounts)}
                 />
               </Grid>
             ))}

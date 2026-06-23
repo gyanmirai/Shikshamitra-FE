@@ -70,7 +70,7 @@ const AddFeeHeadToCardDialog: React.FC<Props> = ({ existingFeeHeadIds, onAdd, on
             setSelectedFeeHeadIds(value);
             if (error) setError('');
           }}
-          options={feeHeadData?.items || []}
+          options={(feeHeadData?.items || []).filter((opt: any) => !existingFeeHeadIds.has(opt.id))}
           labelKey="name"
           valueKey="id"
           error={!!error}

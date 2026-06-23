@@ -5,6 +5,7 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -88,7 +89,7 @@ export const useIncomeForm = (
           categoryTags: values.categoryTags || [],
           amount: values.amount,
           paymentMethod: values.paymentMethod, // integer enum
-          paymentDate: values.paymentDate?.toISOString(),
+          paymentDate: dateConvertor(values.paymentDate?.format(dateFormat) || '') || '',
           notes: values.notes || null,
           ...(values.document && { document: values.document }),
         };

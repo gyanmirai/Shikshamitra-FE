@@ -3,17 +3,21 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
-import React, { useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useRef, useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useCreateLeavePolicyMutation, useUpdateLeavePolicyMutation } from 'src/redux/hr/leaveApi';
+import {
+  useGetLeavePoliciesQuery,
+  useCreateLeavePolicyMutation,
+  useUpdateLeavePolicyMutation,
+} from 'src/redux/hr/leaveApi';
 import {
   Grid,
   Chip,
@@ -168,7 +172,12 @@ const validateRule = (rule: LeavePolicyRuleFormValue) => {
   return null;
 };
 
-const validatePolicy = (values: LeavePolicyFormValues, hasAcademicYear: boolean) => {
+const validatePolicy = (
+  values: LeavePolicyFormValues,
+  hasAcademicYear: boolean,
+  existingTitlesRef: React.MutableRefObject<Set<string>>,
+  editData?: ILeavePolicy | null
+) => {
   if (!hasAcademicYear) return 'Select an academic year before saving a leave policy.';
   if (!values.policyTitle.trim()) return 'Policy name is required.';
   if (!values.effectiveFrom) return 'Effective from date is required.';
@@ -222,6 +231,27 @@ export function LeavePolicyForm({
     currentQueryAndMutation: useUpdateLeavePolicyMutation,
   });
 
+  // Fetch existing policies to validate unique name on the FE (same pattern as FeeHeadForm)
+  const { data: leavePoliciesData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLeavePoliciesQuery,
+    params: { academicYearId: currentYear?.id, page: 1, pageSize: 500 },
+    options: { skip: !currentYear?.id },
+  });
+
+  const existingTitles = useMemo<Set<string>>(
+    () =>
+      new Set<string>(
+        (leavePoliciesData?.items ?? []).map((p: ILeavePolicy) =>
+          (p.policyTitle || p.title || '').trim().toLowerCase()
+        )
+      ),
+    [leavePoliciesData]
+  );
+  // Stable ref so the formik onSubmit closure always reads the latest Set
+  const existingTitlesRef = useRef<Set<string>>(new Set());
+  existingTitlesRef.current = existingTitles;
+
   const initialValues = useMemo<LeavePolicyFormValues>(
     () => ({
       policyTitle: editData?.policyTitle || editData?.title || '',
@@ -239,8 +269,27 @@ export function LeavePolicyForm({
   const formik = useFormik<LeavePolicyFormValues>({
     enableReinitialize: true,
     initialValues,
+    validate: (values) => {
+      const errors: Partial<Record<keyof LeavePolicyFormValues, string>> = {};
+      const titleTrimmed = values.policyTitle.trim().toLowerCase();
+      const editTitle = (editData?.policyTitle || editData?.title || '').trim().toLowerCase();
+      // Flag duplicate only if the name differs from the original (allow keeping same name on edit)
+      if (
+        titleTrimmed &&
+        titleTrimmed !== editTitle &&
+        existingTitlesRef.current.has(titleTrimmed)
+      ) {
+        errors.policyTitle = 'This policy name already exists';
+      }
+      return errors;
+    },
     onSubmit: async (values) => {
-      const validationError = validatePolicy(values, Boolean(currentYear?.id));
+      const validationError = validatePolicy(
+        values,
+        Boolean(currentYear?.id),
+        existingTitlesRef,
+        editData
+      );
       if (validationError) {
         shikshaMitraToast.error({ message: validationError });
         return;
@@ -266,17 +315,21 @@ export function LeavePolicyForm({
         }
 
         shikshaMitraToast.success({
-          message: editData
+          message: editData?.id
             ? 'Leave policy updated successfully'
             : 'Leave policy added successfully',
         });
         handleClose(null, true);
         formik.resetForm();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to save leave policy:', error);
-        shikshaMitraToast.error({
-          message: editData ? 'Failed to update leave policy' : 'Failed to add leave policy',
-        });
+        // Extract the actual message from the BE error response (RTK Query shape: { data: { detail, title } })
+        const beMessage =
+          error?.data?.detail || error?.data?.title || error?.data?.message || error?.message;
+        const fallback = editData?.id
+          ? 'Failed to update leave policy'
+          : 'Failed to add leave policy';
+        shikshaMitraToast.error({ message: beMessage || fallback });
       }
     },
   });
@@ -293,15 +346,22 @@ export function LeavePolicyForm({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Stack spacing={2}>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="policyTitle"
                 label="Policy Name *"
                 value={formik.values.policyTitle}
                 onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
                 size="small"
                 fullWidth
+                error={formik.touched.policyTitle && Boolean(formik.errors.policyTitle)}
+                helperText={
+                  formik.touched.policyTitle && formik.errors.policyTitle
+                    ? formik.errors.policyTitle
+                    : undefined
+                }
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
@@ -406,7 +466,7 @@ export function LeavePolicyForm({
           loading={isCreateLoading || isUpdateLoading}
           onClick={() => formik.handleSubmit()}
         >
-          {editData ? 'Update' : 'Submit'}
+          {editData?.id ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>

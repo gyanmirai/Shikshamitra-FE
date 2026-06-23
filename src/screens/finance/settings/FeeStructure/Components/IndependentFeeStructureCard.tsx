@@ -55,8 +55,10 @@ const feeStructureSchema = Yup.object({
   feeHeads: Yup.array()
     .of(
       Yup.object({
-        paybleMonth: Yup.string().when('isOneTime', {
-          is: true,
+        isOptional: Yup.boolean().optional(),
+        isOneTime: Yup.boolean().optional(),
+        paybleMonth: Yup.string().when(['isOneTime'], {
+          is: (isOneTime: boolean) => isOneTime,
           then: (schema) => schema.required('Payable month is required'),
           otherwise: (schema) => schema.optional().nullable(),
         }),
@@ -110,6 +112,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         // API returns `payableMonth`; the form field is `paybleMonth` (legacy typo) — normalise here
         paybleMonth: fh.paybleMonth ?? (fh as any).payableMonth,
         payableYear: fh.payableYear ?? (fh as any).payableYear,
+        isOptional: fh.isOptional ?? false,
       })),
     },
     validationSchema: feeStructureSchema,
@@ -222,6 +225,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         const savedFeeHeads = (saved.feeHeads ?? formik.values.feeHeads).map((fh: any) => ({
           ...fh,
           paybleMonth: fh.paybleMonth ?? fh.payableMonth,
+          isOptional: fh.isOptional ?? false,
         }));
         formik.resetForm({
           values: {
@@ -243,6 +247,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         const updatedFeeHeads = (saved?.feeHeads ?? formik.values.feeHeads).map((fh: any) => ({
           ...fh,
           paybleMonth: fh.paybleMonth ?? fh.payableMonth,
+          isOptional: fh.isOptional ?? false,
         }));
         formik.resetForm({
           values: {
@@ -301,10 +306,10 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   const COL_WIDTHS = {
     serial: 36, // #
     feeHead: '22%', // Fee Head
-    category: '18%', // Category
-    amount: '15%', // Amount
-    type: '14%', // Type (Recurring / One-Time toggle)
-    month: '20%', // Payable Month
+    category: '17%', // Category
+    amount: '14%', // Amount
+    type: '13%', // Type (Recurring / One-Time toggle)
+    optional: '13%', // Optional/Compulsory toggle
     actions: 40, // remove button
   };
 
@@ -693,6 +698,24 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                     Type
                   </Typography>
                 </Box>
+                <Box
+                  sx={{
+                    width: COL_WIDTHS.optional,
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    color="text.disabled"
+                    fontWeight={600}
+                    textTransform="uppercase"
+                    letterSpacing={0.4}
+                  >
+                    Optional
+                  </Typography>
+                </Box>
                 <Box sx={{ flex: 1 }}>
                   <Typography
                     variant="caption"
@@ -817,6 +840,53 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                           />
                           <Typography variant="caption" fontWeight={600} noWrap>
                             {item.isOneTime ? 'One-Time' : 'Recurring'}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Optional toggle: Optional / Compulsory */}
+                      <Box sx={{ width: COL_WIDTHS.optional, flexShrink: 0, pr: 1 }}>
+                        <Box
+                          component="div"
+                          onClick={() => {
+                            if (!isEditing || isLocked) return;
+                            const newVal = !item.isOptional;
+                            updateFeeHeadFields(idx, {
+                              isOptional: newVal,
+                            });
+                          }}
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            cursor: isEditing && !isLocked ? 'pointer' : 'default',
+                            px: 1,
+                            py: 0.4,
+                            borderRadius: 1,
+                            border: '1px solid',
+                            ...(item.isOptional
+                              ? {
+                                  color: 'info.main',
+                                  bgcolor: varAlpha(theme.palette.info.mainChannel, 0.08),
+                                  borderColor: varAlpha(theme.palette.info.mainChannel, 0.25),
+                                }
+                              : {
+                                  color: 'text.disabled',
+                                  borderColor: varAlpha(theme.palette.grey['500Channel'], 0.2),
+                                }),
+                            transition: 'all 0.18s',
+                          }}
+                        >
+                          <Iconify
+                            icon={
+                              item.isOptional
+                                ? 'solar:check-circle-bold'
+                                : 'solar:check-circle-outline'
+                            }
+                            width={14}
+                          />
+                          <Typography variant="caption" fontWeight={600} noWrap>
+                            {item.isOptional ? 'Optional' : 'Compulsory'}
                           </Typography>
                         </Box>
                       </Box>

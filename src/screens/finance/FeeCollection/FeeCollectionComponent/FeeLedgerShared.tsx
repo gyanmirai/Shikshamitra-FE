@@ -7,7 +7,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
-import { Box, Checkbox, IconButton, Typography } from '@mui/material';
+import { Box, Tooltip, Checkbox, IconButton, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
@@ -45,7 +45,7 @@ const AMOUNT_COLUMN_WIDTH = 112;
 const STATUS_COLUMN_WIDTH = 96;
 
 const getLedgerGridColumns = (showStatus: boolean): string =>
-  `28px minmax(160px, 1fr) repeat(4, ${AMOUNT_COLUMN_WIDTH}px)${showStatus ? ` ${STATUS_COLUMN_WIDTH}px` : ''}`;
+  `28px minmax(160px, 1fr) repeat(5, ${AMOUNT_COLUMN_WIDTH}px)${showStatus ? ` ${STATUS_COLUMN_WIDTH}px` : ''}`;
 
 // ─── ColHeader ─────────────────────────────────────────────────────────────────
 
@@ -83,7 +83,7 @@ export const ColHeader = ({
     >
       {firstLabel}
     </Typography>
-    {(['TOTAL', 'PAID', 'PENDING', 'RECONCILIATION AMOUNT'] as const).map((col) => (
+    {(['TOTAL', 'PAID', 'PENDING', 'CONCESSION', 'RECONCILIATION AMOUNT'] as const).map((col) => (
       <Typography
         key={col}
         variant="caption"
@@ -124,6 +124,9 @@ export interface FeeRowProps {
   showStatus?: boolean;
   onToggle: () => void;
   reconciliationAmount?: number;
+  concessionAmount?: number;
+  refundAmount?: number;
+  refundDescription?: string;
 }
 
 export const FeeRow = ({
@@ -132,6 +135,9 @@ export const FeeRow = ({
   paid,
   due,
   reconciliationAmount,
+  concessionAmount,
+  refundAmount,
+  refundDescription,
   status,
   isSelected,
   isDisabled = false,
@@ -140,6 +146,8 @@ export const FeeRow = ({
 }: FeeRowProps) => {
   const theme = useTheme();
   const safeReconciliationAmount = reconciliationAmount ?? 0;
+  const safeConcessionAmount = concessionAmount ?? 0;
+  const hasRefund = (refundAmount ?? 0) > 0 && !!refundDescription;
 
   return (
     <Box
@@ -181,10 +189,52 @@ export const FeeRow = ({
           '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
         }}
       />
-      <Box display="flex" alignItems="center" gap={1} minWidth={0}>
+      <Box display="flex" alignItems="center" gap={0.5} minWidth={0}>
         <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
           {name}
         </Typography>
+        {hasRefund && (
+          <Tooltip
+            arrow
+            placement="top"
+            title={
+              <Box>
+                <Typography variant="caption" fontWeight={700} display="block">
+                  Refund Info
+                </Typography>
+                <Typography variant="caption" display="block">
+                  Amount: {formatNumber(refundAmount!, 'INR')}
+                </Typography>
+                <Typography variant="caption" display="block">
+                  {refundDescription}
+                </Typography>
+              </Box>
+            }
+          >
+            <Box
+              component="span"
+              onClick={(e) => e.stopPropagation()}
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                bgcolor: 'info.main',
+                color: 'info.contrastText',
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                cursor: 'help',
+                flexShrink: 0,
+                lineHeight: 1,
+                userSelect: 'none',
+              }}
+            >
+              ?
+            </Box>
+          </Tooltip>
+        )}
       </Box>
 
       {/* TOTAL */}
@@ -222,6 +272,21 @@ export const FeeRow = ({
       >
         {formatNumber(due, 'INR')}
       </Typography>
+
+      {/* CONCESSION */}
+      <Typography
+        variant="body2"
+        sx={{
+          textAlign: 'right',
+          fontVariantNumeric: 'tabular-nums',
+          color: safeConcessionAmount > 0 ? 'success.main' : 'text.secondary',
+          fontWeight: safeConcessionAmount > 0 ? 600 : 400,
+        }}
+      >
+        {formatNumber(safeConcessionAmount, 'INR')}
+      </Typography>
+
+      {/* RECONCILIATION AMOUNT */}
       <Typography
         variant="body2"
         sx={{
