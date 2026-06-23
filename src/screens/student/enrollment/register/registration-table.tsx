@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { Label, LabelColor } from 'src/components/label';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
@@ -19,6 +20,11 @@ import {
   useMoveToAdmissionMutation,
   useGetStudentRegistrationQuery,
 } from 'src/redux/student/registration/registration-api';
+import {
+  EntranceExamStatusType,
+  EntranceExamStatusOptions,
+  EntranceExamStatusTypeColors,
+} from 'src/enums/entranceExam-type';
 
 import type { IInquiryData } from '../Inquiry/type';
 
@@ -239,30 +245,11 @@ const RegistrationTable = ({
       { id: 'previousSchool', label: 'Previous School', minWidth: '150px', align: 'left' },
       {
         id: 'inquiryPreference',
-        label: 'Inquiry Preference',
+        label: 'Inquiry Source',
         minWidth: '175px',
         align: 'left',
       },
-      // {
-      //   id: 'status',
-      //   label: 'Entrance Exam',
-      //   filterType: 'enum',
-      //   enumOptions: EntranceExamStatusOptions,
-      //   align: 'left',
-      //   minWidth: '150px',
-      //   sticky: true,
-      //   render(value, row) {
-      //     const color = EntranceExamStatusTypeColors[
-      //       value as EntranceExamStatusType
-      //     ] as LabelColor;
-      //     return (
-      //       <Label color={color}>
-      //         {EntranceExamStatusType[value as EntranceExamStatusType]}
-      //       </Label>
-      //     );
-      //   },
-      // },
-      // { id: 'educationMedium.name', label: 'Organization', align: 'left' },
+      { id: 'educationMedium.name', label: 'Organization', align: 'left' },
       {
         id: 'progress',
         label: 'Progress',
@@ -306,6 +293,22 @@ const RegistrationTable = ({
           );
         },
       },
+      {
+        id: 'status',
+        label: 'Entrance Exam',
+        filterType: 'enum',
+        enumOptions: EntranceExamStatusOptions,
+        align: 'left',
+        minWidth: '150px',
+        sticky: true,
+        render(value, row) {
+          const color = EntranceExamStatusTypeColors[value as EntranceExamStatusType] as LabelColor;
+          return (
+            <Label color={color}>{EntranceExamStatusType[value as EntranceExamStatusType]}</Label>
+          );
+        },
+      },
+
       // {
       //   id: 'followUpStatusType',
       //   label: 'Follow Up Status',

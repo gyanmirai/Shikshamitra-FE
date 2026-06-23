@@ -309,6 +309,7 @@ const AdmissionReportForm = ({
     currentQueryAndMutation: useGetInquiryPreferenceQuery,
     params: {
       academicYearId: currentYear?.id,
+      maxResultCount: 1000,
     },
     options: {
       skip: !currentYear?.id,

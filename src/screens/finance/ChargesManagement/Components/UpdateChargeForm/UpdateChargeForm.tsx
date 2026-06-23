@@ -17,6 +17,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -167,7 +168,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           chargeCategoryId: values.chargeCategoryId,
           purposeDescription: values.purposeDescription,
           amount: parseFloat(String(values.amount)),
-          dueDate: dayjs(values.dueDate).toISOString(),
+          dueDate: dateConvertor(dayjs(values.dueDate).format(dateFormat) || '') || '',
           audience,
         };
 

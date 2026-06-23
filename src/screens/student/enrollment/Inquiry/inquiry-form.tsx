@@ -82,7 +82,10 @@ const InquiryForm = ({
           {/* Section 2: Inquiry Details */}
           <InquiryDetails
             formik={formik}
-            data={{ inquiryPreference: data.inquiryPreference }}
+            data={{
+              inquiryPreference: data.inquiryPreference,
+              selectedInquirySourceInactive: data.selectedInquirySourceInactive,
+            }}
             loading={{
               inquiryPrefrenceLoading: loading.inquiryPrefrenceLoading,
               isGetLoading: loading.isGetLoading,
@@ -140,19 +143,23 @@ const InquiryForm = ({
         handleClose={actions.dialog.onFalse}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Inquiry Preference</Typography>
+            <Typography variant="h5">Inquiry Source</Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Configure and manage inquiry preferences to categorize and track student inquiries effectively."
+              title="Configure inquiry sources for student inquiries."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>
         }
       >
-        <InquiryPreferenceForm handleClose={actions.dialog.onFalse} editData={null} />
+        <InquiryPreferenceForm
+          handleClose={actions.dialog.onFalse}
+          editData={null}
+          academicYearId={values.academicYear}
+        />
       </CustomDialog>
     </BackPopUpChecked>
   );

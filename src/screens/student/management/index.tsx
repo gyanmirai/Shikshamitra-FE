@@ -18,6 +18,7 @@ import GrNoGenerationScreen from './gr-generation';
 import ChangeDivisionScreen from './change-division';
 import BulkStudentAddScreen from './bulk-student-add';
 import RollNoGenerationScreen from './roll-generation';
+import PendingAssignmentScreen from './pending-assignment';
 
 import type { IInquiryData } from '../enrollment/Inquiry/type';
 
@@ -34,8 +35,17 @@ const GroupManagementTab = (props: {
   isLoading: boolean;
   division: string;
 }) => <GroupManagement {...props} />;
+const PendingAssignmentTab = (props: { division: string; classes: string }) => (
+  <PendingAssignmentScreen {...props} />
+);
 
 const TABS = [
+  {
+    value: 'pendingAssignment',
+    label: 'Pending Assignment',
+    icon: <Iconify icon="mdi:clipboard-list-outline" width={20} />,
+    component: PendingAssignmentTab,
+  },
   {
     value: 'grGeneration',
     label: 'GR. No. Generation',
@@ -244,62 +254,79 @@ const StudentManagementScreen = () => {
               minHeight: '0',
             }}
           >
-            {/* Filters Section */}
-            <Card
-              sx={{
-                p: 1,
-                display: 'flex',
-                gap: 2,
-                alignItems: 'center',
-                minHeight: 0,
-                flexShrink: 0,
-              }}
-            >
-              <CustomSelect
-                options={allOrganization}
-                label="Organization"
-                value={organization}
-                onChange={(val) => setOrganization(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-                disabled={!medium}
-              />
-              <CustomSelect
-                options={allClass}
-                label="Class"
-                value={classes}
-                onChange={(val) => setClass(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-                disabled={!organization}
-              />
-              <CustomSelect
-                options={allDivision}
-                label="Division"
-                value={division}
-                onChange={(val) => setDivision(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-                disabled={!classes}
-              />
-            </Card>
+            {/* Filters Section — hidden for Pending Assignment (has its own date-range filter) */}
+            {activeTab !== 'pendingAssignment' && (
+              <Card
+                sx={{
+                  p: 1,
+                  display: 'flex',
+                  gap: 2,
+                  alignItems: 'center',
+                  minHeight: 0,
+                  flexShrink: 0,
+                }}
+              >
+                <CustomSelect
+                  options={allOrganization}
+                  label="Organization"
+                  value={organization}
+                  onChange={(val) => setOrganization(val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  disabled={!medium}
+                />
+                <CustomSelect
+                  options={allClass}
+                  label="Class"
+                  value={classes}
+                  onChange={(val) => setClass(val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  disabled={!organization}
+                />
+                <CustomSelect
+                  options={allDivision}
+                  label="Division"
+                  value={division}
+                  onChange={(val) => setDivision(val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  disabled={!classes}
+                />
+              </Card>
+            )}
 
             {/* Component Render Section */}
-            <Card sx={{ p: 1, flexGrow: 1 }}>
-              {TabComponent && (
-                <TabComponent
-                  tableData={tableData}
-                  isLoading={isLoading}
-                  allDivision={allDivision}
-                  division={division}
-                  allClass={allClass}
-                  classes={classes}
-                />
-              )}
-            </Card>
+            {activeTab === 'pendingAssignment' ? (
+              TabComponent && (
+                <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                  <TabComponent
+                    tableData={tableData}
+                    isLoading={isLoading}
+                    allDivision={allDivision}
+                    division={division}
+                    allClass={allClass}
+                    classes={classes}
+                  />
+                </Box>
+              )
+            ) : (
+              <Card sx={{ p: 1, flexGrow: 1 }}>
+                {TabComponent && (
+                  <TabComponent
+                    tableData={tableData}
+                    isLoading={isLoading}
+                    allDivision={allDivision}
+                    division={division}
+                    allClass={allClass}
+                    classes={classes}
+                  />
+                )}
+              </Card>
+            )}
           </Box>
         </Grid>
       </Grid>

@@ -2,6 +2,7 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import {
   refundPaymentMethodsConfig,
@@ -95,7 +96,7 @@ export const buildFeeRefundApiPayload = (
   paymentDetails: Object.fromEntries(
     Object.entries(values.paymentDetails || {}).map(([k, v]) => [
       k,
-      dayjs.isDayjs(v) ? v.format('YYYY-MM-DD') : v,
+      dayjs.isDayjs(v) ? dateConvertor(v.format(dateFormat) || '') || '' : v,
     ])
   ),
   lines: (values.feeHeadRefunds || []).flatMap((fh) =>

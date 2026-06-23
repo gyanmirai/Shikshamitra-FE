@@ -107,6 +107,7 @@ const EntranceExamScreen = () => {
     data: entranceExamData,
     isLoading,
     isFetching,
+    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamQuery,
@@ -489,11 +490,12 @@ const EntranceExamScreen = () => {
         action={
           <LoadingButton
             variant="contained"
-            loading={isLoading}
+            loading={isMoveLoading}
             size="small"
             startIcon={<Iconify icon="mdi:arrow-right-circle" />}
             onClick={async () => {
               await moveToAdmission(moveId);
+              if (refetch) refetch();
               confirmMovePopup.onFalse();
             }}
           >
@@ -686,14 +688,6 @@ const EntranceExamViewDetails = ({ data, onClose }: { data: any; onClose: () => 
                   fontWeight={600}
                 >
                   {percentage}%
-                  {diff !== null && (
-                    <Box
-                      component="span"
-                      sx={{ ml: 0.5, color: 'text.secondary', fontWeight: 400 }}
-                    >
-                      · {diff >= 0 ? `+${diff} above pass` : `${Math.abs(diff)} below pass`}
-                    </Box>
-                  )}
                 </Typography>
               </Box>
 
@@ -994,7 +988,7 @@ export const ExamForm = ({
               disablePast
               slots={{
                 day: (props: any) => {
-                  const { day } = props;
+                  const { day, disabled } = props;
                   const hasSlots = (slots?.items || []).some(
                     (s: any) =>
                       dayjs(s.startDateTime).format('YYYY-MM-DD') === day.format('YYYY-MM-DD')
@@ -1006,10 +1000,22 @@ export const ExamForm = ({
                         display: 'inline-flex',
                         flexDirection: 'column',
                         alignItems: 'center',
+                        ...(disabled && {
+                          cursor: 'not-allowed',
+                          opacity: 0.5,
+                        }),
                       }}
                     >
-                      <PickersDay {...props} />
-                      {hasSlots && (
+                      <PickersDay
+                        {...props}
+                        sx={{
+                          ...(disabled && {
+                            pointerEvents: 'none',
+                            color: 'text.disabled',
+                          }),
+                        }}
+                      />
+                      {hasSlots && !disabled && (
                         <Box
                           sx={{
                             position: 'absolute',
@@ -1156,29 +1162,39 @@ export const ExamForm = ({
                     dayjs(slot.startDateTime),
                     'minute'
                   );
+                  const isPastSlot = dayjs(slot.startDateTime).isBefore(dayjs());
 
                   return (
                     <Box
                       key={slot.id || index}
-                      onClick={() => formik.setFieldValue('slot', isSelected ? '' : slot.id)}
+                      onClick={() => {
+                        if (!isPastSlot) {
+                          formik.setFieldValue('slot', isSelected ? '' : slot.id);
+                        }
+                      }}
                       sx={{
-                        cursor: 'pointer',
+                        cursor: isPastSlot ? 'not-allowed' : 'pointer',
                         borderRadius: 2,
                         border: '1px solid',
                         borderColor: isSelected ? 'success.main' : 'divider',
-                        bgcolor: 'background.paper',
+                        bgcolor: isPastSlot ? 'action.hover' : 'background.paper',
                         overflow: 'hidden',
                         transition: 'border-color 0.2s, box-shadow 0.2s',
                         boxShadow: isSelected ? '0 0 0 1px rgba(34,197,94,0.15)' : 'none',
-                        '&:hover': {
-                          borderColor: isSelected ? 'success.main' : 'text.secondary',
-                        },
+                        opacity: isPastSlot ? 0.5 : 1,
+                        ...(isPastSlot
+                          ? {}
+                          : {
+                              '&:hover': {
+                                borderColor: isSelected ? 'success.main' : 'text.secondary',
+                              },
+                            }),
                       }}
                     >
-                      {isSelected && (
+                      {isSelected && !isPastSlot && (
                         <Box sx={{ height: 3, bgcolor: 'success.main', width: '100%' }} />
                       )}
-                      <Box sx={{ p: 2 }}>
+                      <Box sx={{ p: 2, pointerEvents: isPastSlot ? 'none' : 'auto' }}>
                         {/* Top row: slot name + radio */}
                         <Box
                           sx={{
@@ -1345,7 +1361,13 @@ export const ExamForm = ({
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             size="small"
-            disabled={!formik.values.slot}
+            disabled={(() => {
+              if (!formik.values.slot) return true;
+              const selectedSlot = formik.values.slots.find(
+                (s: any) => s.id === formik.values.slot
+              );
+              return selectedSlot ? dayjs(selectedSlot.startDateTime).isBefore(dayjs()) : true;
+            })()}
           >
             Confirm
           </LoadingButton>
@@ -1411,10 +1433,10 @@ const ResultForm = ({
    */
   const formik = useFormik({
     initialValues: {
-      obtainedMarks: editData?.obtainedMarks ?? null,
-      totalMarks: editData?.totalMarks,
-      status: editData?.status,
-      passingMarks: editData?.passingMarks,
+      obtainedMarks: editData?.obtainedMarks ?? '',
+      totalMarks: editData?.totalMarks ?? '',
+      status: editData?.status ?? '',
+      passingMarks: editData?.passingMarks ?? '',
     },
     validateOnChange: true,
     validationSchema: Yup.object({

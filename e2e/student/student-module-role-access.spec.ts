@@ -674,6 +674,104 @@ test.describe('Student module bug regression E2E', () => {
     await captureBugScreenshot(page, 'student-4917-inquiry-computed-fields.png');
   });
 
+  test('inquiry source settings keeps failed mutations open', async ({ page }) => {
+    test.setTimeout(180_000);
+
+    const listRequests: string[] = [];
+    await page.route(
+      '**/api/student-enrollment/*/settings/inquiry-preferences**',
+      async (route) => {
+        listRequests.push(route.request().url());
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            totalCount: 2,
+            items: [
+              {
+                id: 'source-status-fail',
+                preferenceName: 'E2E Status Failure Source',
+                description: 'Route controlled source',
+                displayOrder: 1,
+                isActive: true,
+                assignedStudentsCount: 1,
+                canDelete: false,
+              },
+              {
+                id: 'source-delete-fail',
+                preferenceName: 'E2E Delete Failure Source',
+                description: 'Delete should fail',
+                displayOrder: 2,
+                isActive: true,
+                assignedStudentsCount: 0,
+                canDelete: true,
+              },
+            ],
+          }),
+        });
+      }
+    );
+    await page.route(
+      '**/api/student-enrollment/settings/inquiry-preferences/source-status-fail/status',
+      async (route) => {
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            type: 'https://httpstatuses.com/500',
+            title: 'Request failed',
+            status: 500,
+            detail: 'Route-controlled status failure.',
+          }),
+        });
+      }
+    );
+    await page.route(
+      '**/api/student-enrollment/settings/inquiry-preferences/source-delete-fail',
+      async (route) => {
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            type: 'https://httpstatuses.com/500',
+            title: 'Request failed',
+            status: 500,
+            detail: 'Route-controlled delete failure.',
+          }),
+        });
+      }
+    );
+
+    await login(page, process.env.E2E_ADMIN_EMAIL || 'admin-ddvs@ddvs.com');
+    await openStudentPageForEvidence(page, '/student/enrollment/setting/inquiryPrefrence');
+
+    await expect(page.getByTestId('inquiry-preference')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText('E2E Status Failure Source')).toBeVisible();
+    await expect(page.getByText('E2E Delete Failure Source')).toBeVisible();
+    expect(
+      listRequests.some((url) =>
+        /\/student-enrollment\/[^/]+\/settings\/inquiry-preferences/.test(url)
+      )
+    ).toBe(true);
+
+    const statusRow = page.getByRole('row').filter({ hasText: 'E2E Status Failure Source' });
+    await statusRow.locator('input[type="checkbox"]').click({ force: true });
+    const statusDialog = page.getByRole('dialog', { name: /Deactivate Inquiry Source/i });
+    await expect(statusDialog).toBeVisible();
+    await statusDialog.getByRole('button', { name: /^Deactivate$/i }).click();
+    await expect(statusDialog).toBeVisible();
+    await expect(page.getByText(/deactivated successfully/i)).toHaveCount(0);
+
+    await statusDialog.getByRole('button', { name: /^Cancel$/i }).click();
+    const deleteRow = page.getByRole('row').filter({ hasText: 'E2E Delete Failure Source' });
+    await deleteRow.getByTestId('table-action-delete').click();
+    const deleteDialog = page.getByRole('dialog', { name: /^Delete$/i });
+    await expect(deleteDialog).toBeVisible();
+    await deleteDialog.getByRole('button', { name: /^Yes$/i }).click();
+    await expect(deleteDialog).toBeVisible();
+    await expect(page.getByText(/deleted successfully/i)).toHaveCount(0);
+  });
+
   test('4923 registration general details persists class changes', async ({ page }) => {
     test.setTimeout(180_000);
 
@@ -886,7 +984,9 @@ test.describe('Student module bug regression E2E', () => {
     expect(rejectedResponse.ok(), 'Out-of-range Roll No. should be rejected.').toBe(false);
     const problem = await rejectedResponse.json();
     expect(problem.errorCode).toBe('ST:Records:050006');
-    expect(problem.detail).toContain(`Roll numbers cannot exceed total students (${totalStudents}).`);
+    expect(problem.detail).toContain(
+      `Roll numbers cannot exceed total students (${totalStudents}).`
+    );
 
     await openStudentPageForEvidence(page, '/student/management?tab=rollGeneration');
     await captureBugScreenshot(page, 'student-4920-roll-no-max-validation.png');

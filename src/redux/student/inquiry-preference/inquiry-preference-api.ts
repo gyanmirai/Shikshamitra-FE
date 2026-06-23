@@ -4,9 +4,10 @@ import { inquiryPreferenceType } from 'src/redux/tagTypes';
 export const inquiryPreferenceApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getInquiryPreference: builder.query({
-      query: ({ academicYearId }) => ({
+      query: ({ academicYearId, ...params }) => ({
         url: `/student-enrollment/${academicYearId}/settings/inquiry-preferences`,
         method: 'GET',
+        params,
       }),
       providesTags: [inquiryPreferenceType.studentDocumentType],
     }),
@@ -26,6 +27,14 @@ export const inquiryPreferenceApi = api.injectEndpoints({
       }),
       invalidatesTags: [inquiryPreferenceType.studentDocumentType],
     }),
+    updateInquiryPreferenceStatus: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/student-enrollment/settings/inquiry-preferences/${id}/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: [inquiryPreferenceType.studentDocumentType],
+    }),
     deleteInquiryPreference: builder.mutation({
       query: (id) => ({
         url: `/student-enrollment/settings/inquiry-preferences/${id}`,
@@ -39,6 +48,7 @@ export const inquiryPreferenceApi = api.injectEndpoints({
 export const {
   useAddInquiryPreferenceMutation,
   useUpdateInquiryPreferenceMutation,
+  useUpdateInquiryPreferenceStatusMutation,
   useDeleteInquiryPreferenceMutation,
   useGetInquiryPreferenceQuery,
 } = inquiryPreferenceApi;

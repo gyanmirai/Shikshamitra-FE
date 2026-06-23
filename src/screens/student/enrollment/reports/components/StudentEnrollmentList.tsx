@@ -35,7 +35,7 @@ export default function StudentEnrollmentList() {
       dob: Yup.date().required('Date of Birth is required').nullable(),
       religion: Yup.string().required('Religion is required'),
       cast: Yup.string().required('Caste is required'),
-      inquiryPreference: Yup.string().required('Inquiry Preference is required'),
+      inquiryPreference: Yup.string().required('Inquiry Source is required'),
       previousSchoolName: Yup.string().required('Previous School Name is required'),
       contactNo: Yup.string().required('Contact No is required'),
     }),
@@ -223,7 +223,7 @@ export default function StudentEnrollmentList() {
           >
             <TextField
               name="inquiryPreference"
-              label="Inquiry Preference *"
+              label="Inquiry Source *"
               value={formik.values.inquiryPreference}
               onChange={formik.handleChange}
               onBlur={() => formik.setFieldTouched('inquiryPreference', true)}
