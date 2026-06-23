@@ -14,7 +14,7 @@ type UndoConfig<T> = {
   onUndoRestore: (dispatch: any, deleteIndex: number) => void;
 
   // Backend delete (delayed)
-  onCommit: () => Promise<void>;
+  onCommit: () => Promise<any>;
 };
 
 export function useConfirmWithUndo<T>() {
@@ -29,12 +29,26 @@ export function useConfirmWithUndo<T>() {
     onUndoRestore,
     onCommit,
   }: UndoConfig<T>) => {
-    onOptimisticRemove(dispatch, setDeleteIndex);
+    let localDeleteIndex = -1;
+    const customSetDeleteIndex = (index: number) => {
+      localDeleteIndex = index;
+      setDeleteIndex(index);
+    };
+
+    onOptimisticRemove(dispatch, customSetDeleteIndex);
 
     timerRef.current = setTimeout(async () => {
-      await onCommit();
-      toast.dismiss(id);
-      setDeleteIndex(-1);
+      try {
+        const response = (await onCommit()) as any;
+        if (response && response.error) {
+          onUndoRestore(dispatch, localDeleteIndex);
+        }
+      } catch (error) {
+        onUndoRestore(dispatch, localDeleteIndex);
+      } finally {
+        toast.dismiss(id);
+        setDeleteIndex(-1);
+      }
     }, duration);
 
     const id = shikshaMitraToast.info({
@@ -45,7 +59,7 @@ export function useConfirmWithUndo<T>() {
           message={message}
           onUndo={() => {
             if (timerRef.current) clearTimeout(timerRef.current);
-            onUndoRestore(dispatch, deleteIndex);
+            onUndoRestore(dispatch, localDeleteIndex);
             setDeleteIndex(-1);
             toast.dismiss(t);
           }}

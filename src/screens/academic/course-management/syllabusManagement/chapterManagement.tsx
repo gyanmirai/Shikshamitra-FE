@@ -9,12 +9,12 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import React, { useState, useEffect, useCallback } from 'react';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -22,7 +22,6 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
-  chaptersApi,
   useDeleteChapterMutation,
   useGetChaptersByStandardQuery,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
@@ -42,7 +41,6 @@ const Subjects = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteChapterMutation,
   });
-  const { confirmWithUndo } = useConfirmWithUndo();
   const { permissions } = useSelector((state: RootState) => state.auth);
 
   // Permission checks
@@ -438,28 +436,14 @@ const Subjects = () => {
             color="error"
             size="small"
             onClick={async () => {
-              confirmWithUndo({
-                item: selectedChapter,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    chaptersApi.util.updateQueryData(
-                      'getChaptersByStandard',
-                      { standardId: classId, subjectId },
-                      (draft: any) => {
-                        const list = draft?.data ?? draft;
-                        const index = list.findIndex(
-                          (b: any) => b.id === (selectedChapter as any)?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          list.splice(index, 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: (dispatchFn, index) => refetchChapters(),
-                onCommit: () => deleteChapter((selectedChapter as any).id),
-              });
+              try {
+                await deleteChapter((selectedChapter as any).id).unwrap();
+                shikshaMitraToast.success({ message: 'Chapter deleted successfully' });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete chapter.',
+                });
+              }
               deleteDialog.onFalse();
               setSelectedChapter(null);
             }}

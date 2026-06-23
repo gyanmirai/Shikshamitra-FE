@@ -1,14 +1,16 @@
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
-import type { Division } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
+import type { Medium, Division } from 'src/types/school';
 
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Card, Grid, Chip, Button, Divider, Typography } from '@mui/material';
+import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import {
   Class,
   School,
@@ -81,6 +83,20 @@ const ExamBasicReview = ({
 
   // Extract values from formik for easier access
   const { values } = formik;
+
+  const { data: gradeScalingsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetGradeScalingsQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+    options: { skip: !(medium as Medium)?.id },
+  });
+
+  const gradingScaleName = useMemo(() => {
+    if (!values.gradingScaleId) return '-';
+    const list: any[] = gradeScalingsData?.data ?? [];
+    const found = list.find((item: any) => item.id === values.gradingScaleId);
+    return found?.name || '-';
+  }, [values.gradingScaleId, gradeScalingsData]);
 
   // Get all classes by flattening the standards array from each education medium stage
   const allClass = useMemo(
@@ -228,6 +244,15 @@ const ExamBasicReview = ({
                   '-'
                 )
               }
+            />
+          </Grid>
+
+          {/* Grading Scale */}
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <InfoItem
+              icon={<Iconify icon="solar:ranking-bold-duotone" />}
+              label="Grading Scale"
+              value={gradingScaleName}
             />
           </Grid>
 

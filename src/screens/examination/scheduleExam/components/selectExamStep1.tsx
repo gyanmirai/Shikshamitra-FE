@@ -16,6 +16,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Grid, Checkbox, TextField, Typography, Autocomplete } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
+import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -68,6 +69,19 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExaminationTypesQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+    options: {
+      skip: !(medium as Medium)?.id,
+    },
+  });
+
+  const {
+    data: gradeScalingsData,
+    isLoading: isGradeScalingsLoading,
+    isFetching: isGradeScalingsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetGradeScalingsQuery,
     params: { academicMediumId: (medium as Medium)?.id },
     options: {
       skip: !(medium as Medium)?.id,
@@ -272,7 +286,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 </motion.div>
               </Grid>
 
-              <Grid size={{ xs: 12, md: 8 }}>
+              <Grid size={{ xs: 12, md: 12 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
                   <ShakingTextField
                     error={formik.touched.subjects && typeof formik.errors.subjects === 'string'}
@@ -391,7 +405,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 </motion.div>
               </Grid>
 
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
                   <ShakingTextField error={!!(formik.touched.examName && formik.errors.examName)}>
                     <TextField
@@ -411,6 +425,34 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         formik.touched.examName && formik.errors.examName
                           ? formik.errors.examName
                           : 'A short, descriptive name for this exam'
+                      }
+                    />
+                  </ShakingTextField>
+                </motion.div>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                  <ShakingTextField
+                    error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
+                  >
+                    <CustomSelect
+                      options={gradeScalingsData?.data || []}
+                      isLoading={isGradeScalingsLoading || isGradeScalingsFetching}
+                      value={formik.values.gradingScaleId || ''}
+                      onChange={(val) => {
+                        formik.setFieldValue('gradingScaleId', val);
+                        formik.setFieldTouched('gradingScaleId', false);
+                      }}
+                      labelKey="name"
+                      valueKey="id"
+                      label="Grading Scale *"
+                      formControlProps={{ fullWidth: true }}
+                      error={formik.touched.gradingScaleId && Boolean(formik.errors.gradingScaleId)}
+                      helperText={
+                        formik.touched.gradingScaleId && formik.errors.gradingScaleId
+                          ? formik.errors.gradingScaleId
+                          : 'Select overall exam grading scale'
                       }
                     />
                   </ShakingTextField>

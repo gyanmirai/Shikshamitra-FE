@@ -20,6 +20,7 @@ export const defaultExamFormValues: IExamFormValues = {
   examTypeName: '',
   examName: '',
   className: '',
+  gradingScaleId: '',
   divisions: [],
   subjects: [],
   description: '',
@@ -322,6 +323,7 @@ export function mapBackendToFormik(
       '',
     examName: basicData?.examName ?? '',
     className: basicData?.standardId ?? '',
+    gradingScaleId: basicData?.gradingScaleId ?? '',
     divisions: basicData?.divisionIds ?? [],
     subjects,
     description: basicData?.description ?? '',
@@ -339,6 +341,7 @@ export function serializeBasicDetailsPayload(values: IExamFormValues) {
     examTypeId: values.examType,
     examName: values.examName,
     standardId: values.className,
+    gradingScaleId: values.gradingScaleId || null,
     divisionIds: values.divisions.filter((id) => id !== 'all'),
     subjectIds: values.subjects.flatMap((s: any) => {
       // Elective group: send each individual subject's ID, not the group ID

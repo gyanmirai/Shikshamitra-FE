@@ -5,7 +5,6 @@ import type { RootState } from 'src/redux/store';
 import { useState, useCallback } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useDeleteSubjectMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
@@ -23,7 +22,6 @@ export const useSubjectCreation = () => {
     currentQueryAndMutation: useDeleteSubjectMutation,
   });
 
-  const { confirmWithUndo } = useConfirmWithUndo();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedSubject, setSelectedSubject] = useState<ISubject | null>(null);
@@ -61,7 +59,6 @@ export const useSubjectCreation = () => {
     currentMedium,
     selectedSubject,
     setSelectedSubject,
-    confirmWithUndo,
     deleteSubject,
     handleClose,
   };

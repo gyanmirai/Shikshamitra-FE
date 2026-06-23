@@ -10,16 +10,15 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
-  homeworkTypesApi,
   useGetHomeworkTypesQuery,
   useDeleteHomeworkTypeMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
@@ -68,7 +67,6 @@ const HomeworkTypeCreation = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteHomeworkTypeMutation,
   });
-  const { confirmWithUndo } = useConfirmWithUndo();
 
   /**
    * Handles closing of the add/edit dialog
@@ -205,29 +203,17 @@ const HomeworkTypeCreation = () => {
             size="small"
             color="error"
             onClick={async () => {
-              confirmWithUndo({
-                item: selectedData,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    homeworkTypesApi.util.updateQueryData(
-                      'getHomeworkTypes',
-                      { academicMediumId: (medium as Medium)?.id },
-                      (draft: any) => {
-                        const index = draft.data.findIndex(
-                          (item: any) => item.id === selectedData?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) draft.data.splice(index, 1);
-                      }
-                    )
-                  ),
-                onUndoRestore: () => refetch(),
-                onCommit: () =>
-                  deleteHomeworkType({
-                    academicMediumId: (medium as Medium)?.id,
-                    homeworkTypeId: selectedData?.id,
-                  }),
-              });
+              try {
+                await deleteHomeworkType({
+                  academicMediumId: (medium as Medium)?.id,
+                  homeworkTypeId: selectedData?.id,
+                }).unwrap();
+                shikshaMitraToast.success({ message: 'Homework Type deleted successfully' });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete Homework Type',
+                });
+              }
               deleteDialog.onFalse();
               setSelectedData(null);
             }}

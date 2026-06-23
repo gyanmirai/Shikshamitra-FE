@@ -10,16 +10,15 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
-  assignmentTypesApi,
   useGetAssignmentTypesQuery,
   useDeleteAssignmentTypeMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
@@ -65,7 +64,6 @@ const AssignmentTypeCreation = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteAssignmentTypeMutation,
   });
-  const { confirmWithUndo } = useConfirmWithUndo();
 
   /**
    * Handles dialog close with form submission check
@@ -198,29 +196,17 @@ const AssignmentTypeCreation = () => {
             color="error"
             size="small"
             onClick={async () => {
-              confirmWithUndo({
-                item: selectedData,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    assignmentTypesApi.util.updateQueryData(
-                      'getAssignmentTypes',
-                      { academicMediumId: (currentMedium as Medium).id },
-                      (draft: any) => {
-                        const index = draft?.data?.findIndex(
-                          (item: any) => item.id === selectedData?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1 && draft?.data) draft.data.splice(index, 1);
-                      }
-                    )
-                  ),
-                onUndoRestore: (dispatchFn, index) => refetch(),
-                onCommit: () =>
-                  deleteAssignmentType({
-                    academicMediumId: (currentMedium as any).id,
-                    assignmentTypeId: selectedData?.id,
-                  }),
-              });
+              try {
+                await deleteAssignmentType({
+                  academicMediumId: (currentMedium as any).id,
+                  assignmentTypeId: selectedData?.id,
+                }).unwrap();
+                shikshaMitraToast.success({ message: 'Assignment Type deleted successfully' });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete Assignment Type',
+                });
+              }
               deleteDialog.onFalse();
               setSelectedData(null);
             }}

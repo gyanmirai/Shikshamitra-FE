@@ -17,7 +17,6 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -92,7 +91,6 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
     currentQueryAndMutation: useUpdateHomeworkStatusMutation,
   });
 
-  const { confirmWithUndo } = useConfirmWithUndo();
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -487,27 +485,14 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
                 HomeworkDate: isValidDate ? date!.toISOString() : undefined,
               };
 
-              confirmWithUndo({
-                item: selectedHomework,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    homeworkApi.util.updateQueryData(
-                      'getHomeworks',
-                      homeworkQueryParam,
-                      (draft: any) => {
-                        const index = draft.items?.findIndex(
-                          (hw: any) => hw.id === selectedHomework?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          draft.items.splice(index, 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: () => refetch(),
-                onCommit: () => deleteHomework({ homeworkId: selectedHomework?.id }),
-              });
+              try {
+                await deleteHomework({ homeworkId: selectedHomework?.id }).unwrap();
+                shikshaMitraToast.success({ message: 'Homework deleted successfully' });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete homework.',
+                });
+              }
 
               deleteHomeworkDialog.onFalse();
               setSelectedHomework(null);

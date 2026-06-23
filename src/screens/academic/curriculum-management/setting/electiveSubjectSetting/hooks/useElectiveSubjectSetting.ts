@@ -5,7 +5,6 @@ import type { RootState } from 'src/redux/store';
 import { useState, useCallback } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useDeleteElectiveGroupMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
@@ -24,7 +23,6 @@ export const useElectiveSubjectSetting = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteElectiveGroupMutation,
   });
-  const { confirmWithUndo } = useConfirmWithUndo();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
   const [selected, setSelected] = useState<IElectiveSubject | null>(null);
@@ -63,7 +61,6 @@ export const useElectiveSubjectSetting = () => {
     selected,
     setSelected,
     handleClose,
-    confirmWithUndo,
     deleteElectiveGroup,
   };
 };

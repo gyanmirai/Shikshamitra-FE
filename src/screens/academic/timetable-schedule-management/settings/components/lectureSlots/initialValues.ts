@@ -14,7 +14,7 @@ export const getInitialValues = (classes: string, editData?: any) => {
               ? config.timeSlots.map((slot: any, index: number) => ({
                   id: slot.id || index,
                   startTime: slot.startTime ? dayjs(slot.startTime, 'HH:mm:ss') : null,
-                  endTime: slot.endTime ? dayjs(slot.endTime, 'HH,mm:ss') : null,
+                  endTime: slot.endTime ? dayjs(slot.endTime, 'HH:mm:ss') : null,
                   slotType: Number(slot.slotType) === 1 ? 'break' : 'period',
                   breakType:
                     Number(slot.breakType) === 0

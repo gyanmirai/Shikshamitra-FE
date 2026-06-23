@@ -222,6 +222,7 @@ export const validationSchema = [
     examType: yup.string().required('Exam Type is required'),
     examName: yup.string().required('Exam Name is required'),
     className: yup.string().required('Class is required'),
+    gradingScaleId: yup.string().required('Grading Scale is required'),
     divisions: yup.array().min(1, 'At least one division is required'),
     subjects: yup
       .array()

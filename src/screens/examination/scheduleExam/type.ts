@@ -54,6 +54,7 @@ export interface IExamFormValues {
   examTypeName: string;
   examName: string;
   className: string;
+  gradingScaleId?: string | null;
   divisions: string[];
   /** Single array for ALL steps — replaces the old selectedSubjects + subjects split */
   subjects: IExamSubject[];

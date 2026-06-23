@@ -17,13 +17,11 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
-  assignmentApi,
   useGetAssignmentsQuery,
   useGetAssignmentByIdQuery,
   useDeleteAssignmentMutation,
@@ -168,8 +166,6 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subjectOptionsData]);
-
-  const { confirmWithUndo } = useConfirmWithUndo();
 
   // Update classes when organization changes
   useEffect(() => {
@@ -407,27 +403,14 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
                 AssignmentDate: isValidDate ? date.toISOString() : undefined,
               };
 
-              confirmWithUndo({
-                item: selectedAssignment,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    assignmentApi.util.updateQueryData(
-                      'getAssignments',
-                      assignmentQueryParams,
-                      (draft: any) => {
-                        const index = draft.items?.findIndex(
-                          (a: any) => a.id === selectedAssignment?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          draft.items.splice(index, 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: () => refetch(),
-                onCommit: () => deleteAssignment(selectedAssignment?.id),
-              });
+              try {
+                await deleteAssignment(selectedAssignment?.id).unwrap();
+                shikshaMitraToast.success({ message: 'Assignment deleted successfully' });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete assignment.',
+                });
+              }
 
               deleteAssignmentDialog.onFalse();
               setSelectedAssignment(null);

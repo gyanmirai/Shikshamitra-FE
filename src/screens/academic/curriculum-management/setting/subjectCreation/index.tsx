@@ -9,12 +9,12 @@ import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { subjectsApi } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import SettingSubjectForm from './subjectForm';
 import SubjectAddDrawer from './subjectAddDrawer';
@@ -48,7 +48,6 @@ const SubjectCreation = () => {
     currentMedium,
     selectedSubject,
     setSelectedSubject,
-    confirmWithUndo,
     deleteSubject,
     handleClose,
   } = useSubjectCreation();
@@ -148,42 +147,17 @@ const SubjectCreation = () => {
             color="error"
             size="small"
             onClick={async () => {
-              let deletedItemIndex = -1;
-              confirmWithUndo({
-                item: selectedSubject,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    subjectsApi.util.updateQueryData(
-                      'getCoreSubjectsByMedium',
-                      { academicMediumId: (currentMedium as any).id },
-                      (draft: any) => {
-                        const index = draft.findIndex(
-                          (item: any) => item.id === (selectedSubject as any).id
-                        );
-                        deletedItemIndex = index;
-                        setDeleteIndex(index);
-                        if (index !== -1) draft.splice(index, 1);
-                      }
-                    )
-                  ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    subjectsApi.util.updateQueryData(
-                      'getCoreSubjectsByMedium',
-                      { academicMediumId: (currentMedium as any).id },
-                      (draft: any) => {
-                        if (!draft) return;
-                        const restoreIndex = deletedItemIndex !== -1 ? deletedItemIndex : index;
-                        draft.splice(restoreIndex, 0, selectedSubject);
-                      }
-                    )
-                  ),
-                onCommit: () =>
-                  deleteSubject({
-                    academicMediumId: (currentMedium as any).id,
-                    id: (selectedSubject as any).id,
-                  }),
-              });
+              try {
+                await deleteSubject({
+                  academicMediumId: (currentMedium as any).id,
+                  id: (selectedSubject as any).id,
+                }).unwrap();
+                shikshaMitraToast.success({ message: 'Subject deleted successfully' });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete subject.',
+                });
+              }
               deleteSubjectDialog.onFalse();
               setSelectedSubject(null);
             }}

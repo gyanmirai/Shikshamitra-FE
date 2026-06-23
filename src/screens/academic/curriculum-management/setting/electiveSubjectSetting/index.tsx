@@ -9,12 +9,12 @@ import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { electiveGroupsApi } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 
 import ElectiveSubjectTable from './components/electiveSubjectTable';
 import SettingElectiveSubjectForm from './components/electiveSubjectForm';
@@ -47,7 +47,6 @@ const ElectiveSubjectSetting = () => {
     selected,
     setSelected,
     handleClose,
-    confirmWithUndo,
     deleteElectiveGroup,
   } = useElectiveSubjectSetting();
 
@@ -150,38 +149,20 @@ const ElectiveSubjectSetting = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              confirmWithUndo({
-                item: selected,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    electiveGroupsApi.util.updateQueryData(
-                      'getElectiveGroups',
-                      { academicMediumId: (currentMedium as any)?.id },
-                      (draft: any) => {
-                        const index = draft.findIndex((item: any) => item.id === selected?.id);
-                        setDeleteIndex(index);
-                        if (index !== -1) draft.splice(index, 1);
-                      }
-                    )
-                  ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    electiveGroupsApi.util.updateQueryData(
-                      'getElectiveGroups',
-                      { academicMediumId: (currentMedium as any)?.id },
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selected);
-                      }
-                    )
-                  ),
-                onCommit: () =>
-                  deleteElectiveGroup({
-                    academicMediumId: (currentMedium as any)?.id,
-                    id: (selected as any)?.id,
-                  }),
-              });
+            onClick={async () => {
+              try {
+                await deleteElectiveGroup({
+                  academicMediumId: (currentMedium as any)?.id,
+                  id: (selected as any)?.id,
+                }).unwrap();
+                shikshaMitraToast.success({
+                  message: 'Elective subject group deleted successfully',
+                });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete elective subject group.',
+                });
+              }
               deleteDialog.onFalse();
               setSelected(null);
             }}
