@@ -2,12 +2,12 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 
 import { createEmployeeFixture } from './employee-fixtures';
-import { createEmployeeFromExistingDefaults, employeeApiRequest } from './employee-api';
+import { employeeApiRequest, createEmployeeFromExistingDefaults } from './employee-api';
 import {
   fillDate,
   saveStep,
-  fillTextByLabel,
   searchEmployee,
+  fillTextByLabel,
   gotoEmployeeList,
   openFirstRowEdit,
 } from './employee-page';
@@ -47,7 +47,9 @@ function uniqueById(items: any[]) {
 
 async function currentAcademicYear(page: Page) {
   const body = await getJson<any>(page, '/app/academic-year?Sorting=name');
-  const years = asItems<any>(body).map(toAcademicYear).filter((year) => year?.id);
+  const years = asItems<any>(body)
+    .map(toAcademicYear)
+    .filter((year) => year?.id);
   const today = new Date();
   const current =
     years.find((year) => {
@@ -65,8 +67,9 @@ async function currentAcademicYear(page: Page) {
 
 function boardMatchesAcademicYear(board: any, academicYearId: string) {
   return (
-    String(board?.academicYearId || board?.academicYear?.id || board?.AcademicYearId || '').toLowerCase() ===
-    academicYearId.toLowerCase()
+    String(
+      board?.academicYearId || board?.academicYear?.id || board?.AcademicYearId || ''
+    ).toLowerCase() === academicYearId.toLowerCase()
   );
 }
 
@@ -94,8 +97,17 @@ async function firstMediumFromAcademicSetup(page: Page, academicYearId: string) 
   if (!medium?.id) {
     throw new Error('Unable to resolve an Academic Permission parent medium from academic setup');
   }
+  const board = boardsById.get(
+    String(medium.educationBoardId || medium.EducationBoardId || '').toLowerCase()
+  );
+  const boardId = board?.id || medium.educationBoardId || medium.EducationBoardId;
+  if (!boardId) {
+    throw new Error('Unable to resolve a board for the Academic Permission parent medium');
+  }
 
   return {
+    board,
+    boardId,
     medium,
     mediumId: medium.id,
   };
@@ -115,7 +127,11 @@ async function firstNonAdminRoleId(page: Page) {
   return role.id;
 }
 
-async function employeeUserId(page: Page, fixture: ReturnType<typeof createEmployeeFixture>, created: any) {
+async function employeeUserId(
+  page: Page,
+  fixture: ReturnType<typeof createEmployeeFixture>,
+  created: any
+) {
   const employeeList = await getJson<any>(
     page,
     `/employees?page=1&pageSize=10&search=${encodeURIComponent(fixture.email)}`
@@ -148,18 +164,21 @@ async function assignParentMediumAccess(
   page: Page,
   userId: string,
   academicYearId: string,
+  boardId: string,
   mediumId: string
 ) {
   const response = await employeeApiRequest(page, '/app/user-scope/bulk-assign', {
     method: 'POST',
     body: JSON.stringify({
-      academicYearIds: [academicYearId],
+      academicYearId,
       userIds: [userId],
-      educationBoardIds: [],
-      educationMediumIds: [mediumId],
-      educationMediumStageIds: [],
-      standardIds: [],
-      divisionIds: [],
+      scopes: [
+        {
+          educationBoardId: boardId,
+          educationMediumId: mediumId,
+        },
+      ],
+      clearExisting: false,
     }),
   });
   await expectOk(response, 'assign parent Academic Permission medium');
@@ -224,7 +243,10 @@ async function mediumParentCheckbox(page: Page, index = 0) {
   return mediumChip.locator('xpath=preceding::input[@type="checkbox"][1]');
 }
 
-async function firstCheckedMediumParentCheckbox(page: Page, index = 0): Promise<Locator | undefined> {
+async function firstCheckedMediumParentCheckbox(
+  page: Page,
+  index = 0
+): Promise<Locator | undefined> {
   const mediumChips = page.getByText('mediums', { exact: true });
   await expect(mediumChips.first()).toBeVisible({ timeout: 30_000 });
   const mediumChipCount = await mediumChips.count();
@@ -283,7 +305,10 @@ async function closeNotifications(page: Page) {
   const notificationButtonCount = await notificationButtons.count().catch(() => 0);
   await Promise.all(
     Array.from({ length: notificationButtonCount }, (_, index) =>
-      notificationButtons.nth(index).click({ force: true }).catch(() => undefined)
+      notificationButtons
+        .nth(index)
+        .click({ force: true })
+        .catch(() => undefined)
     )
   );
 }
@@ -293,10 +318,9 @@ async function submitAndCaptureBulkAssign(page: Page) {
   const button = page.getByRole('button', { name: /^Submit$/i });
   await expect(button).toBeEnabled({ timeout: 20_000 });
   await expect
-    .poll(
-      () => page.evaluate(() => document.querySelector('form')?.checkValidity() ?? false),
-      { timeout: 5_000 }
-    )
+    .poll(() => page.evaluate(() => document.querySelector('form')?.checkValidity() ?? false), {
+      timeout: 5_000,
+    })
     .toBe(true);
 
   const requestPromise = page.waitForRequest(
@@ -340,15 +364,17 @@ test.describe('HR Employee edit stepper', () => {
     const userId = await employeeUserId(page, fixture, employee);
 
     const academicYear = await currentAcademicYear(page);
-    const { mediumId } = await firstMediumFromAcademicSetup(page, academicYear.id);
+    const { boardId, mediumId } = await firstMediumFromAcademicSetup(page, academicYear.id);
     const payload = {
-      academicYearIds: [academicYear.id],
+      academicYearId: academicYear.id,
       userIds: [userId],
-      educationBoardIds: [],
-      educationMediumIds: [mediumId],
-      educationMediumStageIds: [],
-      standardIds: [],
-      divisionIds: [],
+      scopes: [
+        {
+          educationBoardId: boardId,
+          educationMediumId: mediumId,
+        },
+      ],
+      clearExisting: false,
       description: `E2E parent Academic Permission ${Date.now()}`,
     };
 
@@ -377,9 +403,7 @@ test.describe('HR Employee edit stepper', () => {
     expect(asItems(medium.mediumStages || medium.MediumStages)).toHaveLength(0);
   });
 
-  test('updates personal info and saves a parent Academic Permission node', async ({
-    page,
-  }) => {
+  test('updates personal info and saves a parent Academic Permission node', async ({ page }) => {
     const employee = createEmployeeFixture('E2E HR EDIT');
     await page.goto('/dashboard/');
     const roleId = await firstNonAdminRoleId(page);
@@ -405,8 +429,7 @@ test.describe('HR Employee edit stepper', () => {
     await fillTextByLabel(page, 'Area', `Automation Road ${employee.suffix.slice(-4)}`);
     const personalInfoRequestPromise = page.waitForRequest(
       (request) =>
-        /\/api\/employees\/[^/]+\/personal-info/.test(request.url()) &&
-        request.method() === 'PUT'
+        /\/api\/employees\/[^/]+\/personal-info/.test(request.url()) && request.method() === 'PUT'
     );
     const personalInfoResponsePromise = page.waitForResponse(
       (response) =>
@@ -428,9 +451,12 @@ test.describe('HR Employee edit stepper', () => {
 
     expect(accessControlResponse.ok()).toBe(true);
     const payload = JSON.parse(accessControlRequest.postData() || '{}');
-    expect(payload.educationMediumIds?.length).toBeGreaterThan(0);
-    expect(payload.educationBoardIds || []).toEqual([]);
-    expect(payload.educationMediumStageIds || []).toEqual([]);
+    expect(payload.scopes?.length).toBeGreaterThan(0);
+    expect(payload.scopes[0].educationBoardId).toBeTruthy();
+    expect(payload.scopes[0].educationMediumId).toBeTruthy();
+    expect(payload).not.toHaveProperty('educationBoardIds');
+    expect(payload).not.toHaveProperty('educationMediumIds');
+    expect(payload).not.toHaveProperty('educationMediumStageIds');
     expect(payload.clearExisting).toBe(false);
     await expect(page.getByText(/Failed to save employee details/i)).toHaveCount(0);
   });
@@ -444,8 +470,8 @@ test.describe('HR Employee edit stepper', () => {
     const createdEmployee = await createEmployeeFromExistingDefaults(page, employee, { roleId });
     const userId = await employeeUserId(page, employee, createdEmployee);
     const academicYear = await currentAcademicYear(page);
-    const { mediumId } = await firstMediumFromAcademicSetup(page, academicYear.id);
-    await assignParentMediumAccess(page, userId, academicYear.id, mediumId);
+    const { boardId, mediumId } = await firstMediumFromAcademicSetup(page, academicYear.id);
+    await assignParentMediumAccess(page, userId, academicYear.id, boardId, mediumId);
 
     await gotoEmployeeList(page);
     await searchEmployee(page, employee.email);
@@ -457,11 +483,17 @@ test.describe('HR Employee edit stepper', () => {
 
     expect(accessControlResponse.ok()).toBe(true);
     const payload = JSON.parse(accessControlRequest.postData() || '{}');
-    expect(payload.educationMediumIds).toEqual([mediumId]);
-    expect(payload.educationBoardIds || []).toEqual([]);
-    expect(payload.educationMediumStageIds || []).toEqual([]);
-    expect(payload.standardIds || []).toEqual([]);
-    expect(payload.divisionIds || []).toEqual([]);
+    expect(payload.scopes).toEqual([
+      {
+        educationBoardId: boardId,
+        educationMediumId: mediumId,
+      },
+    ]);
+    expect(payload).not.toHaveProperty('educationBoardIds');
+    expect(payload).not.toHaveProperty('educationMediumIds');
+    expect(payload).not.toHaveProperty('educationMediumStageIds');
+    expect(payload).not.toHaveProperty('standardIds');
+    expect(payload).not.toHaveProperty('divisionIds');
     expect(payload.clearExisting).toBe(false);
     await expect(page.getByText(/Failed to save employee details/i)).toHaveCount(0);
   });
@@ -473,8 +505,8 @@ test.describe('HR Employee edit stepper', () => {
     const createdEmployee = await createEmployeeFromExistingDefaults(page, employee, { roleId });
     const userId = await employeeUserId(page, employee, createdEmployee);
     const academicYear = await currentAcademicYear(page);
-    const { mediumId } = await firstMediumFromAcademicSetup(page, academicYear.id);
-    await assignParentMediumAccess(page, userId, academicYear.id, mediumId);
+    const { boardId, mediumId } = await firstMediumFromAcademicSetup(page, academicYear.id);
+    await assignParentMediumAccess(page, userId, academicYear.id, boardId, mediumId);
 
     await gotoEmployeeList(page);
     await searchEmployee(page, employee.email);
@@ -493,11 +525,12 @@ test.describe('HR Employee edit stepper', () => {
 
     expect(accessControlResponse.ok()).toBe(true);
     const payload = JSON.parse(accessControlRequest.postData() || '{}');
-    expect(payload.educationBoardIds || []).toEqual([]);
-    expect(payload.educationMediumIds || []).toEqual([]);
-    expect(payload.educationMediumStageIds || []).toEqual([]);
-    expect(payload.standardIds || []).toEqual([]);
-    expect(payload.divisionIds || []).toEqual([]);
+    expect(payload.scopes || []).toEqual([]);
+    expect(payload).not.toHaveProperty('educationBoardIds');
+    expect(payload).not.toHaveProperty('educationMediumIds');
+    expect(payload).not.toHaveProperty('educationMediumStageIds');
+    expect(payload).not.toHaveProperty('standardIds');
+    expect(payload).not.toHaveProperty('divisionIds');
     expect(payload.clearExisting).toBe(true);
     await expect(page.getByText(/Failed to save employee details/i)).toHaveCount(0);
   });

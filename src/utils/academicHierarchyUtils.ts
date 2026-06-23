@@ -99,6 +99,14 @@ export type AccessSelection = {
   divisions: string[];
 };
 
+export type AcademicScopeRow = {
+  educationBoardId?: string;
+  educationMediumId?: string;
+  educationMediumStageId?: string;
+  standardId?: string;
+  divisionId?: string;
+};
+
 export type GlobalAcademicSearchOption<TAcademicYear = any, TBoard = any, TMedium = any> = {
   label: string;
   value: string;
@@ -146,32 +154,56 @@ export const dedupeAccessSelection = (selection: AccessSelection): AccessSelecti
 export const hasAccessSelection = (selection?: Partial<AccessSelection> | null) =>
   !!selection && accessSelectionKeys.some((key) => (selection[key]?.length ?? 0) > 0);
 
-type AccessTreeNode = {
+type AccessScopeTreeNode = {
   id: string;
   type: keyof AccessSelection;
-  children?: AccessTreeNode[];
+  path: AcademicScopeRow;
+  children?: AccessScopeTreeNode[];
 };
 
 type AccessSelectionSets = Record<keyof AccessSelection, Set<string>>;
 
-type AccessSelectionStatus = 'full' | 'partial' | 'none';
-
-const toAccessTree = (allBoards: any[] | undefined): AccessTreeNode[] =>
+const toAccessScopeTree = (allBoards: any[] | undefined): AccessScopeTreeNode[] =>
   (allBoards || []).map((board: any) => ({
     id: board.id,
     type: 'boards',
+    path: {
+      educationBoardId: board.id,
+    },
     children: board.educationMediums?.map((medium: any) => ({
       id: medium.id,
       type: 'mediums',
+      path: {
+        educationBoardId: board.id,
+        educationMediumId: medium.id,
+      },
       children: medium.educationMediumStages?.map((stage: any) => ({
         id: stage.id,
         type: 'organizations',
+        path: {
+          educationBoardId: board.id,
+          educationMediumId: medium.id,
+          educationMediumStageId: stage.id,
+        },
         children: stage.standards?.map((standard: any) => ({
           id: standard.id,
           type: 'standards',
+          path: {
+            educationBoardId: board.id,
+            educationMediumId: medium.id,
+            educationMediumStageId: stage.id,
+            standardId: standard.id,
+          },
           children: standard.divisions?.map((division: any) => ({
             id: division.id,
             type: 'divisions',
+            path: {
+              educationBoardId: board.id,
+              educationMediumId: medium.id,
+              educationMediumStageId: stage.id,
+              standardId: standard.id,
+              divisionId: division.id,
+            },
           })),
         })),
       })),
@@ -186,53 +218,18 @@ const toAccessSelectionSets = (selection: AccessSelection): AccessSelectionSets 
   divisions: new Set(selection.divisions || []),
 });
 
-const buildAccessSelectionStatusMap = (
-  roots: AccessTreeNode[],
-  sourceSets: AccessSelectionSets
-): Map<string, AccessSelectionStatus> => {
-  const map = new Map<string, AccessSelectionStatus>();
-
-  const visit = (node: AccessTreeNode): AccessSelectionStatus => {
-    if (!node.children?.length) {
-      const status = sourceSets[node.type].has(node.id) ? 'full' : 'none';
-      map.set(node.id, status);
-      return status;
-    }
-
-    let fullCount = 0;
-    let noneCount = 0;
-    node.children.forEach((child) => {
-      const childStatus = visit(child);
-      if (childStatus === 'full') fullCount += 1;
-      if (childStatus === 'none') noneCount += 1;
-    });
-
-    let status: AccessSelectionStatus;
-    if (fullCount === node.children.length) status = 'full';
-    else if (noneCount === node.children.length) status = 'none';
-    else status = 'partial';
-
-    map.set(node.id, status);
-    return status;
-  };
-
-  roots.forEach(visit);
-  return map;
-};
-
 export const compressExplicitAcademicSelection = (
   checkedItem: AccessSelection,
   allBoards: any[] | undefined
 ): AccessSelection => {
   if (!allBoards?.length) return emptyAccessSelection();
 
-  const roots = toAccessTree(allBoards);
+  const roots = toAccessScopeTree(allBoards);
   const sourceSets = toAccessSelectionSets(checkedItem || emptyAccessSelection());
-  const statusMap = buildAccessSelectionStatusMap(roots, sourceSets);
   const output = emptyAccessSelection();
 
-  const visit = (node: AccessTreeNode) => {
-    if (statusMap.get(node.id) === 'full' && sourceSets[node.type].has(node.id)) {
+  const visit = (node: AccessScopeTreeNode) => {
+    if (sourceSets[node.type].has(node.id)) {
       output[node.type].push(node.id);
       return;
     }
@@ -242,6 +239,44 @@ export const compressExplicitAcademicSelection = (
 
   roots.forEach(visit);
   return dedupeAccessSelection(output);
+};
+
+export const compressAcademicSelectionToScopeRows = (
+  checkedItem: AccessSelection,
+  allBoards: any[] | undefined
+): AcademicScopeRow[] => {
+  if (!allBoards?.length) return [];
+
+  const scopeRoots = toAccessScopeTree(allBoards);
+  const sourceSets = toAccessSelectionSets(checkedItem || emptyAccessSelection());
+  const rows: AcademicScopeRow[] = [];
+  const seen = new Set<string>();
+
+  const pushRow = (row: AcademicScopeRow) => {
+    const key = [
+      row.educationBoardId,
+      row.educationMediumId,
+      row.educationMediumStageId,
+      row.standardId,
+      row.divisionId,
+    ].join('|');
+    if (!seen.has(key)) {
+      seen.add(key);
+      rows.push({ ...row });
+    }
+  };
+
+  const visit = (node: AccessScopeTreeNode) => {
+    if (sourceSets[node.type].has(node.id)) {
+      pushRow(node.path);
+      return;
+    }
+
+    node.children?.forEach(visit);
+  };
+
+  scopeRoots.forEach(visit);
+  return rows;
 };
 
 // Add every id within a board (from the full boards tree) into `out`.

@@ -19,8 +19,8 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Grid, Slide, Button, TextField, Typography } from '@mui/material';
+import { buildUserScopeBulkAssignPayload } from 'src/utils/userScopeBulkAssignPayload';
 import {
-  hasAccessSelection,
   expandAccessibleHierarchy,
   compressExplicitAcademicSelection,
 } from 'src/utils/academicHierarchyUtils';
@@ -903,16 +903,14 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       );
       formik.setFieldValue('academicPermissionSelectedData', normalizedSelection, false);
 
-      const res = await addAccessControl({
-        academicYearIds: [currentYear.id],
-        userIds: [userId],
-        educationBoardIds: normalizedSelection.boards,
-        educationMediumIds: normalizedSelection.mediums,
-        educationMediumStageIds: normalizedSelection.organizations,
-        standardIds: normalizedSelection.standards,
-        divisionIds: normalizedSelection.divisions,
-        clearExisting: !hasAccessSelection(normalizedSelection),
-      }).unwrap();
+      const res = await addAccessControl(
+        buildUserScopeBulkAssignPayload({
+          academicYearId: currentYear.id,
+          userIds: [userId],
+          selection: values.academicPermission,
+          allBoards: allBoardsForAcademicPermission,
+        })
+      ).unwrap();
       return res;
     },
     [addAccessControl, allBoardsForAcademicPermission, currentYear?.id, editData]
@@ -1083,9 +1081,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     activeStep === 7 &&
     Boolean(
       currentYear?.id &&
-        Array.isArray(allBoardsForAcademicPermission) &&
-        allBoardsForAcademicPermission.length > 0 &&
-        !academicPermissionBoardsFetching
+      Array.isArray(allBoardsForAcademicPermission) &&
+      allBoardsForAcademicPermission.length > 0 &&
+      !academicPermissionBoardsFetching
     );
   const disableStepperSubmit =
     activeStep === 7
@@ -1361,10 +1359,10 @@ const FormSlider = ({
     step === 7 &&
     Boolean(
       accessControlUserId &&
-        currentYear?.id &&
-        Array.isArray(allBoardsForYear) &&
-        allBoardsForYear.length > 0 &&
-        !isAcademicPermissionInitialLoading
+      currentYear?.id &&
+      Array.isArray(allBoardsForYear) &&
+      allBoardsForYear.length > 0 &&
+      !isAcademicPermissionInitialLoading
     );
   useEffect(() => {
     onAcademicPermissionReadyChange?.(isAcademicPermissionSubmitReady);

@@ -2,14 +2,15 @@ import { it, expect, describe } from 'vitest';
 
 import {
   hasAccessSelection,
+  emptyAccessSelection,
   getScopedAcademicData,
   getScopedAcademicYears,
   expandAccessibleHierarchy,
-  emptyAccessSelection,
   getGlobalAcademicSearchOptions,
-  compressExplicitAcademicSelection,
   getValidGlobalAcademicSelection,
   getScopedSelectedAcademicOption,
+  compressExplicitAcademicSelection,
+  compressAcademicSelectionToScopeRows,
 } from './academicHierarchyUtils';
 
 describe('expandAccessibleHierarchy', () => {
@@ -94,6 +95,75 @@ describe('expandAccessibleHierarchy', () => {
     expect(hasAccessSelection(compressed)).toBe(false);
   });
 
+  it('emits an explicit board-only selection as a board scope row', () => {
+    expect(
+      compressAcademicSelectionToScopeRows(
+        {
+          ...emptyAccessSelection(),
+          boards: ['board-1'],
+        },
+        allBoards
+      )
+    ).toEqual([
+      {
+        educationBoardId: 'board-1',
+      },
+    ]);
+  });
+
+  it('keeps an explicit board-only selection in the display payload', () => {
+    expect(
+      compressExplicitAcademicSelection(
+        {
+          ...emptyAccessSelection(),
+          boards: ['board-1'],
+        },
+        allBoards
+      )
+    ).toEqual({
+      boards: ['board-1'],
+      mediums: [],
+      organizations: [],
+      standards: [],
+      divisions: [],
+    });
+  });
+
+  it('emits an explicit medium-only selection as a full parent path row', () => {
+    expect(
+      compressAcademicSelectionToScopeRows(
+        {
+          ...emptyAccessSelection(),
+          mediums: ['medium-english'],
+        },
+        allBoards
+      )
+    ).toEqual([
+      {
+        educationBoardId: 'board-1',
+        educationMediumId: 'medium-english',
+      },
+    ]);
+  });
+
+  it('keeps an explicit medium-only selection in the display payload', () => {
+    expect(
+      compressExplicitAcademicSelection(
+        {
+          ...emptyAccessSelection(),
+          mediums: ['medium-english'],
+        },
+        allBoards
+      )
+    ).toEqual({
+      boards: [],
+      mediums: ['medium-english'],
+      organizations: [],
+      standards: [],
+      divisions: [],
+    });
+  });
+
   it('does not escalate child-only selections to a parent payload', () => {
     expect(
       compressExplicitAcademicSelection(
@@ -113,6 +183,73 @@ describe('expandAccessibleHierarchy', () => {
       standards: [],
       divisions: [],
     });
+  });
+
+  it('compresses mixed board and medium stage selections into separate scope rows', () => {
+    const mixedBoards = [
+      {
+        id: 'board-cbse',
+        educationMediums: [
+          {
+            id: 'medium-cbse-english',
+            educationMediumStages: [{ id: 'stage-cbse-secondary' }],
+          },
+        ],
+      },
+      {
+        id: 'board-gseb',
+        educationMediums: [
+          {
+            id: 'medium-gseb-gujarati',
+            educationMediumStages: [{ id: 'stage-gseb-higher-secondary' }],
+          },
+        ],
+      },
+    ];
+
+    expect(
+      compressAcademicSelectionToScopeRows(
+        {
+          boards: [],
+          mediums: ['medium-cbse-english'],
+          organizations: ['stage-cbse-secondary', 'stage-gseb-higher-secondary'],
+          standards: [],
+          divisions: [],
+        },
+        mixedBoards
+      )
+    ).toEqual([
+      {
+        educationBoardId: 'board-cbse',
+        educationMediumId: 'medium-cbse-english',
+      },
+      {
+        educationBoardId: 'board-gseb',
+        educationMediumId: 'medium-gseb-gujarati',
+        educationMediumStageId: 'stage-gseb-higher-secondary',
+      },
+    ]);
+  });
+
+  it('does not collapse child rows to an unselected parent scope row', () => {
+    expect(
+      compressAcademicSelectionToScopeRows(
+        {
+          boards: [],
+          mediums: [],
+          organizations: ['stage-primary'],
+          standards: ['std-1'],
+          divisions: ['div-a', 'div-b'],
+        },
+        allBoards
+      )
+    ).toEqual([
+      {
+        educationBoardId: 'board-1',
+        educationMediumId: 'medium-english',
+        educationMediumStageId: 'stage-primary',
+      },
+    ]);
   });
 });
 
