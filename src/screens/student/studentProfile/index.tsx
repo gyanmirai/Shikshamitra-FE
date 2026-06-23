@@ -13,6 +13,7 @@ import calculateAge from 'src/utils/calculate-age';
 import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Label, LabelColor } from 'src/components/label';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import { convertBase64Format } from 'src/utils/base64Formate';
@@ -35,6 +36,11 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material';
+import {
+  StudentStatusOptions,
+  RegistrationStatusType,
+  RegistrationStatusTypeColor,
+} from 'src/enums/registration-status-type';
 
 import Finance from './finance';
 import Library from './libraray';
@@ -47,6 +53,7 @@ import StudentDashboard from './studentDashboard';
 import StudentTransportProfile from './transport';
 import { StudentInformation } from './information';
 import ChangeStudentStatusForm from './change-status-form';
+import FeeStructureAssignmentForm from '../enrollment/admission/FeeStructureAssignmentForm';
 
 import type { IInquiryData } from '../enrollment/Inquiry/type';
 
@@ -156,6 +163,10 @@ const TABS = [
 
 export function StudentProfile() {
   // Dialog state for student ID card
+  const statusDialog = useBoolean();
+  const dialogForAssignFeeStructure = useBoolean();
+  const [selectedStudentForStatus, setSelectedStudentForStatus] = useState<any>(null);
+  const [selectedStudentForFee, setSelectedStudentForFee] = useState<any>(null);
 
   // States for managing organization/stage selection
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -252,10 +263,6 @@ export function StudentProfile() {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
-
-  // State to control status change dialog
-  const statusDialog = useBoolean();
-  const [selectedStudentForStatus, setSelectedStudentForStatus] = useState<any>(null);
 
   const handleCloseStatus = () => {
     statusDialog.onFalse();
@@ -471,19 +478,21 @@ export function StudentProfile() {
                   { label: 'No', value: 'No' },
                 ],
               },
-              // {
-              //   id: 'status',
-              //   label: 'Status',
-              //   minWidth: '6vw',
-              //   align: 'left',
-              //   sticky: true,
-              //   filterType: 'enum',
-              //   enumOptions: StudentStatusOptions,
-              //   render(value, row) {
-              //     const color = RegistrationStatusTypeColor[row.status as RegistrationStatusType] as LabelColor;
-              //     return <Label color={color}>{RegistrationStatusType[row.status]}</Label>;
-              //   },
-              // },
+              {
+                id: 'status',
+                label: 'Status',
+                minWidth: '6vw',
+                align: 'left',
+                sticky: true,
+                filterType: 'enum',
+                enumOptions: StudentStatusOptions,
+                render(value, row) {
+                  const color = RegistrationStatusTypeColor[
+                    row.status as RegistrationStatusType
+                  ] as LabelColor;
+                  return <Label color={color}>{RegistrationStatusType[row.status]}</Label>;
+                },
+              },
               {
                 id: 'action',
                 label: 'Action',
@@ -515,6 +524,20 @@ export function StudentProfile() {
                           />
                           Change Status
                         </MenuItem>
+                        <MenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            pop.onClose();
+                            setSelectedStudentForFee(row);
+                            dialogForAssignFeeStructure.onTrue();
+                          }}
+                        >
+                          <Iconify
+                            icon="tdesign:money"
+                            sx={{ height: '16px', width: '16px', mr: 1 }}
+                          />
+                          Assign Fee Structure
+                        </MenuItem>
                       </MenuList>
                     )}
                   />
@@ -533,6 +556,38 @@ export function StudentProfile() {
                 studentId={selectedStudentForStatus.id}
                 studentName={selectedStudentForStatus.name}
                 status={selectedStudentForStatus.status}
+              />
+            )}
+          </CustomDialog>
+
+          <CustomDialog
+            open={dialogForAssignFeeStructure.value}
+            handleClose={() => {
+              dialogForAssignFeeStructure.onFalse();
+              setSelectedStudentForFee(null);
+            }}
+            title={
+              <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+                <Typography variant="h5">Assign Fee Structure</Typography>
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  sx={{ textAlign: 'justify' }}
+                  title="Assign a fee structure to the student based on their selected class for accurate fee management and billing."
+                >
+                  <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                </CustomTooltip>
+              </Box>
+            }
+            maxWidth="md"
+          >
+            {selectedStudentForFee && (
+              <FeeStructureAssignmentForm
+                student={selectedStudentForFee as any}
+                handleClose={() => {
+                  dialogForAssignFeeStructure.onFalse();
+                  setSelectedStudentForFee(null);
+                }}
               />
             )}
           </CustomDialog>
