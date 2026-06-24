@@ -235,7 +235,9 @@ const ManualAttendanceScreen = () => {
   const setRowStatus = (id: string, status: AttendanceStatusType) => {
     if (isLocked || isHoliday || isFutureDate || isOutsideAcademicYear) return;
     setEmployeeData((prev) =>
-      prev.map((emp) => (emp.id === id ? applyManualAttendanceRowStatus(emp, status) : emp))
+      prev.map((emp) =>
+        emp.id === id && !emp.isApprovedLeave ? applyManualAttendanceRowStatus(emp, status) : emp
+      )
     );
   };
 
@@ -441,7 +443,17 @@ const ManualAttendanceScreen = () => {
               }
 
               const displayTime = toAttendanceTableTimeValue(value);
-              const isEditing = editingCell?.rowId === row.id && editingCell?.field === field;
+              const timeControlsDisabled = Boolean(
+                isLocked ||
+                isHoliday ||
+                isFutureDate ||
+                isOutsideAcademicYear ||
+                row.isApprovedLeave
+              );
+              const isEditing =
+                !timeControlsDisabled &&
+                editingCell?.rowId === row.id &&
+                editingCell?.field === field;
               if (isEditing) {
                 return (
                   <Stack direction="row" spacing={0.5} alignItems="center">
@@ -500,7 +512,7 @@ const ManualAttendanceScreen = () => {
                   }}
                 >
                   <Typography variant="body2">{displayTime || '\u2014'}</Typography>
-                  {!isLocked && !isHoliday && !isFutureDate && !isOutsideAcademicYear && (
+                  {!timeControlsDisabled && (
                     <CustomTooltip
                       title={`Edit ${field === 'timeIn' ? 'In-Time' : 'Out-Time'}`}
                       arrow
@@ -550,7 +562,13 @@ const ManualAttendanceScreen = () => {
             <TextField
               size="small"
               fullWidth
-              disabled={isLocked || isHoliday || isFutureDate || isOutsideAcademicYear}
+              disabled={
+                isLocked ||
+                isHoliday ||
+                isFutureDate ||
+                isOutsideAcademicYear ||
+                row.isApprovedLeave
+              }
               value={val || ''}
               onChange={(e) =>
                 setEmployeeData((prev) =>
@@ -1042,6 +1060,14 @@ const ManualAttendanceScreen = () => {
               isSort: false,
               isFilter: false,
               render(value: any, row: any) {
+                const rowControlsDisabled = Boolean(
+                  isLocked ||
+                  isHoliday ||
+                  isFutureDate ||
+                  isOutsideAcademicYear ||
+                  row.isApprovedLeave
+                );
+
                 return (
                   <Box
                     sx={{
@@ -1059,13 +1085,14 @@ const ManualAttendanceScreen = () => {
                       <Box
                         component="button"
                         type="button"
+                        disabled={rowControlsDisabled}
                         aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Present`}
                         data-testid={`manual-attendance-${row.id}-present`}
                         onClick={() => setRowStatus(row.id, STATUS.Present)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
-                          opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
+                          cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
+                          opacity: rowControlsDisabled ? 0.5 : 1,
                           border: 0,
                           font: 'inherit',
                           bgcolor:
@@ -1093,13 +1120,14 @@ const ManualAttendanceScreen = () => {
                       <Box
                         component="button"
                         type="button"
+                        disabled={rowControlsDisabled}
                         aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Half Day`}
                         data-testid={`manual-attendance-${row.id}-half-day`}
                         onClick={() => setRowStatus(row.id, STATUS.HalfDay)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
-                          opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
+                          cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
+                          opacity: rowControlsDisabled ? 0.5 : 1,
                           border: 0,
                           font: 'inherit',
                           bgcolor:
@@ -1127,13 +1155,14 @@ const ManualAttendanceScreen = () => {
                       <Box
                         component="button"
                         type="button"
+                        disabled={rowControlsDisabled}
                         aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Pending`}
                         data-testid={`manual-attendance-${row.id}-pending`}
                         onClick={() => setRowStatus(row.id, STATUS.Pending)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
-                          opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
+                          cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
+                          opacity: rowControlsDisabled ? 0.5 : 1,
                           border: 0,
                           font: 'inherit',
                           bgcolor:
@@ -1161,13 +1190,14 @@ const ManualAttendanceScreen = () => {
                       <Box
                         component="button"
                         type="button"
+                        disabled={rowControlsDisabled}
                         aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Absent`}
                         data-testid={`manual-attendance-${row.id}-absent`}
                         onClick={() => setRowStatus(row.id, STATUS.Absent)}
                         sx={{
                           ...segmentBtnBase,
-                          cursor: isLocked || isHoliday || isFutureDate ? 'not-allowed' : 'pointer',
-                          opacity: isLocked || isHoliday || isFutureDate ? 0.5 : 1,
+                          cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
+                          opacity: rowControlsDisabled ? 0.5 : 1,
                           border: 0,
                           font: 'inherit',
                           bgcolor:

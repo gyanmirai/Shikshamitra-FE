@@ -632,20 +632,6 @@ function RuleSection({
               sx={ruleCheckboxSx}
               control={
                 <Checkbox
-                  checked={rule.requiresApproval}
-                  onChange={(event) =>
-                    setRuleValue(bucket, 'requiresApproval', event.target.checked)
-                  }
-                />
-              }
-              label="Approval"
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <FormControlLabel
-              sx={ruleCheckboxSx}
-              control={
-                <Checkbox
                   checked={rule.allowHalfDay}
                   onChange={(event) => setRuleValue(bucket, 'allowHalfDay', event.target.checked)}
                 />

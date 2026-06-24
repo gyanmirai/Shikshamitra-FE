@@ -1,24 +1,25 @@
 /* eslint-disable import/no-extraneous-dependencies, no-await-in-loop */
-import { test, expect, type APIResponse, type Page } from '@playwright/test';
+import { test, expect, type Page, type APIResponse } from '@playwright/test';
 
 import { withHrPayrollQaMutex } from './hr-payroll-qa-mutex';
 import { createEmployeeFixture } from './employee/employee-fixtures';
+import { employeeApiRequest, createEmployeeFromExistingDefaults } from './employee/employee-api';
 import {
   gotoEmployeeList,
   clickAddEmployee,
   dismissAcademicYearTour,
 } from './employee/employee-page';
-import { employeeApiRequest, createEmployeeFromExistingDefaults } from './employee/employee-api';
 
 const fullCycleEnabled = process.env.E2E_HR_FULL_CYCLE === '1';
 
 const fixedEarningAmount = 30_000;
 const fixedDeductionAmount = 500;
 const tempEarningAmount = 1_750;
+const lateArrivalDeductionAmount = 250;
 const fixedEarningComponentName = 'E2E HR Bug Basic Pay';
 const fixedDeductionComponentName = 'E2E HR Bug Fixed Deduction';
 const tempEarningComponentName = 'E2E Temporary Month Earning';
-const lateArrivalDeductionName = 'Late Arrival Salary Deduction';
+const lateArrivalDeductionName = 'Late arrival deduction';
 
 const today = new Date();
 
@@ -26,6 +27,13 @@ const yyyyMmDd = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
     date.getDate()
   ).padStart(2, '0')}`;
+
+const standardOffsetTime = (date: string, time: string) => `${date}T${time}-08:00`;
+
+const clockMinutes = (dateTimeOffset: string) => {
+  const match = dateTimeOffset.match(/T(\d{2}):(\d{2}):/);
+  return match ? Number(match[1]) * 60 + Number(match[2]) : Number.NaN;
+};
 
 const monthKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -267,7 +275,7 @@ async function createShift(page: Page, startTime: string, endTime: string) {
 }
 
 async function createLateArrivalSalaryDeductionPolicy(page: Page, effectivePolicies: any) {
-  const attendancePolicy = effectivePolicies.attendancePolicy;
+  const { attendancePolicy } = effectivePolicies;
   const workCalendarPolicyId =
     attendancePolicy?.workCalendarPolicyId || effectivePolicies.attendanceWorkCalendarPolicy?.id;
   expect(workCalendarPolicyId, 'effective attendance work calendar policy').toBeTruthy();
@@ -286,10 +294,11 @@ async function createLateArrivalSalaryDeductionPolicy(page: Page, effectivePolic
       absentThresholdPercentage: attendancePolicy?.absentThresholdPercentage ?? 0,
       missingPunchBehavior: attendancePolicy?.missingPunchBehavior || 'requires_review',
       manualCorrectionAllowed: true,
-      graceTime: 0,
+      graceTime: 30,
       maxLateAllowedPerMonth: 0,
       penaltyType: 'salary_deduction',
       penaltyCountThreshold: 1,
+      penaltyDeductionAmount: lateArrivalDeductionAmount,
       earlyExitEnabled: false,
       earlyExitGraceTime: 0,
       overtimeEnabled: false,
@@ -370,8 +379,8 @@ async function adjustAttendance(
         employeeId,
         attendanceDate,
         statusWire: 'PRESENT',
-        inTime,
-        outTime,
+        inTime: standardOffsetTime(attendanceDate, inTime),
+        outTime: standardOffsetTime(attendanceDate, outTime),
         reason: 'E2E current sprint HR bug regression',
       }),
     }),
@@ -539,7 +548,7 @@ test.describe('HR current sprint bug regressions', () => {
         salaryDeductionPolicy.id,
         attendanceDate
       );
-      await adjustAttendance(page, employeeId, attendanceDate, '09:30:00', '17:00:00');
+      await adjustAttendance(page, employeeId, attendanceDate, '09:31:00', '17:00:00');
 
       const attendanceRegister = await getJson<any>(
         page,
@@ -550,9 +559,16 @@ test.describe('HR current sprint bug regressions', () => {
       );
       if (attendanceRow) {
         expect(['Present', '1']).toContain(String(attendanceRow.status));
+        expect(
+          clockMinutes(String(attendanceRow.inTime || '')),
+          'stored late in-time'
+        ).toBeGreaterThan(9 * 60 + 30);
       }
 
       const previewRow = await getPayrollRunRow(page, employeeId, runMonth);
+      expect(String(previewRow.attendancePolicyId || ''), 'payroll preview attendance policy').toBe(
+        String(salaryDeductionPolicy.id)
+      );
       const previewTempEarning = componentByName(previewRow.earningComponents, tempLine.name);
       const previewLateDeduction = componentByName(
         previewRow.deductionComponents,
@@ -563,10 +579,9 @@ test.describe('HR current sprint bug regressions', () => {
         tempEarningAmount
       );
       expect(previewLateDeduction, 'payroll preview late-arrival deduction').toBeTruthy();
-      expect(
-        Number(previewLateDeduction.amount),
-        'payroll preview late deduction amount'
-      ).toBeGreaterThan(0);
+      expect(Number(previewLateDeduction.amount), 'payroll preview late deduction amount').toBe(
+        lateArrivalDeductionAmount
+      );
 
       await lockPayroll(page, employeeId, effectivePolicies.academicYearId, runMonth);
       const slip = await getJson<any>(

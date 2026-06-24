@@ -1243,6 +1243,12 @@ function FinalizeDialog({
     formikInstance: any,
     setIsLoading: (val: boolean) => void
   ) => {
+    if (step === 0) {
+      setAcademicTouched(false);
+      setStep(1);
+      return;
+    }
+
     if (step === 1) {
       // Mark all step-1 fields as touched so Yup errors appear
       const allFields = Object.keys(finalizeStep1Schema.fields) as (keyof FinalizeFormState)[];
@@ -1267,6 +1273,7 @@ function FinalizeDialog({
         'stateName',
         'city',
         'religion',
+        'familyCaste',
       ];
       const hasErrors = step1Fields.some((f) => !!errors[f as keyof typeof errors]);
       if (hasErrors) return;
@@ -1311,7 +1318,11 @@ function FinalizeDialog({
     form.address2 &&
     form.countryName &&
     form.stateName &&
-    form.city
+    form.city &&
+    form.religion !== '' &&
+    form.religion !== null &&
+    form.religion !== undefined &&
+    form.familyCaste?.trim()
   );
 
   const handleFinalize = async () => {

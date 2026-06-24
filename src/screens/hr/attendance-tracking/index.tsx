@@ -401,7 +401,7 @@ const AttendanceTrackingScreen = () => {
       bg: varAlpha(theme.vars.palette.warning.mainChannel, 0.12),
     },
     {
-      label: 'Editable',
+      label: 'Editable days',
       value: summary.editable || 0,
       icon: 'solar:pen-new-square-bold',
       color: 'info.main',
@@ -483,7 +483,7 @@ const AttendanceTrackingScreen = () => {
 
   const saveBulk = async () => {
     if (!editableSelectedIds.length) {
-      shikshaMitraToast.error({ message: 'No editable rows selected.' });
+      shikshaMitraToast.error({ message: 'No bulk-adjustable rows selected.' });
       return;
     }
 
@@ -1047,7 +1047,7 @@ const AttendanceTrackingScreen = () => {
           </Typography>
           {isBulk && (
             <Typography variant="body2" color="text.secondary">
-              {editableSelectedIds.length} editable selected, {blockedSelectedCount} locked
+              {editableSelectedIds.length} selected for bulk, {blockedSelectedCount} locked
               selected.
             </Typography>
           )}
@@ -1304,7 +1304,7 @@ const AttendanceTrackingScreen = () => {
               <Typography variant="caption" color="text.secondary">
                 {data?.totalCount || 0} employees found
                 {editableSelectedIds.length
-                  ? ` / ${editableSelectedIds.length} editable selected`
+                  ? ` / ${editableSelectedIds.length} selected for bulk`
                   : ''}
               </Typography>
             </Stack>

@@ -200,20 +200,15 @@ export function LeavePoliciesPanel() {
           const hasPaid = rules.some((rule) => getRuleBucket(rule) === 'Paid');
           const hasUnpaid = rules.some((rule) => getRuleBucket(rule) === 'Unpaid');
           return (
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-              <Label color="default" variant="soft">
-                {rules.length}/2
-              </Label>
-              {hasPaid ? (
-                <Label color="success" variant="soft">
-                  Paid
-                </Label>
-              ) : null}
-              {hasUnpaid ? (
-                <Label color="warning" variant="soft">
-                  Unpaid
-                </Label>
-              ) : null}
+            <Stack spacing={0.25}>
+              <Typography variant="body2" fontWeight={600}>
+                {rules.length}/2 configured
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {[hasPaid ? 'Paid' : null, hasUnpaid ? 'Unpaid' : null]
+                  .filter(Boolean)
+                  .join(' + ') || '-'}
+              </Typography>
             </Stack>
           );
         },
@@ -226,13 +221,11 @@ export function LeavePoliciesPanel() {
           const paid = getRuleByBucket(row.policyItem, 'Paid');
           const unpaid = getRuleByBucket(row.policyItem, 'Unpaid');
           return (
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-              <Label color="success" variant="soft">
-                Paid: {formatRuleEntitlement(paid)}
-              </Label>
-              <Label color="warning" variant="soft">
+            <Stack spacing={0.35}>
+              <Typography variant="body2">Paid: {formatRuleEntitlement(paid)}</Typography>
+              <Typography variant="body2" color="text.secondary">
                 Unpaid: {formatRuleEntitlement(unpaid)}
-              </Label>
+              </Typography>
             </Stack>
           );
         },
@@ -259,7 +252,6 @@ export function LeavePoliciesPanel() {
         render: (_value, row) => {
           const rules = getActivePolicyRules(row.policyItem);
           const flags = [
-            rules.some((rule) => rule.requiresApproval) ? 'Approval' : null,
             rules.some((rule) => rule.carryForward) ? 'Carry forward' : null,
             rules.some((rule) => rule.encashmentAllowed) ? 'Encashment' : null,
           ].filter((flag): flag is string => Boolean(flag));
@@ -387,7 +379,7 @@ export function LeavePoliciesPanel() {
               <Chip size="small" label={`${archivedCount} archived`} variant="outlined" />
             </Stack>
             <Typography variant="body2" color="text.secondary">
-              Entitlements, accrual, carry-forward, encashment, and approval rules live here. Each
+              Entitlements, accrual, carry-forward, encashment, and payroll behavior live here. Each
               policy contains one Paid bucket and one Unpaid bucket.
             </Typography>
           </Stack>
@@ -436,8 +428,8 @@ export function LeavePoliciesPanel() {
             <InfoTooltipIcon
               title={
                 editData?.id
-                  ? 'Update the rules for leave entitlement, accrual type, carry forward options, and approval workflows.'
-                  : 'Define new rules for leave entitlement, accrual type, carry forward options, and approval workflows.'
+                  ? 'Update the rules for leave entitlement, accrual type, carry forward, and payroll handling.'
+                  : 'Define new rules for leave entitlement, accrual type, carry forward, and payroll handling.'
               }
             />
           </Stack>

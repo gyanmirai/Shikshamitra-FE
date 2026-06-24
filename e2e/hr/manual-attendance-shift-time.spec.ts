@@ -78,6 +78,54 @@ const invalidShiftDayResponse = {
   ],
 };
 
+const manualLateTimeDayResponse = {
+  ...dayResponse,
+  totalCount: 1,
+  items: [
+    {
+      employeeId: 'employee-late-manual',
+      fullName: 'Late Manual Employee',
+      employeeCode: 'EMP-LATE',
+      department: 'HR',
+      dateIso: '2026-06-10T00:00:00Z',
+      inTime: '2026-06-10T08:00:00Z',
+      outTime: '2026-06-10T15:30:00Z',
+      shiftStartTime: '07:00:00',
+      shiftEndTime: '15:00:00',
+      captureMode: 'manual_with_time',
+      status: 0,
+      warnings: [],
+      errors: [],
+    },
+  ],
+};
+
+const approvedLeaveDayResponse = {
+  ...dayResponse,
+  totalCount: 1,
+  items: [
+    {
+      employeeId: 'employee-approved-leave',
+      fullName: 'Approved Leave Employee',
+      employeeCode: 'EMP-LEAVE',
+      department: 'HR',
+      dateIso: '2026-06-10T00:00:00Z',
+      inTime: null,
+      outTime: null,
+      shiftStartTime: '09:00:00',
+      shiftEndTime: '17:00:00',
+      captureMode: 'manual_with_time',
+      status: 4,
+      isApprovedLeave: true,
+      approvedLeaveId: 'leave-1',
+      approvedLeaveKind: 'FullDay',
+      approvedLeaveLabel: 'On Leave',
+      warnings: [],
+      errors: [],
+    },
+  ],
+};
+
 test.describe('HR manual attendance shift time automation', () => {
   test('fills shift-derived times when marking manual attendance before save', async ({ page }) => {
     let savedPayload: any = null;
@@ -154,6 +202,65 @@ test.describe('HR manual attendance shift time automation', () => {
     await page.getByTestId('manual-attendance-employee-present-pending').click();
     await expect(page.getByText('09:00')).toHaveCount(0);
     await expect(page.getByText('17:00')).toHaveCount(0);
+  });
+
+  test('preserves manually entered late times when marking a row present', async ({ page }) => {
+    let savedPayload: any = null;
+
+    await page.route('**/api/hr/attendance/take-attendance/day/save', async (route) => {
+      savedPayload = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        json: { upsertedCount: savedPayload?.entries?.length ?? 0 },
+      });
+    });
+
+    await page.route('**/api/hr/attendance/take-attendance/day?**', async (route) => {
+      await route.fulfill({ status: 200, json: manualLateTimeDayResponse });
+    });
+
+    await page.goto('/hr/manual-attendance', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('Late Manual Employee')).toBeVisible();
+
+    await page.getByTestId('manual-attendance-employee-late-manual-present').click();
+    await page.getByRole('button', { name: /^Save$/i }).click();
+
+    await expect.poll(() => savedPayload).toBeTruthy();
+    expect(savedPayload.entries).toEqual([
+      expect.objectContaining({
+        employeeId: 'employee-late-manual',
+        statusWire: 'PRESENT',
+        inTime: '08:00:00',
+        outTime: '15:30:00',
+      }),
+    ]);
+  });
+
+  test('keeps approved leave rows locked and out of save payloads', async ({ page }) => {
+    let saveCalled = false;
+
+    await page.route('**/api/hr/attendance/take-attendance/day/save', async (route) => {
+      saveCalled = true;
+      await route.fulfill({ status: 200, json: { upsertedCount: 0 } });
+    });
+
+    await page.route('**/api/hr/attendance/take-attendance/day?**', async (route) => {
+      await route.fulfill({ status: 200, json: approvedLeaveDayResponse });
+    });
+
+    await page.goto('/hr/manual-attendance', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('Approved Leave Employee')).toBeVisible();
+
+    await expect(
+      page.getByTestId('manual-attendance-employee-approved-leave-present')
+    ).toBeDisabled();
+    await expect(
+      page.getByTestId('manual-attendance-employee-approved-leave-absent')
+    ).toBeDisabled();
+
+    await page.getByRole('button', { name: /^Save$/i }).click();
+    await expect(page.getByText('No attendance changes to save.')).toBeVisible();
+    expect(saveCalled).toBe(false);
   });
 
   test('fills full shift times when marking all rows present', async ({ page }) => {

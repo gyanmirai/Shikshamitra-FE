@@ -145,9 +145,7 @@ const ApplyAdjustmentDialog = ({
               </>
             )}
 
-            {isPreviewMode && (
-              <AdjustmentPreview adjustment={adjustment} summary={summary} lines={selectedLines} />
-            )}
+            {isPreviewMode && <AdjustmentPreview adjustment={adjustment} lines={selectedLines} />}
           </Stack>
         )}
       </Scrollbar>

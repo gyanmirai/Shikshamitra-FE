@@ -63,6 +63,28 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       : impactPreview?.warnings?.length
         ? 'info'
         : 'success';
+  const impactMetrics = impactPreview
+    ? [
+        {
+          label: 'Employees',
+          value: formatNumber(impactPreview.affectedEmployeeCount),
+          icon: 'solar:users-group-rounded-bold',
+          color: 'text.primary',
+        },
+        {
+          label: 'Assignments',
+          value: formatNumber(impactPreview.affectedAssignmentCount),
+          icon: 'solar:source-code-bold',
+          color: 'text.primary',
+        },
+        {
+          label: 'Locked months',
+          value: formatNumber(impactPreview.lockedPayrollMonths?.length),
+          icon: 'solar:lock-keyhole-bold',
+          color: impactPreview.lockedPayrollMonths?.length ? 'error.main' : 'text.primary',
+        },
+      ]
+    : [];
 
   return (
     <Drawer
@@ -99,32 +121,62 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
 
             {impactPreview ? (
               <>
-                {/* Summary chips - single row */}
-                <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                  <Chip
-                    size="small"
-                    label={toLabel(impactPreview.policyType)}
-                    color="primary"
-                    variant="outlined"
-                  />
-                  <Chip size="small" label={toLabel(impactPreview.action)} variant="outlined" />
-                  <Chip
-                    size="small"
-                    label={`v${impactPreview.currentVersion ?? '-'} -> v${impactPreview.proposedVersion ?? '-'}`}
-                  />
-                  <Chip
-                    size="small"
-                    label={`${formatNumber(impactPreview.affectedEmployeeCount)} employees`}
-                  />
-                  <Chip
-                    size="small"
-                    label={`${formatNumber(impactPreview.affectedAssignmentCount)} assignments`}
-                  />
-                  <Chip
-                    size="small"
-                    label={`${formatNumber(impactPreview.lockedPayrollMonths?.length)} locked months`}
-                    color={impactPreview.lockedPayrollMonths?.length ? 'error' : 'default'}
-                  />
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                    <Chip
+                      size="small"
+                      label={toLabel(impactPreview.policyType)}
+                      color="primary"
+                      variant="outlined"
+                    />
+                    <Chip size="small" label={toLabel(impactPreview.action)} variant="outlined" />
+                    <Chip
+                      size="small"
+                      label={`v${impactPreview.currentVersion ?? '-'} -> v${impactPreview.proposedVersion ?? '-'}`}
+                      variant="outlined"
+                    />
+                  </Stack>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: {
+                        xs: 'repeat(1, minmax(0, 1fr))',
+                        sm: 'repeat(3, minmax(0, 1fr))',
+                      },
+                      gap: 1,
+                    }}
+                  >
+                    {impactMetrics.map((metric) => (
+                      <Box
+                        key={metric.label}
+                        sx={{
+                          minHeight: 72,
+                          border: (theme) => `1px solid ${(theme.vars || theme).palette.divider}`,
+                          borderRadius: 1,
+                          bgcolor: 'background.paper',
+                          px: 1.25,
+                          py: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                        }}
+                      >
+                        <Iconify
+                          icon={metric.icon}
+                          width={18}
+                          sx={{ color: metric.color, flexShrink: 0 }}
+                        />
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="h6" sx={{ lineHeight: 1.1, color: metric.color }}>
+                            {metric.value}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" noWrap>
+                            {metric.label}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
                 </Stack>
 
                 {/* Warnings & Errors accordion */}

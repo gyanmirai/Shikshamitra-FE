@@ -152,15 +152,29 @@ export const applyManualAttendanceStatusDefaults = <TRow extends ManualAttendanc
   }
 
   if (status === MANUAL_ATTENDANCE_UI_STATUS.Present) {
-    return { ...row, status, timeIn: shiftStart, timeOut: shiftEnd };
-  }
-
-  if (status === MANUAL_ATTENDANCE_UI_STATUS.HalfDay) {
     return {
       ...row,
       status,
-      timeIn: shiftStart,
-      timeOut: calculateShiftMidpoint(shiftStart, shiftEnd)!,
+      timeIn: shouldPreserveAttendanceTimes(row, status)
+        ? toAttendanceTableTimeValue(row.timeIn) || shiftStart
+        : shiftStart,
+      timeOut: shouldPreserveAttendanceTimes(row, status)
+        ? toAttendanceTableTimeValue(row.timeOut) || shiftEnd
+        : shiftEnd,
+    };
+  }
+
+  if (status === MANUAL_ATTENDANCE_UI_STATUS.HalfDay) {
+    const midpoint = calculateShiftMidpoint(shiftStart, shiftEnd)!;
+    return {
+      ...row,
+      status,
+      timeIn: shouldPreserveAttendanceTimes(row, status)
+        ? toAttendanceTableTimeValue(row.timeIn) || shiftStart
+        : shiftStart,
+      timeOut: shouldPreserveAttendanceTimes(row, status)
+        ? toAttendanceTableTimeValue(row.timeOut) || midpoint
+        : midpoint,
     };
   }
 
@@ -279,6 +293,14 @@ export const toAttendanceWireTime = (value?: string | null) => {
 const isTimeBasedCaptureMode = (captureMode?: ManualAttendanceSaveRow['captureMode']) =>
   captureMode === 'manual_with_time' || captureMode === 'integrated';
 
+const shouldPreserveAttendanceTimes = (
+  row: ManualAttendanceShiftTimeRow,
+  status: ManualAttendanceUiStatus
+) =>
+  row.status === status ||
+  row.status === MANUAL_ATTENDANCE_UI_STATUS.Pending ||
+  typeof row.status === 'undefined';
+
 const calculateShiftMidpoint = (shiftStart: string, shiftEnd: string) => {
   if (!isValidShiftRange(shiftStart, shiftEnd)) {
     return null;
@@ -346,48 +368,32 @@ export const applyManualAttendanceBulkStatus = <TRow extends ManualAttendanceSav
   status: ManualAttendanceUiStatus
 ) =>
   rows.map((row) =>
-    row.status === MANUAL_ATTENDANCE_UI_STATUS.OnLeave
-      ? row
-      : applyManualAttendanceStatusDefaults(row, status)
+    isLockedManualAttendanceRow(row) ? row : applyManualAttendanceStatusDefaults(row, status)
   );
 
 export const isManualAttendanceBulkStatusDisabled = (
   rows: ManualAttendanceSaveRow[],
   status: ManualAttendanceUiStatus,
   state: ManualAttendanceBulkStatusDisabledState
-) =>
-  Boolean(
+) => {
+  const mutableRows = rows.filter((row) => !isLockedManualAttendanceRow(row));
+
+  return Boolean(
     state.isLocked ||
     state.isHoliday ||
     state.isFutureDate ||
     state.isOutsideAcademicYear ||
-    rows.length === 0 ||
-    rows.every((row) => row.status === status)
+    mutableRows.length === 0 ||
+    mutableRows.every((row) => row.status === status)
   );
+};
 
 export const applyManualAttendanceRowStatus = <TRow extends ManualAttendanceSaveRow>(
   row: TRow,
   status: ManualAttendanceUiStatus
 ): TRow => {
-  if (row.isApprovedLeave && status === MANUAL_ATTENDANCE_UI_STATUS.Pending) {
+  if (row.isApprovedLeave) {
     return row;
-  }
-
-  if (
-    row.isApprovedLeave &&
-    status !== MANUAL_ATTENDANCE_UI_STATUS.OnLeave &&
-    status !== MANUAL_ATTENDANCE_UI_STATUS.Pending
-  ) {
-    const warnings = row.warnings || [];
-    return applyManualAttendanceStatusDefaults(
-      {
-        ...row,
-        warnings: warnings.includes(APPROVED_LEAVE_OVERRIDE_WARNING)
-          ? warnings
-          : [...warnings, APPROVED_LEAVE_OVERRIDE_WARNING],
-      },
-      status
-    );
   }
 
   return applyManualAttendanceStatusDefaults(row, status);
@@ -398,7 +404,7 @@ export const buildManualAttendanceSaveEntries = (rows: ManualAttendanceSaveRow[]
     const statusWire = mapManualAttendanceStatusToWire(row.status);
     const employeeId = row.employeeId || row.id;
 
-    if (!employeeId || !statusWire || statusWire === 'NOT_MARKED') {
+    if (row.isApprovedLeave || !employeeId || !statusWire || statusWire === 'NOT_MARKED') {
       return [];
     }
 
@@ -412,3 +418,6 @@ export const buildManualAttendanceSaveEntries = (rows: ManualAttendanceSaveRow[]
       },
     ];
   });
+
+const isLockedManualAttendanceRow = (row: ManualAttendanceSaveRow) =>
+  Boolean(row.isApprovedLeave || row.status === MANUAL_ATTENDANCE_UI_STATUS.OnLeave);

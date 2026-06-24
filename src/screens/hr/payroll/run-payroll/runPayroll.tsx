@@ -62,6 +62,7 @@ import {
   useDeletePayrollAdjustmentMutation,
 } from 'src/redux/runPayroll/runPayrollApi';
 
+import { ISSUE_LABELS } from './run-payroll-issue-labels';
 import { DrawerHeader } from '../../policies/components/HRPolicySharedUI';
 import { SalaryDetailsTableCard } from '../salarySlip-generate/salarySlipGenerate';
 import {
@@ -120,32 +121,6 @@ type PayrollPreviewError = {
   message: string;
   errorCode?: string;
   month?: string;
-};
-
-const ISSUE_LABELS: Record<
-  string,
-  { label: string; severity: 'CRITICAL' | 'WARNING' | 'INFO'; color: 'warning' | 'error' | 'info' }
-> = {
-  MISSING_SALARY_STRUCTURE: {
-    label: 'Salary structure missing',
-    severity: 'CRITICAL',
-    color: 'error',
-  },
-  NO_ATTENDANCE: { label: 'No attendance', severity: 'CRITICAL', color: 'error' },
-  LOW_ATTENDANCE: { label: 'Low attendance', severity: 'WARNING', color: 'warning' },
-  NEGATIVE_NET_PAY: { label: 'Negative net pay', severity: 'CRITICAL', color: 'error' },
-  NO_PREVIOUS_MONTH_COMPARISON: { label: 'No previous month', severity: 'INFO', color: 'info' },
-  LARGE_SALARY_VARIANCE: { label: 'Large variance', severity: 'WARNING', color: 'warning' },
-  ATTENDANCE_POLICY_EFFECTIVE_BOUNDARY: {
-    label: 'Attendance policy boundary warning',
-    severity: 'INFO',
-    color: 'info',
-  },
-  PAYROLL_POLICY_CONFIGURATION: {
-    label: 'Payroll policy needs setup',
-    severity: 'CRITICAL',
-    color: 'error',
-  },
 };
 
 const statusColor = {

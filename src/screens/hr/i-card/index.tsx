@@ -37,8 +37,8 @@ import {
   Stack,
   Button,
   Checkbox,
-  IconButton,
   TextField,
+  IconButton,
   Typography,
   ToggleButton,
   FormControlLabel,
@@ -63,11 +63,11 @@ import {
   clampElementDimension,
   migrateFieldsToLayout,
   DEFAULT_PRINT_SETTINGS,
-  DEFAULT_ICARD_TEXT_COLOR,
   parsePrintSettingsJson,
   type ICardLayoutElement,
   type ICardPrintSettings,
   createICardLayoutPreset,
+  DEFAULT_ICARD_TEXT_COLOR,
   canNavigateEmployeeICardStep,
   updateICardLayoutElementStyle,
   markEmployeeICardStepCompleted,
@@ -1075,6 +1075,8 @@ const EmployeeICardBuilder = ({
         overflow: 'hidden',
         pt: 1.5,
         boxSizing: 'border-box',
+        bgcolor: 'background.neutral',
+        border: (theme) => `1px solid ${theme.palette.divider}`,
       }}
     >
       <CustomStepperWithFormik
@@ -1130,464 +1132,476 @@ const EmployeeICardBuilder = ({
           <Box sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               <Grid size={{ xs: 12, md: 7 }}>
-                {currentStep === 0 && (
-                  <Stack spacing={2}>
-                    <Grid container spacing={1.25}>
-                      {presets.map((preset) => (
-                        <Grid key={preset.key} size={{ xs: 12, sm: 6 }}>
-                          <Paper
-                            variant="outlined"
-                            onClick={() => applyPreset(preset)}
-                            sx={{
-                              p: 1.5,
-                              cursor: 'pointer',
-                              borderColor:
-                                state.presetKey === preset.key ? `${preset.color}88` : 'divider',
-                              bgcolor:
-                                state.presetKey === preset.key
-                                  ? `${preset.color}10`
-                                  : 'background.paper',
-                            }}
-                          >
-                            <Stack direction="row" spacing={1.25} alignItems="center">
-                              <Box
-                                sx={{
-                                  width: 34,
-                                  height: 24,
-                                  borderRadius: 0.75,
-                                  bgcolor: preset.color,
-                                  flexShrink: 0,
-                                }}
-                              />
-                              <Box minWidth={0}>
-                                <Typography variant="subtitle2">{preset.label}</Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {preset.description}
-                                </Typography>
-                              </Box>
-                            </Stack>
-                          </Paper>
-                        </Grid>
-                      ))}
-                    </Grid>
-                    <TextField
-                      label="Template Name"
-                      value={state.name}
-                      onChange={(event) => patchState({ name: event.target.value })}
-                      size="small"
-                    />
-                    <CustomSelect
-                      options={[{ name: 'All organizations', id: 'all' }, ...organizations]}
-                      label="Organization"
-                      value={state.organization}
-                      onChange={(val) => {
-                        patchState({
-                          organization: String(Array.isArray(val) ? val[0] : val),
-                          selectedEmployeeIds: [],
-                        });
-                        setSelectedEmployeesById({});
-                        setEmployeePage(1);
-                      }}
-                      labelKey="name"
-                      valueKey="id"
-                      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                    />
-                    <ToggleButtonGroup
-                      exclusive
-                      value={state.orientation}
-                      onChange={(_, value) => {
-                        if (!value) return;
-                        const nextSize = CARD_DIMENSIONS[value as 'Horizontal' | 'Vertical'];
-                        patchState({
-                          orientation: value,
-                          width: nextSize.width,
-                          height: nextSize.height,
-                          layout: {
-                            ...state.layout,
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 1,
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    minHeight: 520,
+                    bgcolor: 'background.paper',
+                  }}
+                >
+                  {currentStep === 0 && (
+                    <Stack spacing={2}>
+                      <Grid container spacing={1.25}>
+                        {presets.map((preset) => (
+                          <Grid key={preset.key} size={{ xs: 12, sm: 6 }}>
+                            <Paper
+                              variant="outlined"
+                              onClick={() => applyPreset(preset)}
+                              sx={{
+                                p: 1.5,
+                                cursor: 'pointer',
+                                borderColor:
+                                  state.presetKey === preset.key ? `${preset.color}88` : 'divider',
+                                bgcolor:
+                                  state.presetKey === preset.key
+                                    ? `${preset.color}10`
+                                    : 'background.paper',
+                              }}
+                            >
+                              <Stack direction="row" spacing={1.25} alignItems="center">
+                                <Box
+                                  sx={{
+                                    width: 34,
+                                    height: 24,
+                                    borderRadius: 0.75,
+                                    bgcolor: preset.color,
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <Box minWidth={0}>
+                                  <Typography variant="subtitle2">{preset.label}</Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {preset.description}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
+                          </Grid>
+                        ))}
+                      </Grid>
+                      <TextField
+                        label="Template Name"
+                        value={state.name}
+                        onChange={(event) => patchState({ name: event.target.value })}
+                        size="small"
+                      />
+                      <CustomSelect
+                        options={[{ name: 'All organizations', id: 'all' }, ...organizations]}
+                        label="Organization"
+                        value={state.organization}
+                        onChange={(val) => {
+                          patchState({
+                            organization: String(Array.isArray(val) ? val[0] : val),
+                            selectedEmployeeIds: [],
+                          });
+                          setSelectedEmployeesById({});
+                          setEmployeePage(1);
+                        }}
+                        labelKey="name"
+                        valueKey="id"
+                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                      />
+                      <ToggleButtonGroup
+                        exclusive
+                        value={state.orientation}
+                        onChange={(_, value) => {
+                          if (!value) return;
+                          const nextSize = CARD_DIMENSIONS[value as 'Horizontal' | 'Vertical'];
+                          patchState({
                             orientation: value,
                             width: nextSize.width,
                             height: nextSize.height,
-                            front: {
-                              elements: state.layout.front.elements.map((element) => ({
-                                ...element,
-                                visible:
-                                  element.type === 'qr'
-                                    ? state.qrCodeEnabled
-                                    : element.type === 'barcode'
-                                      ? state.barcodeEnabled
-                                      : element.visible,
-                              })),
+                            layout: {
+                              ...state.layout,
+                              orientation: value,
+                              width: nextSize.width,
+                              height: nextSize.height,
+                              front: {
+                                elements: state.layout.front.elements.map((element) => ({
+                                  ...element,
+                                  visible:
+                                    element.type === 'qr'
+                                      ? state.qrCodeEnabled
+                                      : element.type === 'barcode'
+                                        ? state.barcodeEnabled
+                                        : element.visible,
+                                })),
+                              },
                             },
-                          },
-                        });
-                      }}
-                    >
-                      <ToggleButton value="Horizontal" size="small">
-                        Horizontal
-                      </ToggleButton>
-                      <ToggleButton value="Vertical" size="small">
-                        Vertical
-                      </ToggleButton>
-                    </ToggleButtonGroup>
-                  </Stack>
-                )}
-
-                {currentStep === 1 && (
-                  <Stack spacing={2}>
-                    <Button
-                      component="label"
-                      variant="outlined"
-                      startIcon={<Iconify icon="solar:upload-linear" />}
-                    >
-                      Upload School Logo
-                      <input
-                        hidden
-                        type="file"
-                        accept="image/png,image/jpeg"
-                        onChange={handleLogoUpload}
-                      />
-                    </Button>
-                    <TextField
-                      label="School Name"
-                      value={state.schoolName}
-                      onChange={(event) => patchState({ schoolName: event.target.value })}
-                      size="small"
-                    />
-                    <TextField
-                      label="School Address"
-                      value={state.schoolAddress}
-                      onChange={(event) => patchState({ schoolAddress: event.target.value })}
-                      size="small"
-                      multiline
-                      minRows={2}
-                    />
-                    <Stack direction="row" spacing={2}>
-                      <TextField
-                        label="Theme Color"
-                        type="color"
-                        value={state.themeColor}
-                        onChange={(event) => {
-                          patchState({ themeColor: event.target.value });
-                          patchLayout({ themeColor: event.target.value });
-                        }}
-                        size="small"
-                        sx={{ width: 160 }}
-                      />
-                      <TextField
-                        label="Background"
-                        type="color"
-                        value={state.backgroundColor}
-                        onChange={(event) => {
-                          patchState({ backgroundColor: event.target.value });
-                          patchLayout({ backgroundColor: event.target.value });
-                        }}
-                        size="small"
-                        sx={{ width: 160 }}
-                      />
-                    </Stack>
-                    <DesignerCanvas
-                      state={state}
-                      sampleEmployee={previewEmployee}
-                      academicYearName={academicYearName}
-                      onSelect={(id) => patchState({ selectedElementId: id })}
-                      onMove={(id, x, y) => patchLayoutElement(id, { x, y })}
-                      onElementChange={patchLayoutElement}
-                      onElementStyleChange={patchSelectedElementStyle}
-                    />
-                    <Grid container spacing={1}>
-                      {state.fields.map((field) => (
-                        <Grid key={field.name} size={{ xs: 12, sm: 6 }}>
-                          <Paper
-                            variant="outlined"
-                            sx={{
-                              px: 1,
-                              py: 0.5,
-                              borderRadius: 1.5,
-                              bgcolor: field.important ? 'action.hover' : 'background.paper',
-                            }}
-                          >
-                            <FormControlLabel
-                              sx={{ m: 0, width: '100%' }}
-                              control={
-                                <Checkbox
-                                  size="small"
-                                  checked={field.enabled}
-                                  disabled={field.important}
-                                  onChange={() => handleFieldToggle(field.name)}
-                                />
-                              }
-                              label={field.label}
-                            />
-                          </Paper>
-                        </Grid>
-                      ))}
-                    </Grid>
-                    <Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap>
-                      <Paper
-                        variant="outlined"
-                        sx={(theme) => ({
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: 1.5,
-                          bgcolor: state.qrCodeEnabled ? 'success.lighter' : 'background.paper',
-                          borderColor: state.qrCodeEnabled ? 'success.main' : 'divider',
-                          color: 'text.primary',
-                          ...theme.applyStyles('dark', {
-                            bgcolor: state.qrCodeEnabled
-                              ? 'rgba(34, 197, 94, 0.14)'
-                              : 'background.paper',
-                            borderColor: state.qrCodeEnabled ? 'success.light' : 'divider',
-                          }),
-                        })}
-                      >
-                        <FormControlLabel
-                          sx={{
-                            m: 0,
-                            '& .MuiFormControlLabel-label': {
-                              color: 'text.primary',
-                              fontWeight: state.qrCodeEnabled ? 600 : 400,
-                            },
-                          }}
-                          control={
-                            <Checkbox
-                              size="small"
-                              checked={state.qrCodeEnabled}
-                              onChange={(event) =>
-                                patchState({
-                                  qrCodeEnabled: event.target.checked,
-                                  layout: {
-                                    ...state.layout,
-                                    front: {
-                                      elements: state.layout.front.elements.map((element) =>
-                                        element.type === 'qr'
-                                          ? { ...element, visible: event.target.checked }
-                                          : element
-                                      ),
-                                    },
-                                  },
-                                })
-                              }
-                            />
-                          }
-                          label="QR code text"
-                        />
-                      </Paper>
-                      <Paper
-                        variant="outlined"
-                        sx={(theme) => ({
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: 1.5,
-                          bgcolor: state.barcodeEnabled ? 'info.lighter' : 'background.paper',
-                          borderColor: state.barcodeEnabled ? 'info.main' : 'divider',
-                          color: 'text.primary',
-                          ...theme.applyStyles('dark', {
-                            bgcolor: state.barcodeEnabled
-                              ? 'rgba(56, 189, 248, 0.14)'
-                              : 'background.paper',
-                            borderColor: state.barcodeEnabled ? 'info.light' : 'divider',
-                          }),
-                        })}
-                      >
-                        <FormControlLabel
-                          sx={{
-                            m: 0,
-                            '& .MuiFormControlLabel-label': {
-                              color: 'text.primary',
-                              fontWeight: state.barcodeEnabled ? 600 : 400,
-                            },
-                          }}
-                          control={
-                            <Checkbox
-                              size="small"
-                              checked={state.barcodeEnabled}
-                              onChange={(event) =>
-                                patchState({
-                                  barcodeEnabled: event.target.checked,
-                                  layout: {
-                                    ...state.layout,
-                                    front: {
-                                      elements: state.layout.front.elements.map((element) =>
-                                        element.type === 'barcode'
-                                          ? { ...element, visible: event.target.checked }
-                                          : element
-                                      ),
-                                    },
-                                  },
-                                })
-                              }
-                            />
-                          }
-                          label="Barcode text"
-                        />
-                      </Paper>
-                    </Stack>
-                  </Stack>
-                )}
-
-                {currentStep === 2 && (
-                  <Stack spacing={1}>
-                    {designRecommendations.map((item) => (
-                      <Paper key={item.id} variant="outlined" sx={{ p: 1.5 }}>
-                        <Stack direction="row" justifyContent="space-between" gap={2}>
-                          <Box>
-                            <Typography variant="subtitle2">{item.title}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {item.body}
-                            </Typography>
-                          </Box>
-                          {item.action && (
-                            <Button size="small" onClick={() => patchState(item.action!.patch)}>
-                              {item.action.label}
-                            </Button>
-                          )}
-                        </Stack>
-                      </Paper>
-                    ))}
-                  </Stack>
-                )}
-
-                {currentStep === 3 && (
-                  <Stack spacing={2}>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                      <TextField
-                        label="Search employees"
-                        value={state.employeeSearch}
-                        onChange={(event) => {
-                          patchState({ employeeSearch: event.target.value });
-                          setEmployeePage(1);
-                        }}
-                        size="small"
-                        fullWidth
-                      />
-                      <CustomSelect
-                        options={[{ name: 'All designations', id: 'all' }, ...designationOptions]}
-                        label="Designation"
-                        value={state.designationFilter}
-                        onChange={(val) => {
-                          patchState({
-                            designationFilter: String(Array.isArray(val) ? val[0] : val),
                           });
-                          setEmployeePage(1);
                         }}
-                        labelKey="name"
-                        valueKey="id"
-                        formControlProps={{ sx: { minWidth: 220 } }}
-                      />
-                      <CustomSelect
-                        options={[
-                          { name: 'All statuses', id: 'all' },
-                          { name: 'Active', id: 'Active' },
-                          { name: 'Inactive', id: 'Inactive' },
-                        ]}
-                        label="Status"
-                        value={employeeStatusFilter}
-                        onChange={(val) => {
-                          setEmployeeStatusFilter(String(Array.isArray(val) ? val[0] : val));
-                          setEmployeePage(1);
-                        }}
-                        labelKey="name"
-                        valueKey="id"
-                        formControlProps={{ sx: { minWidth: 180 } }}
-                      />
+                      >
+                        <ToggleButton value="Horizontal" size="small">
+                          Horizontal
+                        </ToggleButton>
+                        <ToggleButton value="Vertical" size="small">
+                          Vertical
+                        </ToggleButton>
+                      </ToggleButtonGroup>
                     </Stack>
-                    <ReadinessBar readiness={readiness} />
-                    {isFetchingEmployees && (
-                      <Typography variant="caption" color="text.secondary">
-                        Loading employees...
-                      </Typography>
-                    )}
-                    <CustomizableTable
-                      tableId="employee-icard-selection-table"
-                      columns={employeeColumns}
-                      data={filteredEmployees}
-                      isLoading={isFetchingEmployees}
-                      isSearch={false}
-                      isFilter={false}
-                      isPagination={false}
-                      isShowedDense={false}
-                      rowProps={(row) => ({
-                        selected: state.selectedEmployeeIds.includes((row as EmployeeICardRow).id),
-                      })}
-                      tableContainerProps={{ sx: { maxHeight: 360 } }}
-                      wrapperProps={{ sx: { maxHeight: 430 } }}
-                      noDataText="No employees found for this filter."
-                    />
-                  </Stack>
-                )}
+                  )}
 
-                {currentStep === 4 && (
-                  <Stack spacing={2}>
-                    <ReadinessBar readiness={readiness} />
-                    <TextField
-                      label="Cards per A4 page"
-                      type="number"
-                      size="small"
-                      value={state.printSettings.cardsPerPage}
-                      onChange={(event) =>
-                        patchState({
-                          cardsPerPage: clampCardsPerPage(Number(event.target.value)),
-                          printSettings: {
-                            ...state.printSettings,
-                            cardsPerPage: clampCardsPerPage(Number(event.target.value)),
-                          },
-                        })
-                      }
-                      inputProps={{ min: 1, max: 10 }}
-                      sx={{ maxWidth: 220 }}
-                    />
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                  {currentStep === 1 && (
+                    <Stack spacing={2}>
+                      <Button
+                        component="label"
+                        variant="outlined"
+                        startIcon={<Iconify icon="solar:upload-linear" />}
+                      >
+                        Upload School Logo
+                        <input
+                          hidden
+                          type="file"
+                          accept="image/png,image/jpeg"
+                          onChange={handleLogoUpload}
+                        />
+                      </Button>
                       <TextField
-                        label="Page margin"
-                        type="number"
+                        label="School Name"
+                        value={state.schoolName}
+                        onChange={(event) => patchState({ schoolName: event.target.value })}
                         size="small"
-                        value={state.printSettings.margin}
-                        onChange={(event) =>
-                          patchState({
-                            printSettings: {
-                              ...state.printSettings,
-                              margin: Math.max(0, Math.min(60, Number(event.target.value))),
-                            },
-                          })
-                        }
                       />
                       <TextField
-                        label="Card gap"
-                        type="number"
+                        label="School Address"
+                        value={state.schoolAddress}
+                        onChange={(event) => patchState({ schoolAddress: event.target.value })}
                         size="small"
-                        value={state.printSettings.gap}
-                        onChange={(event) =>
-                          patchState({
-                            printSettings: {
-                              ...state.printSettings,
-                              gap: Math.max(0, Math.min(40, Number(event.target.value))),
-                            },
-                          })
-                        }
+                        multiline
+                        minRows={2}
+                      />
+                      <Stack direction="row" spacing={2}>
+                        <TextField
+                          label="Theme Color"
+                          type="color"
+                          value={state.themeColor}
+                          onChange={(event) => {
+                            patchState({ themeColor: event.target.value });
+                            patchLayout({ themeColor: event.target.value });
+                          }}
+                          size="small"
+                          sx={{ width: 160 }}
+                        />
+                        <TextField
+                          label="Background"
+                          type="color"
+                          value={state.backgroundColor}
+                          onChange={(event) => {
+                            patchState({ backgroundColor: event.target.value });
+                            patchLayout({ backgroundColor: event.target.value });
+                          }}
+                          size="small"
+                          sx={{ width: 160 }}
+                        />
+                      </Stack>
+                      <DesignerCanvas
+                        state={state}
+                        sampleEmployee={previewEmployee}
+                        academicYearName={academicYearName}
+                        onSelect={(id) => patchState({ selectedElementId: id })}
+                        onMove={(id, x, y) => patchLayoutElement(id, { x, y })}
+                        onElementChange={patchLayoutElement}
+                        onElementStyleChange={patchSelectedElementStyle}
+                      />
+                      <Grid container spacing={1}>
+                        {state.fields.map((field) => (
+                          <Grid key={field.name} size={{ xs: 12, sm: 6 }}>
+                            <Paper
+                              variant="outlined"
+                              sx={{
+                                px: 1,
+                                py: 0.5,
+                                borderRadius: 1.5,
+                                bgcolor: field.important ? 'action.hover' : 'background.paper',
+                              }}
+                            >
+                              <FormControlLabel
+                                sx={{ m: 0, width: '100%' }}
+                                control={
+                                  <Checkbox
+                                    size="small"
+                                    checked={field.enabled}
+                                    disabled={field.important}
+                                    onChange={() => handleFieldToggle(field.name)}
+                                  />
+                                }
+                                label={field.label}
+                              />
+                            </Paper>
+                          </Grid>
+                        ))}
+                      </Grid>
+                      <Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap>
+                        <Paper
+                          variant="outlined"
+                          sx={(theme) => ({
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1.5,
+                            bgcolor: state.qrCodeEnabled ? 'success.lighter' : 'background.paper',
+                            borderColor: state.qrCodeEnabled ? 'success.main' : 'divider',
+                            color: 'text.primary',
+                            ...theme.applyStyles('dark', {
+                              bgcolor: state.qrCodeEnabled
+                                ? 'rgba(34, 197, 94, 0.14)'
+                                : 'background.paper',
+                              borderColor: state.qrCodeEnabled ? 'success.light' : 'divider',
+                            }),
+                          })}
+                        >
+                          <FormControlLabel
+                            sx={{
+                              m: 0,
+                              '& .MuiFormControlLabel-label': {
+                                color: 'text.primary',
+                                fontWeight: state.qrCodeEnabled ? 600 : 400,
+                              },
+                            }}
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={state.qrCodeEnabled}
+                                onChange={(event) =>
+                                  patchState({
+                                    qrCodeEnabled: event.target.checked,
+                                    layout: {
+                                      ...state.layout,
+                                      front: {
+                                        elements: state.layout.front.elements.map((element) =>
+                                          element.type === 'qr'
+                                            ? { ...element, visible: event.target.checked }
+                                            : element
+                                        ),
+                                      },
+                                    },
+                                  })
+                                }
+                              />
+                            }
+                            label="QR code text"
+                          />
+                        </Paper>
+                        <Paper
+                          variant="outlined"
+                          sx={(theme) => ({
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1.5,
+                            bgcolor: state.barcodeEnabled ? 'info.lighter' : 'background.paper',
+                            borderColor: state.barcodeEnabled ? 'info.main' : 'divider',
+                            color: 'text.primary',
+                            ...theme.applyStyles('dark', {
+                              bgcolor: state.barcodeEnabled
+                                ? 'rgba(56, 189, 248, 0.14)'
+                                : 'background.paper',
+                              borderColor: state.barcodeEnabled ? 'info.light' : 'divider',
+                            }),
+                          })}
+                        >
+                          <FormControlLabel
+                            sx={{
+                              m: 0,
+                              '& .MuiFormControlLabel-label': {
+                                color: 'text.primary',
+                                fontWeight: state.barcodeEnabled ? 600 : 400,
+                              },
+                            }}
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={state.barcodeEnabled}
+                                onChange={(event) =>
+                                  patchState({
+                                    barcodeEnabled: event.target.checked,
+                                    layout: {
+                                      ...state.layout,
+                                      front: {
+                                        elements: state.layout.front.elements.map((element) =>
+                                          element.type === 'barcode'
+                                            ? { ...element, visible: event.target.checked }
+                                            : element
+                                        ),
+                                      },
+                                    },
+                                  })
+                                }
+                              />
+                            }
+                            label="Barcode text"
+                          />
+                        </Paper>
+                      </Stack>
+                    </Stack>
+                  )}
+
+                  {currentStep === 2 && (
+                    <Stack spacing={1}>
+                      {designRecommendations.map((item) => (
+                        <Paper key={item.id} variant="outlined" sx={{ p: 1.5 }}>
+                          <Stack direction="row" justifyContent="space-between" gap={2}>
+                            <Box>
+                              <Typography variant="subtitle2">{item.title}</Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {item.body}
+                              </Typography>
+                            </Box>
+                            {item.action && (
+                              <Button size="small" onClick={() => patchState(item.action!.patch)}>
+                                {item.action.label}
+                              </Button>
+                            )}
+                          </Stack>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  )}
+
+                  {currentStep === 3 && (
+                    <Stack spacing={2}>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <TextField
+                          label="Search employees"
+                          value={state.employeeSearch}
+                          onChange={(event) => {
+                            patchState({ employeeSearch: event.target.value });
+                            setEmployeePage(1);
+                          }}
+                          size="small"
+                          fullWidth
+                        />
+                        <CustomSelect
+                          options={[{ name: 'All designations', id: 'all' }, ...designationOptions]}
+                          label="Designation"
+                          value={state.designationFilter}
+                          onChange={(val) => {
+                            patchState({
+                              designationFilter: String(Array.isArray(val) ? val[0] : val),
+                            });
+                            setEmployeePage(1);
+                          }}
+                          labelKey="name"
+                          valueKey="id"
+                          formControlProps={{ sx: { minWidth: 220 } }}
+                        />
+                        <CustomSelect
+                          options={[
+                            { name: 'All statuses', id: 'all' },
+                            { name: 'Active', id: 'Active' },
+                            { name: 'Inactive', id: 'Inactive' },
+                          ]}
+                          label="Status"
+                          value={employeeStatusFilter}
+                          onChange={(val) => {
+                            setEmployeeStatusFilter(String(Array.isArray(val) ? val[0] : val));
+                            setEmployeePage(1);
+                          }}
+                          labelKey="name"
+                          valueKey="id"
+                          formControlProps={{ sx: { minWidth: 180 } }}
+                        />
+                      </Stack>
+                      <ReadinessBar readiness={readiness} />
+                      {isFetchingEmployees && (
+                        <Typography variant="caption" color="text.secondary">
+                          Loading employees...
+                        </Typography>
+                      )}
+                      <CustomizableTable
+                        tableId="employee-icard-selection-table"
+                        columns={employeeColumns}
+                        data={filteredEmployees}
+                        isLoading={isFetchingEmployees}
+                        isSearch={false}
+                        isFilter={false}
+                        isPagination={false}
+                        isShowedDense={false}
+                        rowProps={(row) => ({
+                          selected: state.selectedEmployeeIds.includes(
+                            (row as EmployeeICardRow).id
+                          ),
+                        })}
+                        tableContainerProps={{ sx: { maxHeight: 360 } }}
+                        wrapperProps={{ sx: { maxHeight: 430 } }}
+                        noDataText="No employees found for this filter."
                       />
                     </Stack>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={state.excludeIncompleteEmployees}
+                  )}
+
+                  {currentStep === 4 && (
+                    <Stack spacing={2}>
+                      <ReadinessBar readiness={readiness} />
+                      <TextField
+                        label="Cards per A4 page"
+                        type="number"
+                        size="small"
+                        value={state.printSettings.cardsPerPage}
+                        onChange={(event) =>
+                          patchState({
+                            cardsPerPage: clampCardsPerPage(Number(event.target.value)),
+                            printSettings: {
+                              ...state.printSettings,
+                              cardsPerPage: clampCardsPerPage(Number(event.target.value)),
+                            },
+                          })
+                        }
+                        inputProps={{ min: 1, max: 10 }}
+                        sx={{ maxWidth: 220 }}
+                      />
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <TextField
+                          label="Page margin"
+                          type="number"
+                          size="small"
+                          value={state.printSettings.margin}
                           onChange={(event) =>
-                            patchState({ excludeIncompleteEmployees: event.target.checked })
+                            patchState({
+                              printSettings: {
+                                ...state.printSettings,
+                                margin: Math.max(0, Math.min(60, Number(event.target.value))),
+                              },
+                            })
                           }
                         />
-                      }
-                      label="Exclude employees missing photo, phone, or designation"
-                    />
-                    <Button
-                      variant="contained"
-                      disabled={isSaving || isExporting || state.selectedEmployeeIds.length === 0}
-                      onClick={handleExport}
-                      startIcon={<Iconify icon="solar:file-download-bold" />}
-                      sx={{ alignSelf: 'flex-start' }}
-                    >
-                      Export Bulk PDF
-                    </Button>
-                  </Stack>
-                )}
+                        <TextField
+                          label="Card gap"
+                          type="number"
+                          size="small"
+                          value={state.printSettings.gap}
+                          onChange={(event) =>
+                            patchState({
+                              printSettings: {
+                                ...state.printSettings,
+                                gap: Math.max(0, Math.min(40, Number(event.target.value))),
+                              },
+                            })
+                          }
+                        />
+                      </Stack>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={state.excludeIncompleteEmployees}
+                            onChange={(event) =>
+                              patchState({ excludeIncompleteEmployees: event.target.checked })
+                            }
+                          />
+                        }
+                        label="Exclude employees missing photo, phone, or designation"
+                      />
+                      <Button
+                        variant="contained"
+                        disabled={isSaving || isExporting || state.selectedEmployeeIds.length === 0}
+                        onClick={handleExport}
+                        startIcon={<Iconify icon="solar:file-download-bold" />}
+                        sx={{ alignSelf: 'flex-start' }}
+                      >
+                        Export Bulk PDF
+                      </Button>
+                    </Stack>
+                  )}
+                </Box>
               </Grid>
 
               <Grid size={{ xs: 12, md: 5 }}>
@@ -1806,10 +1820,7 @@ const DesignerCanvas = ({
               </Stack>
               <Stack direction="row" spacing={1}>
                 <CustomTooltip title="Align left">
-                  <IconButton
-                    size="small"
-                    onClick={() => onElementChange(selected.id, { x: 16 })}
-                  >
+                  <IconButton size="small" onClick={() => onElementChange(selected.id, { x: 16 })}>
                     <Iconify icon="mdi:format-align-left" width={18} />
                   </IconButton>
                 </CustomTooltip>

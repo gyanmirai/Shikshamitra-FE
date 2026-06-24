@@ -18,11 +18,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import {
-  useLazyGetEmployeeSalarySlipQuery,
-  useLazyGetEmployeeSalarySlipPdfQuery,
-  useLazyGetEmployeeSalarySlipPreviewPdfQuery,
-} from 'src/redux/runPayroll/runPayrollApi';
-import {
   Box,
   Card,
   Grid,
@@ -36,6 +31,11 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
+import {
+  useLazyGetEmployeeSalarySlipQuery,
+  useLazyGetEmployeeSalarySlipPdfQuery,
+  useLazyGetEmployeeSalarySlipPreviewPdfQuery,
+} from 'src/redux/runPayroll/runPayrollApi';
 
 import PaySlipPrintView from './payslip-print-view';
 import { usePayslipActions, isOfficialPayslipStatus } from './use-payslip-actions';
@@ -172,7 +172,7 @@ const PaySlipGenerationScreen = () => {
               <PaginatedSearchSelect
                 label="Select Employee"
                 fetchOptions={async (query, page) => {
-                  const res = await getEmployees({ page, pageSize: 10 }).unwrap();
+                  const res = await getEmployees({ page, pageSize: 10, search: query }).unwrap();
                   const hasMore = res.currentPage !== res.totalPages;
                   return {
                     data: res?.items?.map((item: any) => ({
@@ -226,6 +226,13 @@ const PaySlipGenerationScreen = () => {
               alignItems="center"
               justifyContent="flex-end"
               flexWrap="wrap"
+              sx={{
+                width: { xs: '100%', lg: 'auto' },
+                p: 0.5,
+                border: (theme) => `1px solid ${theme.palette.divider}`,
+                borderRadius: 1,
+                bgcolor: 'background.default',
+              }}
             >
               <ToggleButtonGroup
                 exclusive
@@ -263,30 +270,37 @@ const PaySlipGenerationScreen = () => {
                   PDF View
                 </ToggleButton>
               </ToggleButtonGroup>
-              <Button
-                size="small"
-                startIcon={<Iconify icon="solar:download-linear" />}
-                variant="outlined"
-                color="inherit"
-                disabled={!hasData || isDownloading}
-                onClick={handleDownload}
-              >
-                {isDownloading
-                  ? 'Downloading...'
-                  : isOfficialPayslip
-                    ? 'Download'
-                    : 'Download Preview'}
-              </Button>
-              <Button
-                size="small"
-                startIcon={<Iconify icon="solar:printer-linear" />}
-                variant="outlined"
-                color="inherit"
-                disabled={!hasData}
-                onClick={() => handlePrint()}
-              >
-                {isOfficialPayslip ? 'Print' : 'Print Preview'}
-              </Button>
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{ display: { xs: 'none', sm: 'block' } }}
+              />
+              <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="flex-end">
+                <Button
+                  size="small"
+                  startIcon={<Iconify icon="solar:download-linear" />}
+                  variant="outlined"
+                  color="inherit"
+                  disabled={!hasData || isDownloading}
+                  onClick={handleDownload}
+                >
+                  {isDownloading
+                    ? 'Downloading...'
+                    : isOfficialPayslip
+                      ? 'Download'
+                      : 'Download Preview'}
+                </Button>
+                <Button
+                  size="small"
+                  startIcon={<Iconify icon="solar:printer-linear" />}
+                  variant="outlined"
+                  color="inherit"
+                  disabled={!hasData}
+                  onClick={() => handlePrint()}
+                >
+                  {isOfficialPayslip ? 'Print' : 'Print Preview'}
+                </Button>
+              </Stack>
             </Stack>
           </Stack>
         </Card>

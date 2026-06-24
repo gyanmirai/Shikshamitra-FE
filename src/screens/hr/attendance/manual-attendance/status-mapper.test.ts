@@ -9,7 +9,6 @@ import {
   applyManualAttendanceRowStatus,
   mapManualAttendanceStatusToWire,
   applyManualAttendanceBulkStatus,
-  APPROVED_LEAVE_OVERRIDE_WARNING,
   getTimeBasedAttendanceTimeIssues,
   buildManualAttendanceSaveEntries,
   normalizeManualAttendanceRowsForSave,
@@ -120,20 +119,16 @@ describe('manual attendance status mapper', () => {
     });
   });
 
-  it('sends manually changed on-leave rows with normal save wires', () => {
+  it('does not send approved leave rows even when a stale UI state contains a manual status', () => {
     const entries = buildManualAttendanceSaveEntries([
-      { employeeId: 'employee-1', status: MANUAL_ATTENDANCE_UI_STATUS.Present },
-    ]);
-
-    expect(entries).toEqual([
       {
         employeeId: 'employee-1',
-        statusWire: 'PRESENT',
-        inTime: null,
-        outTime: null,
-        remarks: '',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        isApprovedLeave: true,
       },
     ]);
+
+    expect(entries).toEqual([]);
   });
 
   it('preserves on-leave rows when applying a bulk status', () => {
@@ -147,6 +142,36 @@ describe('manual attendance status mapper', () => {
 
     expect(rows).toEqual([
       { employeeId: 'employee-1', status: MANUAL_ATTENDANCE_UI_STATUS.OnLeave },
+      {
+        employeeId: 'employee-2',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
+      },
+    ]);
+  });
+
+  it('preserves approved-leave rows with stale manual statuses when applying a bulk status', () => {
+    const rows = applyManualAttendanceBulkStatus(
+      [
+        {
+          employeeId: 'employee-1',
+          status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+          isApprovedLeave: true,
+          timeIn: '09:15',
+          timeOut: '16:45',
+        },
+        { employeeId: 'employee-2', status: MANUAL_ATTENDANCE_UI_STATUS.Pending },
+      ],
+      MANUAL_ATTENDANCE_UI_STATUS.Absent
+    );
+
+    expect(rows).toEqual([
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        isApprovedLeave: true,
+        timeIn: '09:15',
+        timeOut: '16:45',
+      },
       {
         employeeId: 'employee-2',
         status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
@@ -447,6 +472,29 @@ describe('manual attendance status mapper', () => {
     ]);
   });
 
+  it('preserves manually edited times when selecting present on a time-based row', () => {
+    const row = applyManualAttendanceRowStatus(
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Pending,
+        captureMode: 'manual_with_time',
+        shiftStartTime: '07:00:00',
+        shiftEndTime: '15:00:00',
+        timeIn: '08:00',
+        timeOut: '15:30',
+      },
+      MANUAL_ATTENDANCE_UI_STATUS.Present
+    );
+
+    expect(row).toEqual(
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        timeIn: '08:00',
+        timeOut: '15:30',
+      })
+    );
+  });
+
   it('fills only the missing side when save-normalizing partial manual time edits', () => {
     const rows = normalizeManualAttendanceRowsForSave([
       {
@@ -475,19 +523,21 @@ describe('manual attendance status mapper', () => {
     ]);
   });
 
-  it('adds one approved-leave override warning for manual statuses', () => {
+  it('keeps approved leave rows unchanged for manual statuses', () => {
     const row = applyManualAttendanceRowStatus(
       {
         employeeId: 'employee-1',
         status: MANUAL_ATTENDANCE_UI_STATUS.OnLeave,
         isApprovedLeave: true,
-        warnings: [APPROVED_LEAVE_OVERRIDE_WARNING],
       },
       MANUAL_ATTENDANCE_UI_STATUS.Present
     );
 
-    expect(row.status).toBe(MANUAL_ATTENDANCE_UI_STATUS.Present);
-    expect(row.warnings).toEqual([APPROVED_LEAVE_OVERRIDE_WARNING]);
+    expect(row).toEqual({
+      employeeId: 'employee-1',
+      status: MANUAL_ATTENDANCE_UI_STATUS.OnLeave,
+      isApprovedLeave: true,
+    });
   });
 
   it('strips times from manual status rows before saving', () => {
@@ -692,6 +742,25 @@ describe('manual attendance status mapper', () => {
       isManualAttendanceBulkStatusDisabled(rows, MANUAL_ATTENDANCE_UI_STATUS.Present, {
         isOutsideAcademicYear: false,
       })
+    ).toBe(false);
+  });
+
+  it('disables bulk status when every mutable row already has the selected status', () => {
+    const rows = [
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
+        isApprovedLeave: true,
+      },
+      { employeeId: 'employee-2', status: MANUAL_ATTENDANCE_UI_STATUS.Absent },
+      { employeeId: 'employee-3', status: MANUAL_ATTENDANCE_UI_STATUS.OnLeave },
+    ];
+
+    expect(isManualAttendanceBulkStatusDisabled(rows, MANUAL_ATTENDANCE_UI_STATUS.Absent, {})).toBe(
+      true
+    );
+    expect(
+      isManualAttendanceBulkStatusDisabled(rows, MANUAL_ATTENDANCE_UI_STATUS.Present, {})
     ).toBe(false);
   });
 
