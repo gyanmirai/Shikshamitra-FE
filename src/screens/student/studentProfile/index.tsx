@@ -161,6 +161,16 @@ const TABS = [
   // },
 ];
 
+const mapStudentRecordStatus = (item: any) => {
+  if (item?.operationalStatus === 0) return RegistrationStatusType.Active;
+  if (item?.operationalStatus === 1) return RegistrationStatusType.Left;
+  if (item?.operationalStatus === 2) return RegistrationStatusType.Inactive;
+  if (item?.status === 6) return RegistrationStatusType.Active;
+  if (item?.status === 7) return RegistrationStatusType.Inactive;
+  if (item?.status === 8) return RegistrationStatusType.Left;
+  return item?.status ?? RegistrationStatusType.Active;
+};
+
 export function StudentProfile() {
   // Dialog state for student ID card
   const statusDialog = useBoolean();
@@ -244,6 +254,7 @@ export function StudentProfile() {
           '-',
         RTE: item?.studentAdditionalDetails?.rightToEducation ? 'Yes' : 'No',
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
+        status: mapStudentRecordStatus(item),
       })) || []
     );
   }, [shouldFetchStudents, StudentsData?.items]);
@@ -487,10 +498,9 @@ export function StudentProfile() {
                 filterType: 'enum',
                 enumOptions: StudentStatusOptions,
                 render(value, row) {
-                  const color = RegistrationStatusTypeColor[
-                    row.status as RegistrationStatusType
-                  ] as LabelColor;
-                  return <Label color={color}>{RegistrationStatusType[row.status]}</Label>;
+                  const status = row.status as RegistrationStatusType;
+                  const color = RegistrationStatusTypeColor[status] as LabelColor;
+                  return <Label color={color}>{RegistrationStatusType[status] ?? '-'}</Label>;
                 },
               },
               {

@@ -1,6 +1,36 @@
 import { api } from 'src/redux/service';
 import { studentGroupType } from 'src/redux/tagTypes';
 
+type StudentRecordListResponse = {
+  items?: unknown[];
+  totalCount?: number;
+  currentPage?: number;
+  pageSize?: number;
+  totalPages?: number;
+  arrangementType?: number | null;
+  arrangementBy?: number | null;
+};
+
+export const normalizeStudentRecordListResponse = (response: any) => {
+  const responseData = response?.data as StudentRecordListResponse | unknown[] | undefined;
+
+  if (Array.isArray(responseData)) {
+    return response;
+  }
+
+  if (responseData && Array.isArray((responseData as StudentRecordListResponse).items)) {
+    const { items, ...meta } = responseData as StudentRecordListResponse;
+
+    return {
+      ...response,
+      data: items,
+      meta,
+    };
+  }
+
+  return response;
+};
+
 export const studentGroupApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getAllGroup: builder.query({
@@ -62,6 +92,7 @@ export const studentGroupApi = api.injectEndpoints({
         method: 'GET',
         params: { sorting, skipCount, maxResultCount },
       }),
+      transformResponse: normalizeStudentRecordListResponse,
       providesTags: [studentGroupType.studentGroup],
     }),
     assignStudentGroup: builder.mutation({

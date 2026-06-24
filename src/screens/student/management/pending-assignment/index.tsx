@@ -155,7 +155,9 @@ const PendingAssignmentScreen = ({ division, classes }: { division: string; clas
       })
         .unwrap()
         .then((result: any) => {
-          const items: PendingAssignmentStudent[] = result?.items ?? result?.data ?? result ?? [];
+          const items: PendingAssignmentStudent[] = Array.isArray(result)
+            ? result
+            : (result?.items ?? result?.data?.items ?? result?.data ?? []);
           setTableData(items);
           setInitialData(items);
           setModifiedRowIds(new Set());

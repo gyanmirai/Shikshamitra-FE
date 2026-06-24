@@ -29,9 +29,21 @@ import {
 import type { IInquiryData } from '../Inquiry/type';
 
 const ENTRANCE_EXAM_LIFECYCLE_STATE = 3;
+const ENTRANCE_EXAM_DISPLAY_COLORS: Record<string, LabelColor> = {
+  'Not Scheduled': 'default',
+  Scheduled: 'warning',
+  Completed: 'success',
+  Enrolled: 'info',
+};
 
 const isEntranceExamRow = (row: any) =>
   Number(row?.studentEnrollmentState ?? row?.enrollmentState) === ENTRANCE_EXAM_LIFECYCLE_STATE;
+
+const getEntranceExamStatusValue = (item: IInquiryData) =>
+  item.entranceExamStatusDisplay ??
+  (item.entranceExamStatus !== null && item.entranceExamStatus !== undefined
+    ? item.entranceExamStatus
+    : 'Not Scheduled');
 
 const RegistrationTable = ({
   dialog,
@@ -138,6 +150,7 @@ const RegistrationTable = ({
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         doiValue: item.dateOfInquiry ? dayjs(item.dateOfInquiry).format('DD-MM-YYYY') : '-',
         genderValue: GenderType[(item as any)?.gender],
+        status: getEntranceExamStatusValue(item),
       })) || [],
     [registrationData?.data?.items]
   );
@@ -297,11 +310,21 @@ const RegistrationTable = ({
         id: 'status',
         label: 'Entrance Exam',
         filterType: 'enum',
-        enumOptions: EntranceExamStatusOptions,
+        enumOptions: [
+          { label: 'Not Scheduled', value: 'Not Scheduled' },
+          { label: 'Scheduled', value: 'Scheduled' },
+          { label: 'Completed', value: 'Completed' },
+          { label: 'Enrolled', value: 'Enrolled' },
+          ...EntranceExamStatusOptions,
+        ],
         align: 'left',
         minWidth: '150px',
         sticky: true,
         render(value, row) {
+          if (typeof value === 'string') {
+            return <Label color={ENTRANCE_EXAM_DISPLAY_COLORS[value] ?? 'default'}>{value}</Label>;
+          }
+
           const color = EntranceExamStatusTypeColors[value as EntranceExamStatusType] as LabelColor;
           return (
             <Label color={color}>{EntranceExamStatusType[value as EntranceExamStatusType]}</Label>
