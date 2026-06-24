@@ -22,13 +22,10 @@ export const MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS = [
   { label: 'Pending', value: MANUAL_ATTENDANCE_UI_STATUS.Pending },
 ];
 
-export const APPROVED_LEAVE_OVERRIDE_WARNING =
-  'Approved leave exists for this date but attendance was manually overridden.';
-
 export type ManualAttendanceUiStatus =
   (typeof MANUAL_ATTENDANCE_UI_STATUS)[keyof typeof MANUAL_ATTENDANCE_UI_STATUS];
 
-export type ManualAttendanceStatusWire = 'PRESENT' | 'HALF_DAY' | 'ABSENT' | 'NOT_MARKED';
+export type ManualAttendanceStatusWire = 'PRESENT' | 'HALF_DAY' | 'ABSENT';
 
 export type ManualAttendanceSaveRow = {
   id?: string;
@@ -404,7 +401,7 @@ export const buildManualAttendanceSaveEntries = (rows: ManualAttendanceSaveRow[]
     const statusWire = mapManualAttendanceStatusToWire(row.status);
     const employeeId = row.employeeId || row.id;
 
-    if (row.isApprovedLeave || !employeeId || !statusWire || statusWire === 'NOT_MARKED') {
+    if (row.isApprovedLeave || !employeeId || !statusWire) {
       return [];
     }
 
