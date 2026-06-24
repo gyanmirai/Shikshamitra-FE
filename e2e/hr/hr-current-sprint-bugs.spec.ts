@@ -28,7 +28,15 @@ const yyyyMmDd = (date: Date) =>
     date.getDate()
   ).padStart(2, '0')}`;
 
-const standardOffsetTime = (date: string, time: string) => `${date}T${time}-08:00`;
+const dateTimeOffsetWithLocalOffset = (date: string, time: string) => {
+  const localDate = new Date(`${date}T${time}`);
+  const offsetMinutes = -localDate.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const absoluteOffsetMinutes = Math.abs(offsetMinutes);
+  const hours = String(Math.floor(absoluteOffsetMinutes / 60)).padStart(2, '0');
+  const minutes = String(absoluteOffsetMinutes % 60).padStart(2, '0');
+  return `${date}T${time}${sign}${hours}:${minutes}`;
+};
 
 const clockMinutes = (dateTimeOffset: string) => {
   const match = dateTimeOffset.match(/T(\d{2}):(\d{2}):/);
@@ -379,8 +387,8 @@ async function adjustAttendance(
         employeeId,
         attendanceDate,
         statusWire: 'PRESENT',
-        inTime: standardOffsetTime(attendanceDate, inTime),
-        outTime: standardOffsetTime(attendanceDate, outTime),
+        inTime: dateTimeOffsetWithLocalOffset(attendanceDate, inTime),
+        outTime: dateTimeOffsetWithLocalOffset(attendanceDate, outTime),
         reason: 'E2E current sprint HR bug regression',
       }),
     }),
