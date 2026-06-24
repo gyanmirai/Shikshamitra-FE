@@ -1,11 +1,9 @@
 'use client';
 
-import type { StepIconProps } from '@mui/material';
-import type { LoadingButtonProps } from '@mui/lab';
+import type { ButtonProps, StepIconProps } from '@mui/material';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { styled } from '@mui/material/styles';
@@ -86,8 +84,8 @@ interface CustomStepperWithFormikProps {
   isDisabledLabel?: boolean;
   showSaveButton?: boolean;
   disableSubmit?: boolean;
-  saveButtonProps?: LoadingButtonProps;
-  saveAndNextButtonProps?: LoadingButtonProps;
+  saveButtonProps?: ButtonProps;
+  saveAndNextButtonProps?: ButtonProps;
   viewMode?: 'horizontal' | 'vertical'; // Add this line
 }
 
@@ -174,7 +172,7 @@ const ModernStepIcon = (props: StepIconProps) => {
         component={motion.div}
         animate={{
           scale: active ? 1.1 : 1,
-          backgroundColor: completed || active ? 'var(--palette-primary-main)' : 'transparent',
+          backgroundColor: completed || active ? 'var(--palette-primary-main)' : 'rgba(0, 0, 0, 0)',
           borderColor:
             completed || active ? 'var(--palette-primary-main)' : 'var(--palette-grey-400)',
         }}
@@ -187,7 +185,8 @@ const ModernStepIcon = (props: StepIconProps) => {
           justifyContent: 'center',
           borderRadius: '50%',
           border: '2px solid',
-          bgcolor: (theme) => (completed || active ? theme.palette.primary.main : 'transparent'),
+          bgcolor: (theme) =>
+            completed || active ? theme.palette.primary.main : 'rgba(0, 0, 0, 0)',
           color: (theme) => (completed || active ? '#fff' : theme.palette.text.secondary),
         }}
       >
@@ -520,7 +519,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         </Button>
         <Box display="flex" gap={2}>
           {showSaveButton && (
-            <LoadingButton
+            <Button
               variant="outlined"
               size="small"
               loading={isSaveLoading.value}
@@ -543,9 +542,9 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               {...saveButtonProps}
             >
               Save
-            </LoadingButton>
+            </Button>
           )}
-          <LoadingButton
+          <Button
             variant="contained"
             type="button"
             size="small"
@@ -563,7 +562,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             {...saveAndNextButtonProps}
           >
             {activeStep === steps.length - 1 ? finalButtonLabel : nextButtonLabel}
-          </LoadingButton>
+          </Button>
         </Box>
       </Box>
     </Box>

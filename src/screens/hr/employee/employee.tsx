@@ -7,7 +7,6 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
 import Add from '@mui/icons-material/Add';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
@@ -801,7 +800,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
         >
           Cancel
         </Button>
-        <LoadingButton
+        <Button
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           size="small"
           loading={isUpdating}
@@ -809,7 +808,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           Submit
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </>
   );

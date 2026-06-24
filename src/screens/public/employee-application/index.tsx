@@ -3,7 +3,6 @@
 import type { FormikTouched } from 'formik';
 
 import dayjs from 'dayjs';
-import { LoadingButton } from '@mui/lab';
 import { getIn, useFormik } from 'formik';
 import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
@@ -1914,7 +1913,7 @@ export default function PublicEmployeeApplicationScreen({ token }: { token: stri
                     Next
                   </Button>
                 ) : (
-                  <LoadingButton
+                  <Button
                     size="small"
                     variant="contained"
                     type="submit"
@@ -1923,7 +1922,7 @@ export default function PublicEmployeeApplicationScreen({ token }: { token: stri
                     data-testid="employee-application-submit"
                   >
                     Submit Application
-                  </LoadingButton>
+                  </Button>
                 )}
               </Box>
             </Box>

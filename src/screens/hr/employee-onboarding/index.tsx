@@ -9,7 +9,6 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import * as React from 'react';
 import { isNaN } from 'lodash';
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
@@ -603,7 +602,7 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
         >
           Cancel
         </Button>
-        <LoadingButton
+        <Button
           variant="contained"
           onClick={handleCreate}
           disabled={!canCreateInvite}
@@ -612,7 +611,7 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
           startIcon={<Iconify icon="mdi:link-plus" />}
         >
           Create link
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </CustomDialog>
   );
@@ -2845,7 +2844,7 @@ export default function EmployeeOnboardingScreen() {
                 width: '100%',
                 p: 0,
                 border: 0,
-                bgcolor: 'transparent',
+                bgcolor: 'rgba(0, 0, 0, 0)',
                 color: 'inherit',
                 textAlign: 'left',
                 cursor: 'pointer',
