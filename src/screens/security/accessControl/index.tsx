@@ -2,7 +2,9 @@
 
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { AccessSelection } from 'src/utils/academicHierarchyUtils';
 import type { Board, Medium, Division, Standards, Organization } from 'src/types/school';
+import type { BulkUserScopeAssignmentPayload } from 'src/utils/userScopeBulkAssignPayload';
 
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
@@ -16,14 +18,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { buildUserScopeBulkAssignPayload } from 'src/utils/userScopeBulkAssignPayload';
 import { useGetAccessControlQuery, useAddAccessControlMutation } from 'src/redux/hr/employeeApi';
-import type { AccessSelection } from 'src/utils/academicHierarchyUtils';
-import {
-  emptyAccessSelection,
-  hasAccessSelection,
-  expandAccessibleHierarchy,
-  compressExplicitAcademicSelection,
-} from 'src/utils/academicHierarchyUtils';
 import {
   Box,
   Card,
@@ -35,6 +31,11 @@ import {
   CardHeader,
   DialogActions,
 } from '@mui/material';
+import {
+  emptyAccessSelection,
+  expandAccessibleHierarchy,
+  compressExplicitAcademicSelection,
+} from 'src/utils/academicHierarchyUtils';
 
 // Main screen component for access control functionality
 const AccessControlScreen = () => {
@@ -80,7 +81,7 @@ export const submitAccessControlForm = async ({
   allBoards,
   handleClose,
 }: {
-  addAccessControl: (body: Record<string, unknown>) => { unwrap: () => Promise<unknown> };
+  addAccessControl: (body: BulkUserScopeAssignmentPayload) => { unwrap: () => Promise<unknown> };
   userId?: string;
   currentYearId?: string;
   checkedItem: AccessSelection;
@@ -89,18 +90,14 @@ export const submitAccessControlForm = async ({
 }) => {
   if (!userId || !currentYearId || !allBoards?.length) return false;
 
-  const normalizedSelection = compressExplicitAcademicSelection(checkedItem, allBoards);
-
-  await addAccessControl({
-    academicYearIds: [currentYearId],
-    userIds: [userId],
-    educationBoardIds: normalizedSelection.boards,
-    educationMediumIds: normalizedSelection.mediums,
-    educationMediumStageIds: normalizedSelection.organizations,
-    standardIds: normalizedSelection.standards,
-    divisionIds: normalizedSelection.divisions,
-    clearExisting: !hasAccessSelection(normalizedSelection),
-  }).unwrap();
+  await addAccessControl(
+    buildUserScopeBulkAssignPayload({
+      academicYearId: currentYearId,
+      userIds: [userId],
+      selection: checkedItem,
+      allBoards,
+    })
+  ).unwrap();
   handleClose?.();
   return true;
 };
@@ -140,8 +137,7 @@ export const AccessControlForm = ({
     params: { userId: user?.id, academicYearId: currentYear?.id },
     options: { skip: !(user?.id && currentYear?.id) },
   });
-  const activeAccessControl =
-    currentAccessControl ?? (!isFetching ? accessControl : undefined);
+  const activeAccessControl = currentAccessControl ?? (!isFetching ? accessControl : undefined);
 
   // Full boards tree for the current academic year — needed to expand the
   // BE response when it compresses branches via `hasFull*Access` flags.
@@ -160,7 +156,9 @@ export const AccessControlForm = ({
     [activeBoardsData?.items, currentYear?.id]
   );
   const isHierarchyLoading = isLoading || isFetching || boardsLoading || boardsFetching;
-  const canSubmit = Boolean(user?.id && currentYear?.id && allBoards?.length && !isHierarchyLoading);
+  const canSubmit = Boolean(
+    user?.id && currentYear?.id && allBoards?.length && !isHierarchyLoading
+  );
 
   // Effect to populate form with existing access control data
   useEffect(() => {

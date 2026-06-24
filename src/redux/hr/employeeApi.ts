@@ -1,5 +1,13 @@
+import type {
+  BulkUserScopeAssignmentScope,
+  BulkUserScopeAssignmentResult,
+  BulkUserScopeAssignmentPayload,
+} from 'src/utils/userScopeBulkAssignPayload';
+
 import { api } from 'src/redux/service';
 import { employeeType } from 'src/redux/tagTypes';
+
+export type { BulkUserScopeAssignmentScope, BulkUserScopeAssignmentPayload };
 
 export const EMPLOYEE_LIST_MAX_PAGE_SIZE = 500;
 
@@ -258,7 +266,10 @@ export const employeeApi = api.injectEndpoints({
     }),
 
     // Access Control & Notifications
-    addAccessControl: builder.mutation({
+    addAccessControl: builder.mutation<
+      BulkUserScopeAssignmentResult,
+      BulkUserScopeAssignmentPayload
+    >({
       query: (body) => ({
         url: '/app/user-scope/bulk-assign',
         method: 'POST',

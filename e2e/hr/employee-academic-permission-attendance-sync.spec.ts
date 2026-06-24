@@ -571,13 +571,16 @@ async function assignAcademicPermission(
   stage: StageSelection
 ) {
   const payload = {
-    academicYearIds: [academicYearId],
+    academicYearId,
     userIds: [userId],
-    educationBoardIds: [],
-    educationMediumIds: [],
-    educationMediumStageIds: [stage.stageId],
-    standardIds: [],
-    divisionIds: [],
+    scopes: [
+      {
+        educationBoardId: stage.boardId,
+        educationMediumId: stage.mediumId,
+        educationMediumStageId: stage.stageId,
+      },
+    ],
+    clearExisting: false,
     description: `E2E Academic Permission attendance sync ${Date.now()}`,
   };
   const response = await employeeApiRequest(page, '/app/user-scope/bulk-assign', {
@@ -917,7 +920,7 @@ test.describe('HR Academic Permission attendance sync', () => {
         stage
       );
       expect(
-        scopedHrPermission.payload.educationMediumStageIds,
+        scopedHrPermission.payload.scopes?.map((scope: any) => scope.educationMediumStageId),
         'scoped HR Academic Permission stage payload'
       ).toEqual([stage.stageId]);
 
@@ -1007,7 +1010,7 @@ test.describe('HR Academic Permission attendance sync', () => {
           stage
         );
         expect(
-          academicPermission.payload.educationMediumStageIds,
+          academicPermission.payload.scopes?.map((scope: any) => scope.educationMediumStageId),
           'Academic Permission stage payload'
         ).toEqual([stage.stageId]);
 

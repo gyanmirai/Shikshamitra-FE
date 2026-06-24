@@ -753,7 +753,11 @@ async function finalizeApplication(
   expect(finalizePayload.personalInfo?.country?.isoCode).toBe(candidate.countryIsoCode);
   expect(finalizePayload.personalInfo?.state?.isoCode).toBe(candidate.stateIsoCode);
   expect(finalizePayload.personalInfo?.city).toBe(candidate.city);
-  expect(accessControlRequest.postData() || '').toContain('educationMediumStageIds');
+  const accessControlPayload = JSON.parse(accessControlRequest.postData() || '{}');
+  expect(accessControlPayload.scopes?.some((scope: any) => scope.educationMediumStageId)).toBe(
+    true
+  );
+  expect(accessControlPayload).not.toHaveProperty('educationMediumStageIds');
 
   if (accessControlForbidden) {
     await dialog.getByRole('button', { name: /close/i }).click();

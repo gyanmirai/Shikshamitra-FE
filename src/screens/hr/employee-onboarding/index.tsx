@@ -9,7 +9,6 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import * as React from 'react';
 import { isNaN } from 'lodash';
-import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -18,6 +17,7 @@ import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { DatePicker } from '@mui/x-date-pickers';
 import PhoneInput from 'src/components/phone-input';
+import { useFormik, type FormikErrors } from 'formik';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { HrBloodGroupArray } from 'src/enums/blood-group';
@@ -42,17 +42,6 @@ import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-gr
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
-import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
 import {
   Box,
   Card,
@@ -85,7 +74,19 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
 
+import { buildOnboardingAcademicPermissionScopeRows } from './employeeOnboardingAcademicPermission';
 import {
   EmployeeApplicationStatus,
   EMPLOYEE_APPLICATION_STATUSES,
@@ -295,6 +296,28 @@ const finalizeStep1Schema = Yup.object({
   useSubmittedPhoto: Yup.boolean(),
   attachResumeAsDocument: Yup.boolean(),
 });
+
+const validateFinalizeStep1Values = async (
+  values: FinalizeFormState
+): Promise<FormikErrors<FinalizeFormState>> => {
+  try {
+    await finalizeStep1Schema.validate(values, { abortEarly: false });
+    return {};
+  } catch (error) {
+    if (!(error instanceof Yup.ValidationError)) {
+      throw error;
+    }
+
+    const errors: FormikErrors<FinalizeFormState> = {};
+    error.inner.forEach((validationError) => {
+      const path = validationError.path as keyof FinalizeFormState | undefined;
+      if (path && !errors[path]) {
+        errors[path] = validationError.message as any;
+      }
+    });
+    return errors;
+  }
+};
 
 const showInviteEmailDeliveryToast = (
   emailDeliverySucceeded: boolean,
@@ -1168,7 +1191,7 @@ function FinalizeDialog({
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: initialValues || ({} as FinalizeFormState),
-    validationSchema: finalizeStep1Schema,
+    validationSchema: Yup.object({}),
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: () => {},
@@ -1202,8 +1225,17 @@ function FinalizeDialog({
 
   // ── Step-level validation using Yup + formik ──────────────────────────────
   const selectedStageIds = parseStageIds(form.academicPermissionStageIds);
+  const academicPermissionScopeRows = buildOnboardingAcademicPermissionScopeRows(
+    selectedStageIds,
+    organizationOptionsById
+  );
 
-  const isStep2Valid = Boolean(currentYear?.id && selectedStageIds?.length > 0);
+  const isStep2Valid = Boolean(
+    currentYear?.id &&
+    selectedStageIds.length > 0 &&
+    !organizationsLoading &&
+    academicPermissionScopeRows.isValid
+  );
 
   const handleStepperNext = async (
     isLastStep: boolean,
@@ -1216,7 +1248,8 @@ function FinalizeDialog({
       const allFields = Object.keys(finalizeStep1Schema.fields) as (keyof FinalizeFormState)[];
       const touchedAll = allFields.reduce((acc, k) => ({ ...acc, [k]: true }), {});
       formik.setTouched(touchedAll as any);
-      const errors = await formik.validateForm();
+      const errors = await validateFinalizeStep1Values(formik.values);
+      formik.setErrors(errors);
       // Only check fields relevant to step 1 (ignore academicPermissionStageIds etc.)
       const step1Fields = [
         'firstName',
@@ -1260,23 +1293,6 @@ function FinalizeDialog({
     setStep(index);
   };
 
-  const selectedStages = selectedStageIds?.map((id) => {
-    const option = organizationOptionsById.get(id);
-    return (
-      option || {
-        id,
-        name: id,
-        label: id,
-        stageName: id,
-        mediumId: '',
-        mediumName: '',
-        boardId: '',
-        boardName: '',
-        academicYearId: currentYear?.id || '',
-      }
-    );
-  });
-
   const canSubmit = Boolean(
     form.firstName &&
     form.lastName &&
@@ -1289,6 +1305,8 @@ function FinalizeDialog({
     form.shiftId &&
     currentYear?.id &&
     selectedStageIds.length > 0 &&
+    !organizationsLoading &&
+    academicPermissionScopeRows.isValid &&
     form.address1 &&
     form.address2 &&
     form.countryName &&
@@ -1298,6 +1316,15 @@ function FinalizeDialog({
 
   const handleFinalize = async () => {
     try {
+      if (!currentYear?.id || !academicPermissionScopeRows.isValid) {
+        setAcademicTouched(true);
+        shikshaMitraToast.warning({
+          message:
+            'Academic Permission could not be saved. Please wait for organization data to load and try again.',
+        });
+        return;
+      }
+
       let userId = finalizedUserId;
       if (!userId) {
         const result = await finalizeApplication({
@@ -1351,7 +1378,7 @@ function FinalizeDialog({
         }
       }
 
-      if (!userId || !currentYear?.id) {
+      if (!userId) {
         shikshaMitraToast.warning({
           message: 'Employee finalized, but Academic Permission could not be saved.',
         });
@@ -1360,9 +1387,10 @@ function FinalizeDialog({
 
       try {
         await addAccessControl({
-          academicYearIds: [currentYear.id],
+          academicYearId: currentYear.id,
           userIds: [userId],
-          educationMediumStageIds: selectedStageIds,
+          scopes: academicPermissionScopeRows.scopeRows,
+          clearExisting: false,
         }).unwrap();
       } catch {
         shikshaMitraToast.warning({
@@ -2548,6 +2576,14 @@ function FinalizeDialog({
                               At least one organization must be selected.
                             </FormHelperText>
                           )}
+                          {academicTouched &&
+                            selectedStageIds.length > 0 &&
+                            !academicPermissionScopeRows.isValid && (
+                              <FormHelperText error sx={{ mb: 1, ml: 0 }}>
+                                Selected organization data is still loading. Please wait and try
+                                again.
+                              </FormHelperText>
+                            )}
                           <Box sx={{ maxHeight: 320, overflowY: 'auto', pr: 0.5, mt: 1 }}>
                             <Grid container spacing={1}>
                               {organizationOptions.map((option) => {
