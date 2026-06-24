@@ -1,13 +1,16 @@
 import type { FormikProps } from 'formik';
+import type { RootState } from 'src/redux/store';
 
-import React from 'react';
+import { useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Grid, TextField, Autocomplete } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { useGetStaffOptionsQuery } from 'src/redux/transport/vehicle-management/driver-conductor-api';
+import { useGetVehicleOptionsQuery } from 'src/redux/transport/vehicle-management/vehicle-management-api';
 
 import RouteDetailsView from './RouteBasicView';
-import vehicleManagementData from '../../../../json/transport/transportModuleData.json';
 
 import type { IRoutePayload } from '../Components/type';
 
@@ -15,114 +18,107 @@ interface VehicleAssignmentStepProps {
   formik: FormikProps<IRoutePayload>;
 }
 
+const getNestedError = (errors: any, path: string): string | undefined => {
+  const pathArray = path.split('.');
+  let current = errors;
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const key of pathArray) {
+    if (current && typeof current === 'object' && key in current) {
+      current = current[key];
+    } else {
+      return undefined;
+    }
+  }
+
+  return typeof current === 'string' ? current : undefined;
+};
+
+const getNestedTouched = (touched: any, path: string): boolean => {
+  const pathArray = path.split('.');
+  let current = touched;
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const key of pathArray) {
+    if (current && typeof current === 'object' && key in current) {
+      current = current[key];
+    } else {
+      return false;
+    }
+  }
+
+  return Boolean(current);
+};
+
 const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
-  // Fetch available vehicles, drivers, and conductors at the top level of the component
-  // const { data: availableVehicles = [] } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetAssignableVehiclesQuery,
-  // });
-  const [availableVehicles, setAvailableVehicles] = React.useState(
-    vehicleManagementData.assignableVehiclesData
-  );
-  const [availableDrivers, setSelectableDriversData] = React.useState(
-    vehicleManagementData.selectableDriversData
-  );
-  const [availableConductors, setSelectableConductorsData] = React.useState(
-    vehicleManagementData.selectableConductorsData
-  );
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { data: availableVehicles = [] } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetVehicleOptionsQuery,
+    params: { academicMediumId: currentMedium?.id, onlyAssignable: false },
+    options: { skip: !currentMedium?.id },
+  });
+  const { data: availableDrivers = [] } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStaffOptionsQuery,
+    params: { academicMediumId: currentMedium?.id, role: 0, onlyAssignable: false },
+    options: { skip: !currentMedium?.id },
+  });
+  const { data: availableConductors = [] } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStaffOptionsQuery,
+    params: { academicMediumId: currentMedium?.id, role: 1, onlyAssignable: false },
+    options: { skip: !currentMedium?.id },
+  });
 
-  // const { data: availableDrivers = [] } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetSelectableDriversQuery,
-  // });
-
-  // const { data: availableConductors = [] } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetSelectableConductorsQuery,
-  // });
-
-  const handleVehicleSelect = (selectedVehicle: string | null) => {
+  const handleVehicleSelect = (selectedVehicle: any | null) => {
     if (!selectedVehicle) {
-      formik.setFieldValue('vehicleAssignment', null);
+      formik.setFieldValue('vehicleAssignment', {
+        vehicleId: '',
+        vehicleNo: '',
+        capacity: 0,
+        driverId: '',
+        driverName: '',
+        conductorId: '',
+        conductorName: '',
+      });
       return;
     }
 
-    const vehicleData = availableVehicles?.find(
-      (vehicle: any) => vehicle.value === selectedVehicle
-    );
-
-    const newAssignment = {
-      vehicleId: vehicleData?.vehicleId || selectedVehicle,
-      vehicleNo: vehicleData?.vehicleNo || '',
-      capacity: vehicleData?.capacity || 0,
-      driverId: '',
-      driverName: '',
-      conductorId: '',
-      conductorName: '',
-    };
-
-    // ✅ Remove the array wrapper if you're only assigning one vehicle
-    formik.setFieldValue('vehicleAssignment', newAssignment);
+    formik.setFieldValue('vehicleAssignment', {
+      vehicleId: selectedVehicle.id || selectedVehicle.value,
+      vehicleNo: selectedVehicle.code || selectedVehicle.name || '',
+      capacity: 0,
+      driverId: formik.values.vehicleAssignment?.driverId || '',
+      driverName: formik.values.vehicleAssignment?.driverName || '',
+      conductorId: formik.values.vehicleAssignment?.conductorId || '',
+      conductorName: formik.values.vehicleAssignment?.conductorName || '',
+    });
   };
 
-  // Helper functions for nested error handling
-  const getNestedError = (errors: any, path: string): string | undefined => {
-    const pathArray = path.split('.');
-    let current = errors;
-
-    // eslint-disable-next-line no-restricted-syntax
-    for (const key of pathArray) {
-      if (current && typeof current === 'object' && key in current) {
-        current = current[key];
-      } else {
-        return undefined;
-      }
-    }
-    return typeof current === 'string' ? current : undefined;
-  };
-
-  const getNestedTouched = (touched: any, path: string): boolean => {
-    const pathArray = path.split('.');
-    let current = touched;
-
-    // eslint-disable-next-line no-restricted-syntax
-    for (const key of pathArray) {
-      if (current && typeof current === 'object' && key in current) {
-        current = current[key];
-      } else {
-        return false;
-      }
-    }
-
-    return Boolean(current);
-  };
+  const selectedVehicle =
+    availableVehicles.find(
+      (vehicle: any) => (vehicle.id || vehicle.value) === formik.values.vehicleAssignment?.vehicleId
+    ) || null;
 
   return (
     <>
       <RouteDetailsView values={formik.values} />
-      <SectionCard title="Vehicle Assignments" paperProps={{ sx: { mt: 2 } }}>
+      <SectionCard title="Vehicle Assignment" paperProps={{ sx: { mt: 2 } }}>
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={
-              !!(
-                typeof formik?.touched?.vehicleAssignment === 'object' &&
-                !Array.isArray(formik?.touched?.vehicleAssignment) &&
-                formik?.touched?.vehicleAssignment?.vehicleId &&
-                (formik?.errors?.vehicleAssignment as any)?.vehicleId
-              )
+              getNestedTouched(formik.touched, 'vehicleAssignment.vehicleId') &&
+              !!getNestedError(formik.errors, 'vehicleAssignment.vehicleId')
             }
           >
             <Autocomplete
               fullWidth
               options={availableVehicles || []}
               getOptionLabel={(option) => option?.label || ''}
-              value={
-                availableVehicles?.find(
-                  (vehicle: any) => vehicle.vehicleId === formik.values.vehicleAssignment?.vehicleId
-                ) || null
-              }
-              onChange={(event, newValue) => {
-                handleVehicleSelect(newValue ? newValue.value : null);
+              value={selectedVehicle}
+              onChange={(_, newValue) => {
+                handleVehicleSelect(newValue);
               }}
               renderInput={(params) => (
                 <TextField
@@ -130,25 +126,20 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
                   label="Vehicle"
                   size="small"
                   error={
-                    !!(
-                      typeof formik.touched.vehicleAssignment === 'object' &&
-                      !Array.isArray(formik.touched.vehicleAssignment) &&
-                      formik.touched.vehicleAssignment?.vehicleId &&
-                      (formik.errors.vehicleAssignment as any)?.vehicleId
-                    )
+                    getNestedTouched(formik.touched, 'vehicleAssignment.vehicleId') &&
+                    !!getNestedError(formik.errors, 'vehicleAssignment.vehicleId')
                   }
                   helperText={
-                    typeof formik.touched.vehicleAssignment === 'object' &&
-                    !Array.isArray(formik.touched.vehicleAssignment) &&
-                    formik.touched.vehicleAssignment?.vehicleId &&
-                    (formik.errors.vehicleAssignment as any)?.vehicleId
+                    getNestedTouched(formik.touched, 'vehicleAssignment.vehicleId')
+                      ? getNestedError(formik.errors, 'vehicleAssignment.vehicleId')
+                      : undefined
                   }
                 />
               )}
             />
           </ShakingTextField>
         </Grid>
-        {/* Driver Selection */}
+
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={
@@ -161,13 +152,13 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
               name="vehicleAssignment.driverId"
               fullWidth
               options={availableDrivers}
-              value={formik.values.vehicleAssignment.driverId}
+              value={formik.values.vehicleAssignment?.driverId || ''}
               labelKey="name"
               onChange={(value) => {
                 const selectedDriver = availableDrivers.find(
-                  (driver: any) => driver.value === value
+                  (driver: any) => driver.value === value || driver.id === value
                 );
-                formik.setFieldValue('vehicleAssignment.driverId', selectedDriver?.value || '');
+                formik.setFieldValue('vehicleAssignment.driverId', selectedDriver?.value || value);
                 formik.setFieldValue('vehicleAssignment.driverName', selectedDriver?.label || '');
                 formik.setFieldTouched('vehicleAssignment.driverId', false);
               }}
@@ -184,19 +175,12 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
               size="small"
               renderValue={(selected) => {
                 const driver = availableDrivers.find((d: any) => d.value === selected);
-                return driver ? (
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {driver.label}
-                  </Box>
-                ) : (
-                  ''
-                );
+                return driver ? <Box display="flex">{driver.label}</Box> : '';
               }}
             />
           </ShakingTextField>
         </Grid>
 
-        {/* Conductor Selection */}
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={
@@ -208,12 +192,12 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
               label="Conductor"
               name="vehicleAssignment.conductorId"
               options={availableConductors}
-              value={formik.values.vehicleAssignment.conductorId}
+              value={formik.values.vehicleAssignment?.conductorId || ''}
               onChange={(value) => {
                 const selectedConductor = availableConductors.find(
-                  (conductor: any) => conductor.value === value
+                  (conductor: any) => conductor.value === value || conductor.id === value
                 );
-                formik.setFieldValue('vehicleAssignment.conductorId', value);
+                formik.setFieldValue('vehicleAssignment.conductorId', value || '');
                 formik.setFieldValue(
                   'vehicleAssignment.conductorName',
                   selectedConductor?.label || ''
@@ -232,19 +216,11 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
               size="small"
               renderValue={(selected) => {
                 const conductor = availableConductors.find((c: any) => c.value === selected);
-                return conductor ? (
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {conductor.label}
-                  </Box>
-                ) : (
-                  ''
-                );
+                return conductor ? <Box display="flex">{conductor.label}</Box> : '';
               }}
             />
           </ShakingTextField>
         </Grid>
-
-        {/* Vehicle Assignments List */}
       </SectionCard>
     </>
   );

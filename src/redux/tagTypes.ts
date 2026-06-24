@@ -595,7 +595,11 @@ export const transportType = {
   member: 'Member',
   routeStop: 'RouteStop',
   feeConfiguration: 'FeeConfiguration',
+  feeRuns: 'FeeRuns',
+  feeDues: 'FeeDues',
   routeManagement: 'RouteManagement',
+  transportDashboard: 'TransportDashboard',
+  transportReports: 'TransportReports',
 } as const;
 
 // ===== Year API (reducerPath: yearApi) =====

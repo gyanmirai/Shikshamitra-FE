@@ -1,13 +1,15 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -21,20 +23,20 @@ import { getServiceTypeInitialValues } from './ServiceTypeInitialValues';
 import type { IServiceTypeFormProps } from './type';
 
 const ServiceTypeForm: React.FC<IServiceTypeFormProps> = ({ open, onClose, editData }) => {
-  const { addServiceType, isLoading: isAdding } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddServiceTypeMutation,
-  });
-  const { updateServiceType, isLoading: isUpdating } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateServiceTypeMutation,
-  });
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
+  const [addServiceType, { isLoading: isAdding }] = useAddServiceTypeMutation();
+  const [updateServiceType, { isLoading: isUpdating }] = useUpdateServiceTypeMutation();
 
   const formik = useFormik({
     initialValues: getServiceTypeInitialValues(editData),
     validationSchema: serviceTypeValidationSchema,
     onSubmit: async (values) => {
       try {
+        if (!currentMedium?.id) {
+          shikshaMitraToast.error({ message: 'Please select an academic medium first' });
+          return;
+        }
+
         const payload = {
           name: values.typeName,
           description: values.description || '',
@@ -44,13 +46,14 @@ const ServiceTypeForm: React.FC<IServiceTypeFormProps> = ({ open, onClose, editD
         if (editData) {
           await updateServiceType({
             servicingTypeId: editData.id,
+            academicMediumId: currentMedium.id,
             body: payload,
-          });
+          }).unwrap();
           shikshaMitraToast.success({
             message: `Service Type: ${values.typeName} updated successfully`,
           });
         } else {
-          await addServiceType(payload);
+          await addServiceType({ academicMediumId: currentMedium.id, body: payload }).unwrap();
           shikshaMitraToast.success({
             message: `Service Type: ${values.typeName} added successfully`,
           });

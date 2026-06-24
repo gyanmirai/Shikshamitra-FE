@@ -3,15 +3,24 @@ export interface IDriverConductor {
   id: string;
   staffId?: string;
   employeeId: string;
+  employeeGuid?: string;
+  employeeCode?: string;
   role: 'Driver' | 'Conductor';
+  roleId?: number;
   name: string;
+  licenceNo?: string;
   licenceExpiry: string;
+  licenceExpiryDate?: string;
   experience: string;
+  experienceYears?: number;
   phoneNo: string;
   assignedRoute?: string;
+  assignedRouteId?: string;
   status: 'Active' | 'On Leave' | 'Inactive';
+  statusId?: number;
   createdBy?: string;
   createdOn?: string;
+  remarks?: string;
 }
 
 export interface IDriverManagementTableProps {
@@ -39,4 +48,6 @@ export interface IAssignRouteValues {
   driverName: string;
   currentRoute: string;
   selectedRoute: string;
+  selectedVehicle: string;
+  selectedConductor: string;
 }

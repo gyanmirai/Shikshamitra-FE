@@ -1,8 +1,10 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -15,6 +17,7 @@ import CustomUpload from 'src/components/custom-upload/custom-upload';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetServiceTypesQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 import { useAddMaintenanceRecordMutation } from 'src/redux/transport/vehicle-management/vehicle-management-api';
 
 import { maintenanceValidationSchema } from './MaintenanceValidationSchema';
@@ -46,10 +49,13 @@ const initialValues: MaintenanceFormValues = {
 };
 
 const AddMaintenanceForm: React.FC<AddMaintenanceFormProps> = ({ open, onClose, vehicleId }) => {
-  // Add Maintenance Record
-  const { addMaintenanceRecord, isLoading } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddMaintenanceRecordMutation,
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [addMaintenanceRecord, { isLoading }] = useAddMaintenanceRecordMutation();
+  const { data: serviceTypes } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetServiceTypesQuery,
+    params: { academicMediumId: currentMedium?.id },
+    options: { skip: !currentMedium?.id },
   });
 
   const formik = useFormik({
@@ -57,6 +63,12 @@ const AddMaintenanceForm: React.FC<AddMaintenanceFormProps> = ({ open, onClose, 
     validationSchema: maintenanceValidationSchema,
     onSubmit: async (values) => {
       try {
+        if (!currentMedium?.id) {
+          shikshaMitraToast.error({
+            message: 'Please select an academic medium before adding maintenance',
+          });
+          return;
+        }
         // Create FormData to match API specification
         const formData = new FormData();
 
@@ -85,7 +97,11 @@ const AddMaintenanceForm: React.FC<AddMaintenanceFormProps> = ({ open, onClose, 
           });
         }
 
-        await addMaintenanceRecord({ vehicleId, body: formData }).unwrap();
+        await addMaintenanceRecord({
+          vehicleId,
+          academicMediumId: currentMedium.id,
+          body: formData,
+        }).unwrap();
 
         shikshaMitraToast.success({
           message: 'Maintenance record added successfully',
@@ -110,13 +126,10 @@ const AddMaintenanceForm: React.FC<AddMaintenanceFormProps> = ({ open, onClose, 
               <CustomSelect
                 label="Service Type *"
                 multiple
-                options={[
-                  { value: 'Regular', label: 'Regular' },
-                  { value: 'Major', label: 'Major' },
-                  { value: 'Minor', label: 'Minor' },
-                  { value: 'Emergency', label: 'Emergency' },
-                  { value: 'Body Work', label: 'Body Work' },
-                ]}
+                options={(serviceTypes || []).map((row: any) => ({
+                  value: row.name,
+                  label: row.name,
+                }))}
                 name="serviceType"
                 value={formik.values.serviceType}
                 onChange={(val) => formik.setFieldValue('serviceType', val)}

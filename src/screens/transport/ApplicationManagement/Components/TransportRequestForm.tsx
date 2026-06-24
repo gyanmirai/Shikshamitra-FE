@@ -1,12 +1,17 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { Box } from '@mui/material';
+import { useSelector } from 'react-redux';
 import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useAddTransportMemberMutation } from 'src/redux/transport/vehicle-management/member-manage-api';
+import {
+  useAddTransportMemberMutation,
+  useUpdateTransportApplicationMutation,
+} from 'src/redux/transport/vehicle-management/member-manage-api';
 
 import SelectStudentStep from './SelectStudentStep';
 import TransportApplicationForm from './TransportApplicationForm';
@@ -15,9 +20,20 @@ import { transportValidationSchema } from './transportRequestValidation';
 import type { ITransportApplicationPayload } from '../type';
 
 const getInitialTransportData = (selectedApplication: ITransportApplicationPayload | null) => ({
+  id: selectedApplication?.id || '',
+  applicationType: selectedApplication?.applicationType ?? 0,
+  memberType: selectedApplication?.memberType ?? 0,
+  sourceId:
+    selectedApplication?.sourceId ||
+    selectedApplication?.studentId ||
+    selectedApplication?.employeeId ||
+    '',
+  employeeId: selectedApplication?.employeeId || '',
   studentId: selectedApplication?.studentId || '',
   name: selectedApplication?.name || '',
   className: selectedApplication?.class || '',
+  class: selectedApplication?.class || '',
+  division: selectedApplication?.division || '',
   rollNo: selectedApplication?.rollNo || '',
   role: selectedApplication?.role || '',
   grNo: selectedApplication?.grNo || '',
@@ -39,11 +55,11 @@ const TransportApplicationStepper = ({
   selectedApplication: ITransportApplicationPayload | null;
 }) => {
   const [activeStep, setActiveStep] = useState(0);
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
 
-  const { addTransportMember, isLoading: isAdding } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddTransportMemberMutation,
-  });
+  const [addTransportMember, { isLoading: isAdding }] = useAddTransportMemberMutation();
+  const [updateTransportApplication, { isLoading: isUpdating }] =
+    useUpdateTransportApplicationMutation();
 
   // Step Names
   const steps = ['Select Member', 'Transport Application'];
@@ -69,23 +85,45 @@ const TransportApplicationStepper = ({
       setIsLoading(true);
       try {
         if (activeStep === 0) {
-          if (!values.studentId) {
-            shikshaMitraToast.error({ message: 'Please select a student before proceeding' });
+          if (!values.sourceId) {
+            shikshaMitraToast.error({ message: 'Please select a member before proceeding' });
             setIsLoading(false);
             return;
           }
         } else if (activeStep === 1) {
-          // Call the API to save transport application
+          const memberType = Number(values.memberType ?? 0);
           const payload = {
-            studentId: values.studentId,
+            applicationType: selectedApplication?.applicationType ?? 0,
+            memberType,
+            memberId: selectedApplication?.memberId || undefined,
+            studentId: memberType === 0 ? values.studentId || values.sourceId : undefined,
+            employeeId: memberType === 1 ? values.employeeId || values.sourceId : undefined,
+            requestedStopId: values.searchStop,
             pickupType: values.pickupType,
-            stopId: values.searchStop,
             landmark: values.landmark,
             areaLocality: values.areaLocality,
+            addressLine1: values.addressLine1,
             description: values.description,
           };
 
-          await addTransportMember(payload);
+          if (!currentMedium?.id) {
+            shikshaMitraToast.error({ message: 'Academic medium is required' });
+            setIsLoading(false);
+            return;
+          }
+
+          if (selectedApplication?.id) {
+            await updateTransportApplication({
+              applicationId: selectedApplication.id,
+              academicMediumId: currentMedium.id,
+              body: payload,
+            }).unwrap();
+          } else {
+            await addTransportMember({
+              academicMediumId: currentMedium.id,
+              body: payload,
+            }).unwrap();
+          }
 
           shikshaMitraToast.success({
             message: `Transport application saved successfully for "${values.name}"`,
@@ -111,7 +149,14 @@ const TransportApplicationStepper = ({
         setIsLoading(false);
       }
     },
-    [activeStep, onClose, selectedApplication, addTransportMember]
+    [
+      activeStep,
+      onClose,
+      selectedApplication,
+      currentMedium?.id,
+      addTransportMember,
+      updateTransportApplication,
+    ]
   );
 
   return (
@@ -120,6 +165,7 @@ const TransportApplicationStepper = ({
       initialValues={initialValues}
       steps={steps}
       activeStep={activeStep}
+      disableSubmit={isAdding || isUpdating}
       validateOnChange={false}
       onStepClick={(step) => {
         if (selectedApplication) {

@@ -1,4 +1,7 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import BadgeIcon from '@mui/icons-material/Badge';
 import RouteIcon from '@mui/icons-material/Route';
@@ -8,10 +11,11 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import { Box, Card, Grid, Stack, Typography } from '@mui/material';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import LocalGasStationIcon from '@mui/icons-material/LocalGasStationOutlined';
 import AirlineSeatReclineNormalIcon from '@mui/icons-material/AirlineSeatReclineNormal';
 import { useGetVehicleDetailsQuery } from 'src/redux/transport/vehicle-management/vehicle-management-api';
+
+import { VehicleStatusType, VehicleStatusTypeColors } from '../Components/type';
 
 interface VehicleInformationCardProps {
   vehicleId: string;
@@ -19,12 +23,19 @@ interface VehicleInformationCardProps {
 
 const VehicleInformationCard = ({ vehicleId }: VehicleInformationCardProps) => {
   const theme = useTheme();
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
 
-  const { data: vehicle } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetVehicleDetailsQuery,
-    params: vehicleId,
-  });
+  const { data: vehicle } = useGetVehicleDetailsQuery(
+    { vehicleId, academicMediumId: currentMedium?.id },
+    { skip: !vehicleId || !currentMedium?.id }
+  );
+
+  const status = vehicle?.status as VehicleStatusType | undefined;
+  const statusLabel =
+    vehicle?.statusName || (status ? VehicleStatusType[status] : undefined) || 'Active';
+  const statusColor = status
+    ? (VehicleStatusTypeColors[status] as 'success' | 'error' | 'warning')
+    : 'success';
 
   // Helper to get colors for different fields to match the reference image style
   const getFieldStyles = (type: string) => {
@@ -159,11 +170,11 @@ const VehicleInformationCard = ({ vehicleId }: VehicleInformationCardProps) => {
         </Box>
 
         <Label
-          color={vehicle?.status === 'Inactive' ? 'error' : 'success'}
+          color={statusColor}
           variant="soft"
           sx={{ fontWeight: 700, textTransform: 'uppercase' }}
         >
-          {vehicle?.status || 'Active'}
+          {statusLabel}
         </Label>
       </Stack>
 

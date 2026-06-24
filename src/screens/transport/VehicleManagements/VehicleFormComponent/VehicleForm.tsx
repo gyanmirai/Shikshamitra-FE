@@ -1,7 +1,9 @@
+import type { RootState } from 'src/redux/store';
+
 import { Box } from '@mui/material';
+import { useSelector } from 'react-redux';
 import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -30,47 +32,26 @@ const VehicleFormStepper = ({
 }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [vehicleId, setVehicleId] = useState<string | null>(editData?.id || null);
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
   const steps = ['Basic Information', 'Documents', 'Vehicle Maintenance'];
   const stepComponents = [VehicleGeneralStep, VehicleDocumentsStep, VehicleMaintenanceStep];
 
   const initialValues = useMemo(() => getInitialVehicleData(editData), [editData]);
 
-  // Add Vehicle
-  const { addVehicle } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddVehicleMutation,
-  });
+  const [addVehicle] = useAddVehicleMutation();
+  const [updateVehicle] = useUpdateVehicleMutation();
+  const [uploadVehicleDocument] = useUploadVehicleDocumentMutation();
+  const [updateVehicleDocument] = useUpdateVehicleDocumentMutation();
+  const [vehicleMantenceDetails] = useVehicleMantenceDetailsMutation();
+  const [updateVehicleMaintenance] = useUpdateVehicleMaintenanceMutation();
 
-  // Update Vehicle
-  const { updateVehicle } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateVehicleMutation,
-  });
-
-  // Upload Vehicle Document
-  const { uploadVehicleDocument } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUploadVehicleDocumentMutation,
-  });
-
-  // Update Vehicle Document
-  const { updateVehicleDocument } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateVehicleDocumentMutation,
-  });
-
-  // Vehicle Maintenance Details
-  const { vehicleMantenceDetails } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useVehicleMantenceDetailsMutation,
-  });
-
-  // Update Vehicle Maintenance
-  const { updateVehicleMaintenance } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateVehicleMaintenanceMutation,
-  });
+  const toIsoString = (value: any) => {
+    if (!value) return null;
+    if (typeof value === 'string') return value;
+    if (typeof value.toISOString === 'function') return value.toISOString();
+    return null;
+  };
 
   const handleSave = useCallback(
     async (
@@ -82,12 +63,18 @@ const VehicleFormStepper = ({
     ) => {
       setIsLoading(true);
       try {
+        const academicMediumId = currentMedium?.id;
+        if (!academicMediumId) {
+          throw new Error('Please select an academic medium before saving vehicle details.');
+        }
+
         // Step 1: Basic Information
         if (activeStep === 0) {
           const step1Data = {
             registrationNo: values.registrationNo,
+            vehicleNo: values.vehicleNo,
             vehicleName: values.vehicleName,
-            vehicleType: values.vehicleType,
+            vehicleTypeId: values.vehicleType,
             vehicleCompany: values.vehicleCompany,
             model: values.model,
             yearOfManufacture: values.yearOfManufacture,
@@ -95,21 +82,25 @@ const VehicleFormStepper = ({
             vehicleColor: values.vehicleColor,
             schoolAssignedNo: values.schoolAssignedNo,
             owner: values.owner,
-            fuelType: values.fuelType,
+            fuelTypeId: values.fuelType,
             isAc: values.isAc,
             description: values.description,
           };
 
           if (editData?.id) {
             // Update existing vehicle
-            await updateVehicle({ vehicleId: editData.id, data: step1Data }).unwrap();
+            await updateVehicle({
+              vehicleId: editData.id,
+              academicMediumId,
+              body: step1Data,
+            }).unwrap();
             shikshaMitraToast.success({
               message: `Vehicle "${values.registrationNo}" updated successfully.`,
             });
           } else {
             // Create new vehicle
-            const response = await addVehicle(step1Data).unwrap();
-            setVehicleId(response.id || response.vehicleId); // Store the vehicleId for next steps
+            const response = await addVehicle({ academicMediumId, body: step1Data }).unwrap();
+            setVehicleId(response.id || response.vehicleId);
             shikshaMitraToast.success({
               message: `Vehicle "${values.registrationNo}" registered successfully.`,
             });
@@ -123,23 +114,29 @@ const VehicleFormStepper = ({
 
           // Upload or update documents in parallel
           if (values.documents && values.documents.length > 0) {
-            const documentPromises = values.documents.map((doc: any) => {
-              const documentData = {
-                documentTypeId: doc.documentTypeId,
-                file: doc.file,
-                fileName: doc.fileName,
-              };
+            const documentPromises = values.documents
+              .filter((doc: any) => doc?.file instanceof File && doc?.requiredDocumentId)
+              .map((doc: any) => {
+                const formData = new FormData();
+                formData.append('requiredDocumentId', doc.requiredDocumentId);
+                formData.append('file', doc.file);
+                formData.append('fileName', doc.fileName || doc.file.name);
 
-              // If document has an ID, update it; otherwise, upload new
-              if (editData?.id && doc.id) {
-                return updateVehicleDocument({
+                if (doc.id) {
+                  return updateVehicleDocument({
+                    vehicleId,
+                    documentId: doc.id,
+                    academicMediumId,
+                    body: formData,
+                  }).unwrap();
+                }
+
+                return uploadVehicleDocument({
                   vehicleId,
-                  documentId: doc.id,
-                  data: documentData,
+                  academicMediumId,
+                  body: formData,
                 }).unwrap();
-              }
-              return uploadVehicleDocument({ vehicleId, data: documentData }).unwrap();
-            });
+              });
             await Promise.all(documentPromises);
           }
 
@@ -155,17 +152,35 @@ const VehicleFormStepper = ({
             throw new Error('Vehicle ID not found. Please complete Step 1 first.');
           }
 
-          const maintenanceData = {
-            insurance: values.insurance,
-            puc: values.puc,
-            roadTax: values.roadTax,
+          const complianceData = {
+            insuranceCompany: values.insuranceCompany || null,
+            policyNo: values.policyNo || null,
+            insuranceIssueDate: toIsoString(values.insuranceIssueDate),
+            insuranceExpiryDate: toIsoString(values.insuranceExpiryDate),
+            coverageAmount: values.coverageAmount === undefined ? null : values.coverageAmount,
+            pucCertificateNo: values.pucCertificateNo || null,
+            pucIssueDate: toIsoString(values.pucIssueDate),
+            pucExpiryDate: toIsoString(values.pucExpiryDate),
+            fitnessCertificateNo: values.fitnessCertificateNo || null,
+            fitnessIssueDate: toIsoString(values.fitnessIssueDate),
+            fitnessExpiryDate: toIsoString(values.fitnessExpiryDate),
+            roadTaxReceiptNo: values.roadTaxReceiptNo || null,
+            roadTaxIssueDate: toIsoString(values.roadTaxIssueDate),
           };
 
           // Use update mutation if editing, otherwise create new
           if (editData?.id) {
-            await updateVehicleMaintenance({ vehicleId, data: maintenanceData }).unwrap();
+            await updateVehicleMaintenance({
+              vehicleId,
+              academicMediumId,
+              body: complianceData,
+            }).unwrap();
           } else {
-            await vehicleMantenceDetails({ vehicleId, data: maintenanceData }).unwrap();
+            await vehicleMantenceDetails({
+              vehicleId,
+              academicMediumId,
+              body: complianceData,
+            }).unwrap();
           }
 
           shikshaMitraToast.success({
@@ -201,6 +216,7 @@ const VehicleFormStepper = ({
       updateVehicleDocument,
       vehicleMantenceDetails,
       updateVehicleMaintenance,
+      currentMedium?.id,
     ]
   );
 

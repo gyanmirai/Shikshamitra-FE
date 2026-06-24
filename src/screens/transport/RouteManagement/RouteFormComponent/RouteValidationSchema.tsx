@@ -141,6 +141,12 @@ export const routeValidationSchema = [
       .min(1, 'At least one stop is required'),
   }),
 
-  // Step 2: Vehicle Assignments
-  yup.object().shape({}),
+  // Step 2: Vehicle Assignment
+  yup.object().shape({
+    vehicleAssignment: yup.object().shape({
+      vehicleId: yup.string().required('Vehicle is required'),
+      driverId: yup.string().required('Driver is required'),
+      conductorId: yup.string().nullable(),
+    }),
+  }),
 ];

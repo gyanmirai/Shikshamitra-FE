@@ -1,8 +1,10 @@
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetSuggestedRouteDataQuery } from 'src/redux/transport/vehicle-management/routeStopApi';
 import {
@@ -49,15 +51,15 @@ const TransportApplicationRouteDetail = ({
   selectedApplication: ITransportApplicationPayload | null;
   formik: any;
 }) => {
-  const { data: apiRouteData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSuggestedRouteDataQuery,
-    params: selectedApplication?.id,
-  });
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
+  const { data: apiRouteData, isLoading } = useGetSuggestedRouteDataQuery(
+    { applicationId: selectedApplication?.id, academicMediumId: currentMedium?.id },
+    { skip: !selectedApplication?.id || !currentMedium?.id }
+  );
 
   const routeData = apiRouteData || [];
 
-  const [setSelectedRoute] = useState<any>(formik.values.selectedRoute);
+  const [, setSelectedRoute] = useState<any>(formik.values.selectedRoute);
 
   const theme = useTheme();
   return (

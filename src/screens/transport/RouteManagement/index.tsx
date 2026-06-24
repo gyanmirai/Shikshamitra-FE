@@ -5,14 +5,12 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import RouteTable from './Components/RouteTable';
 import NewRouteForm from './RouteFormComponent/RouteForm';
-import RouteDetailsCard from './RouteViewDetails/RouteDetailsCard';
 
 const RouteManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control route form visibility
@@ -21,17 +19,11 @@ const RouteManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) 
   // State to store currently selected route for editing
   const [selectedRoute, setSelectedRoute] = useState<any | null>(null);
 
-  // State for view route details
-  const [, setViewRoute] = useState<any | null>(null);
-
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // Redux dispatch hook for state management
   const dispatch = useDispatch();
-
-  // Boolean hook to control detail view dialog
-  const viewDialog = useBoolean();
 
   /**
    * Handles closing the route form with confirmation if there are unsaved changes
@@ -45,14 +37,6 @@ const RouteManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) 
       setOpen(false);
       setSelectedRoute(null);
     }
-  };
-
-  /**
-   * Handles closing the view dialog
-   */
-  const handleViewClose = () => {
-    viewDialog.onFalse();
-    setViewRoute(null);
   };
 
   return (
@@ -85,25 +69,6 @@ const RouteManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) 
             ]}
             sx={{ px: 1 }}
           />
-        ) : viewDialog.value ? (
-          <CustomBreadcrumbs
-            heading="Route Details"
-            description="This screen displays the complete details of a selected route, including its stops, capacity, and student assignments. It helps in quickly reviewing and managing route information."
-            isBack
-            onBack={handleViewClose}
-            links={[
-              { name: 'Transport', href: '/transport/dashboard' },
-              {
-                name: 'Route Management',
-                href: '/transport/routeManagement',
-                onClick: handleViewClose,
-              },
-              {
-                name: 'Route Details',
-                href: '/transport/routeManagement',
-              },
-            ]}
-          />
         ) : (
           <CustomBreadcrumbs
             heading="Route Management"
@@ -130,19 +95,8 @@ const RouteManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) 
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
           <NewRouteForm selectedRoute={selectedRoute} onClose={handleClose} />
         </Card>
-      ) : viewDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <RouteDetailsCard />
-        </Card>
       ) : (
-        <RouteTable
-          setOpenDialog={setOpen}
-          setEditData={setSelectedRoute}
-          onViewDetail={(data) => {
-            viewDialog.onTrue();
-            setViewRoute(data);
-          }}
-        />
+        <RouteTable setOpenDialog={setOpen} setEditData={setSelectedRoute} />
       )}
     </Box>
   );

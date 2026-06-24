@@ -12,7 +12,6 @@ import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
@@ -34,26 +33,21 @@ const ServiceTypeSettingScreen = () => {
 
   // Global state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
+  const serviceTypeQueryArgs = { academicMediumId: currentMedium?.id };
 
   // State to store currently selected service type for edit/delete operations
   const [selectedServiceType, setSelectedServiceType] = useState<IServiceType | null>(null);
 
   const dispatch = useDispatch();
 
-  // Delete mutation hook
-  const { deleteServiceType, isLoading: isDeleting } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteServiceTypeMutation,
-  });
+  const [deleteServiceType, { isLoading: isDeleting }] = useDeleteServiceTypeMutation();
 
   const {
     data: serviceTypeData,
     isLoading: serviceTypesLoading,
     refetch,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetServiceTypesQuery,
-  });
+  } = useGetServiceTypesQuery(serviceTypeQueryArgs, { skip: !currentMedium?.id });
 
   // Undo functionality hook
   const { confirmWithUndo } = useConfirmWithUndo();
@@ -182,7 +176,7 @@ const ServiceTypeSettingScreen = () => {
             size="small"
             disabled={isDeleting}
             onClick={async () => {
-              if (!selectedServiceType?.id) return;
+              if (!selectedServiceType?.id || !currentMedium?.id) return;
 
               confirmWithUndo({
                 item: selectedServiceType,
@@ -191,7 +185,7 @@ const ServiceTypeSettingScreen = () => {
                   dispatchFn(
                     vehicleSettingsApi.util.updateQueryData(
                       'getServiceTypes',
-                      undefined,
+                      serviceTypeQueryArgs,
                       (draft: any) => {
                         const arr = Array.isArray(draft) ? draft : draft?.data;
                         if (!Array.isArray(arr)) return;
@@ -209,7 +203,10 @@ const ServiceTypeSettingScreen = () => {
                 },
                 onUndoRestore: () => refetch(),
                 onCommit: async () => {
-                  await deleteServiceType(selectedServiceType.id);
+                  await deleteServiceType({
+                    servicingTypeId: selectedServiceType.id,
+                    academicMediumId: currentMedium.id,
+                  }).unwrap();
                 },
               });
 

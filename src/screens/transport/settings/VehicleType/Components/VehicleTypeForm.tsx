@@ -1,14 +1,16 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { sliderClasses } from '@mui/material/Slider';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Button, Slider, TextField, Typography, DialogActions } from '@mui/material';
 import {
@@ -22,20 +24,20 @@ import { getVehicleTypeInitialValues } from './VehicleTypeInitialValues';
 import type { IVehicleTypeFormProps } from './type';
 
 const VehicleTypeForm: React.FC<IVehicleTypeFormProps> = ({ open, onClose, editData }) => {
-  const [addVehicleType, { isLoading: isAdding }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddVehicleTypeMutation,
-  });
-  const [updateVehicleType, { isLoading: isUpdating }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateVehicleTypeMutation,
-  });
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
+  const [addVehicleType, { isLoading: isAdding }] = useAddVehicleTypeMutation();
+  const [updateVehicleType, { isLoading: isUpdating }] = useUpdateVehicleTypeMutation();
 
   const formik = useFormik({
     initialValues: getVehicleTypeInitialValues(editData),
     validationSchema: vehicleTypeValidationSchema,
     onSubmit: async (values) => {
       try {
+        if (!currentMedium?.id) {
+          shikshaMitraToast.error({ message: 'Please select an academic medium first' });
+          return;
+        }
+
         const payload = {
           name: values.typeName,
           approxSittingRange: `${values.vehicleRange[0]}-${values.vehicleRange[1]}`,
@@ -46,13 +48,14 @@ const VehicleTypeForm: React.FC<IVehicleTypeFormProps> = ({ open, onClose, editD
         if (editData) {
           await updateVehicleType({
             vehicleTypeId: editData.id,
+            academicMediumId: currentMedium.id,
             body: payload,
           }).unwrap();
           shikshaMitraToast.success({
             message: `Vehicle Type: ${values.typeName} updated successfully`,
           });
         } else {
-          await addVehicleType(payload).unwrap();
+          await addVehicleType({ academicMediumId: currentMedium.id, body: payload }).unwrap();
           shikshaMitraToast.success({
             message: `Vehicle Type: ${values.typeName} added successfully`,
           });

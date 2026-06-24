@@ -1,13 +1,15 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -21,20 +23,20 @@ import { getZoneAreaInitialValues } from './zoneInitialValues';
 import type { IZoneAreaFormProps } from './type';
 
 const ZoneAreaForm: React.FC<IZoneAreaFormProps> = ({ open, onClose, editData }) => {
-  const { addZoneAreaOptions, isLoading: isAdding } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddZoneAreaOptionsMutation,
-  });
-  const { updateZoneAreaOptions, isLoading: isUpdating } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateZoneAreaOptionsMutation,
-  });
+  const currentMediumId = useSelector((state: RootState) => state.globalState.currentMedium?.id);
+  const [addZoneAreaOptions, { isLoading: isAdding }] = useAddZoneAreaOptionsMutation();
+  const [updateZoneAreaOptions, { isLoading: isUpdating }] = useUpdateZoneAreaOptionsMutation();
 
   const formik = useFormik({
     initialValues: getZoneAreaInitialValues(editData),
     validationSchema: zoneValidationSchema,
     onSubmit: async (values) => {
       try {
+        if (!currentMediumId) {
+          shikshaMitraToast.error({ message: 'Academic medium is required to save zone/area' });
+          return;
+        }
+
         const payload = {
           name: values.zoneName,
           description: values.description || '',
@@ -44,13 +46,17 @@ const ZoneAreaForm: React.FC<IZoneAreaFormProps> = ({ open, onClose, editData })
         if (editData) {
           await updateZoneAreaOptions({
             zoneAreaId: editData.id,
+            academicMediumId: currentMediumId,
             body: payload,
-          });
+          }).unwrap();
           shikshaMitraToast.success({
             message: `Zone/Area: ${values.zoneName} updated successfully`,
           });
         } else {
-          await addZoneAreaOptions(payload);
+          await addZoneAreaOptions({
+            academicMediumId: currentMediumId,
+            body: payload,
+          }).unwrap();
           shikshaMitraToast.success({
             message: `Zone/Area: ${values.zoneName} added successfully`,
           });

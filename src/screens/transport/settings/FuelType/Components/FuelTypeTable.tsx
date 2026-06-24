@@ -2,8 +2,6 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFuelTypesQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import type { IFuelType, IFuelTypeTableProps } from './type';
 
@@ -13,16 +11,22 @@ const FuelTypeTable: React.FC<IFuelTypeTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
+  data,
+  isLoading,
 }) => {
-  const { data: fuelTypeData, isLoading: fuelTypesLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFuelTypesQuery,
-  });
+  const transformedData = React.useMemo(
+    () =>
+      (data || []).map((item: any) => ({
+        ...item,
+        typeName: item.name || item.typeName,
+      })),
+    [data]
+  );
 
   return (
     <CustomizableTable
       tableId="fuel-type-data-table"
-      isLoading={fuelTypesLoading}
+      isLoading={isLoading}
       noDataText={
         <>
           Fuel Type Data Not Found{' '}
@@ -93,7 +97,7 @@ const FuelTypeTable: React.FC<IFuelTypeTableProps> = ({
           },
         },
       ]}
-      data={fuelTypeData || []}
+      data={transformedData}
     />
   );
 };

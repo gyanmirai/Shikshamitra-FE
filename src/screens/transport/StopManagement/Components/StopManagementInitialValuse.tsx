@@ -12,6 +12,7 @@ export const getStopManagementInitialValues = (
   amount: editData?.amount || '',
   pincode: editData ? editData?.pincode : null,
   zoneId: editData?.zoneId || '',
+  zone: editData?.zone || editData?.zoneId || '',
   status: editData?.status || 0,
   description: null,
   coordinates: {

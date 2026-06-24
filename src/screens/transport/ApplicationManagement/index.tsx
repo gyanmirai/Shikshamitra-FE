@@ -12,9 +12,9 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useStatusRouteStopDataMutation } from 'src/redux/transport/vehicle-management/routeStopApi';
 import { useGetTransportMembersQuery } from 'src/redux/transport/vehicle-management/member-manage-api';
 
 // import TransportRequestForm from './TransportRequestForm';
@@ -36,18 +36,49 @@ const TransportRequests = () => {
   const [editingRequest, setEditingRequest] = useState<ITransportApplicationPayload | null>(null);
   const changeStopDialog = useBoolean();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
+  const [statusRouteStopData] = useStatusRouteStopDataMutation();
 
   // Fetch data
-  const { data: requestData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetTransportMembersQuery,
-  });
+  const { data: requestData } = useGetTransportMembersQuery(
+    { academicMediumId: currentMedium?.id, pageNumber: 1, pageSize: 100 },
+    { skip: !currentMedium?.id }
+  );
 
-  const handleReasonDialogClose = (_e: any, isSubmit?: boolean) => {
+  const handleReasonDialogClose = async (_e: any, isSubmit?: boolean, reason?: string) => {
+    if (isSubmit && editingRequest?.id && currentMedium?.id) {
+      const status =
+        selectedMode === 'Reject'
+          ? 2
+          : selectedMode === 'Hold'
+            ? 3
+            : selectedMode === 'Approve'
+              ? 1
+              : undefined;
+
+      if (status !== undefined) {
+        await statusRouteStopData({
+          applicationId: editingRequest.id,
+          academicMediumId: currentMedium.id,
+          body: { status, remarks: reason },
+        }).unwrap();
+
+        shikshaMitraToast.success({
+          message:
+            selectedMode === 'Reject'
+              ? 'Application rejected successfully'
+              : selectedMode === 'Hold'
+                ? 'Application put on hold'
+                : 'Application approved successfully',
+        });
+      }
+    }
+
     const reset = () => {
       setTimeout(() => {
         onConfirmDialog.onFalse();
         setSelectedMode('');
+        setEditingRequest(null);
         dispatch(setIsChanges(false));
       }, 200);
     };
@@ -141,8 +172,7 @@ const TransportRequests = () => {
           <TransportApplicationDetail
             selectedApplication={editingRequest}
             onApprove={() => {
-              setSelectedMode('Approve');
-              onConfirmDialog.onTrue();
+              handleClose(null, true);
             }}
             onReject={() => {
               setSelectedMode('Reject');
@@ -192,11 +222,22 @@ const TransportRequests = () => {
             color="error"
             size="small"
             onClick={() => {
-              confirmDialog.onFalse();
-              shikshaMitraToast.success({
-                message: `Transport request for "${editingRequest?.name}" removed successfullly`,
-              });
-              setEditingRequest(null);
+              if (!editingRequest?.id || !currentMedium?.id) {
+                return;
+              }
+              statusRouteStopData({
+                applicationId: editingRequest.id,
+                academicMediumId: currentMedium.id,
+                body: { status: 4, remarks: 'Cancelled from Application Management' },
+              })
+                .unwrap()
+                .then(() => {
+                  confirmDialog.onFalse();
+                  shikshaMitraToast.success({
+                    message: `Transport request for "${editingRequest?.name}" cancelled successfully`,
+                  });
+                  setEditingRequest(null);
+                });
             }}
           >
             Yes

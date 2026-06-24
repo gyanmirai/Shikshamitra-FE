@@ -1,7 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -9,6 +12,10 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddFuelTypeMutation,
+  useUpdateFuelTypeMutation,
+} from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import { fuelTypeValidationSchema } from './FuelTypeValidation';
 import { getFuelTypeInitialValues } from './FuelTypeInitialValues';
@@ -16,20 +23,47 @@ import { getFuelTypeInitialValues } from './FuelTypeInitialValues';
 import type { IFuelTypeFormProps } from './type';
 
 const FuelTypeForm: React.FC<IFuelTypeFormProps> = ({ onClose, editData }) => {
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
+  const [addFuelType, { isLoading: isAdding }] = useAddFuelTypeMutation();
+  const [updateFuelType, { isLoading: isUpdating }] = useUpdateFuelTypeMutation();
+
   const formik = useFormik({
     initialValues: getFuelTypeInitialValues(editData),
     validationSchema: fuelTypeValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `${values.typeName} Fuel Type updated successfully`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `${values.typeName} Fuel Type added successfully`,
+    onSubmit: async (values) => {
+      try {
+        if (!currentMedium?.id) {
+          shikshaMitraToast.error({ message: 'Please select an academic medium first' });
+          return;
+        }
+
+        const payload = {
+          name: values.typeName,
+          description: values.description || '',
+          isActive: true,
+        };
+
+        if (editData) {
+          await updateFuelType({
+            fuelTypeId: editData.id,
+            academicMediumId: currentMedium.id,
+            body: payload,
+          }).unwrap();
+          shikshaMitraToast.success({
+            message: `${values.typeName} Fuel Type updated successfully`,
+          });
+        } else {
+          await addFuelType({ academicMediumId: currentMedium.id, body: payload }).unwrap();
+          shikshaMitraToast.success({
+            message: `${values.typeName} Fuel Type added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Failed to save fuel type',
         });
       }
-      onClose(null, true);
     },
   });
 
@@ -103,8 +137,9 @@ const FuelTypeForm: React.FC<IFuelTypeFormProps> = ({ onClose, editData }) => {
           variant="contained"
           size="small"
           onClick={() => formik.handleSubmit()}
+          disabled={isAdding || isUpdating}
         >
-          {editData ? 'Update' : 'Save'}
+          {isAdding || isUpdating ? 'Saving...' : editData ? 'Update' : 'Save'}
         </Button>{' '}
       </DialogActions>
     </BackPopUpChecked>

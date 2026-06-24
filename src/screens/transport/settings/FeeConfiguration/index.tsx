@@ -8,18 +8,20 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Box, Card, Button, DialogActions } from '@mui/material';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetChargeCategoriesQuery } from 'src/redux/finance/chargeCategory';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Card, Grid, Button, Typography, DialogActions } from '@mui/material';
 import {
   useGetFeeConfigurationQuery,
   useAddFeeConfigurationMutation,
   useUpdateFeeConfigurationMutation,
 } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
+import FeeRunPanel from './Components/FeeRunPanel';
 import StopBasedModel from './Components/StopBasedModel';
 import FeeModelSelection from './Components/FeeModelSelection';
 import DistanceBasedModel from './Components/DistanceBasedModel';
@@ -28,22 +30,23 @@ import { getValidationSchemaByModel } from './Components/FeeConfigurationValidat
 
 const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
+  const academicMediumId = currentMedium?.id;
   const dispatch = useDispatch();
 
-  const { data: feeConfiguration } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeConfigurationQuery,
-  });
+  const { data: feeConfiguration } = useGetFeeConfigurationQuery(
+    { academicMediumId },
+    { skip: !academicMediumId }
+  );
+  const { data: chargeCategoryData, isLoading: isLoadingChargeCategories } =
+    useGetChargeCategoriesQuery(
+      { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
+      { skip: !currentYear?.id }
+    );
 
-  const { addFeeConfiguration, isLoading: isAdding } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddFeeConfigurationMutation,
-  });
+  const [addFeeConfiguration, { isLoading: isAdding }] = useAddFeeConfigurationMutation();
+  const [updateFeeConfiguration, { isLoading: isUpdating }] = useUpdateFeeConfigurationMutation();
 
-  const { updateFeeConfiguration, isLoading: isUpdating } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateFeeConfigurationMutation,
-  });
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       dispatch(setIsChanges(false));
@@ -51,15 +54,26 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
       // Reset logic here
     }
   };
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [selectedModel, setSelectedModel] = useState('distance-based');
   const [editData] = useState(null); // for edit mode, set an object
+
+  React.useEffect(() => {
+    if (feeConfiguration?.model) {
+      setSelectedModel(feeConfiguration.model);
+    }
+  }, [feeConfiguration?.model]);
 
   const initialValues = React.useMemo(
     () => getInitialValuesByModel(selectedModel, editData, feeConfiguration),
     [selectedModel, editData, feeConfiguration]
   );
+
+  const chargeCategoryOptions = React.useMemo(() => {
+    const rows =
+      (chargeCategoryData as any)?.items ?? (chargeCategoryData as any)?.data?.items ?? [];
+    return rows.map((row: any) => ({ label: row.name, value: row.id }));
+  }, [chargeCategoryData]);
 
   const formik = useFormik({
     initialValues,
@@ -67,20 +81,39 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
+        if (!academicMediumId) {
+          shikshaMitraToast.error({
+            message: 'Academic medium is required to save fee configuration',
+          });
+          return;
+        }
+
         const payload = {
           feeModelType: values.model,
-          ratePerKm: values.ratePerKm || null,
-          feeFrequency: values.feeFrequency,
+          ratePerKm: values.model === 'distance-based' ? Number(values.ratePerKm) : null,
+          feeFrequency: Number(values.feeFrequency),
+          chargeCategoryId: values.chargeCategoryId,
+          effectiveFrom:
+            values.effectiveFrom?.toISOString?.() ??
+            values.effectiveFrom?.toDate?.()?.toISOString?.() ??
+            values.effectiveFrom,
           isActive: true,
         };
 
-        if (feeConfiguration) {
-          await updateFeeConfiguration(payload);
+        if (feeConfiguration?.id) {
+          await updateFeeConfiguration({
+            configurationId: feeConfiguration.id,
+            academicMediumId,
+            body: payload,
+          }).unwrap();
           shikshaMitraToast.success({
             message: 'Fee Configuration updated successfully',
           });
         } else {
-          await addFeeConfiguration(payload);
+          await addFeeConfiguration({
+            academicMediumId,
+            body: payload,
+          }).unwrap();
           shikshaMitraToast.success({
             message: 'Fee Configuration created successfully',
           });
@@ -125,6 +158,33 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
             <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
               <Scrollbar sx={{ p: 2, height: '100%' }}>
                 <Card sx={{ boxShadow: 'var(--shadows-4)', mb: 2 }}>
+                  <Box p={2}>
+                    <Typography variant="h6" color="primary" gutterBottom>
+                      Finance Posting
+                    </Typography>
+                    <Grid container spacing={3} mt={1}>
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <CustomSelect
+                          label="Charge Category *"
+                          options={chargeCategoryOptions}
+                          value={formik.values.chargeCategoryId || ''}
+                          onChange={(val) => formik.setFieldValue('chargeCategoryId', val)}
+                          error={
+                            !!(formik.touched.chargeCategoryId && formik.errors.chargeCategoryId)
+                          }
+                          helperText={
+                            (formik.touched.chargeCategoryId &&
+                              formik.errors.chargeCategoryId) as string
+                          }
+                          isLoading={isLoadingChargeCategories}
+                          formControlProps={{ fullWidth: true }}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Card>
+
+                <Card sx={{ boxShadow: 'var(--shadows-4)', mb: 2 }}>
                   <FeeModelSelection formik={formik} setSelectedModel={setSelectedModel} />
                 </Card>
 
@@ -139,6 +199,8 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
                     <StopBasedModel formik={formik} />
                   </Card>
                 )}
+
+                <FeeRunPanel academicMediumId={academicMediumId} academicYearId={currentYear?.id} />
               </Scrollbar>
             </form>
           </BackPopUpChecked>

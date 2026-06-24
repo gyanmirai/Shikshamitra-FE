@@ -5,6 +5,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -12,18 +13,59 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetDriverConductorDataQuery } from 'src/redux/transport/vehicle-management/driver-conductor-api';
+import {
+  useGetDriverConductorDataQuery,
+  useChangeDriverConductorStatusMutation,
+} from 'src/redux/transport/vehicle-management/driver-conductor-api';
 
 import DriverProfile from './DriverProfile';
 import AssignRouteForm from './AssignRouteForm';
 
 import type { IDriverConductor, IDriverManagementTableProps } from './type';
 
-const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
+const statusNameById: Record<number, IDriverConductor['status']> = {
+  0: 'Active',
+  1: 'On Leave',
+  2: 'Inactive',
+};
+
+const normalizeStaffRow = (row: any): IDriverConductor => {
+  const statusId = typeof row.status === 'number' ? row.status : row.statusId;
+  const roleId = typeof row.roleId === 'number' ? row.roleId : row.role === 'Conductor' ? 1 : 0;
+  return {
+    ...row,
+    id: row.id,
+    staffId: row.id,
+    employeeGuid: row.employeeId,
+    employeeId: row.employeeCode || row.employeeIdentifier || row.employeeId,
+    employeeCode: row.employeeCode || row.employeeIdentifier,
+    role: roleId === 1 ? 'Conductor' : 'Driver',
+    roleId,
+    licenceNo: row.licenceNo || row.licenseNo,
+    licenceExpiry: row.licenceExpiry || row.licenseExpiryDate || '',
+    licenceExpiryDate: row.licenceExpiryDate || row.licenseExpiryDate,
+    experience: row.experience || (row.experienceYears ? `${row.experienceYears} years` : ''),
+    experienceYears: row.experienceYears,
+    phoneNo: row.phoneNo || row.mobileNo || '',
+    assignedRoute: row.assignedRoute || '',
+    assignedRouteId: row.assignedRouteId,
+    status: row.statusName || statusNameById[statusId] || 'Active',
+    statusId,
+  };
+};
+
+const DriverConductorTable: React.FC<IDriverManagementTableProps> = ({
+  onAddDriverConductor,
+  setEditData,
+}) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const { data: driverConductorData, isLoading: driverConductorLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDriverConductorDataQuery,
+    params: { academicMediumId: currentMedium?.id, pageNumber: 1, pageSize: 100 },
+    options: { skip: !currentMedium?.id },
   });
+  const [changeStatus] = useChangeDriverConductorStatusMutation();
 
   // Get isChanges state from Redux store to track if there are unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -32,6 +74,10 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
   const assignRouteDialog = useBoolean();
   const viewProfileDialog = useBoolean();
   const [selectedDriver, setSelectedDriver] = useState<IDriverConductor | null>(null);
+  const tableRows = useMemo(
+    () => (driverConductorData?.data || []).map(normalizeStaffRow),
+    [driverConductorData?.data]
+  );
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -61,10 +107,34 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
               Assign Route
             </MenuItem>
           )}
+          <MenuItem
+            onClick={async () => {
+              pop.onClose();
+              try {
+                await changeStatus({
+                  staffId: driverRow.id,
+                  academicMediumId: currentMedium?.id,
+                  body: {
+                    status: driverRow.statusId === 0 ? 2 : 0,
+                    remarks: driverRow.statusId === 0 ? 'Marked inactive' : 'Marked active',
+                  },
+                }).unwrap();
+                shikshaMitraToast.success({ message: 'Staff status updated successfully.' });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message:
+                    error?.data?.detail || error?.data?.message || 'Failed to update staff status.',
+                });
+              }
+            }}
+          >
+            <Iconify icon="solar:refresh-bold" sx={{ height: '16px', width: '16px' }} />
+            {driverRow.statusId === 0 ? 'Mark Inactive' : 'Mark Active'}
+          </MenuItem>
         </MenuList>
       );
     },
-    [assignRouteDialog]
+    [assignRouteDialog, changeStatus, currentMedium?.id]
   );
 
   const columns: IColumn[] = useMemo(
@@ -163,6 +233,11 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
               actions={(prop) => actions({ ...prop, row })}
               placement="right-top"
               showViewIcon
+              showEditIcon
+              handleEditClick={() => {
+                setEditData(row as IDriverConductor);
+                onAddDriverConductor.onTrue();
+              }}
               handleViewClick={() => {
                 setSelectedDriver(row as IDriverConductor);
                 viewProfileDialog.onTrue();
@@ -183,7 +258,7 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
         isLoading={driverConductorLoading}
         noDataText={<>Driver/Conductor Data Not Found </>}
         columns={columns}
-        data={driverConductorData?.length ? driverConductorData : []}
+        data={tableRows}
       />
 
       {/* Assign Route Dialog */}

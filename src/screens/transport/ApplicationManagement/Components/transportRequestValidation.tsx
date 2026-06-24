@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 export const transportValidationSchema = [
   // Step 1: Select Student
   Yup.object({
-    studentId: Yup.string().required('Please select a student'),
+    sourceId: Yup.string().required('Please select a member'),
   }),
   // Step 2: Transport Application
   Yup.object({

@@ -1,16 +1,22 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { useGetStopsQuery } from 'src/redux/transport/vehicle-management/stop-management-api';
 import { Grid, Button, TextField, Typography, DialogActions, InputAdornment } from '@mui/material';
+import { useAddTransportMemberMutation } from 'src/redux/transport/vehicle-management/member-manage-api';
 
 import TransportMemberProfile from '../TransportMemberProfile';
 
@@ -46,6 +52,17 @@ const getInitialTransportData = (selectedApplication: ITransportApplicationPaylo
 
 const ChangeStopRequestForm = ({ onClose, selectedApplication }: Props) => {
   const initialValues = getInitialTransportData(selectedApplication);
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
+  const { data: stopData } = useGetStopsQuery(
+    { academicMediumId: currentMedium?.id, pageNumber: 1, pageSize: 100, status: 0 },
+    { skip: !currentMedium?.id }
+  );
+  const [addTransportMember, { isLoading }] = useAddTransportMemberMutation();
+  const stopOptions =
+    stopData?.data?.map((stop: any) => ({
+      label: stop.stopName,
+      value: stop.id,
+    })) ?? [];
 
   const formik = useFormik({
     initialValues,
@@ -56,8 +73,43 @@ const ChangeStopRequestForm = ({ onClose, selectedApplication }: Props) => {
       newAreaLocality: Yup.string().required('Area/Locality is required'),
       newDescription: Yup.string().required('Description is required'),
     }),
-    onSubmit: (values) => {
-      onClose(values, true);
+    onSubmit: async (values) => {
+      if (!selectedApplication?.memberId || !currentMedium?.id) {
+        shikshaMitraToast.error({ message: 'Active transport member is required for stop change' });
+        return;
+      }
+
+      try {
+        const memberType = Number(selectedApplication.memberType ?? 0);
+        await addTransportMember({
+          academicMediumId: currentMedium.id,
+          body: {
+            applicationType: 1,
+            memberType,
+            memberId: selectedApplication.memberId,
+            studentId:
+              memberType === 0
+                ? selectedApplication.studentId || selectedApplication.sourceId
+                : undefined,
+            employeeId:
+              memberType === 1
+                ? selectedApplication.employeeId || selectedApplication.sourceId
+                : undefined,
+            requestedStopId: values.newStopName,
+            pickupType: values.newPickupType,
+            landmark: values.newLandmark,
+            areaLocality: values.newAreaLocality,
+            addressLine1: values.addressLine1,
+            description: values.newDescription,
+          },
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Stop change request submitted successfully' });
+        onClose(values, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Failed to submit stop change request',
+        });
+      }
     },
   });
 
@@ -73,22 +125,15 @@ const ChangeStopRequestForm = ({ onClose, selectedApplication }: Props) => {
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <ShakingTextField error={!!(formik.touched.newStopName && formik.errors.newStopName)}>
-                <TextField
-                  fullWidth
-                  label="Stop Name *"
+                <CustomSelect
+                  label="Stop *"
                   name="newStopName"
-                  size="small"
+                  options={stopOptions}
                   value={formik.values.newStopName}
-                  onChange={(e) => {
-                    const value = e.target.value
-                      .replace(/[^a-zA-Z0-9\s-]/g, '') // allow letters, numbers, spaces, and hyphens
-                      .split(' ')
-                      .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : ''))
-                      .join(' ');
-                    formik.setFieldValue('newStopName', value);
-                  }}
-                  error={formik.touched.newStopName && Boolean(formik.errors.newStopName)}
-                  helperText={formik.touched.newStopName && formik.errors.newStopName}
+                  onChange={(value) => formik.setFieldValue('newStopName', value)}
+                  formControlProps={{ fullWidth: true }}
+                  error={!!(formik.touched.newStopName && formik.errors.newStopName)}
+                  helperText={(formik.touched.newStopName && formik.errors.newStopName) || ''}
                 />
               </ShakingTextField>
             </Grid>
@@ -217,6 +262,7 @@ const ChangeStopRequestForm = ({ onClose, selectedApplication }: Props) => {
           onClick={(e: any) => {
             formik.handleSubmit(e);
           }}
+          disabled={isLoading}
           startIcon={<Iconify icon={GlobalIcons.submit} width={20} height={20} />}
         >
           Submit

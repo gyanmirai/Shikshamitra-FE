@@ -1,7 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -9,9 +12,11 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetVehicleOptionsQuery } from 'src/redux/transport/vehicle-management/vehicle-management-api';
+import { useAssignVehicleToRouteMutation } from 'src/redux/transport/vehicle-management/route-management-api';
 import {
+  useGetStaffOptionsQuery,
   useGetAvailableRoutesQuery,
-  useAddDriverConductorMutation,
 } from 'src/redux/transport/vehicle-management/driver-conductor-api';
 import {
   Box,
@@ -32,15 +37,26 @@ import { getAssignRouteInitialValues } from './DriverManagementInitialValues';
 import type { IAssignRouteFormProps } from './type';
 
 const AssignRouteForm: React.FC<IAssignRouteFormProps> = ({ onClose, driverData }) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const { data: availableRoutes } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAvailableRoutesQuery,
+    params: { academicMediumId: currentMedium?.id },
+    options: { skip: !currentMedium?.id },
   });
-
-  const { addDriverConductor, isLoading: isAssigning } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddDriverConductorMutation,
+  const { data: availableVehicles = [] } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetVehicleOptionsQuery,
+    params: { academicMediumId: currentMedium?.id, onlyAssignable: true },
+    options: { skip: !currentMedium?.id },
   });
+  const { data: availableConductors = [] } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStaffOptionsQuery,
+    params: { academicMediumId: currentMedium?.id, role: 1, onlyAssignable: true },
+    options: { skip: !currentMedium?.id },
+  });
+  const [assignVehicleToRoute, { isLoading: isAssigning }] = useAssignVehicleToRouteMutation();
 
   const routesData = availableRoutes || [];
 
@@ -49,19 +65,20 @@ const AssignRouteForm: React.FC<IAssignRouteFormProps> = ({ onClose, driverData 
     validationSchema: assignRouteValidationSchema,
     onSubmit: async (values) => {
       try {
-        if (!driverData?.staffId) {
+        if (!driverData?.id) {
           shikshaMitraToast.error({ message: 'Staff ID is missing' });
           return;
         }
 
-        const payload = {
+        await assignVehicleToRoute({
           routeId: values.selectedRoute,
-        };
-
-        await addDriverConductor({
-          staffId: driverData.staffId,
-          data: payload,
-        });
+          academicMediumId: currentMedium?.id,
+          body: {
+            vehicleId: values.selectedVehicle,
+            driverStaffId: driverData.id,
+            conductorStaffId: values.selectedConductor || null,
+          },
+        }).unwrap();
 
         shikshaMitraToast.success({
           message: `Route assigned to ${values.driverName} successfully`,
@@ -173,6 +190,71 @@ const AssignRouteForm: React.FC<IAssignRouteFormProps> = ({ onClose, driverData 
                 )}
               </TextField>
             </ShakingTextField>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1.5, ml: 0.5 }}>
+              Vehicle
+            </Typography>
+            <ShakingTextField
+              error={!!(formik.touched.selectedVehicle && formik.errors.selectedVehicle) || false}
+            >
+              <TextField
+                select
+                fullWidth
+                label="Select Vehicle"
+                name="selectedVehicle"
+                value={formik.values.selectedVehicle}
+                onChange={formik.handleChange}
+                error={formik.touched.selectedVehicle && Boolean(formik.errors.selectedVehicle)}
+                helperText={formik.touched.selectedVehicle && formik.errors.selectedVehicle}
+                InputLabelProps={{ shrink: true }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1.5,
+                  },
+                }}
+              >
+                {availableVehicles.length > 0 ? (
+                  availableVehicles.map((vehicle: any) => (
+                    <MenuItem key={vehicle.value} value={vehicle.value}>
+                      {vehicle.label}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled value="">
+                    No available vehicles
+                  </MenuItem>
+                )}
+              </TextField>
+            </ShakingTextField>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1.5, ml: 0.5 }}>
+              Conductor
+            </Typography>
+            <TextField
+              select
+              fullWidth
+              label="Select Conductor"
+              name="selectedConductor"
+              value={formik.values.selectedConductor}
+              onChange={formik.handleChange}
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1.5,
+                },
+              }}
+            >
+              <MenuItem value="">No conductor</MenuItem>
+              {availableConductors.map((conductor: any) => (
+                <MenuItem key={conductor.value} value={conductor.value}>
+                  {conductor.label}
+                </MenuItem>
+              ))}
+            </TextField>
           </Grid>
         </Grid>
       </DialogScrollContent>

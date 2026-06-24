@@ -7,7 +7,7 @@ export const getInitialVehicleData = (editData?: IVehiclePayload): IVehiclePaylo
   registrationNo: editData?.registrationNo || '',
   vehicleName: editData?.vehicleName || '',
   vehicleNo: editData?.vehicleNo || '',
-  vehicleType: editData?.vehicleType || '',
+  vehicleType: editData?.vehicleTypeId || editData?.vehicleType || '',
   vehicleCompany: editData?.vehicleCompany || '',
   model: editData?.model || '',
   yearOfManufacture: editData?.yearOfManufacture || '',
@@ -15,7 +15,7 @@ export const getInitialVehicleData = (editData?: IVehiclePayload): IVehiclePaylo
   vehicleColor: editData?.vehicleColor || '',
   schoolAssignedNo: editData?.schoolAssignedNo || '',
   owner: editData?.owner || '',
-  fuelType: editData?.fuelType || '',
+  fuelType: editData?.fuelTypeId || editData?.fuelType || '',
   isAc: editData?.isAc || false,
   description: editData?.description || '',
 

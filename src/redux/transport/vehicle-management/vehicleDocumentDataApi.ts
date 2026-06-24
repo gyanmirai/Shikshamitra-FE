@@ -2,91 +2,53 @@ import { transportType } from 'src/redux/tagTypes';
 
 import { transportApi } from '../transportApi';
 
+type AcademicMediumQuery = {
+  academicMediumId?: string;
+};
+
+const unwrapResult = (response: any) => response?.data ?? response ?? [];
+
+const academicParams = (params?: AcademicMediumQuery | void) => ({
+  academicMediumId: params?.academicMediumId,
+});
+
+export const normalizeRequiredDocumentRows = (response: any) =>
+  unwrapResult(response).map((document: any, index: number) => ({
+    ...document,
+    key: index,
+    id: document.id,
+    requiredDocumentId: document.id,
+    name: document.name ?? document.documentName,
+  }));
+
 export const vehicleDocumentDataApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
     getDocumentRows: builder.query({
-      query: () => ({
-        url: '/documentRows',
+      query: (params?: AcademicMediumQuery | void) => ({
+        url: '/transport/required-vehicle-documents',
         method: 'GET',
+        params: academicParams(params),
       }),
+      transformResponse: normalizeRequiredDocumentRows,
       providesTags: [transportType.documentRows],
     }),
     getvehicleTypeOptions: builder.query({
-      query: () => ({
-        url: '/vehicleTypeOptions',
+      query: (params?: AcademicMediumQuery | void) => ({
+        url: '/transport/vehicle-types/options',
         method: 'GET',
+        params: academicParams(params),
       }),
+      transformResponse: unwrapResult,
       providesTags: [transportType.vehicleTypeOptions],
     }),
     getfuelTypeOptions: builder.query({
-      query: () => ({
-        url: '/fuelTypeOptions',
+      query: (params?: AcademicMediumQuery | void) => ({
+        url: '/transport/fuel-types/options',
         method: 'GET',
+        params: academicParams(params),
       }),
+      transformResponse: unwrapResult,
       providesTags: [transportType.fuelTypeOptions],
-    }),
-    getinsurance: builder.query({
-      query: () => ({
-        url: '/insurance',
-        method: 'GET',
-      }),
-      providesTags: [transportType.insurance],
-    }),
-    getdriver: builder.query({
-      query: () => ({
-        url: '/driver',
-        method: 'GET',
-      }),
-      providesTags: [transportType.driver],
-    }),
-    getdocuments: builder.query({
-      query: () => ({
-        url: '/documents',
-        method: 'GET',
-      }),
-      providesTags: [transportType.documents],
-    }),
-    getmaintenanceHistoryData: builder.query({
-      query: () => ({
-        url: '/maintenanceHistoryData',
-        method: 'GET',
-      }),
-      providesTags: [transportType.maintenanceHistory],
-    }),
-    getvehicleInformation: builder.query({
-      query: () => ({
-        url: '/vehicleInformation',
-        method: 'GET',
-      }),
-      providesTags: [transportType.vehicleManagement],
-    }),
-    getrouteHistoryData: builder.query({
-      query: () => ({
-        url: '/routeHistoryData',
-        method: 'GET',
-      }),
-      providesTags: [transportType.routeHistoryData],
-    }),
-    getdriverHistoryData: builder.query({
-      query: () => ({
-        url: '/driverHistoryData',
-        method: 'GET',
-      }),
-      providesTags: [transportType.driverHistory],
-    }),
-    getmaintenanceData: builder.query({
-      query: () => ({
-        url: '/maintenanceData',
-        method: 'GET',
-      }),
-      providesTags: [transportType.maintenanceData],
-    }),
-    getdocumentDetailsData: builder.query({
-      query: () => ({
-        url: '/documentDetailsData',
-        method: 'GET',
-      }),
-      providesTags: [transportType.documentDetailsData],
     }),
   }),
   overrideExisting: false,
@@ -94,15 +56,6 @@ export const vehicleDocumentDataApi = transportApi.injectEndpoints({
 
 export const {
   useGetDocumentRowsQuery,
-  useGetdriverQuery,
-  useGetdocumentsQuery,
   useGetfuelTypeOptionsQuery,
-  useGetinsuranceQuery,
-  useGetmaintenanceHistoryDataQuery,
   useGetvehicleTypeOptionsQuery,
-  useGetvehicleInformationQuery,
-  useGetrouteHistoryDataQuery,
-  useGetdriverHistoryDataQuery,
-  useGetmaintenanceDataQuery,
-  useGetdocumentDetailsDataQuery,
 } = vehicleDocumentDataApi;

@@ -1,5 +1,7 @@
 import type { FormikProps } from 'formik';
+import type { RootState } from 'src/redux/store';
 
+import { useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -17,14 +19,19 @@ interface VehicleGeneralStepProps {
 }
 
 const VehicleGeneralStep = ({ formik }: VehicleGeneralStepProps) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const { data: vehicleTypeOptions } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetvehicleTypeOptionsQuery,
+    params: { academicMediumId: currentMedium?.id },
+    options: { skip: !currentMedium?.id },
   });
 
   const { data: fuelTypeOptions } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetfuelTypeOptionsQuery,
+    params: { academicMediumId: currentMedium?.id },
+    options: { skip: !currentMedium?.id },
   });
 
   return (
