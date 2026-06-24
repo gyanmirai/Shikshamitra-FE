@@ -149,29 +149,27 @@ export const applyManualAttendanceStatusDefaults = <TRow extends ManualAttendanc
   }
 
   if (status === MANUAL_ATTENDANCE_UI_STATUS.Present) {
+    const shouldPreserveTimes = shouldPreserveAttendanceTimes(row, status);
     return {
       ...row,
       status,
-      timeIn: shouldPreserveAttendanceTimes(row, status)
+      timeIn: shouldPreserveTimes
         ? toAttendanceTableTimeValue(row.timeIn) || shiftStart
         : shiftStart,
-      timeOut: shouldPreserveAttendanceTimes(row, status)
-        ? toAttendanceTableTimeValue(row.timeOut) || shiftEnd
-        : shiftEnd,
+      timeOut: shouldPreserveTimes ? toAttendanceTableTimeValue(row.timeOut) || shiftEnd : shiftEnd,
     };
   }
 
   if (status === MANUAL_ATTENDANCE_UI_STATUS.HalfDay) {
     const midpoint = calculateShiftMidpoint(shiftStart, shiftEnd)!;
+    const shouldPreserveTimes = shouldPreserveAttendanceTimes(row, status);
     return {
       ...row,
       status,
-      timeIn: shouldPreserveAttendanceTimes(row, status)
+      timeIn: shouldPreserveTimes
         ? toAttendanceTableTimeValue(row.timeIn) || shiftStart
         : shiftStart,
-      timeOut: shouldPreserveAttendanceTimes(row, status)
-        ? toAttendanceTableTimeValue(row.timeOut) || midpoint
-        : midpoint,
+      timeOut: shouldPreserveTimes ? toAttendanceTableTimeValue(row.timeOut) || midpoint : midpoint,
     };
   }
 
@@ -294,9 +292,20 @@ const shouldPreserveAttendanceTimes = (
   row: ManualAttendanceShiftTimeRow,
   status: ManualAttendanceUiStatus
 ) =>
+  hasPreservableAttendanceTime(row) ||
   row.status === status ||
   row.status === MANUAL_ATTENDANCE_UI_STATUS.Pending ||
   typeof row.status === 'undefined';
+
+const hasPreservableAttendanceTime = (row: ManualAttendanceShiftTimeRow) => {
+  if (row.status === MANUAL_ATTENDANCE_UI_STATUS.Absent) {
+    return false;
+  }
+
+  const timeIn = toAttendanceTableTimeValue(row.timeIn);
+  const timeOut = toAttendanceTableTimeValue(row.timeOut);
+  return Boolean((timeIn && timeIn !== '00:00') || (timeOut && timeOut !== '00:00'));
+};
 
 const calculateShiftMidpoint = (shiftStart: string, shiftEnd: string) => {
   if (!isValidShiftRange(shiftStart, shiftEnd)) {

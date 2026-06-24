@@ -495,6 +495,52 @@ describe('manual attendance status mapper', () => {
     );
   });
 
+  it('preserves manually edited times when changing a time-based row from present to half day', () => {
+    const row = applyManualAttendanceRowStatus(
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        captureMode: 'manual_with_time',
+        shiftStartTime: '07:00:00',
+        shiftEndTime: '15:00:00',
+        timeIn: '08:00',
+        timeOut: '14:30',
+      },
+      MANUAL_ATTENDANCE_UI_STATUS.HalfDay
+    );
+
+    expect(row).toEqual(
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.HalfDay,
+        timeIn: '08:00',
+        timeOut: '14:30',
+      })
+    );
+  });
+
+  it('does not preserve absent zero-time placeholders when changing a row to present', () => {
+    const row = applyManualAttendanceRowStatus(
+      {
+        employeeId: 'employee-1',
+        status: MANUAL_ATTENDANCE_UI_STATUS.Absent,
+        captureMode: 'manual_with_time',
+        shiftStartTime: '07:00:00',
+        shiftEndTime: '15:00:00',
+        timeIn: '00:00',
+        timeOut: '00:00',
+      },
+      MANUAL_ATTENDANCE_UI_STATUS.Present
+    );
+
+    expect(row).toEqual(
+      expect.objectContaining({
+        status: MANUAL_ATTENDANCE_UI_STATUS.Present,
+        timeIn: '07:00',
+        timeOut: '15:00',
+      })
+    );
+  });
+
   it('fills only the missing side when save-normalizing partial manual time edits', () => {
     const rows = normalizeManualAttendanceRowsForSave([
       {
