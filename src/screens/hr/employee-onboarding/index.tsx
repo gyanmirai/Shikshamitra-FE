@@ -17,7 +17,6 @@ import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { DatePicker } from '@mui/x-date-pickers';
 import PhoneInput from 'src/components/phone-input';
-import { useFormik, type FormikErrors } from 'formik';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { HrBloodGroupArray } from 'src/enums/blood-group';
@@ -28,6 +27,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
+import { getIn, setIn, useFormik, type FormikErrors } from 'formik';
 import { MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -308,14 +308,14 @@ const validateFinalizeStep1Values = async (
       throw error;
     }
 
-    const errors: FormikErrors<FinalizeFormState> = {};
-    error.inner.forEach((validationError) => {
-      const path = validationError.path as keyof FinalizeFormState | undefined;
-      if (path && !errors[path]) {
-        errors[path] = validationError.message as any;
+    const validationErrors = error.inner.length ? error.inner : [error];
+    return validationErrors.reduce<FormikErrors<FinalizeFormState>>((errors, validationError) => {
+      if (!validationError.path || getIn(errors, validationError.path)) {
+        return errors;
       }
-    });
-    return errors;
+
+      return setIn(errors, validationError.path, validationError.message);
+    }, {});
   }
 };
 
