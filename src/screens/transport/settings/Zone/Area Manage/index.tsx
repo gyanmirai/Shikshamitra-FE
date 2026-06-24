@@ -34,6 +34,7 @@ const ZoneAreaSettingScreen = () => {
 
   // Global state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const currentMediumId = useSelector((state: RootState) => state.globalState.currentMedium?.id);
 
   // State to store currently selected zone/area for edit/delete operations
   const [selectedZoneArea, setSelectedZoneArea] = useState<IZoneArea | null>(null);
@@ -44,10 +45,7 @@ const ZoneAreaSettingScreen = () => {
   const { confirmWithUndo } = useConfirmWithUndo();
 
   // Delete mutation hook
-  const { deleteZoneAreaOptions, isLoading: isDeleting } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteZoneAreaOptionsMutation,
-  });
+  const [deleteZoneAreaOptions, { isLoading: isDeleting }] = useDeleteZoneAreaOptionsMutation();
 
   const {
     data: zoneAreaData,
@@ -56,6 +54,8 @@ const ZoneAreaSettingScreen = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetZoneAreaOptionsQuery,
+    params: { academicMediumId: currentMediumId },
+    options: { skip: !currentMediumId },
   });
 
   /**
@@ -94,6 +94,7 @@ const ZoneAreaSettingScreen = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            disabled={!currentMediumId}
             sx={{ px: '32px' }}
           >
             Zone/Area
@@ -166,7 +167,7 @@ const ZoneAreaSettingScreen = () => {
             size="small"
             disabled={isDeleting}
             onClick={async () => {
-              if (!selectedZoneArea?.id) return;
+              if (!selectedZoneArea?.id || !currentMediumId) return;
 
               confirmWithUndo({
                 item: selectedZoneArea,
@@ -175,7 +176,7 @@ const ZoneAreaSettingScreen = () => {
                   dispatchFn(
                     vehicleSettingsApi.util.updateQueryData(
                       'getZoneAreaOptions',
-                      undefined,
+                      { academicMediumId: currentMediumId },
                       (draft: any) => {
                         const arr = Array.isArray(draft) ? draft : draft?.data;
                         if (!Array.isArray(arr)) return;
@@ -191,7 +192,10 @@ const ZoneAreaSettingScreen = () => {
                 },
                 onUndoRestore: () => refetch(),
                 onCommit: async () => {
-                  await deleteZoneAreaOptions(selectedZoneArea.id);
+                  await deleteZoneAreaOptions({
+                    zoneAreaId: selectedZoneArea.id,
+                    academicMediumId: currentMediumId,
+                  }).unwrap();
                 },
               });
 

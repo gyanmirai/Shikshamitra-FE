@@ -2,15 +2,64 @@ import { transportType } from 'src/redux/tagTypes';
 
 import { transportApi } from '../transportApi';
 
+type RouteListQuery = {
+  pageNumber?: number;
+  pageSize?: number;
+  search?: string;
+  status?: number | string;
+  academicMediumId?: string;
+};
+
+type RouteStopsQuery = {
+  routeId?: string;
+  page?: number;
+  academicMediumId?: string;
+};
+
+export const buildRouteListRequest = (params?: RouteListQuery | void) => {
+  const { pageNumber = 1, pageSize = 10, search, status, academicMediumId } = params ?? {};
+
+  return {
+    url: '/transport/routes',
+    method: 'GET',
+    params: { pageNumber, pageSize, search, status, academicMediumId },
+  };
+};
+
+export const buildRouteStopsRequest = (params?: RouteStopsQuery | void) => {
+  const { routeId, page = 1, academicMediumId } = params ?? {};
+
+  return {
+    url: `/transport/routes/${routeId}/stops`,
+    method: 'GET',
+    params: { page, academicMediumId },
+  };
+};
+
+export const normalizeRouteListResponse = (response: any) => {
+  const payload = response?.data ?? response;
+  return {
+    data: payload?.items ?? payload?.data ?? [],
+    totalCount: payload?.totalCount ?? 0,
+  };
+};
+
+const unwrapResult = (response: any) => response?.data ?? response;
+
+const normalizePagedItems = (response: any) => {
+  const payload = unwrapResult(response);
+  return {
+    data: payload?.items ?? payload?.data ?? [],
+    totalCount: payload?.totalCount ?? 0,
+  };
+};
+
 export const routeManagementApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get routes (Paginated)
-    getRoutes: builder.query({
-      query: ({ pageNumber = 1, pageSize = 10, academicMediumId }) => ({
-        url: '/transport/routes',
-        method: 'GET',
-        params: { pageNumber, pageSize, academicMediumId },
-      }),
+    getRoutes: builder.query<any, RouteListQuery | void>({
+      query: buildRouteListRequest,
+      transformResponse: normalizeRouteListResponse,
       providesTags: [transportType.routeManagement],
     }),
 
@@ -32,6 +81,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId },
       }),
+      transformResponse: (response: any) => response?.data ?? response,
       providesTags: (result, error, { routeId }) => [
         { type: transportType.routeManagement, id: routeId },
       ],
@@ -52,14 +102,11 @@ export const routeManagementApi = transportApi.injectEndpoints({
     }),
 
     // Get route stops (Step 2)
-    getRouteStops: builder.query({
-      query: ({ routeId, page = 1, academicMediumId }) => ({
-        url: `/transport/routes/${routeId}/stops`,
-        method: 'GET',
-        params: { page, academicMediumId },
-      }),
-      providesTags: (result, error, { routeId }) => [
-        { type: transportType.routeManagement, id: `${routeId}-stops` },
+    getRouteStops: builder.query<any, RouteStopsQuery | void>({
+      query: buildRouteStopsRequest,
+      transformResponse: (response: any) => response?.data ?? response ?? [],
+      providesTags: (result, error, params) => [
+        { type: transportType.routeManagement, id: `${params?.routeId}-stops` },
       ],
     }),
 
@@ -69,8 +116,9 @@ export const routeManagementApi = transportApi.injectEndpoints({
         url: `/transport/routes/${routeId}/stops`,
         method: 'POST',
         params: { academicMediumId },
-        data: { stops },
+        body: { stops },
       }),
+      transformResponse: (response: any) => response?.data ?? response ?? [],
       invalidatesTags: (result, error, { routeId }) => [
         { type: transportType.routeManagement, id: `${routeId}-stops` },
         { type: transportType.routeManagement, id: routeId },
@@ -84,6 +132,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId },
       }),
+      transformResponse: unwrapResult,
       providesTags: (result, error, { routeId }) => [
         { type: transportType.routeManagement, id: `${routeId}-vehicle` },
       ],
@@ -97,9 +146,26 @@ export const routeManagementApi = transportApi.injectEndpoints({
         params: { academicMediumId },
         body,
       }),
+      transformResponse: unwrapResult,
       invalidatesTags: (result, error, { routeId }) => [
         { type: transportType.routeManagement, id: `${routeId}-vehicle` },
         { type: transportType.routeManagement, id: routeId },
+        transportType.vehicleManagement,
+        transportType.driverConductorData,
+      ],
+    }),
+
+    deleteVehicleAssignment: builder.mutation({
+      query: ({ routeId, academicMediumId }) => ({
+        url: `/transport/routes/${routeId}/vehicle-assignment`,
+        method: 'DELETE',
+        params: { academicMediumId },
+      }),
+      invalidatesTags: (result, error, { routeId }) => [
+        { type: transportType.routeManagement, id: `${routeId}-vehicle` },
+        { type: transportType.routeManagement, id: routeId },
+        transportType.vehicleManagement,
+        transportType.driverConductorData,
       ],
     }),
 
@@ -110,6 +176,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         method: 'GET',
         params: { ...params, academicMediumId },
       }),
+      transformResponse: normalizePagedItems,
       providesTags: (result, error, { routeId }) => [
         { type: transportType.routeManagement, id: `${routeId}-vehicle-history` },
       ],
@@ -122,8 +189,23 @@ export const routeManagementApi = transportApi.injectEndpoints({
         method: 'GET',
         params: { ...params, academicMediumId },
       }),
+      transformResponse: normalizePagedItems,
       providesTags: (result, error, { routeId }) => [
         { type: transportType.routeManagement, id: `${routeId}-staff-history` },
+      ],
+    }),
+
+    changeRouteStatus: builder.mutation({
+      query: ({ routeId, body, academicMediumId }) => ({
+        url: `/transport/routes/${routeId}/status`,
+        method: 'PUT',
+        params: { academicMediumId },
+        body,
+      }),
+      transformResponse: (response: any) => response?.data ?? response,
+      invalidatesTags: (result, error, { routeId }) => [
+        { type: transportType.routeManagement, id: routeId },
+        transportType.routeManagement,
       ],
     }),
   }),
@@ -139,6 +221,8 @@ export const {
   useAssignStopsToRouteMutation,
   useGetVehicleAssignmentQuery,
   useAssignVehicleToRouteMutation,
+  useDeleteVehicleAssignmentMutation,
   useGetRouteVehicleHistoryQuery,
   useGetRouteDriverConductorHistoryQuery,
+  useChangeRouteStatusMutation,
 } = routeManagementApi;

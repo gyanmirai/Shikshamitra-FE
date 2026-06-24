@@ -28,13 +28,15 @@ interface VehicleTableViewProps {
 }
 
 const VehicleTableView = ({ onEdit, onView }: VehicleTableViewProps) => {
-  const { data } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetVehicleManagementDataQuery,
-  });
-
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetVehicleManagementDataQuery,
+    params: { academicMediumId: currentMedium?.id, pageNumber: 1, pageSize: 100 },
+    options: { skip: !currentMedium?.id },
+  });
   const maintainDialog = useBoolean();
   const changeStatusDialog = useBoolean();
 
@@ -86,6 +88,7 @@ const VehicleTableView = ({ onEdit, onView }: VehicleTableViewProps) => {
       <CustomizableTable
         tableId="vehicle-management-table"
         noDataText="No Vehicle Records Found"
+        isLoading={isLoading}
         columns={[
           {
             id: 'regNo',
@@ -168,7 +171,7 @@ const VehicleTableView = ({ onEdit, onView }: VehicleTableViewProps) => {
             },
           },
         ]}
-        data={data || []}
+        data={data?.data || []}
       />
 
       <CustomDialog

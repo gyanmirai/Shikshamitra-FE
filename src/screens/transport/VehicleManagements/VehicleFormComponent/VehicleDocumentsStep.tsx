@@ -1,5 +1,7 @@
 import type { FormikProps } from 'formik';
+import type { RootState } from 'src/redux/store';
 
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { Tooltip, IconButton } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -13,14 +15,18 @@ interface VehicleDocumentsStepProps {
 }
 
 const VehicleDocumentsStep = ({ formik }: VehicleDocumentsStepProps) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const { data: documentRows } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDocumentRowsQuery,
+    params: { academicMediumId: currentMedium?.id },
+    options: { skip: !currentMedium?.id },
   });
 
   // Prepare table data from formik values
   const documents = documentRows?.map((doc: { key: string | number }) => {
-    const file = formik.values.documents?.[doc.key as number] || null;
+    const selectedDocument = formik.values.documents?.[doc.key as number] || null;
+    const file = selectedDocument?.file || null;
     return {
       ...doc,
       status: file ? 'Uploaded' : 'Pending',
@@ -88,7 +94,12 @@ const VehicleDocumentsStep = ({ formik }: VehicleDocumentsStepProps) => {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      formik.setFieldValue(`documents.${row.key}`, file);
+                      formik.setFieldValue(`documents.${row.key}`, {
+                        requiredDocumentId: row.requiredDocumentId,
+                        documentTypeId: row.requiredDocumentId,
+                        file,
+                        fileName: file.name,
+                      });
                     }
                   }}
                 />

@@ -12,7 +12,6 @@ import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
@@ -34,6 +33,8 @@ const VehicleDocumentSettingScreen = () => {
 
   // Global state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
+  const vehicleDocumentQueryArgs = { academicMediumId: currentMedium?.id };
 
   // State to store currently selected vehicle document for edit/delete operations
   const [selectedVehicleDocument, setSelectedVehicleDocument] = useState<IVehicleDocument | null>(
@@ -42,20 +43,13 @@ const VehicleDocumentSettingScreen = () => {
 
   const dispatch = useDispatch();
 
-  // Delete mutation hook
-  const { deleteVehicleDocument, isLoading: isDeleting } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteVehicleDocumentMutation,
-  });
+  const [deleteVehicleDocument, { isLoading: isDeleting }] = useDeleteVehicleDocumentMutation();
 
   const {
     data: vehicleDocumentData,
     isLoading: vehicleDocumentsLoading,
     refetch,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetVehicleDocumentsQuery,
-  });
+  } = useGetVehicleDocumentsQuery(vehicleDocumentQueryArgs, { skip: !currentMedium?.id });
 
   // Undo functionality hook
   const { confirmWithUndo } = useConfirmWithUndo();
@@ -184,7 +178,7 @@ const VehicleDocumentSettingScreen = () => {
             size="small"
             disabled={isDeleting}
             onClick={async () => {
-              if (!selectedVehicleDocument?.id) return;
+              if (!selectedVehicleDocument?.id || !currentMedium?.id) return;
 
               confirmWithUndo({
                 item: selectedVehicleDocument,
@@ -193,7 +187,7 @@ const VehicleDocumentSettingScreen = () => {
                   dispatchFn(
                     vehicleSettingsApi.util.updateQueryData(
                       'getVehicleDocuments',
-                      undefined,
+                      vehicleDocumentQueryArgs,
                       (draft: any) => {
                         const arr = Array.isArray(draft) ? draft : draft?.data;
                         if (!Array.isArray(arr)) return;
@@ -211,7 +205,10 @@ const VehicleDocumentSettingScreen = () => {
                 },
                 onUndoRestore: () => refetch(),
                 onCommit: async () => {
-                  await deleteVehicleDocument(selectedVehicleDocument.id);
+                  await deleteVehicleDocument({
+                    documentId: selectedVehicleDocument.id,
+                    academicMediumId: currentMedium.id,
+                  }).unwrap();
                 },
               });
 

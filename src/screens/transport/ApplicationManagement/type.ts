@@ -12,12 +12,19 @@ export interface IStudent {
 
 export interface ITransportApplicationPayload {
   id?: string;
-  selectedStudent: number;
-  studentId: string;
+  applicationId?: string;
+  memberType?: number;
+  applicationType?: number;
+  sourceId?: string;
+  memberId?: string;
+  selectedStudent: number | string;
+  studentId?: string;
+  employeeId?: string;
   avatarUrl?: string;
   name: string;
   addressLine1?: string;
   class: string;
+  className?: string;
   division: string;
   feeAmount?: number;
   rollNo: string;
@@ -31,7 +38,14 @@ export interface ITransportApplicationPayload {
   areaLocality: string;
   description?: string;
   status: TransportStatus;
+  statusName?: string;
   isStopExist: boolean;
-  assignedStop?: number;
-  assignedRoute?: number;
+  requestedStopId?: string;
+  requestedStopName?: string;
+  assignedStop?: string;
+  assignedStopId?: string;
+  assignedStopName?: string;
+  assignedRoute?: string;
+  assignedRouteId?: string;
+  assignedRouteName?: string;
 }

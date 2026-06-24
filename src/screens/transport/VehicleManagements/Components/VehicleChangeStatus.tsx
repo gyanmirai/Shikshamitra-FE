@@ -1,7 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -50,6 +53,7 @@ const ChangeVehicleStatusForm: React.FC<ChangeVehicleStatusProps> = ({
   vehicleId,
 }) => {
   const [changeVehicleStatus, { isLoading }] = useChangeVehicleStatusMutation();
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik({
     initialValues: getInitialVehicleStatusData(vehicleData),
@@ -60,11 +64,18 @@ const ChangeVehicleStatusForm: React.FC<ChangeVehicleStatusProps> = ({
           shikshaMitraToast.error({ message: 'Vehicle ID is required' });
           return;
         }
+        if (!currentMedium?.id) {
+          shikshaMitraToast.error({
+            message: 'Please select an academic medium before changing vehicle status',
+          });
+          return;
+        }
 
         await changeVehicleStatus({
           vehicleId: vehicleIdToUse,
+          academicMediumId: currentMedium.id,
           body: {
-            status: VehicleStatus[values.status],
+            status: values.status,
             remarks: values.reason || undefined,
           },
         }).unwrap();

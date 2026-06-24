@@ -1,14 +1,16 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DocumentTypeArray } from 'src/enums/documnet-type';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -33,20 +35,20 @@ import { getVehicleDocumentInitialValues } from './VehicleDocumentInitialValues'
 import type { IVehicleDocumentFormProps } from './type';
 
 const VehicleDocumentForm: React.FC<IVehicleDocumentFormProps> = ({ open, onClose, editData }) => {
-  const [addVehicleDocument, { isLoading: isAdding }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddVehicleDocumentMutation,
-  });
-  const [updateVehicleDocument, { isLoading: isUpdating }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateVehicleDocumentMutation,
-  });
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
+  const [addVehicleDocument, { isLoading: isAdding }] = useAddVehicleDocumentMutation();
+  const [updateVehicleDocument, { isLoading: isUpdating }] = useUpdateVehicleDocumentMutation();
 
   const formik = useFormik({
     initialValues: getVehicleDocumentInitialValues(editData),
     validationSchema: vehicleDocumentValidationSchema,
     onSubmit: async (values) => {
       try {
+        if (!currentMedium?.id) {
+          shikshaMitraToast.error({ message: 'Please select an academic medium first' });
+          return;
+        }
+
         const payload = {
           name: values.documentName,
           maxSizeMb: Number(values.documentSize),
@@ -58,13 +60,14 @@ const VehicleDocumentForm: React.FC<IVehicleDocumentFormProps> = ({ open, onClos
         if (editData) {
           await updateVehicleDocument({
             documentId: editData.id,
+            academicMediumId: currentMedium.id,
             body: payload,
-          });
+          }).unwrap();
           shikshaMitraToast.success({
             message: `Vehicle Document: ${values.documentName} updated successfully`,
           });
         } else {
-          await addVehicleDocument(payload);
+          await addVehicleDocument({ academicMediumId: currentMedium.id, body: payload }).unwrap();
           shikshaMitraToast.success({
             message: `Vehicle Document: ${values.documentName} added successfully`,
           });

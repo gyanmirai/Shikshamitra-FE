@@ -1,39 +1,45 @@
 import type { FormikProps } from 'formik';
+import type { RootState } from 'src/redux/store';
 
 import { Stack } from '@mui/system';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
-import React, { useMemo, useState } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Grid, Checkbox, TextField, Typography, FormHelperText } from '@mui/material';
-import { useGetTransportMembersQuery } from 'src/redux/transport/vehicle-management/member-manage-api';
+import { useGetTransportMemberCandidatesQuery } from 'src/redux/transport/vehicle-management/member-manage-api';
+import {
+  Box,
+  Grid,
+  Checkbox,
+  TextField,
+  Typography,
+  ToggleButton,
+  FormHelperText,
+  ToggleButtonGroup,
+} from '@mui/material';
 
 import type { ITransportApplicationPayload } from '../type';
 
 const SelectStudentStep = ({ formik }: { formik: FormikProps<ITransportApplicationPayload> }) => {
-  const { data: requestData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetTransportMembersQuery,
-  });
-
-  const [, setSelectedRow] = useState<number>();
-
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
+  const [, setSelectedRow] = useState<number | string>();
   const theme = useTheme();
-  const [searchInput, setSearchInput] = useState(''); // typed text
-  const filteredMembers = useMemo(() => {
-    if (!searchInput) return requestData;
-    if (!requestData) return [];
-    const term = searchInput.toLowerCase();
-    return requestData.filter(
-      (member: ITransportApplicationPayload) =>
-        member.name?.toLowerCase().includes(term) ||
-        member.studentId?.toLowerCase().includes(term) ||
-        member.class?.toString().toLowerCase().includes(term) ||
-        member.rollNo?.toString().toLowerCase().includes(term) ||
-        member.grNo?.toString().toLowerCase().includes(term)
-    );
-  }, [requestData, searchInput]);
+  const [searchInput, setSearchInput] = useState('');
+  const [memberType, setMemberType] = useState<number | undefined>(undefined);
+  const { data: candidates, isFetching } = useGetTransportMemberCandidatesQuery(
+    {
+      academicMediumId: currentMedium?.id,
+      memberType,
+      search: searchInput,
+      pageNumber: 1,
+      pageSize: 25,
+      excludeExisting: true,
+    },
+    { skip: !currentMedium?.id || !searchInput.trim() }
+  );
+
+  const filteredMembers = candidates?.data ?? [];
 
   // const rowProps = useCallback(
   //   (row: any, index: number) => ({
@@ -67,6 +73,20 @@ const SelectStudentStep = ({ formik }: { formik: FormikProps<ITransportApplicati
   return (
     <>
       <Stack direction="row" spacing={2} mb={2}>
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          value={memberType ?? 'all'}
+          onChange={(_, value) => {
+            if (value !== null) {
+              setMemberType(value === 'all' ? undefined : Number(value));
+            }
+          }}
+        >
+          <ToggleButton value="all">All</ToggleButton>
+          <ToggleButton value={0}>Students</ToggleButton>
+          <ToggleButton value={1}>Employees</ToggleButton>
+        </ToggleButtonGroup>
         <TextField
           variant="outlined"
           size="small"
@@ -77,7 +97,7 @@ const SelectStudentStep = ({ formik }: { formik: FormikProps<ITransportApplicati
         />
       </Stack>
       <Grid size={{ xs: 12 }}>
-        {formik.touched.studentId && formik.errors.studentId && (
+        {formik.touched.sourceId && formik.errors.sourceId && (
           <FormHelperText
             error
             sx={{
@@ -87,7 +107,7 @@ const SelectStudentStep = ({ formik }: { formik: FormikProps<ITransportApplicati
               marginLeft: '5px',
             }}
           >
-            {String(formik.errors.studentId)}
+            {String(formik.errors.sourceId)}
           </FormHelperText>
         )}
       </Grid>
@@ -95,7 +115,7 @@ const SelectStudentStep = ({ formik }: { formik: FormikProps<ITransportApplicati
         <Box
           sx={{
             border:
-              formik.touched.studentId && formik.errors.studentId
+              formik.touched.sourceId && formik.errors.sourceId
                 ? `1px solid ${theme.palette.error.main}`
                 : 'none',
             borderRadius: 2,
@@ -104,7 +124,7 @@ const SelectStudentStep = ({ formik }: { formik: FormikProps<ITransportApplicati
           <CustomizableTable
             tableId="transport-request-table"
             data={filteredMembers || []}
-            noDataText="No requests found"
+            noDataText={isFetching ? 'Searching members...' : 'No members found'}
             columns={[
               {
                 id: 'select',
@@ -114,17 +134,22 @@ const SelectStudentStep = ({ formik }: { formik: FormikProps<ITransportApplicati
                 isFilter: false,
                 render: (_, row) => (
                   <Checkbox
-                    checked={formik.values.studentId === row.studentId}
+                    checked={formik.values.sourceId === row.sourceId}
                     onChange={() => {
-                      formik.setFieldValue('studentId', row.studentId);
-                      formik.setFieldValue('studentId', row.studentId);
-                      formik.setFieldTouched('studentId', false);
+                      formik.setFieldValue('sourceId', row.sourceId);
+                      formik.setFieldValue('memberType', row.memberType);
+                      formik.setFieldValue('studentId', row.memberType === 0 ? row.sourceId : '');
+                      formik.setFieldValue('employeeId', row.memberType === 1 ? row.sourceId : '');
+                      formik.setFieldTouched('sourceId', false);
                       formik.setFieldValue('name', row.name);
-                      formik.setFieldValue('email', row.email);
                       formik.setFieldValue('contactNo', row.contactNo);
                       formik.setFieldValue('role', row.role);
-                      formik.setFieldValue('selectedStudent', row.studentId);
-                      setSelectedRow(row.studentId);
+                      formik.setFieldValue('class', row.class);
+                      formik.setFieldValue('division', row.division);
+                      formik.setFieldValue('grNo', row.grNo);
+                      formik.setFieldValue('photoUrl', row.photoUrl);
+                      formik.setFieldValue('selectedStudent', row.sourceId);
+                      setSelectedRow(row.sourceId);
                     }}
                   />
                 ),

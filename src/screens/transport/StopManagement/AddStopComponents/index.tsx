@@ -59,10 +59,10 @@ const AddStopIndex: React.FC<AddStopIndexProps> = ({
         if (editData) {
           const payload = {
             academicMediumId: (currentMedium as Medium).id,
-            id: (editData as IStopData).id,
+            stopId: (editData as IStopData).id,
             body: {
               stopName: values.stopName,
-              zoneId: values.zoneId,
+              zoneId: values.zone || values.zoneId,
               amount: values.amount,
               approxKmFromSchool: values.approxKmFromSchool,
               pinCode: values.pincode,
@@ -82,7 +82,7 @@ const AddStopIndex: React.FC<AddStopIndexProps> = ({
             academicMediumId: (currentMedium as Medium).id,
             body: {
               stopName: values.stopName,
-              zoneId: values.zoneId,
+              zoneId: values.zone || values.zoneId,
               amount: values.amount,
               approxKmFromSchool: values.approxKmFromSchool,
               pinCode: values.pincode,
@@ -100,7 +100,7 @@ const AddStopIndex: React.FC<AddStopIndexProps> = ({
         }
       } catch (error) {
         // Error handling is managed by the API hook or global error handler if configured
-        console.error('Failed to save subject', error);
+        console.error('Failed to save stop', error);
       }
     },
   });

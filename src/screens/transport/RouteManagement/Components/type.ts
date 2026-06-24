@@ -8,6 +8,7 @@ export interface ISchedule {
 }
 
 export interface IRoutePayload {
+  id?: string;
   routeName: string;
   routeCode: string;
   routeType: RouteType;
@@ -25,6 +26,7 @@ export interface IRoutePayload {
 
 export interface IStopPayload {
   id: string;
+  stopId?: string;
   stopName: string;
   expectedArrivalTime: Dayjs | null;
   expectedDepartureTime: Dayjs | null;

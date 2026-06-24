@@ -1,8 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -39,6 +42,7 @@ const ChangeStopStatusForm: React.FC<ChangeStopStatusProps> = ({
   stopData,
   onStatusChange,
 }) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const [changeStopStatus, { isLoading: isChangeStopStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useChangeStopStatusMutation,
@@ -46,12 +50,15 @@ const ChangeStopStatusForm: React.FC<ChangeStopStatusProps> = ({
   const formik = useFormik({
     initialValues: getStopStatusChangeInitialValues(stopData),
     validationSchema: stopStatusChangeValidationSchema,
-    onSubmit: (values) => {
-      changeStopStatus({
+    onSubmit: async (values) => {
+      await changeStopStatus({
         stopId: stopData?.id,
-        status: values.status,
-        remarks: values.reason,
-      });
+        academicMediumId: currentMedium?.id,
+        body: {
+          status: values.status,
+          remarks: values.reason,
+        },
+      }).unwrap();
       shikshaMitraToast.success({
         message: `Stop status for "${stopData?.stopName}" changed to ${StopStatusType[values.status]} successfully`,
       });

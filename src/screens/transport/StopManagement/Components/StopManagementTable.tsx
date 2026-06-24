@@ -35,10 +35,12 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
   setEditData,
   onEdit,
 }) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const { data: stopManagementData, isLoading: stopManagementLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStopsQuery,
+    params: { academicMediumId: currentMedium?.id, pageNumber: 1, pageSize: 100 },
+    options: { skip: !currentMedium?.id },
   });
   const dispatch = useDispatch();
 
@@ -197,7 +199,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             },
           },
         ]}
-        data={[]}
+        data={stopManagementData?.data || []}
       />
 
       {/* Change Status Dialog */}

@@ -1,7 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { RouteStatus } from 'src/enums/route-status';
@@ -9,8 +13,10 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import { useChangeRouteStatusMutation } from 'src/redux/transport/vehicle-management/route-management-api';
 
 import { getInitialStopStatusData } from '../RouteFormComponent/getInitialRouteData';
 
@@ -35,9 +41,22 @@ const ChangeStopStatusForm: React.FC<ChangeStopStatusProps> = ({
   routeData,
   onStatusChange,
 }) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [changeRouteStatus, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useChangeRouteStatusMutation,
+  });
   const formik = useFormik({
     initialValues: getInitialStopStatusData(routeData),
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
+      await changeRouteStatus({
+        routeId: routeData?.id,
+        academicMediumId: currentMedium?.id,
+        body: {
+          status: values.status,
+          remarks: values.reason,
+        },
+      }).unwrap();
       shikshaMitraToast.success({
         message: `Route status for "${routeData?.routeName}" changed to ${RouteStatus[values.status]} successfully`,
       });
@@ -122,15 +141,16 @@ const ChangeStopStatusForm: React.FC<ChangeStopStatusProps> = ({
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={<Iconify icon="mdi:content-save" width={16} height={16} />}
           type="submit"
           variant="contained"
           size="small"
+          loading={isLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           Save
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

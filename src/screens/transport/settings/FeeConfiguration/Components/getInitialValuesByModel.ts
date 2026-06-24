@@ -3,22 +3,17 @@ import dayjs from 'dayjs';
 export const getInitialValuesByModel = (
   model: string,
   editData: any = null,
-  stopBasedFeeData?: any
+  feeConfiguration?: any
 ) => {
-  const baseDate = editData?.effectiveFrom ? dayjs(editData.effectiveFrom) : dayjs();
+  const source = editData || feeConfiguration;
+  const baseDate = source?.effectiveFrom ? dayjs(source.effectiveFrom) : dayjs();
 
   const defaults: Record<string, any> = {
-    // 'flat-rate': {
-    //   model: 'flat-rate',
-    //   feeAmount: '',
-    //   feeFrequency: '',
-    //   effectiveFrom: baseDate,
-    // },
-
     'distance-based': {
       model: 'distance-based',
       ratePerKm: '',
       feeFrequency: '',
+      chargeCategoryId: '',
       effectiveFrom: baseDate,
     },
 
@@ -26,34 +21,20 @@ export const getInitialValuesByModel = (
       model: 'stop-based',
       effectiveFrom: baseDate,
       feeFrequency: '',
+      chargeCategoryId: '',
     },
-
-    // 'zone-based': {
-    //   model: 'zone-based',
-    //   zones: [],
-    //   effectiveFrom: baseDate,
-    // },
   };
 
-  // ✅ Merge edit data if present (for editing)
-  if (editData) {
-    // For stop-based, map the stops properly with all expected fields
-    if (model === 'stop-based' && Array.isArray(editData.stops)) {
-      return {
-        ...defaults[model],
-        ...editData,
-        effectiveFrom: dayjs(editData?.effectiveFrom || baseDate),
-      };
-    }
-
-    // ✅ For other models
-    return {
-      ...defaults[model],
-      ...editData,
-      effectiveFrom: dayjs(editData?.effectiveFrom || baseDate),
-    };
+  if (!source) {
+    return defaults[model];
   }
 
-  // ✅ Return default structure for new creation
-  return defaults[model];
+  return {
+    ...defaults[model],
+    ...source,
+    model: source.model || source.feeModelType || model,
+    feeFrequency: String(source.feeFrequency ?? source.frequency ?? ''),
+    chargeCategoryId: source.chargeCategoryId || '',
+    effectiveFrom: dayjs(source.effectiveFrom || baseDate),
+  };
 };

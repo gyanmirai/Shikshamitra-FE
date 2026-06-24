@@ -4,15 +4,39 @@ import { transportApi } from '../transportApi';
 
 // ----------------------------------------------------------------------
 
+type StopListQuery = {
+  pageNumber?: number;
+  pageSize?: number;
+  search?: string;
+  zoneId?: string;
+  status?: number | string;
+  academicMediumId?: string;
+};
+
+export const buildStopListRequest = (params?: StopListQuery | void) => {
+  const { pageNumber = 1, pageSize = 10, search, zoneId, status, academicMediumId } = params ?? {};
+
+  return {
+    url: '/transport/stops',
+    method: 'GET',
+    params: { pageNumber, pageSize, search, zoneId, status, academicMediumId },
+  };
+};
+
+export const normalizeStopListResponse = (response: any) => {
+  const payload = response?.data ?? response;
+  return {
+    data: payload?.items ?? payload?.data ?? [],
+    totalCount: payload?.totalCount ?? 0,
+  };
+};
+
 export const stopManagementApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get stops (Paginated)
-    getStops: builder.query({
-      query: ({ pageNumber = 1, pageSize = 10, search, zoneId, status, academicMediumId }) => ({
-        url: '/transport/stops',
-        method: 'GET',
-        params: { pageNumber, pageSize, search, zoneId, status, academicMediumId },
-      }),
+    getStops: builder.query<any, StopListQuery | void>({
+      query: buildStopListRequest,
+      transformResponse: normalizeStopListResponse,
       providesTags: [transportType.stopManagement],
     }),
 

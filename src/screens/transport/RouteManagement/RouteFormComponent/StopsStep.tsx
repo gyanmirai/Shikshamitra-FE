@@ -1,6 +1,9 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
@@ -14,6 +17,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Grid, TextField, Typography, IconButton } from '@mui/material';
+import { useGetStopsQuery } from 'src/redux/transport/vehicle-management/stop-management-api';
 import { useGetZoneAreaOptionsQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import RouteDetailsView from './RouteBasicView';
@@ -23,15 +27,17 @@ import type { IStopPayload } from '../Components/type';
 interface StopsStepProps {
   formik: any;
 }
-const availableStops = [
-  { id: 'devadhgam', label: 'Devadhgam Chokdi', routes: 2 },
-  { id: 'dhruv-park', label: 'Dhruv Park', routes: 3 },
-  { id: 'manibhadra-campus', label: 'Manibhadra Campus', routes: 1 },
-  { id: 'maharana-pratap', label: 'Maharana Pratap Circle', routes: 4 },
-  { id: 'midas-square', label: 'Midas Square', routes: 2 },
-];
+
+type AvailableStop = {
+  id: string;
+  label: string;
+  routes: number;
+  zone?: string | null;
+};
+
 const StopsStep = ({ formik }: StopsStepProps) => {
   const theme = useTheme();
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
   const [searchInput, setSearchInput] = useState('');
   const [draggedStop, setDraggedStop] = useState<IStopPayload | null>(null);
@@ -39,6 +45,14 @@ const StopsStep = ({ formik }: StopsStepProps) => {
   const { data: zoneAreaData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetZoneAreaOptionsQuery,
+    params: { academicMediumId: currentMedium?.id },
+    options: { skip: !currentMedium?.id },
+  });
+  const { data: stopsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStopsQuery,
+    params: { academicMediumId: currentMedium?.id, pageNumber: 1, pageSize: 100, status: 0 },
+    options: { skip: !currentMedium?.id },
   });
 
   const [debouncedSearch, setDebouncedSearch] = useState(searchInput);
@@ -77,7 +91,7 @@ const StopsStep = ({ formik }: StopsStepProps) => {
     setDraggedIndex(null);
   };
 
-  const handleExternalDragStart = (stop: { id: string; label: string }) => {
+  const handleExternalDragStart = (stop: AvailableStop) => {
     setDraggedStop({
       id: stop.id,
       stopName: stop.label,
@@ -103,7 +117,17 @@ const StopsStep = ({ formik }: StopsStepProps) => {
   }, [searchInput]);
 
   const filteredStops = useMemo(() => {
-    let filtered = availableStops;
+    let filtered: AvailableStop[] = (stopsData?.data || []).map((stop: any) => ({
+      id: stop.id,
+      label: stop.stopName,
+      routes: stop.assignedRoutes || 0,
+      zone: stop.zone || stop.zoneId,
+    }));
+
+    if (formik.values.zone) {
+      filtered = filtered.filter((stop: any) => stop.zone === formik.values.zone);
+    }
+
     // Search filter
     if (debouncedSearch.trim()) {
       const query = debouncedSearch.toLowerCase();
@@ -116,7 +140,7 @@ const StopsStep = ({ formik }: StopsStepProps) => {
       );
     }
     return filtered;
-  }, [debouncedSearch]);
+  }, [debouncedSearch, formik.values.zone, stopsData?.data]);
 
   return (
     <Grid container spacing={2}>

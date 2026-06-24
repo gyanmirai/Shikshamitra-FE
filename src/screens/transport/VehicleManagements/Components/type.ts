@@ -9,15 +9,15 @@ export enum VehicleStatusType {
 export const VehicleStatusOptions = [
   {
     label: VehicleStatusType[VehicleStatusType.Active],
-    value: VehicleStatusType[VehicleStatusType.Active],
+    value: VehicleStatusType.Active,
   },
   {
     label: VehicleStatusType[VehicleStatusType.Inactive],
-    value: VehicleStatusType[VehicleStatusType.Inactive],
+    value: VehicleStatusType.Inactive,
   },
   {
     label: VehicleStatusType[VehicleStatusType.Maintenance],
-    value: VehicleStatusType[VehicleStatusType.Maintenance],
+    value: VehicleStatusType.Maintenance,
   },
 ];
 
@@ -57,6 +57,7 @@ export interface IVehiclePayload {
   vehicleName?: string; // Vehicle name field
   vehicleNo: string;
   vehicleType: string;
+  vehicleTypeId?: string;
   vehicleCompany: string;
   model: string;
   yearOfManufacture: string;
@@ -65,11 +66,14 @@ export interface IVehiclePayload {
   schoolAssignedNo?: string | null;
   owner: string;
   fuelType: string;
+  fuelTypeId?: string;
   isAc?: boolean;
   description?: string | null;
 
   // Documents step - array format for API
   documents?: Array<{
+    id?: string;
+    requiredDocumentId?: string;
     documentTypeId: string;
     file: File | string; // File object or base64 string
     fileName: string;

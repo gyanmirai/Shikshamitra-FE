@@ -1,12 +1,14 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Button, DialogActions } from '@mui/material';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   useGetRouteStopDataQuery,
@@ -33,20 +35,15 @@ const TransportApplicationDetail = ({
   onReject?: () => void;
   onHold?: () => void;
 }) => {
-  const { data: routeData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRouteStopDataQuery,
-  });
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
+  const { data: routeData } = useGetRouteStopDataQuery(
+    { applicationId: selectedApplication?.id, academicMediumId: currentMedium?.id },
+    { skip: !selectedApplication?.id || !currentMedium?.id }
+  );
 
-  const { postRouteStopData, isLoading: isAssigning } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: usePostRouteStopDataMutation,
-  });
+  const [postRouteStopData, { isLoading: isAssigning }] = usePostRouteStopDataMutation();
 
-  const { statusRouteStopData, isLoading: isApproving } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useStatusRouteStopDataMutation,
-  });
+  const [statusRouteStopData, { isLoading: isApproving }] = useStatusRouteStopDataMutation();
   const initialValues = getTransportApplicationInitialValues(selectedApplication, routeData);
 
   const formik = useFormik({
@@ -71,6 +68,11 @@ const TransportApplicationDetail = ({
           return;
         }
 
+        if (!currentMedium?.id) {
+          shikshaMitraToast.error({ message: 'Academic medium is required' });
+          return;
+        }
+
         if (!values.studentDetails?.assignedStop) {
           shikshaMitraToast.error({ message: 'Please assign a stop before approving' });
           return;
@@ -84,11 +86,16 @@ const TransportApplicationDetail = ({
         // Step 1: Assign stop
         await postRouteStopData({
           applicationId: selectedApplication.id,
+          academicMediumId: currentMedium.id,
           body: payload,
-        });
+        }).unwrap();
 
         // Step 2: Approve application
-        await statusRouteStopData(selectedApplication.id);
+        await statusRouteStopData({
+          applicationId: selectedApplication.id,
+          academicMediumId: currentMedium.id,
+          body: { status: 1, remarks: 'Approved from Application Management' },
+        }).unwrap();
 
         shikshaMitraToast.success({
           message: 'Application approved successfully',

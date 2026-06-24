@@ -2,106 +2,228 @@ import { transportType } from 'src/redux/tagTypes';
 
 import { transportApi } from '../transportApi';
 
+type AcademicMediumQuery = {
+  academicMediumId?: string;
+};
+
+type FeeRunListQuery = AcademicMediumQuery & {
+  academicYearId?: string;
+  pageNumber?: number;
+  pageSize?: number;
+  status?: number;
+  periodFrom?: string;
+  periodTo?: string;
+};
+
+type FeeDueListQuery = AcademicMediumQuery & {
+  academicYearId?: string;
+  pageNumber?: number;
+  pageSize?: number;
+  memberType?: number;
+  status?: number;
+  routeId?: string;
+  stopId?: string;
+  runId?: string;
+};
+
+type TransportMemberDueQuery = AcademicMediumQuery & {
+  memberId?: string;
+  pageNumber?: number;
+  pageSize?: number;
+};
+
+const unwrapResult = (response: any) =>
+  response && Object.prototype.hasOwnProperty.call(response, 'data')
+    ? response.data
+    : (response ?? []);
+
+const academicParams = (params?: AcademicMediumQuery | void) => ({
+  academicMediumId: params?.academicMediumId,
+});
+
+export const buildVehicleTypeListRequest = (params?: AcademicMediumQuery | void) => ({
+  url: '/transport/vehicle-types',
+  method: 'GET',
+  params: academicParams(params),
+});
+
+export const buildFuelTypeListRequest = (params?: AcademicMediumQuery | void) => ({
+  url: '/transport/fuel-types',
+  method: 'GET',
+  params: academicParams(params),
+});
+
+export const buildFeeConfigurationRequest = (params?: AcademicMediumQuery | void) => ({
+  url: '/transport/fee-configuration',
+  method: 'GET',
+  params: academicParams(params),
+});
+
+export const buildFeeFrequencyOptionsRequest = () => ({
+  url: '/transport/fee-frequency-options',
+  method: 'GET',
+});
+
+export const buildZoneAreaListRequest = (params?: AcademicMediumQuery | void) => ({
+  url: '/transport/zones-areas',
+  method: 'GET',
+  params: academicParams(params),
+});
+
+export const buildFeeRunListRequest = (params?: FeeRunListQuery | void) => ({
+  url: '/transport/fees/runs',
+  method: 'GET',
+  params: {
+    academicMediumId: params?.academicMediumId,
+    academicYearId: params?.academicYearId,
+    pageNumber: params?.pageNumber ?? 1,
+    pageSize: params?.pageSize ?? 10,
+    status: params?.status,
+    periodFrom: params?.periodFrom,
+    periodTo: params?.periodTo,
+  },
+});
+
+export const buildFeeDuesListRequest = (params?: FeeDueListQuery | void) => ({
+  url: '/transport/fees/dues',
+  method: 'GET',
+  params: {
+    academicMediumId: params?.academicMediumId,
+    academicYearId: params?.academicYearId,
+    pageNumber: params?.pageNumber ?? 1,
+    pageSize: params?.pageSize ?? 10,
+    memberType: params?.memberType,
+    status: params?.status,
+    routeId: params?.routeId,
+    stopId: params?.stopId,
+    runId: params?.runId,
+  },
+});
+
+export const buildTransportMemberDuesRequest = (params?: TransportMemberDueQuery | void) => ({
+  url: `/transport/members/${params?.memberId}/dues`,
+  method: 'GET',
+  params: {
+    academicMediumId: params?.academicMediumId,
+    pageNumber: params?.pageNumber ?? 1,
+    pageSize: params?.pageSize ?? 10,
+  },
+});
+
 export const vehicleSettingsApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Vehicle Type
     getVehicleTypes: builder.query({
-      query: () => ({
-        url: '/vehicle-types',
-        method: 'GET',
-      }),
+      query: buildVehicleTypeListRequest,
+      transformResponse: unwrapResult,
       providesTags: [transportType.vehicleTypes],
     }),
 
     addVehicleType: builder.mutation({
-      query: (body) => ({
-        url: '/vehicle-types',
+      query: ({ body, academicMediumId }) => ({
+        url: '/transport/vehicle-types',
         method: 'POST',
+        params: { academicMediumId },
         body,
       }),
-      invalidatesTags: [transportType.vehicleTypes],
+      transformResponse: unwrapResult,
+      invalidatesTags: [transportType.vehicleTypes, transportType.vehicleTypeOptions],
     }),
 
     updateVehicleType: builder.mutation({
-      query: ({ vehicleTypeId, body }) => ({
-        url: `/vehicle-types/${vehicleTypeId}`,
+      query: ({ vehicleTypeId, body, academicMediumId }) => ({
+        url: `/transport/vehicle-types/${vehicleTypeId}`,
         method: 'PUT',
+        params: { academicMediumId },
         body,
       }),
-      invalidatesTags: [transportType.vehicleTypes],
+      transformResponse: unwrapResult,
+      invalidatesTags: [transportType.vehicleTypes, transportType.vehicleTypeOptions],
     }),
 
     deleteVehicleType: builder.mutation({
-      query: (vehicleTypeId) => ({
-        url: `/vehicle-types/${vehicleTypeId}`,
+      query: ({ vehicleTypeId, academicMediumId }) => ({
+        url: `/transport/vehicle-types/${vehicleTypeId}`,
         method: 'DELETE',
+        params: { academicMediumId },
       }),
-      invalidatesTags: [transportType.vehicleTypes],
+      invalidatesTags: [transportType.vehicleTypes, transportType.vehicleTypeOptions],
     }),
 
-    // Vehicle Document
     getVehicleDocuments: builder.query({
-      query: () => ({
-        url: '/required-vehicle-documents',
+      query: (params?: AcademicMediumQuery | void) => ({
+        url: '/transport/required-vehicle-documents',
         method: 'GET',
+        params: academicParams(params),
       }),
+      transformResponse: unwrapResult,
       providesTags: [transportType.vehicleDocuments],
     }),
 
     addVehicleDocument: builder.mutation({
-      query: (body) => ({
-        url: '/required-vehicle-documents',
+      query: ({ body, academicMediumId }) => ({
+        url: '/transport/required-vehicle-documents',
         method: 'POST',
+        params: { academicMediumId },
         body,
       }),
-      invalidatesTags: [transportType.vehicleDocuments],
+      transformResponse: unwrapResult,
+      invalidatesTags: [transportType.vehicleDocuments, transportType.documentRows],
     }),
 
     updateVehicleDocument: builder.mutation({
-      query: ({ documentId, body }) => ({
-        url: `/required-vehicle-documents/${documentId}`,
+      query: ({ documentId, body, academicMediumId }) => ({
+        url: `/transport/required-vehicle-documents/${documentId}`,
         method: 'PUT',
+        params: { academicMediumId },
         body,
       }),
-      invalidatesTags: [transportType.vehicleDocuments],
+      transformResponse: unwrapResult,
+      invalidatesTags: [transportType.vehicleDocuments, transportType.documentRows],
     }),
 
     deleteVehicleDocument: builder.mutation({
-      query: (documentId) => ({
-        url: `/required-vehicle-documents/${documentId}`,
+      query: ({ documentId, academicMediumId }) => ({
+        url: `/transport/required-vehicle-documents/${documentId}`,
         method: 'DELETE',
+        params: { academicMediumId },
       }),
-      invalidatesTags: [transportType.vehicleDocuments],
+      invalidatesTags: [transportType.vehicleDocuments, transportType.documentRows],
     }),
 
-    // Service Type
     getServiceTypes: builder.query({
-      query: () => ({
-        url: '/servicing-types',
+      query: (params?: AcademicMediumQuery | void) => ({
+        url: '/transport/servicing-types',
         method: 'GET',
+        params: academicParams(params),
       }),
+      transformResponse: unwrapResult,
       providesTags: [transportType.serviceTypes],
     }),
     addServiceType: builder.mutation({
-      query: (body) => ({
-        url: '/servicing-types',
+      query: ({ body, academicMediumId }) => ({
+        url: '/transport/servicing-types',
         method: 'POST',
+        params: { academicMediumId },
         body,
       }),
+      transformResponse: unwrapResult,
       invalidatesTags: [transportType.serviceTypes],
     }),
     updateServiceType: builder.mutation({
-      query: ({ servicingTypeId, body }) => ({
-        url: `/servicing-types/${servicingTypeId}`,
+      query: ({ servicingTypeId, body, academicMediumId }) => ({
+        url: `/transport/servicing-types/${servicingTypeId}`,
         method: 'PUT',
+        params: { academicMediumId },
         body,
       }),
+      transformResponse: unwrapResult,
       invalidatesTags: [transportType.serviceTypes],
     }),
     deleteServiceType: builder.mutation({
-      query: (servicingTypeId) => ({
-        url: `/servicing-types/${servicingTypeId}`,
+      query: ({ servicingTypeId, academicMediumId }) => ({
+        url: `/transport/servicing-types/${servicingTypeId}`,
         method: 'DELETE',
+        params: { academicMediumId },
       }),
       invalidatesTags: [transportType.serviceTypes],
     }),
@@ -113,35 +235,62 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
       providesTags: [transportType.licenceTypes],
     }),
     getFuelTypes: builder.query({
-      query: () => ({
-        url: '/fuelTypes',
-        method: 'GET',
+      query: buildFuelTypeListRequest,
+      transformResponse: unwrapResult,
+      providesTags: [transportType.fuelTypes, transportType.fuelTypeOptions],
+    }),
+    addFuelType: builder.mutation({
+      query: ({ body, academicMediumId }) => ({
+        url: '/transport/fuel-types',
+        method: 'POST',
+        params: { academicMediumId },
+        body,
       }),
-      providesTags: [transportType.fuelTypeOptions],
+      transformResponse: unwrapResult,
+      invalidatesTags: [transportType.fuelTypes, transportType.fuelTypeOptions],
+    }),
+    updateFuelType: builder.mutation({
+      query: ({ fuelTypeId, body, academicMediumId }) => ({
+        url: `/transport/fuel-types/${fuelTypeId}`,
+        method: 'PUT',
+        params: { academicMediumId },
+        body,
+      }),
+      transformResponse: unwrapResult,
+      invalidatesTags: [transportType.fuelTypes, transportType.fuelTypeOptions],
+    }),
+    deleteFuelType: builder.mutation({
+      query: ({ fuelTypeId, academicMediumId }) => ({
+        url: `/transport/fuel-types/${fuelTypeId}`,
+        method: 'DELETE',
+        params: { academicMediumId },
+      }),
+      invalidatesTags: [transportType.fuelTypes, transportType.fuelTypeOptions],
     }),
 
-    // Fee Configuration
     getFeeConfiguration: builder.query({
-      query: () => ({
-        url: '/fee-configuration',
-        method: 'GET',
-      }),
+      query: buildFeeConfigurationRequest,
+      transformResponse: unwrapResult,
       providesTags: [transportType.feeConfiguration],
     }),
     addFeeConfiguration: builder.mutation({
-      query: (body) => ({
-        url: '/fee-configuration',
+      query: ({ academicMediumId, body }) => ({
+        url: '/transport/fee-configuration',
         method: 'POST',
+        params: { academicMediumId },
         body,
       }),
+      transformResponse: unwrapResult,
       invalidatesTags: [transportType.feeConfiguration],
     }),
     updateFeeConfiguration: builder.mutation({
-      query: (body) => ({
-        url: `/fee-configuration`,
+      query: ({ configurationId, academicMediumId, body }) => ({
+        url: `/transport/fee-configuration/${configurationId}`,
         method: 'PUT',
+        params: { academicMediumId },
         body,
       }),
+      transformResponse: unwrapResult,
       invalidatesTags: [transportType.feeConfiguration],
     }),
 
@@ -153,10 +302,8 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
       providesTags: [transportType.distanceCalculationOptions],
     }),
     getFrequencyOptions: builder.query({
-      query: () => ({
-        url: '/frequencyOptions',
-        method: 'GET',
-      }),
+      query: buildFeeFrequencyOptionsRequest,
+      transformResponse: unwrapResult,
       providesTags: [transportType.frequencyOptions],
     }),
     getZoneBasedFeeData: builder.query({
@@ -175,34 +322,89 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
     }),
 
     getZoneAreaOptions: builder.query({
-      query: () => ({
-        url: '/zones-areas',
-        method: 'GET',
-      }),
+      query: buildZoneAreaListRequest,
+      transformResponse: unwrapResult,
       providesTags: [transportType.zoneAreaOptions],
     }),
     addZoneAreaOptions: builder.mutation({
-      query: (body) => ({
-        url: '/zones-areas',
+      query: ({ academicMediumId, body }) => ({
+        url: '/transport/zones-areas',
         method: 'POST',
+        params: { academicMediumId },
         body,
       }),
+      transformResponse: unwrapResult,
       invalidatesTags: [transportType.zoneAreaOptions],
     }),
     updateZoneAreaOptions: builder.mutation({
-      query: ({ zoneAreaId, body }) => ({
-        url: `/zones-areas/${zoneAreaId}`,
+      query: ({ zoneAreaId, academicMediumId, body }) => ({
+        url: `/transport/zones-areas/${zoneAreaId}`,
         method: 'PUT',
+        params: { academicMediumId },
         body,
       }),
+      transformResponse: unwrapResult,
       invalidatesTags: [transportType.zoneAreaOptions],
     }),
     deleteZoneAreaOptions: builder.mutation({
-      query: (zoneAreaId) => ({
-        url: `/zones-areas/${zoneAreaId}`,
+      query: ({ zoneAreaId, academicMediumId }) => ({
+        url: `/transport/zones-areas/${zoneAreaId}`,
         method: 'DELETE',
+        params: { academicMediumId },
       }),
       invalidatesTags: [transportType.zoneAreaOptions],
+    }),
+    previewFeeRun: builder.mutation({
+      query: ({ academicMediumId, body }) => ({
+        url: '/transport/fees/runs/preview',
+        method: 'POST',
+        params: { academicMediumId },
+        body,
+      }),
+      transformResponse: unwrapResult,
+    }),
+    createFeeRun: builder.mutation({
+      query: ({ academicMediumId, body }) => ({
+        url: '/transport/fees/runs',
+        method: 'POST',
+        params: { academicMediumId },
+        body,
+      }),
+      transformResponse: unwrapResult,
+      invalidatesTags: [transportType.feeRuns, transportType.feeDues],
+    }),
+    getFeeRuns: builder.query({
+      query: buildFeeRunListRequest,
+      transformResponse: unwrapResult,
+      providesTags: [transportType.feeRuns],
+    }),
+    getFeeRun: builder.query({
+      query: ({ runId, academicMediumId }) => ({
+        url: `/transport/fees/runs/${runId}`,
+        method: 'GET',
+        params: { academicMediumId },
+      }),
+      transformResponse: unwrapResult,
+      providesTags: [transportType.feeRuns, transportType.feeDues],
+    }),
+    postFeeRunToFinance: builder.mutation({
+      query: ({ runId, academicMediumId }) => ({
+        url: `/transport/fees/runs/${runId}/post-finance`,
+        method: 'POST',
+        params: { academicMediumId },
+      }),
+      transformResponse: unwrapResult,
+      invalidatesTags: [transportType.feeRuns, transportType.feeDues],
+    }),
+    getTransportFeeDues: builder.query({
+      query: buildFeeDuesListRequest,
+      transformResponse: unwrapResult,
+      providesTags: [transportType.feeDues],
+    }),
+    getTransportMemberDues: builder.query({
+      query: buildTransportMemberDuesRequest,
+      transformResponse: unwrapResult,
+      providesTags: [transportType.feeDues],
     }),
   }),
 });
@@ -225,6 +427,9 @@ export const {
   useGetServiceTypesQuery,
   useGetLicenceTypesQuery,
   useGetFuelTypesQuery,
+  useAddFuelTypeMutation,
+  useUpdateFuelTypeMutation,
+  useDeleteFuelTypeMutation,
   useGetDistanceCalculationOptionsQuery,
   useGetFrequencyOptionsQuery,
   useGetZoneBasedFeeDataQuery,
@@ -233,4 +438,11 @@ export const {
   useAddZoneAreaOptionsMutation,
   useUpdateZoneAreaOptionsMutation,
   useDeleteZoneAreaOptionsMutation,
+  usePreviewFeeRunMutation,
+  useCreateFeeRunMutation,
+  useGetFeeRunsQuery,
+  useGetFeeRunQuery,
+  usePostFeeRunToFinanceMutation,
+  useGetTransportFeeDuesQuery,
+  useGetTransportMemberDuesQuery,
 } = vehicleSettingsApi;

@@ -1,6 +1,8 @@
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -8,7 +10,6 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { Tab, Card, Tooltip, IconButton } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import {
   VehicleRouteType,
@@ -25,13 +26,15 @@ import {
   useGetDriverHistoryQuery,
   useGetVehicleDocumentsQuery,
   useGetMaintenanceRecordsQuery,
+  useLazyDownloadVehicleDocumentQuery,
 } from 'src/redux/transport/vehicle-management/vehicle-management-api';
 
 // Tab Components
 const RouteHistory = ({ vehicleId }: { vehicleId: string }) => {
+  const academicMediumId = useSelector((state: RootState) => state.globalState.currentMedium?.id);
   const { data, isLoading } = useGetRouteHistoryQuery(
-    { vehicleId, page: 1, pageSize: 100 },
-    { skip: !vehicleId }
+    { vehicleId, academicMediumId, pageNumber: 1, pageSize: 100 },
+    { skip: !vehicleId || !academicMediumId }
   );
 
   return (
@@ -87,14 +90,15 @@ const RouteHistory = ({ vehicleId }: { vehicleId: string }) => {
           },
         },
       ]}
-      data={data?.items || []}
+      data={data?.data || []}
     />
   );
 };
 const DriverHistory = ({ vehicleId }: { vehicleId: string }) => {
+  const academicMediumId = useSelector((state: RootState) => state.globalState.currentMedium?.id);
   const { data, isLoading } = useGetDriverHistoryQuery(
-    { vehicleId, page: 1, pageSize: 100 },
-    { skip: !vehicleId }
+    { vehicleId, academicMediumId, pageNumber: 1, pageSize: 100 },
+    { skip: !vehicleId || !academicMediumId }
   );
 
   return (
@@ -145,17 +149,23 @@ const DriverHistory = ({ vehicleId }: { vehicleId: string }) => {
           filterType: 'enum',
           enumOptions: DriverStatusTypeOptions,
           render: (value) => {
-            const color = DriverStatusTypeColor[value as VehicleRouteType] as LabelColor;
+            const color = DriverStatusTypeColor[value as DriverStatusType] as LabelColor;
             return <Label color={color}>{DriverStatusType[value]}</Label>;
           },
         },
       ]}
-      data={data?.items || []}
+      data={data?.data || []}
     />
   );
 };
 const DocumentDetailsTable = ({ vehicleId }: { vehicleId: string }) => {
-  const { data, isLoading } = useGetVehicleDocumentsQuery(vehicleId, { skip: !vehicleId });
+  const academicMediumId = useSelector((state: RootState) => state.globalState.currentMedium?.id);
+  const { data, isLoading } = useGetVehicleDocumentsQuery(
+    { vehicleId, academicMediumId },
+    { skip: !vehicleId || !academicMediumId }
+  );
+  const [downloadVehicleDocument, { isFetching: isDownloading }] =
+    useLazyDownloadVehicleDocumentQuery();
 
   return (
     <CustomizableTable
@@ -205,13 +215,22 @@ const DocumentDetailsTable = ({ vehicleId }: { vehicleId: string }) => {
                   display: 'flex',
                 }}
                 disabled={row.status !== 'Uploaded'}
-                onClick={() => {
-                  if (row.file) {
-                    window.open(URL.createObjectURL(row.file), '_blank');
+                onClick={async () => {
+                  if (row.status !== 'Uploaded' || !academicMediumId) {
+                    return;
                   }
+
+                  const blob = await downloadVehicleDocument({
+                    vehicleId,
+                    documentId: row.id,
+                    academicMediumId,
+                  }).unwrap();
+                  const url = URL.createObjectURL(blob);
+                  window.open(url, '_blank');
+                  window.setTimeout(() => URL.revokeObjectURL(url), 10000);
                 }}
               >
-                <Iconify icon="carbon:view-filled" />
+                <Iconify icon={isDownloading ? 'eos-icons:loading' : 'carbon:view-filled'} />
               </IconButton>
             );
           },
@@ -223,11 +242,11 @@ const DocumentDetailsTable = ({ vehicleId }: { vehicleId: string }) => {
 };
 
 const MaintenanceHistoryTable = ({ vehicleId }: { vehicleId: string }) => {
-  const { data, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetMaintenanceRecordsQuery,
-    params: vehicleId,
-  });
+  const academicMediumId = useSelector((state: RootState) => state.globalState.currentMedium?.id);
+  const { data, isLoading } = useGetMaintenanceRecordsQuery(
+    { vehicleId, academicMediumId, pageNumber: 1, pageSize: 100 },
+    { skip: !vehicleId || !academicMediumId }
+  );
 
   return (
     <CustomizableTable
@@ -249,7 +268,7 @@ const MaintenanceHistoryTable = ({ vehicleId }: { vehicleId: string }) => {
           align: 'left',
           minWidth: '180px',
           render(value, row) {
-            return value.join(', ');
+            return Array.isArray(value) ? value.join(', ') : value || '-';
           },
         },
         {
@@ -258,7 +277,7 @@ const MaintenanceHistoryTable = ({ vehicleId }: { vehicleId: string }) => {
           align: 'left',
           minWidth: '120px',
           filterType: 'number',
-          render: (value) => `₹ ${value.toLocaleString()}`,
+          render: (value) => `Rs. ${Number(value || 0).toLocaleString()}`,
         },
         {
           id: 'description',
@@ -274,7 +293,7 @@ const MaintenanceHistoryTable = ({ vehicleId }: { vehicleId: string }) => {
           filterType: 'date',
         },
       ]}
-      data={data?.items || []}
+      data={data?.data || []}
     />
   );
 };

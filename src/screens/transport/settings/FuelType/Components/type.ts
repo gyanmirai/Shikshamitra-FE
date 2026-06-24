@@ -1,5 +1,6 @@
 export interface IFuelType {
   id: string;
+  name?: string;
   typeName: string;
   description?: string;
 }
@@ -12,6 +13,8 @@ export interface IFuelTypeTableProps {
   setEditData: (value: IFuelType | null) => void;
   onDelete: (data: IFuelType) => void;
   onEdit: (data: IFuelType) => void;
+  data?: IFuelType[];
+  isLoading?: boolean;
 }
 
 export interface IFuelTypeFormProps {

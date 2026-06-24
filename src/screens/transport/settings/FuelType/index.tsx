@@ -14,6 +14,10 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import {
+  useGetFuelTypesQuery,
+  useDeleteFuelTypeMutation,
+} from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import FuelTypeForm from './Components/FuelTypeForm';
 import FuelTypeTable from './Components/FuelTypeTable';
@@ -28,11 +32,17 @@ const FuelTypeSettingScreen = () => {
 
   // Global state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const currentMedium = useSelector((state: RootState) => state.globalState.currentMedium);
 
   // State to store currently selected fuel type for edit/delete operations
   const [selectedFuelType, setSelectedFuelType] = useState<IFuelType | null>(null);
 
   const dispatch = useDispatch();
+  const [deleteFuelType, { isLoading: isDeleting }] = useDeleteFuelTypeMutation();
+  const { data: fuelTypeData, isLoading: fuelTypesLoading } = useGetFuelTypesQuery(
+    { academicMediumId: currentMedium?.id },
+    { skip: !currentMedium?.id }
+  );
 
   /**
    * Handles closing of add/edit fuel type dialog
@@ -86,6 +96,8 @@ const FuelTypeSettingScreen = () => {
       />
 
       <FuelTypeTable
+        data={fuelTypeData}
+        isLoading={fuelTypesLoading}
         onDelete={(data) => {
           setSelectedFuelType(data);
           deleteFuelTypeDialog.onTrue();
@@ -149,15 +161,31 @@ const FuelTypeSettingScreen = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
+            disabled={isDeleting}
+            onClick={async () => {
+              if (!selectedFuelType?.id || !currentMedium?.id) {
+                return;
+              }
+
+              try {
+                await deleteFuelType({
+                  fuelTypeId: selectedFuelType.id,
+                  academicMediumId: currentMedium.id,
+                }).unwrap();
+                shikshaMitraToast.success({
+                  message: `Fuel Type: ${selectedFuelType?.name || selectedFuelType?.typeName} deleted successfully`,
+                });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete fuel type',
+                });
+              }
+
               deleteFuelTypeDialog.onFalse();
               setSelectedFuelType(null);
-              shikshaMitraToast.success({
-                message: `Fuel Type: ${selectedFuelType?.typeName} deleted successfully`,
-              });
             }}
           >
-            Yes
+            {isDeleting ? 'Deleting...' : 'Yes'}
           </Button>
         }
       />

@@ -4,6 +4,31 @@ import { RouteType } from 'src/enums/route-type-options';
 
 import type { IRouteData, IRoutesData, IRoutePayload } from '../Components/type';
 
+const getInitialVehicleAssignment = (editData?: IRoutePayload) => {
+  const assignment = editData?.vehicleAssignment;
+  if (!assignment) {
+    return {
+      vehicleId: '',
+      vehicleNo: '',
+      capacity: 0,
+      driverId: '',
+      driverName: '',
+      conductorId: '',
+      conductorName: '',
+    };
+  }
+
+  return {
+    vehicleId: assignment.vehicleId || '',
+    vehicleNo: assignment.vehicleNo || assignment.vehicleRegistrationNo || '',
+    capacity: assignment.capacity || 0,
+    driverId: assignment.driverId || assignment.driverStaffId || '',
+    driverName: assignment.driverName || '',
+    conductorId: assignment.conductorId || assignment.conductorStaffId || '',
+    conductorName: assignment.conductorName || '',
+  };
+};
+
 export const getInitialRouteData = (editData?: IRoutePayload): IRoutePayload => ({
   // General Information
   routeName: editData?.routeName || '',
@@ -34,15 +59,7 @@ export const getInitialRouteData = (editData?: IRoutePayload): IRoutePayload => 
   stops: editData?.stopData || [],
 
   // Vehicle Assignments
-  vehicleAssignment: editData?.vehicleAssignment || {
-    vehicleId: '',
-    vehicleNo: '',
-    capacity: 0,
-    driverId: '',
-    driverName: '',
-    conductorId: '',
-    conductorName: '',
-  },
+  vehicleAssignment: getInitialVehicleAssignment(editData),
 });
 
 // New function for stop status change form

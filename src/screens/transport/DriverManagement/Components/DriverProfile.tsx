@@ -1,4 +1,7 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
@@ -79,12 +82,14 @@ const InfoRow = ({
 
 const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) => {
   const theme = useTheme();
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
   // Fetch detailed staff profile if staffId is available
   const { data: staffProfile, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDriverConductorByIdQuery,
-    params: driverData?.staffId || driverData?.id,
+    params: { staffId: driverData?.staffId || driverData?.id, academicMediumId: currentMedium?.id },
+    options: { skip: !driverData?.id || !currentMedium?.id },
   });
 
   // Use fetched profile data if available, otherwise use prop data
@@ -100,15 +105,28 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
   }
 
   // Calculate days until license expiry
-  const calculateDaysUntilExpiry = (expiryDate: string) => {
+  const calculateDaysUntilExpiry = (expiryDate?: string) => {
+    if (!expiryDate) return Number.POSITIVE_INFINITY;
     const today = new Date();
     const expiry = new Date(expiryDate);
+    if (Number.isNaN(expiry.getTime())) return Number.POSITIVE_INFINITY;
     const diffTime = expiry.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
 
-  const daysUntilExpiry = calculateDaysUntilExpiry(profileData.licenceExpiry);
+  const licenceExpiry =
+    profileData.licenceExpiry || profileData.licenceExpiryDate || profileData.licenseExpiryDate;
+  const licenseNo = profileData.licenceNo || profileData.licenseNo || '-';
+  const status =
+    typeof profileData.status === 'number'
+      ? profileData.status === 1
+        ? 'On Leave'
+        : profileData.status === 2
+          ? 'Inactive'
+          : 'Active'
+      : profileData.status || profileData.statusName || 'Active';
+  const daysUntilExpiry = calculateDaysUntilExpiry(licenceExpiry);
   const isLicenseExpired = daysUntilExpiry < 0;
   const isLicenseExpiringSoon = daysUntilExpiry <= 30 && daysUntilExpiry >= 0;
 
@@ -157,15 +175,9 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
             </Typography>
             <Label
               variant="soft"
-              color={
-                profileData.status === 'Active'
-                  ? 'success'
-                  : profileData.status === 'On Leave'
-                    ? 'error'
-                    : 'default'
-              }
+              color={status === 'Active' ? 'success' : status === 'On Leave' ? 'error' : 'default'}
             >
-              {profileData.status}
+              {status}
             </Label>
           </Stack>
 
@@ -291,13 +303,13 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
               <InfoRow
                 icon="mdi:email"
                 label="Email Address"
-                value="dharmikjinjala2468@gmail.com"
+                value={profileData.email || ''}
                 color="success"
               />
               <InfoRow
                 icon="mdi:map-marker"
                 label="Residence"
-                value="C-203 Drashti Residency Devadgaon"
+                value={profileData.address || ''}
                 color="success"
               />
             </CardContent>
@@ -328,7 +340,7 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
                       License No.
                     </Typography>
                     <Typography variant="subtitle1" fontWeight={600}>
-                      DL123456789
+                      {licenseNo}
                     </Typography>
                   </Box>
                 </Grid>
@@ -342,7 +354,7 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
                       fontWeight={600}
                       sx={{ color: isLicenseExpiringSoon ? 'error.main' : 'inherit' }}
                     >
-                      {profileData.licenceExpiry}
+                      {licenceExpiry || '-'}
                     </Typography>
                   </Box>
                 </Grid>

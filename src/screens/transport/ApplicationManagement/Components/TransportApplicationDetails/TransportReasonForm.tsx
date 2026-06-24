@@ -5,7 +5,6 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
@@ -26,14 +25,6 @@ const TransportReasonForm: React.FC<ITransportReasonFormProps> = ({ mode, onClos
           : Yup.string(),
     }),
     onSubmit: (values) => {
-      shikshaMitraToast.success({
-        message:
-          mode === 'Reject'
-            ? 'Application rejected successfully'
-            : mode === 'Hold'
-              ? 'Application put on hold'
-              : 'Application approved successfully',
-      });
       onClose(null, true, values.reason);
     },
   });

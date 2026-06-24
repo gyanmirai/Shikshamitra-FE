@@ -3,16 +3,16 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import DriverConductorForm from './Components/AssignRouteForm';
+import DriverConductorForm from './Components/DriverConductorForm';
 import DriverConductorTable from './Components/DriverManagementTable';
 
 import type { IDriverConductor } from './Components/type';
@@ -69,12 +69,22 @@ const DriverManagementScreen = () => {
         ]}
       />
 
+      <Box display="flex" justifyContent="flex-end" mb={2}>
+        <Button
+          variant="contained"
+          startIcon={<Iconify icon="mingcute:add-line" />}
+          onClick={addDriverDialog.onTrue}
+        >
+          Add Staff
+        </Button>
+      </Box>
+
       <DriverConductorTable
         open={open}
         onAddDriverConductor={addDriverDialog}
         setOpenDialog={setOpen}
         setEditData={setSelectedDriverConductor}
-        editData={null}
+        editData={selectedDriverConductor}
       />
 
       <CustomDialog
@@ -108,7 +118,7 @@ const DriverManagementScreen = () => {
         <DriverConductorForm
           onClose={handleClose}
           editData={selectedDriverConductor}
-          driverData={null}
+          open={addDriverDialog.value}
         />
       </CustomDialog>
     </Box>

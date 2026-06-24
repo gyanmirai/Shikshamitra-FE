@@ -4,6 +4,8 @@ export const getTransportApplicationInitialValues = (
   selectedApplication: ITransportApplicationPayload | null,
   routeData: any
 ) => {
+  const application = routeData || selectedApplication;
+
   if (!selectedApplication)
     return {
       studentDetails: {
@@ -43,15 +45,15 @@ export const getTransportApplicationInitialValues = (
       landmark: selectedApplication.landmark || '',
       isExistingStop: selectedApplication.isStopExist || false,
     },
-    selectedRoute: routeData?.[0] && {
-      routeId: routeData[0].routeId || '',
-      routeName: routeData[0].routeName || '',
-      startPoint: routeData[0].startPoint || '',
-      endPoint: routeData[0].endPoint || '',
-      capacity: routeData[0].capacity || '',
-      status: routeData[0].status || '',
+    selectedRoute: application?.assignedRouteId && {
+      routeId: application.assignedRouteId || '',
+      routeName: application.assignedRouteName || '',
+      startPoint: '',
+      endPoint: '',
+      capacity: '',
+      status: '',
     },
-    stops: routeData?.[0].stops || [],
+    stops: [],
     status: selectedApplication.status || '',
   };
 };

@@ -2,7 +2,6 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
@@ -24,16 +23,18 @@ import type { IRoutesData, IStopStatusChange } from './type';
 interface IRouteTableProps {
   setOpenDialog?: (value: boolean) => void;
   setEditData?: (value: any) => void;
-  onViewDetail?: (data: any) => void;
 }
 
-const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, onViewDetail }) => {
+const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData }) => {
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
   const { data: routeDta, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRoutesQuery,
+    params: { academicMediumId: currentMedium?.id, pageNumber: 1, pageSize: 100 },
+    options: { skip: !currentMedium?.id },
   });
 
   const changeStatusDialog = useBoolean();
@@ -70,15 +71,6 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
           >
             <Iconify icon="solar:refresh-bold" sx={{ height: '16px', width: '16px' }} />
             Change Status
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              pop.onClose();
-              setSelectedRoute(routeRow);
-            }}
-          >
-            <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
-            Visualize Route
           </MenuItem>
         </MenuList>
       );
@@ -170,12 +162,8 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
               return (
                 <ThreeDotsActions
                   actions={(prop) => actions({ ...prop, row })}
-                  showViewIcon
                   showEditIcon
                   showDeleteIcon={false}
-                  handleViewClick={() => {
-                    onViewDetail?.(row);
-                  }}
                   handleEditClick={() => {
                     setOpenDialog?.(true);
                     setEditData?.(row);
