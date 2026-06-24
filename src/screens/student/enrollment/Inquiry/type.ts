@@ -311,4 +311,8 @@ export interface IInquiryData {
   lastClassPassed: string;
   studentId?: string;
   isFeeStructureAssigned?: boolean;
+  status?: number | string;
+  operationalStatus?: number | null;
+  entranceExamStatus?: number | null;
+  entranceExamStatusDisplay?: string | null;
 }

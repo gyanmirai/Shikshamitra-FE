@@ -3,6 +3,7 @@ import path from 'node:path';
 import { it, expect, describe } from 'vitest';
 
 import { parseStudentDashboardPayload } from '.';
+import { normalizeStudentRecordListResponse } from './student-group/student-group';
 import {
   hasRollNumberValidationErrors,
   buildRollNumberValidationErrors,
@@ -32,6 +33,31 @@ describe('student production API wiring', () => {
     expect(source).toContain("queryParams.set('skipCount'");
     expect(source).toContain("queryParams.set('maxResultCount'");
     expect(source).toContain("queryParams.set('searchTerm'");
+  });
+
+  it('normalizes house assignment student records while preserving response metadata', () => {
+    const normalized = normalizeStudentRecordListResponse({
+      success: true,
+      data: {
+        totalCount: 2,
+        currentPage: 1,
+        pageSize: 10,
+        totalPages: 1,
+        arrangementType: 1,
+        arrangementBy: 2,
+        items: [{ id: 'first' }, { id: 'second' }],
+      },
+    });
+
+    expect(normalized.data).toEqual([{ id: 'first' }, { id: 'second' }]);
+    expect(normalized.meta).toEqual({
+      totalCount: 2,
+      currentPage: 1,
+      pageSize: 10,
+      totalPages: 1,
+      arrangementType: 1,
+      arrangementBy: 2,
+    });
   });
 
   it('uses upload and dashboard endpoints owned by student records', () => {
