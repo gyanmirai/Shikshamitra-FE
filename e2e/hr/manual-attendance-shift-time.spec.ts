@@ -1,5 +1,26 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page, type Route } from '@playwright/test';
+
+const academicYear = {
+  id: 'year-manual-attendance-e2e',
+  name: '2026-27',
+  startDate: '2026-06-01T00:00:00Z',
+  endDate: '2027-05-31T23:59:59Z',
+};
+
+const authEmployee = {
+  id: 'employee-manual-attendance-auth',
+  fullName: 'Manual Attendance HR User',
+  employeeCode: 'EMP-MA-AUTH',
+  status: 0,
+  employeeStatusType: 0,
+};
+
+const grantedPermissions = [
+  'ShikshaMitra.Module.HR',
+  'ShikshaMitra.Module.HR.AttendanceManagement',
+  'HR.AttendanceAndLeave.MarkAttendance',
+];
 
 const dayResponse = {
   totalCount: 3,
@@ -126,7 +147,94 @@ const approvedLeaveDayResponse = {
   ],
 };
 
+async function fulfillJson(route: Route, json: unknown, status = 200) {
+  await route.fulfill({
+    status,
+    contentType: 'application/json',
+    body: JSON.stringify(json),
+  });
+}
+
+async function seedAuthenticatedHrState(page: Page) {
+  await page.addInitScript(
+    ({ year, employee, permissions }) => {
+      window.localStorage.setItem(
+        'persist:root',
+        JSON.stringify({
+          globalState: JSON.stringify({
+            currentYear: year,
+            currentBoard: {},
+            currentMedium: {},
+          }),
+          auth: JSON.stringify({
+            user: {
+              sub: 'manual-attendance-user-e2e',
+              name: 'Manual Attendance HR User',
+              role: 'hr-manager',
+            },
+            isAuthenticated: true,
+            loading: false,
+            permissionsInitialized: true,
+            employee,
+            permissions,
+            mainModuleVisibility: [false, false, false, false, true],
+          }),
+          _persist: JSON.stringify({ version: -1, rehydrated: true }),
+        })
+      );
+      window.localStorage.setItem('onboarding_completed', 'true');
+    },
+    {
+      year: academicYear,
+      employee: authEmployee,
+      permissions: grantedPermissions.map((name) => ({ name, isGranted: true })),
+    }
+  );
+}
+
+async function installAuthRoutes(page: Page) {
+  await page.route('**/api/auth/session**', (route) =>
+    fulfillJson(route, {
+      accessToken: 'manual-attendance-token-e2e',
+      expires: '2099-01-01T00:00:00.000Z',
+      profile: {
+        sub: 'manual-attendance-user-e2e',
+        name: 'Manual Attendance HR User',
+        role: 'hr-manager',
+      },
+    })
+  );
+  await page.route('**/api/employees/me**', (route) => fulfillJson(route, authEmployee));
+  await page.route('**/api/app/academic-year?**', (route) =>
+    fulfillJson(route, { items: [academicYear], totalCount: 1 })
+  );
+  await page.route('**/api/app/education-board**', (route) =>
+    fulfillJson(route, { items: [], totalCount: 0 })
+  );
+  await page.route('**/api/app/academic-organization-options**', (route) =>
+    fulfillJson(route, { items: [], totalCount: 0 })
+  );
+  await page.route('**/api/app/user-scope/user-scope-hierarchy**', (route) =>
+    fulfillJson(route, { isAdmin: true, accessibleHierarchy: [] })
+  );
+  await page.route('**/permission-management/permissions?**', (route) =>
+    fulfillJson(route, {
+      groups: [
+        {
+          name: 'HR E2E',
+          permissions: grantedPermissions.map((name) => ({ name, isGranted: true })),
+        },
+      ],
+    })
+  );
+}
+
 test.describe('HR manual attendance shift time automation', () => {
+  test.beforeEach(async ({ page }) => {
+    await seedAuthenticatedHrState(page);
+    await installAuthRoutes(page);
+  });
+
   test('fills shift-derived times when marking manual attendance before save', async ({ page }) => {
     let savedPayload: any = null;
 
@@ -258,8 +366,7 @@ test.describe('HR manual attendance shift time automation', () => {
       page.getByTestId('manual-attendance-employee-approved-leave-absent')
     ).toBeDisabled();
 
-    await page.getByRole('button', { name: /^Save$/i }).click();
-    await expect(page.getByText('No attendance changes to save.')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Save$/i })).toBeDisabled();
     expect(saveCalled).toBe(false);
   });
 

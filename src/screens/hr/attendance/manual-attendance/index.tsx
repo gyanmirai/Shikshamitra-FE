@@ -65,6 +65,11 @@ const segmentBtnBase = {
   transition: 'all 0.2s',
 };
 
+const segmentTooltipChildSx = {
+  flex: 1,
+  display: 'flex',
+};
+
 const toAttendanceDateParam = (value: Dayjs | null) => (value ? value.format('YYYY-MM-DD') : '');
 
 const ManualAttendanceScreen = () => {
@@ -1082,141 +1087,149 @@ const ManualAttendanceScreen = () => {
                   >
                     {/* Present */}
                     <CustomTooltip title="Present" arrow placement="top">
-                      <Box
-                        component="button"
-                        type="button"
-                        disabled={rowControlsDisabled}
-                        aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Present`}
-                        data-testid={`manual-attendance-${row.id}-present`}
-                        onClick={() => setRowStatus(row.id, STATUS.Present)}
-                        sx={{
-                          ...segmentBtnBase,
-                          cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
-                          opacity: rowControlsDisabled ? 0.5 : 1,
-                          border: 0,
-                          font: 'inherit',
-                          bgcolor:
-                            value === STATUS.Present
-                              ? (t) => t.vars.palette.success.main
-                              : 'transparent',
-                          color:
-                            value === STATUS.Present
-                              ? (t) => t.vars.palette.success.contrastText
-                              : (t) => t.vars.palette.text.secondary,
-                          '&:hover': {
+                      <Box component="span" sx={segmentTooltipChildSx}>
+                        <Box
+                          component="button"
+                          type="button"
+                          disabled={rowControlsDisabled}
+                          aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Present`}
+                          data-testid={`manual-attendance-${row.id}-present`}
+                          onClick={() => setRowStatus(row.id, STATUS.Present)}
+                          sx={{
+                            ...segmentBtnBase,
+                            cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
+                            opacity: rowControlsDisabled ? 0.5 : 1,
+                            border: 0,
+                            font: 'inherit',
                             bgcolor:
                               value === STATUS.Present
-                                ? (t) => t.vars.palette.success.dark
-                                : (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08),
-                          },
-                        }}
-                      >
-                        <Iconify icon="eva:checkmark-fill" width={18} />
+                                ? (t) => t.vars.palette.success.main
+                                : 'transparent',
+                            color:
+                              value === STATUS.Present
+                                ? (t) => t.vars.palette.success.contrastText
+                                : (t) => t.vars.palette.text.secondary,
+                            '&:hover': {
+                              bgcolor:
+                                value === STATUS.Present
+                                  ? (t) => t.vars.palette.success.dark
+                                  : (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08),
+                            },
+                          }}
+                        >
+                          <Iconify icon="eva:checkmark-fill" width={18} />
+                        </Box>
                       </Box>
                     </CustomTooltip>
 
                     {/* Half Day */}
                     <CustomTooltip title="Half Day" arrow placement="top">
-                      <Box
-                        component="button"
-                        type="button"
-                        disabled={rowControlsDisabled}
-                        aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Half Day`}
-                        data-testid={`manual-attendance-${row.id}-half-day`}
-                        onClick={() => setRowStatus(row.id, STATUS.HalfDay)}
-                        sx={{
-                          ...segmentBtnBase,
-                          cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
-                          opacity: rowControlsDisabled ? 0.5 : 1,
-                          border: 0,
-                          font: 'inherit',
-                          bgcolor:
-                            value === STATUS.HalfDay
-                              ? (t) => t.vars.palette.info.main
-                              : 'transparent',
-                          color:
-                            value === STATUS.HalfDay
-                              ? (t) => t.vars.palette.info.contrastText
-                              : (t) => t.vars.palette.text.secondary,
-                          '&:hover': {
+                      <Box component="span" sx={segmentTooltipChildSx}>
+                        <Box
+                          component="button"
+                          type="button"
+                          disabled={rowControlsDisabled}
+                          aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Half Day`}
+                          data-testid={`manual-attendance-${row.id}-half-day`}
+                          onClick={() => setRowStatus(row.id, STATUS.HalfDay)}
+                          sx={{
+                            ...segmentBtnBase,
+                            cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
+                            opacity: rowControlsDisabled ? 0.5 : 1,
+                            border: 0,
+                            font: 'inherit',
                             bgcolor:
                               value === STATUS.HalfDay
-                                ? (t) => t.vars.palette.info.dark
-                                : (t) => varAlpha(t.vars.palette.info.mainChannel, 0.08),
-                          },
-                        }}
-                      >
-                        <Iconify icon="mdi:fraction-one-half" width={18} />
+                                ? (t) => t.vars.palette.info.main
+                                : 'transparent',
+                            color:
+                              value === STATUS.HalfDay
+                                ? (t) => t.vars.palette.info.contrastText
+                                : (t) => t.vars.palette.text.secondary,
+                            '&:hover': {
+                              bgcolor:
+                                value === STATUS.HalfDay
+                                  ? (t) => t.vars.palette.info.dark
+                                  : (t) => varAlpha(t.vars.palette.info.mainChannel, 0.08),
+                            },
+                          }}
+                        >
+                          <Iconify icon="mdi:fraction-one-half" width={18} />
+                        </Box>
                       </Box>
                     </CustomTooltip>
 
                     {/* Pending */}
                     <CustomTooltip title="Pending" arrow placement="top">
-                      <Box
-                        component="button"
-                        type="button"
-                        disabled={rowControlsDisabled}
-                        aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Pending`}
-                        data-testid={`manual-attendance-${row.id}-pending`}
-                        onClick={() => setRowStatus(row.id, STATUS.Pending)}
-                        sx={{
-                          ...segmentBtnBase,
-                          cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
-                          opacity: rowControlsDisabled ? 0.5 : 1,
-                          border: 0,
-                          font: 'inherit',
-                          bgcolor:
-                            value === STATUS.Pending
-                              ? (t) => t.vars.palette.warning.main
-                              : 'transparent',
-                          color:
-                            value === STATUS.Pending
-                              ? (t) => t.vars.palette.warning.contrastText
-                              : (t) => t.vars.palette.text.secondary,
-                          '&:hover': {
+                      <Box component="span" sx={segmentTooltipChildSx}>
+                        <Box
+                          component="button"
+                          type="button"
+                          disabled={rowControlsDisabled}
+                          aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Pending`}
+                          data-testid={`manual-attendance-${row.id}-pending`}
+                          onClick={() => setRowStatus(row.id, STATUS.Pending)}
+                          sx={{
+                            ...segmentBtnBase,
+                            cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
+                            opacity: rowControlsDisabled ? 0.5 : 1,
+                            border: 0,
+                            font: 'inherit',
                             bgcolor:
                               value === STATUS.Pending
-                                ? (t) => t.vars.palette.warning.dark
-                                : (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.08),
-                          },
-                        }}
-                      >
-                        <Iconify icon="eva:minus-fill" width={18} />
+                                ? (t) => t.vars.palette.warning.main
+                                : 'transparent',
+                            color:
+                              value === STATUS.Pending
+                                ? (t) => t.vars.palette.warning.contrastText
+                                : (t) => t.vars.palette.text.secondary,
+                            '&:hover': {
+                              bgcolor:
+                                value === STATUS.Pending
+                                  ? (t) => t.vars.palette.warning.dark
+                                  : (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.08),
+                            },
+                          }}
+                        >
+                          <Iconify icon="eva:minus-fill" width={18} />
+                        </Box>
                       </Box>
                     </CustomTooltip>
 
                     {/* Absent */}
                     <CustomTooltip title="Absent" arrow placement="top">
-                      <Box
-                        component="button"
-                        type="button"
-                        disabled={rowControlsDisabled}
-                        aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Absent`}
-                        data-testid={`manual-attendance-${row.id}-absent`}
-                        onClick={() => setRowStatus(row.id, STATUS.Absent)}
-                        sx={{
-                          ...segmentBtnBase,
-                          cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
-                          opacity: rowControlsDisabled ? 0.5 : 1,
-                          border: 0,
-                          font: 'inherit',
-                          bgcolor:
-                            value === STATUS.Absent
-                              ? (t) => t.vars.palette.error.main
-                              : 'transparent',
-                          color:
-                            value === STATUS.Absent
-                              ? (t) => t.vars.palette.error.contrastText
-                              : (t) => t.vars.palette.text.secondary,
-                          '&:hover': {
+                      <Box component="span" sx={segmentTooltipChildSx}>
+                        <Box
+                          component="button"
+                          type="button"
+                          disabled={rowControlsDisabled}
+                          aria-label={`Mark ${row.employeeCode || row.fullName || row.id} Absent`}
+                          data-testid={`manual-attendance-${row.id}-absent`}
+                          onClick={() => setRowStatus(row.id, STATUS.Absent)}
+                          sx={{
+                            ...segmentBtnBase,
+                            cursor: rowControlsDisabled ? 'not-allowed' : 'pointer',
+                            opacity: rowControlsDisabled ? 0.5 : 1,
+                            border: 0,
+                            font: 'inherit',
                             bgcolor:
                               value === STATUS.Absent
-                                ? (t) => t.vars.palette.error.dark
-                                : (t) => varAlpha(t.vars.palette.error.mainChannel, 0.08),
-                          },
-                        }}
-                      >
-                        <Iconify icon="eva:close-fill" width={18} />
+                                ? (t) => t.vars.palette.error.main
+                                : 'transparent',
+                            color:
+                              value === STATUS.Absent
+                                ? (t) => t.vars.palette.error.contrastText
+                                : (t) => t.vars.palette.text.secondary,
+                            '&:hover': {
+                              bgcolor:
+                                value === STATUS.Absent
+                                  ? (t) => t.vars.palette.error.dark
+                                  : (t) => varAlpha(t.vars.palette.error.mainChannel, 0.08),
+                            },
+                          }}
+                        >
+                          <Iconify icon="eva:close-fill" width={18} />
+                        </Box>
                       </Box>
                     </CustomTooltip>
                   </Box>
