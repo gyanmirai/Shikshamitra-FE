@@ -319,6 +319,15 @@ const validateFinalizeStep1Values = async (
   }
 };
 
+const markFinalizeStep1Touched = () =>
+  (Object.keys(finalizeStep1Schema.fields) as (keyof FinalizeFormState)[]).reduce(
+    (acc, key) => ({ ...acc, [key]: true }),
+    {} as Partial<Record<keyof FinalizeFormState, boolean>>
+  );
+
+const hasFinalizeStep1Errors = (errors: FormikErrors<FinalizeFormState>) =>
+  Object.keys(errors).length > 0;
+
 const showInviteEmailDeliveryToast = (
   emailDeliverySucceeded: boolean,
   successMessage: string,
@@ -1250,33 +1259,11 @@ function FinalizeDialog({
     }
 
     if (step === 1) {
-      // Mark all step-1 fields as touched so Yup errors appear
-      const allFields = Object.keys(finalizeStep1Schema.fields) as (keyof FinalizeFormState)[];
-      const touchedAll = allFields.reduce((acc, k) => ({ ...acc, [k]: true }), {});
-      formik.setTouched(touchedAll as any);
+      // Mark all employee fields as touched so Yup errors appear.
+      formik.setTouched(markFinalizeStep1Touched() as any);
       const errors = await validateFinalizeStep1Values(formik.values);
       formik.setErrors(errors);
-      // Only check fields relevant to step 1 (ignore academicPermissionStageIds etc.)
-      const step1Fields = [
-        'firstName',
-        'lastName',
-        'email',
-        'mobileNo',
-        'adharNo',
-        'panNo',
-        'doj',
-        'roleId',
-        'shiftId',
-        'address1',
-        'address2',
-        'countryName',
-        'stateName',
-        'city',
-        'religion',
-        'familyCaste',
-      ];
-      const hasErrors = step1Fields.some((f) => !!errors[f as keyof typeof errors]);
-      if (hasErrors) return;
+      if (hasFinalizeStep1Errors(errors)) return;
     }
     if (step === 2 && !isStep2Valid) {
       setAcademicTouched(true);
@@ -1327,8 +1314,20 @@ function FinalizeDialog({
 
   const handleFinalize = async () => {
     try {
+      const employeeErrors = await validateFinalizeStep1Values(formik.values);
+      formik.setErrors(employeeErrors);
+      if (hasFinalizeStep1Errors(employeeErrors)) {
+        formik.setTouched(markFinalizeStep1Touched() as any);
+        setStep(1);
+        shikshaMitraToast.warning({
+          message: 'Please fix employee field validation errors before finalizing onboarding.',
+        });
+        return;
+      }
+
       if (!currentYear?.id || !academicPermissionScopeRows.isValid) {
         setAcademicTouched(true);
+        setStep(2);
         shikshaMitraToast.warning({
           message:
             'Academic Permission could not be saved. Please wait for organization data to load and try again.',
