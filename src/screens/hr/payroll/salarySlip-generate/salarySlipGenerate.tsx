@@ -38,6 +38,7 @@ import {
 } from 'src/redux/runPayroll/runPayrollApi';
 
 import PaySlipPrintView from './payslip-print-view';
+import { hasMoreEmployeeSearchPages } from './salary-slip-employee-search';
 import { usePayslipActions, isOfficialPayslipStatus } from './use-payslip-actions';
 
 // ---------------------------------------------------------------------------
@@ -173,13 +174,12 @@ const PaySlipGenerationScreen = () => {
                 label="Select Employee"
                 fetchOptions={async (query, page) => {
                   const res = await getEmployees({ page, pageSize: 10, search: query }).unwrap();
-                  const hasMore = res.currentPage !== res.totalPages;
                   return {
                     data: res?.items?.map((item: any) => ({
                       label: item.fullName,
                       id: item.id,
                     })),
-                    hasMore,
+                    hasMore: hasMoreEmployeeSearchPages(res),
                   };
                 }}
                 value={employee}
