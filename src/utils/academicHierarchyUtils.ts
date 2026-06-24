@@ -391,7 +391,7 @@ export const expandAccessibleHierarchy = (
     });
   });
 
-  // De-duplicate (defensive — overlapping branches shouldn't normally occur).
+  // De-duplicate; overlapping branches should not normally occur.
   return dedupeAccessSelection(out);
 };
 

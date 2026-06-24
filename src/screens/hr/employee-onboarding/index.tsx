@@ -2655,7 +2655,7 @@ function FinalizeDialog({
                                             {option.mediumName && (
                                               <Typography variant="caption" color="text.secondary">
                                                 {option.mediumName}
-                                                {option.boardName ? ` · ${option.boardName}` : ''}
+                                                {option.boardName ? ` / ${option.boardName}` : ''}
                                               </Typography>
                                             )}
                                           </Box>

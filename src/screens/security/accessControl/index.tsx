@@ -139,7 +139,7 @@ export const AccessControlForm = ({
   });
   const activeAccessControl = currentAccessControl ?? (!isFetching ? accessControl : undefined);
 
-  // Full boards tree for the current academic year — needed to expand the
+  // Full boards tree for the current academic year; needed to expand the
   // BE response when it compresses branches via `hasFull*Access` flags.
   const {
     data: boardsData,
@@ -491,7 +491,7 @@ export const BoardScreenStep = ({
   });
 
   // Filter boards for current academic year. Memoized so `nodeData` keeps a
-  // stable reference between renders — this is what lets RenderNode's React.memo
+  // stable reference between renders; this is what lets RenderNode's React.memo
   // actually skip re-renders for unchanged nodes.
   const allBoards = useMemo(
     () => boards?.items?.filter((board: Board) => board.academicYearId === currentYear?.id),
@@ -598,7 +598,7 @@ export const BoardScreenStep = ({
         const ids = subtree[key];
         if (!ids.length) return;
         if (fully) {
-          // Uncheck the whole subtree (Set lookup → O(M))
+          // Uncheck the whole subtree with Set lookup in O(M).
           const removeSet = new Set(ids);
           updated[key] = updated[key].filter((x) => !removeSet.has(x));
         } else {
