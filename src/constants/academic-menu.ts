@@ -20,6 +20,7 @@ export const academicPaths = {
     root: '',
     subjectsAssignment: '/academic/curriculumSubjects',
     chaptersManagement: '/academic/courseSubjects',
+    lessonPlan: '/academic/lesson-plan',
     resources: '/academic/learningResources',
     reports: '/academic/curriculumReports',
     settings: {
@@ -108,6 +109,7 @@ export const academicPermissions = {
     root: `${defaultModulePermissionName}${defaultAcademicPermissionName}Curriculum`,
     subjectsAssignment: `${defaultAcademicPermissionName}CurriculumManagement.SubjectAssignment`,
     chaptersManagement: `${defaultAcademicPermissionName}CurriculumManagement.ChapterManagement`,
+    lessonPlan: `${defaultAcademicPermissionName}CurriculumManagement.ChapterManagement`,
     resources: `${defaultAcademicPermissionName}CurriculumManagement.Resources`,
     reports: `${defaultAcademicPermissionName}CurriculumManagement.Reports`,
     settings: {
@@ -241,6 +243,15 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+A+S+1',
               permissionName: academicPermissions.curriculum.chaptersManagement,
               icon: menuIconView('mdi:bookmark-multiple-outline'),
+            },
+            {
+              title: 'Lesson Plan / Teacher Diary',
+              path: academicPaths.curriculum.lessonPlan,
+              _action: 'course-management-lesson-plan',
+              shortcutKey: 'Alt+A+C+L',
+              shortcutKeyName: 'Alt+A+C+L',
+              permissionName: academicPermissions.curriculum.lessonPlan,
+              icon: menuIconView('mdi:notebook-edit-outline'),
             },
             // {
             //   title: 'Resources',
