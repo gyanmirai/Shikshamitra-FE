@@ -31,6 +31,8 @@ export const academicPaths = {
   timetable: {
     root: '',
     management: '/academic/newTimetable',
+    roomAvailability: '/academic/roomAvailability',
+    substitutionManagement: '/academic/substitutionManagement',
     reports: '/academic/timetableReports',
     settings: {
       root: '',
@@ -117,6 +119,8 @@ export const academicPermissions = {
   timetable: {
     root: `${defaultModulePermissionName}${defaultAcademicPermissionName}Timetable`,
     management: `${defaultAcademicPermissionName}Timetable.TimetableManagement`,
+    roomAvailability: `${defaultAcademicPermissionName}Timetable.TimetableManagement`,
+    substitutionManagement: `${defaultAcademicPermissionName}Timetable.TimetableManagement`,
     reports: `${defaultAcademicPermissionName}Timetable.Reports`,
     settings: {
       root: `${defaultModulePermissionName}${defaultAcademicPermissionName}Timetable.Settings`,
@@ -312,6 +316,24 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+A+T+2',
               permissionName: academicPermissions.timetable.management,
               icon: menuIconView('mdi:calendar-edit-outline'),
+            },
+            {
+              title: 'Room Availability',
+              path: academicPaths.timetable.roomAvailability,
+              _action: 'timetable-room-availability',
+              shortcutKey: 'Alt+A+T+R',
+              shortcutKeyName: 'Alt+A+T+R',
+              permissionName: academicPermissions.timetable.roomAvailability,
+              icon: menuIconView('mdi:door-open'),
+            },
+            {
+              title: 'Substitution Management',
+              path: academicPaths.timetable.substitutionManagement,
+              _action: 'timetable-substitution-management',
+              shortcutKey: 'Alt+A+T+S',
+              shortcutKeyName: 'Alt+A+T+S',
+              permissionName: academicPermissions.timetable.substitutionManagement,
+              icon: menuIconView('mdi:account-switch-outline'),
             },
             {
               title: 'Reports',
