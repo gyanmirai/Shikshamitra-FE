@@ -1,3 +1,15 @@
+// ===== Academic Calendar API (reducerPath: academicApi) =====
+export const academicCalendarType = {
+  calendar: 'AcademicCalendar',
+  calendarDay: 'AcademicCalendarDay',
+  workingHour: 'AcademicCalendarWorkingHour',
+  checkDate: 'AcademicCalendarCheckDate',
+  impactLog: 'AcademicCalendarImpactLog',
+  auditLog: 'AcademicCalendarAuditLog',
+  settings: 'AcademicCalendarSettings',
+  emergencyClosure: 'AcademicCalendarEmergencyClosure',
+} as const;
+
 // ===== Academic API (reducerPath: academicApi) =====
 export const academicType = {
   subject: 'Subject',
@@ -610,6 +622,7 @@ export const yearType = {
 } as const;
 
 export const allTagTypes = {
+  ...academicCalendarType,
   ...academicType,
   ...quizManagementType,
   ...homeworkType,
