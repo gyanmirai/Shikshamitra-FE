@@ -65,6 +65,8 @@ export interface IChapterTableProps {
   actions: (params: { popover: any; row: IChapter }) => React.JSX.Element;
   handleEyeClick: (subjectName: string) => void;
   onViewDocuments: (chapter: IChapter) => void;
+  onCreateQuestion?: (chapter: IChapter) => void;
+  onViewQuestions?: (chapter: IChapter) => void;
   subjectId?: string;
   standardId?: string;
   canAdd?: boolean;

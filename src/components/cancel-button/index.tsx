@@ -10,7 +10,7 @@ const CancelButton: React.FC<CancelButtonProps> = ({
   buttonText = 'Cancel',
   startIcon = <Iconify icon="basil:cross-solid" />,
 }) => (
-  <Button size="small" onClick={onClick} variant="outlined" startIcon={startIcon}>
+  <Button type="button" size="small" onClick={onClick} variant="outlined" startIcon={startIcon}>
     {buttonText}
   </Button>
 );

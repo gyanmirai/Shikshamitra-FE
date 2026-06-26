@@ -29,6 +29,8 @@ export const academicType = {
   academicReport: 'AcademicReport',
   academicReportExport: 'AcademicReportExport',
   examResult: 'ExamResult',
+  questionBank: 'QuestionBank',
+  questionPaper: 'QuestionPaper',
 } as const;
 
 // ===== Quiz Management API (reducerPath: quizManagementApi) =====

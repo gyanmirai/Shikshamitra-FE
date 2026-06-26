@@ -3,10 +3,11 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, Tooltip, IconButton, Typography } from '@mui/material';
 
 import type { IChapter, IChapterTableProps } from '../type';
 
@@ -19,6 +20,8 @@ const ChapterTable = ({
   actions,
   handleEyeClick,
   onViewDocuments,
+  onCreateQuestion,
+  onViewQuestions,
   subjectId,
   standardId,
   canAdd = true,
@@ -130,33 +133,70 @@ const ChapterTable = ({
       {
         id: 'actions',
         label: 'Actions',
-        minWidth: 90,
+        minWidth: 160,
         isSort: false,
         isFilter: false,
         align: 'left',
         sticky: true,
         render(value, row) {
+          const chapter = row as IChapter;
           return (
-            <ThreeDotsActions
-              showThreeDots={false}
-              placement="right-top"
-              showEditIcon={canAdd}
-              showDeleteIcon={canDelete}
-              showViewIcon={canView}
-              handleViewClick={() => {
-                onViewDocuments(row as IChapter);
-              }}
-              handleEditClick={() => {
-                setEditData(row as IChapter);
-                addChapterDialog.onTrue();
-              }}
-              handleDeleteClick={() => onDelete(row as IChapter)}
-            />
+            <Stack direction="row" alignItems="center" spacing={0.25}>
+              <Tooltip title="Create Question" placement="top">
+                <IconButton
+                  size="small"
+                  color="primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCreateQuestion?.(chapter);
+                  }}
+                >
+                  <Iconify icon="mingcute:question-line" width={18} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="View Questions" placement="top">
+                <IconButton
+                  size="small"
+                  color="info"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewQuestions?.(chapter);
+                  }}
+                >
+                  <Iconify icon="mingcute:list-check-line" width={18} />
+                </IconButton>
+              </Tooltip>
+              <ThreeDotsActions
+                showThreeDots={false}
+                placement="right-top"
+                showEditIcon={canAdd}
+                showDeleteIcon={canDelete}
+                showViewIcon={canView}
+                handleViewClick={() => {
+                  onViewDocuments(chapter);
+                }}
+                handleEditClick={() => {
+                  setEditData(chapter);
+                  addChapterDialog.onTrue();
+                }}
+                handleDeleteClick={() => onDelete(chapter)}
+              />
+            </Stack>
           );
         },
       },
     ],
-    [addChapterDialog, canAdd, canDelete, canView, onDelete, onViewDocuments, setEditData]
+    [
+      addChapterDialog,
+      canAdd,
+      canDelete,
+      canView,
+      onCreateQuestion,
+      onDelete,
+      onViewDocuments,
+      onViewQuestions,
+      setEditData,
+    ]
   );
   return (
     <CustomizableTable

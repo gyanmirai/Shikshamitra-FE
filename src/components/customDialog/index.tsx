@@ -68,7 +68,12 @@ const CustomDialog = ({
           // borderTop: `5px solid ${theme.palette.primary.main}`,
           backgroundImage: `url(${CONFIG.site.basePath}/assets/red-blur.png)`,
           backgroundPosition: 'bottom left',
-          '& form': { minHeight: 0, display: 'flex', flex: '1 1 auto', flexDirection: 'column' },
+          '& form, & #dialog-form': {
+            minHeight: 0,
+            display: 'flex',
+            flex: '1 1 auto',
+            flexDirection: 'column',
+          },
           ...(sx || {}),
         },
         ...paper,

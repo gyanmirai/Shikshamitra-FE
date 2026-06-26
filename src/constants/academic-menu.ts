@@ -46,6 +46,8 @@ export const academicPaths = {
     seatAllocation: '/academic/seatallocation',
     recordMarks: '/academic/gradeEntry',
     resultCreation: '/academic/resultCreation',
+    questionBank: '/academic/questionBank',
+    questionPapers: '/academic/questionPapers',
     quizManagement: '/academic/quizManagement',
     reports: '/academic/examinationReports',
     settings: {
@@ -121,6 +123,8 @@ export const academicPermissions = {
     seatAllocation: `${defaultAcademicPermissionName}Examination.SeatAllocation`,
     recordMarks: `${defaultAcademicPermissionName}Examination.RecordMarks`,
     resultCreation: `${defaultAcademicPermissionName}Examination.Result`,
+    questionBank: `${defaultModulePermissionName}${defaultAcademicPermissionName}Examination`,
+    questionPapers: `${defaultModulePermissionName}${defaultAcademicPermissionName}Examination`,
     quizManagement: `${defaultAcademicPermissionName}Examination.QuizManagement`,
     reports: `${defaultAcademicPermissionName}Examination.Reports`,
     settings: {
@@ -456,6 +460,24 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+E+1+5',
               permissionName: academicPermissions.examination.resultCreation,
               icon: menuIconView('mdi:trophy-outline'),
+            },
+            {
+              title: 'Question Bank',
+              path: academicPaths.examination.questionBank,
+              _action: 'academic-questionBank',
+              shortcutKey: 'Alt+E+1+6',
+              shortcutKeyName: 'Alt+E+1+6',
+              permissionName: academicPermissions.examination.questionBank,
+              icon: menuIconView('mdi:comment-question-outline'),
+            },
+            {
+              title: 'Question Papers',
+              path: academicPaths.examination.questionPapers,
+              _action: 'academic-questionPapers',
+              shortcutKey: 'Alt+E+1+7',
+              shortcutKeyName: 'Alt+E+1+7',
+              permissionName: academicPermissions.examination.questionPapers,
+              icon: menuIconView('mdi:file-document-edit-outline'),
             },
             // {
             //   title: 'Quiz Management',

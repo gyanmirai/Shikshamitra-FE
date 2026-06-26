@@ -31,7 +31,9 @@ import { subjectTempData } from '../subjectsData';
 import ChapterTable from './components/chapterTable';
 import ChapterDocuments from './components/chapterDocuments';
 import BulkChapterForm from './components/bulkChapterForm/BulkChapterForm';
+import CreateQuestionDialog from '../../../examination/question-bank/components/CreateQuestionDialog';
 import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
+import ChapterQuestionsDialog from '../../../examination/question-bank/components/ChapterQuestionsDialog';
 
 import type { IChapter, SubjectOption } from './type';
 
@@ -74,6 +76,8 @@ const Subjects = () => {
   >([]);
   const [selectedChapter, setSelectedChapter] = useState<IChapter | null>(null);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [createQuestionChapter, setCreateQuestionChapter] = useState<IChapter | null>(null);
+  const [viewQuestionsChapter, setViewQuestionsChapter] = useState<IChapter | null>(null);
   useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -410,6 +414,8 @@ const Subjects = () => {
               setSelectedChapter(chapter as IChapter);
               viewDocumentDialog.onTrue();
             }}
+            onCreateQuestion={(chapter) => setCreateQuestionChapter(chapter)}
+            onViewQuestions={(chapter) => setViewQuestionsChapter(chapter)}
             subjectId={subjectId}
             standardId={classId}
           />
@@ -479,6 +485,26 @@ const Subjects = () => {
       >
         <ChapterDocuments chapter={selectedChapter} />
       </CustomDialog>
+
+      {/* Create Question Dialog */}
+      <CreateQuestionDialog
+        open={Boolean(createQuestionChapter)}
+        onClose={() => setCreateQuestionChapter(null)}
+        initialStandardId={createQuestionChapter?.standardId || ''}
+        initialSubjectId={createQuestionChapter?.subjectId || ''}
+        initialChapterId={createQuestionChapter?.id || ''}
+        chapterName={createQuestionChapter?.chapterName}
+      />
+
+      {/* View Chapter Questions Dialog */}
+      <ChapterQuestionsDialog
+        open={Boolean(viewQuestionsChapter)}
+        onClose={() => setViewQuestionsChapter(null)}
+        chapterId={viewQuestionsChapter?.id || ''}
+        subjectId={viewQuestionsChapter?.subjectId}
+        standardId={viewQuestionsChapter?.standardId}
+        chapterName={viewQuestionsChapter?.chapterName}
+      />
     </Box>
   );
 };
