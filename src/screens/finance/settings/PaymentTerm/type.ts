@@ -1,37 +1,82 @@
 import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+export type PaymentTermStatus = 'Active' | 'Archived';
+export type DemandGenerationRule = 'Immediately' | 'XDaysBeforeDue' | 'OnDueDate' | 'Manual';
+export type InitialDemandStatus = 'Draft' | 'Published';
+
 export interface IInstallment {
-  id: number;
+  id?: string | number;
   installmentName: string;
-  dueDate: null | Dayjs; // ISO date string e.g., "2025-03-30"
-  reminderDate: null | Dayjs;
+  sequence: number;
+  startDate: string | null | Dayjs;
+  dueDate: string | null | Dayjs;
+  endDate: string | null | Dayjs;
+  description: string;
+  reminderDate: string | null | Dayjs;
   gracePeriod: number | null;
-  overdueCharges: number | null;
+  lateFeePolicyId: string | null;
+  lateFeePolicyName?: string;
+  allowPartialOverride: boolean;
+  demandEnabled: boolean;
+  reminderEnabled: boolean;
 }
 
 export interface IPaymentTerm {
-  id: string | number;
+  id?: string | number;
   paymentTermName: string;
-  totalInstallments: number | string;
+  paymentTermCode: string;
+  boardId: string;
+  boardName?: string;
+  description: string;
+  status: PaymentTermStatus;
   academicYearId: string;
-  academicYear?: string;
-  board: string;
-  medium: string;
+  academicYearName?: string;
+  totalInstallments?: number | string;
   installments: IInstallment[];
+  isDefaultTerm: boolean;
+  enableBillingSchedule?: boolean;
+
+  // Reminder Rules (kept for API compatibility)
+  autoReminder: boolean;
+  reminderDaysBefore: number | null;
+  reminderFrequencyDays: number | null;
+  reminderMaxCount: number | null;
+
+  // Holiday Rules (kept for API compatibility)
+  holidayShiftingMethod: 'None' | 'NextWorkingDay' | 'PreviousWorkingDay';
+
+  // Billing Schedule
+  demandGenerationRule: DemandGenerationRule;
+  demandOffsetDays: number | null;
+  initialDemandStatus: InitialDemandStatus;
+
+  // Advance & Partial Payment
+  allowAdvancePayment: boolean;
+  minAdvanceDays: number | null;
+  maxAdvanceMonths: number | null;
+  allowFullYearPayment: boolean;
+  allowPartialInstallment: boolean;
+  minPartialAmount: number | null;
+  minPartialPercentage: number | null;
+
+  isUsedInDownstream?: boolean;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface IPaymentTermTableProps {
   data: IPaymentTerm[];
-  addPaymentTerm: { onTrue: () => void };
-  editData: IPaymentTerm | null;
+  addPaymentTerm: UseBooleanReturn;
   setEditData: (value: IPaymentTerm | null) => void;
-  onEdit?: (row: IPaymentTerm) => void;
-  onDelete?: (row: IPaymentTerm) => void;
+  onEdit: (row: IPaymentTerm) => void;
+  onDelete: (row: IPaymentTerm) => void;
 }
 
-export interface IFeeStructureFormProps {
-  open: UseBooleanReturn;
-  onClose: (e: any, isSubmit: boolean) => void;
+export interface IPaymentTermFormProps {
+  open: boolean;
+  onClose: (e?: any, isSubmit?: boolean) => void;
   editData: IPaymentTerm | null;
 }

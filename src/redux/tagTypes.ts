@@ -411,6 +411,11 @@ export const paymentTermType = {
   paymentTerm: 'Payment-Term',
 } as const;
 
+// ===== Finance Policy API (reducerPath: api) =====
+export const financePolicyType = {
+  financePolicy: 'Finance-Policy',
+} as const;
+
 // ===== Payroll Structure API (reducerPath: payrollStructureApi) =====
 export const payrollStructureType = {
   payrollStructure: 'PayrollStructure',
@@ -662,6 +667,7 @@ export const allTagTypes = {
   ...paymentHistoryType,
   ...paymentStatusOptionType,
   ...paymentTermType,
+  ...financePolicyType,
   ...payrollStructureType,
   ...professionalType,
   ...receiptType,
