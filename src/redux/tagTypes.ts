@@ -1,3 +1,15 @@
+// ===== Academic Calendar API (reducerPath: academicApi) =====
+export const academicCalendarType = {
+  calendar: 'AcademicCalendar',
+  calendarDay: 'AcademicCalendarDay',
+  workingHour: 'AcademicCalendarWorkingHour',
+  checkDate: 'AcademicCalendarCheckDate',
+  impactLog: 'AcademicCalendarImpactLog',
+  auditLog: 'AcademicCalendarAuditLog',
+  settings: 'AcademicCalendarSettings',
+  emergencyClosure: 'AcademicCalendarEmergencyClosure',
+} as const;
+
 // ===== Academic API (reducerPath: academicApi) =====
 export const academicType = {
   subject: 'Subject',
@@ -29,6 +41,21 @@ export const academicType = {
   academicReport: 'AcademicReport',
   academicReportExport: 'AcademicReportExport',
   examResult: 'ExamResult',
+  questionBank: 'QuestionBank',
+  questionPaper: 'QuestionPaper',
+  // Lesson Plan / Teacher Diary
+  lessonPlan: 'LessonPlan',
+  teacherDiary: 'TeacherDiary',
+  diaryEvidence: 'DiaryEvidence',
+  lessonPlanReview: 'LessonPlanReview',
+  missedLesson: 'MissedLesson',
+  lessonResource: 'LessonResource',
+  lessonPlanSettings: 'LessonPlanSettings',
+  lessonPlanAuditLog: 'LessonPlanAuditLog',
+  aiLessonSuggestion: 'AiLessonSuggestion',
+  lessonPlanReport: 'LessonPlanReport',
+  teachingExecutionHealth: 'TeachingExecutionHealth',
+  coverageTracker: 'CoverageTracker',
 } as const;
 
 // ===== Quiz Management API (reducerPath: quizManagementApi) =====
@@ -608,6 +635,7 @@ export const yearType = {
 } as const;
 
 export const allTagTypes = {
+  ...academicCalendarType,
   ...academicType,
   ...quizManagementType,
   ...homeworkType,

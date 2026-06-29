@@ -100,6 +100,50 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
       }),
       providesTags: [academicType.subjectAssignment],
     }),
+
+    // Get KPI summary cards for a class
+    getSubjectKpi: builder.query({
+      query: ({ classId }) => ({
+        url: `/academics/curriculum/${classId}/subject-kpi`,
+        method: 'GET',
+      }),
+      providesTags: [academicType.subjectAssignment],
+    }),
+
+    // Get publish readiness report for a class
+    getPublishReadiness: builder.query({
+      query: ({ classId }) => ({
+        url: `/academics/curriculum/${classId}/publish-readiness`,
+        method: 'GET',
+      }),
+      providesTags: [academicType.subjectAssignment],
+    }),
+
+    // Get setup health for a single assignment
+    getSetupHealth: builder.query({
+      query: ({ assignmentId }) => ({
+        url: `/academics/curriculum/subject-assignments/${assignmentId}/setup-health`,
+        method: 'GET',
+      }),
+      providesTags: [academicType.subjectAssignment],
+    }),
+
+    // Get teacher workload
+    getTeacherWorkload: builder.query({
+      query: ({ teacherId }) => ({
+        url: `/academics/curriculum/teachers/${teacherId}/workload`,
+        method: 'GET',
+      }),
+    }),
+
+    // Archive assignment (safe alternative to delete)
+    archiveSubjectAssignment: builder.mutation({
+      query: ({ assignmentId }) => ({
+        url: `/academics/curriculum/subject-assignments/${assignmentId}/archive`,
+        method: 'POST',
+      }),
+      invalidatesTags: [academicType.subjectAssignment],
+    }),
   }),
 
   overrideExisting: false,
@@ -116,4 +160,9 @@ export const {
   useGetCurriculumFileByNameMutation,
   useGetSubjectAssignmentDocumentsQuery,
   useGetCoreElectiveSubjectsQuery,
+  useGetSubjectKpiQuery,
+  useGetPublishReadinessQuery,
+  useGetSetupHealthQuery,
+  useGetTeacherWorkloadQuery,
+  useArchiveSubjectAssignmentMutation,
 } = subjectAssignmentsApi;

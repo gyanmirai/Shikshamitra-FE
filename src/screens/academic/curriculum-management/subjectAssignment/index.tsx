@@ -8,10 +8,12 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 
 import SubjectTable from './component/subjectTable';
+import SubjectKpiCards from './component/SubjectKpiCards';
 import SubjectActionBar from './component/SubjectActionBar';
 import SubjectBreadcrumbs from './component/SubjectBreadcrumbs';
 import SubjectDeleteDialog from './component/SubjectDeleteDialog';
 import SubjectPublishDialog from './component/SubjectPublishDialog';
+import SubjectArchiveDialog from './component/SubjectArchiveDialog';
 import { useSubjectAssignment } from './hooks/useSubjectAssignment';
 import { ViewSubject } from './component/viewDetailComponents/viewSubjectComponent';
 import SubjectAssignmentForm from './component/subjectAssignmentForm/subjectAssignmentForm';
@@ -25,18 +27,24 @@ const Subject = () => {
     isEdit,
     isDeleteLoading,
     isPublishLoading,
+    isArchiveLoading,
     isTableLoading,
     isFetching,
     subjectTableData,
+    kpiData,
+    isKpiLoading,
     addSubjectDialog,
     deleteConfirmDialog,
     confirmPublishDialog,
+    archiveConfirmDialog,
     showSubjectDialog,
     handleClose,
     handleViewSubject,
     handleEditSubject,
     handleRequestDelete,
     handleRequestToggleStatus,
+    handleRequestArchive,
+    handleConfirmArchive,
     handleCloseDialog,
     handleConfirmDelete,
     handleConfirmPublish,
@@ -49,7 +57,6 @@ const Subject = () => {
 
   const { permissions } = useSelector((state: RootState) => state.auth);
 
-  // Permission checks
   const canAdd = hasGrantedPermission(
     permissions,
     `${academicPermissions.curriculum.subjectsAssignment}.Add`
@@ -95,6 +102,11 @@ const Subject = () => {
             />
           )}
 
+          {/* KPI summary cards – only shown on list view, when class is selected */}
+          {!showSubjectDialog.value && classId && (
+            <SubjectKpiCards kpi={kpiData?.data} isLoading={isKpiLoading} />
+          )}
+
           {!showSubjectDialog.value && (
             <SubjectTable
               isLoading={isTableLoading || isFetching}
@@ -106,6 +118,7 @@ const Subject = () => {
               onView={handleViewSubject}
               onEdit={handleEditSubject}
               onDelete={handleRequestDelete}
+              onArchive={handleRequestArchive}
               onToggleStatus={handleRequestToggleStatus}
               query={query}
               setQuery={setQuery}
@@ -133,6 +146,16 @@ const Subject = () => {
           selectedSubject={selectedSubject}
           onClose={handleCloseDialog}
           onConfirm={handleConfirmPublish}
+        />
+      )}
+
+      {archiveConfirmDialog.value && canDelete && (
+        <SubjectArchiveDialog
+          open={archiveConfirmDialog.value}
+          isLoading={isArchiveLoading}
+          selectedSubject={selectedSubject}
+          onClose={handleCloseDialog}
+          onConfirm={handleConfirmArchive}
         />
       )}
 

@@ -73,7 +73,7 @@ const ThreeDotsActions = ({
   const popover = usePopover();
   const ActionComponent = useMemo(() => actions, [actions]);
   return (
-    <Box display="flex" gap={2} alignItems="center" {...props}>
+    <Box display="flex" gap={1} alignItems="center" {...props}>
       {showViewIcon && (
         <Tooltip title={viewLabel}>
           <span>

@@ -1,0 +1,539 @@
+'use client';
+
+import dayjs from 'dayjs';
+import React, { useState } from 'react';
+import { Iconify } from 'src/components/iconify';
+import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import {
+  Box,
+  Card,
+  Chip,
+  Stack,
+  Alert,
+  Button,
+  Switch,
+  Divider,
+  TextField,
+  Typography,
+  CardContent,
+  CardActions,
+  ToggleButton,
+  FormControlLabel,
+  ToggleButtonGroup,
+} from '@mui/material';
+
+import type { LessonPlanRow, TeacherDiaryRow } from '../lessonPlanData';
+
+type ReviewTarget = { type: 'plan' | 'diary'; id: string };
+
+type ReviewState = {
+  target: ReviewTarget | null;
+  action: 'approve' | 'reject' | 'changes';
+  comment: string;
+  updateProgress: boolean;
+};
+
+type ReviewRow = {
+  id: string;
+  targetType: 'plan' | 'diary';
+  teacherName: string;
+  submittedDate: string;
+  pendingSince: string;
+  classDivision: string;
+  subjectName: string;
+  chapterName: string;
+  topic: string;
+  plannedPct: number;
+  actualPct: number | string;
+  progressGap: number | string;
+  evidenceCount: number;
+  diaryQuality: string;
+  aiSummary: string;
+  submittedAt?: string;
+};
+
+type Props = {
+  lessonPlans: LessonPlanRow[];
+  diaryEntries: TeacherDiaryRow[];
+  onApprove: (target: ReviewTarget, comment: string, updateProgress: boolean) => void;
+  onReject: (target: ReviewTarget, comment: string) => void;
+  onRequestChanges: (target: ReviewTarget, comment: string) => void;
+};
+
+const ReviewQueueTab = ({
+  lessonPlans,
+  diaryEntries,
+  onApprove,
+  onReject,
+  onRequestChanges,
+}: Props) => {
+  const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
+  const [reviewDialog, setReviewDialog] = useState(false);
+  const [review, setReview] = useState<ReviewState>({
+    target: null,
+    action: 'approve',
+    comment: '',
+    updateProgress: true,
+  });
+
+  const openReview = (target: ReviewTarget, defaultAction: ReviewState['action'] = 'approve') => {
+    setReview({ target, action: defaultAction, comment: '', updateProgress: true });
+    setReviewDialog(true);
+  };
+
+  const closeReview = () => setReviewDialog(false);
+
+  const submitReview = () => {
+    if (!review.target) return;
+    if (review.action === 'approve')
+      onApprove(review.target, review.comment, review.updateProgress);
+    else if (review.action === 'reject') onReject(review.target, review.comment);
+    else onRequestChanges(review.target, review.comment);
+    closeReview();
+  };
+
+  // Build review rows
+  const reviewRows: ReviewRow[] = [
+    ...lessonPlans
+      .filter((p) => p.planStatus === 'Submitted')
+      .map(
+        (p): ReviewRow => ({
+          id: p.id,
+          targetType: 'plan',
+          teacherName: p.teacherName,
+          submittedDate: p.plannedDate,
+          pendingSince: p.plannedDate,
+          classDivision: `${p.className}-${p.divisionName}`,
+          subjectName: p.subjectName,
+          chapterName: p.chapterName,
+          topic: p.topic,
+          plannedPct: p.plannedCompletionPercentage,
+          actualPct: '-',
+          progressGap: '-',
+          evidenceCount: 0,
+          diaryQuality: '-',
+          aiSummary: 'Plan matches curriculum. Objective is clear.',
+          submittedAt: p.plannedDate,
+        })
+      ),
+    ...diaryEntries
+      .filter((e) => e.diaryStatus === 'Submitted')
+      .map((e): ReviewRow => {
+        const plan = lessonPlans.find((p) => p.id === e.lessonPlanId);
+        const gap = plan ? e.actualCompletionPercentage - plan.plannedCompletionPercentage : 0;
+        return {
+          id: e.id,
+          targetType: 'diary',
+          teacherName: plan?.teacherName || '-',
+          submittedDate: e.actualDate,
+          pendingSince: e.submittedAt
+            ? `${Math.max(0, dayjs().diff(dayjs(e.submittedAt), 'day'))} day(s)`
+            : '-',
+          classDivision: plan ? `${plan.className}-${plan.divisionName}` : '-',
+          subjectName: plan?.subjectName || '-',
+          chapterName: plan?.chapterName || '-',
+          topic: e.actualTopicCovered || plan?.topic || '-',
+          plannedPct: plan?.plannedCompletionPercentage || 0,
+          actualPct: e.actualCompletionPercentage,
+          progressGap: gap,
+          evidenceCount: e.evidence?.length || 0,
+          diaryQuality: e.reflection ? 'Complete' : 'Incomplete',
+          aiSummary:
+            gap < 0
+              ? `Actual progress (${e.actualCompletionPercentage}%) is lower than planned (${plan?.plannedCompletionPercentage}%). Suggest request changes.`
+              : 'Diary matches lesson plan. Progress update is reasonable.',
+          submittedAt: e.submittedAt,
+        };
+      }),
+  ];
+
+  const getActionColor = (action: ReviewState['action']) => {
+    if (action === 'approve') return 'success';
+    if (action === 'reject') return 'error';
+    return 'warning';
+  };
+
+  return (
+    <Box>
+      {/* Toolbar */}
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+        <Typography variant="subtitle1">Review Queue ({reviewRows.length} pending)</Typography>
+        <ToggleButtonGroup
+          value={viewMode}
+          exclusive
+          onChange={(_, v) => v && setViewMode(v)}
+          size="small"
+        >
+          <ToggleButton value="card">
+            <Iconify icon="mdi:view-grid-outline" width={18} />
+          </ToggleButton>
+          <ToggleButton value="table">
+            <Iconify icon="mdi:table" width={18} />
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Stack>
+
+      {reviewRows.length === 0 && (
+        <Card sx={{ p: 4, textAlign: 'center' }}>
+          <Iconify icon="mdi:check-all" width={48} sx={{ color: 'success.main', mb: 1 }} />
+          <Typography variant="h6" color="text.secondary">
+            No pending reviews
+          </Typography>
+          <Typography variant="body2" color="text.disabled">
+            All lesson plans and diaries are reviewed.
+          </Typography>
+        </Card>
+      )}
+
+      {/* Card View */}
+      {viewMode === 'card' && reviewRows.length > 0 && (
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 2,
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', xl: 'repeat(3, 1fr)' },
+          }}
+        >
+          {reviewRows.map((row) => (
+            <Card key={row.id} variant="outlined" sx={{ borderRadius: 2 }}>
+              <CardContent sx={{ pb: 1 }}>
+                {/* Header */}
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="flex-start"
+                  sx={{ mb: 1 }}
+                >
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={600}>
+                      {row.teacherName}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {row.classDivision} • {row.subjectName} •{' '}
+                      {dayjs(row.submittedDate).format('DD MMM')}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={row.targetType === 'plan' ? 'Lesson Plan' : 'Diary'}
+                    size="small"
+                    color={row.targetType === 'plan' ? 'info' : 'secondary'}
+                    variant="soft"
+                  />
+                </Stack>
+
+                <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+                  {row.chapterName} — {row.topic}
+                </Typography>
+
+                {/* Progress */}
+                <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Planned
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {row.plannedPct}%
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Actual
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {row.actualPct === '-' ? '-' : `${row.actualPct}%`}
+                    </Typography>
+                  </Box>
+                  {row.progressGap !== '-' && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        Gap
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        color={Number(row.progressGap) < 0 ? 'error.main' : 'success.main'}
+                      >
+                        {Number(row.progressGap) > 0 ? '+' : ''}
+                        {row.progressGap}%
+                      </Typography>
+                    </Box>
+                  )}
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Evidence
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {row.evidenceCount > 0 ? `${row.evidenceCount} file(s)` : 'Missing'}
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                {/* AI Summary */}
+                <Box sx={{ p: 1, bgcolor: 'grey.50', borderRadius: 1, mb: 1 }}>
+                  <Stack direction="row" spacing={0.5} alignItems="flex-start">
+                    <Iconify
+                      icon="mdi:robot-outline"
+                      width={14}
+                      sx={{ mt: 0.25, color: 'secondary.main', flexShrink: 0 }}
+                    />
+                    <Typography variant="caption" color="text.secondary">
+                      {row.aiSummary}
+                    </Typography>
+                  </Stack>
+                </Box>
+
+                {/* Warnings */}
+                {row.evidenceCount === 0 && row.targetType === 'diary' && (
+                  <Alert severity="warning" sx={{ py: 0.5, mb: 0.5 }}>
+                    <Typography variant="caption">Diary submitted without evidence.</Typography>
+                  </Alert>
+                )}
+                {Number(row.progressGap) < -15 && (
+                  <Alert severity="error" sx={{ py: 0.5, mb: 0.5 }}>
+                    <Typography variant="caption">
+                      Actual progress is significantly lower than planned.
+                    </Typography>
+                  </Alert>
+                )}
+              </CardContent>
+
+              <Divider />
+              <CardActions sx={{ px: 2, py: 1, gap: 1 }}>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="success"
+                  onClick={() => openReview({ type: row.targetType, id: row.id }, 'approve')}
+                >
+                  Approve
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="warning"
+                  onClick={() => openReview({ type: row.targetType, id: row.id }, 'changes')}
+                >
+                  Request Changes
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="error"
+                  onClick={() => openReview({ type: row.targetType, id: row.id }, 'reject')}
+                >
+                  Reject
+                </Button>
+              </CardActions>
+            </Card>
+          ))}
+        </Box>
+      )}
+
+      {/* Table View */}
+      {viewMode === 'table' && reviewRows.length > 0 && (
+        <CustomizableTable
+          tableId="review-queue-table"
+          tableTitle="Review Queue"
+          data={reviewRows}
+          columns={[
+            { id: 'teacherName', label: 'Teacher', minWidth: 160, sticky: true },
+            { id: 'submittedDate', label: 'Date', filterType: 'date' as const, minWidth: 120 },
+            { id: 'pendingSince', label: 'Pending Since', minWidth: 120 },
+            { id: 'classDivision', label: 'Class', minWidth: 110 },
+            { id: 'subjectName', label: 'Subject', minWidth: 130 },
+            { id: 'chapterName', label: 'Chapter', minWidth: 150 },
+            { id: 'topic', label: 'Topic', minWidth: 220 },
+            {
+              id: 'plannedPct',
+              label: 'Planned %',
+              filterType: 'number' as const,
+              minWidth: 100,
+              render: (v: any) => `${v}%`,
+            },
+            {
+              id: 'actualPct',
+              label: 'Actual %',
+              filterType: 'number' as const,
+              minWidth: 100,
+              render: (v: any) => (v === '-' ? '-' : `${v}%`),
+            },
+            {
+              id: 'progressGap',
+              label: 'Gap',
+              filterType: 'number' as const,
+              minWidth: 90,
+              render: (v: any) =>
+                v === '-' ? (
+                  '-'
+                ) : (
+                  <Typography
+                    variant="body2"
+                    color={Number(v) < 0 ? 'error.main' : 'success.main'}
+                    fontWeight={600}
+                  >
+                    {Number(v) > 0 ? '+' : ''}
+                    {v}%
+                  </Typography>
+                ),
+            },
+            {
+              id: 'evidenceCount',
+              label: 'Evidence',
+              minWidth: 100,
+              render: (v: any) => (
+                <Chip
+                  label={v > 0 ? `${v} file(s)` : 'Missing'}
+                  size="small"
+                  color={v > 0 ? 'success' : 'warning'}
+                  variant="soft"
+                />
+              ),
+            },
+            { id: 'diaryQuality', label: 'Quality', minWidth: 110 },
+            {
+              id: 'targetType',
+              label: 'Type',
+              minWidth: 110,
+              render: (v: any) => (
+                <Chip
+                  label={v === 'plan' ? 'Lesson Plan' : 'Diary'}
+                  size="small"
+                  color={v === 'plan' ? 'info' : 'secondary'}
+                  variant="soft"
+                />
+              ),
+            },
+            {
+              id: 'actions',
+              label: 'Actions',
+              minWidth: 200,
+              align: 'center' as const,
+              isFilter: false,
+              isSort: false,
+              sticky: true,
+              stickyPosition: 'right' as const,
+              render: (_: any, row: any) => (
+                <Stack direction="row" spacing={0.5} justifyContent="center">
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="success"
+                    onClick={() => openReview({ type: row.targetType, id: row.id }, 'approve')}
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="warning"
+                    onClick={() => openReview({ type: row.targetType, id: row.id }, 'changes')}
+                  >
+                    Changes
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="error"
+                    onClick={() => openReview({ type: row.targetType, id: row.id }, 'reject')}
+                  >
+                    Reject
+                  </Button>
+                </Stack>
+              ),
+            },
+          ]}
+        />
+      )}
+
+      {/* Review Dialog */}
+      <CustomDialog
+        open={reviewDialog}
+        title={
+          review.action === 'approve'
+            ? 'Approve Submission'
+            : review.action === 'reject'
+              ? 'Reject Submission'
+              : 'Request Changes'
+        }
+        maxWidth="sm"
+        handleClose={closeReview}
+      >
+        <DialogScrollContent>
+          <Stack spacing={2}>
+            {/* Action toggle */}
+            <Stack direction="row" spacing={1}>
+              {(['approve', 'changes', 'reject'] as const).map((action) => (
+                <Button
+                  key={action}
+                  size="small"
+                  variant={review.action === action ? 'contained' : 'outlined'}
+                  color={getActionColor(action) as any}
+                  onClick={() => setReview((r) => ({ ...r, action }))}
+                  sx={{ flex: 1, textTransform: 'capitalize' }}
+                >
+                  {action === 'changes'
+                    ? 'Request Changes'
+                    : action.charAt(0).toUpperCase() + action.slice(1)}
+                </Button>
+              ))}
+            </Stack>
+
+            {review.action === 'approve' && review.target?.type === 'diary' && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={review.updateProgress}
+                    onChange={(e) => setReview((r) => ({ ...r, updateProgress: e.target.checked }))}
+                  />
+                }
+                label="Update syllabus progress after approval"
+              />
+            )}
+
+            <TextField
+              size="small"
+              label={
+                review.action === 'approve'
+                  ? 'Approval Comment (optional)'
+                  : 'Comment (required for reject / changes)'
+              }
+              value={review.comment}
+              onChange={(e) => setReview((r) => ({ ...r, comment: e.target.value }))}
+              fullWidth
+              multiline
+              minRows={4}
+              placeholder={
+                review.action === 'approve'
+                  ? 'Any remarks for the teacher...'
+                  : 'Specify what needs to be corrected...'
+              }
+            />
+
+            {review.action !== 'approve' && !review.comment.trim() && (
+              <Alert severity="warning">
+                Comment is required when rejecting or requesting changes.
+              </Alert>
+            )}
+          </Stack>
+        </DialogScrollContent>
+        <Divider />
+        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
+          <Button variant="outlined" onClick={closeReview}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color={getActionColor(review.action) as any}
+            disabled={review.action !== 'approve' && !review.comment.trim()}
+            onClick={submitReview}
+          >
+            Submit Review
+          </Button>
+        </Stack>
+      </CustomDialog>
+    </Box>
+  );
+};
+
+export default ReviewQueueTab;

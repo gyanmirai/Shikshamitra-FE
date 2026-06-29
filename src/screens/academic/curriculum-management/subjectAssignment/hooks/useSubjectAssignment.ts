@@ -7,7 +7,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import {
+  useGetSubjectKpiQuery,
+  useGetSubjectAssignmentsQuery,
+  useArchiveSubjectAssignmentMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { useClassSelection } from './useClassSelection';
 import { useSubjectMutations } from './useSubjectMutations';
@@ -38,10 +42,20 @@ export function useSubjectAssignment() {
     options: { skip: !classId },
   });
 
+  const { data: kpiData, isLoading: isKpiLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectKpiQuery,
+    params: { classId },
+    options: { skip: !classId },
+  });
+
+  const [archiveSubject, { isLoading: isArchiveLoading }] = useArchiveSubjectAssignmentMutation();
+
   const addSubjectDialog = useBoolean();
   const deleteConfirmDialog = useBoolean();
   const confirmPublishDialog = useBoolean();
   const showSubjectDialog = useBoolean();
+  const archiveConfirmDialog = useBoolean();
 
   const [selectedSubject, setSelectedSubject] = useState<ISubjectFormValues | null>(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -49,9 +63,10 @@ export function useSubjectAssignment() {
   const handleCloseDialog = useCallback(() => {
     deleteConfirmDialog.onFalse();
     confirmPublishDialog.onFalse();
+    archiveConfirmDialog.onFalse();
     setIsEdit(false);
     setTimeout(() => setSelectedSubject(null), 100);
-  }, [deleteConfirmDialog, confirmPublishDialog]);
+  }, [deleteConfirmDialog, confirmPublishDialog, archiveConfirmDialog]);
 
   const { isDeleteLoading, isPublishLoading, handleConfirmDelete, handleConfirmPublish } =
     useSubjectMutations({
@@ -140,6 +155,26 @@ export function useSubjectAssignment() {
     [confirmPublishDialog]
   );
 
+  const handleRequestArchive = useCallback(
+    (row: ISubjectFormValues) => {
+      setSelectedSubject(row);
+      archiveConfirmDialog.onTrue();
+    },
+    [archiveConfirmDialog]
+  );
+
+  const handleConfirmArchive = useCallback(async () => {
+    if (!selectedSubject?.id) return;
+    try {
+      await archiveSubject({ assignmentId: selectedSubject.id }).unwrap();
+      archiveConfirmDialog.onFalse();
+      setSelectedSubject(null);
+      refetch();
+    } catch {
+      // error handled by RTK Query
+    }
+  }, [selectedSubject, archiveSubject, archiveConfirmDialog, refetch]);
+
   const handleAddNew = useCallback(() => {
     addSubjectDialog.onTrue();
     setIsEdit(false);
@@ -159,18 +194,24 @@ export function useSubjectAssignment() {
     isEdit,
     isDeleteLoading,
     isPublishLoading,
+    isArchiveLoading,
     isTableLoading,
     isFetching,
     subjectTableData,
+    kpiData,
+    isKpiLoading,
     addSubjectDialog,
     deleteConfirmDialog,
     confirmPublishDialog,
+    archiveConfirmDialog,
     showSubjectDialog,
     handleClose,
     handleViewSubject,
     handleEditSubject,
     handleRequestDelete,
     handleRequestToggleStatus,
+    handleRequestArchive,
+    handleConfirmArchive,
     handleCloseDialog,
     handleConfirmDelete,
     handleConfirmPublish,

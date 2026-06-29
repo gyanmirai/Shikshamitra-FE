@@ -24,6 +24,51 @@ export interface IChapter {
   lastModifierId: string;
   lastModificationTime: string;
   documents?: string[];
+  unitName?: string;
+  termName?: string;
+  topic?: string;
+  estimatedTeachingDays?: number;
+  estimatedPeriods?: number;
+  revisionDays?: number;
+  bufferDays?: number;
+  difficultyLevel?: string;
+  bloomLevel?: string;
+  tags?: string;
+  learningOutcomes?: string;
+  skillsCovered?: string;
+  prerequisites?: string;
+  teachingMethods?: string;
+  classActivities?: string;
+  completionCriteria?: string;
+  teacherNotes?: string;
+  studentSummary?: string;
+  parentSummary?: string;
+  referenceLinks?: string;
+  worksheets?: string;
+  audioVideoMaterials?: string;
+  boardDocuments?: string;
+  assessmentMethod?: string;
+  questionTypes?: string;
+  marksWeightage?: number;
+  bloomCoverage?: string;
+  difficultyDistribution?: string;
+  visibility?: string;
+  publishStatus?: string;
+  reviewStatus?: string;
+  notifyOnPublish?: boolean;
+  progressPercentage?: number;
+  coverageStatus?: string;
+  lessonPlanStatus?: string;
+  homeworkStatus?: string;
+  assessmentStatus?: string;
+  resourceStatus?: string;
+  questionCount?: number;
+  healthScore?: number;
+  isAiGenerated?: boolean;
+  copiedFromPreviousYear?: boolean;
+  templateSource?: string;
+  dependencyChapterIds?: string;
+  versionLabel?: string;
 }
 
 export interface SubjectOption {
@@ -41,7 +86,54 @@ export interface IChapterFormValues {
   startDate: Dayjs | null;
   endDate: Dayjs | null;
   documents?: string[];
+  unitName: string;
+  termName: string;
+  topic: string;
+  estimatedTeachingDays: number | string;
+  estimatedPeriods: number | string;
+  revisionDays: number | string;
+  bufferDays: number | string;
+  difficultyLevel: string;
+  bloomLevel: string;
+  tags: string;
+  learningOutcomes: string;
+  skillsCovered: string;
+  prerequisites: string;
+  teachingMethods: string;
+  classActivities: string;
+  completionCriteria: string;
+  teacherNotes: string;
+  studentSummary: string;
+  parentSummary: string;
+  referenceLinks: string;
+  worksheets: string;
+  audioVideoMaterials: string;
+  boardDocuments: string;
+  assessmentMethod: string;
+  questionTypes: string;
+  marksWeightage: number | string;
+  bloomCoverage: string;
+  difficultyDistribution: string;
+  visibility: string;
+  publishStatus: string;
+  reviewStatus: string;
+  notifyOnPublish: boolean;
+  progressPercentage: number | string;
+  coverageStatus: string;
+  lessonPlanStatus: string;
+  homeworkStatus: string;
+  assessmentStatus: string;
+  resourceStatus: string;
+  questionCount: number | string;
+  healthScore: number | string;
+  isAiGenerated: boolean;
+  copiedFromPreviousYear: boolean;
+  templateSource: string;
+  dependencyChapterIds: string;
+  versionLabel: string;
 }
+
+export type SyllabusViewMode = 'table' | 'timeline' | 'calendar' | 'unit' | 'coverage';
 
 // Props interface for AddNewChapter component
 export interface IAddNewChapterProps {
@@ -65,6 +157,8 @@ export interface IChapterTableProps {
   actions: (params: { popover: any; row: IChapter }) => React.JSX.Element;
   handleEyeClick: (subjectName: string) => void;
   onViewDocuments: (chapter: IChapter) => void;
+  onCreateQuestion?: (chapter: IChapter) => void;
+  onViewQuestions?: (chapter: IChapter) => void;
   subjectId?: string;
   standardId?: string;
   canAdd?: boolean;
