@@ -30,12 +30,11 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomAccordion from 'src/components/custom-accordian';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useCreateFinancePolicyMutation,
@@ -49,6 +48,7 @@ import {
   Button,
   Switch,
   Select,
+  Drawer,
   Divider,
   MenuItem,
   Checkbox,
@@ -60,6 +60,8 @@ import {
   InputAdornment,
   FormControlLabel,
 } from '@mui/material';
+
+import { SectionCard } from './collection/CollectionCommon';
 
 import type { IFinancePolicyRow, IPaymentPolicyFormValues } from '../types/finance-policy.types';
 
@@ -917,9 +919,6 @@ const PaymentPolicyDrawer: React.FC<PaymentPolicyDrawerProps> = ({
 }) => {
   const { currentYear, academicYears } = useSelector((state: RootState) => state.globalState);
 
-  // Track which sections are expanded
-  const [expandedSections, setExpandedSections] = useState<Set<SectionKey>>(new Set(['general']));
-
   const unsavedChangesDialog = useBoolean();
 
   const handleCloseAttempt = () => {
@@ -928,18 +927,6 @@ const PaymentPolicyDrawer: React.FC<PaymentPolicyDrawerProps> = ({
     } else {
       onClose();
     }
-  };
-
-  const toggleSection = (key: SectionKey) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
-      return next;
-    });
   };
 
   // ── Mutations ──────────────────────────────────────────────────────────────
@@ -1042,229 +1029,202 @@ const PaymentPolicyDrawer: React.FC<PaymentPolicyDrawerProps> = ({
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Header */}
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={handleCloseAttempt}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', lg: 'min(1100px, 95vw)' },
+          maxWidth: '100%',
+        },
+      }}
+    >
       <Box
         sx={{
-          px: 3,
-          py: 2,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          flexShrink: 0,
+          flexDirection: 'column',
+          height: '100%',
+          bgcolor: 'background.paper',
         }}
       >
-        <Box>
-          <Typography variant="h6" fontWeight={700}>
-            {editData ? 'Edit Payment Policy' : 'Create Payment Policy'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {editData
-              ? 'Update the payment policy configuration.'
-              : 'Define payment collection rules, allocation, modes, and approval workflows.'}
-          </Typography>
-        </Box>
-        <Button
-          size="small"
-          onClick={handleCloseAttempt}
-          startIcon={<Iconify icon="mdi:close" />}
-          color="inherit"
+        {/* Header */}
+        <Box
+          sx={{
+            px: 3,
+            py: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            flexShrink: 0,
+          }}
         >
-          Close
-        </Button>
-      </Box>
+          <Box>
+            <Typography variant="h6" fontWeight={700}>
+              {editData ? 'Edit Payment Policy' : 'Create Payment Policy'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {editData
+                ? 'Update the payment policy configuration.'
+                : 'Define payment collection rules, allocation, modes, and approval workflows.'}
+            </Typography>
+          </Box>
+          <Button
+            size="small"
+            onClick={handleCloseAttempt}
+            startIcon={<Iconify icon="mdi:close" />}
+            color="inherit"
+          >
+            Close
+          </Button>
+        </Box>
 
-      {/* Body — scroll area split: sections (left) + live summary (right) */}
-      <Box sx={{ display: 'flex', flex: 1, minHeight: 0 }}>
-        {/* Sections */}
-        <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ p: 0 }}>
-            {/* 1. General */}
-            <CustomAccordion
-              title={SECTION_LABELS.general}
-              expanded={expandedSections.has('general')}
-              onChange={() => toggleSection('general')}
-              isActive={expandedSections.has('general')}
-              content={<SectionGeneral formik={formik} academicYears={academicYears || []} />}
-            />
+        {/* Body — scroll area split: sections (left) + live summary (right) */}
+        <Box sx={{ display: 'flex', flex: 1, minHeight: 0 }}>
+          {/* Sections */}
+          <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ p: 3, pb: 6 }}>
+              {/* 1. General */}
+              <SectionCard title={SECTION_LABELS.general}>
+                <SectionGeneral formik={formik} academicYears={academicYears || []} />
+              </SectionCard>
 
-            {/* 2. Payment Behaviour */}
-            <CustomAccordion
-              title={SECTION_LABELS.behaviour}
-              expanded={expandedSections.has('behaviour')}
-              onChange={() => toggleSection('behaviour')}
-              isActive={expandedSections.has('behaviour')}
-              content={<SectionPaymentBehaviour formik={formik} />}
-            />
+              {/* 2. Payment Behaviour */}
+              <SectionCard title={SECTION_LABELS.behaviour}>
+                <SectionPaymentBehaviour formik={formik} />
+              </SectionCard>
 
-            {/* 3. Partial Payment Rules */}
-            <CustomAccordion
-              title={SECTION_LABELS.partial}
-              expanded={expandedSections.has('partial')}
-              onChange={() => toggleSection('partial')}
-              isActive={expandedSections.has('partial')}
-              content={<SectionPartialPayment formik={formik} />}
-            />
+              {/* 3. Partial Payment Rules */}
+              <SectionCard title={SECTION_LABELS.partial}>
+                <SectionPartialPayment formik={formik} />
+              </SectionCard>
 
-            {/* 4. Allocation Rules — info card */}
-            <CustomAccordion
-              title={SECTION_LABELS.allocation}
-              expanded={expandedSections.has('allocation')}
-              onChange={() => toggleSection('allocation')}
-              isActive={expandedSections.has('allocation')}
-              content={
-                <Box p={2}>
+              {/* 4. Allocation Rules — info card */}
+              <SectionCard title={SECTION_LABELS.allocation}>
+                <Box p={1}>
                   <Typography variant="caption" color="text.secondary">
                     Allocation method is configured in Payment Behaviour above. Current:{' '}
                     <strong>{formik.values.allocationMethod}</strong>
                   </Typography>
                 </Box>
-              }
-            />
+              </SectionCard>
 
-            {/* 5. Advance Payment */}
-            <CustomAccordion
-              title={SECTION_LABELS.advance}
-              expanded={expandedSections.has('advance')}
-              onChange={() => toggleSection('advance')}
-              isActive={expandedSections.has('advance')}
-              content={<SectionAdvancePayment formik={formik} />}
-            />
+              {/* 5. Advance Payment */}
+              <SectionCard title={SECTION_LABELS.advance}>
+                <SectionAdvancePayment formik={formik} />
+              </SectionCard>
 
-            {/* 6. Receipt Rules */}
-            <CustomAccordion
-              title={SECTION_LABELS.receipt}
-              expanded={expandedSections.has('receipt')}
-              onChange={() => toggleSection('receipt')}
-              isActive={expandedSections.has('receipt')}
-              content={<SectionReceiptRules formik={formik} />}
-            />
+              {/* 6. Receipt Rules */}
+              <SectionCard title={SECTION_LABELS.receipt}>
+                <SectionReceiptRules formik={formik} />
+              </SectionCard>
 
-            {/* 7. Demand Generation */}
-            <CustomAccordion
-              title={SECTION_LABELS.demand}
-              expanded={expandedSections.has('demand')}
-              onChange={() => toggleSection('demand')}
-              isActive={expandedSections.has('demand')}
-              content={<SectionDemandGeneration formik={formik} />}
-            />
+              {/* 7. Demand Generation */}
+              <SectionCard title={SECTION_LABELS.demand}>
+                <SectionDemandGeneration formik={formik} />
+              </SectionCard>
 
-            {/* 8. Reminder Rules */}
-            <CustomAccordion
-              title={SECTION_LABELS.reminder}
-              expanded={expandedSections.has('reminder')}
-              onChange={() => toggleSection('reminder')}
-              isActive={expandedSections.has('reminder')}
-              content={<SectionReminderRules formik={formik} />}
-            />
+              {/* 8. Reminder Rules */}
+              <SectionCard title={SECTION_LABELS.reminder}>
+                <SectionReminderRules formik={formik} />
+              </SectionCard>
 
-            {/* 9. Payment Modes */}
-            <CustomAccordion
-              title={SECTION_LABELS.modes}
-              expanded={expandedSections.has('modes')}
-              onChange={() => toggleSection('modes')}
-              isActive={expandedSections.has('modes')}
-              content={<SectionPaymentModes formik={formik} />}
-            />
+              {/* 9. Payment Modes */}
+              <SectionCard title={SECTION_LABELS.modes}>
+                <SectionPaymentModes formik={formik} />
+              </SectionCard>
 
-            {/* 10. Approval Rules */}
-            <CustomAccordion
-              title={SECTION_LABELS.approval}
-              expanded={expandedSections.has('approval')}
-              onChange={() => toggleSection('approval')}
-              isActive={expandedSections.has('approval')}
-              content={<SectionApprovalRules formik={formik} />}
-            />
+              {/* 10. Approval Rules */}
+              <SectionCard title={SECTION_LABELS.approval}>
+                <SectionApprovalRules formik={formik} />
+              </SectionCard>
 
-            {/* 11. Security */}
-            <CustomAccordion
-              title={SECTION_LABELS.security}
-              expanded={expandedSections.has('security')}
-              onChange={() => toggleSection('security')}
-              isActive={expandedSections.has('security')}
-              content={<SectionSecurity formik={formik} />}
-            />
-          </Box>
-        </Scrollbar>
+              {/* 11. Security */}
+              <SectionCard title={SECTION_LABELS.security}>
+                <SectionSecurity formik={formik} />
+              </SectionCard>
+            </Box>
+          </Scrollbar>
 
-        {/* Live Summary Panel */}
-        <Box
-          sx={{
-            width: 240,
-            flexShrink: 0,
-            p: 2,
-            borderLeft: '1px solid',
-            borderColor: 'divider',
-            display: { xs: 'none', md: 'block' },
-            overflowY: 'auto',
-          }}
-        >
-          <LiveSummaryPanel values={formik.values} />
-        </Box>
-      </Box>
-
-      {/* Sticky Footer */}
-      <Stack
-        direction="row"
-        justifyContent="flex-end"
-        spacing={1.5}
-        sx={{
-          px: { xs: 2, sm: 3 },
-          py: 1.5,
-          bgcolor: 'background.paper',
-          position: 'sticky',
-          bottom: 0,
-          zIndex: 1,
-        }}
-      >
-        <Button
-          variant="outlined"
-          color="inherit"
-          onClick={handleCloseAttempt}
-          size="small"
-          startIcon={<Iconify icon="basil:cross-solid" />}
-          disabled={isSaving}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          variant="contained"
-          color="primary"
-          loading={isSaving}
-          onClick={() => handleCustomSubmit('Active')}
-          size="small"
-          startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
-          disabled={!checks.isReadyToPublish}
-          sx={{ minWidth: 90 }}
-        >
-          Submit
-        </LoadingButton>
-      </Stack>
-
-      {/* Unsaved changes confirmation dialog */}
-      <ConfirmDialog
-        open={unsavedChangesDialog.value}
-        icon="warning"
-        onClose={unsavedChangesDialog.onFalse}
-        title="Unsaved Changes"
-        content="You have unsaved changes in this policy form. Are you sure you want to discard them?"
-        action={
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={() => {
-              unsavedChangesDialog.onFalse();
-              onClose();
+          {/* Live Summary Panel */}
+          <Box
+            sx={{
+              width: 240,
+              flexShrink: 0,
+              p: 2,
+              borderLeft: '1px solid',
+              borderColor: 'divider',
+              display: { xs: 'none', md: 'block' },
+              overflowY: 'auto',
             }}
           >
-            Discard
+            <LiveSummaryPanel values={formik.values} />
+          </Box>
+        </Box>
+
+        {/* Sticky Footer */}
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          spacing={1.5}
+          sx={{
+            px: { xs: 2, sm: 3 },
+            py: 1.5,
+            bgcolor: 'background.paper',
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 1,
+          }}
+        >
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={handleCloseAttempt}
+            size="small"
+            startIcon={<Iconify icon="basil:cross-solid" />}
+            disabled={isSaving}
+          >
+            Cancel
           </Button>
-        }
-      />
-    </Box>
+          <LoadingButton
+            variant="contained"
+            color="primary"
+            loading={isSaving}
+            onClick={() => handleCustomSubmit('Active')}
+            size="small"
+            startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
+            disabled={!checks.isReadyToPublish}
+            sx={{ minWidth: 90 }}
+          >
+            Submit
+          </LoadingButton>
+        </Stack>
+
+        {/* Unsaved changes confirmation dialog */}
+        <ConfirmDialog
+          open={unsavedChangesDialog.value}
+          icon="warning"
+          onClose={unsavedChangesDialog.onFalse}
+          title="Unsaved Changes"
+          content="You have unsaved changes in this policy form. Are you sure you want to discard them?"
+          action={
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              onClick={() => {
+                unsavedChangesDialog.onFalse();
+                onClose();
+              }}
+            >
+              Discard
+            </Button>
+          }
+        />
+      </Box>
+    </Drawer>
   );
 };
 

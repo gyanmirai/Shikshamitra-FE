@@ -5,8 +5,8 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
+import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Button, Drawer } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinancePolicyTable from '../components/FinancePolicyTable';
@@ -35,7 +35,7 @@ export default function ConcessionPolicyWorkspace() {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
       <CustomBreadcrumbs
         heading="Concession Policy"
-        description="Set up fee discount eligibility (merit, sibling, staff), stacking settings, and government schemas."
+        description="Define reusable concession calculation rules, fee head scope, application behaviour, and demand recalculation logic."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Policies & Rules', href: '/finance/policies' },
@@ -58,24 +58,12 @@ export default function ConcessionPolicyWorkspace() {
         <FinancePolicyTable policyType="concession" onAdd={handleAdd} onEdit={handleEdit} />
       </Box>
 
-      <Drawer
-        anchor="right"
+      <ConcessionPolicyDrawer
         open={drawerOpen.value}
         onClose={drawerOpen.onFalse}
-        PaperProps={{
-          sx: {
-            width: { xs: '100%', sm: 'min(1180px, 92vw)' },
-            maxWidth: '100%',
-          },
-        }}
-      >
-        <ConcessionPolicyDrawer
-          open={drawerOpen.value}
-          onClose={drawerOpen.onFalse}
-          editData={selectedPolicy}
-          academicYearId={academicYearId}
-        />
-      </Drawer>
+        editData={selectedPolicy}
+        academicYearId={academicYearId}
+      />
     </Box>
   );
 }

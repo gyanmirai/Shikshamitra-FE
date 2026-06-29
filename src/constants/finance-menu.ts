@@ -414,7 +414,7 @@ const financeModule = {
               _action: 'finance-payment-policy',
               shortcutKey: 'Alt+F+Y+1',
               shortcutKeyName: 'Alt+F+Y+1',
-              permissionName: financePermissions.policies.paymentPolicy,
+              permissionName: financePermissions.fees.collections,
               icon: menuIconView('mdi:cash-check'),
             },
             {
@@ -432,7 +432,7 @@ const financeModule = {
               _action: 'finance-concession-policy',
               shortcutKey: 'Alt+F+Y+3',
               shortcutKeyName: 'Alt+F+Y+3',
-              permissionName: financePermissions.policies.concessionPolicy,
+              permissionName: financePermissions.fees.collections,
               icon: menuIconView('mdi:ticket-percent-outline'),
             },
             {

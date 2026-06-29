@@ -2,19 +2,16 @@
 
 import type { RootState } from 'src/redux/store';
 
-import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomAccordion from 'src/components/custom-accordian';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import {
@@ -31,6 +28,7 @@ import {
   Button,
   Select,
   Switch,
+  Drawer,
   Divider,
   MenuItem,
   Checkbox,
@@ -39,10 +37,11 @@ import {
   InputLabel,
   FormControl,
   Autocomplete,
-  FormHelperText,
   InputAdornment,
   FormControlLabel,
 } from '@mui/material';
+
+import { SectionCard } from '../../settings/PaymentTerm/Components/ui/SectionCard';
 
 import type { IFinancePolicyRow, IRefundPolicyFormValues } from '../types/finance-policy.types';
 
@@ -144,7 +143,6 @@ const validationSchema = Yup.object().shape({
     .required('Policy name is required')
     .min(3, 'Must be at least 3 characters')
     .max(100, 'Cannot exceed 100 characters'),
-  academicYearId: Yup.string().required('Academic year is required'),
   refundDueWithin: Yup.number()
     .typeError('Refund due within must be a number')
     .min(0, 'Must be 0 or greater')
@@ -153,8 +151,8 @@ const validationSchema = Yup.object().shape({
 });
 
 // ─── Sections ────────────────────────────────────────────────────────────────
-const SectionGeneral = ({ formik, academicYears }: { formik: any; academicYears: any[] }) => (
-  <Grid container spacing={2.5} p={2}>
+const SectionGeneral = ({ formik }: { formik: any }) => (
+  <Grid container spacing={2.5}>
     <Grid size={{ xs: 12, sm: 8 }}>
       <TextField
         fullWidth
@@ -169,26 +167,6 @@ const SectionGeneral = ({ formik, academicYears }: { formik: any; academicYears:
       />
     </Grid>
     <Grid size={{ xs: 12, sm: 4 }}>
-      <FormControl fullWidth size="small" error={Boolean(formik.errors.academicYearId)}>
-        <InputLabel>Academic Year *</InputLabel>
-        <Select
-          label="Academic Year *"
-          name="academicYearId"
-          value={formik.values.academicYearId}
-          onChange={formik.handleChange}
-        >
-          {academicYears.map((y: any) => (
-            <MenuItem key={y.id} value={y.id}>
-              {y.name}
-            </MenuItem>
-          ))}
-        </Select>
-        {formik.errors.academicYearId && (
-          <FormHelperText>{formik.errors.academicYearId}</FormHelperText>
-        )}
-      </FormControl>
-    </Grid>
-    <Grid size={{ xs: 12, sm: 6 }}>
       <FormControl fullWidth size="small">
         <InputLabel>Status *</InputLabel>
         <Select
@@ -197,35 +175,10 @@ const SectionGeneral = ({ formik, academicYears }: { formik: any; academicYears:
           value={formik.values.status}
           onChange={formik.handleChange}
         >
-          <MenuItem value="Draft">Draft</MenuItem>
           <MenuItem value="Active">Active</MenuItem>
           <MenuItem value="Archived">Archived</MenuItem>
         </Select>
       </FormControl>
-    </Grid>
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <DatePicker
-        label="Effective From"
-        value={formik.values.effectiveFrom ? dayjs(formik.values.effectiveFrom) : null}
-        onChange={(d) => formik.setFieldValue('effectiveFrom', d ? d.toISOString() : null)}
-        slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-      />
-    </Grid>
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <DatePicker
-        label="Effective To"
-        value={formik.values.effectiveTo ? dayjs(formik.values.effectiveTo) : null}
-        onChange={(d) => formik.setFieldValue('effectiveTo', d ? d.toISOString() : null)}
-        minDate={formik.values.effectiveFrom ? dayjs(formik.values.effectiveFrom) : undefined}
-        slotProps={{
-          textField: {
-            fullWidth: true,
-            size: 'small',
-            error: Boolean(formik.errors.effectiveTo),
-            helperText: formik.errors.effectiveTo as string,
-          },
-        }}
-      />
     </Grid>
     <Grid size={{ xs: 12 }}>
       <TextField
@@ -278,7 +231,7 @@ const SectionGeneral = ({ formik, academicYears }: { formik: any; academicYears:
 );
 
 const SectionEligibility = ({ formik, feeHeads }: { formik: any; feeHeads: any[] }) => (
-  <Grid container spacing={2.5} p={2}>
+  <Grid container spacing={2.5}>
     {/* Applicable Fee Heads */}
     <Grid size={{ xs: 12 }}>
       <Autocomplete
@@ -398,7 +351,7 @@ const SectionEligibility = ({ formik, feeHeads }: { formik: any; feeHeads: any[]
 );
 
 const SectionProcessing = ({ formik }: { formik: any }) => (
-  <Grid container spacing={2.5} p={2}>
+  <Grid container spacing={2.5}>
     {/* Refund Due Within */}
     <Grid size={{ xs: 12, sm: 6 }}>
       <TextField
@@ -464,7 +417,7 @@ const SectionProcessing = ({ formik }: { formik: any }) => (
 );
 
 const SectionAccounting = ({ formik }: { formik: any }) => (
-  <Grid container spacing={2.5} p={2}>
+  <Grid container spacing={2.5}>
     {/* Consider as Expense */}
     <Grid size={{ xs: 12, sm: 6 }}>
       <Card
@@ -501,20 +454,6 @@ const SectionAccounting = ({ formik }: { formik: any }) => (
           }
         />
       </Card>
-    </Grid>
-
-    {/* Government Compliance Code */}
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <TextField
-        fullWidth
-        size="small"
-        label="Compliance Code"
-        name="governmentComplianceCode"
-        value={formik.values.governmentComplianceCode}
-        onChange={formik.handleChange}
-        placeholder="e.g. RTE-2009, State Rule"
-        helperText="Link compliance standard code reference"
-      />
     </Grid>
   </Grid>
 );
@@ -655,7 +594,7 @@ const RefundPolicyDrawer: React.FC<RefundPolicyDrawerProps> = ({
     {
       key: 'general',
       label: 'General Information',
-      content: <SectionGeneral formik={formik} academicYears={academicYears || []} />,
+      content: <SectionGeneral formik={formik} />,
     },
     {
       key: 'eligibility',
@@ -675,313 +614,324 @@ const RefundPolicyDrawer: React.FC<RefundPolicyDrawerProps> = ({
   ];
 
   return (
-    <Box
-      sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'background.paper' }}
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={handleCloseAttempt}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', lg: 'min(1100px, 95vw)' },
+          maxWidth: '100%',
+        },
+      }}
     >
-      {/* Header */}
       <Box
         sx={{
-          px: 3,
-          py: 2,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          flexShrink: 0,
+          flexDirection: 'column',
+          height: '100%',
+          bgcolor: 'background.paper',
         }}
       >
-        <Box>
-          <Typography variant="h6" fontWeight={700}>
-            {editData ? 'Edit Refund Policy' : 'Create Refund Policy'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Configure reusable refund criteria, eligibility requirements, compliance, and payment
-            rules.
-          </Typography>
-        </Box>
-        <Button
-          size="small"
-          onClick={handleCloseAttempt}
-          startIcon={<Iconify icon="mdi:close" />}
-          color="inherit"
-        >
-          Close
-        </Button>
-      </Box>
-
-      {/* Main Body */}
-      <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        {/* Scrollable Form */}
-        <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ p: 3, pb: 6 }}>
-            {sections.map((s) => (
-              <CustomAccordion
-                key={s.key}
-                title={s.label}
-                expanded={expandedSections.has(s.key)}
-                onChange={() => toggleSection(s.key)}
-                isActive={expandedSections.has(s.key)}
-                content={s.content}
-              />
-            ))}
-          </Box>
-        </Scrollbar>
-
-        {/* Sticky Right Summary Panel */}
+        {/* Header */}
         <Box
           sx={{
-            width: 300,
-            flexShrink: 0,
-            display: { xs: 'none', lg: 'flex' },
-            flexDirection: 'column',
-            borderLeft: '1px solid',
+            px: 3,
+            py: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid',
             borderColor: 'divider',
-            overflow: 'hidden',
-            bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'background.neutral' : 'grey.50'),
+            flexShrink: 0,
           }}
         >
-          <Scrollbar sx={{ flex: 1 }}>
-            <Box sx={{ p: 2 }}>
-              {/* Summary */}
-              <Typography
-                variant="overline"
-                sx={{
-                  fontSize: '0.6rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.1em',
-                  color: 'text.secondary',
-                }}
-              >
-                Live Summary
-              </Typography>
-              <Stack spacing={0.75} mt={1} mb={2.5}>
-                <SummaryRow
-                  label="Policy Name"
-                  value={
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      sx={{
-                        maxWidth: 140,
-                        textAlign: 'right',
-                        wordBreak: 'break-word',
-                        fontSize: '0.7rem',
-                      }}
-                    >
-                      {formik.values.policyName || '—'}
-                    </Typography>
-                  }
-                />
-                <SummaryRow
-                  label="Status"
-                  value={
-                    <Chip
-                      label={formik.values.status}
-                      size="small"
-                      color={formik.values.status === 'Active' ? 'success' : 'default'}
-                      sx={{ height: 18, fontSize: '0.6rem', fontWeight: 700 }}
-                    />
-                  }
-                />
-                <SummaryRow
-                  label="Refund On"
-                  value={
-                    <Typography variant="caption" fontWeight={600} fontSize="0.7rem">
-                      {formik.values.refundOn === 'FullPayment'
-                        ? 'Full Payment'
-                        : 'Partial + Full Payment'}
-                    </Typography>
-                  }
-                />
-                <SummaryRow
-                  label="Refund for Charges"
-                  value={
-                    <Chip
-                      label={formik.values.enableRefundForCharge ? 'Yes' : 'No'}
-                      size="small"
-                      color={formik.values.enableRefundForCharge ? 'primary' : 'default'}
-                      variant={formik.values.enableRefundForCharge ? 'filled' : 'outlined'}
-                      sx={{ height: 18, fontSize: '0.6rem' }}
-                    />
-                  }
-                />
-                <SummaryRow
-                  label="Due Within"
-                  value={
-                    <Typography variant="caption" fontWeight={600} fontSize="0.7rem">
-                      {formik.values.refundDueWithin} days
-                    </Typography>
-                  }
-                />
-                <SummaryRow
-                  label="Consider as Expense"
-                  value={
-                    <Chip
-                      label={formik.values.considerAsExpense ? 'Yes' : 'No'}
-                      size="small"
-                      color={formik.values.considerAsExpense ? 'warning' : 'default'}
-                      variant={formik.values.considerAsExpense ? 'filled' : 'outlined'}
-                      sx={{ height: 18, fontSize: '0.6rem' }}
-                    />
-                  }
-                />
-              </Stack>
+          <Box>
+            <Typography variant="h6" fontWeight={700}>
+              {editData ? 'Edit Refund Policy' : 'Create Refund Policy'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Configure reusable refund criteria, eligibility requirements, compliance, and payment
+              rules.
+            </Typography>
+          </Box>
+          <Button
+            size="small"
+            onClick={handleCloseAttempt}
+            startIcon={<Iconify icon="mdi:close" />}
+            color="inherit"
+          >
+            Close
+          </Button>
+        </Box>
 
-              <Divider sx={{ my: 1.5 }} />
-
-              {/* Live Calculator */}
-              <Typography
-                variant="overline"
-                sx={{
-                  fontSize: '0.6rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.1em',
-                  color: 'text.secondary',
-                }}
-              >
-                Refund Simulation
-              </Typography>
-              <Stack spacing={1.5} mt={1} mb={2.5}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Paid Amount (₹)"
-                  value={calcAmount}
-                  onChange={(e) => setCalcAmount(Math.max(0, +e.target.value))}
-                  inputProps={{ style: { fontSize: '11px', padding: '6px 8px' } }}
-                />
-
-                <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'action.hover' }}>
-                  <Stack spacing={0.5}>
-                    <Box display="flex" justifyContent="space-between">
-                      <Typography sx={{ fontSize: '11px' }}>Paid Amount:</Typography>
-                      <Typography sx={{ fontSize: '11px' }} fontWeight={700}>
-                        ₹{calcAmount}
-                      </Typography>
-                    </Box>
-                    <Box display="flex" justifyContent="space-between">
-                      <Typography sx={{ fontSize: '11px' }}>Refunding Fee Heads:</Typography>
-                      <Typography sx={{ fontSize: '11px' }} fontWeight={700}>
-                        {formik.values.applicableFeeHeads.length} item(s)
-                      </Typography>
-                    </Box>
-                    <Divider sx={{ my: 0.5 }} />
-                    <Box display="flex" justifyContent="space-between">
-                      <Typography sx={{ fontSize: '11px' }} fontWeight={600}>
-                        Estimated Refund:
-                      </Typography>
-                      <Typography sx={{ fontSize: '11px' }} fontWeight={700} color="success.main">
-                        ₹{calculatedRefund}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Paper>
-              </Stack>
-
-              <Divider sx={{ my: 1.5 }} />
-
-              {/* Validation panel */}
-              <Typography
-                variant="overline"
-                sx={{
-                  fontSize: '0.6rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.1em',
-                  color: 'text.secondary',
-                }}
-              >
-                Validation Panel
-              </Typography>
-              <Stack spacing={0.5} mt={1}>
-                <ValidationCheck
-                  label="General Info Completed"
-                  valid={checks.nameValid && checks.yearValid}
-                />
-                <ValidationCheck label="Applicable Fee Heads Selected" valid={checks.headsValid} />
-                <ValidationCheck label="Payment Process Configured" valid={checks.dueValid} />
-                {checks.isReadyToPublish ? (
-                  <Chip
-                    label="Ready to Publish"
-                    size="small"
-                    color="success"
-                    sx={{ mt: 1, height: 20, fontSize: '10px' }}
-                  />
-                ) : (
-                  <Chip
-                    label="Requires Fields Completion"
-                    size="small"
-                    color="warning"
-                    sx={{ mt: 1, height: 20, fontSize: '10px' }}
-                  />
-                )}
-              </Stack>
+        {/* Main Body */}
+        <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          {/* Scrollable Form */}
+          <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ p: 2, pb: 6 }}>
+              {sections.map((s) => (
+                <SectionCard key={s.key} title={s.label}>
+                  {s.content}
+                </SectionCard>
+              ))}
             </Box>
           </Scrollbar>
-        </Box>
-      </Box>
 
-      {/* Sticky Footer */}
-      <Stack
-        direction="row"
-        justifyContent="flex-end"
-        spacing={1.5}
-        sx={{
-          px: { xs: 2, sm: 3 },
-          py: 1.5,
-          bgcolor: 'background.paper',
-          position: 'sticky',
-          bottom: 0,
-          zIndex: 1,
-        }}
-      >
-        <Button
-          variant="outlined"
-          color="inherit"
-          onClick={handleCloseAttempt}
-          size="small"
-          startIcon={<Iconify icon="basil:cross-solid" />}
-          disabled={isSaving}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          variant="contained"
-          color="primary"
-          loading={isSaving}
-          onClick={() => handleCustomSubmit('Active')}
-          size="small"
-          startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
-          disabled={!checks.isReadyToPublish}
-          sx={{ minWidth: 90 }}
-        >
-          Submit
-        </LoadingButton>
-      </Stack>
-
-      {/* Unsaved changes confirmation dialog */}
-      <ConfirmDialog
-        open={unsavedChangesDialog.value}
-        icon="warning"
-        onClose={unsavedChangesDialog.onFalse}
-        title="Unsaved Changes"
-        content="You have unsaved changes in this policy form. Are you sure you want to discard them?"
-        action={
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={() => {
-              unsavedChangesDialog.onFalse();
-              onClose();
+          {/* Sticky Right Summary Panel */}
+          <Box
+            sx={{
+              width: 300,
+              flexShrink: 0,
+              display: { xs: 'none', lg: 'flex' },
+              flexDirection: 'column',
+              borderLeft: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden',
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark' ? 'background.neutral' : 'grey.50',
             }}
           >
-            Discard
+            <Scrollbar sx={{ flex: 1 }}>
+              <Box sx={{ p: 2 }}>
+                {/* Summary */}
+                <Typography
+                  variant="overline"
+                  sx={{
+                    fontSize: '0.6rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.1em',
+                    color: 'text.secondary',
+                  }}
+                >
+                  Live Summary
+                </Typography>
+                <Stack spacing={0.75} mt={1} mb={2.5}>
+                  <SummaryRow
+                    label="Policy Name"
+                    value={
+                      <Typography
+                        variant="caption"
+                        fontWeight={600}
+                        sx={{
+                          maxWidth: 140,
+                          textAlign: 'right',
+                          wordBreak: 'break-word',
+                          fontSize: '0.7rem',
+                        }}
+                      >
+                        {formik.values.policyName || '—'}
+                      </Typography>
+                    }
+                  />
+                  <SummaryRow
+                    label="Status"
+                    value={
+                      <Chip
+                        label={formik.values.status}
+                        size="small"
+                        color={formik.values.status === 'Active' ? 'success' : 'default'}
+                        sx={{ height: 18, fontSize: '0.6rem', fontWeight: 700 }}
+                      />
+                    }
+                  />
+                  <SummaryRow
+                    label="Refund On"
+                    value={
+                      <Typography variant="caption" fontWeight={600} fontSize="0.7rem">
+                        {formik.values.refundOn === 'FullPayment' ? 'Paid' : 'Partial + Paid'}
+                      </Typography>
+                    }
+                  />
+                  <SummaryRow
+                    label="Refund for Charges"
+                    value={
+                      <Chip
+                        label={formik.values.enableRefundForCharge ? 'Yes' : 'No'}
+                        size="small"
+                        color={formik.values.enableRefundForCharge ? 'primary' : 'default'}
+                        variant={formik.values.enableRefundForCharge ? 'filled' : 'outlined'}
+                        sx={{ height: 18, fontSize: '0.6rem' }}
+                      />
+                    }
+                  />
+                  <SummaryRow
+                    label="Due Within"
+                    value={
+                      <Typography variant="caption" fontWeight={600} fontSize="0.7rem">
+                        {formik.values.refundDueWithin} days
+                      </Typography>
+                    }
+                  />
+                  <SummaryRow
+                    label="Consider as Expense"
+                    value={
+                      <Chip
+                        label={formik.values.considerAsExpense ? 'Yes' : 'No'}
+                        size="small"
+                        color={formik.values.considerAsExpense ? 'warning' : 'default'}
+                        variant={formik.values.considerAsExpense ? 'filled' : 'outlined'}
+                        sx={{ height: 18, fontSize: '0.6rem' }}
+                      />
+                    }
+                  />
+                </Stack>
+
+                <Divider sx={{ my: 1.5 }} />
+
+                {/* Live Calculator */}
+                <Typography
+                  variant="overline"
+                  sx={{
+                    fontSize: '0.6rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.1em',
+                    color: 'text.secondary',
+                  }}
+                >
+                  Refund Simulation
+                </Typography>
+                <Stack spacing={1.5} mt={1} mb={2.5}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="Paid Amount (₹)"
+                    value={calcAmount}
+                    onChange={(e) => setCalcAmount(Math.max(0, +e.target.value))}
+                    inputProps={{ style: { fontSize: '11px', padding: '6px 8px' } }}
+                  />
+
+                  <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'action.hover' }}>
+                    <Stack spacing={0.5}>
+                      <Box display="flex" justifyContent="space-between">
+                        <Typography sx={{ fontSize: '11px' }}>Paid Amount:</Typography>
+                        <Typography sx={{ fontSize: '11px' }} fontWeight={700}>
+                          ₹{calcAmount}
+                        </Typography>
+                      </Box>
+                      <Box display="flex" justifyContent="space-between">
+                        <Typography sx={{ fontSize: '11px' }}>Refunding Fee Heads:</Typography>
+                        <Typography sx={{ fontSize: '11px' }} fontWeight={700}>
+                          {formik.values.applicableFeeHeads.length} item(s)
+                        </Typography>
+                      </Box>
+                      <Divider sx={{ my: 0.5 }} />
+                      <Box display="flex" justifyContent="space-between">
+                        <Typography sx={{ fontSize: '11px' }} fontWeight={600}>
+                          Estimated Refund:
+                        </Typography>
+                        <Typography sx={{ fontSize: '11px' }} fontWeight={700} color="success.main">
+                          ₹{calculatedRefund}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Paper>
+                </Stack>
+
+                <Divider sx={{ my: 1.5 }} />
+
+                {/* Validation panel */}
+                <Typography
+                  variant="overline"
+                  sx={{
+                    fontSize: '0.6rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.1em',
+                    color: 'text.secondary',
+                  }}
+                >
+                  Validation Panel
+                </Typography>
+                <Stack spacing={0.5} mt={1}>
+                  <ValidationCheck label="General Info Completed" valid={checks.nameValid} />
+                  <ValidationCheck
+                    label="Applicable Fee Heads Selected"
+                    valid={checks.headsValid}
+                  />
+                  <ValidationCheck label="Payment Process Configured" valid={checks.dueValid} />
+                  {checks.isReadyToPublish ? (
+                    <Chip
+                      label="Ready to Publish"
+                      size="small"
+                      color="success"
+                      sx={{ mt: 1, height: 20, fontSize: '10px' }}
+                    />
+                  ) : (
+                    <Chip
+                      label="Requires Fields Completion"
+                      size="small"
+                      color="warning"
+                      sx={{ mt: 1, height: 20, fontSize: '10px' }}
+                    />
+                  )}
+                </Stack>
+              </Box>
+            </Scrollbar>
+          </Box>
+        </Box>
+
+        {/* Sticky Footer */}
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          spacing={1.5}
+          sx={{
+            px: { xs: 2, sm: 3 },
+            py: 1.5,
+            bgcolor: 'background.paper',
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 1,
+          }}
+        >
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={handleCloseAttempt}
+            size="small"
+            startIcon={<Iconify icon="basil:cross-solid" />}
+            disabled={isSaving}
+          >
+            Cancel
           </Button>
-        }
-      />
-    </Box>
+          <LoadingButton
+            variant="contained"
+            color="primary"
+            loading={isSaving}
+            onClick={() => handleCustomSubmit('Active')}
+            size="small"
+            startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
+            disabled={!checks.isReadyToPublish}
+            sx={{ minWidth: 90 }}
+          >
+            Submit
+          </LoadingButton>
+        </Stack>
+
+        {/* Unsaved changes confirmation dialog */}
+        <ConfirmDialog
+          open={unsavedChangesDialog.value}
+          icon="warning"
+          onClose={unsavedChangesDialog.onFalse}
+          title="Unsaved Changes"
+          content="You have unsaved changes in this policy form. Are you sure you want to discard them?"
+          action={
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              onClick={() => {
+                unsavedChangesDialog.onFalse();
+                onClose();
+              }}
+            >
+              Discard
+            </Button>
+          }
+        />
+      </Box>
+    </Drawer>
   );
 };
 

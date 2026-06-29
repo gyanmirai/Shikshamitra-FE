@@ -5,8 +5,8 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
+import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Button, Drawer } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinancePolicyTable from '../components/FinancePolicyTable';
@@ -58,24 +58,12 @@ export default function CollectionPolicyWorkspace() {
         <FinancePolicyTable policyType="collection" onAdd={handleAdd} onEdit={handleEdit} />
       </Box>
 
-      <Drawer
-        anchor="right"
+      <CollectionPolicyDrawer
         open={drawerOpen.value}
         onClose={drawerOpen.onFalse}
-        PaperProps={{
-          sx: {
-            width: { xs: '100%', sm: 'min(1180px, 92vw)' },
-            maxWidth: '100%',
-          },
-        }}
-      >
-        <CollectionPolicyDrawer
-          open={drawerOpen.value}
-          onClose={drawerOpen.onFalse}
-          editData={selectedPolicy}
-          academicYearId={academicYearId}
-        />
-      </Drawer>
+        editData={selectedPolicy}
+        academicYearId={academicYearId}
+      />
     </Box>
   );
 }

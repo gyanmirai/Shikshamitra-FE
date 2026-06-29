@@ -336,6 +336,41 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
             },
           ]
         : []),
+      ...(policyType === 'proration'
+        ? [
+            {
+              id: 'feeHeadRules',
+              label: 'Fee Heads Configured',
+              align: 'center' as const,
+              render: (_: any, row: any) => {
+                const rules: any[] = row.feeHeadRules ?? [];
+                const enabled = rules.filter((r: any) => r.prorationApplicable).length;
+                const total = rules.length;
+                return (
+                  <Chip
+                    label={total > 0 ? `${enabled} / ${total}` : '-'}
+                    size="small"
+                    color={enabled > 0 ? 'primary' : 'default'}
+                    variant={enabled > 0 ? 'filled' : 'outlined'}
+                    sx={{ height: 20, fontSize: '0.7rem' }}
+                  />
+                );
+              },
+            },
+            {
+              id: 'usedByCount',
+              label: 'Used By',
+              align: 'center' as const,
+              render: (_: any, row: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {row.usedByCount != null
+                    ? `${row.usedByCount} structure${row.usedByCount !== 1 ? 's' : ''}`
+                    : '-'}
+                </Typography>
+              ),
+            },
+          ]
+        : []),
       {
         id: 'status',
         label: 'Status',

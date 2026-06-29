@@ -4,7 +4,7 @@ import { financePermissions } from 'src/constants/finance-menu';
 import StudentPermissionGuard from 'src/components/student-permission-guard';
 
 const ConcessionPolicyLayout = ({ children }: { children: React.ReactNode }) => (
-  <StudentPermissionGuard permissionKey={financePermissions.policies.concessionPolicy}>
+  <StudentPermissionGuard permissionKey={financePermissions.fees.collections}>
     {children}
   </StudentPermissionGuard>
 );

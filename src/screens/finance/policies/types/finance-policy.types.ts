@@ -33,6 +33,45 @@ export type ConcessionEligibilityType =
   | 'GovernmentScheme'
   | 'Custom';
 
+export type ConcessionCalculationMethod = 'Percentage' | 'FixedAmount' | 'FullWaiver' | 'Manual';
+export type ConcessionCalculationBase = 'OriginalFee' | 'OutstandingAmount' | 'FeeHeadAmount';
+export type ConcessionRoundOff = 'None' | 'RoundUp' | 'RoundDown' | 'NearestRupee';
+export type ConcessionApplyOn =
+  | 'PendingFeesOnly'
+  | 'PaidFeesOnly'
+  | 'PaidAndPending'
+  | 'FutureInstallmentsOnly'
+  | 'CurrentInstallmentOnly'
+  | 'EntireFeeStructure';
+export type ConcessionPaidFeeAdjustment =
+  | 'Refund'
+  | 'CreditNote'
+  | 'StudentWallet'
+  | 'FutureFeeAdjustment'
+  | 'ManualDecision';
+export type ConcessionPendingFeeHandling =
+  | 'ReduceOutstanding'
+  | 'RecalculateInstallments'
+  | 'FutureInstallmentsOnly';
+export type ConcessionFutureInstallmentStrategy =
+  | 'EqualDistribution'
+  | 'RemainingInstallments'
+  | 'CurrentInstallment';
+export type ConcessionExistingDemand =
+  | 'RecalculateAutomatically'
+  | 'RecalculateFutureOnly'
+  | 'ManualRecalculation'
+  | 'KeepExisting';
+export type ConcessionReceiptBehaviour =
+  | 'KeepOriginalReceipt'
+  | 'GenerateAdjustmentReceipt'
+  | 'ReverseOriginalReceipt';
+export type ConcessionLateFeeBehaviour = 'Recalculate' | 'KeepExisting' | 'RemoveLateFee';
+export type ConcessionDemandStatus = 'UpdateImmediately' | 'UpdateAfterApproval';
+export type ConcessionExpiry = 'Never' | 'SessionEnd' | 'FixedDate';
+export type ConcessionRenewal = 'Manual' | 'Automatic' | 'ReapprovalRequired';
+export type ConcessionApplyOn_FeeHeads = 'EntireFeeStructure' | 'SelectedFeeHeads';
+
 export type RefundMethod = 'BankTransfer' | 'Cash' | 'Cheque' | 'OnlineGateway';
 
 // ─── Common fields shared by all policy types ─────────────────────────────────
@@ -184,14 +223,48 @@ export interface IConcessionDiscountRule {
 
 export interface IConcessionPolicy extends IFinancePolicyBase {
   policyType: 'concession';
+
+  // Card 1 – General Information
+  concessionType: string;
+
+  // Card 2 – Calculation Rules
+  calculationMethod: ConcessionCalculationMethod;
+  percentageValue: number | null;
+  fixedAmount: number | null;
+  calculationBase: ConcessionCalculationBase;
+  roundOff: ConcessionRoundOff;
+  minimumConcession: number | null;
+
+  // Card 3 – Applicable Fee Heads
+  feeHeadScope: ConcessionApplyOn_FeeHeads;
+  applicableFeeHeads: string[];
+
+  // Card 4 – Application Behaviour
+  applyOn: ConcessionApplyOn;
+  paidFeeAdjustment: ConcessionPaidFeeAdjustment | null;
+  pendingFeeHandling: ConcessionPendingFeeHandling | null;
+  futureInstallmentStrategy: ConcessionFutureInstallmentStrategy | null;
+
+  // Card 5 – Demand Behaviour
+  existingDemand: ConcessionExistingDemand;
+  receiptBehaviour: ConcessionReceiptBehaviour;
+  lateFeeBehaviour: ConcessionLateFeeBehaviour;
+  demandStatus: ConcessionDemandStatus;
+
+  // Card 6 – Approval Workflow
+  requireApproval: boolean;
+  approvalLevels: string[];
+  minimumApprovalCount: number | null;
+  reasonMandatory: boolean;
+  supportingDocumentsRequired: boolean;
+  requiredDocumentTypes: string[];
+
+  // Legacy / backward-compat
   eligibilityType: ConcessionEligibilityType;
   eligibilityCriteria: string;
   discountType: ConcessionDiscountType;
   discountValue: number;
-  maximumDiscountAmount: number | null;
   discountRules: IConcessionDiscountRule[];
-  applicableFeeHeads: string[];
-  requireApproval: boolean;
   approvalRoleIds: string[];
   allowStacking: boolean;
   maximumStackingCount: number | null;
@@ -312,14 +385,42 @@ export type ICollectionPolicyFormValues = Omit<
 >;
 
 // ─── Proration Policy ─────────────────────────────────────────────────────────
+
+export type ProrationRuleType =
+  | 'NoProration'
+  | 'DailyProration'
+  | 'MonthlyProration'
+  | 'FullMonthCharge';
+
+export type ProrationCalculationBasis = 'CalendarDays';
+
+export type ProrationRoundOff = 'NoRoundOff' | 'NearestRupee' | 'RoundUp' | 'RoundDown';
+
+export type ProrationMonthlyRule = 'ChargeCurrentMonth' | 'ChargeNextMonth' | 'HalfMonthRule';
+
+export interface IProrationRuleConfiguration {
+  // Daily Proration
+  calculationBasis?: ProrationCalculationBasis;
+  roundOff?: ProrationRoundOff;
+  minimumChargeDays?: number | null;
+
+  // Monthly Proration
+  monthlyRule?: ProrationMonthlyRule;
+  cutOffDay?: number | null; // used by ChargeNextMonth & HalfMonthRule
+}
+
+export interface IProrationFeeHeadRule {
+  feeHeadId: string;
+  feeHeadName?: string;
+  feeType: 'Recurring' | 'OneTime'; // stored per rule; displayed read-only
+  prorationApplicable: boolean;
+  ruleType: ProrationRuleType | null;
+  configuration: IProrationRuleConfiguration;
+}
+
 export interface IProrationPolicy extends IFinancePolicyBase {
   policyType: 'proration';
-  prorationMethod: 'FullAmount' | 'Proportional' | 'DaysPercentage' | 'Custom';
-  applyOnAdmission: boolean;
-  applyOnExit: boolean;
-  cutoffDays: number | null;
-  roundOffMethod?: 'None' | 'Nearest' | 'RoundUp' | 'RoundDown';
-  applicableFeeHeads: string[];
+  feeHeadRules: IProrationFeeHeadRule[];
 }
 
 export type IProrationPolicyFormValues = Omit<
