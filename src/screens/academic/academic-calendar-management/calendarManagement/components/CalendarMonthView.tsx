@@ -1,12 +1,12 @@
 'use client';
 
 import dayjs from 'dayjs';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { DayType, DAY_TYPE_COLORS, DAY_TYPE_LABELS } from 'src/enums/academic-calendar';
 import {
   Box,
-  Chip,
   Paper,
   Stack,
   Button,
@@ -507,17 +507,17 @@ const CalendarMonthView = ({
               </Typography>
             </Stack>
             {monthEvents.length > 0 && (
-              <Chip
-                label={monthEvents.length}
-                size="small"
+              <Label
+                variant="soft"
                 color="primary"
                 sx={{
                   height: 18,
                   fontSize: '10px',
                   fontWeight: 700,
-                  '& .MuiChip-label': { px: 0.75 },
                 }}
-              />
+              >
+                {monthEvents.length}
+              </Label>
             )}
           </Box>
 

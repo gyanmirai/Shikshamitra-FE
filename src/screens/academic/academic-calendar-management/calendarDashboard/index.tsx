@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -18,7 +19,6 @@ import {
 import {
   Box,
   Card,
-  Chip,
   Grid,
   Paper,
   Stack,
@@ -663,16 +663,18 @@ const AcademicCalendarDashboard = () => {
                               {cal.name}
                             </Typography>
                             {cal.isDefault && (
-                              <Chip
-                                label="Default"
-                                size="small"
+                              <Label
+                                variant="soft"
                                 color="primary"
                                 sx={{
                                   height: 14,
                                   fontSize: '9px',
-                                  '& .MuiChip-label': { px: 0.75 },
+                                  textTransform: 'uppercase',
+                                  fontWeight: 700,
                                 }}
-                              />
+                              >
+                                Default
+                              </Label>
                             )}
                           </Box>
                         </Stack>
@@ -684,11 +686,13 @@ const AcademicCalendarDashboard = () => {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <Chip
-                          size="small"
-                          label={CALENDAR_STATUS_LABELS[cal.status as CalendarStatus]}
-                          color={CALENDAR_STATUS_COLORS[cal.status as CalendarStatus]}
-                        />
+                        <Label
+                          variant="soft"
+                          color={CALENDAR_STATUS_COLORS[cal.status as CalendarStatus] as any}
+                          sx={{ textTransform: 'uppercase', fontWeight: 600 }}
+                        >
+                          {CALENDAR_STATUS_LABELS[cal.status as CalendarStatus]}
+                        </Label>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -723,12 +727,13 @@ const AcademicCalendarDashboard = () => {
                       Pending Impact Logs
                     </Typography>
                     {(impactLogsData?.totalCount ?? 0) > 0 && (
-                      <Chip
-                        size="small"
-                        label={impactLogsData?.totalCount}
+                      <Label
+                        variant="soft"
                         color="error"
-                        sx={{ height: 18, fontSize: '11px' }}
-                      />
+                        sx={{ height: 18, fontSize: '11px', fontWeight: 700 }}
+                      >
+                        {impactLogsData?.totalCount}
+                      </Label>
                     )}
                   </Stack>
                   <Button
@@ -782,12 +787,15 @@ const AcademicCalendarDashboard = () => {
                           {dayjs(log.affectedDate).format('DD MMM YYYY')}
                         </Typography>
                       </Box>
-                      <Chip
-                        size="small"
-                        label={CALENDAR_IMPACT_STATUS_LABELS[log.status as CalendarImpactStatus]}
-                        color={CALENDAR_IMPACT_STATUS_COLORS[log.status as CalendarImpactStatus]}
-                        sx={{ flexShrink: 0 }}
-                      />
+                      <Label
+                        variant="soft"
+                        color={
+                          CALENDAR_IMPACT_STATUS_COLORS[log.status as CalendarImpactStatus] as any
+                        }
+                        sx={{ flexShrink: 0, fontWeight: 600 }}
+                      >
+                        {CALENDAR_IMPACT_STATUS_LABELS[log.status as CalendarImpactStatus]}
+                      </Label>
                     </Stack>
                   </Box>
                 ))}

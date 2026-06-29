@@ -43,6 +43,19 @@ export const academicType = {
   examResult: 'ExamResult',
   questionBank: 'QuestionBank',
   questionPaper: 'QuestionPaper',
+  // Lesson Plan / Teacher Diary
+  lessonPlan: 'LessonPlan',
+  teacherDiary: 'TeacherDiary',
+  diaryEvidence: 'DiaryEvidence',
+  lessonPlanReview: 'LessonPlanReview',
+  missedLesson: 'MissedLesson',
+  lessonResource: 'LessonResource',
+  lessonPlanSettings: 'LessonPlanSettings',
+  lessonPlanAuditLog: 'LessonPlanAuditLog',
+  aiLessonSuggestion: 'AiLessonSuggestion',
+  lessonPlanReport: 'LessonPlanReport',
+  teachingExecutionHealth: 'TeachingExecutionHealth',
+  coverageTracker: 'CoverageTracker',
 } as const;
 
 // ===== Quiz Management API (reducerPath: quizManagementApi) =====

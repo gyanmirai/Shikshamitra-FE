@@ -18,6 +18,42 @@ export const getChapterValidationSchema = (
     chapterName: Yup.string()
       .required('Chapter Name is required')
       .min(3, 'minimum 3 character required'),
+    unitName: Yup.string().max(128, 'Unit name must be 128 characters or less'),
+    termName: Yup.string().max(128, 'Term name must be 128 characters or less'),
+    estimatedTeachingDays: Yup.number()
+      .nullable()
+      .transform((value, originalValue) => (originalValue === '' ? null : value))
+      .min(0, 'Teaching days cannot be negative'),
+    estimatedPeriods: Yup.number()
+      .nullable()
+      .transform((value, originalValue) => (originalValue === '' ? null : value))
+      .min(0, 'Periods cannot be negative'),
+    revisionDays: Yup.number()
+      .nullable()
+      .transform((value, originalValue) => (originalValue === '' ? null : value))
+      .min(0, 'Revision days cannot be negative'),
+    bufferDays: Yup.number()
+      .nullable()
+      .transform((value, originalValue) => (originalValue === '' ? null : value))
+      .min(0, 'Buffer days cannot be negative'),
+    progressPercentage: Yup.number()
+      .nullable()
+      .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+      .min(0, 'Progress cannot be below 0')
+      .max(100, 'Progress cannot be above 100'),
+    healthScore: Yup.number()
+      .nullable()
+      .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+      .min(0, 'Health score cannot be below 0')
+      .max(100, 'Health score cannot be above 100'),
+    questionCount: Yup.number()
+      .nullable()
+      .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+      .min(0, 'Question count cannot be negative'),
+    marksWeightage: Yup.number()
+      .nullable()
+      .transform((value, originalValue) => (originalValue === '' ? null : value))
+      .min(0, 'Marks weightage cannot be negative'),
     startDate: Yup.mixed()
       .required('Chapter Start Date is required')
       .test(

@@ -122,17 +122,20 @@ const IMPACT_TYPE_ICON: Record<number, string> = {
   [CalendarImpactType.EventSchedule]: 'mdi:party-popper',
 };
 
-const IMPACT_TYPE_COLOR: Record<number, string> = {
-  [CalendarImpactType.TimetableSlot]: '#1565c0',
-  [CalendarImpactType.HomeworkDueDate]: '#6a1b9a',
-  [CalendarImpactType.AssignmentDueDate]: '#00838f',
-  [CalendarImpactType.ExamSchedule]: '#ad1457',
-  [CalendarImpactType.OnlineClass]: '#2e7d32',
-  [CalendarImpactType.AttendanceSession]: '#4527a0',
-  [CalendarImpactType.LessonPlan]: '#e65100',
-  [CalendarImpactType.TeacherDiary]: '#37474f',
-  [CalendarImpactType.PTMBooking]: '#00838f',
-  [CalendarImpactType.EventSchedule]: '#6a1b9a',
+const IMPACT_TYPE_COLOR_KEY: Record<
+  number,
+  'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error' | 'default'
+> = {
+  [CalendarImpactType.TimetableSlot]: 'info',
+  [CalendarImpactType.HomeworkDueDate]: 'secondary',
+  [CalendarImpactType.AssignmentDueDate]: 'primary',
+  [CalendarImpactType.ExamSchedule]: 'error',
+  [CalendarImpactType.OnlineClass]: 'success',
+  [CalendarImpactType.AttendanceSession]: 'secondary',
+  [CalendarImpactType.LessonPlan]: 'warning',
+  [CalendarImpactType.TeacherDiary]: 'default',
+  [CalendarImpactType.PTMBooking]: 'primary',
+  [CalendarImpactType.EventSchedule]: 'secondary',
 };
 
 const IMPACT_STATUS_OPTIONS = [
@@ -196,7 +199,7 @@ const SummaryStrip = ({ logs }: { logs: any[] }) => {
   ];
 
   return (
-    <Grid container spacing={2.5}>
+    <Grid container spacing={1}>
       {items.map((item) => {
         const color = theme.palette[item.colorKey].main;
         const channel = theme.palette[item.colorKey].mainChannel || color;
@@ -377,7 +380,9 @@ const CalendarImpactLogs = () => {
         align: 'left',
         minWidth: 160,
         render: (value, row) => {
-          const typeColor = IMPACT_TYPE_COLOR[row.impactType] ?? '#546e7a';
+          const colorKey = IMPACT_TYPE_COLOR_KEY[row.impactType] ?? 'default';
+          const typeColor =
+            colorKey === 'default' ? theme.palette.text.secondary : theme.palette[colorKey].main;
           const typeIcon = IMPACT_TYPE_ICON[row.impactType] ?? 'mdi:alert-circle-outline';
           return (
             <Stack direction="row" alignItems="center" gap={1}>
@@ -531,7 +536,7 @@ const CalendarImpactLogs = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading="Impact Logs"
         description="Review and resolve academic activities impacted by calendar changes."
@@ -555,7 +560,7 @@ const CalendarImpactLogs = () => {
           backgroundColor: 'background.paper',
         }}
       >
-        <Grid container spacing={2.5} alignItems="center">
+        <Grid container spacing={1} alignItems="center">
           <Grid size={{ xs: 12, sm: 4 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Filter by Status</InputLabel>
@@ -595,7 +600,7 @@ const CalendarImpactLogs = () => {
             </FormControl>
           </Grid>
           <Grid size={{ xs: 12, sm: 4 }}>
-            <Stack direction="row" justifyContent="flex-end" alignItems="center" gap={1.5}>
+            <Stack direction="row" justifyContent="flex-end" alignItems="center" gap={1}>
               {(statusFilter || typeFilter) && (
                 <Label
                   variant="soft"
@@ -634,8 +639,8 @@ const CalendarImpactLogs = () => {
           setPage(p - 1);
           setRowsPerPage(r);
         }}
-        isSearch={false}
-        isFilter={false}
+        isSearch
+        isFilter
         isShowedDense={false}
         columns={columns}
         data={logs}

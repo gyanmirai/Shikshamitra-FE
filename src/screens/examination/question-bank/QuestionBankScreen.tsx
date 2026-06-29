@@ -1127,7 +1127,7 @@ export default function QuestionBankScreen() {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading="Question Bank"
         description="Create, review, approve, tag and reuse questions for assessment workflows."
@@ -1140,6 +1140,7 @@ export default function QuestionBankScreen() {
           <Stack direction="row" spacing={1}>
             <Button
               variant="outlined"
+              size="small"
               startIcon={<Iconify icon="mingcute:settings-3-line" />}
               disabled={!academicYearId}
               onClick={handleOpenSettings}
@@ -1148,6 +1149,7 @@ export default function QuestionBankScreen() {
             </Button>
             <Button
               variant="contained"
+              size="small"
               startIcon={<Iconify icon="mingcute:add-line" />}
               disabled={!academicYearId}
               onClick={handleOpenCreate}
@@ -1167,7 +1169,7 @@ export default function QuestionBankScreen() {
       {/* Stat Cards */}
       <Stack
         direction="row"
-        spacing={2}
+        spacing={1}
         sx={{
           overflowX: 'auto',
           scrollbarWidth: 'none',
@@ -1182,10 +1184,10 @@ export default function QuestionBankScreen() {
       </Stack>
 
       {/* ── Cascade Scope Filters (API-driven) ──────────────────────────── */}
-      <Card sx={{ p: 2, borderRadius: 2 }}>
+      <Card sx={{ p: 1, borderRadius: 2 }}>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
-          spacing={1.5}
+          spacing={1}
           alignItems="center"
           flexWrap="wrap"
           useFlexGap
@@ -1621,12 +1623,13 @@ export default function QuestionBankScreen() {
           />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
-          <Button variant="outlined" onClick={() => setRejectDialogOpen(false)}>
+          <Button variant="outlined" size="small" onClick={() => setRejectDialogOpen(false)}>
             Cancel
           </Button>
           <Button
             variant="contained"
             color="error"
+            size="small"
             disabled={!rejectCommentText.trim()}
             onClick={handleRejectConfirm}
             startIcon={<Iconify icon="mingcute:close-circle-line" />}

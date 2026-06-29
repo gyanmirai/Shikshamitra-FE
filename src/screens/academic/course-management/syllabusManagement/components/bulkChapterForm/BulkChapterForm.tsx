@@ -195,6 +195,20 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
             documents: (entry.documents ?? []).filter(
               (doc): doc is string => typeof doc === 'string' && Boolean(doc)
             ),
+            publishStatus: 'Draft',
+            reviewStatus: 'Not Submitted',
+            coverageStatus: 'Not Started',
+            resourceStatus: entry.documents?.length ? 'Ready' : 'Missing',
+            lessonPlanStatus: 'Not Mapped',
+            homeworkStatus: 'Not Mapped',
+            assessmentStatus: 'Not Mapped',
+            visibility: 'Teacher',
+            difficultyLevel: 'Medium',
+            bloomLevel: 'Understand',
+            progressPercentage: 0,
+            healthScore: entry.documents?.length ? 35 : 20,
+            questionCount: 0,
+            versionLabel: 'v1',
           };
         });
 

@@ -1,18 +1,9 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
-
-import dayjs from 'dayjs';
-import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useCallback } from 'react';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Add, Print, EventBusy, MeetingRoom, CalendarMonth } from '@mui/icons-material';
 import {
   Box,
   Tab,
@@ -20,721 +11,523 @@ import {
   Chip,
   Tabs,
   Stack,
+  Alert,
   Button,
-  Switch,
   Divider,
-  TextField,
-  Typography,
+  Tooltip,
   IconButton,
-  CardContent,
-  FormControlLabel,
+  Typography,
 } from '@mui/material';
-
 import {
-  todayIso,
-  classOptions,
-  roomSchedules,
-  teacherOptions,
-  initialRoomRows,
-  buildingOptions,
-  roomTypeOptions,
-  lectureSlotOptions,
-  initialReservations,
-  reservationTypeOptions,
-} from './roomAvailabilityData';
+  Add,
+  Print,
+  GridView,
+  EventBusy,
+  TableChart,
+  MeetingRoom,
+  CheckCircle,
+  ViewTimeline,
+  CalendarMonth,
+} from '@mui/icons-material';
 
-import type { RoomReservationRow, RoomAvailabilityRow } from './roomAvailabilityData';
+import { MOCK_SUMMARY } from './roomAvailability.mock';
+import { RoomFloorView } from './components/RoomFloorView';
+import { RoomUsageReport } from './components/RoomUsageReport';
+import { RoomDetailDrawer } from './components/RoomDetailDrawer';
+import { RoomTimelineView } from './components/RoomTimelineView';
+import { RoomCalendarView } from './components/RoomCalendarView';
+import { RoomApprovalQueue } from './components/RoomApprovalQueue';
+import { RoomAuditLogPanel } from './components/RoomAuditLogPanel';
+import { RoomReservationsTab } from './components/RoomReservationsTab';
+import { AIRoomAssistantPanel } from './components/AIRoomAssistantPanel';
+import { RoomAvailabilityTable } from './components/RoomAvailabilityTable';
+import { RoomMaintenanceDrawer } from './components/RoomMaintenanceDrawer';
+import { DEFAULT_ROOM_AVAILABILITY_FILTERS } from './roomAvailability.constants';
+// ── Components ─────────────────────────────────────────────────────────────────
+import { RoomAvailabilityKpiCards } from './components/RoomAvailabilityKpiCards';
+import { SmartRoomReservationDrawer } from './components/SmartRoomReservationDrawer';
+import {
+  useRoomAvailability,
+  useRoomReservations,
+  useRoomAvailabilitySummary,
+} from './roomAvailability.hooks';
+import {
+  getActiveFilters,
+  RoomAvailabilityActiveFilters,
+  RoomAvailabilityFilters as FiltersBar,
+} from './components/RoomAvailabilityFilters';
 
-const statusColor: Record<
-  RoomAvailabilityRow['status'] | RoomReservationRow['status'],
-  'success' | 'warning' | 'error' | 'info' | 'default'
-> = {
-  Available: 'success',
-  Occupied: 'warning',
-  Reserved: 'info',
-  Maintenance: 'error',
-  Active: 'success',
-  Cancelled: 'default',
-};
+import type {
+  TabType,
+  ViewType,
+  RoomReservation,
+  RoomAvailabilityItem,
+  RoomAvailabilityFilters,
+} from './types';
 
-const scheduleColor: Record<string, 'success' | 'warning' | 'info' | 'error' | 'default'> = {
-  Free: 'success',
-  Class: 'warning',
-  Exam: 'info',
-  Event: 'default',
-  Maintenance: 'error',
-};
-
-type ReserveFormState = {
-  roomId: string;
-  reservationDate: Dayjs | null;
-  startTime: string;
-  endTime: string;
-  purpose: string;
-  reservationType: string;
-  reservedFor: string;
-  teacherName: string;
-  remarks: string;
-};
-
-const defaultReserveForm: ReserveFormState = {
-  roomId: '',
-  reservationDate: dayjs(todayIso),
-  startTime: '10:00',
-  endTime: '10:45',
-  purpose: '',
-  reservationType: 'Class',
-  reservedFor: '',
-  teacherName: '',
-  remarks: '',
-};
-
-const capacityOptions = [
-  { value: 0, label: 'Any Capacity' },
-  { value: 30, label: '30+' },
-  { value: 40, label: '40+' },
-  { value: 50, label: '50+' },
-  { value: 100, label: '100+' },
+// ── View Switcher buttons ──────────────────────────────────────────────────────
+const VIEW_OPTIONS: { value: ViewType; label: string; icon: React.ReactNode }[] = [
+  { value: 'table', label: 'Table', icon: <TableChart fontSize="small" /> },
+  { value: 'timeline', label: 'Timeline', icon: <ViewTimeline fontSize="small" /> },
+  { value: 'calendar', label: 'Calendar', icon: <CalendarMonth fontSize="small" /> },
+  { value: 'floor', label: 'Floor', icon: <GridView fontSize="small" /> },
 ];
 
 const RoomAvailabilityScreen = () => {
-  const [activeTab, setActiveTab] = useState('availability');
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs(todayIso));
-  const [lectureSlot, setLectureSlot] = useState('p2');
-  const [building, setBuilding] = useState('all');
-  const [roomType, setRoomType] = useState('all');
-  const [minimumCapacity, setMinimumCapacity] = useState<number | string>(0);
-  const [includeOccupied, setIncludeOccupied] = useState(true);
-  const [search, setSearch] = useState('');
-  const [selectedRoomId, setSelectedRoomId] = useState('room-201');
-  const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
-  const [reservationError, setReservationError] = useState('');
-  const [reserveForm, setReserveForm] = useState<ReserveFormState>(defaultReserveForm);
-  const [roomRows, setRoomRows] = useState<RoomAvailabilityRow[]>(initialRoomRows);
-  const [reservations, setReservations] = useState<RoomReservationRow[]>(initialReservations);
-
-  const roomOptions = useMemo(
-    () => roomRows.map((room) => ({ value: room.roomId, label: room.roomName })),
-    [roomRows]
+  // ── State ──────────────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<TabType>('availability');
+  const [activeView, setActiveView] = useState<ViewType>('table');
+  const [filters, setFilters] = useState<RoomAvailabilityFilters>(
+    DEFAULT_ROOM_AVAILABILITY_FILTERS
   );
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [detailRoom, setDetailRoom] = useState<RoomAvailabilityItem | null>(null);
+  const [isDetailOpen, setDetailOpen] = useState(false);
+  const [isReservationOpen, setReservationOpen] = useState(false);
+  const [prefilledRoom, setPrefilledRoom] = useState<{ roomId: string; roomName: string } | null>(
+    null
+  );
+  const [isMaintenanceOpen, setMaintenanceOpen] = useState(false);
+  const [maintenanceRoom, setMaintenanceRoom] = useState<RoomAvailabilityItem | null>(null);
+  const [showAI, setShowAI] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
 
-  const filteredRooms = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-    return roomRows.filter((room) => {
-      const matchesBuilding = building === 'all' || room.buildingName === building;
-      const matchesType = roomType === 'all' || room.roomTypeName === roomType;
-      const matchesCapacity = room.capacity >= Number(minimumCapacity || 0);
-      const matchesAvailability = includeOccupied || room.isAvailable;
-      const matchesSearch =
-        !normalizedSearch ||
-        [room.roomName, room.roomNumber, room.buildingName, room.roomTypeName]
-          .join(' ')
-          .toLowerCase()
-          .includes(normalizedSearch);
+  // ── Data Hooks ─────────────────────────────────────────────────────────────
+  const availability = useRoomAvailability(filters);
+  const summary = useRoomAvailabilitySummary();
+  const reservationsHook = useRoomReservations();
 
-      return (
-        matchesBuilding && matchesType && matchesCapacity && matchesAvailability && matchesSearch
-      );
-    });
-  }, [building, includeOccupied, minimumCapacity, roomRows, roomType, search]);
-
-  const metrics = useMemo(() => {
-    const available = roomRows.filter((room) => room.isAvailable).length;
-    const occupied = roomRows.filter((room) => room.status === 'Occupied').length;
-    const reserved = reservations.filter((item) => item.status === 'Active').length;
-    const conflicts = roomRows.filter((room) => !room.isAvailable && room.conflictReason).length;
-
-    return [
-      { label: 'Free rooms', value: available, icon: 'mdi:door-open', color: 'success.main' },
-      {
-        label: 'Occupied rooms',
-        value: occupied,
-        icon: 'mdi:calendar-clock',
-        color: 'warning.main',
-      },
-      {
-        label: 'Active reservations',
-        value: reserved,
-        icon: 'mdi:calendar-check',
-        color: 'info.main',
-      },
-      {
-        label: 'Conflicts visible',
-        value: conflicts,
-        icon: 'mdi:alert-circle-outline',
-        color: 'error.main',
-      },
-    ];
-  }, [reservations, roomRows]);
-
-  const openReserveDialog = useCallback((room?: RoomAvailabilityRow) => {
-    setReservationError('');
-    setReserveForm({
-      ...defaultReserveForm,
-      roomId: room?.roomId ?? '',
-      reservationDate: dayjs(todayIso),
-    });
-    setReserveDialogOpen(true);
+  // Initial load
+  useEffect(() => {
+    availability.fetch();
+    summary.fetch();
+    reservationsHook.fetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSaveReservation = useCallback(() => {
-    if (
-      !reserveForm.roomId ||
-      !reserveForm.reservationDate ||
-      !reserveForm.startTime ||
-      !reserveForm.endTime
-    ) {
-      setReservationError('Room, date, start time and end time are required.');
-      return;
-    }
+  // Re-fetch availability when filters change
+  useEffect(() => {
+    availability.fetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
 
-    if (reserveForm.endTime <= reserveForm.startTime) {
-      setReservationError('End time must be greater than start time.');
-      return;
-    }
+  // ── Filter helpers ─────────────────────────────────────────────────────────
+  const patchFilters = useCallback((patch: Partial<RoomAvailabilityFilters>) => {
+    setFilters((prev) => ({ ...prev, ...patch }));
+  }, []);
 
-    const selectedRoom = roomRows.find((room) => room.roomId === reserveForm.roomId);
-    if (selectedRoom && !selectedRoom.isAvailable) {
-      setReservationError(selectedRoom.conflictReason || 'Selected room is not available.');
-      return;
-    }
+  const resetFilters = useCallback(() => {
+    setFilters(DEFAULT_ROOM_AVAILABILITY_FILTERS);
+  }, []);
 
-    const reservationDate = reserveForm.reservationDate.format('YYYY-MM-DD');
-    const overlapsExisting = reservations.some(
-      (reservation) =>
-        reservation.status === 'Active' &&
-        reservation.roomId === reserveForm.roomId &&
-        reservation.reservationDate === reservationDate &&
-        reserveForm.startTime < reservation.endTime &&
-        reserveForm.endTime > reservation.startTime
-    );
-
-    if (overlapsExisting) {
-      setReservationError('This room already has an overlapping reservation.');
-      return;
-    }
-
-    const roomName = selectedRoom?.roomName ?? 'Selected room';
-    const nextReservation: RoomReservationRow = {
-      id: `res-${Date.now()}`,
-      roomId: reserveForm.roomId,
-      roomName,
-      reservationDate,
-      startTime: reserveForm.startTime,
-      endTime: reserveForm.endTime,
-      purpose: reserveForm.purpose || 'Manual reservation',
-      reservationType: reserveForm.reservationType,
-      reservedFor: reserveForm.reservedFor || '-',
-      teacherName: reserveForm.teacherName || '-',
-      status: 'Active',
-      remarks: reserveForm.remarks,
-    };
-
-    setReservations((current) => [nextReservation, ...current]);
-    setRoomRows((current) =>
-      current.map((room) =>
-        room.roomId === reserveForm.roomId
-          ? {
-              ...room,
-              isAvailable: false,
-              status: 'Reserved',
-              conflictReason: `Reserved for ${nextReservation.purpose}`,
-              reservationPurpose: nextReservation.purpose,
-              currentAssignmentSource: 'Room Reservation',
-            }
-          : room
-      )
-    );
-    setReserveDialogOpen(false);
-    shikshaMitraToast.success({ message: 'Room reservation saved with conflict check.' });
-  }, [reservations, reserveForm, roomRows]);
-
-  const handleCancelReservation = useCallback(
-    (reservationId: string) => {
-      const reservation = reservations.find((item) => item.id === reservationId);
-      setReservations((current) =>
-        current.map((item) => (item.id === reservationId ? { ...item, status: 'Cancelled' } : item))
-      );
-      if (reservation) {
-        setRoomRows((current) =>
-          current.map((room) =>
-            room.roomId === reservation.roomId &&
-            room.currentAssignmentSource === 'Room Reservation'
-              ? {
-                  ...room,
-                  isAvailable: true,
-                  status: 'Available',
-                  conflictReason: undefined,
-                  reservationPurpose: undefined,
-                  currentAssignmentSource: 'Free',
-                }
-              : room
-          )
-        );
-      }
-      shikshaMitraToast.info({ message: 'Reservation cancelled. Audit record remains visible.' });
+  // KPI card click → apply filter + jump to availability tab
+  const handleKpiFilter = useCallback(
+    (patch: Partial<RoomAvailabilityFilters>) => {
+      patchFilters(patch);
+      setActiveTab('availability');
+      setActiveView('table');
     },
-    [reservations]
+    [patchFilters]
   );
 
-  const renderStatus = (status: RoomAvailabilityRow['status'] | RoomReservationRow['status']) => (
-    <Chip label={status} size="small" color={statusColor[status]} variant="soft" />
+  // ── Room actions ───────────────────────────────────────────────────────────
+  const handleViewRoom = useCallback(
+    (roomId: string) => {
+      const room = availability.data.find((r) => r.roomId === roomId) || null;
+      setDetailRoom(room);
+      setDetailOpen(true);
+    },
+    [availability.data]
+  );
+
+  const handleOpenReservation = useCallback((room?: RoomAvailabilityItem) => {
+    setPrefilledRoom(room ? { roomId: room.roomId, roomName: room.roomName } : null);
+    setReservationOpen(true);
+  }, []);
+
+  const handleViewSchedule = useCallback((roomId: string) => {
+    setSelectedRoomId(roomId);
+    setActiveTab('availability');
+    shikshaMitraToast.info({ message: 'Scroll to room schedule in table view.' });
+  }, []);
+
+  const handleOpenMaintenance = useCallback((room: RoomAvailabilityItem) => {
+    setMaintenanceRoom(room);
+    setMaintenanceOpen(true);
+  }, []);
+
+  const handleReservationSuccess = useCallback(
+    (reservation: RoomReservation) => {
+      reservationsHook.addReservation(reservation);
+      availability.fetch();
+      summary.fetch();
+    },
+    [availability, reservationsHook, summary]
+  );
+
+  const handleCancelReservation = useCallback(
+    (id: string) => {
+      reservationsHook.cancelReservation(id);
+      availability.fetch();
+      shikshaMitraToast.info({ message: 'Reservation cancelled. Audit record remains visible.' });
+    },
+    [availability, reservationsHook]
+  );
+
+  const handleApproveReservation = useCallback(
+    (id: string) => {
+      reservationsHook.updateReservation(id, { approvalStatus: 'approved', status: 'active' });
+      availability.fetch();
+    },
+    [availability, reservationsHook]
+  );
+
+  const handleRejectReservation = useCallback(
+    (id: string, _reason?: string) => {
+      reservationsHook.updateReservation(id, { approvalStatus: 'rejected', status: 'rejected' });
+    },
+    [reservationsHook]
+  );
+
+  const handleRefresh = useCallback(() => {
+    availability.fetch();
+    summary.fetch();
+    reservationsHook.fetch();
+    shikshaMitraToast.success({ message: 'Data refreshed.' });
+  }, [availability, reservationsHook, summary]);
+
+  // ── Pending count for approval badge ──────────────────────────────────────
+  const pendingCount = useMemo(
+    () => reservationsHook.data.filter((r) => r.approvalStatus === 'pending').length,
+    [reservationsHook.data]
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pb: 4 }}>
+      {/* ── Breadcrumbs & Header ─────────────────────────── */}
       <CustomBreadcrumbs
         heading="Room Availability"
-        description="Find free rooms, inspect conflicts, reserve rooms, and review daily room usage."
+        description="Find free rooms, inspect conflicts, reserve rooms, and review room usage."
         links={[
           { name: 'Academic', href: '/academic/dashboard' },
           { name: 'Timetable' },
           { name: 'Room Availability' },
         ]}
         action={
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => openReserveDialog()}
-          >
-            Reserve Room
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Tooltip title="AI Room Assistant">
+              <Button
+                size="small"
+                variant={showAI ? 'contained' : 'outlined'}
+                color="primary"
+                startIcon={<Iconify icon="mdi:robot-outline" />}
+                onClick={() => setShowAI((v) => !v)}
+              >
+                AI Assistant
+              </Button>
+            </Tooltip>
+            <Tooltip title="Audit Trail">
+              <Button
+                size="small"
+                variant={showAudit ? 'contained' : 'outlined'}
+                color="inherit"
+                startIcon={<Iconify icon="mdi:history" />}
+                onClick={() => setShowAudit((v) => !v)}
+              >
+                Audit Log
+              </Button>
+            </Tooltip>
+            <Tooltip title="Refresh Data">
+              <IconButton size="small" onClick={handleRefresh}>
+                <Iconify icon="mdi:refresh" />
+              </IconButton>
+            </Tooltip>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => handleOpenReservation()}
+            >
+              Reserve Room
+            </Button>
+          </Stack>
         }
       />
 
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-        {metrics.map((item) => (
-          <Card key={item.label} sx={{ flex: 1, borderRadius: 2 }}>
-            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box
-                sx={{
-                  width: 42,
-                  height: 42,
-                  display: 'grid',
-                  borderRadius: 1.5,
-                  placeItems: 'center',
-                  color: item.color,
-                  bgcolor: 'action.hover',
-                }}
-              >
-                <Iconify icon={item.icon} width={24} />
-              </Box>
-              <Box>
-                <Typography variant="h4">{item.value}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {item.label}
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        ))}
-      </Stack>
-
-      <Card sx={{ p: 2 }}>
-        <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1.5} alignItems={{ lg: 'center' }}>
-          <DatePicker
-            label="Date"
-            value={selectedDate}
-            onChange={setSelectedDate}
-            slotProps={{ textField: { size: 'small', sx: { minWidth: 160 } } }}
-          />
-          <CustomSelect
-            label="Lecture Slot"
-            options={lectureSlotOptions}
-            value={lectureSlot}
-            onChange={(value) => setLectureSlot(value as string)}
-            formControlProps={{ sx: { minWidth: 230 } }}
-          />
-          <CustomSelect
-            label="Building"
-            options={buildingOptions}
-            value={building}
-            onChange={(value) => setBuilding(value as string)}
-            formControlProps={{ sx: { minWidth: 150 } }}
-          />
-          <CustomSelect
-            label="Room Type"
-            options={roomTypeOptions}
-            value={roomType}
-            onChange={(value) => setRoomType(value as string)}
-            formControlProps={{ sx: { minWidth: 160 } }}
-          />
-          <CustomSelect
-            label="Min Capacity"
-            options={capacityOptions}
-            value={minimumCapacity}
-            onChange={(value) => setMinimumCapacity(value as string | number)}
-            formControlProps={{ sx: { minWidth: 130 } }}
-          />
-          <TextField
-            size="small"
-            label="Search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            sx={{ minWidth: { xs: '100%', lg: 180 } }}
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={includeOccupied}
-                onChange={(event) => setIncludeOccupied(event.target.checked)}
-              />
-            }
-            label="Include occupied"
-          />
-        </Stack>
-      </Card>
-
-      <Card>
-        <Tabs value={activeTab} onChange={(_, value) => setActiveTab(value)} sx={{ px: 2 }}>
-          <Tab
-            value="availability"
-            label="Availability"
-            icon={<MeetingRoom />}
-            iconPosition="start"
-          />
-          <Tab
-            value="schedule"
-            label="Room Schedule"
-            icon={<CalendarMonth />}
-            iconPosition="start"
-          />
-          <Tab
-            value="reservations"
-            label="Reservations"
-            icon={<EventBusy />}
-            iconPosition="start"
-          />
-          <Tab value="reports" label="Usage Report" icon={<Print />} iconPosition="start" />
-        </Tabs>
-      </Card>
-
-      {activeTab === 'availability' && (
-        <CustomizableTable
-          tableId="room-availability-table"
-          tableTitle="Room Availability"
-          data={filteredRooms}
-          columns={[
-            { id: 'roomName', label: 'Room', minWidth: 140, sticky: true },
-            { id: 'buildingName', label: 'Building', minWidth: 120 },
-            { id: 'roomTypeName', label: 'Type', minWidth: 130 },
-            { id: 'capacity', label: 'Capacity', filterType: 'number', minWidth: 100 },
-            {
-              id: 'status',
-              label: 'Status',
-              minWidth: 120,
-              render: (value) => renderStatus(value),
-            },
-            {
-              id: 'occupiedByClass',
-              label: 'Occupied By',
-              minWidth: 220,
-              render: (_value, row) =>
-                row.occupiedByClass
-                  ? `${row.occupiedByClass} - ${row.occupiedBySubject} (${row.occupiedByTeacher})`
-                  : row.reservationPurpose || '-',
-            },
-            {
-              id: 'conflictReason',
-              label: 'Conflict Reason',
-              minWidth: 230,
-              render: (value) => value || 'No conflict',
-            },
-            {
-              id: 'currentAssignmentSource',
-              label: 'Source',
-              minWidth: 150,
-              render: (value) => value || '-',
-            },
-            {
-              id: 'actions',
-              label: 'Action',
-              isSort: false,
-              isFilter: false,
-              minWidth: 150,
-              sticky: true,
-              stickyPosition: 'right',
-              render: (_value, row) => (
-                <Stack direction="row" justifyContent="center" spacing={0.5}>
-                  <IconButton
-                    size="small"
-                    title="View room schedule"
-                    onClick={() => {
-                      setSelectedRoomId(row.roomId);
-                      setActiveTab('schedule');
-                    }}
-                  >
-                    <Iconify icon={GlobalIcons.eye} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    title="Reserve room"
-                    disabled={!row.isAvailable}
-                    onClick={() => openReserveDialog(row as RoomAvailabilityRow)}
-                  >
-                    <Iconify icon={GlobalIcons.reservation} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    title="Assign to timetable slot"
-                    disabled={!row.isAvailable}
-                    onClick={() =>
-                      shikshaMitraToast.success({
-                        message: `${row.roomName} is ready to assign to a timetable slot.`,
-                      })
-                    }
-                  >
-                    <Iconify icon={GlobalIcons.assignedRoute} />
-                  </IconButton>
-                </Stack>
-              ),
-            },
-          ]}
+      {/* ── AI Assistant Panel ───────────────────────────── */}
+      {showAI && (
+        <AIRoomAssistantPanel
+          onReserveRoom={(roomId) => {
+            const room = availability.data.find((r) => r.roomId === roomId);
+            if (room) handleOpenReservation(room);
+          }}
         />
       )}
 
-      {activeTab === 'schedule' && (
-        <Card sx={{ p: 2 }}>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={2}
-            alignItems={{ sm: 'center' }}
-            sx={{ mb: 2 }}
+      {/* ── KPI Cards ────────────────────────────────────── */}
+      <RoomAvailabilityKpiCards
+        summary={summary.data || MOCK_SUMMARY}
+        isLoading={summary.isLoading}
+        onFilterClick={handleKpiFilter}
+      />
+
+      {/* ── Tabs ─────────────────────────────────────────── */}
+      <Card>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ px: 1, borderBottom: 1, borderColor: 'divider' }}
+        >
+          <Tabs
+            value={activeTab}
+            onChange={(_, v) => setActiveTab(v as TabType)}
+            variant="scrollable"
+            scrollButtons="auto"
           >
-            <CustomSelect
-              label="Room"
-              options={roomOptions}
-              value={selectedRoomId}
-              onChange={(value) => setSelectedRoomId(value as string)}
-              formControlProps={{ sx: { maxWidth: 280 } }}
+            <Tab
+              value="availability"
+              label="Availability"
+              icon={<MeetingRoom />}
+              iconPosition="start"
             />
-            <DatePicker
-              label="Date / Week"
-              value={selectedDate}
-              onChange={setSelectedDate}
-              slotProps={{ textField: { size: 'small', sx: { maxWidth: 180 } } }}
+            <Tab
+              value="reservations"
+              label={
+                <Stack direction="row" alignItems="center" spacing={0.5}>
+                  <span>Reservations</span>
+                </Stack>
+              }
+              icon={<EventBusy />}
+              iconPosition="start"
             />
-          </Stack>
-          <Stack spacing={1.25}>
-            {(roomSchedules[selectedRoomId] || []).map((slot) => (
-              <Box
-                key={slot.period}
-                sx={{
-                  p: 1.5,
-                  display: 'grid',
-                  gap: 1,
-                  borderRadius: 1,
-                  alignItems: 'center',
-                  gridTemplateColumns: { xs: '1fr', sm: '160px 140px 1fr auto' },
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
+            <Tab
+              value="approvals"
+              label={
+                <Stack direction="row" alignItems="center" spacing={0.75}>
+                  <CheckCircle fontSize="small" />
+                  <span>Approvals</span>
+                  {pendingCount > 0 && (
+                    <Chip
+                      size="small"
+                      label={pendingCount}
+                      color="warning"
+                      sx={{ height: 18, fontSize: 10 }}
+                    />
+                  )}
+                </Stack>
+              }
+            />
+            <Tab value="reports" label="Usage Report" icon={<Print />} iconPosition="start" />
+          </Tabs>
+
+          {/* Right side: View Switcher & Filters — only for availability tab */}
+          {activeTab === 'availability' && (
+            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: 1 }}>
+              <FiltersBar filters={filters} onChange={patchFilters} onReset={resetFilters} />
+
+              <Divider orientation="vertical" flexItem sx={{ height: 20, my: 'auto' }} />
+
+              <Stack direction="row" spacing={0.5}>
+                {VIEW_OPTIONS.map((opt) => (
+                  <Tooltip key={opt.value} title={opt.label}>
+                    <IconButton
+                      size="small"
+                      onClick={() => setActiveView(opt.value)}
+                      color={activeView === opt.value ? 'primary' : 'default'}
+                      sx={{
+                        borderRadius: 1,
+                        bgcolor: activeView === opt.value ? 'primary.lighter' : 'transparent',
+                      }}
+                    >
+                      {opt.icon}
+                    </IconButton>
+                  </Tooltip>
+                ))}
+              </Stack>
+            </Stack>
+          )}
+        </Stack>
+
+        {/* Active Chips Row (under the borderBottom divider, inside the Card) */}
+        {activeTab === 'availability' && getActiveFilters(filters).length > 0 && (
+          <Box sx={{ px: 2, py: 1.25, bgcolor: 'background.neutral' }}>
+            <RoomAvailabilityActiveFilters
+              filters={filters}
+              onChange={patchFilters}
+              onReset={resetFilters}
+            />
+          </Box>
+        )}
+      </Card>
+
+      {/* ── Tab Content ──────────────────────────────────── */}
+
+      {/* Availability Tab */}
+      {activeTab === 'availability' && (
+        <>
+          {availability.error && (
+            <Alert
+              severity="error"
+              action={
+                <Button size="small" onClick={availability.fetch}>
+                  Retry
+                </Button>
+              }
+            >
+              {availability.error}
+            </Alert>
+          )}
+
+          {activeView === 'table' && (
+            <RoomAvailabilityTable
+              data={availability.data}
+              isLoading={availability.isLoading}
+              canReserve
+              canMaintenance
+              canApprove
+              onViewRoom={handleViewRoom}
+              onReserveRoom={handleOpenReservation}
+              onViewSchedule={handleViewSchedule}
+              onMarkMaintenance={handleOpenMaintenance}
+            />
+          )}
+
+          {activeView === 'timeline' && (
+            <Card sx={{ p: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Today&apos;s Timeline
+              </Typography>
+              <RoomTimelineView
+                rooms={availability.data}
+                onEmptySlotClick={(roomId, _period, startTime) => {
+                  const room = availability.data.find((r) => r.roomId === roomId);
+                  if (room) handleOpenReservation(room);
                 }}
-              >
-                <Typography variant="subtitle2">{slot.period}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {slot.time}
-                </Typography>
-                <Typography variant="body2">{slot.details}</Typography>
-                <Chip
-                  label={slot.status}
-                  size="small"
-                  color={scheduleColor[slot.status]}
-                  variant="soft"
-                />
-              </Box>
-            ))}
-          </Stack>
+                onBlockClick={(roomId) => handleViewRoom(roomId)}
+              />
+            </Card>
+          )}
+
+          {activeView === 'calendar' && (
+            <Card sx={{ p: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Reservations Calendar
+              </Typography>
+              <RoomCalendarView
+                reservations={reservationsHook.data}
+                onEventClick={(r) =>
+                  shikshaMitraToast.info({ message: `${r.roomName}: ${r.purpose}` })
+                }
+                onSlotClick={(date, startTime) => {
+                  patchFilters({ date });
+                  setReservationOpen(true);
+                }}
+              />
+            </Card>
+          )}
+
+          {activeView === 'floor' && (
+            <Card sx={{ p: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Floor / Building View
+              </Typography>
+              <RoomFloorView
+                rooms={availability.data}
+                onRoomClick={handleViewRoom}
+                onReserveRoom={handleOpenReservation}
+              />
+            </Card>
+          )}
+        </>
+      )}
+
+      {/* Reservations Tab */}
+      {activeTab === 'reservations' && (
+        <Card sx={{ p: 2 }}>
+          <RoomReservationsTab
+            reservations={reservationsHook.data}
+            canApprove
+            onCancel={handleCancelReservation}
+            onApprove={handleApproveReservation}
+            onReject={handleRejectReservation}
+          />
         </Card>
       )}
 
-      {activeTab === 'reservations' && (
-        <CustomizableTable
-          tableId="room-reservations-table"
-          tableTitle="Room Reservations"
-          data={reservations}
-          columns={[
-            { id: 'roomName', label: 'Room', minWidth: 140, sticky: true },
-            { id: 'reservationDate', label: 'Date', filterType: 'date', minWidth: 120 },
-            { id: 'startTime', label: 'Start', minWidth: 90 },
-            { id: 'endTime', label: 'End', minWidth: 90 },
-            { id: 'purpose', label: 'Purpose', minWidth: 220 },
-            { id: 'reservationType', label: 'Type', minWidth: 120 },
-            { id: 'reservedFor', label: 'Reserved For', minWidth: 140 },
-            {
-              id: 'status',
-              label: 'Status',
-              minWidth: 110,
-              render: (value) => renderStatus(value),
-            },
-            {
-              id: 'actions',
-              label: 'Action',
-              minWidth: 90,
-              isSort: false,
-              isFilter: false,
-              sticky: true,
-              stickyPosition: 'right',
-              render: (_value, row) => (
-                <IconButton
-                  size="small"
-                  title="Cancel reservation"
-                  disabled={row.status !== 'Active'}
-                  onClick={() => handleCancelReservation(row.id)}
-                >
-                  <Iconify icon={GlobalIcons.cancel} />
-                </IconButton>
-              ),
-            },
-          ]}
-        />
+      {/* Approvals Tab */}
+      {activeTab === 'approvals' && (
+        <Card sx={{ p: 2 }}>
+          <RoomApprovalQueue
+            reservations={reservationsHook.data}
+            onApprove={handleApproveReservation}
+            onReject={handleRejectReservation}
+          />
+        </Card>
       )}
 
+      {/* Usage Report Tab */}
       {activeTab === 'reports' && (
         <Card sx={{ p: 2 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Room Usage Report
-          </Typography>
-          <CustomizableTable
-            tableId="room-usage-report-table"
-            tableTitle="Room Usage Report"
-            data={roomRows.map((room) => ({
-              ...room,
-              totalAvailablePeriods: 5,
-              occupiedPeriods: room.isAvailable ? 1 : 3,
-              freePeriods: room.isAvailable ? 4 : 2,
-              utilization: room.isAvailable ? '20%' : '60%',
-              mainUsageType: room.roomTypeName,
-            }))}
-            columns={[
-              { id: 'roomName', label: 'Room', minWidth: 140 },
-              { id: 'buildingName', label: 'Building', minWidth: 120 },
-              { id: 'roomTypeName', label: 'Room Type', minWidth: 130 },
-              {
-                id: 'totalAvailablePeriods',
-                label: 'Total Periods',
-                filterType: 'number',
-                minWidth: 120,
-              },
-              { id: 'occupiedPeriods', label: 'Occupied', filterType: 'number', minWidth: 110 },
-              { id: 'freePeriods', label: 'Free', filterType: 'number', minWidth: 90 },
-              { id: 'utilization', label: 'Utilization %', minWidth: 120 },
-              { id: 'mainUsageType', label: 'Main Usage Type', minWidth: 160 },
-            ]}
-          />
+          <RoomUsageReport />
         </Card>
       )}
 
-      <CustomDialog
-        open={reserveDialogOpen}
-        title="Reserve Room"
-        maxWidth="md"
-        handleClose={() => setReserveDialogOpen(false)}
-      >
-        <DialogScrollContent>
-          <Stack spacing={2}>
-            {reservationError && (
-              <Box sx={{ p: 1.5, borderRadius: 1, bgcolor: 'error.lighter', color: 'error.dark' }}>
-                <Typography variant="body2">{reservationError}</Typography>
-              </Box>
-            )}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <CustomSelect
-                label="Room"
-                options={roomOptions}
-                value={reserveForm.roomId}
-                onChange={(value) =>
-                  setReserveForm((current) => ({ ...current, roomId: value as string }))
-                }
-              />
-              <DatePicker
-                label="Date"
-                value={reserveForm.reservationDate}
-                onChange={(value) =>
-                  setReserveForm((current) => ({ ...current, reservationDate: value }))
-                }
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
-              />
+      {/* ── Audit Log (floating panel) ───────────────────── */}
+      {showAudit && (
+        <Card sx={{ p: 2 }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Iconify icon="mdi:history" width={20} />
+              <Typography variant="h6">Room Audit Trail</Typography>
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField
-                size="small"
-                label="Start Time"
-                type="time"
-                value={reserveForm.startTime}
-                onChange={(event) =>
-                  setReserveForm((current) => ({ ...current, startTime: event.target.value }))
-                }
-                fullWidth
-              />
-              <TextField
-                size="small"
-                label="End Time"
-                type="time"
-                value={reserveForm.endTime}
-                onChange={(event) =>
-                  setReserveForm((current) => ({ ...current, endTime: event.target.value }))
-                }
-                fullWidth
-              />
-            </Stack>
-            <TextField
-              size="small"
-              label="Purpose"
-              value={reserveForm.purpose}
-              onChange={(event) =>
-                setReserveForm((current) => ({ ...current, purpose: event.target.value }))
-              }
-              fullWidth
-            />
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <CustomSelect
-                label="Reservation Type"
-                options={reservationTypeOptions}
-                value={reserveForm.reservationType}
-                onChange={(value) =>
-                  setReserveForm((current) => ({ ...current, reservationType: value as string }))
-                }
-              />
-              <CustomSelect
-                label="Class / Event"
-                options={classOptions}
-                value={reserveForm.reservedFor}
-                onChange={(value) =>
-                  setReserveForm((current) => ({ ...current, reservedFor: value as string }))
-                }
-              />
-              <CustomSelect
-                label="Teacher / Staff"
-                options={teacherOptions}
-                value={reserveForm.teacherName}
-                onChange={(value) =>
-                  setReserveForm((current) => ({ ...current, teacherName: value as string }))
-                }
-              />
-            </Stack>
-            <TextField
-              size="small"
-              label="Remarks"
-              value={reserveForm.remarks}
-              onChange={(event) =>
-                setReserveForm((current) => ({ ...current, remarks: event.target.value }))
-              }
-              fullWidth
-              multiline
-              minRows={3}
-            />
+            <IconButton size="small" onClick={() => setShowAudit(false)}>
+              <Iconify icon="mdi:close" />
+            </IconButton>
           </Stack>
-        </DialogScrollContent>
-        <Divider />
-        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
-          <Button variant="outlined" onClick={() => setReserveDialogOpen(false)}>
-            Cancel
-          </Button>
-          <Button variant="contained" onClick={handleSaveReservation}>
-            Check Conflict & Save
-          </Button>
-        </Stack>
-      </CustomDialog>
+          <RoomAuditLogPanel />
+        </Card>
+      )}
+
+      {/* ── Drawers ──────────────────────────────────────── */}
+
+      {/* Room Detail Drawer */}
+      <RoomDetailDrawer
+        open={isDetailOpen}
+        room={detailRoom}
+        onClose={() => setDetailOpen(false)}
+        onReserve={(room) => {
+          setDetailOpen(false);
+          handleOpenReservation(room);
+        }}
+        onMaintenance={(room) => {
+          setDetailOpen(false);
+          handleOpenMaintenance(room);
+        }}
+        onViewFullSchedule={(roomId) => {
+          setDetailOpen(false);
+          setSelectedRoomId(roomId);
+        }}
+      />
+
+      {/* Smart Reservation Drawer */}
+      <SmartRoomReservationDrawer
+        open={isReservationOpen}
+        prefilledRoom={prefilledRoom}
+        onClose={() => setReservationOpen(false)}
+        onSuccess={handleReservationSuccess}
+      />
+
+      {/* Maintenance Drawer */}
+      <RoomMaintenanceDrawer
+        open={isMaintenanceOpen}
+        room={maintenanceRoom}
+        onClose={() => setMaintenanceOpen(false)}
+        onSuccess={() => {
+          availability.fetch();
+          shikshaMitraToast.success({ message: 'Maintenance block added.' });
+        }}
+      />
     </Box>
   );
 };

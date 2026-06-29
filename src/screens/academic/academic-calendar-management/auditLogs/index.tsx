@@ -10,8 +10,8 @@ import { alpha, useTheme } from '@mui/material/styles';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetAuditLogsQuery } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 import { CalendarAuditAction, CALENDAR_AUDIT_ACTION_LABELS } from 'src/enums/academic-calendar';
+import { useGetAuditLogsQuery } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 import {
   Box,
   Grid,
@@ -106,17 +106,23 @@ const MOCK_AUDIT_LOGS = {
 
 // ─── Action metadata ──────────────────────────────────────────────────────────
 
-const ACTION_META: Record<CalendarAuditAction, { icon: string; color: string }> = {
-  [CalendarAuditAction.CalendarCreated]: { icon: 'mdi:calendar-plus', color: '#2e7d32' },
-  [CalendarAuditAction.CalendarUpdated]: { icon: 'mdi:calendar-edit', color: '#1565c0' },
-  [CalendarAuditAction.CalendarPublished]: { icon: 'mdi:publish', color: '#00838f' },
-  [CalendarAuditAction.CalendarArchived]: { icon: 'mdi:archive', color: '#e65100' },
-  [CalendarAuditAction.DayAdded]: { icon: 'mdi:calendar-check', color: '#4caf50' },
-  [CalendarAuditAction.DayUpdated]: { icon: 'mdi:calendar-edit', color: '#2196f3' },
-  [CalendarAuditAction.DayDeleted]: { icon: 'mdi:calendar-remove', color: '#f44336' },
-  [CalendarAuditAction.EmergencyClosureDeclared]: { icon: 'mdi:alert-octagon', color: '#b71c1c' },
-  [CalendarAuditAction.ImpactResolved]: { icon: 'mdi:check-circle', color: '#2e7d32' },
-  [CalendarAuditAction.OverrideApplied]: { icon: 'mdi:shield-check', color: '#6a1b9a' },
+const ACTION_META_KEY: Record<
+  CalendarAuditAction,
+  {
+    icon: string;
+    colorKey: 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error' | 'default';
+  }
+> = {
+  [CalendarAuditAction.CalendarCreated]: { icon: 'mdi:calendar-plus', colorKey: 'success' },
+  [CalendarAuditAction.CalendarUpdated]: { icon: 'mdi:calendar-edit', colorKey: 'info' },
+  [CalendarAuditAction.CalendarPublished]: { icon: 'mdi:publish', colorKey: 'primary' },
+  [CalendarAuditAction.CalendarArchived]: { icon: 'mdi:archive', colorKey: 'warning' },
+  [CalendarAuditAction.DayAdded]: { icon: 'mdi:calendar-check', colorKey: 'success' },
+  [CalendarAuditAction.DayUpdated]: { icon: 'mdi:calendar-edit', colorKey: 'info' },
+  [CalendarAuditAction.DayDeleted]: { icon: 'mdi:calendar-remove', colorKey: 'error' },
+  [CalendarAuditAction.EmergencyClosureDeclared]: { icon: 'mdi:alert-octagon', colorKey: 'error' },
+  [CalendarAuditAction.ImpactResolved]: { icon: 'mdi:check-circle', colorKey: 'success' },
+  [CalendarAuditAction.OverrideApplied]: { icon: 'mdi:shield-check', colorKey: 'secondary' },
 };
 
 const ACTION_OPTIONS = [
@@ -183,7 +189,11 @@ const CalendarAuditLogs = () => {
         minWidth: 200,
         render: (value, row) => {
           const action = row.action as CalendarAuditAction;
-          const meta = ACTION_META[action] ?? { icon: 'mdi:history', color: '#9e9e9e' };
+          const meta = ACTION_META_KEY[action] ?? { icon: 'mdi:history', colorKey: 'default' };
+          const actionColor =
+            meta.colorKey === 'default'
+              ? theme.palette.text.secondary
+              : theme.palette[meta.colorKey].main;
           return (
             <Stack direction="row" alignItems="center" gap={1.5}>
               <Box
@@ -191,16 +201,16 @@ const CalendarAuditLogs = () => {
                   width: 32,
                   height: 32,
                   borderRadius: 2,
-                  backgroundColor: alpha(meta.color, 0.12),
+                  backgroundColor: alpha(actionColor, 0.12),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}
               >
-                <Iconify icon={meta.icon} width={18} sx={{ color: meta.color }} />
+                <Iconify icon={meta.icon} width={18} sx={{ color: actionColor }} />
               </Box>
-              <Typography variant="body2" fontWeight={700} sx={{ color: meta.color }}>
+              <Typography variant="body2" fontWeight={700} sx={{ color: actionColor }}>
                 {CALENDAR_AUDIT_ACTION_LABELS[action] ?? '—'}
               </Typography>
             </Stack>
@@ -306,7 +316,7 @@ const CalendarAuditLogs = () => {
                 border: `1px solid ${theme.palette.divider}`,
               }}
             >
-              <Grid container spacing={2.5}>
+              <Grid container spacing={1}>
                 {row.oldValueJson && (
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <Stack direction="row" alignItems="center" gap={0.75} mb={1}>
@@ -385,7 +395,7 @@ const CalendarAuditLogs = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading="Audit Logs"
         description="Track every change made to the academic calendar — who changed what and when."
@@ -406,7 +416,7 @@ const CalendarAuditLogs = () => {
           backgroundColor: 'background.paper',
         }}
       >
-        <Grid container spacing={2.5} alignItems="center">
+        <Grid container spacing={1} alignItems="center">
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl size="small" fullWidth>
               <InputLabel>Filter by Action</InputLabel>
@@ -427,8 +437,15 @@ const CalendarAuditLogs = () => {
                           height: 8,
                           borderRadius: '50%',
                           backgroundColor:
-                            ACTION_META[Number(opt.value) as CalendarAuditAction]?.color ??
-                            '#9e9e9e',
+                            opt.value && ACTION_META_KEY[Number(opt.value) as CalendarAuditAction]
+                              ? ACTION_META_KEY[Number(opt.value) as CalendarAuditAction]
+                                  .colorKey === 'default'
+                                ? theme.palette.text.secondary
+                                : theme.palette[
+                                    ACTION_META_KEY[Number(opt.value) as CalendarAuditAction]
+                                      .colorKey
+                                  ].main
+                              : '#9e9e9e',
                           display: 'inline-block',
                           mr: 1,
                           verticalAlign: 'middle',
@@ -443,7 +460,7 @@ const CalendarAuditLogs = () => {
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6 }}>
-            <Stack direction="row" justifyContent="flex-end" alignItems="center" gap={1.5}>
+            <Stack direction="row" justifyContent="flex-end" alignItems="center" gap={1}>
               {actionFilter && (
                 <Label
                   variant="soft"
@@ -479,8 +496,8 @@ const CalendarAuditLogs = () => {
           setPage(p - 1);
           setRowsPerPage(r);
         }}
-        isSearch={false}
-        isFilter={false}
+        isSearch
+        isFilter
         isShowedDense={false}
         columns={columns}
         data={logs}

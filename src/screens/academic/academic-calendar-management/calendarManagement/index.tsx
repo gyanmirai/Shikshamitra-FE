@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -16,7 +17,7 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Tab, Chip, Paper, Stack, Button, Avatar, Typography } from '@mui/material';
+import { Box, Tab, Paper, Stack, Avatar, Typography } from '@mui/material';
 import {
   DayType,
   CalendarStatus,
@@ -271,7 +272,7 @@ const CalendarManagement = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
       {/* Breadcrumbs */}
       <CustomBreadcrumbs
         heading="Calendar Management"
@@ -329,12 +330,15 @@ const CalendarManagement = () => {
                     <Typography variant="subtitle2" fontWeight={700}>
                       {selectedCalendar.name}
                     </Typography>
-                    <Chip
-                      size="small"
-                      label={CALENDAR_STATUS_LABELS[selectedCalendar.status as CalendarStatus]}
-                      color={CALENDAR_STATUS_COLORS[selectedCalendar.status as CalendarStatus]}
-                      sx={{ height: 18, fontSize: '10px', fontWeight: 700, pointerEvents: 'none' }}
-                    />
+                    <Label
+                      variant="soft"
+                      color={
+                        CALENDAR_STATUS_COLORS[selectedCalendar.status as CalendarStatus] as any
+                      }
+                      sx={{ textTransform: 'uppercase', fontWeight: 700 }}
+                    >
+                      {CALENDAR_STATUS_LABELS[selectedCalendar.status as CalendarStatus]}
+                    </Label>
                   </Stack>
                 </Stack>
               </Stack>
@@ -426,17 +430,6 @@ const CalendarManagement = () => {
                     Publish
                   </LoadingButton>
                 )}
-                {selectedCalendar.status === CalendarStatus.Published && canCreate && (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Iconify icon="mdi:calendar-plus-outline" width={16} />}
-                    onClick={() => addDayDialog.onTrue()}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    Add Day Marker
-                  </Button>
-                )}
               </Stack>
             )}
           </Stack>
@@ -468,27 +461,13 @@ const CalendarManagement = () => {
                 <Typography color="text.secondary">Select a calendar to view</Typography>
               </Paper>
             ) : (
-              <>
-                {selectedCalendar && canCreate && (
-                  <Box sx={{ mb: 2 }}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Iconify icon="mdi:calendar-plus-outline" width={16} />}
-                      onClick={() => addDayDialog.onTrue()}
-                    >
-                      Add Day Marker
-                    </Button>
-                  </Box>
-                )}
-                <CalendarYearView
-                  calendarDays={calendarDays}
-                  calendarStartDate={selectedCalendar?.startDate ?? ''}
-                  calendarEndDate={selectedCalendar?.endDate ?? ''}
-                  isLoading={daysLoading}
-                  onDayClick={handleDayClick}
-                />
-              </>
+              <CalendarYearView
+                calendarDays={calendarDays}
+                calendarStartDate={selectedCalendar?.startDate ?? ''}
+                calendarEndDate={selectedCalendar?.endDate ?? ''}
+                isLoading={daysLoading}
+                onDayClick={handleDayClick}
+              />
             )}
           </>
         )}

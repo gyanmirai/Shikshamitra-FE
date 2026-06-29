@@ -770,7 +770,7 @@ export default function QuestionPaperScreen() {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading="Question Papers"
         description="Create papers, validate blueprints, generate from approved bank questions and publish securely."
@@ -783,6 +783,7 @@ export default function QuestionPaperScreen() {
           <Stack direction="row" spacing={1}>
             <Button
               variant="outlined"
+              size="small"
               startIcon={<Iconify icon="mingcute:settings-3-line" />}
               disabled={!academicYearId}
               onClick={handleOpenSettings}
@@ -791,6 +792,7 @@ export default function QuestionPaperScreen() {
             </Button>
             <Button
               variant="contained"
+              size="small"
               startIcon={<Iconify icon="mingcute:add-line" />}
               disabled={!academicYearId}
               onClick={handleOpenCreate}
@@ -810,7 +812,7 @@ export default function QuestionPaperScreen() {
       {/* Stat Cards */}
       <Stack
         direction="row"
-        spacing={2}
+        spacing={1}
         sx={{
           overflowX: 'auto',
           scrollbarWidth: 'none',
@@ -930,7 +932,7 @@ export default function QuestionPaperScreen() {
             <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
               {/* ── Blueprint & Builder ──────────────────────────────────────── */}
               {drawerMode === 'blueprint' && (
-                <Grid container spacing={2.5}>
+                <Grid container spacing={1}>
                   {/* Blueprint Panel */}
                   <Grid size={{ xs: 12, md: 5 }}>
                     <Stack spacing={2}>
@@ -1246,7 +1248,7 @@ export default function QuestionPaperScreen() {
                         </Typography>
                       </Box>
 
-                      <Grid container spacing={2}>
+                      <Grid container spacing={1}>
                         {/* Current paper questions */}
                         <Grid size={{ xs: 12, md: 6 }}>
                           <Box
@@ -1475,7 +1477,7 @@ export default function QuestionPaperScreen() {
 
               {/* ── Preview & Workflow ───────────────────────────────────────── */}
               {drawerMode === 'preview' && (
-                <Grid container spacing={2.5}>
+                <Grid container spacing={1}>
                   {/* Paper Preview */}
                   <Grid size={{ xs: 12, md: 8 }}>
                     <Card sx={{ p: 3, borderRadius: 2 }}>
@@ -1505,7 +1507,7 @@ export default function QuestionPaperScreen() {
 
                   {/* Actions Sidebar */}
                   <Grid size={{ xs: 12, md: 4 }}>
-                    <Stack spacing={2}>
+                    <Stack spacing={1}>
                       {/* Print / Export */}
                       <Card sx={{ p: 2.5, borderRadius: 2 }}>
                         <Typography variant="subtitle2" mb={1.5} fontWeight={600}>
@@ -1513,6 +1515,7 @@ export default function QuestionPaperScreen() {
                         </Typography>
                         <Button
                           fullWidth
+                          size="small"
                           variant="contained"
                           color="primary"
                           onClick={() => handlePrint()}
@@ -1530,6 +1533,7 @@ export default function QuestionPaperScreen() {
                         <Stack spacing={1}>
                           <Button
                             fullWidth
+                            size="small"
                             variant="outlined"
                             startIcon={<Iconify icon="mingcute:send-line" />}
                             disabled={selectedPaper.status !== 2 && selectedPaper.status !== 1}
@@ -1539,6 +1543,7 @@ export default function QuestionPaperScreen() {
                           </Button>
                           <Button
                             fullWidth
+                            size="small"
                             variant="outlined"
                             color="success"
                             startIcon={<Iconify icon="mingcute:check-circle-line" />}
@@ -1549,6 +1554,7 @@ export default function QuestionPaperScreen() {
                           </Button>
                           <Button
                             fullWidth
+                            size="small"
                             variant="outlined"
                             color="error"
                             startIcon={<Iconify icon="mingcute:close-circle-line" />}
@@ -1562,6 +1568,7 @@ export default function QuestionPaperScreen() {
                           </Button>
                           <Button
                             fullWidth
+                            size="small"
                             variant="contained"
                             color="warning"
                             startIcon={<Iconify icon="mingcute:lock-line" />}
@@ -2011,12 +2018,13 @@ export default function QuestionPaperScreen() {
           />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
-          <Button variant="outlined" onClick={() => setRejectDialogOpen(false)}>
+          <Button variant="outlined" size="small" onClick={() => setRejectDialogOpen(false)}>
             Cancel
           </Button>
           <LoadingButton
             variant="contained"
             color="error"
+            size="small"
             loading={rejectPaperState.isLoading}
             disabled={!rejectComment.trim()}
             onClick={handleRejectPaperConfirm}

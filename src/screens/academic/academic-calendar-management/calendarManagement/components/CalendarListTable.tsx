@@ -1,6 +1,7 @@
 'use client';
 
 import dayjs from 'dayjs';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
@@ -10,7 +11,6 @@ import {
 } from 'src/enums/academic-calendar';
 import {
   Box,
-  Chip,
   Stack,
   Table,
   Paper,
@@ -287,12 +287,18 @@ const CalendarListTable = ({
                             {cal.name}
                           </Typography>
                           {cal.isDefault && (
-                            <Chip
-                              label="Default"
-                              size="small"
+                            <Label
+                              variant="soft"
                               color="primary"
-                              sx={{ height: 16, fontSize: '9px', '& .MuiChip-label': { px: 0.75 } }}
-                            />
+                              sx={{
+                                height: 16,
+                                fontSize: '9px',
+                                textTransform: 'uppercase',
+                                fontWeight: 700,
+                              }}
+                            >
+                              Default
+                            </Label>
                           )}
                         </Stack>
                         {cal.description && (
@@ -361,12 +367,13 @@ const CalendarListTable = ({
 
                   {/* Status */}
                   <TableCell>
-                    <Chip
-                      size="small"
-                      label={CALENDAR_STATUS_LABELS[cal.status as CalendarStatus]}
-                      color={CALENDAR_STATUS_COLORS[cal.status as CalendarStatus]}
-                      sx={{ fontWeight: 600 }}
-                    />
+                    <Label
+                      variant="soft"
+                      color={CALENDAR_STATUS_COLORS[cal.status as CalendarStatus] as any}
+                      sx={{ textTransform: 'uppercase', fontWeight: 600 }}
+                    >
+                      {CALENDAR_STATUS_LABELS[cal.status as CalendarStatus]}
+                    </Label>
                   </TableCell>
 
                   {/* Actions */}
