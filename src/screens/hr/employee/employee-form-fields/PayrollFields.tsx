@@ -1028,7 +1028,7 @@ const RenderPayrollFields = (props: any) => {
         </Grid>
         <Grid
           size={{ xs: 12, sm: 4 }}
-          sx={{ pb: formik.touched.ifscCode && formik.errors.ifscCode ? 1.5 : 0 }}
+          sx={{ pb: formik.touched.ifscCode && formik.errors.ifscCode ? 5 : 0 }}
         >
           <ShakingTextField error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}>
             <TextField

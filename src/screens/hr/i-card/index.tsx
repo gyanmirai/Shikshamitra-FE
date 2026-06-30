@@ -37,8 +37,8 @@ import {
   Stack,
   Button,
   Checkbox,
-  IconButton,
   TextField,
+  IconButton,
   Typography,
   ToggleButton,
   FormControlLabel,
@@ -63,11 +63,12 @@ import {
   clampElementDimension,
   migrateFieldsToLayout,
   DEFAULT_PRINT_SETTINGS,
-  DEFAULT_ICARD_TEXT_COLOR,
   parsePrintSettingsJson,
+  type ICardFieldBinding,
   type ICardLayoutElement,
   type ICardPrintSettings,
   createICardLayoutPreset,
+  DEFAULT_ICARD_TEXT_COLOR,
   canNavigateEmployeeICardStep,
   updateICardLayoutElementStyle,
   markEmployeeICardStepCompleted,
@@ -615,6 +616,7 @@ const EmployeeICardBuilder = ({
   const [isSaving, setIsSaving] = useState(false);
   const [employeePage, setEmployeePage] = useState(1);
   const [employeeStatusFilter, setEmployeeStatusFilter] = useState('all');
+  const [previewIndex, setPreviewIndex] = useState(0);
   const [selectedEmployeesById, setSelectedEmployeesById] = useState<
     Record<string, EmployeeICardRow>
   >({});
@@ -703,12 +705,13 @@ const EmployeeICardBuilder = ({
   );
 
   const sampleEmployee = employees[0];
-  const previewEmployee = useMemo(
-    () =>
-      state.selectedEmployeeIds.map((id) => selectedEmployeesById[id]).find(Boolean) ||
-      sampleEmployee,
-    [sampleEmployee, selectedEmployeesById, state.selectedEmployeeIds]
-  );
+  const previewEmployee = useMemo(() => {
+    const selected = state.selectedEmployeeIds
+      .map((id) => selectedEmployeesById[id])
+      .filter(Boolean);
+    const clamped = Math.min(previewIndex, Math.max(0, selected.length - 1));
+    return selected[clamped] || sampleEmployee;
+  }, [previewIndex, sampleEmployee, selectedEmployeesById, state.selectedEmployeeIds]);
 
   const patchState = (patch: Partial<BuilderState>) => setState((prev) => ({ ...prev, ...patch }));
 
@@ -952,20 +955,57 @@ const EmployeeICardBuilder = ({
   };
 
   const handleFieldToggle = (name: ICardFieldKey) => {
+    const existingElement = state.layout.front.elements.find((el) => el.fieldKey === name);
+    const isCurrentlyEnabled = Boolean(state.fields.find((f) => f.name === name)?.enabled);
+
+    let updatedElements = state.layout.front.elements;
+
+    if (existingElement) {
+      updatedElements = state.layout.front.elements.map((element) =>
+        element.fieldKey === name && !defaultFields.find((field) => field.name === name)?.important
+          ? { ...element, visible: !element.visible }
+          : element
+      );
+    } else if (!isCurrentlyEnabled) {
+      // No layout element for this field yet — create one below the lowest visible text element
+      const bottomY = state.layout.front.elements
+        .filter((el) => el.type === 'text' && el.visible)
+        .reduce((max, el) => Math.max(max, el.y + el.h), 70);
+      const fieldLabels: Partial<Record<ICardFieldKey, string>> = {
+        organization: 'Org',
+        bloodGroup: 'Blood',
+        address: 'Address',
+        validityYear: 'Valid',
+      };
+      const isVertical = state.orientation === 'Vertical';
+      const newElement: ICardLayoutElement = {
+        id: name,
+        type: 'text',
+        fieldKey: name as ICardFieldBinding,
+        label: fieldLabels[name] || name,
+        x: isVertical ? 16 : 116,
+        y: Math.min(bottomY + 4, state.layout.height - 22),
+        w: isVertical ? state.layout.width - 32 : 200,
+        h: 18,
+        z: 5,
+        visible: true,
+        style: {
+          color: DEFAULT_ICARD_TEXT_COLOR,
+          showLabel: true,
+          separator: ': ',
+          fontSize: 9,
+        },
+      };
+      updatedElements = [...state.layout.front.elements, newElement];
+    }
+
     patchState({
       fields: state.fields.map((field) =>
         field.name === name && !field.important ? { ...field, enabled: !field.enabled } : field
       ),
       layout: {
         ...state.layout,
-        front: {
-          elements: state.layout.front.elements.map((element) =>
-            element.fieldKey === name &&
-            !defaultFields.find((field) => field.name === name)?.important
-              ? { ...element, visible: !element.visible }
-              : element
-          ),
-        },
+        front: { elements: updatedElements },
       },
     });
   };
@@ -1061,8 +1101,16 @@ const EmployeeICardBuilder = ({
       window.URL.revokeObjectURL(url);
       shikshaMitraToast.success({ message: 'Employee I-card PDF downloaded' });
       handleClose();
-    } catch {
-      shikshaMitraToast.error({ message: 'Could not export Employee I-card PDF' });
+    } catch (error: any) {
+      const detail: string = error?.data?.detail || '';
+      if (detail.toLowerCase().includes('required') && detail.toLowerCase().includes('employee')) {
+        shikshaMitraToast.error({
+          message:
+            'No eligible employees after filtering. Uncheck "Exclude" or choose employees with complete data.',
+        });
+      } else {
+        shikshaMitraToast.error({ message: 'Could not export Employee I-card PDF' });
+      }
     }
   };
 
@@ -1626,6 +1674,38 @@ const EmployeeICardBuilder = ({
                       employee={previewEmployee}
                       academicYearName={academicYearName}
                     />
+                    {state.selectedEmployeeIds.length > 1 && (
+                      <Stack
+                        direction="row"
+                        justifyContent="center"
+                        alignItems="center"
+                        spacing={1}
+                        sx={{ mt: 1 }}
+                      >
+                        <IconButton
+                          size="small"
+                          disabled={previewIndex === 0}
+                          onClick={() => setPreviewIndex((i) => Math.max(0, i - 1))}
+                        >
+                          <Iconify icon="mdi:chevron-left" />
+                        </IconButton>
+                        <Typography variant="caption" color="text.secondary">
+                          {Math.min(previewIndex + 1, state.selectedEmployeeIds.length)} /{' '}
+                          {state.selectedEmployeeIds.length}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          disabled={previewIndex >= state.selectedEmployeeIds.length - 1}
+                          onClick={() =>
+                            setPreviewIndex((i) =>
+                              Math.min(state.selectedEmployeeIds.length - 1, i + 1)
+                            )
+                          }
+                        >
+                          <Iconify icon="mdi:chevron-right" />
+                        </IconButton>
+                      </Stack>
+                    )}
                   </Paper>
                 </Box>
               </Grid>
@@ -1657,6 +1737,18 @@ const DesignerCanvas = ({
   const selected = state.layout.front.elements.find(
     (element) => element.id === state.selectedElementId
   );
+
+  const [localColor, setLocalColor] = useState(selected?.style?.color || DEFAULT_ICARD_TEXT_COLOR);
+  const colorDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setLocalColor(selected?.style?.color || DEFAULT_ICARD_TEXT_COLOR);
+    return () => {
+      if (colorDebounceRef.current) {
+        clearTimeout(colorDebounceRef.current);
+      }
+    };
+  }, [selected?.id, selected?.style?.color]);
 
   return (
     <Grid container spacing={2}>
@@ -1806,10 +1898,7 @@ const DesignerCanvas = ({
               </Stack>
               <Stack direction="row" spacing={1}>
                 <CustomTooltip title="Align left">
-                  <IconButton
-                    size="small"
-                    onClick={() => onElementChange(selected.id, { x: 16 })}
-                  >
+                  <IconButton size="small" onClick={() => onElementChange(selected.id, { x: 16 })}>
                     <Iconify icon="mdi:format-align-left" width={18} />
                   </IconButton>
                 </CustomTooltip>
@@ -1851,8 +1940,16 @@ const DesignerCanvas = ({
                     label="Text color"
                     type="color"
                     size="small"
-                    value={selected.style?.color || DEFAULT_ICARD_TEXT_COLOR}
-                    onChange={(event) => onElementStyleChange({ color: event.target.value })}
+                    value={localColor}
+                    onChange={(event) => {
+                      const color = event.target.value;
+
+                      if (colorDebounceRef.current) clearTimeout(colorDebounceRef.current);
+                      colorDebounceRef.current = setTimeout(() => {
+                        setLocalColor(color);
+                        onElementStyleChange({ color });
+                      }, 80);
+                    }}
                   />
                   <FormControlLabel
                     control={

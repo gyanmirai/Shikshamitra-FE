@@ -39,7 +39,9 @@ const MuiFormHelperText: Components<Theme>['MuiFormHelperText'] = {
   /** **************************************
    * STYLE
    *************************************** */
-  styleOverrides: { root: ({ theme }) => ({ marginTop: theme.spacing(1) }) },
+  styleOverrides: {
+    root: ({ theme }) => ({ marginTop: theme.spacing(0.2), marginLeft: theme.spacing(0.2) }),
+  },
 };
 
 // ----------------------------------------------------------------------
