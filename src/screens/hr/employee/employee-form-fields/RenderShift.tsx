@@ -45,7 +45,17 @@ const RenderShift = ({ formik, disabled }: any) => {
             label="Shift *"
             size="small"
             fullWidth
-            sx={{ width: '100%', minWidth: '200px' }}
+            sx={{
+              width: '100%',
+              minWidth: '200px',
+              ...(formik?.errors?.shift?.length > 40
+                ? {
+                    '& .MuiFormHelperText-root': {
+                      bottom: '-30px',
+                    },
+                  }
+                : {}),
+            }}
             error={formik.touched.shift && Boolean(formik.errors.shift)}
             helperText={formik.touched.shift && formik.errors.shift}
           />

@@ -232,7 +232,7 @@ function SectionCard({
         borderRadius: 2,
         border: `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
         boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
-        overflow: 'hidden',
+        overflow: 'clip',
         transition: 'all 0.3s ease-in-out',
         '&:hover': {
           boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.08)',
@@ -1408,8 +1408,9 @@ function UploadsReviewStep({
               component="label"
               variant="outlined"
               startIcon={<Iconify icon="mdi:file-upload-outline" />}
+              color={!resume ? 'error' : 'primary'}
             >
-              Upload Resume
+              Upload Resume&nbsp;<span style={{ color: 'inherit' }}>*</span>
               <input
                 hidden
                 type="file"
@@ -1426,8 +1427,9 @@ function UploadsReviewStep({
               component="label"
               variant="outlined"
               startIcon={<Iconify icon="mdi:image-plus-outline" />}
+              color={!photo ? 'error' : 'primary'}
             >
-              Upload Photo
+              Upload Photo&nbsp;<span style={{ color: 'inherit' }}>*</span>
               <input
                 hidden
                 type="file"

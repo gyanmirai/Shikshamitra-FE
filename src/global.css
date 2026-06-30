@@ -88,12 +88,12 @@ input[type='number']::-webkit-inner-spin-button {
   .MuiPickersOutlinedInput-notchedOutline {
   border-color: var(--palette-text-primary);
 }
-.MuiFormHelperText-root {
+/* .MuiFormHelperText-root {
   position: absolute;
   bottom: -15px;
   font-size: 10px !important;
   margin-left: 5px !important;
-}
+} */
 
 html::-webkit-scrollbar {
   display: none;

@@ -62,7 +62,11 @@ const CityComponent = ({
   );
   return (
     <Autocomplete
-      noOptionsText={<Typography variant="caption">No City Found</Typography>}
+      noOptionsText={
+        <Typography variant="caption">
+          {stateValue?.name ? 'No City Found' : 'Select a state first'}
+        </Typography>
+      }
       fullWidth
       value={value?.name ? value : null}
       onChange={onChange}

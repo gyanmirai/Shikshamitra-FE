@@ -200,7 +200,7 @@ export const SectionCard = ({
         borderRadius: 2,
         border: `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
         boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
-        overflow: 'hidden',
+        overflow: 'clip',
         transition: 'all 0.3s ease-in-out',
         '&:hover': {
           boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.08)',
@@ -368,7 +368,7 @@ const InformationAllFields = ({
     // formik.resetForm();
   };
   return (
-    <Box>
+    <Box sx={{ overflowX: 'hidden' }}>
       <SectionCard
         title="Basic Details"
         headerContent={
@@ -967,7 +967,10 @@ const InformationAllFields = ({
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           <RenderRole formik={formik} disabled={!isProfessionalDetailsEditable.value} />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4.5 }}>
+        <Grid
+          size={{ xs: 12, sm: 6, md: 6, lg: 4.5 }}
+          sx={{ pb: formik.touched.shift && formik.errors.shift ? 3 : 0 }}
+        >
           <RenderShift formik={formik} disabled={!isProfessionalDetailsEditable.value} />
         </Grid>
       </SectionCard>

@@ -177,12 +177,7 @@ export default function PayrollComponentDialog({
                       '&:hover': { bgcolor: 'action.hover' },
                     }}
                   >
-                    <Checkbox
-                      checked={allSelected}
-                      indeterminate={syncedValue.length > 0 && !allSelected}
-                      size="small"
-                      sx={{ mr: 1, p: 0.5 }}
-                    />
+                    <Checkbox checked={allSelected} size="small" sx={{ mr: 1, p: 0.5 }} />
                     <Typography variant="body2" fontWeight={600}>
                       {allSelected ? 'Deselect All' : 'Select All'}
                     </Typography>

@@ -81,3 +81,16 @@ export const canFinalizeEmployeeApplication = (
     EmployeeApplicationStatus.Rejected,
     EmployeeApplicationStatus.Withdrawn,
   ].includes(normalizeEmployeeApplicationStatus(value));
+
+// Returns statuses that are valid targets from `currentStatus`.
+// Rules:
+//   - Forward transitions only (no going backward in the workflow)
+//   - Finalized is excluded (reached via the Finalize button, not the status dropdown)
+//   - Rejected and Withdrawn are always reachable from any non-terminal active state
+// The current status itself is always included so the Select can render the selected value.
+export const getValidNextStatuses = (
+  currentStatus: EmployeeApplicationStatus
+): EmployeeApplicationStatus[] =>
+  EMPLOYEE_APPLICATION_STATUSES.filter(
+    (s) => s !== EmployeeApplicationStatus.Finalized && s >= currentStatus
+  );

@@ -38,6 +38,7 @@ const StateComponent = ({
       getOptionKey={(option: any) =>
         `${option?.countryCode || ''}-${option?.isoCode || option?.name || ''}`
       }
+      ListboxProps={{ style: { maxHeight: '220px' } }}
       getOptionLabel={(option: any) =>
         `${option?.isoCode ? `${option?.isoCode} ` : ''}${option?.name || ''}`
       }
