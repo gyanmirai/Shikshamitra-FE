@@ -6,6 +6,7 @@ export interface IFeeHead {
   name: string;
   description?: string;
   isActive: boolean;
+  deactivationReason?: string | null;
 }
 
 export interface IFeeHeadTableProps {

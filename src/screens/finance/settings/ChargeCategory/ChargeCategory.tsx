@@ -27,6 +27,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   Box,
+  Chip,
   Stack,
   Button,
   Switch,
@@ -41,6 +42,7 @@ import {
   usePutChargeCategoryMutation,
   usePostChargeCategoryMutation,
   useDeleteChargeCategoryMutation,
+  usePatchChargeCategoryStatusMutation,
 } from 'src/redux/finance/chargeCategory';
 
 const FinanceChargeCategory = () => {
@@ -80,6 +82,23 @@ const FinanceChargeCategory = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteChargeCategoryMutation,
   });
+
+  const [patchChargeCategoryStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePatchChargeCategoryStatusMutation,
+  });
+
+  const statusConfirm = useBoolean();
+  const [statusData, setStatusData] = useState<any>(null);
+  const [deactivationReason, setDeactivationReason] = useState('');
+
+  const handleOpenStatusConfirm = (row: any) => {
+    setStatusData(row);
+    setDeactivationReason('');
+    statusConfirm.onTrue();
+  };
+
+  const nextStatus = statusData ? !statusData.isActive : false;
 
   const { confirmWithUndo } = useConfirmWithUndo();
 
@@ -166,6 +185,7 @@ const FinanceChargeCategory = () => {
         isSort: true,
         isFilter: true,
         align: 'left',
+        sticky: true,
       },
       {
         id: 'isApprovalRequired',
@@ -183,6 +203,30 @@ const FinanceChargeCategory = () => {
         isSort: true,
         isFilter: true,
         align: 'left',
+      },
+      {
+        id: 'isActive',
+        label: 'Status',
+        minWidth: '140px',
+        sticky: true,
+        render(value: boolean, row: any) {
+          return (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip
+                size="small"
+                label={row.isActive ? 'Active' : 'Inactive'}
+                color={row.isActive ? 'success' : 'default'}
+                variant="soft"
+              />
+              <Switch
+                size="small"
+                checked={row.isActive || false}
+                onClick={(event) => event.stopPropagation()}
+                onChange={() => handleOpenStatusConfirm(row)}
+              />
+            </Stack>
+          );
+        },
       },
       {
         id: 'actions',
@@ -306,6 +350,69 @@ const FinanceChargeCategory = () => {
             onClick={handleDelete}
           >
             Yes
+          </LoadingButton>
+        }
+      />
+
+      {/* Status Confirmation Dialog */}
+      <ConfirmDialog
+        open={statusConfirm.value}
+        onClose={() => {
+          statusConfirm.onFalse();
+          setStatusData(null);
+          setDeactivationReason('');
+        }}
+        title={nextStatus ? 'Activate Charge Category' : 'Deactivate Charge Category'}
+        content={
+          <Stack spacing={2}>
+            <Typography variant="body2">
+              {nextStatus ? 'Activate' : 'Deactivate'}{' '}
+              <Box component="span" fontWeight="bold" color="text.primary">
+                {statusData?.name}
+              </Box>
+              ?
+            </Typography>
+            {!nextStatus && (
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                size="small"
+                label="Deactivation reason"
+                value={deactivationReason}
+                onChange={(event) => setDeactivationReason(event.target.value)}
+              />
+            )}
+          </Stack>
+        }
+        action={
+          <LoadingButton
+            loading={isStatusLoading}
+            variant="contained"
+            color={nextStatus ? 'primary' : 'warning'}
+            size="small"
+            onClick={async () => {
+              if (!statusData) return;
+              try {
+                await patchChargeCategoryStatus({
+                  id: statusData.id,
+                  body: {
+                    isActive: nextStatus,
+                    deactivationReason: nextStatus ? null : deactivationReason || null,
+                  },
+                }).unwrap();
+                shikshaMitraToast.success({
+                  message: `Charge Category ${nextStatus ? 'activated' : 'deactivated'} successfully`,
+                });
+                statusConfirm.onFalse();
+                setStatusData(null);
+                setDeactivationReason('');
+              } catch {
+                // Keep dialog open on error
+              }
+            }}
+          >
+            {nextStatus ? 'Activate' : 'Deactivate'}
           </LoadingButton>
         }
       />

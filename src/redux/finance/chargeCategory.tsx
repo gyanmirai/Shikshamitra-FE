@@ -59,6 +59,16 @@ export const chargeCategoryApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.chargeCategory],
     }),
+
+    // Patch charge category status
+    patchChargeCategoryStatus: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/charge-categories/${id}/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: [financeModuleType.chargeCategory],
+    }),
   }),
   overrideExisting: false,
 });
@@ -69,4 +79,5 @@ export const {
   usePostChargeCategoryMutation,
   usePutChargeCategoryMutation,
   useDeleteChargeCategoryMutation,
+  usePatchChargeCategoryStatusMutation,
 } = chargeCategoryApi;

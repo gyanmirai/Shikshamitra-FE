@@ -15,6 +15,8 @@ export interface IBankAccount {
   ifscCode: string;
   upiId?: string;
   isUsedInDownstream?: boolean;
+  isActive?: boolean;
+  deactivationReason?: string | null;
 }
 
 export interface IBankAccountTableProps {

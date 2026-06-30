@@ -2,6 +2,8 @@ export interface IFeeCategory {
   id: string;
   name: string;
   description?: string;
+  isActive?: boolean;
+  deactivationReason?: string | null;
 }
 export interface IFeeCategoryTableProps {
   onAddFeeCategory: any;

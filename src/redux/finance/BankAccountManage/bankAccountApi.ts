@@ -53,6 +53,14 @@ export const bankAccountApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.bankAccount],
     }),
+    patchBankAccountStatus: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/bank-accounts/${id}/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: [financeModuleType.bankAccount],
+    }),
   }),
   overrideExisting: false,
 });
@@ -62,4 +70,5 @@ export const {
   usePostBankAccountMutation,
   usePutBankAccountMutation,
   useDeleteBankAccountMutation,
+  usePatchBankAccountStatusMutation,
 } = bankAccountApi;

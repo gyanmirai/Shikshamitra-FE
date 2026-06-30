@@ -45,6 +45,16 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.feeCategory],
     }),
+
+    // Patch fee category status
+    patchFeeCategoryStatus: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/fee-categories/${id}/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: [financeModuleType.feeCategory],
+    }),
   }),
 });
 
@@ -53,4 +63,5 @@ export const {
   useAddFeeCategoryMutation,
   useUpdateFeeCategoryMutation,
   useDeleteFeeCategoryMutation,
+  usePatchFeeCategoryStatusMutation,
 } = feeCategoryApi;

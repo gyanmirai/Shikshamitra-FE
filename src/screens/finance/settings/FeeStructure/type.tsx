@@ -33,6 +33,11 @@ export interface IClassWiseFeeStructureCard {
   status: FeeStructureLockStatusType;
   classId: string;
   feeStructureMetaDataId: string;
+  // Finance Policies
+  paymentPolicyId?: string;
+  collectionPolicyId?: string;
+  refundPolicyId?: string;
+  prorationPolicyId?: string;
 }
 
 export interface IFeeStructure {

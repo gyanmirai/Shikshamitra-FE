@@ -5,6 +5,8 @@ export interface IExpenseCategory {
   name: string;
   description?: string;
   tags: string[];
+  isActive?: boolean;
+  deactivationReason?: string | null;
 }
 
 export interface IExpenseCategoryTableProps {

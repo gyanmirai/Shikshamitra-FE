@@ -6,6 +6,8 @@ export interface IIncomeCategory {
   description?: string;
   tags: string[];
   isUsedInDownstream?: boolean;
+  isActive?: boolean;
+  deactivationReason?: string | null;
 }
 
 export interface IIncomeCategoryTableProps {

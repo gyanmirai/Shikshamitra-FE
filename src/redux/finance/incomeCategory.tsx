@@ -56,6 +56,14 @@ export const incomeCategoryApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.incomeCategoryData],
     }),
+    patchIncomeCategoryStatus: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/income-categories/${id}/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: [financeModuleType.incomeCategoryData],
+    }),
     getBudgetOptions: builder.query({
       query: () => ({ url: '/incomeOptions', method: 'GET' }),
       providesTags: [financeModuleType.incomeCategoryData],
@@ -68,5 +76,6 @@ export const {
   usePostIncomeCategoryMutation,
   usePutIncomeCategoryMutation,
   useDeleteIncomeCategoryMutation,
+  usePatchIncomeCategoryStatusMutation,
   useGetBudgetOptionsQuery,
 } = incomeCategoryApi;

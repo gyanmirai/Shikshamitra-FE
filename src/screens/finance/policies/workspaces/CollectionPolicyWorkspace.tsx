@@ -54,7 +54,7 @@ export default function CollectionPolicyWorkspace() {
         }
       />
 
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <FinancePolicyTable policyType="collection" onAdd={handleAdd} onEdit={handleEdit} />
       </Box>
 

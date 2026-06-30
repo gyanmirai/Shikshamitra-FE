@@ -102,6 +102,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
         id: 'policyName',
         label: 'Policy Name',
         align: 'left',
+        sticky: true,
         render: (value, row) => (
           <Box>
             <Typography variant="caption" fontWeight={600} fontSize="13px">
@@ -372,19 +373,6 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
           ]
         : []),
       {
-        id: 'status',
-        label: 'Status',
-        align: 'left',
-        filterType: 'enum',
-        enumOptions: [
-          { label: 'Active', value: 'Active' },
-          { label: 'Archived', value: 'Archived' },
-        ],
-        render: (value) => (
-          <Label color={STATUS_COLOR[value as FinancePolicyStatus] ?? 'default'}>{value}</Label>
-        ),
-      },
-      {
         id: 'effectiveFrom',
         label: 'Effective From',
         align: 'left',
@@ -412,6 +400,20 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
           <Typography variant="caption" fontSize="13px">
             {value ? new Date(value).toLocaleDateString('en-IN') : '-'}
           </Typography>
+        ),
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        align: 'left',
+        filterType: 'enum',
+        sticky: true,
+        enumOptions: [
+          { label: 'Active', value: 'Active' },
+          { label: 'Archived', value: 'Archived' },
+        ],
+        render: (value) => (
+          <Label color={STATUS_COLOR[value as FinancePolicyStatus] ?? 'default'}>{value}</Label>
         ),
       },
       {

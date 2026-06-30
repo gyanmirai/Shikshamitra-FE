@@ -54,7 +54,7 @@ export default function ProrationPolicyWorkspace() {
         }
       />
 
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <FinancePolicyTable policyType="proration" onAdd={handleAdd} onEdit={handleEdit} />
       </Box>
 
