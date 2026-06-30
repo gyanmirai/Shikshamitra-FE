@@ -14,6 +14,15 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
       providesTags: [financeModuleType.feeCategory],
     }),
 
+    // Get fee category by id
+    getFeeCategoryById: builder.query({
+      query: (id) => ({
+        url: `/fee-categories/${id}`,
+        method: 'GET',
+      }),
+      providesTags: [financeModuleType.feeCategory],
+    }),
+
     // Create fee category
     addFeeCategory: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -60,6 +69,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
 
 export const {
   useGetFeeCategoriesQuery,
+  useGetFeeCategoryByIdQuery,
   useAddFeeCategoryMutation,
   useUpdateFeeCategoryMutation,
   useDeleteFeeCategoryMutation,
