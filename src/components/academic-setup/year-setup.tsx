@@ -4,15 +4,18 @@ import type { Board, Medium, Division, Standards, Organization } from 'src/types
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
+import { isNaN } from 'lodash';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useMemo, useState, useEffect } from 'react';
 import { useDeleteClassMutation } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useDeleteMediumMutation } from 'src/redux/medium/mediumApi';
 import { useDeleteDivisionMutation } from 'src/redux/division/divisionApi';
 import { useDeleteOrganizationMutation } from 'src/redux/oraganization/oraganization';
@@ -53,10 +56,6 @@ import { DivisionForm } from './division-setup';
 import { ConfirmDialog } from '../confirm-dialog';
 import { OrganizationForm } from './organization-setup';
 import CustomDialog, { DialogScrollContent } from '../customDialog';
-import {
-  parseAcademicYearDateForPicker,
-  formatAcademicYearDateForPayload,
-} from './academic-year-date-utils';
 
 // ----------------------------------------------------------------------
 
@@ -1246,22 +1245,30 @@ const YearForm = ({ handleClose, editData }: IYearForm) => {
     },
   });
 
+  // Derives the year name string e.g. "2025-2026"
+  const buildYearName = (start: dayjs.Dayjs, end: dayjs.Dayjs) =>
+    `${start.format('YYYY')}-${end.format('YYYY')}`;
+
   const onSubmit = async () => {
     try {
+      const start = formik.values.startYear;
+      const end = formik.values.endYear;
+      const name = buildYearName(start, end);
+
       if (editData) {
         await updateYear({
           id: editData.id,
           body: {
-            name: `${formik.values.startDate.format('YYYY')}-${formik.values.endDate.format('YYYY')}`,
-            startDate: formatAcademicYearDateForPayload(formik.values.startDate),
-            endDate: formatAcademicYearDateForPayload(formik.values.endDate),
+            name,
+            startYear: dateConvertor(start?.format(dateFormat) || '') || '',
+            endYear: dateConvertor(end?.format(dateFormat) || '') || '',
           },
         }).unwrap();
       } else {
         await addYear({
-          name: `${formik.values.startDate.format('YYYY')}-${formik.values.endDate.format('YYYY')}`,
-          startDate: formatAcademicYearDateForPayload(formik.values.startDate),
-          endDate: formatAcademicYearDateForPayload(formik.values.endDate),
+          name,
+          startYear: dateConvertor(start?.format(dateFormat) || '') || '',
+          endYear: dateConvertor(end?.format(dateFormat) || '') || '',
         }).unwrap();
       }
       handleClose();
@@ -1270,31 +1277,45 @@ const YearForm = ({ handleClose, editData }: IYearForm) => {
     }
   };
 
+  // Parse existing name like "2025-2026" back into dayjs year objects
+  const parseStartYear = () => {
+    if (!editData?.name) return dayjs().year(dayjs().year());
+    const parts = String(editData.name).split('-');
+    const yr = parseInt(parts[0], 10);
+    return dayjs().year(isNaN(yr) ? dayjs().year() : yr);
+  };
+  const parseEndYear = () => {
+    if (!editData?.name) return dayjs().year(dayjs().year() + 1);
+    const parts = String(editData.name).split('-');
+    // Support both "2025-2026" (full) and legacy "2025-26" (short) formats
+    const startYr = parseInt(parts[0], 10);
+    const endPart = parseInt(parts[1], 10);
+    if (isNaN(startYr) || isNaN(endPart)) return dayjs().year(dayjs().year() + 1);
+    const endYr = endPart > 100 ? endPart : Math.floor(startYr / 100) * 100 + endPart;
+    return dayjs().year(endYr);
+  };
+
   const formik = useFormik({
     initialValues: {
-      startDate: editData
-        ? parseAcademicYearDateForPicker(editData.startDate)
-        : dayjs().year(dayjs().year()).month(2).date(1),
-      endDate: editData
-        ? parseAcademicYearDateForPicker(editData.endDate)
-        : dayjs()
-            .year(dayjs().year() + 1)
-            .month(1)
-            .endOf('month'),
+      startYear: parseStartYear(),
+      endYear: parseEndYear(),
     },
     validationSchema: Yup.object().shape({
-      startDate: Yup.date().required('Start Date is required'),
-      endDate: Yup.date()
-        .required('End Date is required')
+      startYear: Yup.date()
+        .nullable()
+        .required('Start Year is required.')
+        .typeError('Start Year is required.'),
+      endYear: Yup.date()
+        .nullable()
+        .required('End Year is required.')
+        .typeError('End Year is required.')
         .test(
-          'year-gap-exactly-one',
-          'End year must be exactly 1 year after start year (e.g. 2024-2025)',
-          (endDate, context) => {
-            const { startDate } = context.parent;
-            if (!startDate || !endDate) return true;
-            const startYear = dayjs(startDate).year();
-            const endYear = dayjs(endDate).year();
-            return endYear - startYear === 1;
+          'end-exactly-one-after-start',
+          'End Year must be exactly 1 year after Start Year.',
+          (endYear, context) => {
+            const { startYear } = context.parent;
+            if (!startYear || !endYear) return true;
+            return dayjs(endYear).year() - dayjs(startYear).year() === 1;
           }
         ),
     }),
@@ -1324,36 +1345,61 @@ const YearForm = ({ handleClose, editData }: IYearForm) => {
       <DialogScrollContent>
         <Stack spacing={2} direction="column">
           <DatePicker
-            label="Start Date"
-            value={formik.values.startDate}
-            format="DD-MMM-YYYY"
-            onChange={(newValue) => formik.setFieldValue('startDate', newValue)}
+            label="Start Year"
+            value={formik.values.startYear}
+            views={['year']}
+            format="YYYY"
+            onChange={(newValue) => {
+              formik.setFieldValue('startYear', newValue);
+              // Auto-set End Year to exactly Start Year + 1
+              if (newValue) {
+                formik.setFieldValue('endYear', dayjs(newValue).add(1, 'year'));
+              }
+            }}
             slotProps={{
               textField: {
                 size: 'small',
-                helperText: formik.touched.startDate && (formik.errors.startDate as string),
-                error: formik.touched.startDate && Boolean(formik.errors.startDate),
+                fullWidth: true,
+                helperText: formik.touched.startYear && (formik.errors.startYear as string),
+                error: formik.touched.startYear && Boolean(formik.errors.startYear),
               },
             }}
           />
 
           <DatePicker
-            label="End Date"
-            value={formik.values.endDate}
-            format="DD-MMM-YYYY"
-            onChange={(newValue) => formik.setFieldValue('endDate', newValue)}
+            label="End Year"
+            value={formik.values.endYear}
+            views={['year']}
+            format="YYYY"
+            minDate={
+              formik.values.startYear
+                ? dayjs(formik.values.startYear).add(1, 'year').startOf('year')
+                : undefined
+            }
+            maxDate={
+              formik.values.startYear
+                ? dayjs(formik.values.startYear).add(1, 'year').endOf('year')
+                : undefined
+            }
+            onChange={(newValue) => formik.setFieldValue('endYear', newValue)}
             slotProps={{
               textField: {
                 size: 'small',
-                helperText: formik.touched.endDate && (formik.errors.endDate as string),
-                error: formik.touched.endDate && Boolean(formik.errors.endDate),
+                fullWidth: true,
+                helperText: formik.touched.endYear && (formik.errors.endYear as string),
+                error: formik.touched.endYear && Boolean(formik.errors.endYear),
               },
             }}
           />
         </Stack>
       </DialogScrollContent>
       <DialogActions>
-        <Button variant="outlined" size="small" onClick={handleClose}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={handleClose}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
           Cancel
         </Button>
         <LoadingButton
@@ -1362,6 +1408,7 @@ const YearForm = ({ handleClose, editData }: IYearForm) => {
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
         >
           Submit
         </LoadingButton>

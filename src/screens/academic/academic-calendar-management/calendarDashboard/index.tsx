@@ -294,12 +294,11 @@ const AcademicCalendarDashboard = () => {
     popupConfig: { error: false },
   });
 
-  // Use mock data when API is empty
-  const calendarsData = (calendarsRaw?.items?.length ?? 0) > 0 ? calendarsRaw : MOCK_CALENDARS;
-  const impactLogsData = (impactRaw?.items?.length ?? 0) > 0 ? impactRaw : MOCK_IMPACT_LOGS;
+  const calendarsData = calendarsRaw ?? { items: [], totalCount: 0 };
+  const impactLogsData = impactRaw ?? { items: [], totalCount: 0 };
 
   const publishedCalendar =
-    calendarsData?.items?.find((c: any) => c.status === CalendarStatus.Published) ?? MOCK_PUBLISHED;
+    calendarsData?.items?.find((c: any) => c.status === CalendarStatus.Published);
 
   // Year progress
   const yearStart = dayjs(publishedCalendar?.startDate);

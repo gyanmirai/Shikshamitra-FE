@@ -242,6 +242,11 @@ export enum CalendarAuditAction {
   EmergencyClosureDeclared = 8,
   ImpactResolved = 9,
   OverrideApplied = 10,
+  CalendarDeleted = 11,
+  WorkingHourAdded = 12,
+  WorkingHourUpdated = 13,
+  WorkingHourDeleted = 14,
+  SettingsUpdated = 15,
 }
 
 export const CALENDAR_AUDIT_ACTION_LABELS: Record<CalendarAuditAction, string> = {
@@ -255,6 +260,11 @@ export const CALENDAR_AUDIT_ACTION_LABELS: Record<CalendarAuditAction, string> =
   [CalendarAuditAction.EmergencyClosureDeclared]: 'Emergency Closure Declared',
   [CalendarAuditAction.ImpactResolved]: 'Impact Resolved',
   [CalendarAuditAction.OverrideApplied]: 'Override Applied',
+  [CalendarAuditAction.CalendarDeleted]: 'Calendar Deleted',
+  [CalendarAuditAction.WorkingHourAdded]: 'Working Hours Added',
+  [CalendarAuditAction.WorkingHourUpdated]: 'Working Hours Updated',
+  [CalendarAuditAction.WorkingHourDeleted]: 'Working Hours Deleted',
+  [CalendarAuditAction.SettingsUpdated]: 'Calendar Settings Updated',
 };
 
 // ─── School Shift Type ───────────────────────────────────────────────────────

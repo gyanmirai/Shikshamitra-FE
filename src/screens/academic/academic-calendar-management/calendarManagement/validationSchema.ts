@@ -44,9 +44,9 @@ export const calendarDayValidationSchema = (isPublished: boolean) =>
       then: (schema) => schema.required('End time is required for half day'),
       otherwise: (schema) => schema,
     }),
-    standardId: Yup.string().when('appliesToAll', {
+    standardIds: Yup.array().of(Yup.string()).when('appliesToAll', {
       is: false,
-      then: (schema) => schema.required('Standard is required when not applying to all'),
+      then: (schema) => schema.min(1, 'Select at least one class when not applying to all'),
       otherwise: (schema) => schema,
     }),
     changeReason: isPublished

@@ -17,15 +17,9 @@ export interface CalendarDayFormValues {
   title: string;
   description: string;
   appliesToAll: boolean;
-  standardId: string;
+  standardIds: string[];
   divisionId: string;
   startTime: string;
   endTime: string;
-  blocksTimetable: boolean;
-  blocksHomeworkDueDate: boolean;
-  blocksExamSchedule: boolean;
-  blocksLessonPlan: boolean;
-  blocksOnlineClass: boolean;
-  exemptAttendance: boolean;
   changeReason: string;
 }

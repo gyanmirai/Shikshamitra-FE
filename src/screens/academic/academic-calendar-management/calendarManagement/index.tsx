@@ -5,12 +5,12 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { alpha, useTheme } from '@mui/material/styles';
 import { CustomTabs } from 'src/components/custom-tabs';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -18,54 +18,19 @@ import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Tab, Paper, Stack, Avatar, Typography } from '@mui/material';
-import {
-  DayType,
-  CalendarStatus,
-  CALENDAR_STATUS_LABELS,
-  CALENDAR_STATUS_COLORS,
-} from 'src/enums/academic-calendar';
+import { DayType, CalendarStatus, CalendarDayStatus } from 'src/enums/academic-calendar';
 import {
   useGetCalendarsQuery,
   useGetCalendarDaysQuery,
+  useCreateCalendarMutation,
   usePublishCalendarMutation,
   useArchiveCalendarMutation,
+  useDeleteCalendarDayMutation,
 } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 
 import CalendarYearView from './components/CalendarYearView';
 import CalendarMonthView from './components/CalendarMonthView';
 import CalendarDayFormDialog from './components/CalendarDayFormDialog';
-
-// ─── Mock calendars for demo ──────────────────────────────────────────────────
-
-const MOCK_CALENDARS_DATA = [
-  {
-    id: 'mock-1',
-    name: 'AY 2025–26 (Primary)',
-    status: CalendarStatus.Published,
-    startDate: '2025-06-01',
-    endDate: '2026-03-31',
-    totalWorkingDays: 220,
-    totalHolidays: 18,
-  },
-  {
-    id: 'mock-2',
-    name: 'AY 2024–25 (Archived)',
-    status: CalendarStatus.Archived,
-    startDate: '2024-06-01',
-    endDate: '2025-03-31',
-    totalWorkingDays: 215,
-    totalHolidays: 16,
-  },
-  {
-    id: 'mock-3',
-    name: 'AY 2025–26 (Summer Draft)',
-    status: CalendarStatus.Draft,
-    startDate: '2025-04-01',
-    endDate: '2025-05-31',
-    totalWorkingDays: 40,
-    totalHolidays: 3,
-  },
-];
 
 // ─── Tabs ────────────────────────────────────────────────────────────────────
 
@@ -82,6 +47,79 @@ const TABS = [
   },
 ];
 
+const NON_WORKING_DAY_TYPES = new Set<number>([
+  DayType.Holiday,
+  DayType.Vacation,
+  DayType.EmergencyClosure,
+]);
+
+const addDateRangeToSet = (dateSet: Set<string>, startDate?: string, endDate?: string) => {
+  if (!startDate) return;
+
+  let cursor = dayjs(startDate).startOf('day');
+  let end = dayjs(endDate || startDate).startOf('day');
+
+  if (!cursor.isValid()) return;
+  if (!end.isValid() || end.isBefore(cursor, 'day')) end = cursor;
+
+  while (cursor.isBefore(end, 'day') || cursor.isSame(end, 'day')) {
+    dateSet.add(cursor.format('YYYY-MM-DD'));
+    cursor = cursor.add(1, 'day');
+  }
+};
+
+const calculateCalendarSummary = (
+  days: any[],
+  calendarStartDate?: string,
+  calendarEndDate?: string
+) => {
+  const start = dayjs(calendarStartDate).startOf('day');
+  const end = dayjs(calendarEndDate).startOf('day');
+  const holidayDates = new Set<string>();
+  const nonWorkingDates = new Set<string>();
+  const workingOverrideDates = new Set<string>();
+
+  days
+    .filter((day) => !day.status || Number(day.status) === CalendarDayStatus.Active)
+    .forEach((day) => {
+      const dayType = Number(day.dayType);
+
+      if (dayType === DayType.Holiday) {
+        addDateRangeToSet(holidayDates, day.date, day.endDate);
+      }
+
+      if (NON_WORKING_DAY_TYPES.has(dayType)) {
+        addDateRangeToSet(nonWorkingDates, day.date, day.endDate);
+      }
+
+      if (dayType === DayType.WorkingDay) {
+        addDateRangeToSet(workingOverrideDates, day.date, day.endDate);
+      }
+    });
+
+  if (!start.isValid() || !end.isValid()) {
+    return { totalWorkingDays: 0, totalHolidays: holidayDates.size };
+  }
+
+  let totalWorkingDays = 0;
+  let cursor = start;
+
+  while (cursor.isBefore(end, 'day') || cursor.isSame(end, 'day')) {
+    const dateKey = cursor.format('YYYY-MM-DD');
+    const isWeekend = cursor.day() === 0 || cursor.day() === 6;
+
+    if (workingOverrideDates.has(dateKey)) {
+      totalWorkingDays += 1;
+    } else if (!isWeekend && !nonWorkingDates.has(dateKey)) {
+      totalWorkingDays += 1;
+    }
+
+    cursor = cursor.add(1, 'day');
+  }
+
+  return { totalWorkingDays, totalHolidays: holidayDates.size };
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const CalendarManagement = () => {
@@ -89,7 +127,17 @@ const CalendarManagement = () => {
   const { getAllParams, setParam } = useCustomSearchParams({ tab: 'yearView' });
   const searchParams = getAllParams();
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const {
+    currentYear,
+    currentBoard,
+    currentMedium: medium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Extract standards list from the selected medium stages
+  const standards = useMemo(
+    () => medium?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [],
+    [medium]
+  );
 
   // Permissions
   const canCreate = hasGrantedPermission(
@@ -111,11 +159,16 @@ const CalendarManagement = () => {
 
   // Dialog states
   const addDayDialog = useBoolean(false);
+  const createCalendarDialog = useBoolean(false);
 
   // Local state
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('');
   const [selectedDayDate, setSelectedDayDate] = useState<string>('');
   const [currentMonth, setCurrentMonth] = useState(dayjs());
+  const [filterStandardId, setFilterStandardId] = useState<string>('all');
+
+  // Auto-creation lock ref
+  const autoCreatingRef = React.useRef(false);
 
   // Queries
   const { data: calendarsData, isLoading: calendarsLoading } = useQueryAndMutation({
@@ -134,52 +187,12 @@ const CalendarManagement = () => {
   });
 
   // Mutations
+  const [createCalendar, { isLoading: creatingCal }] = useCreateCalendarMutation();
   const [publishCalendar, { isLoading: publishing }] = usePublishCalendarMutation();
   const [archiveCalendar, { isLoading: archiving }] = useArchiveCalendarMutation();
+  const [deleteCalendarDay, { isLoading: deletingDay }] = useDeleteCalendarDayMutation();
 
-  const calendars: any[] = useMemo(() => {
-    const rawCalendars =
-      (calendarsData?.items?.length ?? 0) > 0 ? calendarsData.items : MOCK_CALENDARS_DATA;
-    if (currentYear?.name) {
-      const yearName = currentYear.name;
-      const parts = yearName.split(/[-/]/);
-      const startYear = parseInt(parts[0], 10) || 2025;
-      const endYear = parseInt(parts[1], 10)
-        ? parts[1].length === 2
-          ? parseInt(`${String(startYear).slice(0, 2)}${parts[1]}`, 10)
-          : parseInt(parts[1], 10)
-        : startYear + 1;
-
-      return rawCalendars.map((cal: any) => {
-        if (cal.id.startsWith('mock-')) {
-          const calStartMonthDay = dayjs(cal.startDate).format('MM-DD');
-          const calEndMonthDay = dayjs(cal.endDate).format('MM-DD');
-
-          const adjustedStart = `${startYear}-${calStartMonthDay}`;
-          const isEndNextYear = dayjs(cal.endDate).year() > dayjs(cal.startDate).year();
-          const adjustedEnd = `${isEndNextYear ? endYear : startYear}-${calEndMonthDay}`;
-
-          const suffix = cal.name.includes('(Primary)')
-            ? '(Primary)'
-            : cal.name.includes('(Summer Draft)')
-              ? '(Summer Draft)'
-              : '(Archived)';
-
-          const shortYear = `${startYear}-${String(endYear).slice(-2)}`;
-          const adjustedName = `AY ${shortYear} ${suffix}`;
-
-          return {
-            ...cal,
-            name: adjustedName,
-            startDate: adjustedStart,
-            endDate: adjustedEnd,
-          };
-        }
-        return cal;
-      });
-    }
-    return rawCalendars;
-  }, [calendarsData, currentYear]);
+  const calendars: any[] = useMemo(() => calendarsData?.items ?? [], [calendarsData]);
 
   const selectedCalendar = useMemo(
     () => calendars.find((c) => c.id === selectedCalendarId),
@@ -187,47 +200,73 @@ const CalendarManagement = () => {
   );
 
   const calendarDays: any[] = useMemo(() => {
-    const rawDays = calendarDaysData?.items ?? [];
-    if (rawDays.length > 0) return rawDays;
+    if (Array.isArray(calendarDaysData)) return calendarDaysData;
+    return calendarDaysData?.items ?? [];
+  }, [calendarDaysData]);
 
-    if (selectedCalendar?.startDate) {
-      const targetStartYear = dayjs(selectedCalendar.startDate).year();
-      const mockDaysBase = [
-        { date: '2025-08-15', dayType: DayType.Holiday, title: 'Independence Day' },
-        { date: '2025-09-05', dayType: DayType.Event, title: "Teachers' Day" },
-        { date: '2025-10-02', dayType: DayType.Holiday, title: 'Gandhi Jayanti' },
-        { date: '2025-10-24', dayType: DayType.Vacation, title: 'Dussehra Break' },
-        { date: '2025-10-25', dayType: DayType.Vacation, title: 'Dussehra Break' },
-        { date: '2025-10-26', dayType: DayType.Vacation, title: 'Dussehra Break' },
-        { date: '2025-11-12', dayType: DayType.Holiday, title: 'Diwali' },
-        { date: '2025-11-13', dayType: DayType.Holiday, title: 'Diwali (2nd day)' },
-        { date: '2025-11-14', dayType: DayType.HalfDay, title: "Children's Day" },
-        { date: '2025-12-25', dayType: DayType.Holiday, title: 'Christmas' },
-        { date: '2025-12-26', dayType: DayType.Vacation, title: 'Winter Vacation' },
-        { date: '2025-12-27', dayType: DayType.Vacation, title: 'Winter Vacation' },
-        { date: '2025-12-28', dayType: DayType.Vacation, title: 'Winter Vacation' },
-        { date: '2025-12-29', dayType: DayType.Vacation, title: 'Winter Vacation' },
-        { date: '2026-01-01', dayType: DayType.Holiday, title: "New Year's Day" },
-        { date: '2026-01-26', dayType: DayType.Holiday, title: 'Republic Day' },
-        { date: '2026-02-10', dayType: DayType.Exam, title: 'Annual Exam Day 1' },
-        { date: '2026-02-11', dayType: DayType.Exam, title: 'Annual Exam Day 2' },
-        { date: '2026-02-12', dayType: DayType.Exam, title: 'Annual Exam Day 3' },
-        { date: '2026-02-13', dayType: DayType.Exam, title: 'Annual Exam Day 4' },
-        { date: '2026-03-08', dayType: DayType.Event, title: "Women's Day Celebration" },
-        { date: '2026-03-15', dayType: DayType.PTM, title: 'Parent-Teacher Meeting' },
-      ];
+  // Class filter options and the days visible for the selected class.
+  // "All classes" markers always stay visible since they apply to every class.
+  const classFilterOptions = useMemo(
+    () => [{ id: 'all', name: 'All Classes' }, ...standards],
+    [standards]
+  );
 
-      return mockDaysBase.map((d) => {
-        const dMonth = dayjs(d.date).month();
-        const year = dMonth < 5 ? targetStartYear + 1 : targetStartYear;
-        return {
-          ...d,
-          date: dayjs(d.date).year(year).format('YYYY-MM-DD'),
-        };
-      });
+  const filteredCalendarDays = useMemo(() => {
+    if (filterStandardId === 'all') return calendarDays;
+    return calendarDays.filter((d) => d.appliesToAll || d.standardId === filterStandardId);
+  }, [calendarDays, filterStandardId]);
+
+  const calendarStartDate = currentBoard?.startDate || selectedCalendar?.startDate || '';
+  const calendarEndDate = currentBoard?.endDate || selectedCalendar?.endDate || '';
+  const calendarSummary = calculateCalendarSummary(
+    calendarDays,
+    calendarStartDate,
+    calendarEndDate
+  );
+
+  // Auto-create calendar if none exists for the selected academic year
+  React.useEffect(() => {
+    if (
+      !calendarsLoading &&
+      calendars.length === 0 &&
+      currentYear?.id &&
+      currentYear?.name &&
+      !autoCreatingRef.current
+    ) {
+      autoCreatingRef.current = true;
+      const yearName = currentYear.name;
+      const parts = yearName.split(/[-/]/);
+      const startYear = parseInt(parts[0], 10) || 2026;
+      const endYear = parseInt(parts[1], 10)
+        ? parts[1].length === 2
+          ? parseInt(`${String(startYear).slice(0, 2)}${parts[1]}`, 10)
+          : parseInt(parts[1], 10)
+        : startYear + 1;
+
+      const startDate =
+        currentBoard?.startDate || currentYear.startDate || `${startYear}-06-01T00:00:00Z`;
+      const endDate = currentBoard?.endDate || currentYear.endDate || `${endYear}-03-31T00:00:00Z`;
+
+      createCalendar({
+        academicYearId: currentYear.id,
+        name: `Academic Calendar ${currentYear.name}`,
+        startDate,
+        endDate,
+        description: `Automatically generated default calendar for ${currentYear.name}`,
+        isDefault: true,
+      })
+        .unwrap()
+        .then((newCal) => {
+          setSelectedCalendarId(newCal.id);
+        })
+        .catch((err) => {
+          console.error('Failed to auto-create calendar:', err);
+        })
+        .finally(() => {
+          autoCreatingRef.current = false;
+        });
     }
-    return [];
-  }, [calendarDaysData, selectedCalendar]);
+  }, [calendars, calendarsLoading, currentYear, createCalendar, currentBoard]);
 
   // Auto-select published calendar
   React.useEffect(() => {
@@ -241,10 +280,11 @@ const CalendarManagement = () => {
 
   // Sync Month View's active month to calendar start date
   React.useEffect(() => {
-    if (selectedCalendar?.startDate) {
-      setCurrentMonth(dayjs(selectedCalendar.startDate));
+    const startD = currentBoard?.startDate || selectedCalendar?.startDate;
+    if (startD) {
+      setCurrentMonth(dayjs(startD));
     }
-  }, [selectedCalendarId, selectedCalendar?.startDate]);
+  }, [selectedCalendarId, selectedCalendar?.startDate, currentBoard?.startDate]);
 
   // Handlers
 
@@ -270,6 +310,42 @@ const CalendarManagement = () => {
     setSelectedDayDate(date);
     addDayDialog.onTrue();
   };
+
+  const handleDeleteDay = async (day: any) => {
+    const ids =
+      Array.isArray(day?.deleteIds) && day.deleteIds.length > 0 ? day.deleteIds : [day?.id];
+    const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+
+    if (uniqueIds.length === 0) return;
+
+    try {
+      await Promise.all(uniqueIds.map((id) => deleteCalendarDay(id).unwrap()));
+      shikshaMitraToast.success({ message: 'Calendar day deleted successfully' });
+      addDayDialog.onFalse();
+      setSelectedDayDate('');
+    } catch (err: any) {
+      shikshaMitraToast.error({ message: err?.data?.detail || 'Failed to delete calendar day' });
+    }
+  };
+
+  // Existing marker(s) on the clicked date — opens the dialog pre-filled in edit mode.
+  // A multi-class marker is stored as one row per class, so sibling rows with the
+  // same title and day type are merged back into a single standardIds selection.
+  const selectedDayEditData = useMemo(() => {
+    if (!selectedDayDate) return undefined;
+    const key = dayjs(selectedDayDate).format('YYYY-MM-DD');
+    const markers = filteredCalendarDays.filter(
+      (d) => d.status === CalendarDayStatus.Active && dayjs(d.date).format('YYYY-MM-DD') === key
+    );
+    if (markers.length === 0) return undefined;
+    const first = markers[0];
+    const group = markers.filter((m) => m.title === first.title && m.dayType === first.dayType);
+    return {
+      ...first,
+      standardIds: group.map((m) => m.standardId).filter(Boolean),
+      deleteIds: group.map((m) => m.id).filter(Boolean),
+    };
+  }, [filteredCalendarDays, selectedDayDate]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
@@ -326,19 +402,15 @@ const CalendarManagement = () => {
                   <Typography variant="caption" color="text.secondary" fontWeight={500}>
                     Selected Calendar
                   </Typography>
-                  <Stack direction="row" alignItems="center" gap={1}>
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      {selectedCalendar.name}
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    {selectedCalendar.name}
+                  </Typography>
+                  <Stack direction="row" alignItems="center" gap={0.5}>
+                    <Iconify icon="mdi:calendar-range-outline" width={15} color="text.secondary" />
+                    <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                      {dayjs(calendarStartDate).format('DD MMM YYYY')} –{' '}
+                      {dayjs(calendarEndDate).format('DD MMM YYYY')}
                     </Typography>
-                    <Label
-                      variant="soft"
-                      color={
-                        CALENDAR_STATUS_COLORS[selectedCalendar.status as CalendarStatus] as any
-                      }
-                      sx={{ textTransform: 'uppercase', fontWeight: 700 }}
-                    >
-                      {CALENDAR_STATUS_LABELS[selectedCalendar.status as CalendarStatus]}
-                    </Label>
                   </Stack>
                 </Stack>
               </Stack>
@@ -364,13 +436,6 @@ const CalendarManagement = () => {
             {/* Stats */}
             {selectedCalendar && (
               <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap">
-                <Stack direction="row" alignItems="center" gap={0.5}>
-                  <Iconify icon="mdi:calendar-range-outline" width={15} color="text.secondary" />
-                  <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                    {dayjs(selectedCalendar.startDate).format('DD MMM YYYY')} –{' '}
-                    {dayjs(selectedCalendar.endDate).format('DD MMM YYYY')}
-                  </Typography>
-                </Stack>
                 <Box
                   sx={{
                     display: 'flex',
@@ -385,7 +450,7 @@ const CalendarManagement = () => {
                 >
                   <Iconify icon="mdi:briefcase-check-outline" width={13} color="success.main" />
                   <Typography variant="caption" fontWeight={700} color="success.main">
-                    {selectedCalendar.totalWorkingDays ?? 0}
+                    {calendarSummary.totalWorkingDays}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Working Days
@@ -405,7 +470,7 @@ const CalendarManagement = () => {
                 >
                   <Iconify icon="mdi:flag-outline" width={13} color="error.main" />
                   <Typography variant="caption" fontWeight={700} color="error.main">
-                    {selectedCalendar.totalHolidays ?? 0}
+                    {calendarSummary.totalHolidays}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Holidays
@@ -436,20 +501,35 @@ const CalendarManagement = () => {
         </Box>
       </Paper>
 
-      {/* Tabs */}
-      <Paper
-        sx={{ '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } } }}
-      >
-        <CustomTabs
-          value={searchParams.tab}
-          onChange={(_, val) => setParam('tab', val)}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
+      {/* Class Filter + Tabs */}
+      <Stack direction="row" alignItems="center" gap={1.5}>
+        <CustomSelect
+          label="Class"
+          options={classFilterOptions}
+          labelKey="name"
+          valueKey="id"
+          value={filterStandardId}
+          onChange={(val) => setFilterStandardId(val as string)}
+          size="small"
+          formControlProps={{ size: 'small', sx: { minWidth: 180 } }}
+        />
+        <Paper
+          sx={{
+            flex: 1,
+            '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+          }}
         >
-          {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
-          ))}
-        </CustomTabs>
-      </Paper>
+          <CustomTabs
+            value={searchParams.tab}
+            onChange={(_, val) => setParam('tab', val)}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
+          >
+            {TABS.map((tab) => (
+              <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+            ))}
+          </CustomTabs>
+        </Paper>
+      </Stack>
 
       {/* Tab Content */}
       <Box sx={{ flex: 1, overflow: 'auto' }}>
@@ -462,9 +542,9 @@ const CalendarManagement = () => {
               </Paper>
             ) : (
               <CalendarYearView
-                calendarDays={calendarDays}
-                calendarStartDate={selectedCalendar?.startDate ?? ''}
-                calendarEndDate={selectedCalendar?.endDate ?? ''}
+                calendarDays={filteredCalendarDays}
+                calendarStartDate={calendarStartDate}
+                calendarEndDate={calendarEndDate}
                 isLoading={daysLoading}
                 onDayClick={handleDayClick}
               />
@@ -481,7 +561,7 @@ const CalendarManagement = () => {
               </Paper>
             ) : (
               <CalendarMonthView
-                calendarDays={calendarDays}
+                calendarDays={filteredCalendarDays}
                 currentMonth={currentMonth}
                 onMonthChange={setCurrentMonth}
                 onDayClick={handleDayClick}
@@ -504,7 +584,12 @@ const CalendarManagement = () => {
           }}
           calendarId={selectedCalendarId}
           calendarStatus={selectedCalendar.status}
+          editData={selectedDayEditData}
           prefillDate={selectedDayDate || undefined}
+          canDelete={canDelete}
+          deleting={deletingDay}
+          onDelete={handleDeleteDay}
+          standards={standards}
         />
       )}
     </Box>
