@@ -195,6 +195,11 @@ export const documentType = {
   document: 'Document',
 } as const;
 
+// ===== Main Dashboard API (reducerPath: api) =====
+export const dashboardType = {
+  summary: 'DashboardSummary',
+} as const;
+
 // ===== Earning Component API (reducerPath: earningComponentApi) =====
 export const earningComponentType = {
   earningComponent: 'EarningComponent',
@@ -657,6 +662,7 @@ export const allTagTypes = {
   ...coreSubjectType,
   ...divisionType,
   ...documentType,
+  ...dashboardType,
   ...earningComponentType,
   ...employeeType,
   ...enrollmentReportType,
