@@ -35,6 +35,16 @@ const backendZoneAliases: Record<string, string> = {
   Calendar: 'calendar',
   Announcements: 'announcements',
 };
+const backendRepoRoot =
+  process.env.DASHBOARD_BACKEND_REPO_ROOT ?? path.resolve(process.cwd(), '..', 'Shikshamitra-BE');
+const backendDashboardWidgetCatalogPath = path.resolve(
+  backendRepoRoot,
+  'src',
+  'ShikshaMitra.Application',
+  'Dashboard',
+  'DashboardWidgetCatalog.cs'
+);
+const backendContractIt = fs.existsSync(backendDashboardWidgetCatalogPath) ? it : it.skip;
 
 const collectPageRoutes = (directory: string, routeSegments: string[] = []): string[] => {
   if (!fs.existsSync(directory)) {
@@ -152,7 +162,7 @@ const resolveRoutePermissionSource = (source: string): string[] => {
 };
 
 const readBackendFile = (...segments: string[]) =>
-  fs.readFileSync(path.resolve(process.cwd(), '..', 'Shikshamitra-BE', ...segments), 'utf8');
+  fs.readFileSync(path.resolve(backendRepoRoot, ...segments), 'utf8');
 
 const resolveLegacySubModulePermission = (expression: string) => {
   const constantName = expression.replace('ShikshaMitraSubModulePermissions.', '');
@@ -370,7 +380,7 @@ describe('dashboard widget registry', () => {
     });
   });
 
-  it('stays in sync with backend dashboard widget definitions', () => {
+  backendContractIt('stays in sync with backend dashboard widget definitions', () => {
     const frontendWidgetIds = Object.keys(dashboardWidgetRegistry).sort();
     const backendWidgetIds = parseBackendDashboardWidgetDefinitions()
       .map((definition) => definition.id)
@@ -379,78 +389,84 @@ describe('dashboard widget registry', () => {
     expect(frontendWidgetIds).toEqual(backendWidgetIds);
   });
 
-  it('keeps frontend widget permissions aligned with backend widget permissions', () => {
-    const backendDefinitions = new Map(
-      parseBackendDashboardWidgetDefinitions().map((definition) => [definition.id, definition])
-    );
-    const permissionDrift = Object.values(dashboardWidgetRegistry).flatMap((entry) => {
-      const backendDefinition = backendDefinitions.get(entry.id);
-      const frontendPermissions = toPermissionArray(entry.requiredPermissions);
-      const hasSharedPermissionFamily = frontendPermissions.some((frontendPermission) =>
-        backendDefinition?.requiredPermissions.some((backendPermission) =>
-          frontendPermissionMatchesBackend(frontendPermission, backendPermission)
-        )
+  backendContractIt(
+    'keeps frontend widget permissions aligned with backend widget permissions',
+    () => {
+      const backendDefinitions = new Map(
+        parseBackendDashboardWidgetDefinitions().map((definition) => [definition.id, definition])
       );
-      const unexpectedPermissions = frontendPermissions.filter(
-        (frontendPermission) =>
-          !backendDefinition?.requiredPermissions.some((backendPermission) =>
+      const permissionDrift = Object.values(dashboardWidgetRegistry).flatMap((entry) => {
+        const backendDefinition = backendDefinitions.get(entry.id);
+        const frontendPermissions = toPermissionArray(entry.requiredPermissions);
+        const hasSharedPermissionFamily = frontendPermissions.some((frontendPermission) =>
+          backendDefinition?.requiredPermissions.some((backendPermission) =>
             frontendPermissionMatchesBackend(frontendPermission, backendPermission)
           )
-      );
+        );
+        const unexpectedPermissions = frontendPermissions.filter(
+          (frontendPermission) =>
+            !backendDefinition?.requiredPermissions.some((backendPermission) =>
+              frontendPermissionMatchesBackend(frontendPermission, backendPermission)
+            )
+        );
 
-      if (hasSharedPermissionFamily && !unexpectedPermissions.length) {
-        return [];
-      }
+        if (hasSharedPermissionFamily && !unexpectedPermissions.length) {
+          return [];
+        }
 
-      return [
-        {
-          widgetId: entry.id,
-          frontendPermissions,
-          backendPermissions: backendDefinition?.requiredPermissions ?? [],
-        },
-      ];
-    });
-
-    expect(permissionDrift).toEqual([]);
-  });
-
-  it('keeps frontend widget zones, drilldowns, and owners aligned with backend metadata', () => {
-    const backendDefinitions = new Map(
-      parseBackendDashboardWidgetDefinitions().map((definition) => [definition.id, definition])
-    );
-    const metadataDrift = Object.values(dashboardWidgetRegistry).flatMap((entry) => {
-      const backendDefinition = backendDefinitions.get(entry.id);
-
-      if (
-        backendDefinition &&
-        entry.zone === backendDefinition.zone &&
-        entry.drilldownUrl === backendDefinition.drilldownUrl &&
-        (entry.owner ?? null) === (backendDefinition.owner ?? null)
-      ) {
-        return [];
-      }
-
-      return [
-        {
-          widgetId: entry.id,
-          frontend: {
-            zone: entry.zone,
-            drilldownUrl: entry.drilldownUrl,
-            owner: entry.owner,
+        return [
+          {
+            widgetId: entry.id,
+            frontendPermissions,
+            backendPermissions: backendDefinition?.requiredPermissions ?? [],
           },
-          backend: backendDefinition
-            ? {
-                zone: backendDefinition.zone,
-                drilldownUrl: backendDefinition.drilldownUrl,
-                owner: backendDefinition.owner,
-              }
-            : null,
-        },
-      ];
-    });
+        ];
+      });
 
-    expect(metadataDrift).toEqual([]);
-  });
+      expect(permissionDrift).toEqual([]);
+    }
+  );
+
+  backendContractIt(
+    'keeps frontend widget zones, drilldowns, and owners aligned with backend metadata',
+    () => {
+      const backendDefinitions = new Map(
+        parseBackendDashboardWidgetDefinitions().map((definition) => [definition.id, definition])
+      );
+      const metadataDrift = Object.values(dashboardWidgetRegistry).flatMap((entry) => {
+        const backendDefinition = backendDefinitions.get(entry.id);
+
+        if (
+          backendDefinition &&
+          entry.zone === backendDefinition.zone &&
+          entry.drilldownUrl === backendDefinition.drilldownUrl &&
+          (entry.owner ?? null) === (backendDefinition.owner ?? null)
+        ) {
+          return [];
+        }
+
+        return [
+          {
+            widgetId: entry.id,
+            frontend: {
+              zone: entry.zone,
+              drilldownUrl: entry.drilldownUrl,
+              owner: entry.owner,
+            },
+            backend: backendDefinition
+              ? {
+                  zone: backendDefinition.zone,
+                  drilldownUrl: backendDefinition.drilldownUrl,
+                  owner: backendDefinition.owner,
+                }
+              : null,
+          },
+        ];
+      });
+
+      expect(metadataDrift).toEqual([]);
+    }
+  );
 
   it('points dashboard drilldowns at existing Next.js routes', () => {
     const pageRoutes = new Set(collectPageRoutes(path.resolve(process.cwd(), 'src', 'app')));
