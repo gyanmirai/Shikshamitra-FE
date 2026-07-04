@@ -9,7 +9,6 @@ import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
@@ -17,6 +16,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FeeMonth } from 'src/enums/fee-collection-type';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -40,7 +40,9 @@ import {
 } from '@mui/material';
 
 import FeePoliciesTab from './FeePoliciesTab';
+import { DUMMY_PAYMENT_TERMS } from '../type';
 import AddFeeHeadToCardDialog from './AddFeeHeadToCardDialog';
+import PaymentTermScheduleDrawer from './PaymentTermScheduleDrawer';
 import {
   useLockClassWiseFeeStructure,
   useCreateClassWiseFeeStructure,
@@ -49,7 +51,11 @@ import {
 } from '../hooks/useClassWiseFeeStructureHooks';
 
 import type { PolicyValues } from './FeePoliciesTab';
-import type { IClassWiseFeeItem, IClassWiseFeeStructureCard } from '../type';
+import type {
+  IClassWiseFeeItem,
+  IClassWiseFeeStructureCard,
+  IFeeHeadPaymentTermOverride,
+} from '../type';
 
 // ---------------------------------------------------------------------------
 // Validation schema
@@ -59,12 +65,6 @@ const feeStructureSchema = Yup.object({
   feeHeads: Yup.array(
     Yup.object({
       isOptional: Yup.boolean().optional(),
-      isOneTime: Yup.boolean().optional(),
-      paybleMonth: Yup.string().when(['isOneTime'], {
-        is: (isOneTime: boolean) => isOneTime,
-        then: (schema) => schema.required('Payable month is required'),
-        otherwise: (schema) => schema.optional().nullable(),
-      }),
       amount: Yup.number()
         .transform((value) => (value === 0 || Number.isNaN(value) ? undefined : value))
         .required('Required'),
@@ -120,6 +120,17 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
+  // Payment Term Schedule drawer state
+  const ptScheduleDrawer = useBoolean();
+  const [selectedFeeHeadForSchedule, setSelectedFeeHeadForSchedule] = useState<{
+    idx: number;
+    feeHeadName: string;
+    paymentTermId: string;
+    paymentTermName: string;
+    override?: IFeeHeadPaymentTermOverride;
+    isLocked: boolean;
+  } | null>(null);
+
   const isNew = !cardId;
   const isLocked = status === FeeStructureLockStatusType.Locked;
 
@@ -128,9 +139,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       name: initialData.name,
       feeHeads: initialData.feeHeads.map((fh) => ({
         ...fh,
-        // API returns `payableMonth`; the form field is `paybleMonth` (legacy typo) — normalise here
-        paybleMonth: fh.paybleMonth ?? (fh as any).payableMonth,
-        payableYear: fh.payableYear ?? (fh as any).payableYear,
         isOptional: fh.isOptional ?? false,
       })),
       // Finance Policies
@@ -161,6 +169,18 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   } = useGetAcademicYearMonthsQuery(
     { academicYearId: currentYear?.id },
     { skip: !currentYear?.id }
+  );
+
+  // ── Payment Term options (for the per-fee-head dropdown using DUMMY_PAYMENT_TERMS) ──
+  const isPaymentTermLoading = false;
+  const paymentTermOptions = useMemo(
+    () =>
+      DUMMY_PAYMENT_TERMS.map((t: any) => ({
+        label: t.paymentTermName,
+        value: t.id,
+        installments: t.installments,
+      })),
+    []
   );
 
   const monthOptions = [
@@ -195,6 +215,24 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   const updateFeeHeadFields = (idx: number, fields: Partial<IClassWiseFeeItem>) => {
     const updated = formik.values.feeHeads.map((fh, i) => (i === idx ? { ...fh, ...fields } : fh));
     formik.setFieldValue('feeHeads', updated);
+  };
+
+  // ── Payment Term Schedule drawer helpers ────────────────────────────────────
+  const openScheduleDrawer = (idx: number, item: IClassWiseFeeItem) => {
+    setSelectedFeeHeadForSchedule({
+      idx,
+      feeHeadName: item.feeHeadName ?? 'Fee Head',
+      paymentTermId: item.paymentTermId ?? '',
+      paymentTermName: item.paymentTermName ?? 'Payment Term',
+      override: item.paymentTermOverride,
+      isLocked: item.paymentTermOverride?.isLocked ?? false,
+    });
+    ptScheduleDrawer.onTrue();
+  };
+
+  const handleScheduleSave = (override: IFeeHeadPaymentTermOverride) => {
+    if (selectedFeeHeadForSchedule === null) return;
+    updateFeeHead(selectedFeeHeadForSchedule.idx, 'paymentTermOverride', override);
   };
 
   const addFeeHeads = (items: IClassWiseFeeItem[]) => {
@@ -236,11 +274,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       const feeHeadsPayload = formik.values.feeHeads.map((fh) => ({
         feeHeadId: fh.feeHeadId,
         amount: fh.amount,
-        isOneTime: fh.isOneTime,
         isOptional: fh.isOptional,
-        ...(fh.isOneTime && fh.paybleMonth !== undefined && fh.payableYear !== undefined
-          ? { payableMonth: Number(fh.paybleMonth), payableYear: Number(fh.payableYear) }
-          : {}),
       }));
 
       // Collect non-empty policy IDs
@@ -270,7 +304,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         const newId = saved._id ?? saved.id;
         const savedFeeHeads = (saved.feeHeads ?? formik.values.feeHeads).map((fh: any) => ({
           ...fh,
-          paybleMonth: fh.paybleMonth ?? fh.payableMonth,
           isOptional: fh.isOptional ?? false,
         }));
         formik.resetForm({
@@ -301,7 +334,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         });
         const updatedFeeHeads = (saved?.feeHeads ?? formik.values.feeHeads).map((fh: any) => ({
           ...fh,
-          paybleMonth: fh.paybleMonth ?? fh.payableMonth,
           isOptional: fh.isOptional ?? false,
         }));
         formik.resetForm({
@@ -360,15 +392,14 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     }
   };
 
-  // ── Column definitions for the fee heads table ─────────────────────────────
-  // widths as flex proportions (total ≈ 12 units)
+  // widths as flex proportions
   const COL_WIDTHS = {
     serial: 36, // #
-    feeHead: '22%', // Fee Head
-    category: '17%', // Category
-    amount: '14%', // Amount
-    type: '13%', // Type (Recurring / One-Time toggle)
-    optional: '13%', // Optional/Compulsory toggle
+    feeHead: '32%', // Fee Head
+    category: '20%', // Category
+    amount: '12%', // Amount
+    paymentTerm: '24%', // Payment Term
+    optional: '12%', // Optional/Compulsory toggle
     actions: 40, // remove button
   };
 
@@ -807,14 +838,8 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         Amount
                       </Typography>
                     </Box>
-                    <Box
-                      sx={{
-                        width: COL_WIDTHS.type,
-                        flexShrink: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
-                    >
+                    {/* ── Payment Term column header (NEW) ──────────────── */}
+                    <Box sx={{ width: COL_WIDTHS.paymentTerm, flexShrink: 0 }}>
                       <Typography
                         variant="caption"
                         color="text.disabled"
@@ -822,7 +847,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         textTransform="uppercase"
                         letterSpacing={0.4}
                       >
-                        Type
+                        Payment Term
                       </Typography>
                     </Box>
                     <Box
@@ -843,17 +868,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         Optional
                       </Typography>
                     </Box>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography
-                        variant="caption"
-                        color="text.disabled"
-                        fontWeight={600}
-                        textTransform="uppercase"
-                        letterSpacing={0.4}
-                      >
-                        Payable Month
-                      </Typography>
-                    </Box>
                     <Box sx={{ width: COL_WIDTHS.actions, flexShrink: 0 }} />
                   </Box>
 
@@ -867,7 +881,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                     sx={{ maxHeight: 340, overflowY: 'auto', minWidth: 640 }}
                   >
                     {formik.values.feeHeads.map((item, idx) => {
-                      const paybleMonthError = getFeeHeadError(idx, 'paybleMonth');
                       const amountError = getFeeHeadError(idx, 'amount');
                       return (
                         <Box
@@ -883,28 +896,24 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                             },
                           }}
                         >
-                          {/* Serial */}
                           <Box sx={{ width: COL_WIDTHS.serial, flexShrink: 0 }}>
                             <Typography variant="body2" color="text.secondary" fontWeight={500}>
                               {String(idx + 1).padStart(2, '0')}
                             </Typography>
                           </Box>
 
-                          {/* Fee Head name */}
                           <Box sx={{ width: COL_WIDTHS.feeHead, flexShrink: 0, pr: 1 }}>
                             <Typography variant="body2" fontWeight={600} noWrap>
                               {item.feeHeadName}
                             </Typography>
                           </Box>
 
-                          {/* Category */}
                           <Box sx={{ width: COL_WIDTHS.category, flexShrink: 0, pr: 1 }}>
                             <Typography variant="body2" color="text.secondary" noWrap>
                               {item.feeCategoryName || (item as any).categoryName || '-'}
                             </Typography>
                           </Box>
 
-                          {/* Amount input */}
                           <Box sx={{ width: COL_WIDTHS.amount, flexShrink: 0, pr: 1 }}>
                             <NumericFormatCustom
                               size="small"
@@ -927,59 +936,71 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                             />
                           </Box>
 
-                          {/* Type toggle: Recurring / One-Time */}
-                          <Box sx={{ width: COL_WIDTHS.type, flexShrink: 0, pr: 1 }}>
+                          {/* Payment Term cell */}
+                          <Box
+                            sx={{
+                              width: COL_WIDTHS.paymentTerm,
+                              flexShrink: 0,
+                              pr: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.75,
+                            }}
+                          >
                             <Box
-                              component="div"
-                              onClick={() => {
-                                if (!isEditing || isLocked) return;
-                                const newVal = !item.isOneTime;
-                                updateFeeHeadFields(idx, {
-                                  isOneTime: newVal,
-                                  paybleMonth: newVal ? item.paybleMonth : undefined,
-                                  payableYear: newVal ? item.payableYear : undefined,
-                                });
-                              }}
                               sx={{
-                                display: 'inline-flex',
+                                display: 'flex',
                                 alignItems: 'center',
                                 gap: 0.5,
-                                cursor: isEditing && !isLocked ? 'pointer' : 'default',
-                                px: 1,
-                                py: 0.4,
-                                borderRadius: 1,
-                                border: '1px solid',
-                                ...(item.isOneTime
-                                  ? {
-                                      color: 'primary.main',
-                                      bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.08),
-                                      borderColor: varAlpha(
-                                        theme.palette.primary.mainChannel,
-                                        0.25
-                                      ),
-                                    }
-                                  : {
-                                      color: 'success.main',
-                                      bgcolor: varAlpha(theme.palette.success.mainChannel, 0.08),
-                                      borderColor: varAlpha(
-                                        theme.palette.success.mainChannel,
-                                        0.25
-                                      ),
-                                    }),
-                                transition: 'all 0.18s',
+                                flex: 1,
+                                minWidth: 0,
                               }}
                             >
-                              <Iconify
-                                icon={
-                                  item.isOneTime
-                                    ? 'solar:calendar-date-bold'
-                                    : 'solar:refresh-circle-bold'
-                                }
-                                width={14}
+                              {/* ── No payment term — show selector dropdown ── */}
+                              <CustomSelect
+                                label="Payment Term"
+                                options={paymentTermOptions}
+                                isLoading={isPaymentTermLoading}
+                                labelKey="label"
+                                valueKey="value"
+                                value={item.paymentTermId ?? ''}
+                                disabled={!isEditing || isLocked}
+                                onChange={(val) => {
+                                  const selected = paymentTermOptions.find((o) => o.value === val);
+                                  if (!selected) return;
+                                  updateFeeHeadFields(idx, {
+                                    paymentTermId: String(selected.value),
+                                    paymentTermName: selected.label,
+                                  });
+                                }}
+                                size="small"
+                                formControlProps={{ sx: { width: '100%', flex: 1 } }}
+                                noOptionsMessage="No active payment terms"
                               />
-                              <Typography variant="caption" fontWeight={600} noWrap>
-                                {item.isOneTime ? 'One-Time' : 'Recurring'}
-                              </Typography>
+                              {item.paymentTermId && (
+                                <Tooltip title="Customize installment schedule for this Fee Head">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => openScheduleDrawer(idx, item)}
+                                    sx={{
+                                      flexShrink: 0,
+                                      p: 0.35,
+                                      borderRadius: 1,
+                                      border: `1px solid ${varAlpha(theme.palette.primary.mainChannel, 0.2)}`,
+                                      color: 'primary.main',
+                                      '&:hover': {
+                                        bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.08),
+                                        borderColor: varAlpha(
+                                          theme.palette.primary.mainChannel,
+                                          0.4
+                                        ),
+                                      },
+                                    }}
+                                  >
+                                    <Iconify icon={GlobalIcons.edit} width={12} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
                             </Box>
                           </Box>
 
@@ -1028,38 +1049,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                                 {item.isOptional ? 'Optional' : 'Compulsory'}
                               </Typography>
                             </Box>
-                          </Box>
-
-                          {/* Payable Month select */}
-                          <Box sx={{ flex: 1, pr: 1 }}>
-                            <CustomSelect
-                              label="Month"
-                              options={monthOptions}
-                              disabled={!isEditing || isLocked || !item.isOneTime}
-                              isLoading={isMonthsLoading || isMonthsFetching}
-                              labelKey="label"
-                              valueKey="value"
-                              value={
-                                item.paybleMonth !== undefined && item.payableYear !== undefined
-                                  ? `${item.paybleMonth}-${item.payableYear}`
-                                  : ''
-                              }
-                              onChange={(value) => {
-                                const [month, year] = (value as string).split('-');
-                                updateFeeHeadFields(idx, {
-                                  paybleMonth: Number(month) as any,
-                                  payableYear: Number(year),
-                                });
-                                formik.setFieldTouched(`feeHeads[${idx}].paybleMonth`, true, false);
-                              }}
-                              formControlProps={{
-                                error: Boolean(paybleMonthError),
-                                sx: { width: '100%' },
-                              }}
-                              error={Boolean(paybleMonthError)}
-                              helperText={paybleMonthError}
-                              size="small"
-                            />
                           </Box>
 
                           {/* Remove row action */}
@@ -1244,6 +1233,20 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
           </LoadingButton>
         }
       />
+
+      {/* ── Payment Term Schedule Drawer ─────────────────────────────────────── */}
+      {selectedFeeHeadForSchedule && (
+        <PaymentTermScheduleDrawer
+          open={ptScheduleDrawer.value}
+          onClose={ptScheduleDrawer.onFalse}
+          feeHeadName={selectedFeeHeadForSchedule.feeHeadName}
+          paymentTermId={selectedFeeHeadForSchedule.paymentTermId}
+          paymentTermName={selectedFeeHeadForSchedule.paymentTermName}
+          override={selectedFeeHeadForSchedule.override}
+          isLocked={selectedFeeHeadForSchedule.isLocked}
+          onSave={handleScheduleSave}
+        />
+      )}
     </motion.div>
   );
 };

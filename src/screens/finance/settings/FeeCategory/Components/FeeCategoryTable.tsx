@@ -116,6 +116,16 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         ),
       },
       {
+        id: 'module',
+        label: 'Module',
+        align: 'left',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value || '-'}
+          </Typography>
+        ),
+      },
+      {
         id: 'isConcessionApplied',
         label: 'Concession Applicable',
         align: 'left',

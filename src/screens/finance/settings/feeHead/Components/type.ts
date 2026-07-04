@@ -4,6 +4,7 @@ export interface IFeeHead {
   id: string;
   feeCategoryId: string;
   name: string;
+  module?: string;
   description?: string;
   isActive: boolean;
   deactivationReason?: string | null;

@@ -13,29 +13,21 @@ import {
   Alert,
   Stack,
   Button,
-  Select,
-  Switch,
   Tooltip,
-  MenuItem,
   TextField,
   IconButton,
-  InputLabel,
   Typography,
-  FormControl,
-  FormControlLabel,
 } from '@mui/material';
 
 import { SectionCard } from '../ui/SectionCard';
 
 import type { IPaymentTerm } from '../../type';
-import type { ILateFeePolicy } from '../../hooks/usePaymentTermForm';
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 interface InstallmentSectionProps {
   formik: FormikProps<IPaymentTerm>;
-  lateFeePolicies: ILateFeePolicy[];
   onAdd: () => void;
   onRemove: (index: number) => void;
   onDuplicate: (index: number) => void;
@@ -46,7 +38,6 @@ interface InstallmentSectionProps {
 // ---------------------------------------------------------------------------
 export function InstallmentSection({
   formik,
-  lateFeePolicies,
   onAdd,
   onRemove,
   onDuplicate,
@@ -226,106 +217,6 @@ export function InstallmentSection({
                       },
                     }}
                   />
-                </Grid>
-
-                {/* Grace Days */}
-                <Grid size={{ xs: 12, sm: 3 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    label="Grace Days"
-                    name={`${prefix}.gracePeriod`}
-                    value={inst.gracePeriod ?? 0}
-                    onChange={formik.handleChange}
-                    inputProps={{ min: 0 }}
-                    helperText="Days after due date"
-                    error={Boolean(errObj?.gracePeriod)}
-                  />
-                </Grid>
-
-                {/* Late Fee Policy */}
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Late Fee Policy</InputLabel>
-                    <Select
-                      label="Late Fee Policy"
-                      name={`${prefix}.lateFeePolicyId`}
-                      value={inst.lateFeePolicyId ?? ''}
-                      onChange={(e) => {
-                        const pId = e.target.value;
-                        const pObj = lateFeePolicies.find((p) => p.id === pId);
-                        formik.setFieldValue(`${prefix}.lateFeePolicyId`, pId);
-                        formik.setFieldValue(`${prefix}.lateFeePolicyName`, pObj?.policyName ?? '');
-                      }}
-                    >
-                      <MenuItem value="">
-                        <em>None</em>
-                      </MenuItem>
-                      {lateFeePolicies.map((p) => (
-                        <MenuItem key={p.id} value={p.id}>
-                          {p.policyName}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                {/* Feature toggles */}
-                <Grid size={{ xs: 12, sm: 5 }}>
-                  <Stack direction="row" flexWrap="wrap" gap={0} mt={0.5}>
-                    <FormControlLabel
-                      sx={{ mr: 1.5, mb: 0 }}
-                      control={
-                        <Switch
-                          size="small"
-                          checked={inst.demandEnabled}
-                          onChange={(e) =>
-                            formik.setFieldValue(`${prefix}.demandEnabled`, e.target.checked)
-                          }
-                        />
-                      }
-                      label={
-                        <Typography variant="caption" fontSize="0.7rem">
-                          Generate Demand
-                        </Typography>
-                      }
-                    />
-                    <FormControlLabel
-                      sx={{ mr: 1.5, mb: 0 }}
-                      control={
-                        <Switch
-                          size="small"
-                          checked={inst.reminderEnabled}
-                          onChange={(e) =>
-                            formik.setFieldValue(`${prefix}.reminderEnabled`, e.target.checked)
-                          }
-                        />
-                      }
-                      label={
-                        <Typography variant="caption" fontSize="0.7rem">
-                          Send Reminder
-                        </Typography>
-                      }
-                    />
-                    <FormControlLabel
-                      sx={{ mb: 0 }}
-                      control={
-                        <Switch
-                          size="small"
-                          checked={inst.allowPartialOverride}
-                          onChange={(e) =>
-                            formik.setFieldValue(`${prefix}.allowPartialOverride`, e.target.checked)
-                          }
-                        />
-                      }
-                      label={
-                        <Typography variant="caption" fontSize="0.7rem">
-                          Allow Partial
-                        </Typography>
-                      }
-                    />
-                  </Stack>
                 </Grid>
               </Grid>
             </Card>

@@ -11,7 +11,9 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import moduleSequence from 'src/constants/module-sequence';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -46,6 +48,11 @@ import { feeCategoryValidationSchema } from './FeeCategoryValidation';
 import { getFeeCategoryInitialValues } from './FeeCategoryInitialValues';
 
 import type { IFeeCategoryFormProps } from './type';
+
+const moduleOptions = Object.values(moduleSequence).map((val) => ({
+  label: val,
+  value: val,
+}));
 
 const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -152,7 +159,13 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
           body: {
             categoryName: values.categoryName,
             description: values.description,
-            feeHeads: [], // initially empty, we will update with mapped fee heads right after
+            feeHeads: values.feeHeads.map((fh: any) => ({
+              feeHeadId: fh.feeHeadId || undefined,
+              feeHeadName: fh.name.trim(),
+              module: fh.module,
+              isConcessionApply: fh.isConcessionApply,
+              description: fh.description || '',
+            })),
           },
         }).unwrap();
         categoryId = resCategory.data?.id || resCategory.id;
@@ -173,14 +186,17 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
               body: {
                 feeCategoryId: categoryId,
                 name: fh.name.trim(),
+                module: fh.module,
                 description: fh.description || '',
               },
             }).unwrap();
 
             return {
               feeHeadId: fh.feeHeadId,
+              feeHeadName: fh.name.trim(),
+              module: fh.module,
+              isConcessionApply: fh.isConcessionApply,
               description: fh.description || '',
-              isConcessionApplied: fh.isConcessionApplied,
             };
           }
 
@@ -191,14 +207,17 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
               body: {
                 feeCategoryId: categoryId,
                 name: existingFeeHead.name,
+                module: fh.module,
                 description: fh.description || existingFeeHead.description || '',
               },
             }).unwrap();
 
             return {
               feeHeadId: existingFeeHead.id,
+              feeHeadName: existingFeeHead.name.trim(),
+              module: fh.module,
+              isConcessionApply: fh.isConcessionApply,
               description: fh.description || '',
-              isConcessionApplied: fh.isConcessionApplied,
             };
           }
 
@@ -208,6 +227,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
             body: {
               feeCategoryId: categoryId,
               name: fh.name.trim(),
+              module: fh.module,
               description: fh.description || '',
             },
           }).unwrap();
@@ -215,8 +235,10 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
 
           return {
             feeHeadId: realId,
+            feeHeadName: fh.name.trim(),
+            module: fh.module,
+            isConcessionApply: fh.isConcessionApply,
             description: fh.description || '',
-            isConcessionApplied: fh.isConcessionApplied,
           };
         })
       );
@@ -249,8 +271,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
       {
         feeHeadId: '',
         name: '',
+        module: '',
         description: '',
-        isConcessionApplied: false,
+        isConcessionApply: false,
       },
     ]);
   };
@@ -449,15 +472,42 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                             </ShakingTextField>
                           </Grid>
 
+                          {/* Module */}
+                          <Grid size={{ xs: 12, md: 3 }}>
+                            <ShakingTextField
+                              error={!!(feeHeadTouched?.module && feeHeadError?.module)}
+                            >
+                              <CustomSelect
+                                name={`feeHeads.${idx}.module`}
+                                label="Module *"
+                                options={moduleOptions}
+                                value={fh.module || ''}
+                                labelKey="label"
+                                valueKey="value"
+                                onChange={(value) => {
+                                  formik.setFieldValue(`feeHeads.${idx}.module`, value);
+                                  formik.setFieldTouched(`feeHeads.${idx}.module`, false);
+                                }}
+                                error={!!(feeHeadTouched?.module && feeHeadError?.module)}
+                                helperText={
+                                  feeHeadTouched?.module && feeHeadError?.module
+                                    ? (feeHeadError.module as string)
+                                    : ''
+                                }
+                                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                              />
+                            </ShakingTextField>
+                          </Grid>
+
                           {/* Concession Applicable Switch */}
-                          <Grid size={{ xs: 12, md: 4 }}>
+                          <Grid size={{ xs: 12, md: 2 }}>
                             <FormControlLabel
                               control={
                                 <Switch
-                                  checked={fh.isConcessionApplied}
+                                  checked={fh.isConcessionApply}
                                   onChange={(e) => {
                                     formik.setFieldValue(
-                                      `feeHeads.${idx}.isConcessionApplied`,
+                                      `feeHeads.${idx}.isConcessionApply`,
                                       e.target.checked
                                     );
                                   }}
@@ -471,7 +521,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                     color="text.secondary"
                                     display="block"
                                   >
-                                    Enable if concessions are allowed for this Fee Head.
+                                    Enable concessions.
                                   </Typography>
                                 </Box>
                               }
@@ -479,10 +529,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                           </Grid>
 
                           {/* Description */}
-                          <Grid size={{ xs: 12, md: 4 }}>
+                          <Grid size={{ xs: 12, md: 3 }}>
                             <TextField
                               fullWidth
-                              multiline
                               label="Description"
                               name={`feeHeads.${idx}.description`}
                               value={fh.description}
@@ -496,7 +545,12 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                               inputProps={{ maxLength: 500 }}
                             />
                           </Grid>
-                          <Grid size={{ xs: 12, md: 1 }}>
+                          <Grid
+                            size={{ xs: 12, md: 1 }}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                          >
                             <Button
                               color="error"
                               size="small"

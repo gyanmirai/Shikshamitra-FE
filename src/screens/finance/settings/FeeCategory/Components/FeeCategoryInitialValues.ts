@@ -6,8 +6,9 @@ export const getFeeCategoryInitialValues = (editData?: IFeeCategory | null) => (
   feeHeads:
     editData?.feeHeads?.map((fh) => ({
       feeHeadId: fh.feeHeadId || '',
-      name: fh.feeHeadName || '',
+      name: fh.feeHeadName || (fh as any).name || '',
+      module: (fh as any).module || '',
       description: fh.description || '',
-      isConcessionApplied: fh.isConcessionApplied || false,
+      isConcessionApply: fh.isConcessionApply || false,
     })) || [],
 });

@@ -4,7 +4,7 @@ import { financePermissions } from 'src/constants/finance-menu';
 import StudentPermissionGuard from 'src/components/student-permission-guard';
 
 const ProrationPolicyLayout = ({ children }: { children: React.ReactNode }) => (
-  <StudentPermissionGuard permissionKey={financePermissions.fees.collections}>
+  <StudentPermissionGuard permissionKey={financePermissions.policies.prorationPolicy}>
     {children}
   </StudentPermissionGuard>
 );

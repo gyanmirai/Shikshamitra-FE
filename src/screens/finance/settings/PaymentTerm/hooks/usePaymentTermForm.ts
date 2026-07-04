@@ -68,12 +68,10 @@ export interface UsePaymentTermFormReturn {
   lateFeePolicies: ILateFeePolicy[];
   checks: IPaymentTermChecks;
   demandLabel: string;
-  isSavingDraft: boolean;
-  isPublishing: boolean;
+  isSubmitting: boolean;
   codeManuallyEdited: boolean;
   setCodeManuallyEdited: (v: boolean) => void;
-  handleSaveDraft: () => Promise<void>;
-  handlePublish: () => Promise<void>;
+  handleSubmit: () => Promise<void>;
   addInstallment: () => void;
   removeInstallment: (index: number) => void;
   duplicateInstallment: (index: number) => void;
@@ -88,8 +86,7 @@ export function usePaymentTermForm(
 ): UsePaymentTermFormReturn {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
 
   // ── Data queries ──────────────────────────────────────────────────────────
@@ -201,41 +198,13 @@ export function usePaymentTermForm(
     [buildPayload, createTerm, editData, formik.values, onClose, updateTerm]
   );
 
-  // ── Save Draft ────────────────────────────────────────────────────────────
+  // ── Submit ────────────────────────────────────────────────────────────────
   /**
    * Memoization Justification:
-   * handleSaveDraft is passed as a prop to the memoized FormFooter component.
-   * Without useCallback, a new function reference is created on every render,
-   * defeating React.memo on FormFooter and causing unnecessary re-renders during
-   * fast form typing.
+   * handleSubmit is passed as a prop to the FormFooter component.
+   * Stable reference prevents FormFooter re-renders during fast form typing.
    */
-  const handleSaveDraft = useCallback(async () => {
-    if (!formik.values.paymentTermName?.trim() || !formik.values.boardId) {
-      formik.setFieldTouched('paymentTermName', true);
-      formik.setFieldTouched('boardId', true);
-      shikshaMitraToast.error({
-        message: 'Board and Payment Term Name are required to save draft.',
-      });
-      return;
-    }
-    setIsSavingDraft(true);
-    try {
-      await submitToAPI();
-    } catch {
-      shikshaMitraToast.error({ message: 'Failed to save draft.' });
-    } finally {
-      setIsSavingDraft(false);
-    }
-  }, [formik, submitToAPI]);
-
-  // ── Publish ───────────────────────────────────────────────────────────────
-  /**
-   * Memoization Justification:
-   * handlePublish is passed as a prop to the memoized FormFooter component.
-   * Same rationale as handleSaveDraft — prevents FormFooter re-renders during
-   * form-field interactions unrelated to submission state.
-   */
-  const handlePublish = useCallback(async () => {
+  const handleSubmit = useCallback(async () => {
     const errors = await formik.validateForm();
     const hasErrors = Object.keys(errors).length > 0;
     if (hasErrors) {
@@ -243,7 +212,6 @@ export function usePaymentTermForm(
         installmentName: true,
         dueDate: true,
         startDate: true,
-        gracePeriod: true,
       }));
       formik.setTouched({
         boardId: true,
@@ -253,16 +221,16 @@ export function usePaymentTermForm(
         demandOffsetDays: true,
         installments: instTouched,
       } as FormikTouched<IPaymentTerm>);
-      shikshaMitraToast.error({ message: 'Fix all errors before publishing.' });
+      shikshaMitraToast.error({ message: 'Fix all errors before submitting.' });
       return;
     }
-    setIsPublishing(true);
+    setIsSubmitting(true);
     try {
-      await submitToAPI('Active');
+      await submitToAPI();
     } catch {
-      shikshaMitraToast.error({ message: 'Failed to publish.' });
+      shikshaMitraToast.error({ message: 'Failed to submit.' });
     } finally {
-      setIsPublishing(false);
+      setIsSubmitting(false);
     }
   }, [formik, submitToAPI]);
 
@@ -431,12 +399,10 @@ export function usePaymentTermForm(
     lateFeePolicies,
     checks,
     demandLabel,
-    isSavingDraft,
-    isPublishing,
+    isSubmitting,
     codeManuallyEdited,
     setCodeManuallyEdited,
-    handleSaveDraft,
-    handlePublish,
+    handleSubmit,
     addInstallment,
     removeInstallment,
     duplicateInstallment,

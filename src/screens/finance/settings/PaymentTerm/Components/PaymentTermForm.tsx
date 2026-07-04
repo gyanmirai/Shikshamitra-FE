@@ -14,23 +14,16 @@ import { BillingScheduleSection } from './sections/BillingScheduleSection';
 
 import type { IPaymentTermFormProps } from '../type';
 
-// ---------------------------------------------------------------------------
-// PaymentTermForm — pure orchestrator (~80 LOC)
-// All business logic lives in usePaymentTermForm.
-// ---------------------------------------------------------------------------
 export default function PaymentTermForm({ open: _open, onClose, editData }: IPaymentTermFormProps) {
   const {
     formik,
     boards,
-    lateFeePolicies,
     checks,
     demandLabel,
-    isSavingDraft,
-    isPublishing,
+    isSubmitting,
     codeManuallyEdited,
     setCodeManuallyEdited,
-    handleSaveDraft,
-    handlePublish,
+    handleSubmit,
     addInstallment,
     removeInstallment,
     duplicateInstallment,
@@ -38,7 +31,6 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <Box
         sx={{
           px: 3,
@@ -96,7 +88,6 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
             />
             <InstallmentSection
               formik={formik}
-              lateFeePolicies={lateFeePolicies}
               onAdd={addInstallment}
               onRemove={removeInstallment}
               onDuplicate={duplicateInstallment}
@@ -117,13 +108,10 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
 
       {/* ── Footer ─────────────────────────────────────────────────────────── */}
       <FormFooter
-        isSavingDraft={isSavingDraft}
-        isPublishing={isPublishing}
-        isReadyToPublish={checks.isReadyToPublish}
-        hasInstallments={formik.values.installments.length > 0}
+        isSubmitting={isSubmitting}
+        isEdit={Boolean(editData)}
         onCancel={() => onClose()}
-        onSaveDraft={handleSaveDraft}
-        onPublish={handlePublish}
+        onSubmit={handleSubmit}
       />
     </Box>
   );

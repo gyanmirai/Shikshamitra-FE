@@ -1,33 +1,22 @@
 'use client';
 
 import { LoadingButton } from '@mui/lab';
-import { Box, Stack, Button, Tooltip, Typography } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 interface FormFooterProps {
-  isSavingDraft: boolean;
-  isPublishing: boolean;
-  isReadyToPublish: boolean;
-  hasInstallments: boolean;
+  isSubmitting: boolean;
+  isEdit: boolean;
   onCancel: () => void;
-  onSaveDraft: () => Promise<void>;
-  onPublish: () => Promise<void>;
+  onSubmit: () => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export function FormFooter({
-  isSavingDraft,
-  isPublishing,
-  isReadyToPublish,
-  hasInstallments,
-  onCancel,
-  onSaveDraft,
-  onPublish,
-}: FormFooterProps) {
+export function FormFooter({ isSubmitting, isEdit, onCancel, onSubmit }: FormFooterProps) {
   return (
     <Box
       sx={{
@@ -48,49 +37,21 @@ export function FormFooter({
         color="inherit"
         onClick={onCancel}
         size="small"
-        disabled={isSavingDraft || isPublishing}
+        disabled={isSubmitting}
       >
         Cancel
       </Button>
 
-      <Stack direction="row" spacing={1.5} alignItems="center">
-        {!isReadyToPublish && hasInstallments && (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: { xs: 'none', sm: 'block' } }}
-          >
-            Complete checklist to publish
-          </Typography>
-        )}
-
-        <LoadingButton
-          variant="outlined"
-          loading={isSavingDraft}
-          onClick={onSaveDraft}
-          size="small"
-          disabled={isPublishing}
-        >
-          Save Draft
-        </LoadingButton>
-
-        <Tooltip title={!isReadyToPublish ? 'Complete all required fields to publish' : ''} arrow>
-          {/* span wrapper required for Tooltip when button is disabled */}
-          <span>
-            <LoadingButton
-              variant="contained"
-              color="primary"
-              loading={isPublishing}
-              onClick={onPublish}
-              size="small"
-              disabled={!isReadyToPublish || isSavingDraft}
-              sx={{ minWidth: 90 }}
-            >
-              Publish
-            </LoadingButton>
-          </span>
-        </Tooltip>
-      </Stack>
+      <LoadingButton
+        variant="contained"
+        color="primary"
+        loading={isSubmitting}
+        onClick={onSubmit}
+        size="small"
+        sx={{ minWidth: 90 }}
+      >
+        {isEdit ? 'Update' : 'Submit'}
+      </LoadingButton>
     </Box>
   );
 }

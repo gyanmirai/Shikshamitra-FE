@@ -3,6 +3,34 @@ import type { FeeMonth } from 'src/enums/fee-collection-type';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import type { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 
+// ---------------------------------------------------------------------------
+// Per-Fee-Head Payment Term Schedule Override types
+// ---------------------------------------------------------------------------
+export interface IInstallmentOverride {
+  id?: string;
+  installmentName: string;
+  sequence: number;
+  startDate: string | null;
+  endDate: string | null;
+  dueDate: string | null;
+  /** UI-only flag — true when user has edited this row vs the master */
+  isModified?: boolean;
+}
+
+export interface IFeeHeadPaymentTermOverride {
+  paymentTermId: string;
+  paymentTermName: string;
+  installmentCount: number;
+  /** false = Inherited (master schedule intact), true = Customized */
+  isCustomized: boolean;
+  /** true when financial transactions already exist for this Fee Head */
+  isLocked: boolean;
+  installments: IInstallmentOverride[];
+}
+
+// ---------------------------------------------------------------------------
+// Core fee-head item
+// ---------------------------------------------------------------------------
 export interface IClassWiseFeeItem {
   id?: string;
   feeHeadId: string;
@@ -13,6 +41,11 @@ export interface IClassWiseFeeItem {
   paybleMonth?: FeeMonth; // for monthly fee heads
   payableYear?: number;
   isOptional: boolean;
+  /** Payment term assigned to this fee head (id + display name from master) */
+  paymentTermId?: string;
+  paymentTermName?: string;
+  /** Override schedule; undefined = inherited from master payment term */
+  paymentTermOverride?: IFeeHeadPaymentTermOverride;
 }
 
 export interface IClassWiseFeeData {
@@ -91,3 +124,189 @@ export interface FeeStructureCardProps {
   formik: FormikProps<IFeeStructure>;
   onAddFeeHead: () => void;
 }
+
+// ---------------------------------------------------------------------------
+// Dummy Payment Terms data for Fee Head level configuration
+// ---------------------------------------------------------------------------
+export const DUMMY_PAYMENT_TERMS = [
+  {
+    id: 'term-annual',
+    paymentTermName: 'Annual',
+    status: 'Active',
+    installments: [
+      {
+        id: 'inst-annual-1',
+        installmentName: 'Full Term',
+        sequence: 1,
+        startDate: '2026-04-01T00:00:00.000Z',
+        endDate: '2027-03-31T00:00:00.000Z',
+        dueDate: '2026-04-10T00:00:00.000Z',
+      },
+    ],
+  },
+  {
+    id: 'term-semiannual',
+    paymentTermName: 'Semi-Annual',
+    status: 'Active',
+    installments: [
+      {
+        id: 'inst-semi-1',
+        installmentName: 'Term 1',
+        sequence: 1,
+        startDate: '2026-04-01T00:00:00.000Z',
+        endDate: '2026-09-30T00:00:00.000Z',
+        dueDate: '2026-04-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-semi-2',
+        installmentName: 'Term 2',
+        sequence: 2,
+        startDate: '2026-10-01T00:00:00.000Z',
+        endDate: '2027-03-31T00:00:00.000Z',
+        dueDate: '2026-10-10T00:00:00.000Z',
+      },
+    ],
+  },
+  {
+    id: 'term-quarterly',
+    paymentTermName: 'Quarterly',
+    status: 'Active',
+    installments: [
+      {
+        id: 'inst-q1',
+        installmentName: 'Quarter 1',
+        sequence: 1,
+        startDate: '2026-04-01T00:00:00.000Z',
+        endDate: '2026-06-30T00:00:00.000Z',
+        dueDate: '2026-04-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-q2',
+        installmentName: 'Quarter 2',
+        sequence: 2,
+        startDate: '2026-07-01T00:00:00.000Z',
+        endDate: '2026-09-30T00:00:00.000Z',
+        dueDate: '2026-07-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-q3',
+        installmentName: 'Quarter 3',
+        sequence: 3,
+        startDate: '2026-10-01T00:00:00.000Z',
+        endDate: '2026-12-31T00:00:00.000Z',
+        dueDate: '2026-10-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-q4',
+        installmentName: 'Quarter 4',
+        sequence: 4,
+        startDate: '2027-01-01T00:00:00.000Z',
+        endDate: '2027-03-31T00:00:00.000Z',
+        dueDate: '2027-01-10T00:00:00.000Z',
+      },
+    ],
+  },
+  {
+    id: 'term-monthly',
+    paymentTermName: 'Monthly',
+    status: 'Active',
+    installments: [
+      {
+        id: 'inst-m-1',
+        installmentName: 'Apr Month',
+        sequence: 1,
+        startDate: '2026-04-01T00:00:00.000Z',
+        endDate: '2026-04-30T00:00:00.000Z',
+        dueDate: '2026-04-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-m-2',
+        installmentName: 'May Month',
+        sequence: 2,
+        startDate: '2026-05-01T00:00:00.000Z',
+        endDate: '2026-05-31T00:00:00.000Z',
+        dueDate: '2026-05-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-m-3',
+        installmentName: 'Jun Month',
+        sequence: 3,
+        startDate: '2026-06-01T00:00:00.000Z',
+        endDate: '2026-06-30T00:00:00.000Z',
+        dueDate: '2026-06-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-m-4',
+        installmentName: 'Jul Month',
+        sequence: 4,
+        startDate: '2026-07-01T00:00:00.000Z',
+        endDate: '2026-07-31T00:00:00.000Z',
+        dueDate: '2026-07-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-m-5',
+        installmentName: 'Aug Month',
+        sequence: 5,
+        startDate: '2026-08-01T00:00:00.000Z',
+        endDate: '2026-08-31T00:00:00.000Z',
+        dueDate: '2026-08-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-m-6',
+        installmentName: 'Sep Month',
+        sequence: 6,
+        startDate: '2026-09-01T00:00:00.000Z',
+        endDate: '2026-09-30T00:00:00.000Z',
+        dueDate: '2026-09-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-m-7',
+        installmentName: 'Oct Month',
+        sequence: 7,
+        startDate: '2026-10-01T00:00:00.000Z',
+        endDate: '2026-10-31T00:00:00.000Z',
+        dueDate: '2026-10-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-m-8',
+        installmentName: 'Nov Month',
+        sequence: 8,
+        startDate: '2026-11-01T00:00:00.000Z',
+        endDate: '2026-11-30T00:00:00.000Z',
+        dueDate: '2026-11-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-m-9',
+        installmentName: 'Dec Month',
+        sequence: 9,
+        startDate: '2026-12-01T00:00:00.000Z',
+        endDate: '2026-12-31T00:00:00.000Z',
+        dueDate: '2026-12-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-m-10',
+        installmentName: 'Jan Month',
+        sequence: 10,
+        startDate: '2027-01-01T00:00:00.000Z',
+        endDate: '2027-01-31T00:00:00.000Z',
+        dueDate: '2027-01-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-m-11',
+        installmentName: 'Feb Month',
+        sequence: 11,
+        startDate: '2027-02-01T00:00:00.000Z',
+        endDate: '2027-02-28T00:00:00.000Z',
+        dueDate: '2027-02-10T00:00:00.000Z',
+      },
+      {
+        id: 'inst-m-12',
+        installmentName: 'Mar Month',
+        sequence: 12,
+        startDate: '2027-03-01T00:00:00.000Z',
+        endDate: '2027-03-31T00:00:00.000Z',
+        dueDate: '2027-03-10T00:00:00.000Z',
+      },
+    ],
+  },
+];

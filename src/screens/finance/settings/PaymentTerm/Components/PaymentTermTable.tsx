@@ -3,21 +3,14 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Box, MenuItem, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Chip, Stack, Switch, Typography } from '@mui/material';
 import { usePatchPaymentTermMutation } from 'src/redux/finance/paymentTerm';
 
 import type { IPaymentTerm, PaymentTermStatus, IPaymentTermTableProps } from '../type';
-
-const STATUS_COLOR: Record<PaymentTermStatus, 'success' | 'warning' | 'error' | 'default'> = {
-  Active: 'success',
-  Archived: 'default',
-};
 
 const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   data,
@@ -77,9 +70,36 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         id: 'status',
         label: 'Status',
         align: 'left',
-        render: (value) => (
-          <Label color={STATUS_COLOR[value as PaymentTermStatus] ?? 'default'}>{value}</Label>
-        ),
+        render: (value, row) => {
+          const term = row as IPaymentTerm;
+          const isActive = term.status === 'Active';
+          return (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip
+                size="small"
+                label={isActive ? 'Active' : 'Inactive'}
+                color={isActive ? 'success' : 'default'}
+                variant="soft"
+              />
+              <Switch
+                size="small"
+                checked={isActive}
+                onClick={(event) => event.stopPropagation()}
+                onChange={async () => {
+                  try {
+                    const newStatus: PaymentTermStatus = isActive ? 'Archived' : 'Active';
+                    await patchPaymentTerm({ id: term.id, body: { status: newStatus } });
+                    shikshaMitraToast.success({
+                      message: `Payment Term "${term.paymentTermName}" marked as ${newStatus === 'Active' ? 'Active' : 'Inactive'} successfully.`,
+                    });
+                  } catch {
+                    shikshaMitraToast.error({ message: 'Failed to update status.' });
+                  }
+                }}
+              />
+            </Stack>
+          );
+        },
       },
       {
         id: 'updatedBy',
@@ -103,35 +123,12 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
           const term = row as IPaymentTerm;
           return (
             <ThreeDotsActions
-              showThreeDots
+              showThreeDots={false}
               showEditIcon
               handleEditClick={() => onEdit(term)}
               showDeleteIcon
               disableDeleteIcon={term.isUsedInDownstream}
               handleDeleteClick={() => onDelete(term)}
-              actions={({ popover }) => (
-                <MenuItem
-                  onClick={async () => {
-                    popover.onClose();
-                    try {
-                      const newStatus: PaymentTermStatus =
-                        term.status === 'Active' ? 'Archived' : 'Active';
-                      await patchPaymentTerm({ id: term.id, body: { status: newStatus } });
-                      shikshaMitraToast.success({
-                        message: `Payment Term "${term.paymentTermName}" marked as ${newStatus} successfully.`,
-                      });
-                    } catch {
-                      shikshaMitraToast.error({ message: 'Failed to update status.' });
-                    }
-                  }}
-                >
-                  <Iconify
-                    icon={term.status === 'Active' ? 'mdi:archive-outline' : 'mdi:eye-outline'}
-                    sx={{ mr: 1, width: 18, height: 18 }}
-                  />
-                  {term.status === 'Active' ? 'Archive' : 'Activate'}
-                </MenuItem>
-              )}
             />
           );
         },

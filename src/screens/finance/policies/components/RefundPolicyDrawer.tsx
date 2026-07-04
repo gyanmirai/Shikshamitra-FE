@@ -115,8 +115,6 @@ const getInitialValues = (
     applicableFeeHeads: data?.applicableFeeHeads || [],
     refundOn: data?.refundOn || 'FullPayment',
     enableRefundForCharge: data?.enableRefundForCharge ?? false,
-    refundOnWithdrawal: data?.refundOnWithdrawal ?? true,
-    refundOnTransfer: data?.refundOnTransfer ?? true,
 
     // Payment Processing
     refundDueWithin: data?.refundDueWithin ?? 7,
@@ -320,32 +318,6 @@ const SectionEligibility = ({ formik, feeHeads }: { formik: any; feeHeads: any[]
           }
         />
       </Card>
-    </Grid>
-
-    {/* Switches for Withdrawal and Transfer */}
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={formik.values.refundOnWithdrawal}
-            onChange={(e) => formik.setFieldValue('refundOnWithdrawal', e.target.checked)}
-            size="small"
-          />
-        }
-        label={<Typography variant="body2">Refund on Withdrawal</Typography>}
-      />
-    </Grid>
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={formik.values.refundOnTransfer}
-            onChange={(e) => formik.setFieldValue('refundOnTransfer', e.target.checked)}
-            size="small"
-          />
-        }
-        label={<Typography variant="body2">Refund on Transfer</Typography>}
-      />
     </Grid>
   </Grid>
 );

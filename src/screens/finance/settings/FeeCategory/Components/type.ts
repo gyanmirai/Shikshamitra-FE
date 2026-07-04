@@ -10,8 +10,9 @@ export interface IFeeCategory {
     feeHeadId: string;
     feeHeadName?: string;
     name?: string;
+    module?: string;
     description?: string;
-    isConcessionApplied: boolean;
+    isConcessionApply?: boolean;
     isActive?: boolean;
   }>;
 }
