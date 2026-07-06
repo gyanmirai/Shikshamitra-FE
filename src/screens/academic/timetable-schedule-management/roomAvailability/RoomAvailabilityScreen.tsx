@@ -30,7 +30,7 @@ import {
   CalendarMonth,
 } from '@mui/icons-material';
 
-import { MOCK_SUMMARY } from './roomAvailability.mock';
+// Removed MOCK_SUMMARY
 import { RoomFloorView } from './components/RoomFloorView';
 import { RoomUsageReport } from './components/RoomUsageReport';
 import { RoomDetailDrawer } from './components/RoomDetailDrawer';
@@ -39,18 +39,17 @@ import { RoomCalendarView } from './components/RoomCalendarView';
 import { RoomApprovalQueue } from './components/RoomApprovalQueue';
 import { RoomAuditLogDrawer } from './components/RoomAuditLogDrawer';
 import { RoomReservationsTab } from './components/RoomReservationsTab';
-import { AIRoomAssistantPanel } from './components/AIRoomAssistantPanel';
+// Removed AIRoomAssistantPanel
 import { RoomAvailabilityTable } from './components/RoomAvailabilityTable';
 import { RoomMaintenanceDrawer } from './components/RoomMaintenanceDrawer';
 import { DEFAULT_ROOM_AVAILABILITY_FILTERS } from './roomAvailability.constants';
 // ── Components ─────────────────────────────────────────────────────────────────
-import { RoomAvailabilityKpiCards } from './components/RoomAvailabilityKpiCards';
+// Removed RoomAvailabilityKpiCards
 import { SmartRoomReservationDrawer } from './components/SmartRoomReservationDrawer';
 import { DirectRoomReservationDrawer } from './components/DirectRoomReservationDrawer';
 import {
   useRoomAvailability,
   useRoomReservations,
-  useRoomAvailabilitySummary,
 } from './roomAvailability.hooks';
 import dayjs from 'dayjs';
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
@@ -82,7 +81,6 @@ const RoomAvailabilityScreen = () => {
   const [isDirectReservationOpen, setDirectReservationOpen] = useState(false);
   const [directReservationRoom, setDirectReservationRoom] = useState<RoomAvailabilityItem | null>(null);
   const [maintenanceRoom, setMaintenanceRoom] = useState<RoomAvailabilityItem | null>(null);
-  const [showAI, setShowAI] = useState(false);
   const [showAudit, setShowAudit] = useState(false);
 
   // ── Data Hooks ─────────────────────────────────────────────────────────────
@@ -111,13 +109,11 @@ const RoomAvailabilityScreen = () => {
   }, [buildings, filters.building]);
 
   const availability = useRoomAvailability(filters);
-  const summary = useRoomAvailabilitySummary();
   const reservationsHook = useRoomReservations();
 
   // Initial load
   useEffect(() => {
     availability.fetch();
-    summary.fetch();
     reservationsHook.fetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -137,14 +133,7 @@ const RoomAvailabilityScreen = () => {
     setFilters(DEFAULT_ROOM_AVAILABILITY_FILTERS);
   }, []);
 
-  // KPI card click → apply filter + jump to availability tab
-  const handleKpiFilter = useCallback(
-    (patch: Partial<RoomAvailabilityFilters>) => {
-      patchFilters(patch);
-      setActiveTab('availability');
-    },
-    [patchFilters]
-  );
+
 
   // ── Room actions ───────────────────────────────────────────────────────────
   const handleViewRoom = useCallback(
@@ -181,9 +170,8 @@ const RoomAvailabilityScreen = () => {
     (reservation: RoomReservation) => {
       reservationsHook.addReservation(reservation);
       availability.fetch();
-      summary.fetch();
     },
-    [availability, reservationsHook, summary]
+    [availability, reservationsHook]
   );
 
   const handleCancelReservation = useCallback(
@@ -217,10 +205,9 @@ const RoomAvailabilityScreen = () => {
 
   const handleRefresh = useCallback(() => {
     availability.fetch();
-    summary.fetch();
     reservationsHook.fetch();
     shikshaMitraToast.success({ message: 'Data refreshed.' });
-  }, [availability, reservationsHook, summary]);
+  }, [availability, reservationsHook]);
 
   // ── Pending count for approval badge ──────────────────────────────────────
   const pendingCount = useMemo(
@@ -241,17 +228,6 @@ const RoomAvailabilityScreen = () => {
         ]}
         action={
           <Stack direction="row" spacing={1}>
-            <Tooltip title="AI Room Assistant">
-              <Button
-                size="small"
-                variant={showAI ? 'contained' : 'outlined'}
-                color="primary"
-                startIcon={<Iconify icon="mdi:robot-outline" />}
-                onClick={() => setShowAI((v) => !v)}
-              >
-                AI Assistant
-              </Button>
-            </Tooltip>
             <Tooltip title="Audit Trail">
               <Button
                 size="small"
@@ -278,23 +254,6 @@ const RoomAvailabilityScreen = () => {
             </Button>
           </Stack>
         }
-      />
-
-      {/* ── AI Assistant Panel ───────────────────────────── */}
-      {showAI && (
-        <AIRoomAssistantPanel
-          onReserveRoom={(roomId) => {
-            const room = availability.data.find((r) => r.roomId === roomId);
-            if (room) handleOpenReservation(room);
-          }}
-        />
-      )}
-
-      {/* ── KPI Cards ────────────────────────────────────── */}
-      <RoomAvailabilityKpiCards
-        summary={summary.data || MOCK_SUMMARY}
-        isLoading={summary.isLoading}
-        onFilterClick={handleKpiFilter}
       />
 
       {/* ── Tabs ─────────────────────────────────────────── */}

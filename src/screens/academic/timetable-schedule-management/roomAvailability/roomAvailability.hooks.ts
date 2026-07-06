@@ -5,7 +5,6 @@ import { useState, useCallback, useMemo } from 'react';
 
 import {
   useGetRoomAvailabilityQuery,
-  useGetRoomAvailabilitySummaryQuery,
   useGetReservationsQuery,
   useCheckRoomConflictsMutation,
   useSuggestAlternativeRoomsMutation,
@@ -90,18 +89,7 @@ export function useRoomAvailability(filters?: Partial<RoomAvailabilityFilters>) 
   };
 }
 
-// ─── useRoomAvailabilitySummary ───────────────────────────────────────────────
-export function useRoomAvailabilitySummary() {
-  const { data, isLoading, isError, refetch } = useGetRoomAvailabilitySummaryQuery(undefined);
-
-  return {
-    data: data || null,
-    isLoading,
-    error: isError ? 'Failed to load summary.' : null,
-    refetch,
-    fetch: refetch
-  };
-}
+// Removed useRoomAvailabilitySummary hook
 
 // ─── useRoomSchedule ──────────────────────────────────────────────────────────
 export function useRoomSchedule(roomId: string | null, dateStr?: string) {

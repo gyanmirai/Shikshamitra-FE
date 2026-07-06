@@ -98,7 +98,7 @@ const CalendarDayFormDialog = ({
       const isSingleClass = !values.appliesToAll && values.standardIds.length === 1;
       const payload: any = {
         ...values,
-        date: values.date ? dayjs(values.date).toISOString() : null,
+        date: values.date ? dayjs(values.date).format('YYYY-MM-DDTHH:mm:ssZ') : null,
         dayType: Number(values.dayType),
         holidayCategory: values.holidayCategory !== '' ? Number(values.holidayCategory) : null,
         standardIds: values.appliesToAll ? null : values.standardIds,
@@ -108,7 +108,7 @@ const CalendarDayFormDialog = ({
         endTime: values.endTime || null,
         endDate:
           Number(values.dayType) === DayType.Vacation && values.endDate
-            ? dayjs(values.endDate).toISOString()
+            ? dayjs(values.endDate).format('YYYY-MM-DDTHH:mm:ssZ')
             : null,
       };
 
@@ -209,7 +209,7 @@ const CalendarDayFormDialog = ({
             <DatePicker
               label={isVacation ? 'Start Date *' : 'Date *'}
               value={formik.values.date ? dayjs(formik.values.date) : null}
-              onChange={(val) => formik.setFieldValue('date', val ? val.toISOString() : null)}
+              onChange={(val) => formik.setFieldValue('date', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -257,7 +257,7 @@ const CalendarDayFormDialog = ({
                 label="End Date *"
                 value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
                 minDate={formik.values.date ? dayjs(formik.values.date) : undefined}
-                onChange={(val) => formik.setFieldValue('endDate', val ? val.toISOString() : null)}
+                onChange={(val) => formik.setFieldValue('endDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
                 slotProps={{
                   textField: {
                     fullWidth: true,

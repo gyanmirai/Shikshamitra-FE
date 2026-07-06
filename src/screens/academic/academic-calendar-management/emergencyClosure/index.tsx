@@ -117,7 +117,7 @@ const EmergencyClosureScreen = () => {
     onSubmit: async (values, helpers) => {
       const payload = {
         ...values,
-        date: values.date ? dayjs(values.date).toISOString() : null,
+        date: values.date ? dayjs(values.date).format('YYYY-MM-DDTHH:mm:ssZ') : null,
         standardIds: values.appliesToAll ? [] : values.standardIds,
         divisionIds: [],
       };
@@ -308,7 +308,7 @@ const EmergencyClosureScreen = () => {
               <DatePicker
                 label="Closure Date *"
                 value={formik.values.date ? dayjs(formik.values.date) : null}
-                onChange={(val) => formik.setFieldValue('date', val ? val.toISOString() : null)}
+                onChange={(val) => formik.setFieldValue('date', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
                 disablePast
                 slotProps={{
                   textField: {

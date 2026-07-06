@@ -11,13 +11,7 @@ export const roomAvailabilityApi = academicApi.injectEndpoints({
       }),
       providesTags: [academicType.timetableManagement],
     }),
-    getRoomAvailabilitySummary: builder.query({
-      query: (filters) => ({
-        url: 'academics/timetable/room-availability/summary',
-        method: 'GET',
-        params: filters,
-      }),
-    }),
+
     getReservations: builder.query({
       query: () => ({
         url: 'academics/timetable/room-reservations',
@@ -113,7 +107,6 @@ export const roomAvailabilityApi = academicApi.injectEndpoints({
 
 export const {
   useGetRoomAvailabilityQuery,
-  useGetRoomAvailabilitySummaryQuery,
   useGetReservationsQuery,
   useCheckRoomConflictsMutation,
   useSuggestAlternativeRoomsMutation,
