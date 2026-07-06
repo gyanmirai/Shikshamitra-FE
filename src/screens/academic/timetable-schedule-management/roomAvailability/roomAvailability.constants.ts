@@ -146,6 +146,22 @@ export const FACILITY_ICONS: Record<RoomFacility, string> = {
   whiteboard: 'mdi:draw',
 };
 
+const FACILITY_KEYS = Object.keys(FACILITY_LABELS) as RoomFacility[];
+const normalizeFacilityKey = (value: string) => value.toLowerCase().replace(/[\s_-]/g, '');
+
+// Backend facility values don't always match the frontend's RoomFacility casing/naming,
+// so match loosely (by key or label) before falling back to the raw value.
+export const resolveFacility = (raw: string) => {
+  const normalizedRaw = normalizeFacilityKey(raw);
+  const key = FACILITY_KEYS.find(
+    (k) => normalizeFacilityKey(k) === normalizedRaw || normalizeFacilityKey(FACILITY_LABELS[k]) === normalizedRaw
+  );
+  return {
+    label: key ? FACILITY_LABELS[key] : raw,
+    icon: key ? FACILITY_ICONS[key] : 'mdi:check-circle-outline',
+  };
+};
+
 // ─── Priority Options ─────────────────────────────────────────────────────────
 export const PRIORITY_OPTIONS: { value: Priority; label: string; color: string }[] = [
   { value: 'low', label: 'Low', color: 'default' },

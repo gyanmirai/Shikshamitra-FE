@@ -133,11 +133,12 @@ export interface RoomReservation {
   teacherName?: string;
   subject?: string;
   status: ReservationStatus;
-  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  approvalStatus?: 'pending' | 'approved' | 'rejected' | 'none';
   conflictStatus?: ConflictSeverity | 'none';
   conflictReason?: string;
   remarks?: string;
   isRecurring?: boolean;
+  recurringUntilDate?: string;
   createdAt?: string;
   updatedAt?: string;
   approvedBy?: string;
@@ -267,6 +268,7 @@ export interface AuditLogEntry {
   remarks?: string;
   reservationId?: string;
   roomId?: string;
+  roomName?: string;
 }
 
 export interface UsageReportData {
