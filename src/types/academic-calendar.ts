@@ -64,12 +64,6 @@ export interface AcademicCalendarDay {
   divisionId?: string;
   startTime?: string;
   endTime?: string;
-  blocksTimetable: boolean;
-  blocksHomeworkDueDate: boolean;
-  blocksExamSchedule: boolean;
-  blocksLessonPlan: boolean;
-  blocksOnlineClass: boolean;
-  exemptAttendance: boolean;
   status: CalendarDayStatus;
   changeReason?: string;
   creationTime?: string;
@@ -83,16 +77,11 @@ export interface CreateCalendarDayPayload {
   title: string;
   description?: string;
   appliesToAll: boolean;
-  standardId?: string;
-  divisionId?: string;
+  standardId?: string | null;
+  standardIds?: string[] | null;
+  divisionId?: string | null;
   startTime?: string;
   endTime?: string;
-  blocksTimetable: boolean;
-  blocksHomeworkDueDate: boolean;
-  blocksExamSchedule: boolean;
-  blocksLessonPlan: boolean;
-  blocksOnlineClass: boolean;
-  exemptAttendance: boolean;
   changeReason?: string;
 }
 

@@ -3,13 +3,18 @@
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { alpha, useTheme } from '@mui/material/styles';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import {
+  useCreateCalendarDayMutation,
+  useUpdateCalendarDayMutation,
+} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 import {
   DayType,
   CalendarStatus,
@@ -18,16 +23,13 @@ import {
   HOLIDAY_CATEGORY_OPTIONS,
 } from 'src/enums/academic-calendar';
 import {
-  useCreateCalendarDayMutation,
-  useUpdateCalendarDayMutation,
-} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
-import {
   Box,
   Grid,
   Stack,
   Switch,
   Button,
   Select,
+  Checkbox,
   MenuItem,
   TextField,
   Typography,
@@ -48,7 +50,10 @@ interface Props {
   calendarStatus: CalendarStatus;
   editData?: any;
   prefillDate?: string;
-  standards?: { id: string; name: string }[];
+  canDelete?: boolean;
+  deleting?: boolean;
+  onDelete?: (editData: any) => void | Promise<void>;
+  standards?: { id: string; name: string; divisions?: { id: string; name: string }[] }[];
   divisions?: { id: string; name: string }[];
 }
 
@@ -63,15 +68,6 @@ const DAY_TYPE_ICONS: Record<DayType, string> = {
   [DayType.EmergencyClosure]: 'mdi:alert-octagon-outline',
 };
 
-const BLOCK_OPTIONS = [
-  { key: 'blocksTimetable', label: 'Block Timetable' },
-  { key: 'blocksHomeworkDueDate', label: 'Block Homework Due Date' },
-  { key: 'blocksExamSchedule', label: 'Block Exam Schedule' },
-  { key: 'blocksLessonPlan', label: 'Block Lesson Plan' },
-  { key: 'blocksOnlineClass', label: 'Block Online Class' },
-  { key: 'exemptAttendance', label: 'Exempt Attendance' },
-];
-
 const CalendarDayFormDialog = ({
   open,
   onClose,
@@ -79,14 +75,18 @@ const CalendarDayFormDialog = ({
   calendarStatus,
   editData,
   prefillDate,
+  canDelete = false,
+  deleting = false,
+  onDelete,
   standards = [],
   divisions = [],
 }: Props) => {
   const theme = useTheme();
+  const deleteDialog = useBoolean();
   const isPublished = calendarStatus === CalendarStatus.Published;
   const [createDay, { isLoading: creating }] = useCreateCalendarDayMutation();
   const [updateDay, { isLoading: updating }] = useUpdateCalendarDayMutation();
-  const isLoading = creating || updating;
+  const isLoading = creating || updating || deleting;
 
   const formik = useFormik({
     initialValues: calendarDayInitialValues(
@@ -95,16 +95,20 @@ const CalendarDayFormDialog = ({
     enableReinitialize: true,
     validationSchema: calendarDayValidationSchema(isPublished),
     onSubmit: async (values) => {
+      const isSingleClass = !values.appliesToAll && values.standardIds.length === 1;
       const payload: any = {
         ...values,
-        date: values.date ? dayjs(values.date).toISOString() : null,
+        date: values.date ? dayjs(values.date).format('YYYY-MM-DDTHH:mm:ssZ') : null,
         dayType: Number(values.dayType),
         holidayCategory: values.holidayCategory !== '' ? Number(values.holidayCategory) : null,
-        standardId: values.standardId || null,
-        divisionId: values.divisionId || null,
+        standardIds: values.appliesToAll ? null : values.standardIds,
+        standardId: isSingleClass ? values.standardIds[0] : null,
+        divisionId: isSingleClass ? values.divisionId || null : null,
+        startTime: values.startTime || null,
+        endTime: values.endTime || null,
         endDate:
           Number(values.dayType) === DayType.Vacation && values.endDate
-            ? dayjs(values.endDate).toISOString()
+            ? dayjs(values.endDate).format('YYYY-MM-DDTHH:mm:ssZ')
             : null,
       };
 
@@ -133,15 +137,23 @@ const CalendarDayFormDialog = ({
   const isPtm = dayTypeNum === DayType.PTM;
 
   const title = editData
-    ? 'Edit Calendar Day'
+    ? `Edit Marker for ${dayjs(editData.date).format('DD MMM YYYY')}`
     : prefillDate
       ? `Add Marker for ${dayjs(prefillDate).format('DD MMM YYYY')}`
       : 'Add Calendar Day';
 
+  const handleDelete = async () => {
+    if (!editData || !onDelete) return;
+
+    await onDelete(editData);
+    deleteDialog.onFalse();
+  };
+
   return (
-    <CustomDialog open={open} handleClose={onClose} title={title} maxWidth="sm">
-      <DialogScrollContent>
-        <Grid container spacing={2.5}>
+    <>
+      <CustomDialog open={open} handleClose={onClose} title={title} maxWidth="sm">
+        <DialogScrollContent>
+          <Grid container spacing={2.5}>
           {/* Day Type */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl
@@ -197,7 +209,7 @@ const CalendarDayFormDialog = ({
             <DatePicker
               label={isVacation ? 'Start Date *' : 'Date *'}
               value={formik.values.date ? dayjs(formik.values.date) : null}
-              onChange={(val) => formik.setFieldValue('date', val ? val.toISOString() : null)}
+              onChange={(val) => formik.setFieldValue('date', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -245,7 +257,7 @@ const CalendarDayFormDialog = ({
                 label="End Date *"
                 value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
                 minDate={formik.values.date ? dayjs(formik.values.date) : undefined}
-                onChange={(val) => formik.setFieldValue('endDate', val ? val.toISOString() : null)}
+                onChange={(val) => formik.setFieldValue('endDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -365,7 +377,7 @@ const CalendarDayFormDialog = ({
                       onChange={(e) => {
                         formik.setFieldValue('appliesToAll', e.target.checked);
                         if (e.target.checked) {
-                          formik.setFieldValue('standardId', '');
+                          formik.setFieldValue('standardIds', []);
                           formik.setFieldValue('divisionId', '');
                         }
                       }}
@@ -374,120 +386,85 @@ const CalendarDayFormDialog = ({
                   label={
                     <Box>
                       <Typography variant="body2" fontWeight={600}>
-                        Applies to all standards & divisions
+                        Applies to all classes & divisions
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Toggle off to restrict this marker to a specific grade or section
+                        Toggle off to restrict this marker to specific classes or a section
                       </Typography>
                     </Box>
                   }
                 />
 
-                {!formik.values.appliesToAll && (
+                 {!formik.values.appliesToAll && (
                   <Grid container spacing={2} sx={{ pt: 1 }}>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <FormControl
                         fullWidth
                         size="small"
-                        error={formik.touched.standardId && Boolean(formik.errors.standardId)}
+                        error={formik.touched.standardIds && Boolean(formik.errors.standardIds)}
                       >
-                        <InputLabel>Standard *</InputLabel>
+                        <InputLabel>Class *</InputLabel>
                         <Select
-                          label="Standard *"
-                          name="standardId"
-                          value={formik.values.standardId}
-                          onChange={formik.handleChange}
+                          multiple
+                          label="Class *"
+                          name="standardIds"
+                          value={formik.values.standardIds}
+                          onChange={(e) => {
+                            const {value} = e.target;
+                            const selected =
+                              typeof value === 'string' ? value.split(',') : value;
+                            formik.setFieldValue('standardIds', selected);
+                            if (selected.length !== 1) {
+                              formik.setFieldValue('divisionId', '');
+                            }
+                          }}
+                          renderValue={(selected) =>
+                            (selected as string[])
+                              .map((id) => standards.find((s) => s.id === id)?.name ?? id)
+                              .join(', ')
+                          }
                         >
                           {standards.map((s) => (
                             <MenuItem key={s.id} value={s.id}>
+                              <Checkbox
+                                size="small"
+                                checked={formik.values.standardIds.includes(s.id)}
+                              />
                               {s.name}
                             </MenuItem>
                           ))}
                         </Select>
-                        {formik.touched.standardId && formik.errors.standardId && (
-                          <FormHelperText>{formik.errors.standardId as string}</FormHelperText>
+                        {formik.touched.standardIds && formik.errors.standardIds && (
+                          <FormHelperText>{formik.errors.standardIds as string}</FormHelperText>
                         )}
                       </FormControl>
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Division (optional)</InputLabel>
-                        <Select
-                          label="Division (optional)"
-                          name="divisionId"
-                          value={formik.values.divisionId}
-                          onChange={formik.handleChange}
-                        >
-                          <MenuItem value="">All Divisions</MenuItem>
-                          {divisions.map((d) => (
-                            <MenuItem key={d.id} value={d.id}>
-                              {d.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
+                    {formik.values.standardIds.length === 1 && (
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Division (optional)</InputLabel>
+                          <Select
+                            label="Division (optional)"
+                            name="divisionId"
+                            value={formik.values.divisionId}
+                            onChange={formik.handleChange}
+                          >
+                            <MenuItem value="">All Divisions</MenuItem>
+                            {(
+                              standards.find((s) => s.id === formik.values.standardIds[0])
+                                ?.divisions || []
+                            ).map((d: any) => (
+                              <MenuItem key={d.id} value={d.id}>
+                                {d.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                    )}
                   </Grid>
                 )}
               </Stack>
-            </Box>
-          </Grid>
-
-          {/* Blocking Rules Card block */}
-          <Grid size={{ xs: 12 }}>
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                border: `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.15)}`,
-                backgroundColor: varAlpha(theme.palette.warning.mainChannel, 0.01),
-              }}
-            >
-              <Typography
-                variant="subtitle2"
-                fontWeight={800}
-                sx={{
-                  mb: 1.5,
-                  color: 'warning.main',
-                  fontSize: '12px',
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5,
-                }}
-              >
-                Conflict & Blocking Rules
-              </Typography>
-              <Grid container spacing={1.5}>
-                {BLOCK_OPTIONS.map(({ key, label }) => (
-                  <Grid size={{ xs: 12, sm: 6 }} key={key}>
-                    <Box
-                      sx={{
-                        p: 1.2,
-                        px: 1.8,
-                        borderRadius: 1.5,
-                        border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                        backgroundColor: theme.vars.palette.background.paper,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          borderColor: theme.palette.warning.main,
-                          backgroundColor: alpha(theme.palette.warning.main, 0.01),
-                        },
-                      }}
-                    >
-                      <Typography variant="body2" fontWeight={600} color="text.secondary">
-                        {label}
-                      </Typography>
-                      <Switch
-                        size="small"
-                        checked={formik.values[key as keyof typeof formik.values] as boolean}
-                        onChange={(e) => formik.setFieldValue(key, e.target.checked)}
-                      />
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
             </Box>
           </Grid>
 
@@ -519,37 +496,81 @@ const CalendarDayFormDialog = ({
               />
             </Grid>
           )}
-        </Grid>
-      </DialogScrollContent>
+          </Grid>
+        </DialogScrollContent>
 
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={onClose}
-          disabled={isLoading}
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        <DialogActions
+          sx={{ p: 2, boxShadow: 'var(--shadows-10)', justifyContent: 'space-between' }}
         >
-          Cancel
-        </Button>
-        <LoadingButton
-          type="submit"
-          variant="contained"
-          size="small"
-          loading={isLoading}
-          startIcon={
-            <Iconify
-              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-              width={16}
-              height={16}
-            />
-          }
-          onClick={(e: any) => formik.handleSubmit(e)}
-        >
-          {editData ? 'Update Day' : 'Add Day'}
-        </LoadingButton>
-      </DialogActions>
-    </CustomDialog>
+          <Box>
+            {editData && canDelete && (
+              <LoadingButton
+                variant="outlined"
+                color="error"
+                size="small"
+                loading={deleting}
+                disabled={creating || updating}
+                startIcon={<Iconify icon={GlobalIcons.delete} width={16} height={16} />}
+                onClick={deleteDialog.onTrue}
+              >
+                Delete Day
+              </LoadingButton>
+            )}
+          </Box>
+          <Stack direction="row" gap={1}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={onClose}
+              disabled={isLoading}
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              type="submit"
+              variant="contained"
+              size="small"
+              loading={creating || updating}
+              disabled={deleting}
+              startIcon={
+                <Iconify
+                  icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={16}
+                  height={16}
+                />
+              }
+              onClick={(e: any) => formik.handleSubmit(e)}
+            >
+              {editData ? 'Update Day' : 'Add Day'}
+            </LoadingButton>
+          </Stack>
+        </DialogActions>
+      </CustomDialog>
+
+      <ConfirmDialog
+        open={deleteDialog.value}
+        onClose={deleteDialog.onFalse}
+        title="Delete Day"
+        content={
+          <>
+            Are you sure you want to delete <strong>{editData?.title || 'this day marker'}</strong>?
+            This action will be recorded in audit logs.
+          </>
+        }
+        action={
+          <LoadingButton
+            loading={deleting}
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={handleDelete}
+          >
+            Delete
+          </LoadingButton>
+        }
+      />
+    </>
   );
 };
 

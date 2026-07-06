@@ -338,7 +338,7 @@ const CalendarImpactLogs = () => {
         await rescheduleLog({
           id: selectedLog.id,
           body: {
-            newDate: values.newDate ? dayjs(values.newDate).toISOString() : '',
+            newDate: values.newDate ? dayjs(values.newDate).format('YYYY-MM-DDTHH:mm:ssZ') : '',
             note: values.note,
           },
         }).unwrap();

@@ -87,7 +87,7 @@ export const ReservationStatusChip = ({ status, size = 'small' }: ReservationSta
 
 // ─── Approval Status Chip ─────────────────────────────────────────────────────
 interface ApprovalStatusChipProps {
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'none';
   size?: 'small' | 'medium';
 }
 
@@ -96,8 +96,9 @@ export const ApprovalStatusChip = ({ status, size = 'small' }: ApprovalStatusChi
     pending: { label: 'Pending', color: 'warning' as const, icon: 'mdi:clock-outline' },
     approved: { label: 'Approved', color: 'success' as const, icon: 'mdi:check-circle' },
     rejected: { label: 'Rejected', color: 'error' as const, icon: 'mdi:close-circle' },
+    none: { label: '—', color: 'default' as const, icon: 'mdi:minus' },
   };
-  const config = map[status];
+  const config = map[status] || map.none;
   return (
     <Chip
       size={size}

@@ -124,12 +124,16 @@ export const RoomApprovalQueue = ({
             {
               id: 'date',
               label: 'Date / Time',
-              minWidth: 160,
+              minWidth: 180,
               render: (_v, row) => (
                 <Box>
-                  <Typography variant="body2">{row.date}</Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="body2">
+                    {row.date}
+                    {row.isRecurring && row.recurringUntilDate && ` to ${row.recurringUntilDate}`}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block">
                     {row.startTime} – {row.endTime}
+                    {row.isRecurring && ' (Recurring)'}
                   </Typography>
                 </Box>
               ),

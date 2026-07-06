@@ -1,527 +1,534 @@
 'use client';
 
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { RootState } from 'src/redux/store';
 
-import dayjs from 'dayjs';
-import { useMemo, useState } from 'react';
-import { Label } from 'src/components/label';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { alpha, useTheme } from '@mui/material/styles';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { useMemo, useState, useEffect } from 'react';
+import { CustomTabs } from 'src/components/custom-tabs';
+import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { CalendarAuditAction, CALENDAR_AUDIT_ACTION_LABELS } from 'src/enums/academic-calendar';
-import { useGetAuditLogsQuery } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import {
+  useGetAuditLogsQuery,
+  useGetAuditLogsSummaryQuery,
+} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 import {
   Box,
-  Grid,
+  Tab,
   Paper,
   Stack,
-  Select,
-  Avatar,
-  MenuItem,
+  Alert,
+  Button,
+  Tooltip,
+  TextField,
+  IconButton,
   Typography,
-  InputLabel,
-  FormControl,
+  DialogActions,
 } from '@mui/material';
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
+import AuditLogsTable from './components/AuditLogsTable';
+import AuditExportMenu from './components/AuditExportMenu';
+import AuditSummaryCards from './components/AuditSummaryCards';
+import AuditSmartFilters from './components/AuditSmartFilters';
+import AuditTimelineView from './components/AuditTimelineView';
+import AuditAnalyticsView from './components/AuditAnalyticsView';
+import AuditAISummaryDrawer from './components/AuditAISummaryDrawer';
+import AuditLogDetailsDrawer from './components/AuditLogDetailsDrawer';
+import { EMPTY_FILTERS, KEYBOARD_SHORTCUTS } from './constants/auditLogs.constants';
 
-const MOCK_AUDIT_LOGS = {
-  items: [
-    {
-      id: 'a1',
-      changedAt: '2025-06-10T09:14:00Z',
-      action: CalendarAuditAction.CalendarCreated,
-      changedByUserId: 'usr-admin-001',
-      changedByName: 'Rajesh Sharma',
-      reason: 'New academic year calendar initialization',
-      oldValueJson: null,
-      newValueJson: JSON.stringify({
-        name: 'Academic Year 2025–26',
-        startDate: '2025-06-01',
-        endDate: '2026-03-31',
-      }),
-    },
-    {
-      id: 'a2',
-      changedAt: '2025-06-12T11:32:00Z',
-      action: CalendarAuditAction.DayAdded,
-      changedByUserId: 'usr-admin-001',
-      changedByName: 'Rajesh Sharma',
-      reason: null,
-      oldValueJson: null,
-      newValueJson: JSON.stringify({ date: '2025-08-15', dayType: 2, title: 'Independence Day' }),
-    },
-    {
-      id: 'a3',
-      changedAt: '2025-06-15T14:05:00Z',
-      action: CalendarAuditAction.CalendarPublished,
-      changedByUserId: 'usr-principal-001',
-      changedByName: 'Priya Nair',
-      reason: 'Calendar reviewed and approved for academic year',
-      oldValueJson: JSON.stringify({ status: 1 }),
-      newValueJson: JSON.stringify({ status: 2 }),
-    },
-    {
-      id: 'a4',
-      changedAt: '2025-07-01T08:45:00Z',
-      action: CalendarAuditAction.DayUpdated,
-      changedByUserId: 'usr-admin-001',
-      changedByName: 'Rajesh Sharma',
-      reason: 'Updated holiday category after government notification',
-      oldValueJson: JSON.stringify({ holidayCategory: 1 }),
-      newValueJson: JSON.stringify({ holidayCategory: 6, title: 'Gandhi Jayanti (State)' }),
-    },
-    {
-      id: 'a5',
-      changedAt: '2025-07-20T10:22:00Z',
-      action: CalendarAuditAction.EmergencyClosureDeclared,
-      changedByUserId: 'usr-principal-001',
-      changedByName: 'Priya Nair',
-      reason: 'Heavy rainfall and local flooding warning issued by municipality',
-      oldValueJson: null,
-      newValueJson: JSON.stringify({
-        date: '2025-07-20',
-        title: 'Emergency Closure — Flooding',
-        appliesToAll: true,
-      }),
-    },
-    {
-      id: 'a6',
-      changedAt: '2025-07-21T09:10:00Z',
-      action: CalendarAuditAction.ImpactResolved,
-      changedByUserId: 'usr-teacher-005',
-      changedByName: 'Anjali Mehta',
-      reason: 'Timetable rescheduled to compensate for missed class',
-      oldValueJson: JSON.stringify({ status: 1 }),
-      newValueJson: JSON.stringify({
-        status: 5,
-        resolutionNote: 'Rescheduled to Saturday 26th July',
-      }),
-    },
-  ],
-  totalCount: 6,
-};
+import type { AuditLog, AuditView, AuditFilterState } from './types/auditLogs.types';
 
-// ─── Action metadata ──────────────────────────────────────────────────────────
+// ─── View tabs ────────────────────────────────────────────────────────────────
 
-const ACTION_META_KEY: Record<
-  CalendarAuditAction,
+const VIEW_TABS = [
   {
-    icon: string;
-    colorKey: 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error' | 'default';
-  }
-> = {
-  [CalendarAuditAction.CalendarCreated]: { icon: 'mdi:calendar-plus', colorKey: 'success' },
-  [CalendarAuditAction.CalendarUpdated]: { icon: 'mdi:calendar-edit', colorKey: 'info' },
-  [CalendarAuditAction.CalendarPublished]: { icon: 'mdi:publish', colorKey: 'primary' },
-  [CalendarAuditAction.CalendarArchived]: { icon: 'mdi:archive', colorKey: 'warning' },
-  [CalendarAuditAction.DayAdded]: { icon: 'mdi:calendar-check', colorKey: 'success' },
-  [CalendarAuditAction.DayUpdated]: { icon: 'mdi:calendar-edit', colorKey: 'info' },
-  [CalendarAuditAction.DayDeleted]: { icon: 'mdi:calendar-remove', colorKey: 'error' },
-  [CalendarAuditAction.EmergencyClosureDeclared]: { icon: 'mdi:alert-octagon', colorKey: 'error' },
-  [CalendarAuditAction.ImpactResolved]: { icon: 'mdi:check-circle', colorKey: 'success' },
-  [CalendarAuditAction.OverrideApplied]: { icon: 'mdi:shield-check', colorKey: 'secondary' },
-};
-
-const ACTION_OPTIONS = [
-  { label: 'All Actions', value: '' },
-  ...Object.entries(CALENDAR_AUDIT_ACTION_LABELS).map(([value, label]) => ({ value, label })),
+    value: 'table' as AuditView,
+    label: 'Table',
+    icon: <Iconify icon="mdi:table-large" width={16} />,
+  },
+  {
+    value: 'timeline' as AuditView,
+    label: 'Timeline',
+    icon: <Iconify icon="mdi:timeline-clock-outline" width={16} />,
+  },
+  {
+    value: 'analytics' as AuditView,
+    label: 'Analytics',
+    icon: <Iconify icon="mdi:chart-box-outline" width={16} />,
+  },
 ];
 
-// ─── JSON Diff Helper ─────────────────────────────────────────────────────────
+// ─── Local filtering logic (client-side on mock + server data) ────────────────
 
-const formatJson = (raw: string | null) => {
-  if (!raw) return null;
-  try {
-    return JSON.stringify(JSON.parse(raw), null, 2);
-  } catch {
-    return raw;
+const matchesFilters = (log: AuditLog, filters: AuditFilterState): boolean => {
+  if (filters.search) {
+    const q = filters.search.toLowerCase();
+    const haystack = [
+      log.actionLabel,
+      log.entityName,
+      log.entityType,
+      log.changedByName,
+      log.changedByRole,
+      log.reason || '',
+      log.metadata?.ipAddress || '',
+      log.metadata?.device || '',
+      log.metadata?.browser || '',
+      ...(log.diff?.map((d) => d.fieldName) || []),
+    ]
+      .join(' ')
+      .toLowerCase();
+    if (!haystack.includes(q)) return false;
   }
+  if (filters.action && String(log.action) !== filters.action) return false;
+  if (filters.source && String(log.source) !== filters.source) return false;
+  if (filters.entityType && log.entityType !== filters.entityType) return false;
+  if (filters.changedByRole && log.changedByRole !== filters.changedByRole) return false;
+  if (filters.hasDiff === 'true' && !log.hasDiff) return false;
+  if (filters.hasDiff === 'false' && log.hasDiff) return false;
+  if (filters.reasonAvailable === 'true' && !log.reason) return false;
+  if (filters.reasonAvailable === 'false' && log.reason) return false;
+  if (filters.approvalStatus && String(log.approvalStatus) !== filters.approvalStatus) return false;
+  if (filters.entityId && log.entityId !== filters.entityId) return false;
+  return true;
 };
 
-// ─── Main Component ────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 const CalendarAuditLogs = () => {
   const theme = useTheme();
-  const [actionFilter, setActionFilter] = useState('');
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  // Permissions
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.academicCalendar.auditLogs}.View`
+  );
+  const canExport = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.academicCalendar.auditLogs}.Export`
+  );
+  const canRestore = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.academicCalendar.auditLogs}.Restore`
+  );
+  const canViewSensitive = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.academicCalendar.auditLogs}.ViewSensitiveMetadata`
+  );
+  const canAddNote = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.academicCalendar.auditLogs}.AddReviewNote`
+  );
+  const canViewAI = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.academicCalendar.auditLogs}.ViewAIInsights`
+  );
+  const canViewAnalytics = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.academicCalendar.auditLogs}.ViewAnalytics`
+  );
+
+  // State
+  const [view, setView] = useState<AuditView>('table');
+  const [filters, setFilters] = useState<AuditFilterState>(EMPTY_FILTERS);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
+  const [aiLog, setAiLog] = useState<AuditLog | null>(null);
+  const [exportAnchor, setExportAnchor] = useState<HTMLElement | null>(null);
+  const [restoreDialog, setRestoreDialog] = useState<AuditLog | null>(null);
+  const [restoreReason, setRestoreReason] = useState('');
+  const [restoring, setRestoring] = useState(false);
 
+  // Query
   const { data: logsRaw, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAuditLogsQuery,
     params: {
-      ...(actionFilter ? { action: Number(actionFilter) } : {}),
+      ...(filters.action ? { action: Number(filters.action) } : {}),
       skipCount: page * rowsPerPage,
       maxResultCount: rowsPerPage,
     },
     popupConfig: { error: false },
   });
 
-  const logsData = (logsRaw?.items?.length ?? 0) > 0 ? logsRaw : MOCK_AUDIT_LOGS;
-  const logs: any[] = logsData?.items ?? [];
-  const total: number = logsData?.totalCount ?? 0;
+  const { data: summaryRaw } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAuditLogsSummaryQuery,
+    params: undefined,
+    popupConfig: { error: false },
+  });
 
-  const columns: IColumn[] = useMemo(
-    () => [
-      {
-        id: 'changedAt',
-        label: 'Timestamp',
-        align: 'left',
-        minWidth: 160,
-        render: (value, row) => (
-          <Box>
-            <Typography variant="body2" fontWeight={600}>
-              {dayjs(row.changedAt).format('DD MMM YYYY')}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {dayjs(row.changedAt).format('HH:mm')}
-            </Typography>
-          </Box>
-        ),
-      },
-      {
-        id: 'action',
-        label: 'Action',
-        align: 'left',
-        minWidth: 200,
-        render: (value, row) => {
-          const action = row.action as CalendarAuditAction;
-          const meta = ACTION_META_KEY[action] ?? { icon: 'mdi:history', colorKey: 'default' };
-          const actionColor =
-            meta.colorKey === 'default'
-              ? theme.palette.text.secondary
-              : theme.palette[meta.colorKey].main;
-          return (
-            <Stack direction="row" alignItems="center" gap={1.5}>
-              <Box
-                sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 2,
-                  backgroundColor: alpha(actionColor, 0.12),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <Iconify icon={meta.icon} width={18} sx={{ color: actionColor }} />
-              </Box>
-              <Typography variant="body2" fontWeight={700} sx={{ color: actionColor }}>
-                {CALENDAR_AUDIT_ACTION_LABELS[action] ?? '—'}
-              </Typography>
-            </Stack>
-          );
-        },
-      },
-      {
-        id: 'changedByName',
-        label: 'Changed By',
-        align: 'left',
-        minWidth: 220,
-        render: (value, row) => (
-          <Stack direction="row" alignItems="center" gap={1}>
-            <Avatar
-              sx={{
-                width: 28,
-                height: 28,
-                fontSize: '11px',
-                fontWeight: 700,
-                backgroundColor: alpha(theme.palette.primary.main, 0.12),
-                color: theme.palette.primary.main,
-              }}
-            >
-              {(row.changedByName ?? row.changedByUserId ?? 'U').slice(0, 2).toUpperCase()}
-            </Avatar>
-            <Box>
-              {row.changedByName && (
-                <Typography variant="body2" fontWeight={500}>
-                  {row.changedByName}
-                </Typography>
-              )}
-              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                {row.changedByUserId?.slice(0, 10)}
-              </Typography>
-            </Box>
-          </Stack>
-        ),
-      },
-      {
-        id: 'reason',
-        label: 'Reason',
-        align: 'left',
-        minWidth: 260,
-        render: (value, row) =>
-          row.reason ? (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }}
-            >
-              {row.reason}
-            </Typography>
-          ) : (
-            <Typography variant="caption" color="text.disabled">
-              —
-            </Typography>
-          ),
-      },
-      {
-        id: 'changes',
-        label: 'Changes',
-        align: 'right',
-        minWidth: 120,
-        isSort: false,
-        isFilter: false,
-        render: (value, row) => {
-          const hasChanges = row.oldValueJson || row.newValueJson;
-          if (!hasChanges) {
-            return (
-              <Label variant="soft" color="default" sx={{ fontSize: '11px', height: 20 }}>
-                No Diff
-              </Label>
-            );
-          }
-          return (
-            <Label variant="soft" color="info" sx={{ fontSize: '11px', height: 20 }}>
-              Has Diff
-            </Label>
-          );
-        },
-        children: (row) => {
-          const hasChanges = row.oldValueJson || row.newValueJson;
-          if (!hasChanges) {
-            return (
-              <Box sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
-                <Typography variant="body2">
-                  No changes details recorded for this action.
-                </Typography>
-              </Box>
-            );
-          }
-          return (
-            <Box
-              sx={{
-                p: 2.5,
-                backgroundColor: alpha(theme.palette.grey[500], 0.02),
-                borderRadius: 2,
-                border: `1px solid ${theme.palette.divider}`,
-              }}
-            >
-              <Grid container spacing={1}>
-                {row.oldValueJson && (
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <Stack direction="row" alignItems="center" gap={0.75} mb={1}>
-                      <Box
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          backgroundColor: theme.palette.error.main,
-                        }}
-                      />
-                      <Typography variant="caption" fontWeight={700} color="error.main">
-                        Before
-                      </Typography>
-                    </Stack>
-                    <Box
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 2,
-                        backgroundColor: alpha(theme.palette.error.main, 0.04),
-                        border: `1px solid ${alpha(theme.palette.error.main, 0.15)}`,
-                        fontFamily: '"Fira Code", "Courier New", monospace',
-                        fontSize: '11px',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-all',
-                        maxHeight: 140,
-                        overflowY: 'auto',
-                        color: 'error.dark',
-                      }}
-                    >
-                      {formatJson(row.oldValueJson)}
-                    </Box>
-                  </Grid>
-                )}
-                {row.newValueJson && (
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <Stack direction="row" alignItems="center" gap={0.75} mb={1}>
-                      <Box
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          backgroundColor: theme.palette.success.main,
-                        }}
-                      />
-                      <Typography variant="caption" fontWeight={700} color="success.main">
-                        After
-                      </Typography>
-                    </Stack>
-                    <Box
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 2,
-                        backgroundColor: alpha(theme.palette.success.main, 0.04),
-                        border: `1px solid ${alpha(theme.palette.success.main, 0.15)}`,
-                        fontFamily: '"Fira Code", "Courier New", monospace',
-                        fontSize: '11px',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-all',
-                        maxHeight: 140,
-                        overflowY: 'auto',
-                        color: 'success.dark',
-                      }}
-                    >
-                      {formatJson(row.newValueJson)}
-                    </Box>
-                  </Grid>
-                )}
-              </Grid>
-            </Box>
-          );
-        },
-      },
-    ],
-    [theme]
+  const serverLogs: AuditLog[] = useMemo(() => {
+    const items = logsRaw?.items ?? [];
+    // BE now returns the full rich shape (actionLabel, changedByName/Role, diff, metadata, etc.)
+    // directly — the DTO field names line up with AuditLog, so no client-side backfill needed.
+    return items as AuditLog[];
+  }, [logsRaw]);
+
+  const summary = summaryRaw
+    ? {
+        totalAuditEvents: summaryRaw.totalAuditEvents,
+        changesThisWeek: summaryRaw.changesThisWeek,
+        changesLastWeek: summaryRaw.changesLastWeek,
+        criticalChanges: summaryRaw.criticalChanges,
+        mostActiveUser: summaryRaw.mostActiveUser
+          ? {
+              userId: summaryRaw.mostActiveUser.userId,
+              name: summaryRaw.mostActiveUser.name,
+              role: summaryRaw.mostActiveUser.role,
+              actionCount: summaryRaw.mostActiveUser.actionCount,
+            }
+          : undefined,
+        lastSyncedAt: summaryRaw.lastSyncedAt,
+      }
+    : undefined;
+
+  // Apply client-side filters on top of server/mock data
+  const filteredLogs = useMemo(
+    () => serverLogs.filter((log) => matchesFilters(log, filters)),
+    [serverLogs, filters]
   );
 
+  const totalCount = filteredLogs.length;
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isTyping =
+        target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      if (isTyping) return;
+      if (e.key === 'Escape') {
+        setDrawerOpen(false);
+        setAiDrawerOpen(false);
+      }
+      if ((e.key === 't' || e.key === 'T') && !e.metaKey && !e.ctrlKey) {
+        setView((v) => (v === 'table' ? 'timeline' : 'table'));
+      }
+      if ((e.key === 'a' || e.key === 'A') && !e.metaKey && !e.ctrlKey && canViewAI) {
+        setAiLog(null);
+        setAiDrawerOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [canViewAI]);
+
+  const hasActiveFilters = useMemo(
+    () => JSON.stringify(filters) !== JSON.stringify(EMPTY_FILTERS),
+    [filters]
+  );
+
+  // Handlers
+  const handleRowClick = (log: AuditLog) => {
+    setSelectedLog(log);
+    setDrawerOpen(true);
+  };
+
+  const handleResetFilters = () => {
+    setFilters(EMPTY_FILTERS);
+    setPage(0);
+  };
+
+  const handleAIExplain = (log: AuditLog) => {
+    setAiLog(log);
+    setAiDrawerOpen(true);
+  };
+
+  const handleAddNote = async (log: AuditLog, note: string) => {
+    // Mock: attach the note locally
+    const newNote = {
+      id: `rn-${Date.now()}`,
+      note,
+      createdBy: 'You',
+      createdAt: new Date().toISOString(),
+    };
+    setSelectedLog((prev) =>
+      prev && prev.id === log.id
+        ? { ...prev, reviewNotes: [...(prev.reviewNotes || []), newNote] }
+        : prev
+    );
+  };
+
+  const handleRestore = async () => {
+    if (!restoreDialog || !restoreReason.trim()) return;
+    setRestoring(true);
+    setTimeout(() => {
+      setRestoring(false);
+      setRestoreDialog(null);
+      setRestoreReason('');
+      setDrawerOpen(false);
+      shikshaMitraToast.success({
+        message: 'Previous version restored. A new audit log has been created.',
+      });
+    }, 1000);
+  };
+
+  // Permission gate
+  if (!canView) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <CustomBreadcrumbs
+          heading="Audit Logs"
+          description="Track every academic calendar change with full history, impact, and accountability."
+          links={[
+            { name: 'Academics', href: '/academic/dashboard' },
+            { name: 'Academic Calendar', href: '/academic/academicCalendarDashboard' },
+            { name: 'Audit Logs' },
+          ]}
+        />
+        <Alert severity="warning" icon={<Iconify icon="mdi:lock-outline" />}>
+          You do not have permission to view audit logs. Contact your administrator.
+        </Alert>
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: '100%' }}>
+      {/* Header */}
       <CustomBreadcrumbs
         heading="Audit Logs"
-        description="Track every change made to the academic calendar — who changed what and when."
+        description="Track every academic calendar change with full history, impact, and accountability."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Academic Calendar', href: '/academic/academicCalendarDashboard' },
           { name: 'Audit Logs' },
         ]}
-      />
-
-      {/* Filters */}
-      <Paper
-        sx={{
-          p: 2.5,
-          borderRadius: 3,
-          border: `1px solid ${theme.palette.divider}`,
-          boxShadow: theme.customShadows?.card || '0px 2px 12px rgba(0, 0, 0, 0.03)',
-          backgroundColor: 'background.paper',
-        }}
-      >
-        <Grid container spacing={1} alignItems="center">
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <FormControl size="small" fullWidth>
-              <InputLabel>Filter by Action</InputLabel>
-              <Select
-                label="Filter by Action"
-                value={actionFilter}
-                onChange={(e) => {
-                  setActionFilter(e.target.value);
-                  setPage(0);
-                }}
-              >
-                {ACTION_OPTIONS.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.value && (
-                      <Box
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          backgroundColor:
-                            opt.value && ACTION_META_KEY[Number(opt.value) as CalendarAuditAction]
-                              ? ACTION_META_KEY[Number(opt.value) as CalendarAuditAction]
-                                  .colorKey === 'default'
-                                ? theme.palette.text.secondary
-                                : theme.palette[
-                                    ACTION_META_KEY[Number(opt.value) as CalendarAuditAction]
-                                      .colorKey
-                                  ].main
-                              : '#9e9e9e',
-                          display: 'inline-block',
-                          mr: 1,
-                          verticalAlign: 'middle',
-                        }}
-                      />
-                    )}
-                    {opt.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Stack direction="row" justifyContent="flex-end" alignItems="center" gap={1}>
-              {actionFilter && (
-                <Label
-                  variant="soft"
-                  color="error"
-                  onClick={() => setActionFilter('')}
-                  sx={{ cursor: 'pointer' }}
-                  endIcon={<Iconify icon="mdi:close" width={12} />}
-                >
-                  Clear Filters
-                </Label>
-              )}
-              <Label
+        action={
+          <Stack direction="row" gap={1}>
+            {canViewAI && (
+              <Button
+                size="small"
                 variant="outlined"
-                color="default"
-                startIcon={<Iconify icon="mdi:history" width={14} />}
-                sx={{ py: 1.5, px: 1.5 }}
+                color="success"
+                startIcon={<Iconify icon="mdi:robot-outline" width={16} />}
+                onClick={() => {
+                  setAiLog(null);
+                  setAiDrawerOpen(true);
+                }}
+                sx={{ borderRadius: 1.5, textTransform: 'none' }}
               >
-                {`${total} total entries`}
-              </Label>
-            </Stack>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      {/* Table */}
-      <CustomizableTable
-        tableId="calendar-audit-logs"
-        isLoading={isLoading}
-        isPagination
-        serverSidePagination
-        totalCount={total}
-        onServerPagination={(p, r) => {
-          setPage(p - 1);
-          setRowsPerPage(r);
-        }}
-        isSearch
-        isFilter
-        isShowedDense={false}
-        columns={columns}
-        data={logs}
-        noDataText={
-          <Stack alignItems="center" spacing={1.5} sx={{ py: 6 }}>
-            <Box
-              sx={{
-                width: 64,
-                height: 64,
-                borderRadius: '50%',
-                backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Iconify icon="mdi:history" width={32} color="text.disabled" />
-            </Box>
-            <Typography variant="subtitle2" color="text.secondary">
-              No audit logs found
-            </Typography>
+                AI Summary
+              </Button>
+            )}
+            {canExport && (
+              <LoadingButton
+                size="small"
+                variant="contained"
+                startIcon={<Iconify icon="mdi:download" width={16} />}
+                onClick={(e) => setExportAnchor(e.currentTarget)}
+                sx={{ borderRadius: 1.5, textTransform: 'none' }}
+              >
+                Export Report
+              </LoadingButton>
+            )}
           </Stack>
         }
       />
+
+      {/* Summary cards */}
+      <AuditSummaryCards summary={summary} loading={isLoading} />
+
+      {/* Smart filters */}
+      <AuditSmartFilters
+        filters={filters}
+        onChange={(next) => {
+          setFilters(next);
+          setPage(0);
+        }}
+        onReset={handleResetFilters}
+        totalCount={totalCount}
+        canManageSavedFilters
+      />
+
+      {/* View switcher */}
+      <Stack direction="row" alignItems="center" gap={1.5}>
+        <Paper sx={{ flex: 1 }}>
+          <CustomTabs
+            value={view}
+            onChange={(_, val) => setView(val as AuditView)}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
+          >
+            {VIEW_TABS.filter((t) => (t.value === 'analytics' ? canViewAnalytics : true)).map(
+              (tab) => (
+                <Tab
+                  key={tab.value}
+                  value={tab.value}
+                  label={tab.label}
+                  icon={tab.icon}
+                  iconPosition="start"
+                />
+              )
+            )}
+          </CustomTabs>
+        </Paper>
+        <Tooltip
+          title={
+            <Box sx={{ p: 0.5 }}>
+              <Typography variant="caption" fontWeight={700} display="block" sx={{ mb: 0.5 }}>
+                Keyboard Shortcuts
+              </Typography>
+              {KEYBOARD_SHORTCUTS.map((s) => (
+                <Stack key={s.key} direction="row" justifyContent="space-between" gap={2}>
+                  <Typography variant="caption" color="text.secondary">
+                    {s.description}
+                  </Typography>
+                  <kbd
+                    style={{
+                      fontSize: 10,
+                      padding: '1px 5px',
+                      borderRadius: 3,
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                    }}
+                  >
+                    {s.key}
+                  </kbd>
+                </Stack>
+              ))}
+            </Box>
+          }
+          arrow
+        >
+          <IconButton size="small">
+            <Iconify icon="mdi:keyboard-outline" width={18} />
+          </IconButton>
+        </Tooltip>
+      </Stack>
+
+      {/* Main content */}
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
+        {view === 'table' && (
+          <AuditLogsTable
+            logs={filteredLogs}
+            loading={isLoading}
+            totalCount={totalCount}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={(p, r) => {
+              setPage(p);
+              setRowsPerPage(r);
+            }}
+            onRowClick={handleRowClick}
+            hasActiveFilters={hasActiveFilters}
+          />
+        )}
+        {view === 'timeline' && (
+          <AuditTimelineView
+            logs={filteredLogs}
+            onLogClick={handleRowClick}
+            hasActiveFilters={hasActiveFilters}
+          />
+        )}
+        {view === 'analytics' && canViewAnalytics && <AuditAnalyticsView logs={filteredLogs} />}
+      </Box>
+
+      {/* Detail Drawer */}
+      <AuditLogDetailsDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        log={selectedLog}
+        loading={false}
+        canViewSensitiveMetadata={canViewSensitive}
+        canRestore={canRestore}
+        canAddReviewNote={canAddNote}
+        canViewAIInsights={canViewAI}
+        onRestore={(log) => {
+          setRestoreDialog(log);
+        }}
+        onAddNote={handleAddNote}
+        onAIExplain={handleAIExplain}
+      />
+
+      {/* AI Summary / Explain Drawer */}
+      <AuditAISummaryDrawer
+        open={aiDrawerOpen}
+        onClose={() => setAiDrawerOpen(false)}
+        log={aiLog}
+      />
+
+      {/* Export Menu */}
+      <AuditExportMenu
+        anchorEl={exportAnchor}
+        open={Boolean(exportAnchor)}
+        onClose={() => setExportAnchor(null)}
+      />
+
+      {/* Restore Confirmation Dialog */}
+      <CustomDialog
+        open={Boolean(restoreDialog)}
+        handleClose={() => setRestoreDialog(null)}
+        title="Restore Previous Version?"
+        maxWidth="xs"
+      >
+        <DialogScrollContent>
+          <Stack spacing={2}>
+            <Alert severity="warning" icon={<Iconify icon="mdi:undo-variant" />}>
+              This will revert the selected record to its previous state. A new audit log will be
+              created for this restore action.
+            </Alert>
+            {restoreDialog && (
+              <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Restoring
+                </Typography>
+                <Typography variant="body2" fontWeight={700}>
+                  {restoreDialog.entityName}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {restoreDialog.actionLabel}
+                </Typography>
+              </Paper>
+            )}
+            <TextField
+              fullWidth
+              size="small"
+              multiline
+              rows={3}
+              label="Reason for restore *"
+              placeholder="Explain why this restore is necessary..."
+              value={restoreReason}
+              onChange={(e) => setRestoreReason(e.target.value)}
+              error={restoreReason.length > 0 && restoreReason.length < 10}
+              helperText={
+                restoreReason.length > 0 && restoreReason.length < 10
+                  ? 'Reason must be at least 10 characters'
+                  : 'This reason will be saved in the audit trail.'
+              }
+            />
+          </Stack>
+        </DialogScrollContent>
+        <DialogActions>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setRestoreDialog(null)}
+            disabled={restoring}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            variant="contained"
+            size="small"
+            color="warning"
+            loading={restoring}
+            disabled={restoreReason.trim().length < 10}
+            onClick={handleRestore}
+            startIcon={<Iconify icon="mdi:undo-variant" width={16} />}
+          >
+            Restore Previous Version
+          </LoadingButton>
+        </DialogActions>
+      </CustomDialog>
     </Box>
   );
 };

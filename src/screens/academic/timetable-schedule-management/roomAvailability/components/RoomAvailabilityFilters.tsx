@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import {
@@ -29,7 +29,6 @@ import {
 
 import {
   SOURCE_OPTIONS,
-  BUILDING_OPTIONS,
   CAPACITY_OPTIONS,
   FACILITY_OPTIONS,
   ROOM_TYPE_OPTIONS,
@@ -42,7 +41,7 @@ import {
 import type { RoomFacility, RoomAvailabilityFilters as Filters } from '../types';
 
 // Helper function to determine active filters
-export const getActiveFilters = (currentFilters: Filters) => {
+export const getActiveFilters = (currentFilters: Filters, buildings?: any[]) => {
   const active: { key: keyof Filters; label: string; value: any }[] = [];
 
   // Date
@@ -67,12 +66,24 @@ export const getActiveFilters = (currentFilters: Filters) => {
   }
 
   // Building
-  if (currentFilters.building !== DEFAULT_ROOM_AVAILABILITY_FILTERS.building) {
-    const option = BUILDING_OPTIONS.find((o) => o.value === currentFilters.building);
+  if (currentFilters.building && currentFilters.building !== 'all') {
+    const buildingObj = (buildings || []).find((b) => b.id === currentFilters.building);
     active.push({
       key: 'building',
-      label: `Building: ${option ? option.label : currentFilters.building}`,
+      label: `Building: ${buildingObj ? buildingObj.buildingName : currentFilters.building}`,
       value: currentFilters.building,
+    });
+  }
+
+  // Floor
+  if (currentFilters.floor && currentFilters.floor !== 'all') {
+    const buildingObj = (buildings || []).find((b) => b.id === currentFilters.building);
+    const floorObj = (buildingObj?.floors || []).find((f: any) => f.id === currentFilters.floor);
+    const displayFloorName = floorObj ? (floorObj.floorName || `Floor ${floorObj.floorNo}`) : currentFilters.floor;
+    active.push({
+      key: 'floor',
+      label: `Floor: ${displayFloorName}`,
+      value: currentFilters.floor,
     });
   }
 
@@ -190,12 +201,14 @@ interface RoomAvailabilityFiltersProps {
   filters: Filters;
   onChange: (patch: Partial<Filters>) => void;
   onReset: () => void;
+  buildings?: any[];
 }
 
 export const RoomAvailabilityFilters = ({
   filters,
   onChange,
   onReset,
+  buildings = [],
 }: RoomAvailabilityFiltersProps) => {
   const popover = usePopover();
   const [draftFilters, setDraftFilters] = useState<Filters>(filters);
@@ -222,7 +235,28 @@ export const RoomAvailabilityFilters = ({
     setDraftFilters(DEFAULT_ROOM_AVAILABILITY_FILTERS);
   }, []);
 
-  const activeFiltersCount = getActiveFilters(filters).length;
+  const activeFiltersCount = getActiveFilters(filters, buildings).length;
+
+  const buildingOptions = useMemo(() => {
+    const list = buildings.map((b) => ({
+      value: b.id,
+      label: b.buildingName,
+    }));
+    return [{ value: 'all', label: 'All Buildings' }, ...list];
+  }, [buildings]);
+
+  const floorOptions = useMemo(() => {
+    if (!draftFilters.building || draftFilters.building === 'all') {
+      return [{ value: 'all', label: 'Select a Building First' }];
+    }
+    const selectedBuildingObj = buildings.find((b) => b.id === draftFilters.building);
+    const floorsList = selectedBuildingObj?.floors || [];
+    const list = floorsList.map((f: any) => ({
+      value: f.id,
+      label: f.floorName || `Floor ${f.floorNo}`,
+    }));
+    return [{ value: 'all', label: 'All Floors' }, ...list];
+  }, [buildings, draftFilters.building]);
 
   return (
     <>
@@ -340,10 +374,20 @@ export const RoomAvailabilityFilters = ({
             />
             <CustomSelect
               label="Building"
-              options={BUILDING_OPTIONS}
+              options={buildingOptions}
               value={draftFilters.building}
-              onChange={(v) => handleDraftChange({ building: v as string })}
+              onChange={(v) => {
+                handleDraftChange({ building: v as string, floor: 'all' });
+              }}
               formControlProps={{ fullWidth: true }}
+            />
+            <CustomSelect
+              label="Floor"
+              options={floorOptions}
+              value={draftFilters.floor}
+              onChange={(v) => handleDraftChange({ floor: v as string })}
+              formControlProps={{ fullWidth: true }}
+              disabled={!draftFilters.building || draftFilters.building === 'all'}
             />
             <CustomSelect
               label="Room Type"
@@ -378,99 +422,59 @@ export const RoomAvailabilityFilters = ({
                 multiple
                 value={draftFilters.facilities}
                 onChange={(e) => {
-                  const value = e.target.value as RoomFacility[];
-                  handleDraftChange({ facilities: value });
+                  const val = e.target.value;
+                  handleDraftChange({
+                    facilities: typeof val === 'string' ? (val.split(',') as RoomFacility[]) : val,
+                  });
                 }}
                 input={<OutlinedInput label="Facilities" />}
-                renderValue={(selected) =>
-                  (selected as RoomFacility[])
-                    .slice(0, 2)
-                    .map((f) => FACILITY_OPTIONS.find((o) => o.value === f)?.label || f)
-                    .join(', ') + (selected.length > 2 ? ` +${selected.length - 2}` : '')
-                }
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => {
+                      const opt = FACILITY_OPTIONS.find((o) => o.value === value);
+                      return <Chip key={value} size="small" label={opt ? opt.label : value} />;
+                    })}
+                  </Box>
+                )}
               >
                 {FACILITY_OPTIONS.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value} dense>
-                    <Checkbox
-                      checked={draftFilters.facilities.includes(opt.value as RoomFacility)}
-                      size="small"
-                    />
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <Checkbox checked={draftFilters.facilities.includes(opt.value)} />
                     <ListItemText primary={opt.label} />
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
 
-            <Stack direction="row" spacing={1}>
-              <TextField
-                size="small"
-                label="Start Time"
-                type="time"
-                value={draftFilters.startTime || ''}
-                onChange={(e) => handleDraftChange({ startTime: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-              <TextField
-                size="small"
-                label="End Time"
-                type="time"
-                value={draftFilters.endTime || ''}
-                onChange={(e) => handleDraftChange({ endTime: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-            </Stack>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={draftFilters.includeOccupied}
+                  onChange={(e) => handleDraftChange({ includeOccupied: e.target.checked })}
+                />
+              }
+              label="Include Occupied Rooms"
+            />
 
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
-              justifyContent="space-between"
-              sx={{ px: 0.5 }}
-            >
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={draftFilters.includeOccupied}
-                    onChange={(e) => handleDraftChange({ includeOccupied: e.target.checked })}
-                    size="small"
-                  />
-                }
-                label={
-                  <Typography variant="caption" sx={{ fontWeight: 'fontWeightMedium' }}>
-                    Include Occupied
-                  </Typography>
-                }
-                sx={{ m: 0 }}
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={draftFilters.onlyAvailable}
-                    onChange={(e) => handleDraftChange({ onlyAvailable: e.target.checked })}
-                    color="success"
-                    size="small"
-                  />
-                }
-                label={
-                  <Typography variant="caption" sx={{ fontWeight: 'fontWeightMedium' }}>
-                    Only Available
-                  </Typography>
-                }
-                sx={{ m: 0 }}
-              />
-            </Stack>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={draftFilters.onlyAvailable}
+                  onChange={(e) => handleDraftChange({ onlyAvailable: e.target.checked })}
+                />
+              }
+              label="Only Show Available"
+            />
           </Box>
 
           <Divider sx={{ borderStyle: 'dashed', my: 1.5 }} />
 
-          {/* Section 3: Status & Conflict */}
+          {/* Section 3: Status & Conflict Filters */}
           <Typography
             variant="overline"
             sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}
           >
-            Status & Conflict
+            System Status & Conflict severity
           </Typography>
           <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={2}>
             <CustomSelect
@@ -514,14 +518,16 @@ interface RoomAvailabilityActiveFiltersProps {
   filters: Filters;
   onChange: (patch: Partial<Filters>) => void;
   onReset: () => void;
+  buildings?: any[];
 }
 
 export const RoomAvailabilityActiveFilters = ({
   filters,
   onChange,
   onReset,
+  buildings = [],
 }: RoomAvailabilityActiveFiltersProps) => {
-  const activeFilters = getActiveFilters(filters);
+  const activeFilters = getActiveFilters(filters, buildings);
 
   const handleRemoveFilter = useCallback(
     (key: keyof Filters) => {

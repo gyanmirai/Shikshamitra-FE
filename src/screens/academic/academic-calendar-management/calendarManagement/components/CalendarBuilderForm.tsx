@@ -47,8 +47,8 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
     onSubmit: async (values) => {
       const payload = {
         ...values,
-        startDate: values.startDate ? dayjs(values.startDate).toISOString() : null,
-        endDate: values.endDate ? dayjs(values.endDate).toISOString() : null,
+        startDate: values.startDate ? dayjs(values.startDate).format('YYYY-MM-DDTHH:mm:ssZ') : null,
+        endDate: values.endDate ? dayjs(values.endDate).format('YYYY-MM-DDTHH:mm:ssZ') : null,
       };
 
       try {
@@ -91,7 +91,7 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
           <DatePicker
             label="Start Date *"
             value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
-            onChange={(val) => formik.setFieldValue('startDate', val ? val.toISOString() : null)}
+            onChange={(val) => formik.setFieldValue('startDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
             slotProps={{
               textField: {
                 fullWidth: true,
@@ -109,7 +109,7 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
             label="End Date *"
             value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
             minDate={formik.values.startDate ? dayjs(formik.values.startDate) : undefined}
-            onChange={(val) => formik.setFieldValue('endDate', val ? val.toISOString() : null)}
+            onChange={(val) => formik.setFieldValue('endDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
             slotProps={{
               textField: {
                 fullWidth: true,

@@ -135,7 +135,13 @@ export const TableBody = ({
           >
             {columns.some((column) => column.children) && (
               <TableCell>
-                <IconButton size="small" onClick={() => onExpandRow(index)}>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onExpandRow(index);
+                  }}
+                >
                   {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </IconButton>
               </TableCell>

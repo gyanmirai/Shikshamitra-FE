@@ -90,7 +90,11 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicCalendarType.calendarDay, academicCalendarType.calendar],
+      invalidatesTags: [
+        academicCalendarType.calendarDay,
+        academicCalendarType.calendar,
+        academicCalendarType.auditLog,
+      ],
     }),
 
     createCalendarDaysBulk: builder.mutation({
@@ -99,7 +103,11 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicCalendarType.calendarDay, academicCalendarType.calendar],
+      invalidatesTags: [
+        academicCalendarType.calendarDay,
+        academicCalendarType.calendar,
+        academicCalendarType.auditLog,
+      ],
     }),
 
     updateCalendarDay: builder.mutation({
@@ -108,7 +116,11 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [academicCalendarType.calendarDay, academicCalendarType.calendar],
+      invalidatesTags: [
+        academicCalendarType.calendarDay,
+        academicCalendarType.calendar,
+        academicCalendarType.auditLog,
+      ],
     }),
 
     deleteCalendarDay: builder.mutation({
@@ -116,7 +128,11 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         url: `/academic/calendar-days/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [academicCalendarType.calendarDay, academicCalendarType.calendar],
+      invalidatesTags: [
+        academicCalendarType.calendarDay,
+        academicCalendarType.calendar,
+        academicCalendarType.auditLog,
+      ],
     }),
 
     // ─── Working Hours ──────────────────────────────────────────────────────
@@ -173,6 +189,20 @@ export const academicCalendarApi = academicApi.injectEndpoints({
 
     // ─── Emergency Closure ──────────────────────────────────────────────────
 
+    getEmergencyClosures: builder.query({
+      query: (params?: {
+        academicYearId?: string;
+        status?: number | '';
+        skipCount?: number;
+        maxResultCount?: number;
+      }) => ({
+        url: '/academic/calendar-emergency-closures',
+        method: 'GET',
+        params,
+      }),
+      providesTags: [academicCalendarType.emergencyClosure],
+    }),
+
     createEmergencyClosure: builder.mutation({
       query: (body) => ({
         url: '/academic/calendar-days/emergency-closure',
@@ -183,6 +213,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         academicCalendarType.calendarDay,
         academicCalendarType.calendar,
         academicCalendarType.impactLog,
+        academicCalendarType.auditLog,
         academicCalendarType.emergencyClosure,
       ],
     }),
@@ -195,6 +226,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
       invalidatesTags: [
         academicCalendarType.calendarDay,
         academicCalendarType.impactLog,
+        academicCalendarType.auditLog,
         academicCalendarType.emergencyClosure,
       ],
     }),
@@ -283,6 +315,14 @@ export const academicCalendarApi = academicApi.injectEndpoints({
       providesTags: [academicCalendarType.auditLog],
     }),
 
+    getAuditLogsSummary: builder.query({
+      query: () => ({
+        url: '/academic/calendar-audit-logs/summary',
+        method: 'GET',
+      }),
+      providesTags: [academicCalendarType.auditLog],
+    }),
+
     // ─── Settings ───────────────────────────────────────────────────────────
 
     getCalendarSettings: builder.query({
@@ -348,6 +388,7 @@ export const {
 
   useCheckDateQuery,
 
+  useGetEmergencyClosuresQuery,
   useCreateEmergencyClosureMutation,
   useCancelEmergencyClosureMutation,
 
@@ -360,6 +401,7 @@ export const {
   useGetAuditLogsQuery,
   useGetAuditLogsByCalendarQuery,
   useGetAuditLogsByDayQuery,
+  useGetAuditLogsSummaryQuery,
 
   useGetCalendarSettingsQuery,
   useCreateCalendarSettingsMutation,

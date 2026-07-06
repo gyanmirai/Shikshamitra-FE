@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -18,6 +19,7 @@ interface RoomReservationsTabProps {
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
   onEdit?: (reservation: RoomReservation) => void;
+  onViewRoom?: (roomId: string) => void;
 }
 
 export const RoomReservationsTab = ({
@@ -27,6 +29,7 @@ export const RoomReservationsTab = ({
   onApprove,
   onReject,
   onEdit,
+  onViewRoom,
 }: RoomReservationsTabProps) => {
   const [filter, setFilter] = useState<string>('all');
 
@@ -83,7 +86,24 @@ export const RoomReservationsTab = ({
               </Box>
             ),
           },
-          { id: 'date', label: 'Date', filterType: 'date', minWidth: 110 },
+          {
+            id: 'date',
+            label: 'Date Range',
+            minWidth: 180,
+            render: (_v, row) => (
+              <Box>
+                <Typography variant="body2">
+                  {row.date}
+                  {row.isRecurring && row.recurringUntilDate && ` to ${row.recurringUntilDate}`}
+                </Typography>
+                {row.isRecurring && (
+                  <Typography variant="caption" color="primary.main" fontWeight={600} display="block">
+                    (Recurring)
+                  </Typography>
+                )}
+              </Box>
+            ),
+          },
           {
             id: 'startTime',
             label: 'Time',
@@ -114,24 +134,6 @@ export const RoomReservationsTab = ({
             ),
           },
           {
-            id: 'reservedFor',
-            label: 'Reserved For',
-            minWidth: 130,
-            render: (v) => v || '—',
-          },
-          {
-            id: 'requestedBy',
-            label: 'Requested By',
-            minWidth: 140,
-            render: (v) => v || '—',
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            minWidth: 140,
-            render: (_v, row) => <ReservationStatusChip status={row.status} />,
-          },
-          {
             id: 'approvalStatus',
             label: 'Approval',
             minWidth: 130,
@@ -145,44 +147,40 @@ export const RoomReservationsTab = ({
               ),
           },
           {
-            id: 'conflictStatus',
-            label: 'Conflict',
-            minWidth: 110,
-            render: (_v, row) =>
-              row.conflictStatus && row.conflictStatus !== 'none' ? (
-                <Tooltip title={row.conflictReason || ''} arrow>
-                  <Chip
-                    size="small"
-                    label={row.conflictStatus}
-                    color={row.conflictStatus === 'critical' ? 'error' : 'warning'}
-                    variant="soft"
-                    sx={{ textTransform: 'capitalize' }}
-                  />
-                </Tooltip>
-              ) : (
-                <Chip size="small" label="None" color="success" variant="soft" />
-              ),
-          },
-          {
             id: 'actions',
             label: 'Actions',
-            minWidth: 150,
+            minWidth: 120,
             isSort: false,
             isFilter: false,
             sticky: true,
             stickyPosition: 'right',
             render: (_v, row) => (
-              <Stack direction="row" spacing={0.25} justifyContent="center">
-                <Tooltip title="View Details">
-                  <IconButton size="small">
-                    <Iconify icon={GlobalIcons.eye} width={17} />
+              <Stack direction="row" spacing={1} justifyContent="center">
+                <Tooltip title="View Room Details">
+                  <IconButton
+                    size="small"
+                    onClick={() => onViewRoom?.(row.roomId)}
+                    sx={{
+                      bgcolor: 'action.selected',
+                      '&:hover': { bgcolor: 'action.hover' },
+                    }}
+                  >
+                    <Iconify icon={GlobalIcons.eye} width={16} />
                   </IconButton>
                 </Tooltip>
 
                 {onEdit && ['draft', 'pendingApproval'].includes(row.status) && (
                   <Tooltip title="Edit">
-                    <IconButton size="small" onClick={() => onEdit(row)}>
-                      <Iconify icon={GlobalIcons.edit} width={17} />
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => onEdit(row)}
+                      sx={{
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                        '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16) },
+                      }}
+                    >
+                      <Iconify icon={GlobalIcons.edit} width={16} />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -199,13 +197,25 @@ export const RoomReservationsTab = ({
                             message: `${row.roomName} reservation approved.`,
                           });
                         }}
+                        sx={{
+                          bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
+                          '&:hover': { bgcolor: (theme) => alpha(theme.palette.success.main, 0.16) },
+                        }}
                       >
-                        <Iconify icon="mdi:check-circle" width={17} />
+                        <Iconify icon="mdi:check-circle" width={16} />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Reject">
-                      <IconButton size="small" color="error" onClick={() => onReject?.(row.id)}>
-                        <Iconify icon="mdi:close-circle" width={17} />
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => onReject?.(row.id)}
+                        sx={{
+                          bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+                          '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
+                        }}
+                      >
+                        <Iconify icon="mdi:close-circle" width={16} />
                       </IconButton>
                     </Tooltip>
                   </>
@@ -220,17 +230,15 @@ export const RoomReservationsTab = ({
                         onCancel(row.id);
                         shikshaMitraToast.info({ message: 'Reservation cancelled.' });
                       }}
+                      sx={{
+                        bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+                        '&:hover': { bgcolor: (theme) => alpha(theme.palette.error.main, 0.16) },
+                      }}
                     >
-                      <Iconify icon={GlobalIcons.cancel} width={17} />
+                      <Iconify icon={GlobalIcons.cancel} width={16} />
                     </IconButton>
                   </Tooltip>
                 )}
-
-                <Tooltip title="Duplicate">
-                  <IconButton size="small">
-                    <Iconify icon="mdi:content-copy" width={17} />
-                  </IconButton>
-                </Tooltip>
               </Stack>
             ),
           },

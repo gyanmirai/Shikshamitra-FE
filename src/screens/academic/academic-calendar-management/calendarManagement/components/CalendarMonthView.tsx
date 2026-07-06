@@ -19,13 +19,7 @@ import {
 
 import CalendarDayTypeChip from './CalendarDayTypeChip';
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
 
-const MOCK_DAYS = [
-  { date: '2025-08-15', dayType: DayType.Holiday, title: 'Independence Day' },
-  { date: '2025-08-20', dayType: DayType.Event, title: 'Science Exhibition' },
-  { date: '2025-08-28', dayType: DayType.HalfDay, title: 'Half Day — PTM Prep' },
-];
 
 interface Props {
   calendarDays: any[];
@@ -232,7 +226,7 @@ const CalendarMonthView = ({
     );
   }
 
-  const days = calendarDays.length > 0 ? calendarDays : MOCK_DAYS;
+  const days = calendarDays;
 
   const dayMap: Record<string, any[]> = {};
   days.forEach((d) => {

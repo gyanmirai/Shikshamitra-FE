@@ -1,6 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
+import { DatePicker } from '@mui/x-date-pickers';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import {
@@ -21,12 +24,9 @@ import {
 } from '@mui/material';
 
 import { RoomStatusChip } from './RoomStatusChip';
-import { useRoomSchedule, useRoomAuditLogs } from '../roomAvailability.hooks';
-import {
-  FACILITY_ICONS,
-  FACILITY_LABELS,
-  SCHEDULE_STATUS_COLORS,
-} from '../roomAvailability.constants';
+import { RoomAuditLogPanel } from './RoomAuditLogPanel';
+import { useRoomSchedule } from '../roomAvailability.hooks';
+import { resolveFacility, SCHEDULE_STATUS_COLORS } from '../roomAvailability.constants';
 
 import type { RoomAvailabilityItem } from '../types';
 
@@ -50,13 +50,13 @@ export const RoomDetailDrawer = ({
   const tabState = useBoolean(false); // false=schedule, true=audit
   const activeTab = tabState.value ? 'audit' : 'details';
 
-  const scheduleHook = useRoomSchedule(room?.roomId || null);
-  const auditHook = useRoomAuditLogs(room?.roomId || null);
+  const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(dayjs());
+  const scheduleHook = useRoomSchedule(room?.roomId || null, selectedDate?.format('YYYY-MM-DD'));
 
   useEffect(() => {
     if (open && room) {
+      setSelectedDate(dayjs());
       scheduleHook.fetch();
-      auditHook.fetch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, room?.roomId]);
@@ -67,7 +67,13 @@ export const RoomDetailDrawer = ({
       open={open}
       onClose={onClose}
       PaperProps={{
-        sx: { width: { xs: '100%', sm: 460 }, display: 'flex', flexDirection: 'column' },
+        sx: {
+          width: { xs: '100%', sm: 460 },
+          display: 'flex',
+          flexDirection: 'column',
+          borderTopLeftRadius: { sm: 16 },
+          borderBottomLeftRadius: { sm: 16 },
+        },
       }}
     >
       {/* ── Header ───────────────────────────────────────── */}
@@ -75,23 +81,31 @@ export const RoomDetailDrawer = ({
         direction="row"
         alignItems="center"
         justifyContent="space-between"
-        sx={{ px: 2.5, py: 2, borderBottom: 1, borderColor: 'divider' }}
+        sx={{
+          px: 2.5,
+          py: 2,
+          borderBottom: 1,
+          borderColor: 'divider',
+          background: (theme) =>
+            `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
+        }}
       >
         <Stack direction="row" alignItems="center" spacing={1.5}>
           <Box
             sx={{
-              width: 40,
-              height: 40,
-              borderRadius: 1.5,
+              width: 42,
+              height: 42,
+              borderRadius: 2,
               display: 'grid',
               placeItems: 'center',
-              bgcolor: 'primary.lighter',
+              bgcolor: 'primary.main',
+              boxShadow: (theme) => `0 8px 16px 0 ${alpha(theme.palette.primary.main, 0.24)}`,
             }}
           >
-            <Iconify icon="mdi:door" width={22} color="primary.main" />
+            <Iconify icon="mdi:door" width={22} sx={{ color: 'common.white' }} />
           </Box>
           <Box>
-            <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
+            <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
               {room?.roomName || '—'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -99,8 +113,16 @@ export const RoomDetailDrawer = ({
             </Typography>
           </Box>
         </Stack>
-        <IconButton onClick={onClose}>
-          <Iconify icon="mdi:close" />
+        <IconButton
+          onClick={onClose}
+          sx={{
+            bgcolor: 'background.paper',
+            border: 1,
+            borderColor: 'divider',
+            '&:hover': { bgcolor: 'action.hover' },
+          }}
+        >
+          <Iconify icon="mdi:close" width={20} />
         </IconButton>
       </Stack>
 
@@ -109,18 +131,20 @@ export const RoomDetailDrawer = ({
         <Box sx={{ px: 2.5, pt: 2 }}>
           <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
             <RoomStatusChip status={room.status} />
-            <Chip size="small" label={room.type} variant="outlined" />
+            <Chip size="small" label={room.type} variant="outlined" sx={{ borderRadius: 1 }} />
             <Chip
               size="small"
               icon={<Iconify icon="mdi:seat" width={13} />}
               label={`${room.capacity} seats`}
               variant="outlined"
+              sx={{ borderRadius: 1 }}
             />
             {room.utilizationPercentage != null && (
               <Chip
                 size="small"
                 label={`${room.utilizationPercentage}% utilization`}
                 variant="outlined"
+                sx={{ borderRadius: 1 }}
               />
             )}
           </Stack>
@@ -142,7 +166,7 @@ export const RoomDetailDrawer = ({
       <Divider />
 
       {/* ── Content ──────────────────────────────────────── */}
-      <Box sx={{ flex: 1, overflow: 'auto', px: 2.5, py: 2 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', px: 2.5, py: 2, bgcolor: 'background.neutral' }}>
         {activeTab === 'details' && room && (
           <Stack spacing={2.5}>
             {/* Facilities */}
@@ -152,16 +176,19 @@ export const RoomDetailDrawer = ({
               </Typography>
               <Stack direction="row" flexWrap="wrap" gap={1}>
                 {room.facilities?.length ? (
-                  room.facilities.map((f) => (
-                    <Chip
-                      key={f}
-                      size="small"
-                      icon={<Iconify icon={FACILITY_ICONS[f]} width={14} />}
-                      label={FACILITY_LABELS[f]}
-                      variant="soft"
-                      color="default"
-                    />
-                  ))
+                  room.facilities.map((f) => {
+                    const { label, icon } = resolveFacility(f);
+                    return (
+                      <Chip
+                        key={f}
+                        size="small"
+                        icon={<Iconify icon={icon} width={14} />}
+                        label={label}
+                        variant="soft"
+                        color="default"
+                      />
+                    );
+                  })
                 ) : (
                   <Typography variant="body2" color="text.secondary">
                     No facilities listed.
@@ -170,44 +197,66 @@ export const RoomDetailDrawer = ({
               </Stack>
             </Box>
 
-            {/* Current Usage */}
-            {(room.occupiedBy || room.reservationPurpose) && (
-              <Alert
-                severity={room.status === 'maintenance' ? 'warning' : 'info'}
-                icon={<Iconify icon="mdi:information" />}
-              >
-                <Typography variant="subtitle2" gutterBottom>
-                  Current Usage
-                </Typography>
-                <Typography variant="body2">
-                  {room.occupiedBy || room.reservationPurpose}
-                </Typography>
-                {room.source && (
-                  <Typography variant="caption" color="text.secondary">
-                    Source: {room.source}
-                  </Typography>
-                )}
-              </Alert>
-            )}
+            {/* Current Usage / Conflict — shown as a single banner when they describe the same thing */}
+            {(() => {
+              const usageText = room.occupiedBy || room.reservationPurpose;
+              const isSameAsConflict = usageText && room.conflictReason && usageText === room.conflictReason;
 
-            {/* Conflict */}
-            {room.conflictReason && (
-              <Alert severity={room.conflictSeverity === 'critical' ? 'error' : 'warning'}>
-                {room.conflictReason}
-                {room.nextAvailableAt && (
-                  <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
-                    Next available: {room.nextAvailableAt}
-                  </Typography>
-                )}
-              </Alert>
-            )}
+              return (
+                <>
+                  {usageText && !isSameAsConflict && (
+                    <Alert
+                      severity={room.status === 'maintenance' ? 'warning' : 'info'}
+                      icon={<Iconify icon="mdi:information" />}
+                      sx={{ borderRadius: 1.5 }}
+                    >
+                      <Typography variant="subtitle2" gutterBottom>
+                        Current Usage
+                      </Typography>
+                      <Typography variant="body2">{usageText}</Typography>
+                      {room.source && (
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Source: {room.source}
+                        </Typography>
+                      )}
+                    </Alert>
+                  )}
+
+                  {room.conflictReason && (
+                    <Alert
+                      severity={room.conflictSeverity === 'critical' ? 'error' : 'warning'}
+                      sx={{ borderRadius: 1.5 }}
+                    >
+                      {isSameAsConflict && (
+                        <Typography variant="subtitle2" gutterBottom>
+                          Current Usage
+                        </Typography>
+                      )}
+                      <Typography variant="body2">{room.conflictReason}</Typography>
+                      {isSameAsConflict && room.source && (
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Source: {room.source}
+                        </Typography>
+                      )}
+                      {room.nextAvailableAt && (
+                        <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                          Next available: {room.nextAvailableAt}
+                        </Typography>
+                      )}
+                    </Alert>
+                  )}
+                </>
+              );
+            })()}
 
             {/* Utilization */}
             {room.utilizationPercentage != null && (
-              <Box>
-                <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
-                  <Typography variant="subtitle2">Utilization</Typography>
-                  <Typography variant="body2" color="text.secondary">
+              <Box sx={{ p: 2, borderRadius: 2, border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+                <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Utilization
+                  </Typography>
+                  <Typography variant="body2" fontWeight={700} color="text.secondary">
                     {room.utilizationPercentage}%
                   </Typography>
                 </Stack>
@@ -226,51 +275,66 @@ export const RoomDetailDrawer = ({
               </Box>
             )}
 
-            {/* Today Schedule */}
+            {/* Schedule Timeline */}
             <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Today Schedule
+              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+                Schedule Timeline
               </Typography>
+              <DatePicker
+                label="Select Date"
+                value={selectedDate}
+                onChange={(newDate) => setSelectedDate(newDate)}
+                slotProps={{ textField: { size: 'small', fullWidth: true, sx: { mb: 2 } } }}
+              />
               {scheduleHook.isLoading ? (
                 <Stack spacing={1}>
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} height={44} />
+                    <Skeleton key={i} height={44} sx={{ borderRadius: 1.5 }} />
                   ))}
                 </Stack>
               ) : scheduleHook.data?.slots?.length ? (
                 <Stack spacing={1}>
-                  {scheduleHook.data.slots.map((slot) => (
-                    <Box
-                      key={slot.period}
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 1,
-                        border: 1,
-                        borderColor: 'divider',
-                        display: 'grid',
-                        gridTemplateColumns: '100px 110px 1fr auto',
-                        gap: 1,
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Typography variant="caption" fontWeight={600}>
-                        {slot.period}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {slot.time}
-                      </Typography>
-                      <Typography variant="caption" noWrap>
-                        {slot.details}
-                      </Typography>
-                      <Chip
-                        size="small"
-                        label={slot.status}
-                        color={SCHEDULE_STATUS_COLORS[slot.status]}
-                        variant="soft"
-                        sx={{ fontSize: 10, height: 20 }}
-                      />
-                    </Box>
-                  ))}
+                  {scheduleHook.data.slots.map((slot) => {
+                    const accentColor = `${SCHEDULE_STATUS_COLORS[slot.status]}.main`;
+                    return (
+                      <Box
+                        key={slot.period}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 1.5,
+                          border: 1,
+                          borderColor: 'divider',
+                          borderLeft: 3,
+                          borderLeftColor: accentColor,
+                          bgcolor: 'background.paper',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1.5,
+                        }}
+                      >
+                        <Box sx={{ minWidth: 34 }}>
+                          <Typography variant="caption" fontWeight={700} display="block">
+                            {slot.period}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ minWidth: 92 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            {slot.time}
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary" noWrap sx={{ flex: 1 }}>
+                          {slot.details}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={slot.status}
+                          color={SCHEDULE_STATUS_COLORS[slot.status]}
+                          variant="soft"
+                          sx={{ fontSize: 10, height: 20, flexShrink: 0 }}
+                        />
+                      </Box>
+                    );
+                  })}
                 </Stack>
               ) : (
                 <Typography variant="body2" color="text.secondary">
@@ -281,102 +345,21 @@ export const RoomDetailDrawer = ({
           </Stack>
         )}
 
-        {activeTab === 'audit' && (
-          <Stack spacing={1.5}>
-            {auditHook.isLoading ? (
-              [1, 2, 3].map((i) => <Skeleton key={i} height={60} />)
-            ) : auditHook.data.length ? (
-              auditHook.data.map((log) => (
-                <Box
-                  key={log.id}
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 1,
-                    border: 1,
-                    borderColor: 'divider',
-                  }}
-                >
-                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                    <Typography variant="subtitle2">{log.action}</Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap sx={{ ml: 1 }}>
-                      {log.dateTime}
-                    </Typography>
-                  </Stack>
-                  <Typography variant="body2" color="text.secondary">
-                    By {log.user}
-                  </Typography>
-                  {log.newValue && (
-                    <Typography
-                      variant="caption"
-                      color="text.primary"
-                      display="block"
-                      sx={{ mt: 0.5 }}
-                    >
-                      {log.newValue}
-                    </Typography>
-                  )}
-                  {log.remarks && (
-                    <Typography variant="caption" color="text.secondary">
-                      {log.remarks}
-                    </Typography>
-                  )}
-                </Box>
-              ))
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                No audit trail for this room.
-              </Typography>
-            )}
-          </Stack>
+        {activeTab === 'audit' && room && (
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              border: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+            }}
+          >
+            <RoomAuditLogPanel roomId={room.roomId} />
+          </Box>
         )}
       </Box>
 
-      {/* ── Footer Actions ────────────────────────────────── */}
-      <Divider />
-      <Stack direction="row" spacing={1} sx={{ p: 2 }} flexWrap="wrap">
-        {onReserve && room && (
-          <Button
-            size="small"
-            variant="contained"
-            disabled={room.status !== 'available'}
-            startIcon={<Iconify icon="mdi:calendar-plus" />}
-            onClick={() => onReserve(room)}
-          >
-            Reserve
-          </Button>
-        )}
-        {onViewFullSchedule && room && (
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:calendar-month" />}
-            onClick={() => onViewFullSchedule(room.roomId)}
-          >
-            Full Schedule
-          </Button>
-        )}
-        {onMaintenance && room && (
-          <Tooltip title="Mark for Maintenance">
-            <Button
-              size="small"
-              variant="outlined"
-              color="warning"
-              startIcon={<Iconify icon="mdi:wrench" />}
-              onClick={() => onMaintenance(room)}
-            >
-              Maintenance
-            </Button>
-          </Tooltip>
-        )}
-        <Button
-          size="small"
-          variant="outlined"
-          color="inherit"
-          startIcon={<Iconify icon="mdi:qrcode" />}
-        >
-          QR Code
-        </Button>
-      </Stack>
     </Drawer>
   );
 };

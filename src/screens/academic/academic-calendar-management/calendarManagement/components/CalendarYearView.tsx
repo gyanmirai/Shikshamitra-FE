@@ -6,46 +6,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { DayType, DAY_TYPE_COLORS, DAY_TYPE_LABELS } from 'src/enums/academic-calendar';
-import {
-  Box,
-  Grid,
-  Paper,
-  Stack,
-  Avatar,
-  Tooltip,
-  Typography,
-  CircularProgress,
-} from '@mui/material';
-
-// ─── Mock calendar days for demo ──────────────────────────────────────────────
-
-const MOCK_CALENDAR_DAYS = [
-  { date: '2025-08-15', dayType: DayType.Holiday, title: 'Independence Day' },
-  { date: '2025-09-05', dayType: DayType.Event, title: "Teachers' Day" },
-  { date: '2025-10-02', dayType: DayType.Holiday, title: 'Gandhi Jayanti' },
-  { date: '2025-10-24', dayType: DayType.Vacation, title: 'Dussehra Break' },
-  { date: '2025-10-25', dayType: DayType.Vacation, title: 'Dussehra Break' },
-  { date: '2025-10-26', dayType: DayType.Vacation, title: 'Dussehra Break' },
-  { date: '2025-11-12', dayType: DayType.Holiday, title: 'Diwali' },
-  { date: '2025-11-13', dayType: DayType.Holiday, title: 'Diwali (2nd day)' },
-  { date: '2025-11-14', dayType: DayType.HalfDay, title: "Children's Day" },
-  { date: '2025-12-25', dayType: DayType.Holiday, title: 'Christmas' },
-  { date: '2025-12-26', dayType: DayType.Vacation, title: 'Winter Vacation' },
-  { date: '2025-12-27', dayType: DayType.Vacation, title: 'Winter Vacation' },
-  { date: '2025-12-28', dayType: DayType.Vacation, title: 'Winter Vacation' },
-  { date: '2025-12-29', dayType: DayType.Vacation, title: 'Winter Vacation' },
-  { date: '2026-01-01', dayType: DayType.Holiday, title: "New Year's Day" },
-  { date: '2026-01-26', dayType: DayType.Holiday, title: 'Republic Day' },
-  { date: '2026-02-10', dayType: DayType.Exam, title: 'Annual Exam Day 1' },
-  { date: '2026-02-11', dayType: DayType.Exam, title: 'Annual Exam Day 2' },
-  { date: '2026-02-12', dayType: DayType.Exam, title: 'Annual Exam Day 3' },
-  { date: '2026-02-13', dayType: DayType.Exam, title: 'Annual Exam Day 4' },
-  { date: '2026-03-08', dayType: DayType.Event, title: "Women's Day Celebration" },
-  { date: '2026-03-15', dayType: DayType.PTM, title: 'Parent-Teacher Meeting' },
-];
-
-const MOCK_START = '2025-06-01';
-const MOCK_END = '2026-03-31';
+import { Box, Paper, Stack, Avatar, Tooltip, Typography, CircularProgress } from '@mui/material';
 
 interface Props {
   calendarDays: any[];
@@ -69,7 +30,7 @@ const LEGEND_ITEMS = [
 
 // ─── Single Month Mini-Calendar ───────────────────────────────────────────────
 
-const MonthCard = ({
+const MonthInner = ({
   monthStart,
   dayMap,
   startDate,
@@ -100,21 +61,7 @@ const MonthCard = ({
   ).length;
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        borderRadius: 2.5,
-        overflow: 'hidden',
-        border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
-        backgroundColor: theme.vars.palette.background.paper,
-        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-        '&:hover': {
-          boxShadow: `0 12px 28px ${alpha(theme.palette.primary.main, 0.08)}`,
-          borderColor: alpha(theme.palette.primary.main, 0.25),
-          transform: 'translateY(-2px)',
-        },
-      }}
-    >
+    <Box sx={{ minWidth: 0 }}>
       {/* Month Header */}
       <Box
         sx={{
@@ -144,7 +91,8 @@ const MonthCard = ({
       {/* Weekday headers */}
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', px: 1, pt: 1.5, pb: 0.5 }}>
         {WEEKDAY_ABBR.map((lbl, i) => {
-          const isWeekend = i === 0 || i === 6;
+          const isSunday = i === 0;
+          const isSaturday = i === 6;
           return (
             <Box key={`${lbl}-${i}`} sx={{ textAlign: 'center', py: 0.25 }}>
               <Typography
@@ -152,9 +100,9 @@ const MonthCard = ({
                 sx={{
                   fontSize: '11px',
                   fontWeight: 800,
-                  color: isWeekend ? theme.palette.error.main : 'text.disabled',
+                  color: isSunday ? theme.palette.error.main : 'text.disabled',
                   textTransform: 'uppercase',
-                  opacity: isWeekend ? 0.8 : 0.6,
+                  opacity: isSunday ? 0.8 : isSaturday ? 0.5 : 0.6,
                 }}
               >
                 {lbl}
@@ -175,7 +123,8 @@ const MonthCard = ({
 
           const key = day.format('YYYY-MM-DD');
           const calDay = dayMap[key];
-          const isWeekend = day.day() === 0 || day.day() === 6;
+          const isWeekend = day.day() === 0;
+          const isSaturday = day.day() === 6;
           const isToday = key === today;
           const isOutside =
             day.isBefore(dayjs(startDate), 'day') || day.isAfter(dayjs(endDate), 'day');
@@ -189,7 +138,7 @@ const MonthCard = ({
                   ? ''
                   : calDay
                     ? calDay.title || DAY_TYPE_LABELS[calDay.dayType as DayType]
-                    : isWeekend
+                    : isWeekend || isSaturday
                       ? 'Weekend'
                       : dayjs(key).format('dddd, DD MMM YYYY')
               }
@@ -199,68 +148,170 @@ const MonthCard = ({
               disableHoverListener={isOutside}
             >
               <Box
-                onClick={() => !isOutside && onDayClick(key)}
                 sx={{
                   height: 34,
                   display: 'flex',
-                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: '50%',
-                  cursor: isOutside ? 'default' : 'pointer',
-                  opacity: isOutside ? 0.15 : 1,
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                  backgroundColor: isToday
-                    ? theme.palette.primary.main
-                    : markerColor
-                      ? alpha(markerColor, 0.08)
-                      : 'transparent',
-                  border: '1px solid transparent',
-                  '&:hover': isOutside
-                    ? {}
-                    : {
-                        backgroundColor: markerColor
-                          ? alpha(markerColor, 0.18)
-                          : isToday
-                            ? theme.vars.palette.primary.dark
-                            : varAlpha(theme.palette.primary.mainChannel, 0.08),
-                        transform: 'scale(1.15)',
-                        zIndex: 2,
-                        boxShadow: `0 4px 8px ${alpha(theme.palette.common.black, 0.08)}`,
-                      },
                 }}
               >
-                <Typography
+                <Box
+                  onClick={() => !isOutside && onDayClick(key)}
                   sx={{
-                    fontSize: '11px',
-                    fontWeight: isToday ? 800 : calDay ? 700 : 500,
-                    lineHeight: 1,
-                    color: isToday
-                      ? '#fff'
-                      : isWeekend
-                        ? theme.vars.palette.text.secondary
-                        : theme.vars.palette.text.primary,
+                    width: 30,
+                    height: 30,
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    cursor: isOutside ? 'default' : 'pointer',
+                    opacity: isOutside ? 0.15 : 1,
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    backgroundColor: isToday
+                      ? theme.palette.primary.main
+                      : markerColor
+                        ? alpha(markerColor, 0.08)
+                        : 'transparent',
+                    border: '1px solid transparent',
+                    boxSizing: 'border-box',
+                    '&:hover': isOutside
+                      ? {}
+                      : {
+                          backgroundColor: markerColor
+                            ? alpha(markerColor, 0.18)
+                            : isToday
+                              ? theme.vars.palette.primary.dark
+                              : varAlpha(theme.palette.primary.mainChannel, 0.08),
+                          transform: 'scale(1.15)',
+                          zIndex: 2,
+                          boxShadow: `0 4px 8px ${alpha(theme.palette.common.black, 0.08)}`,
+                        },
                   }}
                 >
-                  {day.date()}
-                </Typography>
-                {/* Visual Dot indicator */}
-                {calDay && !isToday && (
-                  <Box
+                  <Typography
                     sx={{
-                      width: 5,
-                      height: 5,
-                      borderRadius: '50%',
-                      backgroundColor: markerColor,
-                      mt: '2px',
+                      fontSize: '11px',
+                      fontWeight: isToday ? 800 : calDay ? 700 : 500,
+                      lineHeight: 1,
+                      color: isToday
+                        ? '#fff'
+                        : isWeekend
+                          ? theme.vars.palette.text.secondary
+                          : isSaturday
+                            ? theme.vars.palette.text.disabled
+                            : theme.vars.palette.text.primary,
                     }}
-                  />
-                )}
+                  >
+                    {day.date()}
+                  </Typography>
+                  {/* Visual Dot indicator */}
+                  {calDay && !isToday && (
+                    <Box
+                      sx={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: '50%',
+                        backgroundColor: markerColor,
+                        mt: '2px',
+                      }}
+                    />
+                  )}
+                </Box>
               </Box>
             </Tooltip>
           );
         })}
       </Box>
+    </Box>
+  );
+};
+
+const MonthCard = (props: {
+  monthStart: dayjs.Dayjs;
+  dayMap: Record<string, any>;
+  startDate: string;
+  endDate: string;
+  today: string;
+  onDayClick: (date: string) => void;
+}) => {
+  const theme = useTheme();
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: 2.5,
+        overflow: 'hidden',
+        border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+        backgroundColor: theme.vars.palette.background.paper,
+        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          boxShadow: `0 12px 28px ${alpha(theme.palette.primary.main, 0.08)}`,
+          borderColor: alpha(theme.palette.primary.main, 0.25),
+          transform: 'translateY(-2px)',
+        },
+      }}
+    >
+      <MonthInner {...props} />
+    </Paper>
+  );
+};
+
+// ─── Dual Month Card (two months combined into one wide card) ───────────────
+
+const DualMonthCard = ({
+  months,
+  dayMap,
+  startDate,
+  endDate,
+  today,
+  onDayClick,
+}: {
+  months: dayjs.Dayjs[];
+  dayMap: Record<string, any>;
+  startDate: string;
+  endDate: string;
+  today: string;
+  onDayClick: (date: string) => void;
+}) => {
+  const theme = useTheme();
+
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: 2.5,
+        overflow: 'hidden',
+        border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+        backgroundColor: theme.vars.palette.background.paper,
+        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        display: 'grid',
+        gridTemplateColumns: `repeat(${months.length}, minmax(0, 1fr))`,
+        '&:hover': {
+          boxShadow: `0 12px 28px ${alpha(theme.palette.primary.main, 0.08)}`,
+          borderColor: alpha(theme.palette.primary.main, 0.25),
+        },
+      }}
+    >
+      {months.map((month, idx) => (
+        <Box
+          key={month.format('YYYY-MM')}
+          sx={{
+            minWidth: 0,
+            borderLeft: idx > 0 ? `1px solid ${alpha(theme.palette.divider, 0.6)}` : 'none',
+          }}
+        >
+          <MonthInner
+            monthStart={month}
+            dayMap={dayMap}
+            startDate={startDate}
+            endDate={endDate}
+            today={today}
+            onDayClick={onDayClick}
+          />
+        </Box>
+      ))}
     </Paper>
   );
 };
@@ -284,9 +335,9 @@ const CalendarYearView = ({
     );
   }
 
-  const days = calendarDays.length > 0 ? calendarDays : MOCK_CALENDAR_DAYS;
-  const startDate = calendarStartDate || MOCK_START;
-  const endDate = calendarEndDate || MOCK_END;
+  const days = calendarDays;
+  const startDate = calendarStartDate;
+  const endDate = calendarEndDate;
   const today = dayjs().format('YYYY-MM-DD');
 
   // Build date map
@@ -297,11 +348,12 @@ const CalendarYearView = ({
 
   // Build months list
   const months: dayjs.Dayjs[] = [];
-  let cursor = dayjs(startDate).startOf('month');
-  const calEnd = dayjs(endDate).endOf('month');
-  while (cursor.isBefore(calEnd) || cursor.isSame(calEnd, 'month')) {
-    months.push(cursor);
-    cursor = cursor.add(1, 'month');
+  if (startDate && endDate) {
+    let cursor = dayjs(startDate).startOf('month');
+    while (cursor.isBefore(dayjs(endDate).endOf('month'))) {
+      months.push(cursor);
+      cursor = cursor.add(1, 'month');
+    }
   }
 
   // Summary stats
@@ -523,9 +575,15 @@ const CalendarYearView = ({
       </Paper>
 
       {/* Monthly Grids */}
-      <Grid container spacing={1.5}>
+      <Box
+        sx={{
+          display: 'grid',
+          gap: 1.5,
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        }}
+      >
         {months.map((month) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={month.format('YYYY-MM')}>
+          <Box key={month.format('YYYY-MM')} sx={{ minWidth: 0 }}>
             <MonthCard
               monthStart={month}
               dayMap={dayMap}
@@ -534,9 +592,9 @@ const CalendarYearView = ({
               today={today}
               onDayClick={onDayClick}
             />
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Box>
     </Box>
   );
 };
