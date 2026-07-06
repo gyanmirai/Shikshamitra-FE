@@ -271,6 +271,10 @@ export const financeModuleType = {
   feeStructure: 'FeeStructure',
   classWiseFeeStructure: 'ClassWiseFeeStructure',
   financeAudit: 'FinanceAudit',
+  accountHead: 'AccountHead',
+  accountPosting: 'AccountPosting',
+  draftPosting: 'DraftPosting',
+  payrollPostingConfig: 'PayrollPostingConfig',
 } as const;
 
 // ===== Finance Budgets Category API (reducerPath: BudgetsCategoryApi) =====

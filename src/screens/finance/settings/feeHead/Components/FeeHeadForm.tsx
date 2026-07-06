@@ -15,6 +15,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
+import HeadSelector from 'src/screens/finance/components/HeadSelector';
 import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
@@ -104,6 +105,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
         name: values.name,
         module: values.module,
         description: values.description || '',
+        incomeHeadId: values.incomeHeadId || undefined,
       };
 
       if (editData?.id) {
@@ -215,6 +217,25 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                     : ''
                 }
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Income Head Field */}
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField
+              error={!!(formik.touched.incomeHeadId && formik.errors.incomeHeadId) || false}
+            >
+              <HeadSelector
+                name="incomeHeadId"
+                label="Income Head"
+                headType="Income"
+                value={formik.values.incomeHeadId || ''}
+                onChange={(val) => formik.setFieldValue('incomeHeadId', val)}
+                error={formik.touched.incomeHeadId && Boolean(formik.errors.incomeHeadId)}
+                helperText={
+                  formik.touched.incomeHeadId ? (formik.errors.incomeHeadId as string) : undefined
+                }
               />
             </ShakingTextField>
           </Grid>

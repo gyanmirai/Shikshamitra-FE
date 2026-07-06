@@ -60,6 +60,7 @@ const getInitialValues = (
     paidFeeAdjustment: d?.paidFeeAdjustment || null,
     pendingFeeHandling: d?.pendingFeeHandling || null,
     futureInstallmentStrategy: d?.futureInstallmentStrategy || null,
+    walletHeadId: d?.walletHeadId || '',
 
     // Card 5 – Demand Behaviour
     existingDemand: d?.existingDemand || 'RecalculateAutomatically',

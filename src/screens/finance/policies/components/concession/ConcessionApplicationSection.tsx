@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 
 import { ConcessionSectionCard } from './ConcessionCommon';
+import HeadSelector from '../../../components/HeadSelector';
 
 const APPLY_ON_OPTIONS = [
   { value: 'PendingFeesOnly', label: 'Pending Fees Only' },
@@ -176,6 +177,22 @@ export default function ConcessionApplicationSection({
             </Alert>
           </Grid>
         )}
+
+        {/* Wallet Head */}
+        {showPaidAdjustment &&
+          (formik.values.paidFeeAdjustment === 'StudentWallet' ||
+            formik.values.paidFeeAdjustment === 'CreditNote') && (
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <HeadSelector
+                headType="Liability"
+                label="Wallet / Credit Note Head *"
+                value={formik.values.walletHeadId}
+                onChange={(val) => formik.setFieldValue('walletHeadId', val)}
+                error={formik.touched.walletHeadId && Boolean(formik.errors.walletHeadId)}
+                helperText={formik.touched.walletHeadId && formik.errors.walletHeadId}
+              />
+            </Grid>
+          )}
 
         {/* Pending Fee Handling */}
         {showPendingHandling && (

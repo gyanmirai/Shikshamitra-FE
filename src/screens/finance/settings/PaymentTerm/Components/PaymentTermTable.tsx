@@ -14,6 +14,7 @@ import type { IPaymentTerm, PaymentTermStatus, IPaymentTermTableProps } from '..
 
 const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   data,
+  loading,
   addPaymentTerm,
   setEditData,
   onEdit,
@@ -37,29 +38,9 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         ),
       },
       {
-        id: 'boardName',
-        label: 'Board',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value || '-'}
-          </Typography>
-        ),
-      },
-      {
-        id: 'academicYearName',
-        label: 'Academic Year',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value || '-'}
-          </Typography>
-        ),
-      },
-      {
         id: 'installments',
         label: 'Installments',
-        align: 'center',
+        align: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
             {Array.isArray(value) ? value.length : 0}
@@ -67,9 +48,21 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         ),
       },
       {
+        id: 'updatedBy',
+        label: 'Updated By',
+        align: 'left',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value || '-'}
+          </Typography>
+        ),
+      },
+      {
         id: 'status',
         label: 'Status',
         align: 'left',
+        sticky: true,
+        minWidth: 80,
         render: (value, row) => {
           const term = row as IPaymentTerm;
           const isActive = term.status === 'Active';
@@ -101,16 +94,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
           );
         },
       },
-      {
-        id: 'updatedBy',
-        label: 'Updated By',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value || '-'}
-          </Typography>
-        ),
-      },
+
       {
         id: 'action',
         label: 'Actions',
@@ -140,6 +124,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   return (
     <CustomizableTable
       tableId="payment-term-table"
+      isLoading={loading}
       noDataText={
         <>
           No Payment Term data found.{' '}

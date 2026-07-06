@@ -813,7 +813,9 @@ const FeeCollectComponentForm = ({
         payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
       }).unwrap();
 
-      shikshaMitraToast.success({ message: 'Fee collected successfully' });
+      shikshaMitraToast.success({
+        message: collectResponse.auditSummary?.headline || 'Fee collected successfully',
+      });
       setFinalReviewOpen(false);
       setLastCollectResponse(collectResponse);
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
@@ -893,7 +895,9 @@ const FeeCollectComponentForm = ({
         payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
       }).unwrap();
 
-      shikshaMitraToast.success({ message: 'Payment saved as pending verification' });
+      shikshaMitraToast.success({
+        message: collectResponse.auditSummary?.headline || 'Payment saved as pending verification',
+      });
       setFinalReviewOpen(false);
       setLastCollectResponse(collectResponse);
       if (!(await showGeneratedReceiptDialog(collectResponse))) {

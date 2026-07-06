@@ -70,8 +70,15 @@ export const useExpenseForm = ({
   // Form Submission Handler - payload matches API contract exactly
   const handleSubmit = async (values: IExpenseFormValues) => {
     try {
+      // Find account head from selected category
+      const selectedCategory = (categoryOptions?.items || categoryOptions || []).find(
+        (c: any) => c.id === values.categoryId
+      );
+      const accountHeadId = selectedCategory?.accountHeadId || null;
+
       const payload = {
         categoryId: values.categoryId,
+        accountHeadId, // Auto-resolved head for posting
         name: values.name,
         categoryTags: values.categoryTags || [],
         amount: values.amount,

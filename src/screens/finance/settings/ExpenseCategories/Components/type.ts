@@ -5,6 +5,7 @@ export interface IExpenseCategory {
   name: string;
   description?: string;
   tags: string[];
+  expenseHeadId?: string;
   isActive?: boolean;
   deactivationReason?: string | null;
 }

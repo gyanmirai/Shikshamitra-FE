@@ -21,6 +21,7 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import HeadSelector from 'src/screens/finance/components/HeadSelector';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -432,6 +433,7 @@ interface ChargeCategoryFormValues {
   chargeName: string;
   isRefundable: boolean;
   description: string;
+  chargeHeadId?: string;
 }
 
 const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogProps) => {
@@ -487,6 +489,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
           }),
         isRefundable: Yup.boolean().required(),
         description: Yup.string().optional(),
+        chargeHeadId: Yup.string().nullable(),
       }),
     [editData]
   );
@@ -497,6 +500,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
       chargeName: editData?.name || '',
       isRefundable: editData?.isApprovalRequired || false,
       description: editData?.description || '',
+      chargeHeadId: editData?.chargeHeadId || '',
     },
     validationSchema,
     enableReinitialize: true,
@@ -520,6 +524,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
         name: values.chargeName,
         isApprovalRequired: values.isRefundable,
         description: values.description || '',
+        chargeHeadId: values.chargeHeadId || undefined,
       };
 
       if (editData?.id) {
@@ -588,6 +593,23 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
                   formik.touched.chargeName && typeof formik.errors.chargeName === 'string'
                     ? formik.errors.chargeName
                     : undefined
+                }
+              />
+            </ShakingTextField>
+
+            {/* Charge Head Field */}
+            <ShakingTextField
+              error={!!(formik.touched.chargeHeadId && formik.errors.chargeHeadId) || false}
+            >
+              <HeadSelector
+                name="chargeHeadId"
+                label="Charge Head"
+                headType="Income"
+                value={formik.values.chargeHeadId || ''}
+                onChange={(val) => formik.setFieldValue('chargeHeadId', val)}
+                error={formik.touched.chargeHeadId && Boolean(formik.errors.chargeHeadId)}
+                helperText={
+                  formik.touched.chargeHeadId ? (formik.errors.chargeHeadId as string) : undefined
                 }
               />
             </ShakingTextField>

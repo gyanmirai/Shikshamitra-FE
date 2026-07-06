@@ -32,7 +32,7 @@ export default function ConcessionPolicyWorkspace() {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Concession Policy"
         description="Define reusable concession calculation rules, fee head scope, application behaviour, and demand recalculation logic."

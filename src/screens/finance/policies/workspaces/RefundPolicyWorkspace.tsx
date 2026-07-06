@@ -32,7 +32,7 @@ export default function RefundPolicyWorkspace() {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Refund Policy"
         description="Establish refund timeline rules, deduction tiers, bank requirements, and government compliance."

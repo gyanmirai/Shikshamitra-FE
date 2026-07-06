@@ -82,9 +82,16 @@ export const useIncomeForm = (
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
+        // Find account head from selected category
+        const selectedCategory = (incomeOptionsData?.items || incomeOptionsData || []).find(
+          (c: any) => c.id === values.categoryId
+        );
+        const accountHeadId = selectedCategory?.accountHeadId || null;
+
         // Payload matches the API contract exactly
         const payload = {
           categoryId: values.categoryId,
+          accountHeadId, // Auto-resolved head for posting
           name: values.name,
           categoryTags: values.categoryTags || [],
           amount: values.amount,

@@ -12,6 +12,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import HeadSelector from 'src/screens/finance/components/HeadSelector';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { DownstreamUsageWarning } from 'src/screens/finance/settings/components/DownstreamUsageWarning';
@@ -92,6 +93,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
         name: values.name,
         description: values.description || '',
         tags: values.tags || [],
+        incomeHeadId: values.incomeHeadId || undefined,
       };
 
       if (editData?.id) {
@@ -150,7 +152,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
       <DialogScrollContent>
         <Grid container spacing={3}>
           {/* Income Category Name */}
-          <Grid size={12}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
               <TextField
                 fullWidth
@@ -176,6 +178,24 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                     : `${formik.values.name.length}/40 characters`
                 }
                 inputProps={{ maxLength: 40 }}
+              />
+            </ShakingTextField>
+          </Grid>
+          {/* Income Head */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ShakingTextField
+              error={!!(formik.touched.incomeHeadId && formik.errors.incomeHeadId) || false}
+            >
+              <HeadSelector
+                name="incomeHeadId"
+                label="Income Head"
+                headType="Income"
+                value={formik.values.incomeHeadId}
+                onChange={(val) => formik.setFieldValue('incomeHeadId', val)}
+                error={formik.touched.incomeHeadId && Boolean(formik.errors.incomeHeadId)}
+                helperText={
+                  formik.touched.incomeHeadId ? (formik.errors.incomeHeadId as string) : undefined
+                }
               />
             </ShakingTextField>
           </Grid>

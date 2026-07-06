@@ -28,6 +28,7 @@ import {
 } from '@mui/material';
 
 import { SectionCard } from './CollectionCommon';
+import HeadSelector from '../../../components/HeadSelector';
 
 interface CollectionLateFeeSectionProps {
   formik: any;
@@ -466,6 +467,25 @@ export default function CollectionLateFeeSection({
                 />
               </Card>
             </Grid>
+
+            {/* Late-Fee Income Head */}
+            {formik.values.considerAsIncome && (
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <HeadSelector
+                  headType="Income"
+                  label="Late-Fee Income Head *"
+                  value={formik.values.lateFeeIncomeHeadId}
+                  onChange={(val) => formik.setFieldValue('lateFeeIncomeHeadId', val)}
+                  error={
+                    formik.touched.lateFeeIncomeHeadId && Boolean(formik.errors.lateFeeIncomeHeadId)
+                  }
+                  helperText={
+                    formik.touched.lateFeeIncomeHeadId &&
+                    (formik.errors.lateFeeIncomeHeadId as string)
+                  }
+                />
+              </Grid>
+            )}
           </>
         )}
       </Grid>

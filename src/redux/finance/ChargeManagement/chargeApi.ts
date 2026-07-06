@@ -58,7 +58,11 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financeModuleType.charges],
+      invalidatesTags: [
+        financeModuleType.charges,
+        financeModuleType.accountPosting,
+        financeModuleType.draftPosting,
+      ],
     }),
     rejectCharge: builder.mutation({
       query: ({ id, body }) => ({
@@ -66,7 +70,11 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financeModuleType.charges],
+      invalidatesTags: [
+        financeModuleType.charges,
+        financeModuleType.accountPosting,
+        financeModuleType.draftPosting,
+      ],
     }),
     getChargeById: builder.query({
       query: ({ id }: { id: string }) => ({

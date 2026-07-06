@@ -15,9 +15,12 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, MenuList, Typography, IconButton } from '@mui/material';
-import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
+import { Box, Switch, MenuList, Typography, IconButton } from '@mui/material';
 import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
+import {
+  useMatchTransactionMutation,
+  useGetReconciliationListQuery,
+} from 'src/redux/finance/reconciliation';
 import {
   PamentMethodsStatusColor,
   PaymentMethodsStatusType,
@@ -66,6 +69,12 @@ const BankTransferTable = ({
       success: false,
     },
   });
+
+  const [matchTransaction] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useMatchTransactionMutation,
+  });
+
   const bankTransferData = useMemo(
     () =>
       (listResponse?.items ?? []).map((item: any) => ({
@@ -215,6 +224,33 @@ const BankTransferTable = ({
         },
       },
       {
+        id: 'matched',
+        label: 'Matched',
+        width: 100,
+        minWidth: 80,
+        maxWidth: 120,
+        align: 'center',
+        render(value, row: any) {
+          return (
+            <Switch
+              size="small"
+              checked={row.matched}
+              onChange={async (e) => {
+                try {
+                  await matchTransaction({
+                    id: row.id,
+                    body: { matched: e.target.checked },
+                  });
+                  shikshaMitraToast.success({ message: 'Transaction match status updated.' });
+                } catch {
+                  // error handled by hook
+                }
+              }}
+            />
+          );
+        },
+      },
+      {
         id: 'action',
         label: 'Actions',
         isSort: false,
@@ -309,7 +345,7 @@ const BankTransferTable = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canApproveReject, downloadReceiptPdf]
+    [canApproveReject, downloadReceiptPdf, matchTransaction]
   );
 
   // Cleanup blob URLs on unmount

@@ -32,7 +32,7 @@ export default function CollectionPolicyWorkspace() {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Collection Policy"
         description="Configure grace periods, late fee structures, waivers, and online payment options."

@@ -31,13 +31,16 @@ export const financePaths = {
   // Accounts
   accounts: {
     root: '/finance/accounts',
+    draftPostings: '/finance/draft-postings',
     reconciliation: '/finance/reconciliation',
     incomeAndExpense: '/finance/income-and-expense',
     settings: {
       root: '',
+      accountHeads: '/finance/settings/account-heads',
       expenseCategories: '/finance/settings/expenseCategories',
       incomeCategories: '/finance/settings/incomeCategories',
       bankAccounts: '/finance/settings/bank-account-management',
+      postingAutomation: '/finance/settings/posting-automation',
     },
   },
   // Policies & Rules
@@ -99,15 +102,18 @@ export const financePermissions = {
   },
   accounts: {
     root: `${defaultModulePermissionName}${defaultFinancePermissionName}Accounts`,
+    draftPostings: `${defaultFinancePermissionName}Accounts.Reconciliation`,
     reconciliation: `${defaultFinancePermissionName}Accounts.Reconciliation`,
     reconciliationAdd: `${defaultFinancePermissionName}Accounts.Reconciliation.Add`,
     expense: `${defaultFinancePermissionName}Accounts.ExpenseTracking`,
     income: `${defaultFinancePermissionName}Accounts.IncomeTracking`,
     settings: {
       root: `${defaultModulePermissionName}${defaultFinancePermissionName}Accounts.Settings`,
+      accountHead: `${defaultFinancePermissionName}Accounts.Settings.ExpenseCategory`,
       expenseCategory: `${defaultFinancePermissionName}Accounts.Settings.ExpenseCategory`,
       incomeCategory: `${defaultFinancePermissionName}Accounts.Settings.IncomeCategory`,
       bankAccount: `${defaultFinancePermissionName}Accounts.Settings.BankAccount`,
+      postingAutomation: `${defaultFinancePermissionName}Accounts.Settings.PostingAutomation`,
     },
   },
   // Policies & Rules
@@ -329,6 +335,13 @@ const financeModule = {
           icon: menuIconView('mdi:bank-outline'),
           children: [
             {
+              title: 'Draft Postings',
+              path: financePaths.accounts.draftPostings,
+              _action: 'draft-postings',
+              permissionName: financePermissions.accounts.draftPostings,
+              icon: menuIconView('mdi:clipboard-text-clock-outline'),
+            },
+            {
               title: 'Reconciliation',
               path: financePaths.accounts.reconciliation,
               _action: 'reconciliation',
@@ -365,6 +378,13 @@ const financeModule = {
               icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
+                  title: 'Account Heads',
+                  path: financePaths.accounts.settings.accountHeads,
+                  _action: 'account-heads',
+                  permissionName: financePermissions.accounts.settings.accountHead,
+                  icon: menuIconView('mdi:book-open-page-variant-outline'),
+                },
+                {
                   title: 'Income Category',
                   path: financePaths.accounts.settings.incomeCategories,
                   _action: 'income-category',
@@ -390,6 +410,15 @@ const financeModule = {
                   shortcutKeyName: 'Alt+F+3+S+3',
                   permissionName: financePermissions.accounts.settings.bankAccount,
                   icon: menuIconView('mdi:bank-outline'),
+                },
+                {
+                  title: 'Posting Automation',
+                  path: financePaths.accounts.settings.postingAutomation,
+                  _action: 'posting-automation',
+                  shortcutKey: 'Alt+F+3+S+4',
+                  shortcutKeyName: 'Alt+F+3+S+4',
+                  permissionName: financePermissions.accounts.settings.postingAutomation,
+                  icon: menuIconView('mdi:robot-outline'),
                 },
               ],
             },

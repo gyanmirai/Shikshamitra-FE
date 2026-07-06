@@ -48,6 +48,18 @@ export default function LateFeeLimitsSection({
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              type="number"
+              label="Maximum Fine Cap (₹)"
+              name="maximumFineCap"
+              value={formik.values.maximumFineCap ?? ''}
+              onChange={formik.handleChange}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Round Off Method</InputLabel>
               <Select

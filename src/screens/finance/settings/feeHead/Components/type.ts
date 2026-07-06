@@ -6,6 +6,8 @@ export interface IFeeHead {
   name: string;
   module?: string;
   description?: string;
+  incomeHeadId?: string;
+  isUsedInDownstream?: boolean;
   isActive: boolean;
   deactivationReason?: string | null;
 }

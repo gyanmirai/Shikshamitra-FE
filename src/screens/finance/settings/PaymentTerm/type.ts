@@ -68,6 +68,7 @@ export interface IPaymentTerm {
 }
 
 export interface IPaymentTermTableProps {
+  loading: boolean;
   data: IPaymentTerm[];
   addPaymentTerm: UseBooleanReturn;
   setEditData: (value: IPaymentTerm | null) => void;

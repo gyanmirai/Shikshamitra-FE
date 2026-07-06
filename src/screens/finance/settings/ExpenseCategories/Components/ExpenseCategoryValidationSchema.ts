@@ -20,4 +20,5 @@ export const expenseCategoryValidationSchema = (
       .of(Yup.string().required('Each tag must be a non-empty string'))
       .min(1, 'At least one tag is required')
       .required('Tags are required'),
+    expenseHeadId: Yup.string().nullable(),
   });

@@ -13,6 +13,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import HeadSelector from '../../../components/HeadSelector';
+
 // Mock lists for charge generation
 const MOCK_CHARGE_CATEGORIES = [
   { id: 'cat-1', name: 'Late Fee Penalties' },
@@ -123,6 +125,22 @@ export default function LateFeeChargeSection({
                     </Typography>
                   )}
                 </FormControl>
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <HeadSelector
+                  headType="Income"
+                  label="Late-Fee Income Head"
+                  value={formik.values.lateFeeIncomeHeadId}
+                  onChange={(val) => formik.setFieldValue('lateFeeIncomeHeadId', val)}
+                  error={
+                    formik.touched.lateFeeIncomeHeadId && Boolean(formik.errors.lateFeeIncomeHeadId)
+                  }
+                  helperText={
+                    formik.touched.lateFeeIncomeHeadId &&
+                    (formik.errors.lateFeeIncomeHeadId as string)
+                  }
+                />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 6 }}>

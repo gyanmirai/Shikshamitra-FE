@@ -30,7 +30,6 @@ import {
   FormControl,
   DialogActions,
   DialogContent,
-  CircularProgress,
 } from '@mui/material';
 
 import PaymentTermForm from './Components/PaymentTermForm';
@@ -56,7 +55,8 @@ const PaymentTerm = () => {
   // ── API ────────────────────────────────────────────────────────────────────
   const {
     data: paymentTerms,
-    isLoading,
+    isLoading: isPaymentTermLoading,
+    isFetching: isPaymentTermFetching,
     refetch,
   } = useQueryAndMutation({
     type: 'query',
@@ -182,26 +182,21 @@ const PaymentTerm = () => {
       />
 
       {/* Main Table */}
-      <Box sx={{ flex: 1, minHeight: 0 }}>
-        {isLoading ? (
-          <Box display="flex" justifyContent="center" py={5}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <PaymentTermTable
-            data={tableData}
-            addPaymentTerm={addPaymentTermDrawer}
-            setEditData={setSelectedPaymentTerm}
-            onEdit={(data) => {
-              setSelectedPaymentTerm(data);
-              addPaymentTermDrawer.onTrue();
-            }}
-            onDelete={(data) => {
-              setSelectedPaymentTerm(data);
-              deletePaymentTermDialog.onTrue();
-            }}
-          />
-        )}
+      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <PaymentTermTable
+          data={tableData}
+          loading={isPaymentTermLoading || isPaymentTermFetching}
+          addPaymentTerm={addPaymentTermDrawer}
+          setEditData={setSelectedPaymentTerm}
+          onEdit={(data) => {
+            setSelectedPaymentTerm(data);
+            addPaymentTermDrawer.onTrue();
+          }}
+          onDelete={(data) => {
+            setSelectedPaymentTerm(data);
+            deletePaymentTermDialog.onTrue();
+          }}
+        />
       </Box>
 
       {/* Add / Edit Drawer */}

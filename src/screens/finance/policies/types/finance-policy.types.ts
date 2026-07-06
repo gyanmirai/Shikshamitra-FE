@@ -205,6 +205,9 @@ export interface ILateFeePolicy extends IFinancePolicyBase {
   // Escalation Slabs
   escalationRules: ILateFeeEscalationRule[];
   applyOnFeeHeads: string[];
+
+  lateFeeIncomeHeadId?: string;
+  maximumFineCap?: number | null;
 }
 
 export type ILateFeePolicyFormValues = Omit<
@@ -244,6 +247,7 @@ export interface IConcessionPolicy extends IFinancePolicyBase {
   paidFeeAdjustment: ConcessionPaidFeeAdjustment | null;
   pendingFeeHandling: ConcessionPendingFeeHandling | null;
   futureInstallmentStrategy: ConcessionFutureInstallmentStrategy | null;
+  walletHeadId?: string;
 
   // Card 5 – Demand Behaviour
   existingDemand: ConcessionExistingDemand;
@@ -310,6 +314,9 @@ export interface IRefundPolicy extends IFinancePolicyBase {
   enableRefundForCharge?: boolean;
   considerAsExpense?: boolean;
   refundDueWithin?: number;
+  refundExpenseHeadId?: string;
+  refundPayableHeadId?: string;
+  lateFeeClawback?: boolean;
 }
 
 export type IRefundPolicyFormValues = Omit<
@@ -377,6 +384,7 @@ export interface ICollectionPolicy extends IFinancePolicyBase {
   maximumWaiverPercentage: number | null;
   waiverExpiry: string | null;
   allowOnlineCollection: boolean;
+  lateFeeIncomeHeadId?: string;
 }
 
 export type ICollectionPolicyFormValues = Omit<

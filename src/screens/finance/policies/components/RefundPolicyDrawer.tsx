@@ -41,6 +41,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import HeadSelector from '../../components/HeadSelector';
 import { SectionCard } from '../../settings/PaymentTerm/Components/ui/SectionCard';
 
 import type { IFinancePolicyRow, IRefundPolicyFormValues } from '../types/finance-policy.types';
@@ -123,6 +124,9 @@ const getInitialValues = (
     // Accounting
     considerAsExpense: data?.considerAsExpense ?? false,
     governmentComplianceCode: data?.governmentComplianceCode || '',
+    refundExpenseHeadId: data?.refundExpenseHeadId || '',
+    refundPayableHeadId: data?.refundPayableHeadId || '',
+    lateFeeClawback: data?.lateFeeClawback ?? false,
 
     // Keep compatibility for unused fields
     refundMethod: data?.refundMethod || 'BankTransfer',
@@ -421,6 +425,57 @@ const SectionAccounting = ({ formik }: { formik: any }) => (
                 fontSize="0.68rem"
               >
                 Account refund pay-out as operational school expense
+              </Typography>
+            </Box>
+          }
+        />
+      </Card>
+    </Grid>
+
+    {formik.values.considerAsExpense && (
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <HeadSelector
+          headType="Expense"
+          label="Refund Expense Head *"
+          value={formik.values.refundExpenseHeadId}
+          onChange={(val) => formik.setFieldValue('refundExpenseHeadId', val)}
+          error={formik.touched.refundExpenseHeadId && Boolean(formik.errors.refundExpenseHeadId)}
+          helperText={formik.touched.refundExpenseHeadId && formik.errors.refundExpenseHeadId}
+        />
+      </Grid>
+    )}
+
+    {/* Late-Fee Clawback */}
+    <Grid size={{ xs: 12, sm: 6 }}>
+      <Card
+        variant="outlined"
+        sx={{
+          px: 2,
+          py: 1,
+          display: 'flex',
+          alignItems: 'center',
+          bgcolor: formik.values.lateFeeClawback ? 'info.lighter' : 'transparent',
+          borderColor: formik.values.lateFeeClawback ? 'info.light' : 'divider',
+          transition: 'all 0.2s ease',
+          cursor: 'pointer',
+        }}
+        onClick={() => formik.setFieldValue('lateFeeClawback', !formik.values.lateFeeClawback)}
+      >
+        <FormControlLabel
+          sx={{ m: 0, pointerEvents: 'none' }}
+          control={<Switch size="small" checked={formik.values.lateFeeClawback} />}
+          label={
+            <Box ml={0.5}>
+              <Typography variant="body2" fontWeight={600} fontSize="0.8rem">
+                Late-Fee Clawback
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+                fontSize="0.68rem"
+              >
+                Clawback any late fee collected from student
               </Typography>
             </Box>
           }

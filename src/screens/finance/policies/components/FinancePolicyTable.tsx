@@ -120,16 +120,6 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
           </Box>
         ),
       },
-      {
-        id: 'policyCode',
-        label: 'Policy Code',
-        align: 'left',
-        render: (value, row) => (
-          <Typography variant="caption" fontSize="13px" color="text.secondary">
-            {(row as any).policyType === 'collection' ? '-' : value || '-'}
-          </Typography>
-        ),
-      },
       // ── Policy Specific Columns ──
       ...(policyType === 'payment'
         ? [
