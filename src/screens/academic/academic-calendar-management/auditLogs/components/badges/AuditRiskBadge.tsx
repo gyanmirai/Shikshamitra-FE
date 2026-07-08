@@ -2,13 +2,13 @@
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Tooltip, Stack, Box } from '@mui/material';
+import { Box, Stack, Tooltip } from '@mui/material';
 
 import { AuditRiskLevel } from '../../types/auditLogs.types';
 import {
+  RISK_ICONS,
   RISK_LABELS,
   RISK_COLOR_KEYS,
-  RISK_ICONS,
   RISK_EXPLANATIONS,
 } from '../../constants/auditLogs.constants';
 
@@ -20,6 +20,8 @@ interface Props {
 
 /** Colored risk badge with an explanatory tooltip. */
 const AuditRiskBadge = ({ level, showTooltip = true, size = 'small' }: Props) => {
+  if (level == null) return null;
+
   const label = RISK_LABELS[level];
   const color = RISK_COLOR_KEYS[level];
   const icon = RISK_ICONS[level];

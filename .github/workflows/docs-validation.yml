@@ -1,0 +1,32 @@
+name: Documentation Validation
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'scripts/docs/**'
+      - 'AGENTS.md'
+      - '.agents/skills/**'
+      - '.gitignore'
+      - '.github/workflows/docs-validation.yml'
+  workflow_dispatch:
+
+env:
+  HUSKY: 0
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  frontend-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate docs
+        run: npm run docs:check

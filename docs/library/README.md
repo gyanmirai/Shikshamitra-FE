@@ -1,41 +1,71 @@
-# Library Frontend Handoff
+---
+module: library
+domain: overview
+content_type: Landing
+status: canonical
+updated_on: 2026-07-06
+owner: frontend-team
+audience: humans-and-agents
+---
 
-This is the frontend navigation index for the Library module. Canonical product and API documentation lives in the backend docs pack at [Library module documentation](../../../Shikshamitra-BE/docs/modules/library/README.md).
+# Understand Library frontend integration
 
-## Active Release Surface
+TL;DR: use this page as the entrypoint for Library routes, screens, clients, workflows, and frontend validation.
+Backend Library docs own product and API truth at [Library backend docs](../../../Shikshamitra-BE/docs/modules/library/README.md).
 
-The active Library menu is defined in `src/constants/library-menus.ts`:
+## Read order
 
-- Dashboard: `/library/dashboard`
-- All Books: `/library/book-list`
-- Issue & Return: `/library/issued-books`
-- Library Members: `/library/member-management`
-- Charges: `/library/charges-management`
-- Reports: `/library/reports`
-- Notification: `/library/notification`
-- Settings: `/library/settings/book-category`, `/library/settings/charge-type`, `/library/settings/library-timing`, `/library/settings/borrowing-and-return-rules`, `/library/settings/sectionManagement`
+Follow this order when changing Library frontend behavior:
 
-## Integration Files
+| Step | File | Use it to |
+|---|---|---|
+| 1 | [routes.md](./routes.md) | Confirm visible routes, menu status, and inactive surfaces |
+| 2 | [clients.md](./clients.md) | Find Redux Toolkit Query clients, adapters, and backend contract ownership |
+| 3 | [workflows.md](./workflows.md) | Trace catalog, issue, return, member, charge, report, and notification flows |
+| 4 | [testing.md](./testing.md) | Pick frontend docs, unit, contract, and browser checks |
 
-- `src/redux/library/libraryModuleApi.ts`: shared Library RTK module base.
-- `src/redux/library/library-adapters.ts`: backend DTO to screen-model mapping and mutation payload builders.
-- `src/redux/library/bookList/*`: book, copy, reservation, and member lookup endpoints.
-- `src/redux/library/issueAndReturnApi/*`: issue, return, accession lookup, and issue-return list endpoints.
-- `src/redux/library/libraryMembers/*`: member list/detail tab endpoints.
-- `src/redux/library/charges-management/*`: charge and charge-category endpoints.
-- `src/redux/library/dashboard-api.ts`: dashboard overview endpoint.
-- `src/redux/library/reports-api.ts`: report options, preview, export, status, and download endpoints.
-- `src/redux/library/copy-labels-api.ts`: copy-label endpoint.
-- `src/redux/library/notifications-api.ts`: notification settings, history, send, and reminder endpoints.
-- `src/redux/library/settingApi.tsx`: settings endpoints for categories, hours, borrowing rules, sections, and shelves.
+## Ownership boundary
 
-## Release Guards
+Frontend Library docs own visible navigation, App Router pages, screen folders, client integration, cache behavior, and browser workflows.
+Backend Library docs own product rules, endpoint contracts, permissions, errors, domain invariants, and data integrity.
+Do not duplicate backend behavior here when a link to the backend canonical doc is enough.
 
-- `src/screens/library/library-release-surface.test.ts` verifies active pages expose E2E smoke test IDs, prototype pages redirect away from release, and reports use the backend report panel.
-- `e2e/library/library-release-gate.spec.ts` is the gated browser release suite.
-- `e2e/library/library-api.ts` creates/reuses API fixtures for the Library E2E run.
-- `e2e/library/library-release-qa.md` records the latest QA evidence and blocker status.
+## Source of truth
 
-## Future Work Boundary
+Use these paths before searching broadly:
 
-Before Finance integration, complete Phase 3E browser sign-off against a live local API and FE stack. Keep Finance receipt mapping, acquisitions, vendor flows, write-off, RFID, ISBN/OpenLibrary enrichment, SMS, WhatsApp, report scheduling, and membership-expiry workflows out of the active frontend until their backend domains exist.
+| Need | Source |
+|---|---|
+| Visible navigation | `src/constants/library-menus.ts` |
+| App Router pages | `src/app/(auth-route)/library/**` |
+| Screens and components | `src/screens/library/**` |
+| Library API clients | `src/redux/library/**` |
+| Library tests | `src/redux/library/*.test.ts`, `src/screens/library/*.test.ts`, `e2e/library/**` |
+| Backend docs | `../../../Shikshamitra-BE/docs/modules/library/README.md` |
+| Backend contracts | `../../../Shikshamitra-BE/src/ShikshaMitra.Application.Contracts/Library/**` |
+
+## For agents
+
+Use this table before code search:
+
+| Question | First file |
+|---|---|
+| Which Library route or menu item is active? | [routes.md](./routes.md) |
+| Which API client owns a call? | [clients.md](./clients.md) |
+| Which workflow should I test? | [workflows.md](./workflows.md) |
+| Which command should I run? | [testing.md](./testing.md) |
+| Which backend API behavior is canonical? | `../../../Shikshamitra-BE/docs/modules/library/api.md` |
+
+## Validation
+
+Run these commands from the `Shikshamitra-FE` repo root:
+
+```bash
+npm run docs:check
+git diff --check
+```
+
+## Source inspection rule
+
+Use the files listed above and current source paths for Library behavior.
+Do not restore old handoff notes under `docs/`.

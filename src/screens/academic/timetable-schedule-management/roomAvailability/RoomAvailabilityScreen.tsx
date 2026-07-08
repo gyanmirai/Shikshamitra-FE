@@ -1,10 +1,15 @@
 'use client';
 
+// ── Components ─────────────────────────────────────────────────────────────────
+import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
+import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
+import { Add, EventBusy, MeetingRoom, CheckCircle } from '@mui/icons-material';
 import {
   Box,
   Tab,
@@ -14,28 +19,12 @@ import {
   Stack,
   Alert,
   Button,
-  Divider,
   Tooltip,
   IconButton,
 } from '@mui/material';
-import {
-  Add,
-  Print,
-  GridView,
-  EventBusy,
-  TableChart,
-  MeetingRoom,
-  CheckCircle,
-  ViewTimeline,
-  CalendarMonth,
-} from '@mui/icons-material';
 
 // Removed MOCK_SUMMARY
-import { RoomFloorView } from './components/RoomFloorView';
-import { RoomUsageReport } from './components/RoomUsageReport';
 import { RoomDetailDrawer } from './components/RoomDetailDrawer';
-import { RoomTimelineView } from './components/RoomTimelineView';
-import { RoomCalendarView } from './components/RoomCalendarView';
 import { RoomApprovalQueue } from './components/RoomApprovalQueue';
 import { RoomAuditLogDrawer } from './components/RoomAuditLogDrawer';
 import { RoomReservationsTab } from './components/RoomReservationsTab';
@@ -43,17 +32,10 @@ import { RoomReservationsTab } from './components/RoomReservationsTab';
 import { RoomAvailabilityTable } from './components/RoomAvailabilityTable';
 import { RoomMaintenanceDrawer } from './components/RoomMaintenanceDrawer';
 import { DEFAULT_ROOM_AVAILABILITY_FILTERS } from './roomAvailability.constants';
-// ── Components ─────────────────────────────────────────────────────────────────
 // Removed RoomAvailabilityKpiCards
 import { SmartRoomReservationDrawer } from './components/SmartRoomReservationDrawer';
 import { DirectRoomReservationDrawer } from './components/DirectRoomReservationDrawer';
-import {
-  useRoomAvailability,
-  useRoomReservations,
-} from './roomAvailability.hooks';
-import dayjs from 'dayjs';
-import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
-import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
+import { useRoomAvailability, useRoomReservations } from './roomAvailability.hooks';
 
 import type {
   TabType,
@@ -61,6 +43,16 @@ import type {
   RoomAvailabilityItem,
   RoomAvailabilityFilters,
 } from './types';
+
+type BuildingWithFloors = {
+  id: string;
+  buildingName: string;
+  floors?: Array<{
+    id: string;
+    floorName?: string;
+    floorNo?: string | number;
+  }>;
+};
 
 const RoomAvailabilityScreen = () => {
   // ── State ──────────────────────────────────────────────────────────────────
@@ -79,13 +71,15 @@ const RoomAvailabilityScreen = () => {
   );
   const [isMaintenanceOpen, setMaintenanceOpen] = useState(false);
   const [isDirectReservationOpen, setDirectReservationOpen] = useState(false);
-  const [directReservationRoom, setDirectReservationRoom] = useState<RoomAvailabilityItem | null>(null);
+  const [directReservationRoom, setDirectReservationRoom] = useState<RoomAvailabilityItem | null>(
+    null
+  );
   const [maintenanceRoom, setMaintenanceRoom] = useState<RoomAvailabilityItem | null>(null);
   const [showAudit, setShowAudit] = useState(false);
 
   // ── Data Hooks ─────────────────────────────────────────────────────────────
   const { data: buildingsData } = useGetBuildingsQuery(undefined);
-  const buildings = buildingsData || [];
+  const buildings = useMemo(() => (buildingsData || []) as BuildingWithFloors[], [buildingsData]);
 
   const buildingOptions = useMemo(() => {
     const list = buildings.map((b) => ({
@@ -132,8 +126,6 @@ const RoomAvailabilityScreen = () => {
   const resetFilters = useCallback(() => {
     setFilters(DEFAULT_ROOM_AVAILABILITY_FILTERS);
   }, []);
-
-
 
   // ── Room actions ───────────────────────────────────────────────────────────
   const handleViewRoom = useCallback(
@@ -404,7 +396,6 @@ const RoomAvailabilityScreen = () => {
           />
         </Card>
       )}
-
 
       {/* ── Drawers ──────────────────────────────────────── */}
 

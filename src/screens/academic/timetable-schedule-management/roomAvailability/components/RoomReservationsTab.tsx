@@ -8,7 +8,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Chip, Stack, Tooltip, IconButton, Typography } from '@mui/material';
 
-import { ApprovalStatusChip, ReservationStatusChip } from './RoomStatusChip';
+import { ApprovalStatusChip } from './RoomStatusChip';
 
 import type { RoomReservation } from '../types';
 
@@ -97,7 +97,12 @@ export const RoomReservationsTab = ({
                   {row.isRecurring && row.recurringUntilDate && ` to ${row.recurringUntilDate}`}
                 </Typography>
                 {row.isRecurring && (
-                  <Typography variant="caption" color="primary.main" fontWeight={600} display="block">
+                  <Typography
+                    variant="caption"
+                    color="primary.main"
+                    fontWeight={600}
+                    display="block"
+                  >
                     (Recurring)
                   </Typography>
                 )}
@@ -174,7 +179,7 @@ export const RoomReservationsTab = ({
                     <IconButton
                       size="small"
                       color="primary"
-                      onClick={() => onEdit(row)}
+                      onClick={() => onEdit(row as RoomReservation)}
                       sx={{
                         bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
                         '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16) },
@@ -199,7 +204,9 @@ export const RoomReservationsTab = ({
                         }}
                         sx={{
                           bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
-                          '&:hover': { bgcolor: (theme) => alpha(theme.palette.success.main, 0.16) },
+                          '&:hover': {
+                            bgcolor: (theme) => alpha(theme.palette.success.main, 0.16),
+                          },
                         }}
                       >
                         <Iconify icon="mdi:check-circle" width={16} />

@@ -4,7 +4,11 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
 import { AuditSource } from '../../types/auditLogs.types';
-import { SOURCE_ICONS, SOURCE_LABELS, SOURCE_COLOR_KEYS } from '../../constants/auditLogs.constants';
+import {
+  SOURCE_ICONS,
+  SOURCE_LABELS,
+  SOURCE_COLOR_KEYS,
+} from '../../constants/auditLogs.constants';
 
 interface Props {
   source?: AuditSource;
@@ -12,6 +16,8 @@ interface Props {
 
 /** Compact source badge (Web / Mobile / API / Bulk Upload / System). */
 const AuditSourceBadge = ({ source }: Props) => {
+  if (source == null) return null;
+
   // Server data may omit the source — render nothing instead of an empty chip.
   if (!SOURCE_LABELS[source]) return null;
 

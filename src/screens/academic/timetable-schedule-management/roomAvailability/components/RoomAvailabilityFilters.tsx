@@ -4,8 +4,8 @@ import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useCallback, useMemo } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import React, { useMemo, useState, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import {
   Box,
@@ -79,7 +79,9 @@ export const getActiveFilters = (currentFilters: Filters, buildings?: any[]) => 
   if (currentFilters.floor && currentFilters.floor !== 'all') {
     const buildingObj = (buildings || []).find((b) => b.id === currentFilters.building);
     const floorObj = (buildingObj?.floors || []).find((f: any) => f.id === currentFilters.floor);
-    const displayFloorName = floorObj ? (floorObj.floorName || `Floor ${floorObj.floorNo}`) : currentFilters.floor;
+    const displayFloorName = floorObj
+      ? floorObj.floorName || `Floor ${floorObj.floorNo}`
+      : currentFilters.floor;
     active.push({
       key: 'floor',
       label: `Floor: ${displayFloorName}`,
@@ -367,7 +369,7 @@ export const RoomAvailabilityFilters = ({
             />
             <CustomSelect
               label="Lecture Slot"
-              options={LECTURE_SLOT_OPTIONS}
+              options={LECTURE_SLOT_OPTIONS.map(({ value, label }) => ({ value, label }))}
               value={draftFilters.lectureSlot}
               onChange={(v) => handleDraftChange({ lectureSlot: v as string })}
               formControlProps={{ fullWidth: true }}
