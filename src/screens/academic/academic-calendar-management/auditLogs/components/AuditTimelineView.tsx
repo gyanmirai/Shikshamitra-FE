@@ -150,7 +150,7 @@ const AuditTimelineView = ({ logs, onLogClick, hasActiveFilters }: Props) => {
                             flexShrink: 0,
                           }}
                         >
-                          {getUserInitials(log.changedByName)}
+                          {getUserInitials(log.changedByName ?? undefined)}
                         </Avatar>
                         <Box sx={{ minWidth: 0 }}>
                           <AuditActionBadge action={log.action} />
@@ -173,14 +173,14 @@ const AuditTimelineView = ({ logs, onLogClick, hasActiveFilters }: Props) => {
                       </Stack>
 
                       <Stack direction="row" alignItems="center" gap={0.75} flexWrap="wrap">
-                        <Tooltip title={log.entityName}>
+                        <Tooltip title={log.entityName ?? ''}>
                           <Typography
                             variant="caption"
                             color="text.secondary"
                             noWrap
                             sx={{ maxWidth: 140 }}
                           >
-                            {log.entityName}
+                            {log.entityName ?? 'Unknown record'}
                           </Typography>
                         </Tooltip>
                         <AuditRiskBadge level={log.riskLevel} showTooltip={false} />

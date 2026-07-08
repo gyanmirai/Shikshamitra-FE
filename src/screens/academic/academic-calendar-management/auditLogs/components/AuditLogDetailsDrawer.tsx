@@ -28,8 +28,13 @@ import AuditMetadataPanel from './AuditMetadataPanel';
 import AuditApprovalTrail from './AuditApprovalTrail';
 import AuditActionBadge from './badges/AuditActionBadge';
 import AuditSourceBadge from './badges/AuditSourceBadge';
+import { AuditApprovalStatus } from '../types/auditLogs.types';
 import { getUserInitials, formatAuditTimestamp } from '../utils/auditFormatters';
-import { SOURCE_LABELS, APPROVAL_LABELS, APPROVAL_COLOR_KEYS } from '../constants/auditLogs.constants';
+import {
+  SOURCE_LABELS,
+  APPROVAL_LABELS,
+  APPROVAL_COLOR_KEYS,
+} from '../constants/auditLogs.constants';
 
 import type { AuditLog } from '../types/auditLogs.types';
 
@@ -152,12 +157,12 @@ const AuditLogDetailsDrawer = ({
 
   // Skip rows that would just repeat the header or show nothing.
   const showRecordRow = Boolean(log && log.entityName && log.entityName !== log.actionLabel);
-  const hasStatusChips = Boolean(
-    log &&
-      (log.riskLevel != null ||
-        SOURCE_LABELS[log.source] ||
-        (log.approvalStatus !== 0 && APPROVAL_LABELS[log.approvalStatus]))
-  );
+  const sourceLabel = log?.source != null ? SOURCE_LABELS[log.source] : undefined;
+  const approvalStatus = log?.approvalStatus ?? AuditApprovalStatus.NotRequired;
+  const approvalLabel = APPROVAL_LABELS[approvalStatus];
+  const showApprovalChip =
+    approvalStatus !== AuditApprovalStatus.NotRequired && Boolean(approvalLabel);
+  const hasStatusChips = Boolean(log && (log.riskLevel != null || sourceLabel || showApprovalChip));
 
   return (
     <Drawer
@@ -215,13 +220,13 @@ const AuditLogDetailsDrawer = ({
               <Stack direction="row" alignItems="center" gap={1} sx={{ mt: 1.5 }} flexWrap="wrap">
                 <AuditRiskBadge level={log.riskLevel} />
                 <AuditSourceBadge source={log.source} />
-                {log.approvalStatus !== 0 && APPROVAL_LABELS[log.approvalStatus] && (
+                {showApprovalChip && (
                   <Label
                     variant="soft"
-                    color={APPROVAL_COLOR_KEYS[log.approvalStatus] as any}
+                    color={APPROVAL_COLOR_KEYS[approvalStatus] as any}
                     sx={{ fontWeight: 600, fontSize: 10 }}
                   >
-                    {APPROVAL_LABELS[log.approvalStatus]}
+                    {approvalLabel}
                   </Label>
                 )}
               </Stack>
@@ -245,7 +250,7 @@ const AuditLogDetailsDrawer = ({
                     color: 'primary.main',
                   }}
                 >
-                  {getUserInitials(log.changedByName)}
+                  {getUserInitials(log.changedByName ?? undefined)}
                 </Avatar>
                 <Box>
                   <Typography variant="body2" fontWeight={700} lineHeight={1.3}>
@@ -298,14 +303,14 @@ const AuditLogDetailsDrawer = ({
             >
               <Stack spacing={0}>
                 <DetailRow label="Action" value={log.actionLabel} />
-                {showRecordRow && <DetailRow label="Record" value={log.entityName} />}
-                <DetailRow label="Record Type" value={log.entityType} />
+                {showRecordRow && <DetailRow label="Record" value={log.entityName ?? undefined} />}
+                <DetailRow label="Record Type" value={log.entityType ?? undefined} />
                 <DetailRow
                   label="Reason"
                   value={log.reason || 'No reason provided'}
                   muted={!log.reason}
                 />
-                {SOURCE_LABELS[log.source] && (
+                {sourceLabel && (
                   <DetailRow label="Source">
                     <AuditSourceBadge source={log.source} />
                   </DetailRow>

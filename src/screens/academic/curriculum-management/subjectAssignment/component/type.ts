@@ -62,6 +62,13 @@ export interface ISubjectFormValues {
   subjectName: string;
   subjects?: ISubjectDetail[];
   subjectType: number;
+  isAiSuggested?: boolean;
+  isCopiedFromPreviousYear?: boolean;
+  primaryTeacherName?: string;
+  chaptersCount?: number;
+  weeklyPeriods?: number;
+  lastUpdatedAt?: string;
+  setupHealthScore?: number;
 
   // New schema fields
   academicMediumId?: string;

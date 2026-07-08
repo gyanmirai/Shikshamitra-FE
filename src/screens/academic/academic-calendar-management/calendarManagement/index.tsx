@@ -314,7 +314,7 @@ const CalendarManagement = () => {
   const handleDeleteDay = async (day: any) => {
     const ids =
       Array.isArray(day?.deleteIds) && day.deleteIds.length > 0 ? day.deleteIds : [day?.id];
-    const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+    const uniqueIds = Array.from(new Set(ids.filter(Boolean))) as string[];
 
     if (uniqueIds.length === 0) return;
 

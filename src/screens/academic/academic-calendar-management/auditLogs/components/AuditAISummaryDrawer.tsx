@@ -19,7 +19,7 @@ interface Props {
 
 /** Builds a mock AI summary for the full audit log set. */
 const buildWeeklySummary = (logs: AuditLog[]) => {
-  const high = logs.filter((l) => l.riskLevel >= 3).length;
+  const high = logs.filter((l) => (l.riskLevel ?? 0) >= 3).length;
   const workingDayImpacts = logs.filter((l) => (l.impact?.workingDaysAffected ?? 0) > 0).length;
   const publishedMods = logs.filter((l) => l.actionLabel.includes('Published')).length;
   const suspicious = high > 2 || publishedMods > 0;

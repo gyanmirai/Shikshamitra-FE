@@ -364,16 +364,21 @@ export const buildMockAnalytics = (logs: AuditLog[]) => {
   const byEntity = new Map<string, number>();
 
   logs.forEach((l) => {
+    const riskLevel = l.riskLevel ?? AuditRiskLevel.Low;
+    const changedByName = l.changedByName ?? 'Unknown user';
+    const changedByRole = l.changedByRole ?? 'Unknown role';
+    const entityName = l.entityName ?? 'Unknown record';
+
     byAction.set(l.actionLabel, (byAction.get(l.actionLabel) ?? 0) + 1);
-    byRisk.set(l.riskLevel, (byRisk.get(l.riskLevel) ?? 0) + 1);
+    byRisk.set(riskLevel, (byRisk.get(riskLevel) ?? 0) + 1);
     const u = byUser.get(l.changedByUserId) ?? {
-      name: l.changedByName,
-      role: l.changedByRole,
+      name: changedByName,
+      role: changedByRole,
       count: 0,
     };
     u.count += 1;
     byUser.set(l.changedByUserId, u);
-    byEntity.set(l.entityName, (byEntity.get(l.entityName) ?? 0) + 1);
+    byEntity.set(entityName, (byEntity.get(entityName) ?? 0) + 1);
   });
 
   return {
@@ -389,7 +394,8 @@ export const buildMockAnalytics = (logs: AuditLog[]) => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5),
     criticalCount: logs.filter((l) => l.riskLevel === AuditRiskLevel.Critical).length,
-    highRiskCount: logs.filter((l) => l.riskLevel >= AuditRiskLevel.High).length,
+    highRiskCount: logs.filter((l) => (l.riskLevel ?? AuditRiskLevel.Low) >= AuditRiskLevel.High)
+      .length,
     pendingApprovalCount: logs.filter(
       (l) => l.approvalStatus === AuditApprovalStatus.PendingApproval
     ).length,

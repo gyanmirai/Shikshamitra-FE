@@ -150,7 +150,7 @@ export const RoomAvailabilityTable = ({
                   <IconButton
                     size="small"
                     disabled={row.status !== 'available'}
-                    onClick={() => onReserveRoom?.(row)}
+                    onClick={() => onReserveRoom?.(row as RoomAvailabilityItem)}
                     color="primary"
                   >
                     <Iconify icon="mdi:calendar-plus" width={18} />
@@ -161,7 +161,11 @@ export const RoomAvailabilityTable = ({
 
             {canApprove && row.status === 'pendingApproval' && (
               <Tooltip title="View Approval">
-                <IconButton size="small" color="info" onClick={() => onCancelReservation?.(row)}>
+                <IconButton
+                  size="small"
+                  color="info"
+                  onClick={() => onCancelReservation?.(row as RoomAvailabilityItem)}
+                >
                   <Iconify icon="mdi:check-decagram" width={18} />
                 </IconButton>
               </Tooltip>

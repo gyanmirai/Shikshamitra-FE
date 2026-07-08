@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { GlobalIcons } from 'src/utils/icons';
@@ -269,6 +270,10 @@ const SubstitutionManagementScreen = () => {
   const [availabilityForm, setAvailabilityForm] = useState(defaultAvailabilityForm);
   const [actionAnchor, setActionAnchor] = useState<HTMLElement | null>(null);
   const [actionRowId, setActionRowId] = useState('');
+
+  const patchFilters = useCallback((patch: Partial<typeof DEFAULT_SUBSTITUTION_FILTERS>) => {
+    setFilters((prev) => ({ ...prev, ...patch }));
+  }, []);
 
   const filteredSubstitutions = useMemo(() => {
     const dateValue = filters.filterDate?.format('YYYY-MM-DD');
@@ -819,7 +824,7 @@ const SubstitutionManagementScreen = () => {
     setActionAnchor(null);
   };
 
-  const substitutionColumns = [
+  const substitutionColumns: IColumn[] = [
     { id: 'date', label: 'Date', filterType: 'date' as const, minWidth: 120, sticky: true },
     { id: 'period', label: 'Period', minWidth: 110 },
     { id: 'time', label: 'Time', minWidth: 120 },
@@ -827,7 +832,10 @@ const SubstitutionManagementScreen = () => {
       id: 'className',
       label: 'Class / Div',
       minWidth: 120,
-      render: (_value: string, row: SubstitutionRow) => `${row.className}-${row.divisionName}`,
+      render: (_value, row: IData) => {
+        const substitution = row as SubstitutionRow;
+        return `${substitution.className}-${substitution.divisionName}`;
+      },
     },
     { id: 'subjectName', label: 'Subject', minWidth: 130 },
     { id: 'originalTeacherName', label: 'Original Teacher', minWidth: 170 },
@@ -841,7 +849,7 @@ const SubstitutionManagementScreen = () => {
       id: 'assignedRoomName',
       label: 'Room',
       minWidth: 130,
-      render: (value: string, row: SubstitutionRow) => value || row.roomName,
+      render: (value, row: IData) => value || (row as SubstitutionRow).roomName,
     },
     { id: 'reason', label: 'Reason', minWidth: 120 },
     {
@@ -869,8 +877,8 @@ const SubstitutionManagementScreen = () => {
       id: 'conflictStatus',
       label: 'Conflict',
       minWidth: 140,
-      render: (value: ConflictStatus, row: SubstitutionRow) =>
-        renderConflict(value, row.conflictReason),
+      render: (value: ConflictStatus, row: IData) =>
+        renderConflict(value, (row as SubstitutionRow).conflictReason),
     },
     {
       id: 'aiScore',
@@ -888,23 +896,26 @@ const SubstitutionManagementScreen = () => {
       isFilter: false,
       sticky: true,
       stickyPosition: 'right' as const,
-      render: (_value: unknown, row: SubstitutionRow) => (
-        <Stack direction="row" spacing={0.75} justifyContent="center">
-          <Button
-            size="small"
-            variant={row.substituteTeacherName ? 'outlined' : 'contained'}
-            disabled={['Completed', 'Cancelled'].includes(row.status)}
-            onClick={() => openAssignDialog(row.id)}
-          >
-            {row.substituteTeacherName ? 'Reassign' : 'Assign'}
-          </Button>
-          <Tooltip title="More actions">
-            <IconButton size="small" onClick={(event) => openActionMenu(event, row.id)}>
-              <MoreVert fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Stack>
-      ),
+      render: (_value, row: IData) => {
+        const substitution = row as SubstitutionRow;
+        return (
+          <Stack direction="row" spacing={0.75} justifyContent="center">
+            <Button
+              size="small"
+              variant={substitution.substituteTeacherName ? 'outlined' : 'contained'}
+              disabled={['Completed', 'Cancelled'].includes(substitution.status)}
+              onClick={() => openAssignDialog(substitution.id)}
+            >
+              {substitution.substituteTeacherName ? 'Reassign' : 'Assign'}
+            </Button>
+            <Tooltip title="More actions">
+              <IconButton size="small" onClick={(event) => openActionMenu(event, substitution.id)}>
+                <MoreVert fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        );
+      },
     },
   ];
 
@@ -1312,7 +1323,7 @@ const SubstitutionManagementScreen = () => {
 
           {/* Filters Button aligned on the right side of the Tabs row */}
           <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: 2 }}>
-            <FiltersBar filters={filters} onChange={setFilters} onReset={clearFilters} />
+            <FiltersBar filters={filters} onChange={patchFilters} onReset={clearFilters} />
           </Stack>
         </Stack>
 
@@ -1321,7 +1332,7 @@ const SubstitutionManagementScreen = () => {
           <Box sx={{ px: 2, py: 1.25, bgcolor: 'background.neutral' }}>
             <SubstitutionActiveFilters
               filters={filters}
-              onChange={setFilters}
+              onChange={patchFilters}
               onReset={clearFilters}
             />
           </Box>

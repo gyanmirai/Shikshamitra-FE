@@ -37,7 +37,7 @@ const planStatusColor: Record<
   Rescheduled: 'info',
   Cancelled: 'default',
   AutoCreated: 'info',
-  AiGenerated: 'secondary',
+  AiGenerated: 'info',
 };
 
 type Props = {

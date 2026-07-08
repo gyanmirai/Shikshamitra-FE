@@ -7,7 +7,6 @@ import {
   Box,
   Card,
   Chip,
-  Grid,
   Stack,
   Skeleton,
   Typography,
@@ -96,13 +95,23 @@ export const RoomUsageReport = () => {
   if (isLoading) {
     return (
       <Stack spacing={2}>
-        <Grid container spacing={2}>
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 2,
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(4, 1fr)',
+            },
+          }}
+        >
           {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-            <Grid item xs={12} sm={6} md={3} key={i}>
+            <Box key={i}>
               <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 2 }} />
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
         <Skeleton variant="rectangular" height={350} sx={{ borderRadius: 2 }} />
       </Stack>
     );
@@ -117,9 +126,20 @@ export const RoomUsageReport = () => {
         <Typography variant="h6" sx={{ mb: 1.5 }}>
           Usage Overview
         </Typography>
-        <Grid container spacing={2}>
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 2,
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(3, minmax(0, 1fr))',
+              lg: 'repeat(7, minmax(0, 1fr))',
+            },
+          }}
+        >
           {kpis.map((kpi) => (
-            <Grid item xs={12} sm={6} md={3} lg={12 / 7 > 1 ? 2 : 3} key={kpi.label}>
+            <Box key={kpi.label}>
               <Card sx={{ borderRadius: 2 }}>
                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                   <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -148,9 +168,9 @@ export const RoomUsageReport = () => {
                   </Stack>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       </Box>
 
       {/* Utilization Bars */}

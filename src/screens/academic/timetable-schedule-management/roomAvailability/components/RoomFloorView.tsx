@@ -7,7 +7,6 @@ import {
   Box,
   Card,
   Chip,
-  Grid,
   Stack,
   Tooltip,
   Typography,
@@ -113,9 +112,20 @@ export const RoomFloorView = ({ rooms, onRoomClick, onReserveRoom }: RoomFloorVi
             <Chip size="small" label={`${buildingRooms.length} rooms`} variant="outlined" />
           </Stack>
 
-          <Grid container spacing={1.5}>
+          <Box
+            sx={{
+              display: 'grid',
+              gap: 1.5,
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                md: 'repeat(3, minmax(0, 1fr))',
+                lg: 'repeat(4, minmax(0, 1fr))',
+              },
+            }}
+          >
             {buildingRooms.map((room) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={room.roomId}>
+              <Box key={room.roomId}>
                 <Card
                   sx={{
                     border: 2,
@@ -201,9 +211,9 @@ export const RoomFloorView = ({ rooms, onRoomClick, onReserveRoom }: RoomFloorVi
                     </CardContent>
                   </CardActionArea>
                 </Card>
-              </Grid>
+              </Box>
             ))}
-          </Grid>
+          </Box>
         </Box>
       ))}
 

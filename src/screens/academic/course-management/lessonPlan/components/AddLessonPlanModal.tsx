@@ -383,4 +383,3 @@ const AddLessonPlanModal = ({
 };
 
 export default AddLessonPlanModal;
-export type { LessonFormState };

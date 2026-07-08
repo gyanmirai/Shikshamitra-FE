@@ -1,9 +1,9 @@
 'use client';
 
-import { CalendarAuditAction, CALENDAR_AUDIT_ACTION_LABELS } from 'src/enums/academic-calendar';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
-import { Stack, Box, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { CalendarAuditAction, CALENDAR_AUDIT_ACTION_LABELS } from 'src/enums/academic-calendar';
 
 /** Action icon + color mapping (kept consistent with the legacy screen). */
 const ACTION_META: Record<
@@ -23,6 +23,11 @@ const ACTION_META: Record<
   [CalendarAuditAction.EmergencyClosureDeclared]: { icon: 'mdi:alert-octagon', colorKey: 'error' },
   [CalendarAuditAction.ImpactResolved]: { icon: 'mdi:check-circle', colorKey: 'success' },
   [CalendarAuditAction.OverrideApplied]: { icon: 'mdi:shield-check', colorKey: 'secondary' },
+  [CalendarAuditAction.CalendarDeleted]: { icon: 'mdi:calendar-remove', colorKey: 'error' },
+  [CalendarAuditAction.WorkingHourAdded]: { icon: 'mdi:clock-plus-outline', colorKey: 'success' },
+  [CalendarAuditAction.WorkingHourUpdated]: { icon: 'mdi:clock-edit-outline', colorKey: 'info' },
+  [CalendarAuditAction.WorkingHourDeleted]: { icon: 'mdi:clock-remove-outline', colorKey: 'error' },
+  [CalendarAuditAction.SettingsUpdated]: { icon: 'mdi:cog-outline', colorKey: 'warning' },
 };
 
 interface Props {
