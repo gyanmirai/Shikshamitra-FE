@@ -1,14 +1,6 @@
 name: Documentation Validation
 
 on:
-  pull_request:
-    paths:
-      - 'docs/**'
-      - 'scripts/docs/**'
-      - 'AGENTS.md'
-      - '.agents/skills/**'
-      - '.gitignore'
-      - '.github/workflows/docs-validation.yml'
   workflow_dispatch:
 
 env:

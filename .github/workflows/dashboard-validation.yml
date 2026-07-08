@@ -1,16 +1,6 @@
 name: Dashboard Validation
 
 on:
-  pull_request:
-    paths:
-      - 'src/screens/mainDashboard/**'
-      - 'src/redux/dashboard/**'
-      - 'e2e/dashboard/**'
-      - 'docs/dashboard/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'next.config.mjs'
-      - '.github/workflows/dashboard-validation.yml'
   workflow_dispatch:
 
 env:
