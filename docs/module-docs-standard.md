@@ -3,7 +3,7 @@ module: frontend-docs
 domain: standard
 content_type: Reference
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-07-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -24,8 +24,7 @@ docs/<module>/
   clients.md
   workflows.md
   testing.md
-  references/
-    README.md
+  references/        # optional, only when active deep notes exist
     <topic>.md
 ```
 
@@ -40,6 +39,12 @@ Each active file has one job.
 | `clients.md` | Reference | Map Redux Toolkit Query clients, adapters, contracts, and backend ownership |
 | `workflows.md` | How-to | Trace screen-level user flows and integration effects |
 | `testing.md` | Troubleshooting | Name docs, unit, contract, type, lint, and browser checks |
+
+## Supporting folder
+
+Use `references/` only when the five active pages need deeper supporting detail.
+Do not add empty `references/README.md` placeholders.
+A `references/README.md` is allowed only when it indexes active reference files.
 
 ## Ownership boundary
 

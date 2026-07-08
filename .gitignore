@@ -22,7 +22,11 @@ artifacts/
 # production
 .next
 .agent/
-.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/shikshamitra-module-docs/
+!.agents/skills/shikshamitra-module-docs/**
 .claude/
 .swc
 _static
