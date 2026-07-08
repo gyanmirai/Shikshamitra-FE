@@ -18,6 +18,7 @@ export interface FeeHeadGroupHeaderProps {
   onCheckboxToggle: () => void;
   onExpandToggle: () => void;
   applyInAllState?: { isApplying: boolean; amount: number | string };
+  isFullRefund?: boolean;
   onApplyInAllAmountChange?: (amount: number | string) => void;
   onApplyInAllToggle?: () => void;
 }
@@ -31,6 +32,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   onCheckboxToggle,
   onExpandToggle,
   applyInAllState = { isApplying: false, amount: '' },
+  isFullRefund = false,
   onApplyInAllAmountChange,
   onApplyInAllToggle,
 }): React.ReactElement => {
@@ -148,7 +150,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
       )}
 
       <Box flex={1} />
-      {hasSelectedMonths && (
+      {hasSelectedMonths && !isFullRefund && (
         <Box display="flex" alignItems="center" gap={1}>
           <NumericFormatCustom
             size="small"

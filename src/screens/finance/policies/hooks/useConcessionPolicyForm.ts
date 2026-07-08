@@ -61,32 +61,6 @@ const getInitialValues = (
     pendingFeeHandling: d?.pendingFeeHandling || null,
     futureInstallmentStrategy: d?.futureInstallmentStrategy || null,
     walletHeadId: d?.walletHeadId || '',
-
-    // Card 5 – Demand Behaviour
-    existingDemand: d?.existingDemand || 'RecalculateAutomatically',
-    receiptBehaviour: d?.receiptBehaviour || 'KeepOriginalReceipt',
-    lateFeeBehaviour: d?.lateFeeBehaviour || 'KeepExisting',
-    demandStatus: d?.demandStatus || 'UpdateImmediately',
-
-    // Legacy / compat
-    eligibilityType: d?.eligibilityType || 'Custom',
-    eligibilityCriteria: d?.eligibilityCriteria || '',
-    discountType: d?.discountType || 'Percentage',
-    discountValue: d?.discountValue ?? 0,
-    discountRules: d?.discountRules || [],
-    requireApproval: d?.requireApproval ?? false,
-    approvalLevels: d?.approvalLevels || [],
-    minimumApprovalCount: d?.minimumApprovalCount ?? null,
-    reasonMandatory: d?.reasonMandatory ?? false,
-    supportingDocumentsRequired: d?.supportingDocumentsRequired ?? false,
-    requiredDocumentTypes: d?.requiredDocumentTypes || [],
-    approvalRoleIds: d?.approvalRoleIds || [],
-    allowStacking: d?.allowStacking ?? false,
-    maximumStackingCount: d?.maximumStackingCount ?? null,
-    governmentSchemeCode: d?.governmentSchemeCode || '',
-    governmentSchemeDetails: d?.governmentSchemeDetails || '',
-    validFrom: d?.validFrom || null,
-    validTo: d?.validTo || null,
   };
 };
 
@@ -226,7 +200,7 @@ export function useConcessionPolicyForm({
       values.feeHeadScope === 'EntireFeeStructure' ||
       (values.feeHeadScope === 'SelectedFeeHeads' && values.applicableFeeHeads.length > 0);
     const applicationValid = !!values.applyOn;
-    const demandValid = !!values.existingDemand;
+
     const isReadyToPublish = generalValid && calcValid && feeHeadsValid && applicationValid;
 
     return {
@@ -234,7 +208,7 @@ export function useConcessionPolicyForm({
       calcValid,
       feeHeadsValid,
       applicationValid,
-      demandValid,
+
       isReadyToPublish,
     };
   }, [formik]);

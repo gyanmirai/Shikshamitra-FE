@@ -23,16 +23,6 @@ export type LateFeeCalculationType =
   | 'PerWeek'
   | 'PerMonth';
 
-export type ConcessionDiscountType = 'Percentage' | 'FlatAmount';
-
-export type ConcessionEligibilityType =
-  | 'Sibling'
-  | 'Staff'
-  | 'MeritBased'
-  | 'NeedBased'
-  | 'GovernmentScheme'
-  | 'Custom';
-
 export type ConcessionCalculationMethod = 'Percentage' | 'FixedAmount' | 'FullWaiver' | 'Manual';
 export type ConcessionCalculationBase = 'OriginalFee' | 'OutstandingAmount' | 'FeeHeadAmount';
 export type ConcessionRoundOff = 'None' | 'RoundUp' | 'RoundDown' | 'NearestRupee';
@@ -57,17 +47,7 @@ export type ConcessionFutureInstallmentStrategy =
   | 'EqualDistribution'
   | 'RemainingInstallments'
   | 'CurrentInstallment';
-export type ConcessionExistingDemand =
-  | 'RecalculateAutomatically'
-  | 'RecalculateFutureOnly'
-  | 'ManualRecalculation'
-  | 'KeepExisting';
-export type ConcessionReceiptBehaviour =
-  | 'KeepOriginalReceipt'
-  | 'GenerateAdjustmentReceipt'
-  | 'ReverseOriginalReceipt';
-export type ConcessionLateFeeBehaviour = 'Recalculate' | 'KeepExisting' | 'RemoveLateFee';
-export type ConcessionDemandStatus = 'UpdateImmediately' | 'UpdateAfterApproval';
+
 export type ConcessionExpiry = 'Never' | 'SessionEnd' | 'FixedDate';
 export type ConcessionRenewal = 'Manual' | 'Automatic' | 'ReapprovalRequired';
 export type ConcessionApplyOn_FeeHeads = 'EntireFeeStructure' | 'SelectedFeeHeads';
@@ -217,13 +197,6 @@ export type ILateFeePolicyFormValues = Omit<
 
 // ─── Concession Policy ────────────────────────────────────────────────────────
 
-export interface IConcessionDiscountRule {
-  feeHeadId: string;
-  feeHeadName?: string;
-  discountType: ConcessionDiscountType;
-  discountValue: number;
-}
-
 export interface IConcessionPolicy extends IFinancePolicyBase {
   policyType: 'concession';
 
@@ -248,34 +221,6 @@ export interface IConcessionPolicy extends IFinancePolicyBase {
   pendingFeeHandling: ConcessionPendingFeeHandling | null;
   futureInstallmentStrategy: ConcessionFutureInstallmentStrategy | null;
   walletHeadId?: string;
-
-  // Card 5 – Demand Behaviour
-  existingDemand: ConcessionExistingDemand;
-  receiptBehaviour: ConcessionReceiptBehaviour;
-  lateFeeBehaviour: ConcessionLateFeeBehaviour;
-  demandStatus: ConcessionDemandStatus;
-
-  // Card 6 – Approval Workflow
-  requireApproval: boolean;
-  approvalLevels: string[];
-  minimumApprovalCount: number | null;
-  reasonMandatory: boolean;
-  supportingDocumentsRequired: boolean;
-  requiredDocumentTypes: string[];
-
-  // Legacy / backward-compat
-  eligibilityType: ConcessionEligibilityType;
-  eligibilityCriteria: string;
-  discountType: ConcessionDiscountType;
-  discountValue: number;
-  discountRules: IConcessionDiscountRule[];
-  approvalRoleIds: string[];
-  allowStacking: boolean;
-  maximumStackingCount: number | null;
-  governmentSchemeCode: string;
-  governmentSchemeDetails: string;
-  validFrom: string | null;
-  validTo: string | null;
 }
 
 export type IConcessionPolicyFormValues = Omit<

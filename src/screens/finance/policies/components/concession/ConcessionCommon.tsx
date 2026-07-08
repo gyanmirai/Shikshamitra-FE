@@ -83,7 +83,6 @@ interface ConcessionSummaryPanelProps {
     calcValid: boolean;
     feeHeadsValid: boolean;
     applicationValid: boolean;
-    demandValid: boolean;
     isReadyToPublish: boolean;
   };
   simulation: {
@@ -295,7 +294,7 @@ export function ConcessionSummaryPanel({
             <ValidationCheck label="Calculation Valid" valid={checks.calcValid} />
             <ValidationCheck label="Fee Heads Configured" valid={checks.feeHeadsValid} />
             <ValidationCheck label="Application Rules Valid" valid={checks.applicationValid} />
-            <ValidationCheck label="Demand Behaviour Set" valid={checks.demandValid} />
+
             {checks.isReadyToPublish ? (
               <Chip
                 label="Ready to Publish"

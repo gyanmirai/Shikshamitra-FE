@@ -140,6 +140,31 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     if (formik.touched.feeHeadRefunds) setShowValidation(true);
   }, [formik.touched.feeHeadRefunds]);
 
+  // Effect to handle refundType change to 'full'
+  useEffect(() => {
+    if (formik.values.refundType === 'full' && formik.values.feeHeadRefunds.length > 0) {
+      const refunds = formik.values.feeHeadRefunds;
+      let needsUpdate = false;
+      const updated = refunds.map((fh) => {
+        const fhInfo = feeHeads.find((f) => f.feeHeadId === fh.feeHeadId);
+        if (!fhInfo) return fh;
+        const newMonths = fh.months.map((m) => {
+          const item = fhInfo.items.find((i) => i.month === m.month);
+          const refundable = item ? Math.max(0, item.refundable) : 0;
+          if (m.amount !== refundable) {
+            needsUpdate = true;
+            return { ...m, amount: refundable };
+          }
+          return m;
+        });
+        return { ...fh, months: newMonths };
+      });
+      if (needsUpdate) {
+        formik.setFieldValue('feeHeadRefunds', updated, false);
+      }
+    }
+  }, [formik.values.refundType, formik.values.feeHeadRefunds, feeHeads, formik]);
+
   /**
    * Memoization Justification:
    * - toggleMonth is passed as a prop to FeeHeadGroup children
@@ -152,13 +177,18 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       const existing = refunds.find((fh) => fh.feeHeadId === feeHeadId);
 
       let updated;
+      const fhInfo = feeHeads.find((f) => f.feeHeadId === feeHeadId);
+      const itemInfo = fhInfo?.items.find((i) => i.month === month);
+      const refundable = itemInfo ? Math.max(0, itemInfo.refundable) : 0;
+      const initialAmount = formik.values.refundType === 'full' ? refundable : '';
+
       if (!existing) {
-        updated = [...refunds, { feeHeadId, months: [{ month, dueFeeId, amount: '' }] }];
+        updated = [...refunds, { feeHeadId, months: [{ month, dueFeeId, amount: initialAmount }] }];
       } else {
         const hasMonth = existing.months.some((m) => m.month === month);
         const updatedMonths = hasMonth
           ? existing.months.filter((m) => m.month !== month)
-          : [...existing.months, { month, dueFeeId, amount: '' }];
+          : [...existing.months, { month, dueFeeId, amount: initialAmount }];
 
         if (updatedMonths.length === 0) {
           updated = refunds.filter((fh) => fh.feeHeadId !== feeHeadId);
@@ -171,7 +201,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       formik.setFieldValue('feeHeadRefunds', updated);
       formik.setFieldTouched('feeHeadRefunds', true, false);
     },
-    [formik]
+    [formik, feeHeads]
   );
 
   /**
@@ -201,14 +231,18 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
             months: refundableItems.map((i) => ({
               month: i.month,
               dueFeeId: i.dueFeeId,
-              amount: '',
+              amount: formik.values.refundType === 'full' ? Math.max(0, i.refundable) : '',
             })),
           },
         ];
       } else {
         const toAdd = refundableItems
           .filter((i) => !existing.months.some((e) => e.month === i.month))
-          .map((i) => ({ month: i.month, dueFeeId: i.dueFeeId, amount: '' }));
+          .map((i) => ({
+            month: i.month,
+            dueFeeId: i.dueFeeId,
+            amount: formik.values.refundType === 'full' ? Math.max(0, i.refundable) : '',
+          }));
         updated = refunds.map((fh) =>
           fh.feeHeadId === feeHead.feeHeadId ? { ...fh, months: [...fh.months, ...toAdd] } : fh
         );

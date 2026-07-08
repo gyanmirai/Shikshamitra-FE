@@ -17,7 +17,6 @@ import { Box, Button, Drawer, Typography } from '@mui/material';
 
 import { ConcessionSummaryPanel } from './concession/ConcessionCommon';
 import { useConcessionPolicyForm } from '../hooks/useConcessionPolicyForm';
-import ConcessionDemandSection from './concession/ConcessionDemandSection';
 import ConcessionFooterActions from './concession/ConcessionFooterActions';
 import ConcessionGeneralSection from './concession/ConcessionGeneralSection';
 import ConcessionFeeHeadsSection from './concession/ConcessionFeeHeadsSection';
@@ -135,9 +134,6 @@ export default function ConcessionPolicyDrawer({
 
               {/* Card 4 — Application Behaviour */}
               <ConcessionApplicationSection formik={formik} />
-
-              {/* Card 5 — Demand Behaviour */}
-              <ConcessionDemandSection formik={formik} />
             </Box>
           </Scrollbar>
 
