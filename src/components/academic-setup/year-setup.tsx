@@ -37,6 +37,7 @@ import {
   Select,
   MenuItem,
   Collapse,
+  ButtonBase,
   Typography,
   IconButton,
   FormControl,
@@ -88,6 +89,17 @@ interface NodeData {
   children?: NodeData[];
   parentsData?: any;
 }
+
+// Per-level icon + "what's inside" label, kept to a single neutral tone so the
+// hierarchy reads at a glance without relying on color.
+const NODE_TYPE_META: Record<NodeType, { icon: string; childLabel: string }> = {
+  'Academic Year': { icon: 'solar:calendar-bold-duotone', childLabel: 'Education Boards' },
+  'Education Board': { icon: 'solar:library-bold-duotone', childLabel: 'Mediums' },
+  Medium: { icon: 'solar:global-bold-duotone', childLabel: 'Stages' },
+  Organization: { icon: 'solar:layers-minimalistic-bold-duotone', childLabel: 'Standards' },
+  Standard: { icon: 'solar:notebook-bold-duotone', childLabel: 'Divisions' },
+  Division: { icon: 'solar:users-group-rounded-bold-duotone', childLabel: '' },
+};
 
 // ----------------------------------------------------------------------
 
@@ -246,7 +258,7 @@ const YearSetup = () => {
         name: currentAcademicYear.name,
         type: 'Academic Year' as NodeType,
         data: currentAcademicYear,
-        children: [],
+        children: treeData,
         parentsData: {},
       };
     }
@@ -351,12 +363,14 @@ const YearSetup = () => {
         }
         handleClose={boardDialog.onFalse}
         open={boardDialog.value}
+        maxWidth="sm"
       >
         <BoardForm
           handleClose={boardDialog.onFalse}
           academicYearId={selectedAcademicYear}
           editData={null}
           boards={boards}
+          academicYear={currentAcademicYear}
         />
       </CustomDialog>
 
@@ -407,6 +421,13 @@ const YearSetup = () => {
                 </Select>
               </FormControl>
 
+              {currentAcademicYear?.startDate && currentAcademicYear?.endDate && (
+                <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                  {dayjs(currentAcademicYear.startDate).format('DD MMM YYYY')} –{' '}
+                  {dayjs(currentAcademicYear.endDate).format('DD MMM YYYY')}
+                </Typography>
+              )}
+
               <Stack direction="row" spacing={0.5}>
                 <CustomTooltip title="Edit Year">
                   <IconButton
@@ -451,6 +472,10 @@ const YearSetup = () => {
               Add Board
             </Button>
           </Stack>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            Select an academic year, then build out its boards, mediums, standards and divisions
+            from the hierarchy on the left.
+          </Typography>
         </Card>
 
         {/* Master-Detail Body */}
@@ -477,9 +502,12 @@ const YearSetup = () => {
                 <Typography
                   variant="overline"
                   color="text.secondary"
-                  sx={{ fontWeight: 700, letterSpacing: 1 }}
+                  sx={{ fontWeight: 700, letterSpacing: 1, display: 'block' }}
                 >
                   HIERARCHY
+                </Typography>
+                <Typography variant="caption" color="text.disabled">
+                  Board → Medium → Stage → Standard → Division
                 </Typography>
               </Box>
 
@@ -492,11 +520,22 @@ const YearSetup = () => {
 
                 {!isYearLoading && !isBoardLoading && treeData.length === 0 && (
                   <Box sx={{ p: 4, textAlign: 'center' }}>
+                    <Iconify
+                      icon="solar:library-bold-duotone"
+                      width={36}
+                      sx={{ color: 'text.disabled', opacity: 0.6, mb: 1 }}
+                    />
                     <Typography variant="body2" color="text.secondary">
-                      No boards found for this year.
+                      No education boards yet for this academic year.
                     </Typography>
-                    <Button size="small" variant="text" onClick={boardDialog.onTrue} sx={{ mt: 1 }}>
-                      Get Started
+                    <Button
+                      size="small"
+                      variant="text"
+                      startIcon={<Iconify icon="mingcute:add-line" width={16} />}
+                      onClick={boardDialog.onTrue}
+                      sx={{ mt: 1 }}
+                    >
+                      Add your first board
                     </Button>
                   </Box>
                 )}
@@ -524,6 +563,7 @@ const YearSetup = () => {
               <DetailsPanel
                 selectedNode={activeSelectedNode}
                 currentAcademicYear={currentAcademicYear}
+                onSelectChild={handleSelectNode}
               />
             ) : (
               <Card
@@ -538,14 +578,18 @@ const YearSetup = () => {
                   bgcolor: 'background.neutral',
                 }}
               >
-                <Stack alignItems="center" spacing={2}>
+                <Stack alignItems="center" spacing={1} sx={{ textAlign: 'center', px: 4 }}>
                   <Iconify
                     icon="solar:folder-open-bold-duotone"
                     width={64}
                     sx={{ color: 'text.disabled', opacity: 0.5 }}
                   />
                   <Typography color="text.secondary" variant="subtitle1">
-                    Select an item to view details
+                    Select an item from the hierarchy
+                  </Typography>
+                  <Typography color="text.disabled" variant="caption">
+                    Pick a board, medium, stage, standard or division on the left to view and manage
+                    it here.
                   </Typography>
                 </Stack>
               </Card>
@@ -640,6 +684,16 @@ const SidebarItem = ({
             <Box sx={{ width: 18, mr: 1, flexShrink: 0 }} />
           )}
 
+          <Iconify
+            icon={NODE_TYPE_META[node.type].icon}
+            width={17}
+            sx={{
+              mr: 1,
+              flexShrink: 0,
+              color: isSelected ? 'primary.main' : 'text.disabled',
+            }}
+          />
+
           <ListItemText
             primary={node.name}
             primaryTypographyProps={{
@@ -706,9 +760,42 @@ const SidebarItem = ({
 interface DetailsPanelProps {
   selectedNode: NodeData;
   currentAcademicYear: AcademicYear;
+  onSelectChild: (node: NodeData) => void;
 }
 
-const DetailsPanel = ({ selectedNode, currentAcademicYear }: DetailsPanelProps) => {
+// Small neutral (non-colored) fact pill — icon + label + value.
+const StatPill = ({
+  icon,
+  label,
+  value,
+}: {
+  icon: string;
+  label: string;
+  value: React.ReactNode;
+}) => (
+  <Stack
+    direction="row"
+    alignItems="center"
+    spacing={1}
+    sx={{
+      px: 1.5,
+      py: 0.75,
+      borderRadius: 1.5,
+      border: (t) => `1px solid ${t.palette.divider}`,
+      bgcolor: 'background.neutral',
+    }}
+  >
+    <Iconify icon={icon} width={16} sx={{ color: 'text.disabled', flexShrink: 0 }} />
+    <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+      {value}
+    </Typography>
+    <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+      {label}
+    </Typography>
+  </Stack>
+);
+
+const DetailsPanel = ({ selectedNode, currentAcademicYear, onSelectChild }: DetailsPanelProps) => {
   // Generate Breadcrumbs
   const { parentsData } = selectedNode;
 
@@ -722,6 +809,51 @@ const DetailsPanel = ({ selectedNode, currentAcademicYear }: DetailsPanelProps) 
   if (parentsData?.organization) crumbs.push(parentsData.organization.name);
   if (parentsData?.standard) crumbs.push(parentsData.standard.name);
   if (selectedNode.type !== 'Academic Year') crumbs.push(selectedNode.name); // Current node
+
+  const meta = NODE_TYPE_META[selectedNode.type];
+  const childCount = selectedNode.children?.length ?? 0;
+
+  // Build the "what am I looking at" facts for this node type — this is the
+  // informative part: real counts/dates instead of a generic sentence.
+  const stats: { icon: string; label: string; value: React.ReactNode }[] = [];
+
+  if (selectedNode.type === 'Division') {
+    stats.push({
+      icon: 'solar:users-group-rounded-bold-duotone',
+      label: 'seat capacity',
+      value: selectedNode.data?.strength ?? '—',
+    });
+  } else {
+    stats.push({
+      icon: meta.icon,
+      label: meta.childLabel,
+      value: childCount,
+    });
+  }
+
+  const rangeStart =
+    selectedNode.type === 'Academic Year'
+      ? currentAcademicYear?.startDate
+      : selectedNode.type === 'Education Board'
+        ? selectedNode.data?.startDate
+        : null;
+  const rangeEnd =
+    selectedNode.type === 'Academic Year'
+      ? currentAcademicYear?.endDate
+      : selectedNode.type === 'Education Board'
+        ? selectedNode.data?.endDate
+        : null;
+
+  if (rangeStart && rangeEnd) {
+    stats.push({
+      icon: 'solar:calendar-bold-duotone',
+      label: '',
+      value: `${dayjs(rangeStart).format('DD MMM YYYY')} – ${dayjs(rangeEnd).format('DD MMM YYYY')}`,
+    });
+  }
+
+  const emptyChildrenHint =
+    childCount === 0 && meta.childLabel ? `No ${meta.childLabel.toLowerCase()} added yet.` : null;
 
   return (
     <Card
@@ -757,31 +889,113 @@ const DetailsPanel = ({ selectedNode, currentAcademicYear }: DetailsPanelProps) 
         </Breadcrumbs>
 
         <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
-          <Box>
+          <Box sx={{ minWidth: 0 }}>
             <Stack direction="row" alignItems="center" spacing={1.5}>
-              <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
+              <Iconify
+                icon={meta.icon}
+                width={26}
+                sx={{ color: 'text.secondary', flexShrink: 0 }}
+              />
+              <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }} noWrap>
                 {selectedNode.name}
               </Typography>
               <Chip
                 label={selectedNode.type}
-                color="primary"
-                variant="soft"
+                variant="outlined"
                 size="small"
-                sx={{ borderRadius: 1, fontWeight: 600, px: 0.5 }}
+                sx={{ borderRadius: 1, fontWeight: 600, px: 0.5, color: 'text.secondary' }}
               />
             </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, maxWidth: 600 }}>
-              {selectedNode.data.description ||
-                `Manage settings and configurations for this ${selectedNode.type}.`}
-            </Typography>
+
+            <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mt: 2 }}>
+              {stats.map((s, i) => (
+                <StatPill key={i} icon={s.icon} label={s.label} value={s.value} />
+              ))}
+            </Stack>
+
+            {emptyChildrenHint && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mt: 1.5, display: 'block' }}
+              >
+                {emptyChildrenHint} Use the button on the right to add the first one.
+              </Typography>
+            )}
           </Box>
 
           {/* Context Actions */}
-          <Stack direction="row" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
             <NodeActions node={selectedNode} />
           </Stack>
         </Stack>
       </Box>
+
+      {childCount > 0 && (
+        <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
+          <Typography
+            variant="overline"
+            color="text.secondary"
+            sx={{ fontWeight: 700, letterSpacing: 1, mb: 1.5, display: 'block' }}
+          >
+            {meta.childLabel} ({childCount})
+          </Typography>
+
+          <Grid container spacing={1.5}>
+            {selectedNode.children!.map((child) => {
+              const childMeta = NODE_TYPE_META[child.type];
+              const grandChildCount = child.children?.length ?? 0;
+              return (
+                <Grid key={child.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                  <ButtonBase
+                    onClick={() => onSelectChild(child)}
+                    sx={{
+                      width: '100%',
+                      textAlign: 'left',
+                      borderRadius: 2,
+                      border: (t) => `1px solid ${t.palette.divider}`,
+                      p: 1.75,
+                      transition: 'all 0.15s',
+                      '&:hover': {
+                        borderColor: 'text.disabled',
+                        bgcolor: 'action.hover',
+                      },
+                    }}
+                  >
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      spacing={1.25}
+                      sx={{ width: '100%' }}
+                    >
+                      <Iconify
+                        icon={childMeta.icon}
+                        width={20}
+                        sx={{ color: 'text.disabled', flexShrink: 0 }}
+                      />
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography variant="body2" fontWeight={700} noWrap>
+                          {child.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {child.type === 'Division'
+                            ? `${child.data?.strength ?? '—'} seats`
+                            : `${grandChildCount} ${childMeta.childLabel}`}
+                        </Typography>
+                      </Box>
+                      <Iconify
+                        icon="eva:arrow-ios-forward-fill"
+                        width={16}
+                        sx={{ color: 'text.disabled', flexShrink: 0 }}
+                      />
+                    </Stack>
+                  </ButtonBase>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Box>
+      )}
     </Card>
   );
 };
@@ -813,7 +1027,16 @@ const NodeActions = ({ node }: { node: NodeData }) => {
 // Reuse logic from original file but render buttons
 const BoardActionController = ({ data, parentsData }: { data: Board; parentsData: any }) => {
   const modal = useBoolean();
+  const edit = useBoolean();
   const confirm = useBoolean();
+  const { data: boardsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+  });
+  const siblingBoards = useMemo(
+    () => boardsData?.items?.filter((b: Board) => b.academicYearId === data.academicYearId) || [],
+    [boardsData?.items, data.academicYearId]
+  );
   const [deleteBoard, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteBoardMutation,
@@ -829,6 +1052,32 @@ const BoardActionController = ({ data, parentsData }: { data: Board; parentsData
         open={modal.value}
       >
         <MediumForm handleClose={modal.onFalse} editData={null} boardId={data?.id} />
+      </CustomDialog>
+
+      <CustomDialog
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {`Update Board (${data.name})`}
+            <CustomTooltip
+              title="Governing authority for curriculum and exams."
+              placement="right"
+              arrow
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        handleClose={edit.onFalse}
+        open={edit.value}
+        maxWidth="sm"
+      >
+        <BoardForm
+          handleClose={edit.onFalse}
+          editData={data}
+          academicYearId={data.academicYearId}
+          academicYear={parentsData?.year}
+          boards={siblingBoards}
+        />
       </CustomDialog>
 
       <ConfirmDialog
@@ -865,6 +1114,14 @@ const BoardActionController = ({ data, parentsData }: { data: Board; parentsData
         size="small"
       >
         Delete
+      </Button>
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={edit.onTrue}
+        startIcon={<Iconify icon="solar:pen-bold" />}
+      >
+        Edit
       </Button>
       <Button
         variant="contained"
@@ -1277,22 +1534,32 @@ const YearForm = ({ handleClose, editData }: IYearForm) => {
     }
   };
 
-  // Parse existing name like "2025-2026" back into dayjs year objects
+  // An academic year spans 01-Jun of the start year to 31-Mar of the following
+  // year — not "today's day/month with the year swapped" (which produced
+  // nonsensical stored ranges like 07-Jul-2034 to 07-Jul-2035).
+  const startOfAcademicYear = (yr: number) => dayjs().year(yr).month(5).date(1);
+  const endOfAcademicYear = (yr: number) => dayjs().year(yr).month(2).date(31);
+
+  // Parse existing name like "2025-2026" back into dayjs year objects.
+  // Prefers the record's real startDate/endDate (edit mode) over reconstructing
+  // from the name, since the name alone can't tell us the correct day/month.
   const parseStartYear = () => {
-    if (!editData?.name) return dayjs().year(dayjs().year());
+    if (editData?.startDate) return dayjs(editData.startDate);
+    if (!editData?.name) return startOfAcademicYear(dayjs().year());
     const parts = String(editData.name).split('-');
     const yr = parseInt(parts[0], 10);
-    return dayjs().year(isNaN(yr) ? dayjs().year() : yr);
+    return startOfAcademicYear(isNaN(yr) ? dayjs().year() : yr);
   };
   const parseEndYear = () => {
-    if (!editData?.name) return dayjs().year(dayjs().year() + 1);
+    if (editData?.endDate) return dayjs(editData.endDate);
+    if (!editData?.name) return endOfAcademicYear(dayjs().year() + 1);
     const parts = String(editData.name).split('-');
     // Support both "2025-2026" (full) and legacy "2025-26" (short) formats
     const startYr = parseInt(parts[0], 10);
     const endPart = parseInt(parts[1], 10);
-    if (isNaN(startYr) || isNaN(endPart)) return dayjs().year(dayjs().year() + 1);
+    if (isNaN(startYr) || isNaN(endPart)) return endOfAcademicYear(dayjs().year() + 1);
     const endYr = endPart > 100 ? endPart : Math.floor(startYr / 100) * 100 + endPart;
-    return dayjs().year(endYr);
+    return endOfAcademicYear(endYr);
   };
 
   const formik = useFormik({
@@ -1350,10 +1617,13 @@ const YearForm = ({ handleClose, editData }: IYearForm) => {
             views={['year']}
             format="YYYY"
             onChange={(newValue) => {
-              formik.setFieldValue('startYear', newValue);
-              // Auto-set End Year to exactly Start Year + 1
-              if (newValue) {
-                formik.setFieldValue('endYear', dayjs(newValue).add(1, 'year'));
+              // Anchor to 01-Jun of the picked year regardless of which day/month
+              // the MUI year-view carried over from the previous value.
+              const anchoredStart = newValue ? startOfAcademicYear(newValue.year()) : newValue;
+              formik.setFieldValue('startYear', anchoredStart);
+              // Auto-set End Year to 31-Mar of the following year
+              if (anchoredStart) {
+                formik.setFieldValue('endYear', endOfAcademicYear(anchoredStart.year() + 1));
               }
             }}
             slotProps={{
@@ -1381,7 +1651,12 @@ const YearForm = ({ handleClose, editData }: IYearForm) => {
                 ? dayjs(formik.values.startYear).add(1, 'year').endOf('year')
                 : undefined
             }
-            onChange={(newValue) => formik.setFieldValue('endYear', newValue)}
+            onChange={(newValue) =>
+              formik.setFieldValue(
+                'endYear',
+                newValue ? endOfAcademicYear(newValue.year()) : newValue
+              )
+            }
             slotProps={{
               textField: {
                 size: 'small',

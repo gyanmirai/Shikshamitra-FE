@@ -10,6 +10,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { useSlotForm } from './useSlotForm';
 import FormFooter from './components/FormFooter';
 import FormSkeleton from './components/FormSkeleton';
+import CapacitySummary from './components/CapacitySummary';
 import SlotConfigurationAccordion from './components/SlotConfigurationAccordion';
 
 import type { ICreateSlotsFormProps } from '../type';
@@ -148,6 +149,8 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                 </Tooltip>
               )}
             </Stack>
+
+            {hasSlotConfigs && <CapacitySummary slotConfigurations={slotConfigs} />}
 
             {/* Empty state */}
             {!hasSlotConfigs && (

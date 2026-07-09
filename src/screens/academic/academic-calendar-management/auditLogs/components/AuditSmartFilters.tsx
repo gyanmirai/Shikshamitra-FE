@@ -126,7 +126,7 @@ const AuditSmartFilters = ({
             inputRef={searchRef}
             fullWidth
             size="small"
-            placeholder="Search by action, user, reason, entity, IP, or field..."
+            placeholder="Search audit logs..."
             value={filters.search}
             onChange={(e) => set('search', e.target.value)}
             sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.02) }}

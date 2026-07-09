@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Card, Chip, Stack, Typography, CardContent, LinearProgress } from '@mui/material';
+import { Box, Card, Stack, Typography, CardContent, LinearProgress } from '@mui/material';
 
 import { subjectOptions, initialCoverageData } from '../lessonPlanData';
 
@@ -59,40 +60,40 @@ const CoverageTrackerTab = ({ lessonPlans, coverageData = initialCoverageData }:
             label: 'Total Chapters Tracked',
             value: coverageData.length,
             icon: 'mdi:book-multiple-outline',
-            color: 'primary.main',
+            color: 'primary',
           },
           {
             label: 'Chapters Delayed',
             value: totalDelayed,
             icon: 'mdi:clock-alert-outline',
-            color: 'warning.main',
+            color: 'warning',
           },
           {
             label: 'Chapters Critical',
             value: totalCritical,
             icon: 'mdi:alert-circle-outline',
-            color: 'error.main',
+            color: 'error',
           },
         ].map((item) => (
-          <Card key={item.label} variant="outlined" sx={{ borderRadius: 2 }}>
-            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
+          <Card key={item.label}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Box
                 sx={{
-                  width: 44,
-                  height: 44,
+                  width: 40,
+                  height: 40,
                   borderRadius: 1.5,
                   display: 'grid',
                   placeItems: 'center',
-                  bgcolor: 'action.hover',
-                  color: item.color,
+                  bgcolor: `${item.color}.lighter`,
+                  color: `${item.color}.main`,
                   flexShrink: 0,
                 }}
               >
-                <Iconify icon={item.icon} width={24} />
+                <Iconify icon={item.icon} width={22} />
               </Box>
               <Box>
                 <Typography variant="h4">{item.value}</Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="subtitle2" color="text.secondary">
                   {item.label}
                 </Typography>
               </Box>
@@ -121,13 +122,13 @@ const CoverageTrackerTab = ({ lessonPlans, coverageData = initialCoverageData }:
                     <Typography variant="body2" fontWeight={500}>
                       {item.subject}
                     </Typography>
-                    <Chip
-                      label={cfg.label}
-                      size="small"
+                    <Label
                       color={cfg.color}
                       variant="soft"
-                      icon={<Iconify icon={cfg.icon} width={12} />}
-                    />
+                      startIcon={<Iconify icon={cfg.icon} width={12} />}
+                    >
+                      {cfg.label}
+                    </Label>
                   </Stack>
                   <Stack direction="row" spacing={2}>
                     <Typography variant="caption" color="text.secondary">
@@ -249,12 +250,9 @@ const CoverageTrackerTab = ({ lessonPlans, coverageData = initialCoverageData }:
             render: (v: any) => {
               const cfg = statusConfig[v as keyof typeof statusConfig];
               return (
-                <Chip
-                  label={cfg?.label || v}
-                  color={cfg?.color || 'default'}
-                  size="small"
-                  variant="soft"
-                />
+                <Label color={cfg?.color || 'default'} variant="soft">
+                  {cfg?.label || v}
+                </Label>
               );
             },
           },

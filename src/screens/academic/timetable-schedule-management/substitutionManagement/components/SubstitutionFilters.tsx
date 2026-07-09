@@ -348,6 +348,7 @@ export const SubstitutionFilters = ({ filters, onChange, onReset }: Substitution
             <DatePicker
               label="Date"
               value={draftFilters.filterDate}
+              format="DD/MM/YYYY"
               onChange={(value) => handleDraftChange({ filterDate: value })}
               slotProps={{ textField: { size: 'small', fullWidth: true } }}
             />

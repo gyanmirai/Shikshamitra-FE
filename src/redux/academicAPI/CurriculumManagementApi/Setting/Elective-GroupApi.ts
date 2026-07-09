@@ -50,6 +50,47 @@ export const electiveGroupsApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.electiveGroup],
     }),
+
+    archiveElectiveGroup: builder.mutation({
+      query: ({ academicMediumId, id, body }) => ({
+        url: `/academic-mediums/${academicMediumId}/elective-groups/${id}/archive`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.electiveGroup],
+    }),
+
+    restoreElectiveGroup: builder.mutation({
+      query: ({ academicMediumId, id }) => ({
+        url: `/academic-mediums/${academicMediumId}/elective-groups/${id}/restore`,
+        method: 'POST',
+      }),
+      invalidatesTags: [academicType.electiveGroup],
+    }),
+
+    checkElectiveGroupDuplicate: builder.mutation({
+      query: ({ academicMediumId, body }) => ({
+        url: `/academic-mediums/${academicMediumId}/elective-groups/check-duplicate`,
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    getElectiveGroupUsage: builder.query({
+      query: ({ academicMediumId, id }) => ({
+        url: `/academic-mediums/${academicMediumId}/elective-groups/${id}/usage`,
+        method: 'GET',
+      }),
+      providesTags: [academicType.electiveGroup],
+    }),
+
+    getElectiveGroupAuditLogs: builder.query({
+      query: ({ academicMediumId, id }) => ({
+        url: `/academic-mediums/${academicMediumId}/elective-groups/${id}/audit-logs`,
+        method: 'GET',
+      }),
+      providesTags: [academicType.electiveGroup],
+    }),
   }),
   overrideExisting: false,
 });
@@ -61,4 +102,9 @@ export const {
   useAddElectiveGroupMutation,
   useUpdateElectiveGroupMutation,
   useDeleteElectiveGroupMutation,
+  useArchiveElectiveGroupMutation,
+  useRestoreElectiveGroupMutation,
+  useCheckElectiveGroupDuplicateMutation,
+  useGetElectiveGroupUsageQuery,
+  useGetElectiveGroupAuditLogsQuery,
 } = electiveGroupsApi;

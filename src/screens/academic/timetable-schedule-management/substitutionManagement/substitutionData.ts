@@ -8,7 +8,8 @@ export type SubstitutionStatus =
   | 'Completed'
   | 'Rejected'
   | 'Cancelled'
-  | 'Conflict';
+  | 'Conflict'
+  | 'Expired';
 
 export type SubstitutionPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
 
@@ -51,7 +52,7 @@ export type SubstitutionRow = {
   priority: SubstitutionPriority;
   acknowledgementStatus: AcknowledgementStatus;
   notificationStatus: 'Not Sent' | 'Queued' | 'Sent' | 'Reminder Sent' | 'Escalated';
-  source: 'Manual' | 'AI Suggested' | 'Auto Created' | 'HR Leave' | 'Calendar';
+  source: 'Manual' | 'AI Suggested' | 'Auto Created' | 'HR Leave' | 'Calendar' | 'Attendance';
   conflictStatus: ConflictStatus;
   conflictReason?: string;
   aiScore?: number;
@@ -67,6 +68,7 @@ export type SubstitutionRow = {
 
 export type TeacherAvailabilityRow = {
   id: string;
+  teacherId?: string | null;
   teacherName: string;
   departmentName: string;
   availabilityDate: string;
@@ -77,6 +79,7 @@ export type TeacherAvailabilityRow = {
   reason: string;
   isFullDay: boolean;
   affectedLectureCount: number;
+  canCreateSubstitution?: boolean;
   autoCreateSubstitutions: boolean;
   notifyLeadership: boolean;
   attachmentName?: string;
@@ -85,8 +88,20 @@ export type TeacherAvailabilityRow = {
 
 export type AffectedLectureRow = {
   id: string;
+  timetableId?: string | null;
+  timetableSlotId?: string | null;
+  slotSubjectId?: string | null;
+  standardId?: string | null;
+  divisionId?: string | null;
+  subjectId?: string | null;
+  roomId?: string | null;
+  teacherId?: string | null;
+  existingSubstitutionId?: string | null;
+  canCreateSubstitution?: boolean;
   period: string;
   time: string;
+  startTime: string;
+  endTime: string;
   className: string;
   divisionName: string;
   subjectName: string;
@@ -110,6 +125,11 @@ export type AvailableTeacherRow = {
   lastDutyDate: string;
   loadStatus: 'Low' | 'Medium' | 'High' | 'Overloaded';
   score: number;
+  coverageStartTime?: string;
+  coverageEndTime?: string;
+  coverageMinutes?: number;
+  isFullSlotCoverage?: boolean;
+  isPartialCoverage?: boolean;
   recommendationReason: string;
 };
 
@@ -271,6 +291,8 @@ export const affectedLectureTemplates: AffectedLectureRow[] = [
     id: 'aff-1',
     period: 'Period 1',
     time: '09:00 - 09:45',
+    startTime: '09:00',
+    endTime: '09:45',
     className: '7',
     divisionName: 'A',
     subjectName: 'Mathematics',
@@ -281,6 +303,8 @@ export const affectedLectureTemplates: AffectedLectureRow[] = [
     id: 'aff-2',
     period: 'Period 2',
     time: '10:00 - 10:45',
+    startTime: '10:00',
+    endTime: '10:45',
     className: '8',
     divisionName: 'B',
     subjectName: 'Science',
@@ -291,6 +315,8 @@ export const affectedLectureTemplates: AffectedLectureRow[] = [
     id: 'aff-3',
     period: 'Period 3',
     time: '11:00 - 11:45',
+    startTime: '11:00',
+    endTime: '11:45',
     className: '9',
     divisionName: 'A',
     subjectName: 'English',

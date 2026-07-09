@@ -3,6 +3,7 @@
 import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
+import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -97,7 +98,7 @@ export const defaultDiaryForm: DiaryFormState = {
 
 export const createDraftDiaryForm = (plan: LessonPlanRow): DiaryFormState => ({
   ...defaultDiaryForm,
-  lessonPlanId: plan.id,
+  lessonPlanId: plan.id || (plan as any).Id,
   actualDate: dayjs(plan.plannedDate),
   actualTopicCovered: plan.topic,
   actualCompletionPercentage: plan.plannedCompletionPercentage,
@@ -110,12 +111,13 @@ type Props = {
   existingDiary?: TeacherDiaryRow | null;
   allowBackdated?: boolean;
   maxBackdateDays?: number;
+  loading?: boolean;
   onClose: () => void;
   onSave: (form: DiaryFormState, submit: boolean) => void;
   onAiSummary?: () => void;
 };
 
-const TABS = ['Teaching', 'Reflection', 'Evidence', 'Settings'] as const;
+const TABS = ['Teaching', 'Reflection', 'Evidence'] as const;
 type TabKey = (typeof TABS)[number];
 
 const SubmitDiaryModal = ({
@@ -124,6 +126,7 @@ const SubmitDiaryModal = ({
   existingDiary,
   allowBackdated = true,
   maxBackdateDays = 3,
+  loading = false,
   onClose,
   onSave,
   onAiSummary,
@@ -195,6 +198,29 @@ const SubmitDiaryModal = ({
     onSave(form, submit);
   };
 
+  const tabIcon = (t: TabKey): string => {
+    switch (t) {
+      case 'Teaching':
+        return 'mdi:school-outline';
+      case 'Reflection':
+        return 'mdi:thought-bubble-outline';
+      case 'Evidence':
+        return 'mdi:paperclip';
+
+      default:
+        return 'mdi:circle-outline';
+    }
+  };
+
+  const sectionHeader = (icon: string, label: string) => (
+    <Stack direction="row" spacing={1} alignItems="center">
+      <Iconify icon={icon} width={16} sx={{ color: 'text.disabled' }} />
+      <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.6 }}>
+        {label}
+      </Typography>
+    </Stack>
+  );
+
   const diaryQualityScore = (): number => {
     let score = 0;
     if (form.classConducted) {
@@ -221,7 +247,18 @@ const SubmitDiaryModal = ({
   return (
     <CustomDialog
       open={open}
-      title={existingDiary ? 'Edit Teacher Diary' : 'Submit Teacher Diary'}
+      title={
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            {existingDiary ? 'Edit Teacher Diary' : 'Submit Teacher Diary'}
+          </Typography>
+          {form.isBackdated && (
+            <Label color="warning" variant="soft" startIcon={<Iconify icon="mdi:history" />}>
+              Backdated
+            </Label>
+          )}
+        </Stack>
+      }
       maxWidth="md"
       handleClose={onClose}
     >
@@ -230,28 +267,107 @@ const SubmitDiaryModal = ({
         <Box
           sx={{
             px: 3,
-            py: 1.5,
-            bgcolor: 'grey.50',
+            py: 2,
+            bgcolor: 'background.neutral',
             borderBottom: '1px solid',
             borderColor: 'divider',
           }}
         >
-          <Stack direction="row" spacing={3} flexWrap="wrap">
-            <Typography variant="caption" color="text.secondary">
-              <strong>Class:</strong> {plan.className}-{plan.divisionName}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              <strong>Subject:</strong> {plan.subjectName}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              <strong>Chapter:</strong> {plan.chapterName}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              <strong>Planned Topic:</strong> {plan.topic}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              <strong>Planned:</strong> {plan.plannedCompletionPercentage}%
-            </Typography>
+          <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+            <Stack
+              direction="row"
+              spacing={0.75}
+              alignItems="center"
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                borderRadius: '8px',
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Iconify icon="mdi:google-classroom" width={16} sx={{ color: 'primary.main' }} />
+              <Typography variant="caption" color="text.primary" sx={{ fontWeight: 600 }}>
+                Class: {plan.className}-{plan.divisionName}
+              </Typography>
+            </Stack>
+            <Stack
+              direction="row"
+              spacing={0.75}
+              alignItems="center"
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                borderRadius: '8px',
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Iconify icon="mdi:book-outline" width={16} sx={{ color: 'secondary.main' }} />
+              <Typography variant="caption" color="text.primary" sx={{ fontWeight: 600 }}>
+                Subject: {plan.subjectName}
+              </Typography>
+            </Stack>
+            <Stack
+              direction="row"
+              spacing={0.75}
+              alignItems="center"
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                borderRadius: '8px',
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Iconify
+                icon="mdi:book-open-page-variant-outline"
+                width={16}
+                sx={{ color: 'info.main' }}
+              />
+              <Typography variant="caption" color="text.primary" sx={{ fontWeight: 600 }}>
+                Chapter: {plan.chapterName}
+              </Typography>
+            </Stack>
+            <Stack
+              direction="row"
+              spacing={0.75}
+              alignItems="center"
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                borderRadius: '8px',
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Iconify icon="mdi:target" width={16} sx={{ color: 'warning.main' }} />
+              <Typography variant="caption" color="text.primary" sx={{ fontWeight: 600 }}>
+                Planned Topic: {plan.topic}
+              </Typography>
+            </Stack>
+            <Stack
+              direction="row"
+              spacing={0.75}
+              alignItems="center"
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                borderRadius: '8px',
+                bgcolor: 'primary.lighter',
+                border: '1px solid',
+                borderColor: 'primary.light',
+              }}
+            >
+              <Iconify icon="mdi:percent-outline" width={16} sx={{ color: 'primary.main' }} />
+              <Typography variant="caption" color="primary.dark" sx={{ fontWeight: 700 }}>
+                Planned: {plan.plannedCompletionPercentage}%
+              </Typography>
+            </Stack>
           </Stack>
         </Box>
       )}
@@ -259,353 +375,438 @@ const SubmitDiaryModal = ({
       <Tabs
         value={tab}
         onChange={(_, v) => setTab(v)}
-        variant="scrollable"
-        scrollButtons="auto"
-        sx={{ px: 3, borderBottom: '1px solid', borderColor: 'divider' }}
+        variant="standard"
+        scrollButtons={false}
+        sx={{
+          px: 3,
+          pt: 1.5,
+          pb: 1.5,
+          height: 100,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          '& .MuiTabs-indicator': {
+            display: 'none',
+          },
+          '& .MuiTabs-scrollButtons': {
+            display: 'none !important',
+          },
+        }}
       >
         {TABS.map((t) => (
-          <Tab key={t} label={t} value={t} />
+          <Tab
+            key={t}
+            label={t}
+            value={t}
+            icon={<Iconify icon={tabIcon(t)} width={18} />}
+            iconPosition="start"
+          />
         ))}
       </Tabs>
 
       <DialogScrollContent>
-        <Stack spacing={2.5}>
-          {error && <Alert severity="error">{error}</Alert>}
+        <Stack spacing={3}>
+          {error && (
+            <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
+              {error}
+            </Alert>
+          )}
 
           {/* Diary Quality Score */}
           <Box
             sx={{
               p: 1.5,
               bgcolor: qualityScore >= 70 ? 'success.lighter' : 'warning.lighter',
-              borderRadius: 1,
+              borderRadius: 1.5,
+              border: '1px solid',
+              borderColor: qualityScore >= 70 ? 'success.light' : 'warning.light',
             }}
           >
             <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="caption" fontWeight={600}>
-                Diary Quality Score
-              </Typography>
-              <Typography variant="caption" fontWeight={700}>
+              <Stack direction="row" spacing={0.75} alignItems="center">
+                <Iconify
+                  icon="mdi:chart-donut"
+                  width={16}
+                  sx={{ color: qualityScore >= 70 ? 'success.dark' : 'warning.dark' }}
+                />
+                <Typography variant="caption" fontWeight={600}>
+                  Diary Quality Score
+                </Typography>
+              </Stack>
+              <Label color={qualityScore >= 70 ? 'success' : 'warning'} variant="soft">
                 {qualityScore}%{qualityScore < 50 && ' — Needs Improvement'}
                 {qualityScore >= 50 && qualityScore < 75 && ' — Good'}
                 {qualityScore >= 75 && ' — Excellent'}
-              </Typography>
+              </Label>
             </Stack>
             <LinearProgress
               variant="determinate"
               value={qualityScore}
               color={qualityScore >= 70 ? 'success' : 'warning'}
-              sx={{ mt: 0.5, borderRadius: 1, height: 6 }}
+              sx={{ mt: 1, borderRadius: 1, height: 6 }}
             />
           </Box>
 
           {tab === 'Teaching' && (
             <>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-                <DatePicker
-                  label="Actual Date *"
-                  value={form.actualDate}
-                  onChange={(v) => set('actualDate', v)}
-                  slotProps={{ textField: { size: 'small', sx: { maxWidth: 200 } } }}
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={form.classConducted}
-                      onChange={(e) => set('classConducted', e.target.checked)}
-                    />
-                  }
-                  label="Class Conducted"
-                />
-                {form.isBackdated && (
-                  <Label color="warning" variant="soft">
-                    Backdated Entry
-                  </Label>
-                )}
-              </Stack>
-
-              {form.classConducted ? (
-                <>
-                  <TextField
-                    size="small"
-                    label="Actual Topic Covered *"
-                    value={form.actualTopicCovered}
-                    onChange={(e) => set('actualTopicCovered', e.target.value)}
-                    fullWidth
-                  />
-                  <TextField
-                    size="small"
-                    label="Actual Content Summary"
-                    value={form.actualContentSummary}
-                    onChange={(e) => set('actualContentSummary', e.target.value)}
-                    fullWidth
-                    multiline
-                    minRows={3}
-                    placeholder="Describe what was taught in detail..."
-                  />
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Actual Completion: {form.actualCompletionPercentage}%
-                      </Typography>
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        <Box sx={{ flex: 1 }}>
-                          <LinearProgress
-                            variant="determinate"
-                            value={form.actualCompletionPercentage}
-                            sx={{ height: 8, borderRadius: 1 }}
-                          />
-                        </Box>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={form.actualCompletionPercentage}
-                          onChange={(e) =>
-                            set('actualCompletionPercentage', Number(e.target.value))
-                          }
-                          inputProps={{ min: 0, max: 100, style: { width: 60 } }}
-                        />
-                      </Box>
-                    </Box>
-                    <CustomSelect
-                      label="Teaching Method Used"
-                      options={teachingMethodOptions}
-                      value={form.teachingMethodUsed}
-                      onChange={(v) => set('teachingMethodUsed', v as string)}
-                      formControlProps={{ sx: { flex: 1 } }}
-                    />
-                  </Stack>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    <CustomSelect
-                      label="Class Understanding Level"
-                      options={understandingLevelOptions}
-                      value={form.classUnderstandingLevel}
-                      onChange={(v) => set('classUnderstandingLevel', v as UnderstandingLevel)}
-                      formControlProps={{ sx: { flex: 1 } }}
-                    />
-                    <CustomSelect
-                      label="Student Engagement Level"
-                      options={engagementLevelOptions}
-                      value={form.studentEngagementLevel}
-                      onChange={(v) => set('studentEngagementLevel', v as EngagementLevel)}
-                      formControlProps={{ sx: { flex: 1 } }}
-                    />
-                  </Stack>
-                  <TextField
-                    size="small"
-                    label="Student Response"
-                    value={form.studentResponse}
-                    onChange={(e) => set('studentResponse', e.target.value)}
-                    fullWidth
-                    multiline
-                    minRows={2}
-                    placeholder="How did students respond to the lesson?"
-                  />
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    <TextField
-                      size="small"
-                      label="Homework Assigned"
-                      value={form.homeworkAssigned}
-                      onChange={(e) => set('homeworkAssigned', e.target.value)}
-                      fullWidth
+              <Box
+                sx={{
+                  p: 2.5,
+                  borderRadius: '12px',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: 'background.paper',
+                }}
+              >
+                <Stack spacing={2}>
+                  {sectionHeader('mdi:calendar-check-outline', 'Class Status')}
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                    <DatePicker
+                      label="Actual Date *"
+                      value={form.actualDate}
+                      onChange={(v) => set('actualDate', v)}
+                      slotProps={{ textField: { size: 'small', sx: { maxWidth: 200 } } }}
                     />
                     <FormControlLabel
                       control={
                         <Switch
-                          checked={form.needRevision}
-                          onChange={(e) => set('needRevision', e.target.checked)}
+                          checked={form.classConducted}
+                          onChange={(e) => set('classConducted', e.target.checked)}
                         />
                       }
-                      label="Needs Revision"
+                      label="Class Conducted"
                     />
                   </Stack>
+                </Stack>
+              </Box>
+
+              {form.classConducted ? (
+                <>
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      borderRadius: '12px',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      bgcolor: 'background.paper',
+                    }}
+                  >
+                    <Stack spacing={2.5}>
+                      {sectionHeader('mdi:book-open-variant', 'Lesson Coverage')}
+                      <TextField
+                        size="small"
+                        label="Actual Topic Covered *"
+                        value={form.actualTopicCovered}
+                        onChange={(e) => set('actualTopicCovered', e.target.value)}
+                        fullWidth
+                      />
+                      <TextField
+                        size="small"
+                        label="Actual Content Summary"
+                        value={form.actualContentSummary}
+                        onChange={(e) => set('actualContentSummary', e.target.value)}
+                        fullWidth
+                        multiline
+                        minRows={3}
+                        placeholder="Describe what was taught in detail..."
+                        helperText="Summarize the concepts, examples and activities actually covered"
+                      />
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <Box sx={{ flex: 1 }}>
+                          <Stack direction="row" justifyContent="space-between" alignItems="center">
+                            <Typography variant="body2" color="text.secondary">
+                              Actual Completion
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                              {form.actualCompletionPercentage}%
+                            </Typography>
+                          </Stack>
+                          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 1 }}>
+                            <Box sx={{ flex: 1 }}>
+                              <LinearProgress
+                                variant="determinate"
+                                value={form.actualCompletionPercentage}
+                                sx={{ height: 8, borderRadius: 1 }}
+                              />
+                            </Box>
+                            <TextField
+                              size="small"
+                              type="number"
+                              value={form.actualCompletionPercentage}
+                              onChange={(e) =>
+                                set('actualCompletionPercentage', Number(e.target.value))
+                              }
+                              inputProps={{ min: 0, max: 100, style: { width: 60 } }}
+                            />
+                          </Box>
+                        </Box>
+                        <CustomSelect
+                          label="Teaching Method Used"
+                          options={teachingMethodOptions}
+                          value={form.teachingMethodUsed}
+                          onChange={(v) => set('teachingMethodUsed', v as string)}
+                          formControlProps={{ sx: { flex: 1 } }}
+                        />
+                      </Stack>
+                    </Stack>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      borderRadius: '12px',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      bgcolor: 'background.paper',
+                    }}
+                  >
+                    <Stack spacing={2.5}>
+                      {sectionHeader('mdi:account-group-outline', 'Classroom Feedback')}
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <CustomSelect
+                          label="Class Understanding Level"
+                          options={understandingLevelOptions}
+                          value={form.classUnderstandingLevel}
+                          onChange={(v) => set('classUnderstandingLevel', v as UnderstandingLevel)}
+                          formControlProps={{ sx: { flex: 1 } }}
+                        />
+                        <CustomSelect
+                          label="Student Engagement Level"
+                          options={engagementLevelOptions}
+                          value={form.studentEngagementLevel}
+                          onChange={(v) => set('studentEngagementLevel', v as EngagementLevel)}
+                          formControlProps={{ sx: { flex: 1 } }}
+                        />
+                      </Stack>
+                      <TextField
+                        size="small"
+                        label="Student Response"
+                        value={form.studentResponse}
+                        onChange={(e) => set('studentResponse', e.target.value)}
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        placeholder="How did students respond to the lesson?"
+                      />
+                      <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={2}
+                        alignItems="center"
+                      >
+                        <TextField
+                          size="small"
+                          label="Homework Assigned"
+                          value={form.homeworkAssigned}
+                          onChange={(e) => set('homeworkAssigned', e.target.value)}
+                          fullWidth
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={form.needRevision}
+                              onChange={(e) => set('needRevision', e.target.checked)}
+                            />
+                          }
+                          label="Needs Revision"
+                          sx={{ whiteSpace: 'nowrap' }}
+                        />
+                      </Stack>
+                    </Stack>
+                  </Box>
                 </>
               ) : (
-                <Stack spacing={2}>
-                  <Alert severity="warning">
-                    Class not conducted. Please provide a reason and reschedule date if needed.
-                  </Alert>
-                  <CustomSelect
-                    label="Missed Reason *"
-                    options={missedReasonOptions}
-                    value={form.missedReason}
-                    onChange={(v) => set('missedReason', v as MissedReason)}
-                    formControlProps={{ sx: { maxWidth: 320 } }}
-                  />
-                  <DatePicker
-                    label="Rescheduled To"
-                    value={form.rescheduledToDate}
-                    onChange={(v) => set('rescheduledToDate', v)}
-                    slotProps={{ textField: { size: 'small', sx: { maxWidth: 220 } } }}
-                  />
-                </Stack>
+                <Box
+                  sx={{
+                    p: 2.5,
+                    borderRadius: '12px',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                  }}
+                >
+                  <Stack spacing={2}>
+                    <Alert severity="warning" icon={<Iconify icon="mdi:alert-outline" />}>
+                      Class not conducted. Please provide a reason and reschedule date if needed.
+                    </Alert>
+                    <CustomSelect
+                      label="Missed Reason *"
+                      options={missedReasonOptions}
+                      value={form.missedReason}
+                      onChange={(v) => set('missedReason', v as MissedReason)}
+                      formControlProps={{ sx: { maxWidth: 320 } }}
+                    />
+                    <DatePicker
+                      label="Rescheduled To"
+                      value={form.rescheduledToDate}
+                      onChange={(v) => set('rescheduledToDate', v)}
+                      slotProps={{ textField: { size: 'small', sx: { maxWidth: 220 } } }}
+                    />
+                  </Stack>
+                </Box>
               )}
             </>
           )}
 
           {tab === 'Reflection' && (
-            <>
-              <TextField
-                size="small"
-                label="Overall Reflection"
-                value={form.reflection}
-                onChange={(e) => set('reflection', e.target.value)}
-                fullWidth
-                multiline
-                minRows={3}
-                placeholder="Overall thoughts on today's lesson..."
-              />
-              <TextField
-                size="small"
-                label="What Went Well?"
-                value={form.whatWentWell}
-                onChange={(e) => set('whatWentWell', e.target.value)}
-                fullWidth
-                multiline
-                minRows={2}
-              />
-              <TextField
-                size="small"
-                label="What Was Difficult?"
-                value={form.whatWasDifficult}
-                onChange={(e) => set('whatWasDifficult', e.target.value)}
-                fullWidth
-                multiline
-                minRows={2}
-              />
-              <TextField
-                size="small"
-                label="Students Needing Support"
-                value={form.studentsNeedingSupport}
-                onChange={(e) => set('studentsNeedingSupport', e.target.value)}
-                fullWidth
-                placeholder="Names or roll numbers of students who need extra attention"
-              />
-              <TextField
-                size="small"
-                label="Next Class Follow-up"
-                value={form.nextClassFollowUp}
-                onChange={(e) => set('nextClassFollowUp', e.target.value)}
-                fullWidth
-                multiline
-                minRows={2}
-              />
-              <TextField
-                size="small"
-                label="Remedial Action Required"
-                value={form.remedialActionRequired}
-                onChange={(e) => set('remedialActionRequired', e.target.value)}
-                fullWidth
-                multiline
-                minRows={2}
-              />
-              <TextField
-                size="small"
-                label="Teacher Remarks"
-                value={form.teacherRemarks}
-                onChange={(e) => set('teacherRemarks', e.target.value)}
-                fullWidth
-                multiline
-                minRows={2}
-              />
-            </>
+            <Box
+              sx={{
+                p: 2.5,
+                borderRadius: '12px',
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+              }}
+            >
+              <Stack spacing={2.5}>
+                {sectionHeader('mdi:thought-bubble-outline', 'Teacher Reflection')}
+                <TextField
+                  size="small"
+                  label="Overall Reflection"
+                  value={form.reflection}
+                  onChange={(e) => set('reflection', e.target.value)}
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  placeholder="Overall thoughts on today's lesson..."
+                />
+                <TextField
+                  size="small"
+                  label="What Went Well?"
+                  value={form.whatWentWell}
+                  onChange={(e) => set('whatWentWell', e.target.value)}
+                  fullWidth
+                  multiline
+                  minRows={2}
+                />
+                <TextField
+                  size="small"
+                  label="What Was Difficult?"
+                  value={form.whatWasDifficult}
+                  onChange={(e) => set('whatWasDifficult', e.target.value)}
+                  fullWidth
+                  multiline
+                  minRows={2}
+                />
+                <TextField
+                  size="small"
+                  label="Students Needing Support"
+                  value={form.studentsNeedingSupport}
+                  onChange={(e) => set('studentsNeedingSupport', e.target.value)}
+                  fullWidth
+                  placeholder="Names or roll numbers of students who need extra attention"
+                />
+                <TextField
+                  size="small"
+                  label="Next Class Follow-up"
+                  value={form.nextClassFollowUp}
+                  onChange={(e) => set('nextClassFollowUp', e.target.value)}
+                  fullWidth
+                  multiline
+                  minRows={2}
+                />
+                <TextField
+                  size="small"
+                  label="Remedial Action Required"
+                  value={form.remedialActionRequired}
+                  onChange={(e) => set('remedialActionRequired', e.target.value)}
+                  fullWidth
+                  multiline
+                  minRows={2}
+                />
+                <TextField
+                  size="small"
+                  label="Teacher Remarks"
+                  value={form.teacherRemarks}
+                  onChange={(e) => set('teacherRemarks', e.target.value)}
+                  fullWidth
+                  multiline
+                  minRows={2}
+                />
+              </Stack>
+            </Box>
           )}
 
           {tab === 'Evidence' && (
-            <>
-              <Alert severity="info">
-                Upload classroom evidence to support your diary entry. Supported: photos, PDF,
-                worksheets.
-              </Alert>
-              <Box
-                sx={{
-                  border: '2px dashed',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                  p: 3,
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  '&:hover': { bgcolor: 'action.hover' },
-                }}
-                onClick={handleMockFileUpload}
-              >
-                <Iconify
-                  icon="mdi:cloud-upload-outline"
-                  width={40}
-                  sx={{ color: 'text.secondary', mb: 1 }}
-                />
-                <Typography variant="body2" color="text.secondary">
-                  Click to upload evidence (class photo, board work, worksheet, PDF)
-                </Typography>
-                <Typography variant="caption" color="text.disabled">
-                  Supported: JPG, PNG, PDF, MP4 (max 10 MB each)
-                </Typography>
-              </Box>
-              {mockFiles.length > 0 && (
-                <List dense>
-                  {mockFiles.map((file, i) => (
-                    <Box
-                      key={i}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        p: 1,
-                        bgcolor: 'grey.50',
-                        borderRadius: 1,
-                        mb: 0.5,
-                      }}
-                    >
-                      <Iconify icon="mdi:file-image-outline" />
-                      <Typography variant="body2" sx={{ flex: 1 }}>
-                        {file.name}
-                      </Typography>
-                      <CustomSelect
-                        label="Type"
-                        options={evidenceTypeOptions}
-                        value={file.type}
-                        onChange={() => {}}
-                        formControlProps={{ sx: { minWidth: 160 } }}
-                      />
-                      <IconButton
-                        size="small"
-                        onClick={() => setMockFiles((p) => p.filter((_, j) => j !== i))}
-                      >
-                        <Iconify icon="mdi:close" />
-                      </IconButton>
-                    </Box>
-                  ))}
-                </List>
-              )}
-            </>
-          )}
-
-          {tab === 'Settings' && (
-            <>
-              {allowBackdated && (
-                <>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={form.isBackdated}
-                        onChange={(e) => set('isBackdated', e.target.checked)}
-                      />
-                    }
-                    label={`Backdated Entry (max ${maxBackdateDays} days)`}
+            <Box
+              sx={{
+                p: 2.5,
+                borderRadius: '12px',
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+              }}
+            >
+              <Stack spacing={2.5}>
+                {sectionHeader('mdi:paperclip', 'Supporting Evidence')}
+                <Alert severity="info" icon={<Iconify icon="mdi:information-outline" />}>
+                  Upload classroom evidence to support your diary entry. Supported: photos, PDF,
+                  worksheets.
+                </Alert>
+                <Box
+                  sx={{
+                    border: '2px dashed',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    p: 3.5,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    bgcolor: 'background.neutral',
+                    transition: 'all 0.2s',
+                    '&:hover': { bgcolor: 'action.hover', borderColor: 'primary.main' },
+                  }}
+                  onClick={handleMockFileUpload}
+                >
+                  <Iconify
+                    icon="mdi:cloud-upload-outline"
+                    width={40}
+                    sx={{ color: 'primary.main', mb: 1 }}
                   />
-                  {form.isBackdated && (
-                    <TextField
-                      size="small"
-                      label="Backdated Reason *"
-                      value={form.backdatedReason}
-                      onChange={(e) => set('backdatedReason', e.target.value)}
-                      fullWidth
-                      multiline
-                      minRows={2}
-                    />
-                  )}
-                </>
-              )}
-            </>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    Click to upload evidence (class photo, board work, worksheet, PDF)
+                  </Typography>
+                  <Typography variant="caption" color="text.disabled">
+                    Supported: JPG, PNG, PDF, MP4 (max 10 MB each)
+                  </Typography>
+                </Box>
+                {mockFiles.length > 0 && (
+                  <List dense>
+                    {mockFiles.map((file, i) => (
+                      <Box
+                        key={i}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1.5,
+                          p: 1.5,
+                          bgcolor: 'background.neutral',
+                          borderRadius: '8px',
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          mb: 1,
+                        }}
+                      >
+                        <Iconify icon="mdi:file-image-outline" sx={{ color: 'primary.main' }} />
+                        <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
+                          {file.name}
+                        </Typography>
+                        <CustomSelect
+                          label="Type"
+                          options={evidenceTypeOptions}
+                          value={file.type}
+                          onChange={() => {}}
+                          formControlProps={{ sx: { minWidth: 160 } }}
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={() => setMockFiles((p) => p.filter((_, j) => j !== i))}
+                        >
+                          <Iconify icon="mdi:close" />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </List>
+                )}
+              </Stack>
+            </Box>
           )}
         </Stack>
       </DialogScrollContent>
@@ -618,27 +819,26 @@ const SubmitDiaryModal = ({
         alignItems="center"
         sx={{ p: 2 }}
       >
-        {onAiSummary && (
+        <Box />
+        <Stack direction="row" spacing={1}>
           <Button
             size="small"
-            variant="outlined"
-            color="secondary"
-            startIcon={<Iconify icon="mdi:robot-outline" />}
-            onClick={onAiSummary}
+            variant="text"
+            color="inherit"
+            startIcon={<Iconify icon="mdi:close" />}
+            onClick={onClose}
           >
-            AI Summary
-          </Button>
-        )}
-        <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
-          <Button variant="outlined" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="outlined" onClick={() => handleSave(false)}>
-            Save Draft
-          </Button>
-          <Button variant="contained" onClick={() => handleSave(true)}>
+          <LoadingButton
+            size="small"
+            variant="contained"
+            loading={loading}
+            startIcon={<Iconify icon="mdi:check-circle-outline" />}
+            onClick={() => handleSave(true)}
+          >
             Submit & Update Progress
-          </Button>
+          </LoadingButton>
         </Stack>
       </Stack>
     </CustomDialog>

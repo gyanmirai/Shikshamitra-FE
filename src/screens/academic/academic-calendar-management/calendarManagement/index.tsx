@@ -216,8 +216,8 @@ const CalendarManagement = () => {
     return calendarDays.filter((d) => d.appliesToAll || d.standardId === filterStandardId);
   }, [calendarDays, filterStandardId]);
 
-  const calendarStartDate = currentBoard?.startDate || selectedCalendar?.startDate || '';
-  const calendarEndDate = currentBoard?.endDate || selectedCalendar?.endDate || '';
+  const calendarStartDate = selectedCalendar?.startDate || currentBoard?.startDate || '';
+  const calendarEndDate = selectedCalendar?.endDate || currentBoard?.endDate || '';
   const calendarSummary = calculateCalendarSummary(
     calendarDays,
     calendarStartDate,
@@ -244,8 +244,8 @@ const CalendarManagement = () => {
         : startYear + 1;
 
       const startDate =
-        currentBoard?.startDate || currentYear.startDate || `${startYear}-06-01T00:00:00Z`;
-      const endDate = currentBoard?.endDate || currentYear.endDate || `${endYear}-03-31T00:00:00Z`;
+        currentYear.startDate || currentBoard?.startDate || `${startYear}-06-01T00:00:00Z`;
+      const endDate = currentYear.endDate || currentBoard?.endDate || `${endYear}-03-31T00:00:00Z`;
 
       createCalendar({
         academicYearId: currentYear.id,
@@ -280,7 +280,7 @@ const CalendarManagement = () => {
 
   // Sync Month View's active month to calendar start date
   React.useEffect(() => {
-    const startD = currentBoard?.startDate || selectedCalendar?.startDate;
+    const startD = selectedCalendar?.startDate || currentBoard?.startDate;
     if (startD) {
       setCurrentMonth(dayjs(startD));
     }

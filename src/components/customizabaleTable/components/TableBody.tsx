@@ -160,9 +160,6 @@ export const TableBody = ({
                       color: 'text.primary',
                       borderBottom: `1px dashed ${theme.vars.palette.divider}`,
                       position: column.sticky ? 'sticky' : 'static',
-                      // @ts-ignore
-                      left: column.sticky ? getStickyStyle(column).left : 'auto',
-                      right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
                       zIndex: column.sticky ? 10 : 2,
                       backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                       boxShadow: column.sticky ? '0px 0 4px rgba(0,0,0,0.08)' : 'none',

@@ -8,6 +8,8 @@ import { useSelector } from 'react-redux';
 import { useMemo, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { getTimetableSettingStatus } from 'src/utils/timetable-capacity';
+import { useGetLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
 import { SubjectType } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
@@ -37,6 +39,10 @@ interface UseWeeklyLectureFormResult {
   allClass: IClassOption[];
   isSubjectsLoading: boolean;
   isSubmitting: boolean;
+  availableCapacity: number;
+  hasSlots: boolean;
+  requiredLectures: number;
+  status: ReturnType<typeof getTimetableSettingStatus>;
 }
 
 /**
@@ -71,6 +77,17 @@ export function useWeeklyLectureForm({
     options: { skip: !editData?.id },
   });
 
+  const { data: lectureSlotsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLectureSlotsQuery,
+    params: { AcademicMediumId: medium?.id },
+    options: { skip: !medium?.id },
+  });
+
+  const selectedClassSlot = (lectureSlotsData?.items ?? []).find(
+    (item: any) => item.standardId === (editData?.standardId || selectedClass)
+  );
+
   const formik = useFormik<ISubjectFormValues>({
     initialValues: getNoOfLectureInitialValues(
       weeklyLectureSlotById,
@@ -84,6 +101,18 @@ export function useWeeklyLectureForm({
         weeklyLectures: Number(subject.noOfLecture) || 0,
         electiveGroupId: subject.electiveGroupId || null,
       }));
+
+      const classSlot = (lectureSlotsData?.items ?? []).find(
+        (item: any) => item.standardId === values.classId
+      );
+      const totalRequired = subjectsPayload.reduce((sum, s) => sum + s.weeklyLectures, 0);
+
+      if (classSlot && totalRequired > classSlot.weeklyTeachingCapacity) {
+        shikshaMitraToast.error({
+          message: `You have assigned ${totalRequired} lectures, but only ${classSlot.weeklyTeachingCapacity} teaching slots are available. Please reduce ${totalRequired - classSlot.weeklyTeachingCapacity} lectures or update Lecture Slots.`,
+        });
+        return;
+      }
 
       if (editData && editData.id) {
         const res = await updateWeeklyLectureSlot({
@@ -207,10 +236,28 @@ export function useWeeklyLectureForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subjectTableData?.data?.items, editData]);
 
+  const requiredLectures = useMemo(
+    () => formik.values.subjects.reduce((sum, s) => sum + Number(s.noOfLecture || 0), 0),
+    [formik.values.subjects]
+  );
+
+  const hasSlots = Boolean(selectedClassSlot);
+  const availableCapacity = selectedClassSlot?.weeklyTeachingCapacity ?? 0;
+  const status = getTimetableSettingStatus({
+    availableCapacity,
+    requiredLectures,
+    hasSlots,
+    hasWeeklyLectures: requiredLectures > 0,
+  });
+
   return {
     formik,
     allClass,
     isSubjectsLoading,
     isSubmitting: isAddLoading || isUpdateLoading,
+    availableCapacity,
+    hasSlots,
+    requiredLectures,
+    status,
   };
 }

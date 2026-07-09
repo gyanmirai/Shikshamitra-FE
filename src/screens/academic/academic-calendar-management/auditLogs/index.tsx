@@ -14,10 +14,7 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  useGetAuditLogsQuery,
-  useGetAuditLogsSummaryQuery,
-} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
+import { useGetAuditLogsQuery } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 import {
   Box,
   Tab,
@@ -34,7 +31,6 @@ import {
 
 import AuditLogsTable from './components/AuditLogsTable';
 import AuditExportMenu from './components/AuditExportMenu';
-import AuditSummaryCards from './components/AuditSummaryCards';
 import AuditSmartFilters from './components/AuditSmartFilters';
 import AuditTimelineView from './components/AuditTimelineView';
 import AuditAnalyticsView from './components/AuditAnalyticsView';
@@ -160,37 +156,12 @@ const CalendarAuditLogs = () => {
     popupConfig: { error: false },
   });
 
-  const { data: summaryRaw } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAuditLogsSummaryQuery,
-    params: undefined,
-    popupConfig: { error: false },
-  });
-
   const serverLogs: AuditLog[] = useMemo(() => {
     const items = logsRaw?.items ?? [];
     // BE now returns the full rich shape (actionLabel, changedByName/Role, diff, metadata, etc.)
     // directly — the DTO field names line up with AuditLog, so no client-side backfill needed.
     return items as AuditLog[];
   }, [logsRaw]);
-
-  const summary = summaryRaw
-    ? {
-        totalAuditEvents: summaryRaw.totalAuditEvents,
-        changesThisWeek: summaryRaw.changesThisWeek,
-        changesLastWeek: summaryRaw.changesLastWeek,
-        criticalChanges: summaryRaw.criticalChanges,
-        mostActiveUser: summaryRaw.mostActiveUser
-          ? {
-              userId: summaryRaw.mostActiveUser.userId,
-              name: summaryRaw.mostActiveUser.name,
-              role: summaryRaw.mostActiveUser.role,
-              actionCount: summaryRaw.mostActiveUser.actionCount,
-            }
-          : undefined,
-        lastSyncedAt: summaryRaw.lastSyncedAt,
-      }
-    : undefined;
 
   // Apply client-side filters on top of server/mock data
   const filteredLogs = useMemo(
@@ -335,9 +306,6 @@ const CalendarAuditLogs = () => {
           </Stack>
         }
       />
-
-      {/* Summary cards */}
-      <AuditSummaryCards summary={summary} loading={isLoading} />
 
       {/* Smart filters */}
       <AuditSmartFilters

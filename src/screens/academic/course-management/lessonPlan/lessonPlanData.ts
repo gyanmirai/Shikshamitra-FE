@@ -14,15 +14,7 @@ export type PlanStatus =
   | 'AutoCreated'
   | 'AiGenerated';
 
-export type DiaryStatus =
-  | 'NotSubmitted'
-  | 'Draft'
-  | 'Submitted'
-  | 'Approved'
-  | 'Rejected'
-  | 'NeedsChanges'
-  | 'Backdated'
-  | 'EvidenceMissing';
+export type DiaryStatus = 'NotSubmitted' | 'Draft' | 'Submitted' | 'Backdated' | 'EvidenceMissing';
 
 export type ApprovalStatus =
   | 'Pending'
@@ -109,6 +101,7 @@ export type LessonPlanRow = {
   academicYear: string;
   teacherId: string;
   teacherName: string;
+  standardId?: string;
   classId: string;
   className: string;
   divisionId: string;
@@ -118,6 +111,7 @@ export type LessonPlanRow = {
   chapterId: string;
   chapterName: string;
   plannedDate: string;
+  timetableSlotId?: string;
   periodId: string;
   period: string;
   plannedTime: string;
@@ -138,6 +132,11 @@ export type LessonPlanRow = {
   reviewRemarks?: string;
   reviewedBy?: string;
   reviewedAt?: string;
+  teacherDiaryId?: string;
+  insightType?: string | null;
+  insightSeverity?: string | null;
+  insightMessage?: string | null;
+  isPlanCreationBlocked?: boolean;
   // legacy fields for backward compat
   status: PlanStatus;
   reviewStatus: string;
@@ -167,9 +166,6 @@ export type TeacherDiaryRow = {
   backdatedReason?: string;
   isSubstituteDiary: boolean;
   submittedAt?: string;
-  reviewRemarks?: string;
-  reviewedBy?: string;
-  reviewedAt?: string;
   evidence?: DiaryEvidence[];
   // legacy fields
   classConducted: boolean;
@@ -394,9 +390,6 @@ export const diaryStatusOptions = [
   { value: 'NotSubmitted', label: 'Diary Pending' },
   { value: 'Draft', label: 'Draft' },
   { value: 'Submitted', label: 'Diary Submitted' },
-  { value: 'Approved', label: 'Diary Approved' },
-  { value: 'Rejected', label: 'Diary Rejected' },
-  { value: 'NeedsChanges', label: 'Needs Changes' },
   { value: 'Backdated', label: 'Backdated' },
   { value: 'EvidenceMissing', label: 'Evidence Missing' },
 ];
@@ -528,7 +521,7 @@ export const initialLessonPlans: LessonPlanRow[] = [
     reviewedBy: 'HOD Mathematics',
     reviewedAt: dayjs().subtract(1, 'day').toISOString(),
     status: 'Approved',
-    reviewStatus: 'Diary Pending Approval',
+    reviewStatus: 'Diary Notes Saved',
   },
   {
     id: 'lp-2',
@@ -586,7 +579,7 @@ export const initialLessonPlans: LessonPlanRow[] = [
     plannedCompletionPercentage: 60,
     resourcesRequired: 'Grammar worksheet, smart board examples',
     planStatus: 'Approved',
-    diaryStatus: 'Approved',
+    diaryStatus: 'Submitted',
     approvalStatus: 'Approved',
     actualCompletionPercentage: 55,
     existingChapterProgress: 55,
@@ -597,7 +590,7 @@ export const initialLessonPlans: LessonPlanRow[] = [
     reviewedBy: 'Principal',
     reviewedAt: dayjs().subtract(10, 'hour').toISOString(),
     status: 'Approved',
-    reviewStatus: 'Progress Synced',
+    reviewStatus: 'Diary Notes Saved',
   },
   {
     id: 'lp-4',
@@ -622,16 +615,15 @@ export const initialLessonPlans: LessonPlanRow[] = [
     plannedCompletionPercentage: 30,
     resourcesRequired: 'Civics chart, textbook examples',
     planStatus: 'Approved',
-    diaryStatus: 'Rejected',
-    approvalStatus: 'Rejected',
+    diaryStatus: 'Submitted',
+    approvalStatus: 'Approved',
     actualCompletionPercentage: 0,
     existingChapterProgress: 20,
     source: 'Manual',
     isAiGenerated: false,
     executionStatus: 'NeedsReview',
-    reviewRemarks: 'Add clearer evidence of student response.',
     status: 'Approved',
-    reviewStatus: 'Diary Correction Requested',
+    reviewStatus: 'Diary Notes Saved',
   },
   {
     id: 'lp-5',
@@ -753,20 +745,18 @@ export const initialDiaryEntries: TeacherDiaryRow[] = [
     nextClassFollowUp: 'Start future perfect tense next session.',
     remedialActionRequired: '',
     homeworkAssigned: 'Write 10 sentences using past perfect tense',
-    diaryStatus: 'Approved',
+    diaryStatus: 'Submitted',
     isBackdated: false,
     isSubstituteDiary: false,
     submittedAt: dayjs().subtract(1, 'day').toISOString(),
-    reviewedBy: 'Principal',
-    reviewedAt: dayjs().subtract(10, 'hour').toISOString(),
     // legacy
     classConducted: true,
     actualTopicTaught: 'Past Perfect Tense',
     actualContentSummary: 'Sentence formation, timeline usage, and correction practice.',
     completionPercentage: 55,
     resourcesUsed: 'Grammar worksheet, smart board',
-    teacherRemarks: 'Approved progress synced to chapter progress.',
-    status: 'Approved',
+    teacherRemarks: 'Progress synced to chapter progress.',
+    status: 'Submitted',
   },
   {
     id: 'diary-3',
@@ -787,11 +777,10 @@ export const initialDiaryEntries: TeacherDiaryRow[] = [
     nextClassFollowUp: '',
     remedialActionRequired: '',
     homeworkAssigned: '',
-    diaryStatus: 'Rejected',
+    diaryStatus: 'Submitted',
     isBackdated: false,
     isSubstituteDiary: false,
     submittedAt: dayjs().subtract(2, 'hour').toISOString(),
-    reviewRemarks: 'Clarify whether rescheduled period is confirmed.',
     // legacy
     classConducted: false,
     actualTopicTaught: '',
@@ -801,7 +790,7 @@ export const initialDiaryEntries: TeacherDiaryRow[] = [
     missedReason: 'SchoolEvent',
     rescheduledToDate: dayjs(todayIso).add(3, 'day').format('YYYY-MM-DD'),
     teacherRemarks: 'Class engaged in annual day rehearsal.',
-    status: 'Rejected',
+    status: 'Submitted',
   },
 ];
 
@@ -942,26 +931,8 @@ export const notificationEvents = [
   },
   {
     event: 'TeacherDiary.Submitted',
-    audience: 'HOD / Principal',
-    sampleMessage: 'A teacher diary is ready for review.',
-    enabled: true,
-  },
-  {
-    event: 'TeacherDiary.Approved',
     audience: 'Teacher',
-    sampleMessage: 'Your diary has been approved and progress updated.',
-    enabled: true,
-  },
-  {
-    event: 'TeacherDiary.Rejected',
-    audience: 'Teacher',
-    sampleMessage: 'Your diary was rejected. Please revise.',
-    enabled: true,
-  },
-  {
-    event: 'Evidence.Requested',
-    audience: 'Teacher',
-    sampleMessage: 'Reviewer has requested evidence for your diary.',
+    sampleMessage: 'Your teacher diary notes have been saved.',
     enabled: true,
   },
   {
@@ -987,12 +958,6 @@ export const notificationEvents = [
     audience: 'Teacher',
     sampleMessage: 'Weekly lesson plan is not submitted yet.',
     enabled: true,
-  },
-  {
-    event: 'Approval.PendingTooLong',
-    audience: 'Reviewer',
-    sampleMessage: 'A diary approval has been pending for more than 2 days.',
-    enabled: false,
   },
   {
     event: 'ParentUpdate.Generated',

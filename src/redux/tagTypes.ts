@@ -38,6 +38,7 @@ export const academicType = {
   weeklyLectureSlot: 'WeeklyLectureSlot',
   lectureSlot: 'LectureSlot',
   timetableManagement: 'TimetableManagement',
+  substitutionManagement: 'SubstitutionManagement',
   academicReport: 'AcademicReport',
   academicReportExport: 'AcademicReportExport',
   examResult: 'ExamResult',

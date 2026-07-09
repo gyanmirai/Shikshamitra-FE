@@ -1,17 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import {
   Box,
-  Chip,
   List,
   Stack,
   Alert,
   Button,
   Drawer,
   Divider,
+  Tooltip,
   ListItem,
+  Skeleton,
   TextField,
   Typography,
   IconButton,
@@ -92,7 +95,7 @@ const AI_ACTIONS: { key: AiAction; label: string; icon: string; description: str
     key: 'parent_update',
     label: 'Generate Parent Update',
     icon: 'mdi:account-child-outline',
-    description: 'AI creates a parent-friendly summary from approved diary',
+    description: 'AI creates a parent-friendly summary from saved diary notes',
   },
 ];
 
@@ -256,6 +259,8 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
     }
   };
 
+  const activeAction = AI_ACTIONS.find((a) => a.key === selectedAction);
+
   return (
     <Drawer
       anchor="right"
@@ -266,20 +271,40 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
       }}
     >
       {/* Header */}
-      <Box sx={{ p: 2, bgcolor: 'secondary.darker', color: 'white' }}>
+      <Box
+        sx={{
+          p: 2.5,
+          color: 'common.white',
+          background: (theme) =>
+            `linear-gradient(135deg, ${theme.palette.secondary.dark} 0%, ${theme.palette.secondary.darker} 100%)`,
+        }}
+      >
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Iconify icon="mdi:robot-outline" width={22} />
+          <Stack direction="row" spacing={1.5} alignItems="flex-start">
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: 1.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: (theme) => alpha(theme.palette.common.white, 0.16),
+                flexShrink: 0,
+              }}
+            >
+              <Iconify icon="mdi:creation" width={20} />
+            </Box>
+            <Box>
               <Typography variant="h6" fontWeight={700}>
                 AI Lesson Builder
               </Typography>
-            </Stack>
-            <Typography variant="caption" sx={{ opacity: 0.85 }}>
-              AI-powered lesson planning & diary assistant
-            </Typography>
-          </Box>
-          <IconButton size="small" onClick={onClose} sx={{ color: 'white' }}>
+              <Typography variant="caption" sx={{ opacity: 0.85 }}>
+                AI-powered lesson planning &amp; diary assistant
+              </Typography>
+            </Box>
+          </Stack>
+          <IconButton size="small" onClick={onClose} sx={{ color: 'common.white' }}>
             <Iconify icon="mdi:close" />
           </IconButton>
         </Stack>
@@ -287,15 +312,21 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
 
       {/* Context banner */}
       {contextPlan && (
-        <Box sx={{ px: 2, py: 1, bgcolor: 'secondary.lighter' }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          sx={{ px: 2.5, py: 1, bgcolor: 'secondary.lighter' }}
+        >
+          <Iconify icon="mdi:map-marker-outline" width={14} sx={{ color: 'secondary.dark' }} />
           <Typography variant="caption" color="secondary.dark">
             Context: {contextPlan.subjectName} — {contextPlan.chapterName} — {contextPlan.topic}
           </Typography>
-        </Box>
+        </Stack>
       )}
 
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        <Stack spacing={2}>
+      <Box sx={{ flex: 1, overflow: 'auto', p: 2.5 }}>
+        <Stack spacing={2.5}>
           {/* Action selector */}
           <Typography variant="subtitle2" color="text.secondary">
             Select AI Action
@@ -315,21 +346,24 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
                   setResult('');
                 }}
                 sx={{
-                  p: 1.25,
+                  p: 1.5,
                   borderRadius: 1.5,
                   border: '1.5px solid',
                   borderColor: selectedAction === action.key ? 'secondary.main' : 'divider',
                   bgcolor: selectedAction === action.key ? 'secondary.lighter' : 'background.paper',
                   cursor: 'pointer',
-                  transition: 'all 0.15s',
+                  transition: (theme) =>
+                    theme.transitions.create(['border-color', 'background-color']),
                   '&:hover': { borderColor: 'secondary.main', bgcolor: 'secondary.lighter' },
                 }}
               >
                 <Iconify
                   icon={action.icon}
                   width={18}
-                  color={selectedAction === action.key ? 'secondary.main' : 'text.secondary'}
-                  sx={{ mb: 0.5 }}
+                  sx={{
+                    mb: 0.5,
+                    color: selectedAction === action.key ? 'secondary.main' : 'text.secondary',
+                  }}
                 />
                 <Typography
                   variant="caption"
@@ -345,10 +379,12 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
 
           {selectedAction && (
             <>
-              <Alert severity="info" sx={{ py: 0.75 }}>
-                <Typography variant="caption">
-                  {AI_ACTIONS.find((a) => a.key === selectedAction)?.description}
-                </Typography>
+              <Alert
+                severity="info"
+                icon={<Iconify icon="mdi:information-outline" width={18} />}
+                sx={{ py: 0.75 }}
+              >
+                <Typography variant="caption">{activeAction?.description}</Typography>
               </Alert>
 
               <TextField
@@ -363,6 +399,7 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
               />
 
               <Button
+                size="small"
                 variant="contained"
                 color="secondary"
                 onClick={runAi}
@@ -371,31 +408,83 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
                   loading ? (
                     <CircularProgress size={16} color="inherit" />
                   ) : (
-                    <Iconify icon="mdi:robot-outline" />
+                    <Iconify icon="mdi:creation" />
                   )
                 }
+                sx={{ alignSelf: 'flex-start' }}
               >
                 {loading ? 'Generating...' : 'Generate with AI'}
               </Button>
             </>
           )}
 
+          {/* Generating state */}
+          {loading && (
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 1.5,
+                border: '1px dashed',
+                borderColor: 'secondary.main',
+                bgcolor: 'secondary.lighter',
+              }}
+            >
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                <Iconify
+                  icon="mdi:creation"
+                  width={18}
+                  sx={{
+                    color: 'secondary.main',
+                    animation: 'ai-pulse 1.4s ease-in-out infinite',
+                    '@keyframes ai-pulse': {
+                      '0%, 100%': { opacity: 0.4, transform: 'scale(0.92)' },
+                      '50%': { opacity: 1, transform: 'scale(1.08)' },
+                    },
+                    '@media (prefers-reduced-motion: reduce)': {
+                      animation: 'none',
+                    },
+                  }}
+                />
+                <Typography variant="caption" fontWeight={600} color="secondary.dark">
+                  AI is generating your content…
+                </Typography>
+              </Stack>
+              <Stack spacing={0.75}>
+                <Skeleton variant="text" width="90%" />
+                <Skeleton variant="text" width="75%" />
+                <Skeleton variant="text" width="82%" />
+                <Skeleton variant="text" width="60%" />
+              </Stack>
+            </Box>
+          )}
+
           {/* Result */}
-          {result && (
+          {!loading && result && (
             <>
               <Divider />
               <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="subtitle2">AI Response</Typography>
-                <Stack direction="row" spacing={0.75}>
-                  <Chip label="AI Generated" size="small" color="secondary" variant="soft" />
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => navigator.clipboard?.writeText(result)}
-                    startIcon={<Iconify icon="mdi:content-copy" width={14} />}
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Iconify icon="mdi:auto-fix" width={16} sx={{ color: 'secondary.main' }} />
+                  <Typography variant="subtitle2">AI Response</Typography>
+                </Stack>
+                <Stack direction="row" spacing={0.75} alignItems="center">
+                  <Label
+                    color="secondary"
+                    variant="soft"
+                    startIcon={<Iconify icon="mdi:creation" />}
                   >
-                    Copy
-                  </Button>
+                    AI Generated
+                  </Label>
+                  <Tooltip title="Copy to clipboard">
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => navigator.clipboard?.writeText(result)}
+                      startIcon={<Iconify icon="mdi:content-copy" width={14} />}
+                    >
+                      Copy
+                    </Button>
+                  </Tooltip>
                   {onInsertContent && (
                     <Button
                       size="small"
@@ -410,14 +499,15 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
               </Stack>
               <Box
                 sx={{
-                  p: 1.5,
-                  bgcolor: 'grey.50',
-                  borderRadius: 1,
+                  p: 1.75,
+                  bgcolor: 'secondary.lighter',
+                  borderRadius: 1.5,
                   border: '1px solid',
-                  borderColor: 'divider',
+                  borderColor: (theme) => theme.palette.secondary.light,
                   whiteSpace: 'pre-wrap',
                   fontFamily: 'inherit',
                   fontSize: 13,
+                  color: 'text.primary',
                   maxHeight: 360,
                   overflow: 'auto',
                 }}
@@ -434,14 +524,14 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
               <Typography variant="subtitle2" color="text.secondary">
                 Recent AI Generations
               </Typography>
-              <List dense>
+              <List dense disablePadding>
                 {history.slice(0, 3).map((item, i) => (
                   <ListItem
                     key={i}
                     sx={{
                       px: 1,
                       py: 0.5,
-                      bgcolor: 'grey.50',
+                      bgcolor: 'background.neutral',
                       borderRadius: 1,
                       mb: 0.5,
                       cursor: 'pointer',
@@ -469,9 +559,12 @@ const AiLessonBuilderDrawer = ({ open, onClose, contextPlan, onInsertContent }: 
 
       <Divider />
       <Box sx={{ p: 2 }}>
-        <Typography variant="caption" color="text.disabled" textAlign="center" display="block">
-          AI content requires human review before submission. Always verify accuracy.
-        </Typography>
+        <Stack direction="row" spacing={0.75} justifyContent="center" alignItems="center">
+          <Iconify icon="mdi:shield-alert-outline" width={14} sx={{ color: 'text.disabled' }} />
+          <Typography variant="caption" color="text.disabled" textAlign="center">
+            AI content requires human review before submission. Always verify accuracy.
+          </Typography>
+        </Stack>
       </Box>
     </Drawer>
   );

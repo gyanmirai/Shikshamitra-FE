@@ -32,7 +32,6 @@ interface TableHeaderProps {
   onColumnFilterClick: (event: React.MouseEvent, column: IColumn) => void;
   headerRefs: (number | null)[];
   setHeaderRef: React.Dispatch<React.SetStateAction<number[]>>;
-  stickyMap: { left: Record<string, number>; right: Record<string, number> };
   getStickyStyle: (col: IColumn, isHeader: boolean) => React.CSSProperties;
   tableUniqId: string;
 }
@@ -47,7 +46,6 @@ export const TableHeader = React.memo(
     onColumnFilterClick,
     headerRefs,
     setHeaderRef,
-    stickyMap,
     getStickyStyle,
     tableUniqId,
   }: TableHeaderProps) => {
@@ -91,8 +89,6 @@ export const TableHeader = React.memo(
                     py: 1.5,
                     px: 2,
                     animation: `${fadeSlideIn} 0.4s ease both`,
-                    // @ts-ignore
-                    left: column.sticky ? stickyMap[column.id] : 'auto',
 
                     backgroundColor: theme.vars.palette.background.neutral,
                     // boxShadow: column.sticky

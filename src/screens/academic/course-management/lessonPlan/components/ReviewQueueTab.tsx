@@ -211,7 +211,7 @@ const ReviewQueueTab = ({
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       {row.classDivision} • {row.subjectName} •{' '}
-                      {dayjs(row.submittedDate).format('DD MMM')}
+                      {dayjs(row.submittedDate).format('DD-MM-YYYY')}
                     </Typography>
                   </Box>
                   <Chip
@@ -338,8 +338,19 @@ const ReviewQueueTab = ({
           data={reviewRows}
           columns={[
             { id: 'teacherName', label: 'Teacher', minWidth: 160, sticky: true },
-            { id: 'submittedDate', label: 'Date', filterType: 'date' as const, minWidth: 120 },
-            { id: 'pendingSince', label: 'Pending Since', minWidth: 120 },
+            {
+              id: 'submittedDate',
+              label: 'Date',
+              filterType: 'date' as const,
+              minWidth: 120,
+              render: (v: any) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
+            },
+            {
+              id: 'pendingSince',
+              label: 'Pending Since',
+              minWidth: 120,
+              render: (v: any) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
+            },
             { id: 'classDivision', label: 'Class', minWidth: 110 },
             { id: 'subjectName', label: 'Subject', minWidth: 130 },
             { id: 'chapterName', label: 'Chapter', minWidth: 150 },
