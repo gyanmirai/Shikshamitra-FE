@@ -142,10 +142,9 @@ export default function CollectionLateFeeSection({
                   }}
                 >
                   <MenuItem value="Flat">Flat Amount</MenuItem>
-                  <MenuItem value="Percentage">Percentage</MenuItem>
+                  <MenuItem value="Percentage">Percentage Per Day</MenuItem>
                   <MenuItem value="PerDay">Per Day</MenuItem>
                   <MenuItem value="PerWeek">Per Week</MenuItem>
-                  <MenuItem value="PerMonth">Per Month</MenuItem>
                   <MenuItem value="Compound">Compound</MenuItem>
                   <MenuItem value="Slab">Slab Based</MenuItem>
                 </Select>
