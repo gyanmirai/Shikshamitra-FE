@@ -13,7 +13,9 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { normalizeTimetableStatus } from 'src/utils/timetable-capacity';
 import { useGetWeeklyLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/weeklyLecturesApi';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import CreateNoOfLecture from './createWeeklyLectures';
 import { useWeeklyLectureColumns } from './hooks/useWeeklyLectureColumns';
@@ -76,6 +78,50 @@ const WeeklyLectures = () => {
     [weeklyLectureData]
   );
 
+  const summaryCards = useMemo(() => {
+    const total = tableData.length;
+    const configured = tableData.filter((item) => (item.totalLectures ?? 0) > 0).length;
+    const balanced = tableData.filter(
+      (item) => normalizeTimetableStatus(item.status) === 'Balanced'
+    ).length;
+    const capacityIssues = tableData.filter(
+      (item) => normalizeTimetableStatus(item.status) === 'OverCapacity'
+    ).length;
+
+    return [
+      {
+        label: 'Total Classes',
+        value: total,
+        icon: 'mdi:google-classroom',
+        color: 'primary' as const,
+      },
+      {
+        label: 'Configured Weekly Lectures',
+        value: configured,
+        icon: 'mdi:check-circle-outline',
+        color: 'info' as const,
+      },
+      {
+        label: 'Pending Configuration',
+        value: total - configured,
+        icon: 'mdi:clock-alert-outline',
+        color: 'warning' as const,
+      },
+      {
+        label: 'Balanced Classes',
+        value: balanced,
+        icon: 'mdi:scale-balance',
+        color: 'success' as const,
+      },
+      {
+        label: 'Capacity Issues',
+        value: capacityIssues,
+        icon: 'mdi:alert-circle-outline',
+        color: 'error' as const,
+      },
+    ];
+  }, [tableData]);
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
@@ -100,12 +146,14 @@ const WeeklyLectures = () => {
         // }
       />
 
+      <TimetableSettingsSummaryCards cards={summaryCards} />
+
       <CustomizableTable
-        tableId="time-schedule-management-setting-table"
+        tableId="weekly-lectures-setting-table"
         isLoading={isLoading || isFetching}
         noDataText={
           <>
-            Weekly Lectures Data Not Found{' '}
+            Weekly lectures not configured{' '}
             {canAdd && (
               <Box
                 onClick={openCreate}

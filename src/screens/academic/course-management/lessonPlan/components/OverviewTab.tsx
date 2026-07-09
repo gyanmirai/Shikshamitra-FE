@@ -2,12 +2,12 @@
 
 import dayjs from 'dayjs';
 import React from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Card,
-  Chip,
   Stack,
   Alert,
   Button,
@@ -37,9 +37,7 @@ const OverviewTab = ({
   onGoToCoverageTracker,
 }: Props) => {
   const todayPlans = lessonPlans.filter((p) => p.plannedDate === todayIso);
-  const pendingApprovals = lessonPlans.filter(
-    (p) => p.planStatus === 'Submitted' || p.diaryStatus === 'Submitted'
-  );
+  const pendingApprovals = lessonPlans.filter((p) => p.planStatus === 'Submitted');
   const missedLessons = diaryEntries.filter((e) => !e.classConducted);
   const syllabusDelayed = lessonPlans.filter(
     (p) => p.plannedCompletionPercentage - p.actualCompletionPercentage > 10
@@ -48,7 +46,7 @@ const OverviewTab = ({
   // Teacher compliance
   const teacherCompliance = teacherOptions.map((teacher) => {
     const plans = lessonPlans.filter((p) => p.teacherName === teacher.value);
-    const approved = plans.filter((p) => p.diaryStatus === 'Approved').length;
+    const approved = plans.filter((p) => p.diaryStatus === 'Submitted').length;
     const pending = plans.filter((p) => p.diaryStatus === 'NotSubmitted').length;
     const rate = plans.length ? Math.round((approved / plans.length) * 100) : 0;
     return { teacher: teacher.label, planned: plans.length, approved, pending, compliance: rate };
@@ -64,7 +62,7 @@ const OverviewTab = ({
     })),
     ...pendingApprovals.slice(0, 3).map((p) => ({
       type: 'info' as const,
-      message: `Diary/Plan pending approval: ${p.teacherName} — ${p.subjectName} (${p.chapterName})`,
+      message: `Lesson plan pending approval: ${p.teacherName} — ${p.subjectName} (${p.chapterName})`,
       action: 'Review Now',
       onAction: onGoToReviewQueue,
     })),
@@ -140,16 +138,34 @@ const OverviewTab = ({
               sx={{ mb: 1.5 }}
             >
               <Typography variant="subtitle1">Today&apos;s Planned Lessons</Typography>
-              <Chip label={todayPlans.length} color="primary" size="small" />
+              <Label color="primary" variant="soft">
+                {todayPlans.length}
+              </Label>
             </Stack>
             {todayPlans.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                No lessons planned for today.
-              </Typography>
+              <Stack alignItems="center" spacing={1} sx={{ py: 3 }}>
+                <Iconify
+                  icon="mdi:calendar-blank-outline"
+                  width={32}
+                  sx={{ color: 'text.disabled' }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  No lessons planned for today.
+                </Typography>
+              </Stack>
             ) : (
               <Stack spacing={1}>
                 {todayPlans.map((plan) => (
-                  <Box key={plan.id} sx={{ p: 1.25, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  <Box
+                    key={plan.id}
+                    sx={{
+                      p: 1.25,
+                      bgcolor: 'background.neutral',
+                      borderRadius: 1,
+                      transition: 'background-color 0.2s',
+                      '&:hover': { bgcolor: 'action.hover' },
+                    }}
+                  >
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
                       <Box>
                         <Typography variant="body2" fontWeight={500}>
@@ -159,10 +175,8 @@ const OverviewTab = ({
                           {plan.className}-{plan.divisionName} • {plan.teacherName}
                         </Typography>
                       </Box>
-                      <Stack spacing={0.5}>
-                        <Chip
-                          label={plan.planStatus}
-                          size="small"
+                      <Stack spacing={0.5} alignItems="flex-end">
+                        <Label
                           color={
                             plan.planStatus === 'Approved'
                               ? 'success'
@@ -171,21 +185,15 @@ const OverviewTab = ({
                                 : 'default'
                           }
                           variant="soft"
-                          sx={{ fontSize: 10 }}
-                        />
-                        <Chip
-                          label={`Diary: ${plan.diaryStatus === 'NotSubmitted' ? 'Pending' : plan.diaryStatus}`}
-                          size="small"
-                          color={
-                            plan.diaryStatus === 'Approved'
-                              ? 'success'
-                              : plan.diaryStatus === 'Submitted'
-                                ? 'info'
-                                : 'default'
-                          }
+                        >
+                          {plan.planStatus}
+                        </Label>
+                        <Label
+                          color={plan.diaryStatus === 'Submitted' ? 'info' : 'default'}
                           variant="soft"
-                          sx={{ fontSize: 10 }}
-                        />
+                        >
+                          {`Diary: ${plan.diaryStatus === 'NotSubmitted' ? 'Pending' : plan.diaryStatus}`}
+                        </Label>
                       </Stack>
                     </Stack>
                   </Box>
@@ -202,7 +210,9 @@ const OverviewTab = ({
               <Iconify icon="mdi:robot-outline" color="secondary.main" />
               <Typography variant="subtitle1">AI Risk Alerts</Typography>
               {riskAlerts.length > 0 && (
-                <Chip label={riskAlerts.length} color="error" size="small" />
+                <Label color="error" variant="soft">
+                  {riskAlerts.length}
+                </Label>
               )}
             </Stack>
             {riskAlerts.length === 0 ? (
@@ -249,17 +259,14 @@ const OverviewTab = ({
                       {item.teacher}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      ({item.approved}/{item.planned} diaries approved)
+                      ({item.approved}/{item.planned} diaries submitted)
                     </Typography>
                   </Stack>
                   <Stack direction="row" spacing={1} alignItems="center">
                     {item.pending > 0 && (
-                      <Chip
-                        label={`${item.pending} pending`}
-                        size="small"
-                        color="warning"
-                        variant="soft"
-                      />
+                      <Label color="warning" variant="soft">
+                        {`${item.pending} pending`}
+                      </Label>
                     )}
                     <Typography
                       variant="body2"
@@ -395,12 +402,9 @@ const OverviewTab = ({
             label: 'Status',
             minWidth: 110,
             render: (v: any) => (
-              <Chip
-                label={v}
-                size="small"
-                color={v === 'On Track' ? 'success' : 'warning'}
-                variant="soft"
-              />
+              <Label color={v === 'On Track' ? 'success' : 'warning'} variant="soft">
+                {v}
+              </Label>
             ),
           },
         ]}

@@ -1,4 +1,5 @@
 import type { IData } from 'src/components/customizabaleTable/types';
+import type { TimetableSettingStatus } from 'src/utils/timetable-capacity';
 
 /**
  * Domain type representing a single subject row inside the weekly-lectures form.
@@ -35,6 +36,9 @@ export interface IWeeklyLecture extends IData {
   className: string;
   totalLectures: number;
   subjects: ISubject[];
+  availableTeachingCapacity?: number;
+  difference?: number;
+  status?: TimetableSettingStatus;
 }
 
 export interface ISubjectFormValues {
@@ -45,6 +49,9 @@ export interface ISubjectFormValues {
   classId: string;
   standardId?: string;
   standardName?: string;
+  availableTeachingCapacity?: number;
+  difference?: number;
+  status?: TimetableSettingStatus;
 }
 
 export interface ICreateNoOfLectureProps {

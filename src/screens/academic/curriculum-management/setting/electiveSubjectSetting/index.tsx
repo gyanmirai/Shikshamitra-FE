@@ -2,19 +2,31 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useGetElectiveGroupUsageQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
+import {
+  Box,
+  List,
+  Alert,
+  Drawer,
+  Button,
+  Divider,
+  TextField,
+  Typography,
+  IconButton,
+  ListItemText,
+} from '@mui/material';
 
 import ElectiveSubjectTable from './components/electiveSubjectTable';
 import SettingElectiveSubjectForm from './components/electiveSubjectForm';
@@ -36,25 +48,39 @@ const ElectiveSubjectSetting = () => {
     permissions,
     `${academicPermissions.curriculum.settings.electiveGroupCreation}.Delete`
   );
+  const [archiveReason, setArchiveReason] = useState('');
 
   const {
     deleteDialog,
     open,
     setOpen,
     addElectiveGroupDialog,
+    archiveDialog,
+    usageDrawer,
     isDeleteLoading,
+    isArchiveLoading,
     currentMedium,
     selected,
     setSelected,
     handleClose,
     deleteElectiveGroup,
+    archiveElectiveGroup,
+    restoreElectiveGroup,
   } = useElectiveSubjectSetting();
+
+  const { data: usageData, isFetching: isUsageFetching } = useGetElectiveGroupUsageQuery(
+    {
+      academicMediumId: (currentMedium as any)?.id,
+      id: selected?.id,
+    },
+    { skip: !(currentMedium as any)?.id || !selected?.id || !usageDrawer.value }
+  );
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Elective Group Creation"
-        description="Create and manage elective subject groups for your curriculum. Add, edit, or delete groups as needed."
+        description="Manage reusable elective subject groups used during class-wise subject allocation."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum', href: '/academic/curriculumSubjects' },
@@ -66,7 +92,10 @@ const ElectiveSubjectSetting = () => {
             <Button
               sx={{ width: '160px' }}
               startIcon={<Add />}
-              onClick={addElectiveGroupDialog.onTrue}
+              onClick={() => {
+                setSelected(null);
+                addElectiveGroupDialog.onTrue();
+              }}
               variant="contained"
               size="small"
             >
@@ -84,6 +113,28 @@ const ElectiveSubjectSetting = () => {
           setSelected(data);
           deleteDialog.onTrue();
         }}
+        onArchive={(data) => {
+          setSelected(data);
+          setArchiveReason('');
+          archiveDialog.onTrue();
+        }}
+        onRestore={async (data) => {
+          try {
+            await restoreElectiveGroup({
+              academicMediumId: (currentMedium as any)?.id,
+              id: data.id,
+            }).unwrap();
+            shikshaMitraToast.success({ message: 'Elective group restored successfully.' });
+          } catch (error: any) {
+            shikshaMitraToast.error({
+              message: error?.data?.message || 'Failed to restore elective group.',
+            });
+          }
+        }}
+        onViewUsage={(data) => {
+          setSelected(data);
+          usageDrawer.onTrue();
+        }}
         onEdit={(data) => {
           setSelected(data);
           addElectiveGroupDialog.onTrue();
@@ -95,6 +146,66 @@ const ElectiveSubjectSetting = () => {
         setEditData={setSelected}
         data={[]}
       />
+
+      <Drawer
+        anchor="right"
+        open={usageDrawer.value}
+        onClose={() => {
+          usageDrawer.onFalse();
+          setSelected(null);
+        }}
+        PaperProps={{ sx: { width: { xs: '100%', sm: 480 } } }}
+      >
+        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h6">{selected?.name} Usage</Typography>
+          <IconButton onClick={usageDrawer.onFalse}>
+            <Iconify icon="mingcute:close-line" />
+          </IconButton>
+        </Box>
+        <Divider />
+        <Box sx={{ p: 2 }}>
+          {isUsageFetching ? (
+            <Typography variant="body2">Loading usage...</Typography>
+          ) : (
+            <>
+              <UsageSection title="Subjects" items={usageData?.subjects || []} />
+              <UsageCount
+                title="Used In Class Allocations"
+                count={usageData?.usage?.classAllocationsCount}
+                suffix="class allocation(s)"
+              />
+              <UsageCount
+                title="Student Selection"
+                count={usageData?.usage?.studentSelectionsCount}
+                suffix="student selection(s)"
+              />
+              <UsageCount
+                title="Timetable"
+                count={usageData?.usage?.timetablePeriodsCount}
+                suffix="period(s)"
+              />
+              <UsageCount
+                title="Examination"
+                count={usageData?.usage?.examSchedulesCount}
+                suffix="exam schedule(s)"
+              />
+              <UsageSection
+                title="Subject Wise Student Count"
+                items={
+                  usageData?.usage?.subjectWiseStudentCount?.map(
+                    (item: any) => `${item.subject}: ${item.count} student(s)`
+                  ) || []
+                }
+              />
+              <Alert severity={usageData?.canDelete ? 'success' : 'warning'} sx={{ mt: 2 }}>
+                {usageData?.canDelete
+                  ? 'This elective group is not currently used in any class allocation. Safe to edit or delete.'
+                  : 'This elective group is already used. Safe to edit color and description. Archive is recommended if no longer used.'}
+              </Alert>
+            </>
+          )}
+        </Box>
+      </Drawer>
 
       <CustomDialog
         open={addElectiveGroupDialog.value}
@@ -132,6 +243,57 @@ const ElectiveSubjectSetting = () => {
       </CustomDialog>
 
       <ConfirmDialog
+        open={archiveDialog.value}
+        onClose={() => {
+          setSelected(null);
+          archiveDialog.onFalse();
+        }}
+        title="Archive Elective Group"
+        content={
+          <Box>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Archived groups will not be available for new class allocations but will remain
+              visible in old academic records.
+            </Alert>
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
+              label="Reason for archiving"
+              value={archiveReason}
+              onChange={(event) => setArchiveReason(event.target.value)}
+            />
+          </Box>
+        }
+        action={
+          <LoadingButton
+            loading={isArchiveLoading}
+            variant="contained"
+            color="warning"
+            size="small"
+            onClick={async () => {
+              try {
+                await archiveElectiveGroup({
+                  academicMediumId: (currentMedium as any)?.id,
+                  id: selected?.id,
+                  body: { reason: archiveReason },
+                }).unwrap();
+                shikshaMitraToast.success({ message: 'Elective group archived successfully.' });
+                archiveDialog.onFalse();
+                setSelected(null);
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to archive elective group.',
+                });
+              }
+            }}
+          >
+            Archive
+          </LoadingButton>
+        }
+      />
+
+      <ConfirmDialog
         open={deleteDialog.value}
         onClose={() => {
           setSelected(null);
@@ -140,7 +302,16 @@ const ElectiveSubjectSetting = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete elective subject <strong>{selected?.name}</strong>?
+            {selected?.canDelete ? (
+              <>
+                Are you sure you want to delete elective group <strong>{selected?.name}</strong>?
+              </>
+            ) : (
+              <>
+                <strong>{selected?.name}</strong> cannot be deleted because it is already used. You
+                can archive this group instead.
+              </>
+            )}
           </>
         }
         action={
@@ -149,6 +320,7 @@ const ElectiveSubjectSetting = () => {
             variant="contained"
             color="error"
             size="small"
+            disabled={!selected?.canDelete}
             onClick={async () => {
               try {
                 await deleteElectiveGroup({
@@ -176,3 +348,33 @@ const ElectiveSubjectSetting = () => {
 };
 
 export default ElectiveSubjectSetting;
+
+const UsageSection = ({ title, items }: { title: string; items: string[] }) => (
+  <Box sx={{ mb: 1.5 }}>
+    <Typography variant="subtitle2">{title}</Typography>
+    <List dense disablePadding>
+      {items.length > 0 ? (
+        items.map((item) => <ListItemText key={item} primary={`- ${item}`} />)
+      ) : (
+        <ListItemText primary="- Not used" />
+      )}
+    </List>
+  </Box>
+);
+
+const UsageCount = ({
+  title,
+  count = 0,
+  suffix,
+}: {
+  title: string;
+  count?: number;
+  suffix: string;
+}) => (
+  <Box sx={{ mb: 1.5 }}>
+    <Typography variant="subtitle2">{title}</Typography>
+    <Typography variant="body2" color="text.secondary">
+      {count || 0} {suffix}
+    </Typography>
+  </Box>
+);

@@ -7,7 +7,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteSubjectMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import {
+  useDeleteSubjectMutation,
+  useArchiveSubjectMutation,
+  useRestoreSubjectMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import type { ISubject } from '../type';
 
@@ -16,10 +20,20 @@ export const useSubjectCreation = () => {
   const [open, setOpen] = useState(false);
   const addSubjectDialog = useBoolean(false);
   const drawerOpen = useBoolean(false);
+  const usageDrawer = useBoolean(false);
+  const archiveDialog = useBoolean(false);
 
   const [deleteSubject, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteSubjectMutation,
+  });
+  const [archiveSubject, { isLoading: isArchiveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useArchiveSubjectMutation,
+  });
+  const [restoreSubject, { isLoading: isRestoreLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRestoreSubjectMutation,
   });
 
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
@@ -55,11 +69,17 @@ export const useSubjectCreation = () => {
     setOpen,
     addSubjectDialog,
     drawerOpen,
+    usageDrawer,
+    archiveDialog,
     isDeleteLoading,
+    isArchiveLoading,
+    isRestoreLoading,
     currentMedium,
     selectedSubject,
     setSelectedSubject,
     deleteSubject,
+    archiveSubject,
+    restoreSubject,
     handleClose,
   };
 };

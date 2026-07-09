@@ -118,7 +118,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   // For empty content width
   const fullScreenDialog = useBoolean();
 
-  const { stickyMap, getStickyStyle } = useStickyColumns({
+  const { getStickyStyle } = useStickyColumns({
     columns: memoizedColumns,
     columnVisibility,
     headerRefs,
@@ -484,7 +484,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   }}
                   headerRefs={headerRefs}
                   setHeaderRef={setHeaderRefs}
-                  stickyMap={stickyMap}
                   getStickyStyle={getStickyStyle}
                   tableUniqId={tableUniqId}
                 />
@@ -584,7 +583,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       sorts,
       handleSort,
       headerRefs,
-      stickyMap,
       getStickyStyle,
       isLoading,
       paginatedData,

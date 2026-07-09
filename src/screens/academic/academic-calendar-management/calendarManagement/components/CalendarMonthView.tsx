@@ -19,8 +19,6 @@ import {
 
 import CalendarDayTypeChip from './CalendarDayTypeChip';
 
-
-
 interface Props {
   calendarDays: any[];
   currentMonth: dayjs.Dayjs;
@@ -475,32 +473,32 @@ const CalendarMonthView = ({
         </Paper>
 
         {/* Events panel */}
-        <Paper
-          sx={{
-            borderRadius: 3,
-            overflow: 'hidden',
-            border: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
-            boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.05)}`,
-          }}
-        >
-          <Box
+        {monthEvents.length > 0 && (
+          <Paper
             sx={{
-              px: 2,
-              py: 1.5,
-              borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: alpha(theme.palette.primary.main, 0.04),
+              borderRadius: 3,
+              overflow: 'hidden',
+              border: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
+              boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.05)}`,
             }}
           >
-            <Stack direction="row" alignItems="center" gap={0.75}>
-              <Iconify icon="mdi:calendar-star-outline" width={17} color="primary.main" />
-              <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '13px' }}>
-                {currentMonth.format('MMMM')} Events
-              </Typography>
-            </Stack>
-            {monthEvents.length > 0 && (
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: alpha(theme.palette.primary.main, 0.04),
+              }}
+            >
+              <Stack direction="row" alignItems="center" gap={0.75}>
+                <Iconify icon="mdi:calendar-star-outline" width={17} color="primary.main" />
+                <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '13px' }}>
+                  {currentMonth.format('MMMM')} Events
+                </Typography>
+              </Stack>
               <Label
                 variant="soft"
                 color="primary"
@@ -512,25 +510,9 @@ const CalendarMonthView = ({
               >
                 {monthEvents.length}
               </Label>
-            )}
-          </Box>
+            </Box>
 
-          <Box sx={{ maxHeight: 460, overflowY: 'auto' }}>
-            {monthEvents.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 5, px: 2 }}>
-                <Iconify icon="mdi:calendar-check-outline" width={36} color="text.disabled" />
-                <Typography variant="body2" color="text.secondary" mt={1.25} fontWeight={500}>
-                  No events this month
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.disabled"
-                  sx={{ display: 'block', mt: 0.5 }}
-                >
-                  Click any date to add a day marker
-                </Typography>
-              </Box>
-            ) : (
+            <Box sx={{ maxHeight: 460, overflowY: 'auto' }}>
               <Stack>
                 {monthEvents.map((ev, i) => {
                   const evColor = DAY_TYPE_COLORS[ev.dayType as DayType];
@@ -595,9 +577,9 @@ const CalendarMonthView = ({
                   );
                 })}
               </Stack>
-            )}
-          </Box>
-        </Paper>
+            </Box>
+          </Paper>
+        )}
       </Box>
     </Box>
   );

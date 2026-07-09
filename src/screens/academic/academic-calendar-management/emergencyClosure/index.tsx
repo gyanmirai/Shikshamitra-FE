@@ -15,6 +15,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { alpha, useTheme } from '@mui/material/styles';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -71,11 +72,14 @@ const EmergencyClosureScreen = () => {
   const theme = useTheme();
   const addDialog = useBoolean();
   const cancelDialog = useBoolean();
+  const viewDialog = useBoolean();
   const { permissions } = useSelector((state: RootState) => state.auth);
   const { currentYear, currentMedium: medium } = useSelector(
     (state: RootState) => state.globalState
   );
   const [selectedClosure, setSelectedClosure] = useState<any>(null);
+  const [viewingClosure, setViewingClosure] = useState<any>(null);
+  const [editingClosureId, setEditingClosureId] = useState<string | null>(null);
 
   const standards =
     medium?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [];
@@ -123,13 +127,22 @@ const EmergencyClosureScreen = () => {
       };
 
       try {
-        await createEmergencyClosure(payload).unwrap();
-        shikshaMitraToast.success({ message: 'Emergency closure declared successfully' });
+        if (editingClosureId) {
+          // No dedicated update endpoint exists — an edit is applied as
+          // cancel-the-original then declare-a-new-one with the updated values.
+          await cancelEmergencyClosure(editingClosureId).unwrap();
+          await createEmergencyClosure(payload).unwrap();
+          shikshaMitraToast.success({ message: 'Emergency closure updated successfully' });
+        } else {
+          await createEmergencyClosure(payload).unwrap();
+          shikshaMitraToast.success({ message: 'Emergency closure declared successfully' });
+        }
         helpers.resetForm();
+        setEditingClosureId(null);
         addDialog.onFalse();
       } catch (err: any) {
         shikshaMitraToast.error({
-          message: err?.data?.detail || 'Failed to declare emergency closure',
+          message: err?.data?.detail || 'Failed to save emergency closure',
         });
       }
     },
@@ -146,11 +159,34 @@ const EmergencyClosureScreen = () => {
   const closeAddDialog = () => {
     addDialog.onFalse();
     formik.resetForm();
+    setEditingClosureId(null);
   };
 
   const handleCancelClick = (row: any) => {
     setSelectedClosure(row);
     cancelDialog.onTrue();
+  };
+
+  const handleViewClick = (row: any) => {
+    setViewingClosure(row);
+    viewDialog.onTrue();
+  };
+
+  const handleEditClick = (row: any) => {
+    setEditingClosureId(row.id);
+    formik.setValues({
+      date: row.date ?? null,
+      title: row.title ?? '',
+      description: row.description ?? '',
+      appliesToAll: Boolean(row.appliesToAll),
+      standardIds: row.appliesToAll ? [] : [row.standardId].filter(Boolean),
+      notifyParents: row.notifyParents ?? true,
+      notifyTeachers: row.notifyTeachers ?? true,
+      notifyStudents: row.notifyStudents ?? true,
+      notifyStaff: row.notifyStaff ?? false,
+      autoScanImpacts: row.autoScanImpacts ?? true,
+    });
+    addDialog.onTrue();
   };
 
   const handleCancelClosure = async () => {
@@ -220,6 +256,18 @@ const EmergencyClosureScreen = () => {
       align: 'right',
       render: (_, row) => (
         <Stack direction="row" justifyContent="flex-end" gap={0.5}>
+          <Tooltip title="View details">
+            <IconButton size="small" onClick={() => handleViewClick(row)}>
+              <Iconify icon="mdi:eye-outline" width={18} />
+            </IconButton>
+          </Tooltip>
+          {canDeclare && Number(row.status) === CalendarDayStatus.Active && (
+            <Tooltip title="Edit closure">
+              <IconButton size="small" color="primary" onClick={() => handleEditClick(row)}>
+                <Iconify icon="mdi:pencil-outline" width={18} />
+              </IconButton>
+            </Tooltip>
+          )}
           {canCancel && Number(row.status) === CalendarDayStatus.Active && (
             <Tooltip title="Cancel closure">
               <IconButton size="small" color="error" onClick={() => handleCancelClick(row)}>
@@ -299,7 +347,18 @@ const EmergencyClosureScreen = () => {
       <CustomDialog
         open={addDialog.value}
         handleClose={closeAddDialog}
-        title="Declare Emergency Closure"
+        title={
+          <Stack direction="row" alignItems="center" gap={0.75}>
+            <span>{editingClosureId ? 'Edit Emergency Closure' : 'Declare Emergency Closure'}</span>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Declaring a closure marks the selected date as an emergency non-working day, notifies the selected audiences, and (if auto-scan is on) flags academic activities affected on that date."
+            >
+              <Iconify icon="lucide:info" width={16} sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Stack>
+        }
         maxWidth="md"
       >
         <DialogScrollContent>
@@ -308,7 +367,9 @@ const EmergencyClosureScreen = () => {
               <DatePicker
                 label="Closure Date *"
                 value={formik.values.date ? dayjs(formik.values.date) : null}
-                onChange={(val) => formik.setFieldValue('date', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
+                onChange={(val) =>
+                  formik.setFieldValue('date', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)
+                }
                 disablePast
                 slotProps={{
                   textField: {
@@ -501,12 +562,97 @@ const EmergencyClosureScreen = () => {
             variant="contained"
             color="error"
             size="small"
-            loading={creating}
+            loading={creating || cancelling}
             onClick={(e: any) => formik.handleSubmit(e)}
             startIcon={<Iconify icon="mdi:alert-octagon-outline" />}
           >
-            Declare Closure
+            {editingClosureId ? 'Update Closure' : 'Declare Closure'}
           </LoadingButton>
+        </DialogActions>
+      </CustomDialog>
+
+      <CustomDialog
+        open={viewDialog.value}
+        handleClose={viewDialog.onFalse}
+        title="Emergency Closure Details"
+        maxWidth="sm"
+      >
+        <DialogScrollContent>
+          {viewingClosure && (
+            <Stack spacing={2}>
+              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Title
+                  </Typography>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    {viewingClosure.title}
+                  </Typography>
+                </Box>
+                <Label color={statusColor[Number(viewingClosure.status)] ?? 'default'}>
+                  {CALENDAR_DAY_STATUS_LABELS[Number(viewingClosure.status) as CalendarDayStatus] ??
+                    'Unknown'}
+                </Label>
+              </Stack>
+
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Closure Date
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {dayjs(viewingClosure.date).format('DD MMM YYYY')}
+                  </Typography>
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Scope
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {getScopeLabel(viewingClosure)}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Reason / Description
+                </Typography>
+                <Typography variant="body2">
+                  {viewingClosure.description || 'No reason provided'}
+                </Typography>
+              </Box>
+
+              <Divider />
+
+              <Box>
+                <Typography variant="caption" color="text.secondary" display="block" mb={0.75}>
+                  Notified Audiences
+                </Typography>
+                <Stack direction="row" gap={1} flexWrap="wrap">
+                  {[
+                    ['notifyTeachers', 'Teachers'],
+                    ['notifyParents', 'Parents'],
+                    ['notifyStudents', 'Students'],
+                    ['notifyStaff', 'Staff'],
+                  ].map(([key, label]) => (
+                    <Label
+                      key={key}
+                      variant={viewingClosure[key] ? 'filled' : 'outlined'}
+                      color={viewingClosure[key] ? 'primary' : 'default'}
+                    >
+                      {label}
+                    </Label>
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
+          )}
+        </DialogScrollContent>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Button variant="outlined" size="small" onClick={viewDialog.onFalse}>
+            Close
+          </Button>
         </DialogActions>
       </CustomDialog>
 

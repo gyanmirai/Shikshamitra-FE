@@ -1,48 +1,69 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { DateTimePicker } from '@mui/x-date-pickers';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useCallback } from 'react';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import {
   Box,
   Tab,
   Card,
   Tabs,
   Stack,
+  Alert,
   Button,
+  Divider,
+  MenuItem,
+  MenuList,
+  TextField,
   Typography,
-  IconButton,
   LinearProgress,
 } from '@mui/material';
+import {
+  useGetLessonPlansQuery,
+  useGetTeacherDiariesQuery,
+  useCreateLessonPlanMutation,
+  useUpdateLessonPlanMutation,
+  useSubmitLessonPlanMutation,
+  useRejectLessonPlanMutation,
+  useApproveLessonPlanMutation,
+  useGetLessonPlanTimelineQuery,
+  useCreateTeacherDiaryMutation,
+  useUpdateTeacherDiaryMutation,
+  useRequestPlanChangesMutation,
+  useBulkSubmitLessonPlansMutation,
+  useCreateHomeworkFromLessonPlanMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/LessonPlanApi/lesson-plan-api';
 
-import SettingsTab from './components/SettingsTab';
 import ReviewQueueTab from './components/ReviewQueueTab';
+import DailyTimelineTab from './components/DailyTimelineTab';
 import TeachingKpiCards from './components/TeachingKpiCards';
 import WeeklyPlannerTab from './components/WeeklyPlannerTab';
 import SubmitDiaryModal from './components/SubmitDiaryModal';
 import AddLessonPlanModal from './components/AddLessonPlanModal';
 import AiLessonBuilderDrawer from './components/AiLessonBuilderDrawer';
-import {
-  getActiveFilters,
-  LessonPlanFilters,
-  LessonPlanActiveFilters,
-} from './components/LessonPlanFilters';
+import LessonDiaryDetailsDrawer from './components/LessonDiaryDetailsDrawer';
 import {
   todayIso,
   weekStartIso,
   classOptions,
-  periodTimeMap,
   teacherOptions,
   chapterOptions,
   subjectOptions,
-  initialSettings,
   divisionOptions,
   initialLessonPlans,
   initialHealthScore,
@@ -56,11 +77,19 @@ import type {
   DiaryStatus,
   LessonPlanRow,
   TeacherDiaryRow,
-  LessonPlanSettings,
   TeachingHealthScore,
 } from './lessonPlanData';
 
-type ReviewTarget = { type: 'plan' | 'diary'; id: string };
+type ReviewTarget = { type: 'plan'; id: string };
+
+type HomeworkFromPlanForm = {
+  homeworkTypeId: string;
+  title: string;
+  description: string;
+  submissionType: number;
+  publishAt: Dayjs | null;
+  dueAt: Dayjs | null;
+};
 
 const planStatusColor: Record<
   PlanStatus,
@@ -85,9 +114,6 @@ const diaryStatusColor: Record<
   NotSubmitted: 'default',
   Draft: 'default',
   Submitted: 'warning',
-  Approved: 'success',
-  Rejected: 'error',
-  NeedsChanges: 'warning',
   Backdated: 'info',
   EvidenceMissing: 'error',
 };
@@ -105,6 +131,79 @@ const QUICK_FILTER_LABELS: Record<string, string> = {
   my_reviews: 'My Reviews',
 };
 
+const PLAN_STATUS_BY_VALUE: PlanStatus[] = [
+  'Draft',
+  'Submitted',
+  'Approved',
+  'Rejected',
+  'NeedsChanges',
+];
+const DIARY_STATUS_BY_VALUE: DiaryStatus[] = ['Draft', 'Submitted'];
+
+const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isGuidLike = (value: unknown) => typeof value === 'string' && GUID_PATTERN.test(value);
+
+const normalizeSlotTime = (value: unknown) => {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AP]M)?$/i);
+  if (!match) return trimmed;
+
+  const hour = Number(match[1]);
+  const minute = match[2];
+  const meridiem = match[3]?.toUpperCase();
+
+  if (meridiem) {
+    return `${hour.toString().padStart(2, '0')}:${minute} ${meridiem}`;
+  }
+
+  const displayHour = hour % 12 || 12;
+  const displayMeridiem = hour >= 12 ? 'PM' : 'AM';
+  return `${displayHour.toString().padStart(2, '0')}:${minute} ${displayMeridiem}`;
+};
+
+const getPlannedSlotTime = (plan: any) => {
+  const start = normalizeSlotTime(
+    plan.startTime ||
+      plan.slotStartTime ||
+      plan.timetableSlot?.startTime ||
+      plan.timetableSlot?.slotStartTime
+  );
+  const end = normalizeSlotTime(
+    plan.endTime ||
+      plan.slotEndTime ||
+      plan.timetableSlot?.endTime ||
+      plan.timetableSlot?.slotEndTime
+  );
+
+  return start && end ? `${start} - ${end}` : '';
+};
+
+const getCurrentEmployeeName = (employee: any, user: any) =>
+  employee?.employeeName ||
+  employee?.fullName ||
+  [employee?.firstName, employee?.lastName].filter(Boolean).join(' ').trim() ||
+  [user?.given_name, user?.family_name].filter(Boolean).join(' ').trim() ||
+  user?.name ||
+  user?.preferred_username ||
+  user?.unique_name ||
+  user?.email ||
+  '';
+
+const toPlanStatus = (value: unknown): PlanStatus =>
+  typeof value === 'number'
+    ? (PLAN_STATUS_BY_VALUE[value] ?? 'Draft')
+    : (value as PlanStatus) || 'Draft';
+
+const toDiaryStatus = (value: unknown, hasDiary = true): DiaryStatus => {
+  if (!hasDiary) return 'NotSubmitted';
+  return typeof value === 'number'
+    ? (DIARY_STATUS_BY_VALUE[value] ?? 'Draft')
+    : (value as DiaryStatus) || 'Draft';
+};
+
 const allClassOptions = [{ value: 'all', label: 'All Classes' }, ...classOptions];
 const allDivisionOptions = [{ value: 'all', label: 'All Divisions' }, ...divisionOptions];
 const allSubjectOptions = [{ value: 'all', label: 'All Subjects' }, ...subjectOptions];
@@ -112,21 +211,160 @@ const allChapterOptions = [{ value: 'all', label: 'All Chapters' }, ...chapterOp
 const allTeacherOptions = [{ value: 'all', label: 'All Teachers' }, ...teacherOptions];
 
 const TABS = [
-  { value: 'lessonList', label: 'Lesson Plans', icon: 'mdi:book-open-outline' },
+  { value: 'dailyTimeline', label: 'Daily Timeline', icon: 'mdi:clock-outline' },
   { value: 'weeklyPlanner', label: 'Weekly Planner', icon: 'mdi:calendar-week-outline' },
+  { value: 'lessonList', label: 'Lesson Plans', icon: 'mdi:book-open-outline' },
   { value: 'teacherDiary', label: 'Teacher Diary', icon: 'mdi:notebook-edit-outline' },
   { value: 'reviewQueue', label: 'Review Queue', icon: 'mdi:clipboard-check-outline' },
-  { value: 'settings', label: 'Settings', icon: 'mdi:cog-outline' },
 ] as const;
 
 type TabValue = (typeof TABS)[number]['value'];
 
 const LessonPlanScreen = () => {
-  const [activeTab, setActiveTab] = useState<TabValue>('lessonList');
-  const [lessonPlans, setLessonPlans] = useState<LessonPlanRow[]>(initialLessonPlans);
-  const [diaryEntries, setDiaryEntries] = useState<TeacherDiaryRow[]>(initialDiaryEntries);
+  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { employee, user } = useSelector((state: RootState) => state.auth);
+  const [activeTab, setActiveTab] = useState<TabValue>('dailyTimeline');
   const [healthScore] = useState<TeachingHealthScore>(initialHealthScore);
-  const [settings, setSettings] = useState<LessonPlanSettings>(initialSettings);
+
+  // ─── RTK Queries & Mutations ──────────────────────────────────────────────────
+  const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
+
+  const {
+    data: timelineData,
+    isLoading: isTimelineLoading,
+    refetch: refetchTimeline,
+  } = useGetLessonPlanTimelineQuery({
+    date: dateConvertor(selectedDate.format(dateFormat)),
+  });
+
+  const { data: lessonPlanList, refetch: refetchLessonPlans } = useGetLessonPlansQuery({
+    academicYearId: currentYear?.id,
+    maxResultCount: 1000,
+  });
+
+  const { data: teacherDiaryList, refetch: refetchTeacherDiaries } = useGetTeacherDiariesQuery({
+    academicYearId: currentYear?.id,
+    maxResultCount: 1000,
+  });
+  const { data: homeworkTypeData } = useGetHomeworkTypesQuery(
+    { academicMediumId: currentMedium?.id },
+    { skip: !currentMedium?.id }
+  );
+
+  const [createLessonPlan] = useCreateLessonPlanMutation();
+  const [updateLessonPlan] = useUpdateLessonPlanMutation();
+  const [submitLessonPlan] = useSubmitLessonPlanMutation();
+  const [bulkSubmitLessonPlans] = useBulkSubmitLessonPlansMutation();
+  const [approveLessonPlan] = useApproveLessonPlanMutation();
+  const [rejectLessonPlan] = useRejectLessonPlanMutation();
+  const [requestChanges] = useRequestPlanChangesMutation();
+  const [createHomeworkFromLessonPlan, { isLoading: isCreatingHomeworkFromPlan }] =
+    useCreateHomeworkFromLessonPlanMutation();
+  const [createTeacherDiary, { isLoading: isCreatingDiary }] = useCreateTeacherDiaryMutation();
+  const [updateTeacherDiary, { isLoading: isUpdatingDiary }] = useUpdateTeacherDiaryMutation();
+  const isSavingDiary = isCreatingDiary || isUpdatingDiary;
+
+  const lessonPlans = useMemo<LessonPlanRow[]>(() => {
+    if (!lessonPlanList) return initialLessonPlans;
+    return (
+      (lessonPlanList as any).items?.map((p: any) => ({
+        id: p.id,
+        academicYear: p.academicYear || '2026-27',
+        teacherName: p.teacherName || 'Rohit Mehta',
+        teacherId: p.teacherId,
+        standardId: p.standardId,
+        classId: p.standardId,
+        className: p.standardName || '7',
+        divisionId: p.divisionId,
+        divisionName: p.divisionName || 'A',
+        subjectId: p.subjectId,
+        subjectName: p.subjectName || 'Mathematics',
+        chapterId: p.chapterId,
+        chapterName: p.chapterName || 'Fractions',
+        plannedDate: p.plannedDate ? dayjs(p.plannedDate).format('YYYY-MM-DD') : todayIso,
+        periodId: p.timetableSlotId || 'Manual',
+        period: (() => {
+          const rawPeriodName =
+            p.periodName ||
+            p.slotName ||
+            p.timeSlotName ||
+            p.timetableSlot?.periodName ||
+            p.timetableSlot?.slotName;
+          if (rawPeriodName && !isGuidLike(rawPeriodName)) return rawPeriodName;
+          return p.timetableSlotId ? 'Scheduled' : 'Manual';
+        })(),
+        plannedTime: getPlannedSlotTime(p),
+        topic: p.topic || '',
+        learningObjective: p.learningObjective || '',
+        teachingMethod: p.teachingMethod || 'ExplanationBoardWork',
+        resourcesRequired: p.resourcesRequired || '',
+        planStatus: toPlanStatus(p.status),
+        diaryStatus: toDiaryStatus(p.diaryStatus, Boolean(p.teacherDiaryId)),
+        status: toPlanStatus(p.status),
+        approvalStatus: toPlanStatus(p.status) === 'Approved' ? 'Approved' : 'Pending',
+        plannedCompletionPercentage: p.plannedCompletionPercentage || 0,
+        actualCompletionPercentage: p.actualCompletionPercentage || 0,
+        existingChapterProgress: p.existingChapterProgress || 0,
+        source: p.isAiGenerated ? 'AiGenerated' : 'Manual',
+        isAiGenerated: !!p.isAiGenerated,
+        executionStatus: 'OnTrack',
+        reviewStatus: p.status === 'Approved' ? 'Plan Approved' : 'Draft',
+        reviewRemarks: p.reviewRemarks,
+        timetableSlotId: p.timetableSlotId,
+        teacherDiaryId: p.teacherDiaryId,
+        insightType: p.insightType,
+        insightSeverity: p.insightSeverity,
+        insightMessage: p.insightMessage,
+        isPlanCreationBlocked: Boolean(p.isPlanCreationBlocked),
+      })) || []
+    );
+  }, [lessonPlanList]);
+
+  const diaryEntries = useMemo<TeacherDiaryRow[]>(() => {
+    if (!teacherDiaryList) return initialDiaryEntries;
+    return (
+      (teacherDiaryList as any).items?.map((d: any) => {
+        const diaryStatus = toDiaryStatus(d.diaryStatus ?? d.status);
+
+        return {
+          id: d.id,
+          lessonPlanId: d.lessonPlanId,
+          teacherId: d.teacherId,
+          actualDate: d.actualDate ? dayjs(d.actualDate).format('YYYY-MM-DD') : todayIso,
+          actualCompletionPercentage: d.actualCompletionPercentage || 0,
+          actualTopicCovered: d.actualTopicCovered || '',
+          teachingMethodUsed: d.teachingMethodUsed || 'ExplanationBoardWork',
+          studentResponse: d.studentResponse || '',
+          classUnderstandingLevel: d.classUnderstandingLevel || 'Medium',
+          studentEngagementLevel: d.studentEngagementLevel || 'Medium',
+          needRevision: Boolean(d.needRevision),
+          reflection: d.reflection || '',
+          whatWentWell: d.whatWentWell || '',
+          whatWasDifficult: d.whatWasDifficult || '',
+          studentsNeedingSupport: d.studentsNeedingSupport || '',
+          nextClassFollowUp: d.nextClassFollowUp || '',
+          remedialActionRequired: d.remedialActionRequired || '',
+          homeworkAssigned: d.homeworkAssigned || '',
+          diaryStatus,
+          isBackdated: Boolean(d.isBackdated),
+          backdatedReason: d.backdatedReason,
+          isSubstituteDiary: Boolean(d.isSubstituteDiary),
+          submittedAt: d.submittedAt,
+          classConducted: Boolean(d.classConducted),
+          actualTopicTaught: d.actualTopicTaught || d.actualTopicCovered || '',
+          actualContentSummary: d.actualContentSummary || '',
+          completionPercentage: d.completionPercentage || d.actualCompletionPercentage || 0,
+          resourcesUsed: d.resourcesUsed || '',
+          missedReason: d.missedReason,
+          rescheduledToDate: d.rescheduledToDate
+            ? dayjs(d.rescheduledToDate).format('YYYY-MM-DD')
+            : undefined,
+          teacherRemarks: d.teacherRemarks || '',
+          status: diaryStatus as Exclude<DiaryStatus, 'NotSubmitted'>,
+        };
+      }) || []
+    );
+  }, [teacherDiaryList]);
 
   // Filter state
   const [academicYearFilter, setAcademicYearFilter] = useState('2026-27');
@@ -138,8 +376,8 @@ const LessonPlanScreen = () => {
   const [planStatusFilter, setPlanStatusFilter] = useState('all');
   const [diaryStatusFilter, setDiaryStatusFilter] = useState('all');
   const [approvalStatusFilter, setApprovalStatusFilter] = useState('all');
-  const [fromDate, setFromDate] = useState<Dayjs | null>(dayjs(weekStartIso));
-  const [toDate, setToDate] = useState<Dayjs | null>(dayjs(weekStartIso).add(6, 'day'));
+  const [fromDate, setFromDate] = useState<Dayjs | null>(null);
+  const [toDate, setToDate] = useState<Dayjs | null>(null);
   const [quickFilter, setQuickFilter] = useState<string | null>(null);
 
   const activeFiltersState = useMemo(
@@ -191,6 +429,7 @@ const LessonPlanScreen = () => {
   const handleResetFilters = useCallback(() => {
     setAcademicYearFilter('2026-27');
     setTeacherFilter('all');
+    setTeacherFilterObj(null);
     setClassFilter('all');
     setDivisionFilter('all');
     setSubjectFilter('all');
@@ -198,8 +437,8 @@ const LessonPlanScreen = () => {
     setPlanStatusFilter('all');
     setDiaryStatusFilter('all');
     setApprovalStatusFilter('all');
-    setFromDate(dayjs(weekStartIso));
-    setToDate(dayjs(weekStartIso).add(6, 'day'));
+    setFromDate(null);
+    setToDate(null);
     setQuickFilter(null);
   }, []);
 
@@ -209,7 +448,56 @@ const LessonPlanScreen = () => {
   const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
   const [editPlan, setEditPlan] = useState<LessonPlanRow | null>(null);
   const [prefillDate, setPrefillDate] = useState<Dayjs | null>(null);
+  const [timelinePrefill, setTimelinePrefill] = useState<Partial<LessonFormState> | null>(null);
   const [activePlanForDiary, setActivePlanForDiary] = useState<LessonPlanRow | null>(null);
+  const [detailPlan, setDetailPlan] = useState<LessonPlanRow | null>(null);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [homeworkPlan, setHomeworkPlan] = useState<LessonPlanRow | null>(null);
+  const [homeworkForm, setHomeworkForm] = useState<HomeworkFromPlanForm>({
+    homeworkTypeId: '',
+    title: '',
+    description: '',
+    submissionType: 0,
+    publishAt: dayjs(),
+    dueAt: dayjs().add(1, 'day'),
+  });
+  const [homeworkError, setHomeworkError] = useState('');
+
+  /**
+   * Memoization Justification:
+   * - Keeps the current teacher option stable while the modal is open.
+   * - Prevents the modal effect from resetting form fields during topic/objective typing.
+   * - The value depends on Redux auth objects that change independently of local form edits.
+   */
+  const currentTeacherOption = useMemo(() => {
+    const teacherId =
+      employee?.id || employee?.employeeId || employee?.userId || user?.sub || user?.id || '';
+    const teacherName = getCurrentEmployeeName(employee, user);
+
+    if (!teacherId || !teacherName) {
+      return null;
+    }
+
+    return {
+      value: String(teacherId),
+      label: teacherName,
+    };
+  }, [employee, user]);
+
+  /**
+   * Memoization Justification:
+   * - Homework type options are passed into a controlled select inside the homework dialog.
+   * - Keeping the options stable prevents select reprocessing while teachers edit title/description/date fields.
+   * - The list only changes when the homework type API response changes.
+   */
+  const homeworkTypeOptions = useMemo(
+    () =>
+      ((homeworkTypeData as any)?.data || []).map((item: any) => ({
+        value: item.id,
+        label: item.homeworkTypeName || item.name,
+      })),
+    [homeworkTypeData]
+  );
 
   const getDiaryForLesson = useCallback(
     (lessonPlanId: string) => diaryEntries.find((e) => e.lessonPlanId === lessonPlanId) ?? null,
@@ -246,12 +534,7 @@ const LessonPlanScreen = () => {
         )
           return false;
         if (quickFilter === 'pending_diary' && plan.diaryStatus !== 'NotSubmitted') return false;
-        if (
-          quickFilter === 'pending_approval' &&
-          plan.planStatus !== 'Submitted' &&
-          plan.diaryStatus !== 'Submitted'
-        )
-          return false;
+        if (quickFilter === 'pending_approval' && plan.planStatus !== 'Submitted') return false;
         if (quickFilter === 'missed_lessons' && plan.planStatus !== 'Missed') return false;
         if (
           quickFilter === 'delayed_progress' &&
@@ -287,328 +570,351 @@ const LessonPlanScreen = () => {
 
   const openAddLesson = useCallback((date?: Dayjs) => {
     setEditPlan(null);
+    setTimelinePrefill(null);
     setPrefillDate(date ?? null);
     setLessonModalOpen(true);
   }, []);
 
   const openEditLesson = useCallback((plan: LessonPlanRow) => {
     if (plan.planStatus === 'Approved') {
-      shikshaMitraToast.warning({ message: 'Approved lesson plans are read-only.' });
+      setDetailPlan(plan);
+      setDetailDrawerOpen(true);
       return;
     }
     setEditPlan(plan);
+    setTimelinePrefill(null);
     setPrefillDate(null);
     setLessonModalOpen(true);
   }, []);
 
-  const handleSaveLesson = useCallback((form: LessonFormState, submitAfterSave: boolean) => {
-    const plannedDate = form.plannedDate?.format('YYYY-MM-DD') ?? todayIso;
-    const nextPlan: LessonPlanRow = {
-      id: form.id ?? `lp-${Date.now()}`,
-      academicYear: form.academicYear,
-      teacherId: `t-${form.teacherName.replace(/\s+/g, '').toLowerCase()}`,
-      teacherName: form.teacherName,
-      classId: `c-${form.className}`,
-      className: form.className,
-      divisionId: `d-${form.divisionName.toLowerCase()}`,
-      divisionName: form.divisionName,
-      subjectId: `s-${form.subjectName.replace(/\s+/g, '').toLowerCase()}`,
-      subjectName: form.subjectName,
-      chapterId: `ch-${form.chapterName.replace(/\s+/g, '').toLowerCase()}`,
-      chapterName: form.chapterName,
-      plannedDate,
-      periodId: form.period,
-      period: form.period,
-      plannedTime: periodTimeMap[form.period] ?? '',
-      topic: form.topic,
-      learningObjective: form.learningObjective,
-      teachingMethod: form.teachingMethod,
-      plannedCompletionPercentage: form.plannedCompletionPercentage,
-      resourcesRequired: form.resourcesRequired,
-      planStatus: submitAfterSave ? 'Submitted' : 'Draft',
-      diaryStatus: 'NotSubmitted',
-      approvalStatus: 'Pending',
-      actualCompletionPercentage: 0,
-      existingChapterProgress: 0,
-      source: form.source ?? 'Manual',
-      isAiGenerated: form.source === 'AiGenerated',
-      executionStatus: 'OnTrack',
-      status: submitAfterSave ? 'Submitted' : 'Draft',
-      reviewStatus: submitAfterSave ? 'Plan Pending Approval' : 'Draft',
+  /**
+   * Memoization Justification:
+   * - This handler is passed to timeline/weekly/table action renderers.
+   * - Keeping it stable avoids unnecessary child action re-renders when filter state changes.
+   * - It only mutates drawer state and does not depend on changing row data.
+   */
+  const openDetails = useCallback((plan: LessonPlanRow) => {
+    setDetailPlan(plan);
+    setDetailDrawerOpen(true);
+  }, []);
+
+  /**
+   * Memoization Justification:
+   * - This handler is passed to timeline, weekly, and table action renderers.
+   * - Keeping it stable avoids rebuilding action menus while unrelated filters change.
+   * - It only initializes local dialog state from the selected approved plan.
+   */
+  const openHomeworkFromPlan = useCallback((plan: LessonPlanRow) => {
+    const planStatus = toPlanStatus(plan.planStatus ?? plan.status);
+    if (planStatus !== 'Approved') {
+      shikshaMitraToast.warning({ message: 'Homework can be created only from an approved plan.' });
+      return;
+    }
+
+    const normalizedPlan = {
+      ...plan,
+      planStatus,
+      status: planStatus,
+      className: plan.className || (plan as any).standardName || '',
+      divisionName: plan.divisionName || '',
+      subjectName: plan.subjectName || '',
     };
 
-    setLessonPlans((current) => {
-      const exists = current.some((p) => p.id === nextPlan.id);
-      if (exists) {
-        return current.map((p) =>
-          p.id === nextPlan.id
-            ? {
-                ...p,
-                ...nextPlan,
-                diaryStatus: p.diaryStatus,
-                actualCompletionPercentage: p.actualCompletionPercentage,
-              }
-            : p
-        );
-      }
-      return [nextPlan, ...current];
+    setHomeworkPlan(normalizedPlan);
+    setHomeworkForm({
+      homeworkTypeId: '',
+      title: normalizedPlan.topic || `${normalizedPlan.subjectName} Homework`,
+      description: [
+        normalizedPlan.learningObjective
+          ? `Learning objective: ${normalizedPlan.learningObjective}`
+          : '',
+        normalizedPlan.resourcesRequired
+          ? `Reference resources: ${normalizedPlan.resourcesRequired}`
+          : '',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+      submissionType: 0,
+      publishAt: dayjs(),
+      dueAt: dayjs().add(1, 'day'),
     });
-    setLessonModalOpen(false);
-    shikshaMitraToast.success({
-      message: submitAfterSave
-        ? 'Lesson plan submitted for review.'
-        : 'Lesson plan saved as draft.',
-    });
+    setHomeworkError('');
   }, []);
 
-  const submitPlan = useCallback((planId: string) => {
-    setLessonPlans((current) =>
-      current.map((p) =>
-        p.id === planId
-          ? {
-              ...p,
-              planStatus: 'Submitted',
-              status: 'Submitted',
-              reviewStatus: 'Plan Pending Approval',
-            }
-          : p
-      )
-    );
-    shikshaMitraToast.success({ message: 'Lesson plan submitted for review.' });
-  }, []);
+  const closeHomeworkFromPlan = () => {
+    setHomeworkPlan(null);
+    setHomeworkError('');
+  };
+
+  const saveHomeworkFromPlan = async () => {
+    if (!homeworkPlan) return;
+    if (!currentMedium?.id) {
+      setHomeworkError('Academic medium is required before creating homework.');
+      return;
+    }
+    if (!homeworkForm.homeworkTypeId) {
+      setHomeworkError('Homework type is required.');
+      return;
+    }
+    if (!homeworkForm.title.trim()) {
+      setHomeworkError('Homework title is required.');
+      return;
+    }
+    if (!homeworkForm.description.trim()) {
+      setHomeworkError('Homework description is required.');
+      return;
+    }
+    if (!homeworkForm.publishAt || !homeworkForm.dueAt) {
+      setHomeworkError('Publish date and due date are required.');
+      return;
+    }
+    if (homeworkForm.dueAt.isBefore(homeworkForm.publishAt)) {
+      setHomeworkError('Due date must be after publish date.');
+      return;
+    }
+
+    try {
+      await createHomeworkFromLessonPlan({
+        id: homeworkPlan.id,
+        body: {
+          academicMediumId: currentMedium.id,
+          homeworkTypeId: homeworkForm.homeworkTypeId,
+          title: homeworkForm.title.trim(),
+          description: homeworkForm.description.trim(),
+          submissionType: homeworkForm.submissionType,
+          publishAt: homeworkForm.publishAt.toISOString(),
+          dueAt: homeworkForm.dueAt.toISOString(),
+        },
+      }).unwrap();
+
+      closeHomeworkFromPlan();
+      shikshaMitraToast.success({ message: 'Homework created from lesson plan.' });
+    } catch (err: any) {
+      setHomeworkError(err?.data?.error?.message || 'Failed to create homework from lesson plan.');
+    }
+  };
+
+  const handleSaveLesson = useCallback(
+    async (form: LessonFormState, submitAfterSave: boolean) => {
+      try {
+        const missingFields = [
+          !currentYear?.id && 'academic year',
+          !form.teacherId && 'teacher',
+          !form.standardId && 'class',
+          !form.divisionId && 'division',
+          !form.subjectId && 'subject',
+          !form.chapterId && 'chapter',
+        ].filter(Boolean);
+
+        if (missingFields.length > 0) {
+          shikshaMitraToast.warning({
+            message: `Please select a valid ${missingFields.join(', ')} before saving.`,
+          });
+          return;
+        }
+
+        const plannedDate = form.plannedDate
+          ? dateConvertor(form.plannedDate.format(dateFormat))
+          : dateConvertor(dayjs(todayIso).format(dateFormat));
+
+        const planDetailsPayload = {
+          chapterId: form.chapterId,
+          topic: form.topic,
+          learningObjective: form.learningObjective,
+          teachingMethod: form.teachingMethod,
+          resourcesRequired: form.resourcesRequired,
+          plannedCompletionPercentage: form.plannedCompletionPercentage,
+        };
+
+        const createPayload = {
+          academicYearId: currentYear.id,
+          teacherId: form.teacherId,
+          standardId: form.standardId,
+          divisionId: form.divisionId,
+          subjectId: form.subjectId,
+          plannedDate,
+          timetableSlotId: form.timetableSlotId || null,
+          isAiGenerated: form.source === 'AiGenerated',
+          ...planDetailsPayload,
+        };
+
+        let result;
+        if (form.id) {
+          result = await updateLessonPlan({ id: form.id, body: planDetailsPayload }).unwrap();
+        } else {
+          result = await createLessonPlan(createPayload).unwrap();
+        }
+
+        const resultId =
+          result?.id || result?.result?.id || (result as any)?.result?.Id || (result as any)?.Id;
+        if (submitAfterSave && resultId) {
+          await submitLessonPlan({ id: resultId }).unwrap();
+        }
+
+        setLessonModalOpen(false);
+        refetchTimeline();
+        refetchLessonPlans();
+
+        shikshaMitraToast.success({
+          message: submitAfterSave
+            ? 'Lesson plan submitted for review.'
+            : 'Lesson plan saved as draft.',
+        });
+      } catch (err: any) {
+        shikshaMitraToast.error({
+          message: err?.data?.error?.message || 'Failed to save lesson plan.',
+        });
+      }
+    },
+    [
+      createLessonPlan,
+      currentYear?.id,
+      updateLessonPlan,
+      submitLessonPlan,
+      refetchTimeline,
+      refetchLessonPlans,
+    ]
+  );
+
+  const submitPlan = useCallback(
+    async (planId: string) => {
+      try {
+        await submitLessonPlan({ id: planId }).unwrap();
+        refetchTimeline();
+        refetchLessonPlans();
+        shikshaMitraToast.success({ message: 'Lesson plan submitted for review.' });
+      } catch (err: any) {
+        shikshaMitraToast.error({
+          message: err?.data?.error?.message || 'Failed to submit lesson plan.',
+        });
+      }
+    },
+    [submitLessonPlan, refetchTimeline, refetchLessonPlans]
+  );
 
   // ─── Diary Handlers ──────────────────────────────────────────────────────────
 
-  const openDiary = useCallback(
-    (plan: LessonPlanRow) => {
-      const diary = getDiaryForLesson(plan.id);
-      if (diary?.diaryStatus === 'Approved') {
-        shikshaMitraToast.warning({ message: 'Approved diary is read-only.' });
-        return;
-      }
-      setActivePlanForDiary(plan);
-      setDiaryModalOpen(true);
-    },
-    [getDiaryForLesson]
-  );
+  const openDiary = useCallback((plan: LessonPlanRow) => {
+    setActivePlanForDiary(plan);
+    setDiaryModalOpen(true);
+  }, []);
 
   const handleSaveDiary = useCallback(
-    (form: DiaryFormState, submit: boolean) => {
-      const status: DiaryStatus = submit ? 'Submitted' : 'Draft';
-      const nextDiary: TeacherDiaryRow = {
-        id: getDiaryForLesson(form.lessonPlanId)?.id ?? `diary-${Date.now()}`,
-        lessonPlanId: form.lessonPlanId,
-        teacherId: activePlanForDiary?.teacherId ?? '',
-        actualDate: form.actualDate?.format('YYYY-MM-DD') ?? todayIso,
-        actualCompletionPercentage: form.classConducted ? form.actualCompletionPercentage : 0,
-        actualTopicCovered: form.classConducted ? form.actualTopicCovered : '',
-        teachingMethodUsed: form.teachingMethodUsed,
-        studentResponse: form.studentResponse,
-        classUnderstandingLevel: form.classUnderstandingLevel,
-        studentEngagementLevel: form.studentEngagementLevel,
-        needRevision: form.needRevision,
-        reflection: form.reflection,
-        whatWentWell: form.whatWentWell,
-        whatWasDifficult: form.whatWasDifficult,
-        studentsNeedingSupport: form.studentsNeedingSupport,
-        nextClassFollowUp: form.nextClassFollowUp,
-        remedialActionRequired: form.remedialActionRequired,
-        homeworkAssigned: form.homeworkAssigned,
-        diaryStatus: status,
-        isBackdated: form.isBackdated,
-        backdatedReason: form.backdatedReason,
-        isSubstituteDiary: false,
-        submittedAt: submit ? dayjs().toISOString() : undefined,
-        // legacy
-        classConducted: form.classConducted,
-        actualTopicTaught: form.actualTopicCovered,
-        actualContentSummary: form.actualContentSummary,
-        completionPercentage: form.actualCompletionPercentage,
-        resourcesUsed: '',
-        missedReason: form.missedReason || undefined,
-        rescheduledToDate: form.rescheduledToDate?.format('YYYY-MM-DD'),
-        teacherRemarks: form.teacherRemarks,
-        status: status as Exclude<DiaryStatus, 'NotSubmitted'>,
-      };
+    async (form: DiaryFormState) => {
+      try {
+        const existingDiary = getDiaryForLesson(form.lessonPlanId);
+        const body = {
+          lessonPlanId: form.lessonPlanId,
+          actualDate: form.actualDate
+            ? dateConvertor(form.actualDate.format(dateFormat))
+            : dateConvertor(dayjs(todayIso).format(dateFormat)),
+          classConducted: form.classConducted,
+          actualTopicCovered: form.classConducted ? form.actualTopicCovered : '',
+          actualContentSummary: form.actualContentSummary,
+          actualCompletionPercentage: form.classConducted ? form.actualCompletionPercentage : 0,
+          teachingMethodUsed: form.teachingMethodUsed,
+          studentResponse: form.studentResponse,
+          classUnderstandingLevel: form.classUnderstandingLevel,
+          studentEngagementLevel: form.studentEngagementLevel,
+          needRevision: form.needRevision,
+          reflection: form.reflection,
+          whatWentWell: form.whatWentWell,
+          whatWasDifficult: form.whatWasDifficult,
+          studentsNeedingSupport: form.studentsNeedingSupport,
+          nextClassFollowUp: form.nextClassFollowUp,
+          remedialActionRequired: form.remedialActionRequired,
+          homeworkAssigned: form.homeworkAssigned,
+          missedReason: form.missedReason || null,
+          rescheduledToDate: form.rescheduledToDate
+            ? dateConvertor(form.rescheduledToDate.format(dateFormat))
+            : null,
+          isBackdated: form.isBackdated,
+          backdatedReason: form.backdatedReason,
+          teacherRemarks: form.teacherRemarks,
+        };
 
-      setDiaryEntries((current) => {
-        const exists = current.some((e) => e.id === nextDiary.id);
-        return exists
-          ? current.map((e) => (e.id === nextDiary.id ? nextDiary : e))
-          : [nextDiary, ...current];
-      });
+        if (existingDiary) {
+          await updateTeacherDiary({ id: existingDiary.id, body }).unwrap();
+        } else {
+          await createTeacherDiary(body).unwrap();
+        }
 
-      setLessonPlans((current) =>
-        current.map((p) =>
-          p.id === form.lessonPlanId
-            ? {
-                ...p,
-                diaryStatus: status,
-                actualCompletionPercentage: nextDiary.actualCompletionPercentage,
-                reviewStatus: submit ? 'Diary Pending Approval' : p.reviewStatus,
-              }
-            : p
-        )
-      );
-      setDiaryModalOpen(false);
-      shikshaMitraToast.success({
-        message: submit ? 'Teacher diary submitted for review.' : 'Teacher diary saved as draft.',
-      });
+        await refetchTeacherDiaries();
+        await refetchLessonPlans();
+        await refetchTimeline();
+        setDiaryModalOpen(false);
+        shikshaMitraToast.success({
+          message: 'Teacher diary notes saved.',
+        });
+      } catch (err: any) {
+        shikshaMitraToast.error({
+          message: err?.data?.error?.message || 'Failed to save teacher diary.',
+        });
+      }
     },
-    [activePlanForDiary, getDiaryForLesson]
+    [
+      createTeacherDiary,
+      getDiaryForLesson,
+      refetchLessonPlans,
+      refetchTeacherDiaries,
+      refetchTimeline,
+      updateTeacherDiary,
+    ]
   );
 
   // ─── Review Handlers ─────────────────────────────────────────────────────────
 
   const handleApprove = useCallback(
-    (target: ReviewTarget, comment: string, updateProgress: boolean) => {
-      if (target.type === 'plan') {
-        setLessonPlans((current) =>
-          current.map((p) =>
-            p.id === target.id
-              ? {
-                  ...p,
-                  planStatus: 'Approved',
-                  status: 'Approved',
-                  approvalStatus: 'Approved',
-                  reviewStatus: 'Plan Approved',
-                  reviewRemarks: comment,
-                  reviewedBy: 'HOD / Principal',
-                  reviewedAt: dayjs().toISOString(),
-                }
-              : p
-          )
-        );
-      } else {
-        const diary = diaryEntries.find((e) => e.id === target.id);
-        setDiaryEntries((current) =>
-          current.map((e) =>
-            e.id === target.id
-              ? {
-                  ...e,
-                  diaryStatus: 'Approved',
-                  status: 'Approved' as any,
-                  reviewRemarks: comment,
-                  reviewedBy: 'HOD / Principal',
-                  reviewedAt: dayjs().toISOString(),
-                }
-              : e
-          )
-        );
-        if (diary && updateProgress) {
-          setLessonPlans((current) =>
-            current.map((p) =>
-              p.id === diary.lessonPlanId
-                ? {
-                    ...p,
-                    diaryStatus: 'Approved',
-                    actualCompletionPercentage: diary.actualCompletionPercentage,
-                    existingChapterProgress: diary.classConducted
-                      ? diary.actualCompletionPercentage
-                      : p.existingChapterProgress,
-                    executionStatus: 'ProgressUpdated',
-                    reviewStatus: 'Progress Synced',
-                    reviewRemarks: comment,
-                  }
-                : p
-            )
-          );
-        }
+    async (target: ReviewTarget, comment: string) => {
+      try {
+        await approveLessonPlan({ id: target.id, body: { comment } }).unwrap();
+        refetchTimeline();
+        refetchLessonPlans();
+        shikshaMitraToast.success({ message: 'Approved successfully.' });
+      } catch (err: any) {
+        shikshaMitraToast.error({ message: err?.data?.error?.message || 'Failed to approve.' });
       }
-      shikshaMitraToast.success({ message: 'Approved. Progress sync recorded.' });
     },
-    [diaryEntries]
+    [approveLessonPlan, refetchTimeline, refetchLessonPlans]
   );
 
   const handleReject = useCallback(
-    (target: ReviewTarget, comment: string) => {
-      if (!comment) {
-        shikshaMitraToast.warning({ message: 'Please provide a rejection reason.' });
-        return;
-      }
-      if (target.type === 'plan') {
-        setLessonPlans((current) =>
-          current.map((p) =>
-            p.id === target.id
-              ? {
-                  ...p,
-                  planStatus: 'Rejected',
-                  status: 'Rejected',
-                  approvalStatus: 'Rejected',
-                  reviewRemarks: comment,
-                  reviewedBy: 'HOD / Principal',
-                  reviewedAt: dayjs().toISOString(),
-                }
-              : p
-          )
-        );
-      } else {
-        setDiaryEntries((current) =>
-          current.map((e) =>
-            e.id === target.id
-              ? {
-                  ...e,
-                  diaryStatus: 'Rejected',
-                  status: 'Rejected' as any,
-                  reviewRemarks: comment,
-                  reviewedBy: 'HOD / Principal',
-                  reviewedAt: dayjs().toISOString(),
-                }
-              : e
-          )
-        );
-        const diary = diaryEntries.find((e) => e.id === target.id);
-        if (diary) {
-          setLessonPlans((current) =>
-            current.map((p) =>
-              p.id === diary.lessonPlanId
-                ? {
-                    ...p,
-                    diaryStatus: 'Rejected',
-                    reviewStatus: 'Diary Correction Requested',
-                    reviewRemarks: comment,
-                  }
-                : p
-            )
-          );
+    async (target: ReviewTarget, comment: string) => {
+      try {
+        if (!comment) {
+          shikshaMitraToast.warning({ message: 'Please provide a reason.' });
+          return;
         }
+        await rejectLessonPlan({ id: target.id, body: { comment } }).unwrap();
+        refetchTimeline();
+        refetchLessonPlans();
+        shikshaMitraToast.success({ message: 'Rejected and returned for correction.' });
+      } catch (err: any) {
+        shikshaMitraToast.error({ message: err?.data?.error?.message || 'Failed to reject.' });
       }
-      shikshaMitraToast.info({ message: 'Rejected and returned for correction.' });
     },
-    [diaryEntries]
+    [rejectLessonPlan, refetchTimeline, refetchLessonPlans]
   );
 
-  const handleRequestChanges = useCallback((target: ReviewTarget, comment: string) => {
-    if (target.type === 'plan') {
-      setLessonPlans((current) =>
-        current.map((p) =>
-          p.id === target.id
-            ? {
-                ...p,
-                planStatus: 'NeedsChanges',
-                status: 'NeedsChanges',
-                approvalStatus: 'ChangesRequested',
-                reviewRemarks: comment,
-              }
-            : p
-        )
-      );
-    } else {
-      setDiaryEntries((current) =>
-        current.map((e) =>
-          e.id === target.id
-            ? {
-                ...e,
-                diaryStatus: 'NeedsChanges',
-                status: 'NeedsChanges' as any,
-                reviewRemarks: comment,
-              }
-            : e
-        )
-      );
-    }
-    shikshaMitraToast.info({ message: 'Changes requested. Teacher has been notified.' });
-  }, []);
+  const handleRequestChanges = useCallback(
+    async (target: ReviewTarget, comment: string) => {
+      try {
+        if (!comment) {
+          shikshaMitraToast.warning({ message: 'Please provide comments.' });
+          return;
+        }
+        await requestChanges({ id: target.id, body: { comment } }).unwrap();
+        refetchTimeline();
+        refetchLessonPlans();
+        shikshaMitraToast.success({ message: 'Changes requested successfully.' });
+      } catch (err: any) {
+        shikshaMitraToast.error({
+          message: err?.data?.error?.message || 'Failed to request changes.',
+        });
+      }
+    },
+    [requestChanges, refetchTimeline, refetchLessonPlans]
+  );
 
   // ─── Columns ─────────────────────────────────────────────────────────────────
 
@@ -625,9 +931,21 @@ const LessonPlanScreen = () => {
   );
 
   const lessonColumns = [
-    { id: 'plannedDate', label: 'Date', filterType: 'date' as const, minWidth: 120, sticky: true },
+    {
+      id: 'plannedDate',
+      label: 'Date',
+      filterType: 'date' as const,
+      minWidth: 120,
+      sticky: true,
+      render: (v: string) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
+    },
     { id: 'period', label: 'Period', minWidth: 110 },
-    { id: 'plannedTime', label: 'Time', minWidth: 120 },
+    {
+      id: 'plannedTime',
+      label: 'Time',
+      minWidth: 120,
+      render: (v: string) => v || '—',
+    },
     {
       id: 'className',
       label: 'Class / Div',
@@ -649,6 +967,30 @@ const LessonPlanScreen = () => {
       label: 'Diary Status',
       minWidth: 130,
       render: (v: DiaryStatus) => renderDiaryStatus(v),
+    },
+    {
+      id: 'insightMessage',
+      label: 'Insight',
+      minWidth: 220,
+      isFilter: false,
+      render: (v: string, row: any) =>
+        v ? (
+          <Stack direction="row" spacing={0.75} alignItems="flex-start">
+            <Iconify
+              icon="mdi:information-outline"
+              width={16}
+              sx={{
+                mt: 0.25,
+                color: row.insightSeverity === 'error' ? 'error.main' : 'warning.main',
+              }}
+            />
+            <Typography variant="caption" color="text.secondary">
+              {v}
+            </Typography>
+          </Stack>
+        ) : (
+          '-'
+        ),
     },
     {
       id: 'plannedCompletionPercentage',
@@ -680,25 +1022,9 @@ const LessonPlanScreen = () => {
       ),
     },
     {
-      id: 'isAiGenerated',
-      label: 'AI',
-      minWidth: 70,
-      isFilter: false,
-      render: (v: boolean) =>
-        v ? (
-          <Label
-            color="secondary"
-            variant="soft"
-            startIcon={<Iconify icon="mdi:robot-outline" width={12} />}
-          >
-            AI
-          </Label>
-        ) : null,
-    },
-    {
       id: 'actions',
       label: 'Actions',
-      minWidth: 190,
+      minWidth: 120,
       align: 'center' as const,
       isSort: false,
       isFilter: false,
@@ -707,52 +1033,65 @@ const LessonPlanScreen = () => {
       render: (_v: unknown, row: any) => {
         const plan = row as LessonPlanRow;
         const diary = getDiaryForLesson(plan.id);
+        const isPlanLocked = plan.planStatus === 'Approved';
         return (
-          <Stack direction="row" spacing={0.5} justifyContent="center">
-            <IconButton size="small" title="Edit lesson plan" onClick={() => openEditLesson(plan)}>
-              <Iconify icon={GlobalIcons.edit} />
-            </IconButton>
-            <IconButton
-              size="small"
-              title="Submit plan"
-              disabled={!['Draft', 'Rejected', 'NeedsChanges'].includes(plan.planStatus)}
-              onClick={() => submitPlan(plan.id)}
-            >
-              <Iconify icon={GlobalIcons.submit} />
-            </IconButton>
-            <IconButton
-              size="small"
-              title={diary ? 'View/edit diary' : 'Add diary'}
-              disabled={plan.planStatus === 'Cancelled'}
-              onClick={() => openDiary(plan)}
-            >
-              <Iconify icon="mdi:notebook-edit-outline" />
-            </IconButton>
-            <IconButton
-              size="small"
-              title="AI Builder"
-              onClick={() => {
-                setEditPlan(plan);
-                setAiDrawerOpen(true);
-              }}
-            >
-              <Iconify icon="mdi:robot-outline" />
-            </IconButton>
-            <IconButton
-              size="small"
-              title="Export"
-              onClick={() => shikshaMitraToast.info({ message: 'Lesson plan export prepared.' })}
-            >
-              <Iconify icon={GlobalIcons.download} />
-            </IconButton>
-          </Stack>
+          <ThreeDotsActions
+            showViewIcon
+            handleViewClick={() => openDetails(plan)}
+            showEditIcon
+            placement="right-center"
+            disableEditIcon={isPlanLocked}
+            editLabel={isPlanLocked ? 'Approved lesson plan is view only' : 'Edit lesson plan'}
+            handleEditClick={() => openEditLesson(plan)}
+            actions={({ popover: pop }) => (
+              <MenuList>
+                <MenuItem
+                  disabled={!['Draft', 'Rejected', 'NeedsChanges'].includes(plan.planStatus)}
+                  onClick={() => {
+                    pop.onClose();
+                    submitPlan(plan.id);
+                  }}
+                >
+                  <Iconify icon={GlobalIcons.submit} sx={{ mr: 1, width: 16, height: 16 }} />
+                  Submit plan
+                </MenuItem>
+                <MenuItem
+                  disabled={plan.planStatus === 'Cancelled'}
+                  onClick={() => {
+                    pop.onClose();
+                    openDiary(plan);
+                  }}
+                >
+                  <Iconify icon="mdi:notebook-edit-outline" sx={{ mr: 1, width: 16, height: 16 }} />
+                  {diary ? 'Edit diary notes' : 'Add diary notes'}
+                </MenuItem>
+                <MenuItem
+                  disabled={plan.planStatus !== 'Approved'}
+                  onClick={() => {
+                    pop.onClose();
+                    openHomeworkFromPlan(plan);
+                  }}
+                >
+                  <Iconify icon="mdi:book-plus-outline" sx={{ mr: 1, width: 16, height: 16 }} />
+                  Create homework
+                </MenuItem>
+              </MenuList>
+            )}
+          />
         );
       },
     },
   ];
 
   const diaryColumns = [
-    { id: 'plannedDate', label: 'Date', filterType: 'date' as const, minWidth: 120, sticky: true },
+    {
+      id: 'plannedDate',
+      label: 'Date',
+      filterType: 'date' as const,
+      minWidth: 120,
+      sticky: true,
+      render: (v: string) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
+    },
     { id: 'period', label: 'Period', minWidth: 110 },
     {
       id: 'className',
@@ -780,7 +1119,7 @@ const LessonPlanScreen = () => {
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 130,
+      minWidth: 120,
       align: 'center' as const,
       isSort: false,
       isFilter: false,
@@ -788,22 +1127,27 @@ const LessonPlanScreen = () => {
       stickyPosition: 'right' as const,
       render: (_v: unknown, row: any) => {
         const plan = row as LessonPlanRow;
+        const diary = getDiaryForLesson(plan.id);
         return (
-          <Stack direction="row" spacing={0.5} justifyContent="center">
-            <IconButton size="small" title="Open diary" onClick={() => openDiary(plan)}>
-              <Iconify icon="mdi:notebook-edit-outline" />
-            </IconButton>
-            <IconButton
-              size="small"
-              title="AI Summary"
-              onClick={() => {
-                setEditPlan(plan);
-                setAiDrawerOpen(true);
-              }}
-            >
-              <Iconify icon="mdi:robot-outline" />
-            </IconButton>
-          </Stack>
+          <ThreeDotsActions
+            showViewIcon
+            handleViewClick={() => openDetails(plan)}
+            placement="right-center"
+            actions={({ popover: pop }) => (
+              <MenuList>
+                <MenuItem
+                  disabled={plan.planStatus === 'Cancelled'}
+                  onClick={() => {
+                    pop.onClose();
+                    openDiary(plan);
+                  }}
+                >
+                  <Iconify icon="mdi:notebook-edit-outline" sx={{ mr: 1, width: 16, height: 16 }} />
+                  {diary ? 'Edit diary notes' : 'Add diary notes'}
+                </MenuItem>
+              </MenuList>
+            )}
+          />
         );
       },
     },
@@ -811,7 +1155,7 @@ const LessonPlanScreen = () => {
 
   const reportTeacherData = teacherOptions.map((t) => {
     const plans = lessonPlans.filter((p) => p.teacherName === t.value);
-    const completed = plans.filter((p) => p.diaryStatus === 'Approved').length;
+    const completed = plans.filter((p) => p.diaryStatus === 'Submitted').length;
     const missed = diaryEntries.filter((e) => {
       const p = lessonPlans.find((lp) => lp.id === e.lessonPlanId);
       return p?.teacherName === t.value && !e.classConducted;
@@ -850,23 +1194,11 @@ const LessonPlanScreen = () => {
           <Stack direction="row" spacing={1} flexWrap="wrap">
             <Button
               size="small"
-              variant="outlined"
-              color="secondary"
-              startIcon={<Iconify icon="mdi:robot-outline" />}
-              onClick={() => {
-                setEditPlan(null);
-                setAiDrawerOpen(true);
-              }}
-            >
-              AI Generate Plan
-            </Button>
-            <Button
-              size="small"
               variant="contained"
               startIcon={<Iconify icon={GlobalIcons.addIcon} />}
               onClick={() => openAddLesson()}
             >
-              Add Lesson Plan
+              Lesson Plan
             </Button>
           </Stack>
         }
@@ -910,34 +1242,79 @@ const LessonPlanScreen = () => {
               />
             ))}
           </Tabs>
-
-          <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: 1 }}>
-            <LessonPlanFilters
-              filters={activeFiltersState}
-              onChange={handleFilterChange}
-              onReset={handleResetFilters}
-            />
-          </Stack>
         </Stack>
-
-        {getActiveFilters(activeFiltersState).length > 0 && (
-          <Box sx={{ px: 2, py: 1.25, bgcolor: 'background.neutral' }}>
-            <LessonPlanActiveFilters
-              filters={activeFiltersState}
-              onChange={handleFilterChange}
-              onReset={handleResetFilters}
-            />
-          </Box>
-        )}
       </Card>
 
       {/* Tab Content */}
+      {activeTab === 'dailyTimeline' && (
+        <DailyTimelineTab
+          selectedDate={selectedDate}
+          onChangeDate={setSelectedDate}
+          slots={timelineData?.slots || []}
+          isLoading={isTimelineLoading}
+          onAddLesson={(date, prefill) => {
+            setEditPlan(null);
+            setPrefillDate(date ?? null);
+            setTimelinePrefill({
+              ...(prefill ?? {}),
+              plannedDate: date ?? dayjs(todayIso),
+              teacherId: currentTeacherOption?.value || '',
+              teacherName: currentTeacherOption?.label || '',
+            });
+            setLessonModalOpen(true);
+          }}
+          onViewDetails={openDetails}
+          onEditLesson={(plan) => {
+            openEditLesson({
+              id: plan.id || plan.Id,
+              academicYear: plan.academicYear || '2026-27',
+              teacherId: plan.teacherId || '',
+              teacherName: plan.teacherName || 'Rohit Mehta',
+              classId: plan.standardId || '',
+              className: plan.standardName || '7',
+              divisionId: plan.divisionId || '',
+              divisionName: plan.divisionName || 'A',
+              subjectId: plan.subjectId || '',
+              subjectName: plan.subjectName || 'Mathematics',
+              chapterId: plan.chapterId || '',
+              chapterName: plan.chapterName || '',
+              plannedDate: plan.plannedDate || todayIso,
+              timetableSlotId: plan.timetableSlotId,
+              periodId: plan.timetableSlotId || 'Manual',
+              period: plan.timetableSlotId ? 'Period 1' : 'Manual',
+              plannedTime: getPlannedSlotTime(plan),
+              topic: plan.topic || '',
+              learningObjective: plan.learningObjective || '',
+              teachingMethod: plan.teachingMethod || 'ExplanationBoardWork',
+              resourcesRequired: plan.resourcesRequired || '',
+              plannedCompletionPercentage: plan.plannedCompletionPercentage || 0,
+              planStatus: plan.status || 'Draft',
+              status: plan.status || 'Draft',
+              diaryStatus: plan.diaryStatus || 'NotSubmitted',
+              approvalStatus: plan.status === 'Approved' ? 'Approved' : 'Pending',
+              reviewStatus: plan.status === 'Approved' ? 'Plan Approved' : 'Draft',
+              reviewRemarks: plan.reviewRemarks,
+              actualCompletionPercentage: plan.plannedCompletionPercentage || 0,
+              existingChapterProgress: 0,
+              source: plan.source || 'Manual',
+              isAiGenerated: plan.source === 'AiGenerated',
+              executionStatus: 'OnTrack',
+              standardId: plan.standardId,
+            });
+          }}
+          onSubmitDiary={openDiary}
+          onSubmitPlan={submitPlan}
+          onCreateHomework={openHomeworkFromPlan}
+        />
+      )}
+
       {activeTab === 'lessonList' && (
         <CustomizableTable
           tableId="lesson-plan-list-table"
           tableTitle={`Lesson Plans (${filteredPlans.length})`}
           data={filteredPlans}
           columns={lessonColumns}
+          noDataText="No lesson plans match the current filters. Try adjusting or clearing filters, or add a new lesson plan."
         />
       )}
 
@@ -946,22 +1323,11 @@ const LessonPlanScreen = () => {
           lessonPlans={lessonPlans}
           onAddLesson={openAddLesson}
           onEditLesson={openEditLesson}
+          onViewDetails={openDetails}
           onSubmitDiary={openDiary}
+          onCreateHomework={openHomeworkFromPlan}
           onMarkMissed={(plan) => {
-            setLessonPlans((current) =>
-              current.map((p) =>
-                p.id === plan.id
-                  ? {
-                      ...p,
-                      planStatus: 'Missed',
-                      status: 'Missed',
-                      executionStatus: 'Missed',
-                      reviewStatus: 'Missed - Needs Reschedule',
-                    }
-                  : p
-              )
-            );
-            shikshaMitraToast.info({ message: 'Lesson marked as missed.' });
+            shikshaMitraToast.info({ message: `Mark missed for ${plan.topic} is not wired yet.` });
           }}
           onCreateFromTimetable={(date) =>
             shikshaMitraToast.info({
@@ -971,23 +1337,20 @@ const LessonPlanScreen = () => {
           onCopyPreviousWeek={() =>
             shikshaMitraToast.info({ message: 'Previous week lessons copied as draft.' })
           }
-          onSubmitWeekPlan={(plans) => {
+          onSubmitWeekPlan={async (plans) => {
             const ids = plans.map((p) => p.id);
-            setLessonPlans((current) =>
-              current.map((p) =>
-                ids.includes(p.id) && p.planStatus === 'Draft'
-                  ? {
-                      ...p,
-                      planStatus: 'Submitted',
-                      status: 'Submitted',
-                      reviewStatus: 'Week Plan Pending Approval',
-                    }
-                  : p
-              )
-            );
-            shikshaMitraToast.success({
-              message: `${plans.length} draft lesson(s) submitted for the week.`,
-            });
+            try {
+              await bulkSubmitLessonPlans({ lessonPlanIds: ids }).unwrap();
+              refetchTimeline();
+              refetchLessonPlans();
+              shikshaMitraToast.success({
+                message: `${plans.length} draft lesson(s) submitted for the week.`,
+              });
+            } catch (err: any) {
+              shikshaMitraToast.error({
+                message: err?.data?.error?.message || 'Failed to submit week plan.',
+              });
+            }
           }}
         />
       )}
@@ -1005,20 +1368,26 @@ const LessonPlanScreen = () => {
       {activeTab === 'reviewQueue' && (
         <ReviewQueueTab
           lessonPlans={lessonPlans}
-          diaryEntries={diaryEntries}
           onApprove={handleApprove}
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}
         />
       )}
 
-      {activeTab === 'settings' && <SettingsTab settings={settings} onChange={setSettings} />}
-
       {/* Modals */}
       <AddLessonPlanModal
+        key={
+          editPlan?.id ??
+          timelinePrefill?.timetableSlotId ??
+          prefillDate?.format('YYYY-MM-DD') ??
+          'new-lesson-plan'
+        }
         open={lessonModalOpen}
         editData={editPlan}
         prefillDate={prefillDate}
+        timelinePrefill={timelinePrefill}
+        currentTeacher={currentTeacherOption}
+        lessonPlans={lessonPlans}
         onClose={() => setLessonModalOpen(false)}
         onSave={handleSaveLesson}
         onAiGenerate={() => {
@@ -1028,18 +1397,163 @@ const LessonPlanScreen = () => {
       />
 
       <SubmitDiaryModal
+        key={activePlanForDiary?.id ?? 'new-teacher-diary'}
         open={diaryModalOpen}
         plan={activePlanForDiary}
         existingDiary={activePlanForDiary ? getDiaryForLesson(activePlanForDiary.id) : null}
-        allowBackdated={settings.allowBackdatedDiary}
-        maxBackdateDays={settings.maxBackdateDays}
+        allowBackdated
+        maxBackdateDays={3}
+        loading={isSavingDiary}
         onClose={() => setDiaryModalOpen(false)}
         onSave={handleSaveDiary}
-        onAiSummary={() => {
-          setDiaryModalOpen(false);
-          setAiDrawerOpen(true);
-        }}
       />
+
+      <LessonDiaryDetailsDrawer
+        open={detailDrawerOpen}
+        plan={detailPlan}
+        diary={detailPlan ? getDiaryForLesson(detailPlan.id) : null}
+        onClose={() => setDetailDrawerOpen(false)}
+      />
+
+      <CustomDialog
+        open={Boolean(homeworkPlan)}
+        title="Create Homework From Lesson Plan"
+        maxWidth="sm"
+        handleClose={closeHomeworkFromPlan}
+      >
+        <DialogScrollContent sx={{ bgcolor: 'background.neutral', pb: 2 }}>
+          <Stack spacing={2}>
+            {homeworkError && (
+              <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
+                {homeworkError}
+              </Alert>
+            )}
+
+            {homeworkPlan && (
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 1,
+                  bgcolor: 'background.paper',
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                <Stack spacing={0.5}>
+                  <Typography variant="subtitle2">{homeworkPlan.topic}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {homeworkPlan.className}-{homeworkPlan.divisionName} /{' '}
+                    {homeworkPlan.subjectName} / {homeworkPlan.chapterName}
+                  </Typography>
+                  {homeworkPlan.insightMessage && (
+                    <Alert
+                      severity={homeworkPlan.insightSeverity === 'error' ? 'error' : 'warning'}
+                      icon={<Iconify icon="mdi:information-outline" />}
+                      sx={{ mt: 1, py: 0.25, px: 1 }}
+                    >
+                      {homeworkPlan.insightMessage}
+                    </Alert>
+                  )}
+                </Stack>
+              </Box>
+            )}
+
+            <CustomSelect
+              label="Homework Type *"
+              options={homeworkTypeOptions}
+              value={homeworkForm.homeworkTypeId}
+              onChange={(value) =>
+                setHomeworkForm((current) => ({
+                  ...current,
+                  homeworkTypeId: value as string,
+                }))
+              }
+              formControlProps={{ fullWidth: true }}
+            />
+
+            <TextField
+              size="small"
+              label="Homework Title *"
+              value={homeworkForm.title}
+              onChange={(event) =>
+                setHomeworkForm((current) => ({ ...current, title: event.target.value }))
+              }
+              fullWidth
+            />
+
+            <TextField
+              size="small"
+              label="Description *"
+              value={homeworkForm.description}
+              onChange={(event) =>
+                setHomeworkForm((current) => ({ ...current, description: event.target.value }))
+              }
+              fullWidth
+              multiline
+              minRows={3}
+            />
+
+            <CustomSelect
+              label="Submission Type *"
+              options={[
+                { value: 0, label: 'Online Text' },
+                { value: 1, label: 'File Upload' },
+                { value: 2, label: 'In-Person' },
+              ]}
+              value={homeworkForm.submissionType}
+              onChange={(value) =>
+                setHomeworkForm((current) => ({
+                  ...current,
+                  submissionType: Number(value),
+                }))
+              }
+              formControlProps={{ fullWidth: true }}
+            />
+
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <DateTimePicker
+                label="Publish Date *"
+                value={homeworkForm.publishAt}
+                onChange={(value) =>
+                  setHomeworkForm((current) => ({ ...current, publishAt: value }))
+                }
+                format="DD/MM/YYYY HH:mm"
+                ampm={false}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              />
+              <DateTimePicker
+                label="Due Date *"
+                value={homeworkForm.dueAt}
+                onChange={(value) => setHomeworkForm((current) => ({ ...current, dueAt: value }))}
+                format="DD/MM/YYYY HH:mm"
+                ampm={false}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              />
+            </Stack>
+          </Stack>
+        </DialogScrollContent>
+
+        <Divider />
+        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
+          <Button
+            size="small"
+            variant="text"
+            color="inherit"
+            startIcon={<Iconify icon="mdi:close" />}
+            onClick={closeHomeworkFromPlan}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Iconify icon="mdi:book-plus-outline" />}
+            disabled={isCreatingHomeworkFromPlan}
+            onClick={saveHomeworkFromPlan}
+          >
+            Create Homework
+          </Button>
+        </Stack>
+      </CustomDialog>
 
       <AiLessonBuilderDrawer
         open={aiDrawerOpen}

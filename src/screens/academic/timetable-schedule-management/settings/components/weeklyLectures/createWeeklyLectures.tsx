@@ -5,6 +5,7 @@ import { Box, Chip, Grid, Typography } from '@mui/material';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
+import { CapacityBanner } from './components/CapacityBanner';
 import { useWeeklyLectureForm } from './hooks/useWeeklyLectureForm';
 import { SubjectListSkeleton } from './components/SubjectListSkeleton';
 import { SubjectsLectureTable } from './components/SubjectsLectureTable';
@@ -21,7 +22,16 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
   selectedClass,
   tableData,
 }) => {
-  const { formik, allClass, isSubjectsLoading, isSubmitting } = useWeeklyLectureForm({
+  const {
+    formik,
+    allClass,
+    isSubjectsLoading,
+    isSubmitting,
+    availableCapacity,
+    hasSlots,
+    requiredLectures,
+    status,
+  } = useWeeklyLectureForm({
     editData,
     selectedClass,
     tableData,
@@ -44,6 +54,17 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
             disabled={disabled}
             isEditLocked={isEdit && !!editData}
           />
+
+          {hasClass && (
+            <Grid size={{ xs: 12 }}>
+              <CapacityBanner
+                status={status}
+                availableCapacity={availableCapacity}
+                requiredLectures={requiredLectures}
+                hasSlots={hasSlots}
+              />
+            </Grid>
+          )}
 
           {/* Contextual metadata — shown once a class is selected and loaded */}
           {hasClass && !isSubjectsLoading && subjectCount > 0 && (

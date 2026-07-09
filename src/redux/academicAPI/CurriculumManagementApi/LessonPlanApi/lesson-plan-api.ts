@@ -10,6 +10,42 @@ export const lessonPlanApi = academicApi.injectEndpoints({
       providesTags: [academicType.lessonPlan],
     }),
 
+    getLessonPlanTimeline: builder.query({
+      query: (params) => ({
+        url: '/academic/curriculum/lesson-plans/timeline',
+        method: 'GET',
+        params,
+      }),
+      providesTags: [academicType.lessonPlan],
+    }),
+
+    bulkSubmitLessonPlans: builder.mutation({
+      query: (body) => ({
+        url: '/academic/curriculum/lesson-plans/bulk-submit',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.lessonPlan],
+    }),
+
+    requestPlanChanges: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/academic/curriculum/lesson-plans/${id}/request-changes`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.lessonPlan, academicType.lessonPlanReview],
+    }),
+
+    createHomeworkFromLessonPlan: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/academic/curriculum/lesson-plans/${id}/homework`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.homework],
+    }),
+
     getLessonPlanById: builder.query({
       query: ({ id }) => ({ url: `/academic/curriculum/lesson-plans/${id}`, method: 'GET' }),
       providesTags: [academicType.lessonPlan],
@@ -132,38 +168,6 @@ export const lessonPlanApi = academicApi.injectEndpoints({
         academicType.lessonPlan,
         academicType.lessonPlanReview,
       ],
-    }),
-
-    approveTeacherDiary: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/academic/curriculum/teacher-diaries/${id}/approve`,
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: [
-        academicType.teacherDiary,
-        academicType.lessonPlan,
-        academicType.coverageTracker,
-        academicType.lessonPlanReview,
-      ],
-    }),
-
-    rejectTeacherDiary: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/academic/curriculum/teacher-diaries/${id}/reject`,
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: [academicType.teacherDiary, academicType.lessonPlanReview],
-    }),
-
-    requestDiaryChanges: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/academic/curriculum/teacher-diaries/${id}/request-changes`,
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: [academicType.teacherDiary, academicType.lessonPlanReview],
     }),
 
     updateDiaryProgress: builder.mutation({
@@ -426,6 +430,10 @@ export const lessonPlanApi = academicApi.injectEndpoints({
 
 export const {
   useGetLessonPlansQuery,
+  useGetLessonPlanTimelineQuery,
+  useBulkSubmitLessonPlansMutation,
+  useRequestPlanChangesMutation,
+  useCreateHomeworkFromLessonPlanMutation,
   useGetLessonPlanByIdQuery,
   useCreateLessonPlanMutation,
   useUpdateLessonPlanMutation,
@@ -442,9 +450,6 @@ export const {
   useCreateTeacherDiaryMutation,
   useUpdateTeacherDiaryMutation,
   useSubmitTeacherDiaryMutation,
-  useApproveTeacherDiaryMutation,
-  useRejectTeacherDiaryMutation,
-  useRequestDiaryChangesMutation,
   useUpdateDiaryProgressMutation,
   useUploadDiaryEvidenceMutation,
   useGetDiaryEvidenceQuery,

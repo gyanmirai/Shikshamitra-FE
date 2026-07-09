@@ -38,7 +38,11 @@ export const useStickyColumns = ({
 
           totalVisibleColumns.forEach((col, idx) => {
             if (col.sticky) {
-              if (idx < half) {
+              if (col.stickyPosition === 'left') {
+                leftSticky.push({ col, idx });
+              } else if (col.stickyPosition === 'right') {
+                rightSticky.push({ col, idx });
+              } else if (idx < half) {
                 leftSticky.push({ col, idx });
               } else {
                 rightSticky.push({ col, idx });

@@ -44,7 +44,9 @@ type Props = {
   lessonPlans: LessonPlanRow[];
   onAddLesson: (date: Dayjs) => void;
   onEditLesson: (plan: LessonPlanRow) => void;
+  onViewDetails?: (plan: LessonPlanRow) => void;
   onSubmitDiary: (plan: LessonPlanRow) => void;
+  onCreateHomework?: (plan: LessonPlanRow) => void;
   onMarkMissed: (plan: LessonPlanRow) => void;
   onCreateFromTimetable: (date: Dayjs) => void;
   onCopyPreviousWeek: () => void;
@@ -55,7 +57,9 @@ const WeeklyPlannerTab = ({
   lessonPlans,
   onAddLesson,
   onEditLesson,
+  onViewDetails,
   onSubmitDiary,
+  onCreateHomework,
   onMarkMissed,
   onCreateFromTimetable,
   onCopyPreviousWeek,
@@ -173,9 +177,23 @@ const WeeklyPlannerTab = ({
                           Today
                         </Label>
                       )}
+                      {plansForDay.some((plan) => plan.insightMessage) && (
+                        <Label
+                          color={
+                            plansForDay.some((plan) => plan.insightSeverity === 'error')
+                              ? 'error'
+                              : 'warning'
+                          }
+                          variant="soft"
+                          startIcon={<Iconify icon="mdi:information-outline" width={12} />}
+                          sx={{ height: 18, fontSize: 10 }}
+                        >
+                          Insight
+                        </Label>
+                      )}
                     </Stack>
                     <Typography variant="caption" color="text.secondary">
-                      {date.format('DD MMM YYYY')}
+                      {date.format('DD-MM-YYYY')}
                     </Typography>
                   </Box>
                   <IconButton
@@ -291,6 +309,21 @@ const WeeklyPlannerTab = ({
                         >
                           {plan.topic}
                         </Typography>
+                        {plan.insightMessage && (
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            alignItems="flex-start"
+                            sx={{
+                              mt: 0.75,
+                              color:
+                                plan.insightSeverity === 'error' ? 'error.main' : 'warning.dark',
+                            }}
+                          >
+                            <Iconify icon="mdi:information-outline" width={14} />
+                            <Typography variant="caption">{plan.insightMessage}</Typography>
+                          </Stack>
+                        )}
 
                         {/* Progress + Diary row */}
                         <Stack
@@ -339,12 +372,31 @@ const WeeklyPlannerTab = ({
       >
         <MenuItem
           onClick={() => {
+            if (cardMenuAnchor) onViewDetails?.(cardMenuAnchor.plan);
+            closeCardMenu();
+          }}
+        >
+          <Iconify icon="mdi:eye-outline" width={18} sx={{ mr: 1 }} />
+          View Details
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
             if (cardMenuAnchor) onSubmitDiary(cardMenuAnchor.plan);
             closeCardMenu();
           }}
         >
           <Iconify icon="mdi:notebook-edit-outline" width={18} sx={{ mr: 1 }} />
           Create / Edit Diary
+        </MenuItem>
+        <MenuItem
+          disabled={cardMenuAnchor?.plan.planStatus !== 'Approved'}
+          onClick={() => {
+            if (cardMenuAnchor) onCreateHomework?.(cardMenuAnchor.plan);
+            closeCardMenu();
+          }}
+        >
+          <Iconify icon="mdi:book-plus-outline" width={18} sx={{ mr: 1 }} />
+          Create Homework
         </MenuItem>
         <MenuItem
           onClick={() => {

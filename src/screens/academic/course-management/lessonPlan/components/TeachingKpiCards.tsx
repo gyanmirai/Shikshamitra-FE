@@ -40,18 +40,16 @@ const TeachingKpiCards = ({ lessonPlans, diaryEntries, healthScore, onCardClick 
   const pendingThisWeek = thisWeekPlans.filter((p) => p.planStatus === 'Submitted').length;
 
   const submittedToday = diaryEntries.filter(
-    (e) => e.actualDate === todayIso && ['Submitted', 'Approved'].includes(e.diaryStatus)
+    (e) => e.actualDate === todayIso && e.diaryStatus === 'Submitted'
   ).length;
   const lastSubmitted = diaryEntries.find((e) => e.submittedAt)?.submittedAt;
 
   const pendingDiaries = lessonPlans.filter((p) => p.diaryStatus === 'NotSubmitted').length;
-  const pendingApprovals = lessonPlans.filter(
-    (p) => p.planStatus === 'Submitted' || p.diaryStatus === 'Submitted'
-  ).length;
+  const pendingApprovals = lessonPlans.filter((p) => p.planStatus === 'Submitted').length;
 
   const oldestPending = (() => {
     const submitted = lessonPlans
-      .filter((p) => p.planStatus === 'Submitted' || p.diaryStatus === 'Submitted')
+      .filter((p) => p.planStatus === 'Submitted')
       .map((p) => dayjs(p.plannedDate).diff(dayjs(), 'day'));
     return submitted.length ? Math.abs(Math.min(...submitted)) : 0;
   })();
