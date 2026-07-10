@@ -20,7 +20,6 @@ import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import {
   Box,
-  Chip,
   Grid,
   Alert,
   Select,
@@ -301,7 +300,7 @@ function FeeHeadRow({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: '1fr 100px 100px 1fr 40px',
+          gridTemplateColumns: '1fr 100px 1fr 40px',
           gap: 1.5,
           alignItems: 'center',
           px: 1.5,
@@ -315,15 +314,6 @@ function FeeHeadRow({
         <Typography variant="caption" fontWeight={600} fontSize="13px" noWrap>
           {rule.feeHeadName || rule.feeHeadId}
         </Typography>
-
-        {/* Fee Type */}
-        <Chip
-          label={rule.feeType}
-          size="small"
-          color={rule.feeType === 'Recurring' ? 'primary' : 'default'}
-          variant="outlined"
-          sx={{ height: 20, fontSize: '0.65rem', maxWidth: '100%' }}
-        />
 
         {/* Proration Applicable Switch */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -559,7 +549,7 @@ export default function ProrationFeeHeadsSection({ formik }: ProrationFeeHeadsSe
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: '1fr 100px 100px 1fr 40px',
+              gridTemplateColumns: '1fr 100px 1fr 40px',
               gap: 1.5,
               px: 1.5,
               py: 1,
@@ -575,14 +565,6 @@ export default function ProrationFeeHeadsSection({ formik }: ProrationFeeHeadsSe
               fontSize="0.72rem"
             >
               FEE HEAD
-            </Typography>
-            <Typography
-              variant="caption"
-              fontWeight={700}
-              color="text.secondary"
-              fontSize="0.72rem"
-            >
-              FEE TYPE
             </Typography>
             <Typography
               variant="caption"
