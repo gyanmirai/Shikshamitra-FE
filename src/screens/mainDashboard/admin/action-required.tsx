@@ -25,7 +25,7 @@ const ACTION_REQUIRED = [
     count: 14,
     icon: 'solar:user-plus-bold',
     color: 'info' as const,
-    path: studentPaths.enrollment.admission,
+    path: studentPaths.enrollment.activation,
   },
   {
     title: 'Pending Fee Reconciliation',

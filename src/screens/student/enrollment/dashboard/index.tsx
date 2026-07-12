@@ -4,7 +4,6 @@ import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
 import { fNumber } from 'src/utils/format-number';
-import 'src/utils/convertABPPermissionToNavigation';
 import React, { useState, useCallback } from 'react';
 import { alpha, useTheme } from '@mui/material/styles';
 import { Box, Grid, Card, CardHeader } from '@mui/material';

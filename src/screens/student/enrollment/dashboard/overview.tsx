@@ -153,7 +153,7 @@ const Overview = () => {
       count: fNumber(1120),
       color: 'primary.main',
       bgColor: 'primary',
-      href: '/student/enrollment/inquiry',
+      href: '/student/enrollment/pipeline',
       labels: [
         { name: `Male ${fNumber(500)}`, color: 'success' },
         { name: `Female ${fNumber(200)}`, color: 'warning' },
@@ -167,7 +167,7 @@ const Overview = () => {
       count: fNumber(78),
       color: 'info.main',
       bgColor: 'info',
-      href: '/student/enrollment/registration',
+      href: '/student/enrollment/registrations',
       labels: [
         { name: `Male ${fNumber(500)}`, color: 'success' },
         { name: `Female ${fNumber(200)}`, color: 'warning' },
@@ -181,7 +181,7 @@ const Overview = () => {
       count: fNumber(45),
       color: 'secondary.main',
       bgColor: 'secondary',
-      href: '/student/enrollment/admission',
+      href: '/student/enrollment/offers-seats',
       labels: [
         { name: `Male ${fNumber(500)}`, color: 'success' },
         { name: `Female ${fNumber(200)}`, color: 'warning' },

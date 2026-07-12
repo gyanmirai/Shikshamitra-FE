@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-07-08
+updated_on: 2026-07-10
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,12 +17,12 @@ Backend Student docs own product and API truth at [Student backend docs](../../.
 
 Follow this order when changing Student frontend behavior:
 
-| Step | File | Use it to |
-|---|---|---|
-| 1 | [routes.md](./routes.md) | Confirm visible routes, menu status, and permission gates |
-| 2 | [clients.md](./clients.md) | Find Redux Toolkit Query clients and backend contract ownership |
-| 3 | [workflows.md](./workflows.md) | Trace enrollment, records, attendance, reports, and notification flows |
-| 4 | [testing.md](./testing.md) | Pick frontend docs, unit, contract, and browser checks |
+| Step | File                           | Use it to                                                              |
+| ---- | ------------------------------ | ---------------------------------------------------------------------- |
+| 1    | [routes.md](./routes.md)       | Confirm visible routes, menu status, and permission gates              |
+| 2    | [clients.md](./clients.md)     | Find Redux Toolkit Query clients and backend contract ownership        |
+| 3    | [workflows.md](./workflows.md) | Trace enrollment, records, attendance, reports, and notification flows |
+| 4    | [testing.md](./testing.md)     | Pick frontend docs, unit, contract, and browser checks                 |
 
 ## Ownership boundary
 
@@ -34,27 +34,28 @@ Do not duplicate backend behavior here when a link to the backend canonical doc 
 
 Use these paths before searching broadly:
 
-| Need | Source |
-|---|---|
-| Visible navigation | `src/constants/student-menu.ts` |
-| App Router pages | `src/app/(auth-route)/student/**` |
-| Screens and components | `src/screens/student/**` |
-| Student API clients | `src/redux/student/**` |
-| Student tests | `src/constants/student-menu.permissions.test.ts`, `src/redux/student/student-api.production.test.ts`, `src/screens/student/**/*.test.ts`, `e2e/student/**` |
-| Backend docs | `../../../Shikshamitra-BE/docs/modules/student/README.md` |
-| Backend contracts | `../../../Shikshamitra-BE/src/ShikshaMitra.Application.Contracts/Students/**` |
+| Need                   | Source                                                                                                                                                     |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visible navigation     | `src/constants/student-menu.ts`                                                                                                                            |
+| App Router pages       | `src/app/(auth-route)/student/**`                                                                                                                          |
+| Screens and components | `src/screens/student/**`                                                                                                                                   |
+| Student API clients    | `src/redux/student/**`                                                                                                                                     |
+| Admissions CRM client  | `src/redux/student/admissions-crm/admissions-crm-api.ts`                                                                                                   |
+| Student tests          | `src/constants/student-menu.permissions.test.ts`, `src/redux/student/student-api.production.test.ts`, `src/screens/student/**/*.test.ts`, `e2e/student/**` |
+| Backend docs           | `../../../Shikshamitra-BE/docs/modules/student/README.md`                                                                                                  |
+| Backend contracts      | `../../../Shikshamitra-BE/src/ShikshaMitra.Application.Contracts/Students/**`                                                                              |
 
 ## For agents
 
 Use this table before code search:
 
-| Question | First file |
-|---|---|
-| Which Student route or menu item is active? | [routes.md](./routes.md) |
-| Which API client owns a call? | [clients.md](./clients.md) |
-| Which workflow should I test? | [workflows.md](./workflows.md) |
-| Which command should I run? | [testing.md](./testing.md) |
-| Which backend API behavior is canonical? | `../../../Shikshamitra-BE/docs/modules/student/api.md` |
+| Question                                    | First file                                             |
+| ------------------------------------------- | ------------------------------------------------------ |
+| Which Student route or menu item is active? | [routes.md](./routes.md)                               |
+| Which API client owns a call?               | [clients.md](./clients.md)                             |
+| Which workflow should I test?               | [workflows.md](./workflows.md)                         |
+| Which command should I run?                 | [testing.md](./testing.md)                             |
+| Which backend API behavior is canonical?    | `../../../Shikshamitra-BE/docs/modules/student/api.md` |
 
 ## Validation
 

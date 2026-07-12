@@ -28,10 +28,14 @@ const studentUiSmokePaths = [
   '/student/upload-student-photo',
   '/student/upload-student-documents',
   '/student/enrollment/dashboard',
-  '/student/enrollment/entrance-exam/dashboard',
-  '/student/enrollment/inquiry',
-  '/student/enrollment/registration',
-  '/student/enrollment/admission',
+  '/student/enrollment/pipeline',
+  '/student/enrollment/exams',
+  '/student/enrollment/registrations',
+  '/student/enrollment/offers-seats',
+  '/student/enrollment/activation',
+  '/student/enrollment/operations',
+  '/student/enrollment/analytics',
+  '/student/enrollment/settings',
   '/student/attendance/dashboard',
   '/student/attendance/take-attendance',
   '/student/attendance/leave-absent',
@@ -600,7 +604,7 @@ test.describe('Student module bug regression E2E', () => {
         dateOfBirth: yearsAgoIso(9),
         gender: 0,
         dateOfInquiry: new Date().toISOString(),
-        inquiryPreferenceId: preference.id,
+        inquirySourceId: preference.id,
         primaryContactNo: uniquePhone(),
         address1: 'Inquiry House 17',
         address2: 'Near Main Road',
@@ -661,7 +665,7 @@ test.describe('Student module bug regression E2E', () => {
     for (const item of [detail, refreshedInquiry]) {
       expect(String(item.age), 'Inquiry age should be populated.').toMatch(/\d+\s+years?/i);
       expect(item.address, 'Inquiry address should be consolidated.').toContain('Inquiry House 17');
-      expect(item.inquiryPreferenceId).toBe(preference.id);
+      expect(item.inquirySourceId).toBe(preference.id);
       expect(item.inquiryPreference).toBe(preferenceName);
       expect(
         Math.abs(Date.parse(String(item.nextReminderDate)) - Date.parse(reminderDate)),

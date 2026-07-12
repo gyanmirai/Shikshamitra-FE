@@ -116,7 +116,7 @@ const kpiData = [
     value: '42',
     // icon: 'solar:document-add-bold',
     status: 'secondary' as const,
-    path: studentPaths.enrollment.admission,
+    path: studentPaths.enrollment.activation,
     tooltip: 'This Session · 5 applications waiting > 3 days',
     chart: {
       type: 'bar' as const,

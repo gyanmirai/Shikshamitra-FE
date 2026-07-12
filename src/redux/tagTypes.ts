@@ -540,6 +540,18 @@ export const studentInquiryType = {
   studentInquiry: 'Student-Inquiry',
 } as const;
 
+// ===== Student Admissions CRM API (reducerPath: StudentAdmissionsCrmApi) =====
+export const studentAdmissionsCrmType = {
+  lead: 'Student-Admissions-Crm-Lead',
+  configuration: 'Student-Admissions-Crm-Configuration',
+  task: 'Student-Admissions-Crm-Task',
+  timeline: 'Student-Admissions-Crm-Timeline',
+  exam: 'Student-Admissions-Crm-Exam',
+  analytics: 'Student-Admissions-Crm-Analytics',
+  publicForm: 'Student-Admissions-Crm-Public-Form',
+  communication: 'Student-Admissions-Crm-Communication',
+} as const;
+
 // ===== Student Invoice API (reducerPath: StudentInvoiceApi) =====
 export const studentInvoiceType = {
   studentInvoice: 'StudentInvoice',
@@ -716,6 +728,8 @@ export const allTagTypes = {
   ...studentGrNumberType,
   ...studentGroupType,
   ...studentInquiryType,
+  ...studentAdmissionsCrmType,
+  academicExam: academicType.exam,
   ...studentInvoiceType,
   ...studentLeaveType,
   ...studentReceiptType,

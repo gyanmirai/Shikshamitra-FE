@@ -107,8 +107,8 @@ export const dashboardMockDataByTemplate: Record<DashboardTemplate, DashboardDat
         subtitle: 'Waiting for leadership review',
         owner: 'Admissions',
         status: 'info',
-        drilldownUrl: studentPaths.enrollment.admission,
-        requiredPermissions: studentPermissions.enrollment.admission,
+        drilldownUrl: studentPaths.enrollment.activation,
+        requiredPermissions: studentPermissions.enrollment.activation,
       },
       {
         id: 'leadership-payroll-review',
@@ -194,8 +194,8 @@ export const dashboardMockDataByTemplate: Record<DashboardTemplate, DashboardDat
         value: 42,
         subtitle: '5 waiting more than 3 days',
         status: 'secondary',
-        drilldownUrl: studentPaths.enrollment.admission,
-        requiredPermissions: studentPermissions.enrollment.admission,
+        drilldownUrl: studentPaths.enrollment.activation,
+        requiredPermissions: studentPermissions.enrollment.activation,
       },
     ],
     actionItems: [

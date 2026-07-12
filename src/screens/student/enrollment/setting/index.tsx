@@ -16,6 +16,13 @@ import FormNumberSeries from './FormNumberSeries';
 import InquiryPreference from './inquiryPreference';
 import EntranceExamSlots from './entrance-exam-slots';
 import RegistrationAmount from './RegistrationFormAmount';
+import AdmissionsCrmConfiguration from './admissions-crm-configuration';
+import AdmissionsRouteConfiguration from './admissions-route-configuration';
+import AdmissionsSeatPoolConfiguration from './admissions-seat-pool-configuration';
+import AdmissionsFinancialConfiguration from './admissions-financial-configuration';
+import AdmissionsGovernanceConfiguration from './admissions-governance-configuration';
+import AdmissionsPolicyPackConfiguration from './admissions-policy-pack-configuration';
+import AdmissionsNumberSeriesConfiguration from './admissions-number-series-configuration';
 
 const TABS = [
   {
@@ -38,6 +45,55 @@ const TABS = [
     icon: <Iconify icon="healthicons:i-exam-qualification-outline" width={20} />,
     buttonText: 'Slot',
     component: (props: any) => <EntranceExamSlots {...props} />,
+  },
+  {
+    value: 'admissionsCrmConfiguration',
+    label: 'Admissions CRM',
+    icon: <Iconify icon="solar:filter-bold-duotone" width={20} />,
+    buttonText: 'Form Template',
+    component: (props: any) => <AdmissionsCrmConfiguration {...props} />,
+  },
+  {
+    value: 'admissionsSeatPools',
+    label: 'Seat Plans',
+    icon: <Iconify icon="solar:chair-2-bold-duotone" width={20} />,
+    buttonText: 'Seat Pool',
+    component: () => <AdmissionsSeatPoolConfiguration />,
+  },
+  {
+    value: 'admissionsFinancialRules',
+    label: 'Financial Rules',
+    icon: <Iconify icon="solar:wallet-money-bold-duotone" width={20} />,
+    buttonText: 'Fee Policy',
+    component: () => <AdmissionsFinancialConfiguration />,
+  },
+  {
+    value: 'admissionsPolicyPacks',
+    label: 'Policy Packs',
+    icon: <Iconify icon="solar:shield-check-bold-duotone" width={20} />,
+    buttonText: 'Policy Pack',
+    component: () => <AdmissionsPolicyPackConfiguration />,
+  },
+  {
+    value: 'admissionsNumberSeries',
+    label: 'Activation Numbering',
+    icon: <Iconify icon="solar:hashtag-square-bold-duotone" width={20} />,
+    buttonText: 'Number Series',
+    component: () => <AdmissionsNumberSeriesConfiguration />,
+  },
+  {
+    value: 'admissionsRoutes',
+    label: 'Admission Routes',
+    icon: <Iconify icon="solar:route-bold-duotone" width={20} />,
+    buttonText: 'Admission Route',
+    component: () => <AdmissionsRouteConfiguration />,
+  },
+  {
+    value: 'admissionsGovernance',
+    label: 'Governance & Privacy',
+    icon: <Iconify icon="solar:clipboard-check-bold-duotone" width={20} />,
+    buttonText: 'Governance',
+    component: () => <AdmissionsGovernanceConfiguration />,
   },
   {
     value: 'registrationFormAmount',
@@ -64,6 +120,8 @@ const StudentEnrollmentSettingScreen = () => {
   const inquiryPreferenceDialog = useBoolean();
   // Controls visibility of entrance exam time slots dialog
   const entranceExamSlotsDialog = useBoolean();
+  // Controls visibility of admissions CRM form template dialog
+  const admissionsCrmConfigurationDialog = useBoolean();
   // Controls visibility of registration fee amount dialog
   const registrationAmountDialog = useBoolean();
   // Controls visibility of form number series configuration dialog
@@ -106,6 +164,17 @@ const StudentEnrollmentSettingScreen = () => {
           Slot
         </Button>
       ),
+      admissionsCrmConfiguration: (
+        <Button
+          sx={{ width: '180px' }}
+          startIcon={<Add />}
+          onClick={admissionsCrmConfigurationDialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          Form Template
+        </Button>
+      ),
       registrationFormAmount: (
         <Button
           sx={{ width: '160px' }}
@@ -130,6 +199,7 @@ const StudentEnrollmentSettingScreen = () => {
     }),
     [
       defaultDocumentTypes.onTrue,
+      admissionsCrmConfigurationDialog.onTrue,
       entranceExamSlotsDialog.onTrue,
       inquiryPreferenceDialog.onTrue,
       registrationAmountDialog.onTrue,
@@ -211,6 +281,7 @@ const StudentEnrollmentSettingScreen = () => {
               defaultDocumentTypes={defaultDocumentTypes}
               inquiryPreferenceDialog={inquiryPreferenceDialog}
               entranceExamSlotsDialog={entranceExamSlotsDialog}
+              admissionsCrmConfigurationDialog={admissionsCrmConfigurationDialog}
               registrationAmountDialog={registrationAmountDialog}
               formNumberSeriesDialog={formNumberSeriesDialog}
             />

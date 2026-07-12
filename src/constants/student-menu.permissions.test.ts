@@ -13,7 +13,7 @@ const readSource = (relativePath: string) =>
 describe('student permission groups', () => {
   it('uses real backend leaf permissions for student section parents', () => {
     const permissions = [
-      { name: 'Students.Enrollment.Inquiry.View', isGranted: true },
+      { name: 'Students.Enrollment.AdmissionsCrm.View', isGranted: true },
       { name: 'Students.Records.StudentList.View', isGranted: true },
       { name: 'Students.Attendance.LeaveAndAbsent.View', isGranted: true },
     ];
@@ -33,19 +33,22 @@ describe('student permission groups', () => {
     expect(studentPermissions.dashboard).toBe('ShikshaMitra.Module.Students');
   });
 
-  it('keeps nested student permission layouts server-rendered so routes do not fall into 404', () => {
-    const layoutPaths = [
-      'src/app/(auth-route)/student/enrollment/layout.tsx',
-      'src/app/(auth-route)/student/enrollment/admission/layout.tsx',
-      'src/app/(auth-route)/student/enrollment/entrance-exam/layout.tsx',
-      'src/app/(auth-route)/student/enrollment/inquiry/layout.tsx',
-      'src/app/(auth-route)/student/enrollment/registration/layout.tsx',
-      'src/app/(auth-route)/student/enrollment/registration-form/layout.tsx',
-      'src/app/(auth-route)/student/enrollment/reports/layout.tsx',
-      'src/app/(auth-route)/student/enrollment/setting/layout.tsx',
-      'src/app/(auth-route)/student/enrollment/setting/documentTypes/layout.tsx',
-      'src/app/(auth-route)/student/enrollment/setting/entranceExamSlots/layout.tsx',
-      'src/app/(auth-route)/student/enrollment/setting/inquiryPrefrence/layout.tsx',
+  it('keeps the CRM enrollment shell server-rendered so workspace routes do not fall into 404', () => {
+    const shellSource = readSource(
+      'src/app/(auth-route)/student/enrollment/layout.tsx'
+    ).trimStart();
+    expect(shellSource).not.toMatch(/^['"]use client['"]/);
+    expect(shellSource).toContain('StudentPermissionGuard');
+
+    const workspacePaths = [
+      'src/app/(auth-route)/student/enrollment/pipeline/page.tsx',
+      'src/app/(auth-route)/student/enrollment/exams/page.tsx',
+      'src/app/(auth-route)/student/enrollment/registrations/page.tsx',
+      'src/app/(auth-route)/student/enrollment/offers-seats/page.tsx',
+      'src/app/(auth-route)/student/enrollment/activation/page.tsx',
+      'src/app/(auth-route)/student/enrollment/operations/page.tsx',
+      'src/app/(auth-route)/student/enrollment/analytics/page.tsx',
+      'src/app/(auth-route)/student/enrollment/settings/page.tsx',
       'src/app/(auth-route)/student/attendance/layout.tsx',
       'src/app/(auth-route)/student/attendance/leave-absent/layout.tsx',
       'src/app/(auth-route)/student/attendance/notification/layout.tsx',
@@ -54,11 +57,10 @@ describe('student permission groups', () => {
       'src/app/(auth-route)/student/attendance/take-attendance/layout.tsx',
     ];
 
-    layoutPaths.forEach((layoutPath) => {
-      const source = readSource(layoutPath).trimStart();
+    workspacePaths.forEach((workspacePath) => {
+      const source = readSource(workspacePath).trimStart();
 
-      expect(source, layoutPath).not.toMatch(/^['"]use client['"]/);
-      expect(source, layoutPath).toContain('StudentPermissionGuard');
+      expect(source, workspacePath).not.toMatch(/^['"]use client['"]/);
     });
   });
 });

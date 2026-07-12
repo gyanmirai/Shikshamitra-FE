@@ -3,7 +3,7 @@ import path from 'node:path';
 import { it, expect, describe } from 'vitest';
 
 const readSource = (relativePath: string) =>
-  fs.readFileSync(path.join(process.cwd(), relativePath), 'utf8');
+  fs.readFileSync(path.join(process.cwd(), relativePath), 'utf8').replace(/\r\n/g, '\n');
 
 describe('Inquiry Source form wiring', () => {
   it('loads inquiry and registration sources from the selected academic year', () => {
