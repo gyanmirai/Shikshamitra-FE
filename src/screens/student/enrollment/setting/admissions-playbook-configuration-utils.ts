@@ -1,6 +1,6 @@
 import type {
-  AdmissionCrmPlaybookUpsertDto,
   AdmissionCrmSlotTemplateDto,
+  AdmissionCrmPlaybookUpsertDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import {

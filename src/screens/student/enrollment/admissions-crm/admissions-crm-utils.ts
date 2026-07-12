@@ -1,11 +1,11 @@
 import {
   AdmissionInquiryStage,
   AdmissionInquiryChannel,
-  AdmissionCrmMessageChannel,
   type AdmissionCrmLeadDto,
-  type AdmissionCrmPipelineStageDto,
-  type AdmissionCrmEntranceExamDto,
+  AdmissionCrmMessageChannel,
   AdmissionCrmEligibilityDecision,
+  type AdmissionCrmEntranceExamDto,
+  type AdmissionCrmPipelineStageDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 export const admissionCrmStageLabels: Record<AdmissionInquiryStage, string> = {

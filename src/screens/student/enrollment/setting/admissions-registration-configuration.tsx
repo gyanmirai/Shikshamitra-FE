@@ -1,39 +1,25 @@
 'use client';
 
 import type {
-  AdmissionCrmRegistrationFieldDto,
   AdmissionCrmFormNumberSeriesDto,
-  AdmissionCrmFormNumberSeriesUpsertDto,
+  AdmissionCrmRegistrationFieldDto,
   AdmissionCrmRegistrationTemplateDto,
+  AdmissionCrmFormNumberSeriesUpsertDto,
   AdmissionCrmRegistrationTemplateUpsertDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { shikshaMitraToast } from 'src/components/toast';
 import {
   Add,
   Edit,
   Archive,
   Publish,
-  DeleteOutline,
   ContentCopy,
+  DeleteOutline,
   FormatListNumbered,
 } from '@mui/icons-material';
-import { shikshaMitraToast } from 'src/components/toast';
-import {
-  AdmissionInquiryStage,
-  AdmissionCrmFormFieldType,
-  AdmissionCrmRegistrationTemplateStatus,
-  useGetAdmissionCrmRegistrationTemplatesQuery,
-  useCreateAdmissionCrmRegistrationTemplateMutation,
-  useUpdateAdmissionCrmRegistrationTemplateMutation,
-  usePublishAdmissionCrmRegistrationTemplateMutation,
-  useRetireAdmissionCrmRegistrationTemplateMutation,
-  useCreateAdmissionCrmRegistrationTemplateVersionMutation,
-  useGetAdmissionCrmFormNumberSeriesQuery,
-  useCreateAdmissionCrmFormNumberSeriesMutation,
-  useUpdateAdmissionCrmFormNumberSeriesMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
 import {
   Box,
   Tab,
@@ -52,16 +38,30 @@ import {
   DialogTitle,
   DialogActions,
   DialogContent,
-  FormControlLabel,
   LinearProgress,
+  FormControlLabel,
 } from '@mui/material';
+import {
+  AdmissionInquiryStage,
+  AdmissionCrmFormFieldType,
+  AdmissionCrmRegistrationTemplateStatus,
+  useGetAdmissionCrmFormNumberSeriesQuery,
+  useGetAdmissionCrmRegistrationTemplatesQuery,
+  useCreateAdmissionCrmFormNumberSeriesMutation,
+  useUpdateAdmissionCrmFormNumberSeriesMutation,
+  useCreateAdmissionCrmRegistrationTemplateMutation,
+  useUpdateAdmissionCrmRegistrationTemplateMutation,
+  useRetireAdmissionCrmRegistrationTemplateMutation,
+  usePublishAdmissionCrmRegistrationTemplateMutation,
+  useCreateAdmissionCrmRegistrationTemplateVersionMutation,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import {
   createRegistrationField,
   createRegistrationSection,
   createRegistrationTemplate,
-  normalizeRegistrationTemplate,
   validateRegistrationTemplate,
+  normalizeRegistrationTemplate,
 } from './admissions-registration-configuration-utils';
 
 type Props = { academicYearId?: string };
@@ -135,7 +135,7 @@ const toSeriesForm = (
 
 const messageFromError = (error: unknown) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { detail?: string; errorCode?: string } }).data;
+    const { data } = error as { data?: { detail?: string; errorCode?: string } };
     return data?.detail || data?.errorCode || 'The configuration action failed.';
   }
   return 'The configuration action failed.';

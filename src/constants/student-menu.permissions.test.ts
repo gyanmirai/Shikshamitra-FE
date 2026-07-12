@@ -34,7 +34,9 @@ describe('student permission groups', () => {
   });
 
   it('keeps the CRM enrollment shell server-rendered so workspace routes do not fall into 404', () => {
-    const shellSource = readSource('src/app/(auth-route)/student/enrollment/layout.tsx').trimStart();
+    const shellSource = readSource(
+      'src/app/(auth-route)/student/enrollment/layout.tsx'
+    ).trimStart();
     expect(shellSource).not.toMatch(/^['"]use client['"]/);
     expect(shellSource).toContain('StudentPermissionGuard');
 

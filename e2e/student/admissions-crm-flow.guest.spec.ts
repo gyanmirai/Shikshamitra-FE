@@ -1,7 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies, no-await-in-loop */
-import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { test, expect, type APIResponse, type Locator, type Page } from '@playwright/test';
+
+import { type Server, createServer } from 'node:http';
+import { test, expect, type Page, type Locator, type APIResponse } from '@playwright/test';
 
 const studentCrmE2EEnabled = process.env.E2E_STUDENT_CRM === '1';
 const tenantCode = () => process.env.E2E_TENANT || 'DDVS';
@@ -141,7 +142,11 @@ async function resolveAcademicYearId(page: Page) {
   const response = await crmApiRequest(page, '/app/academic-year?Sorting=name');
   await expectOk(response, 'GET academic years');
   const payload = await response.json();
-  const items = (payload?.items ?? []) as Array<{ id?: string; startDate?: string; endDate?: string }>;
+  const items = (payload?.items ?? []) as Array<{
+    id?: string;
+    startDate?: string;
+    endDate?: string;
+  }>;
   const now = Date.now();
   const currentYear = items.find((item) => {
     const start = item.startDate ? Date.parse(item.startDate) : Number.NaN;
@@ -167,19 +172,23 @@ const uniquePhone = () => `9${Date.now().toString().slice(-9)}`;
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 async function createCrmLead(page: Page, academicYearId: string, phone: string, suffix: string) {
-  const response = await crmApiRequest(page, `/student-enrollment/admissions-crm/${academicYearId}/leads`, {
-    method: 'POST',
-    body: {
-      channel: 1,
-      firstName: uniqueToken(`Crm${suffix}`),
-      parentGuardianName: 'Playwright Parent',
-      primaryContactNo: phone,
-      admissionIntent: 'Admission inquiry for Grade 1',
-      desiredClassName: 'Grade 1',
-      campaignName: 'Playwright CRM Smoke',
-      notes: 'Created by admissions CRM E2E.',
-    },
-  });
+  const response = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/${academicYearId}/leads`,
+    {
+      method: 'POST',
+      body: {
+        channel: 1,
+        firstName: uniqueToken(`Crm${suffix}`),
+        parentGuardianName: 'Playwright Parent',
+        primaryContactNo: phone,
+        admissionIntent: 'Admission inquiry for Grade 1',
+        desiredClassName: 'Grade 1',
+        campaignName: 'Playwright CRM Smoke',
+        notes: 'Created by admissions CRM E2E.',
+      },
+    }
+  );
   await expectOk(response, 'create CRM lead');
   return response.json();
 }
@@ -252,7 +261,10 @@ async function getCrmExamRecord(page: Page, academicYearId: string, examRecordId
   await expectOk(response, 'list CRM entrance exams');
   const payload = await response.json();
   const exam = payload?.items?.find((item: { id?: string }) => item.id === examRecordId);
-  expect(exam, `CRM exam record ${examRecordId} should be returned in the workspace list.`).toBeTruthy();
+  expect(
+    exam,
+    `CRM exam record ${examRecordId} should be returned in the workspace list.`
+  ).toBeTruthy();
   return exam;
 }
 
@@ -441,7 +453,10 @@ test.describe('Student admissions CRM E2E', () => {
 
     expect(firstLead?.id, 'Created CRM lead should return an id.').toBeTruthy();
     expect(firstLead?.stage, 'New quick inquiry should start as New Inquiry.').toBe(0);
-    expect(firstLead?.likelyDuplicateCount, 'First CRM lead should not have duplicate warnings.').toBe(0);
+    expect(
+      firstLead?.likelyDuplicateCount,
+      'First CRM lead should not have duplicate warnings.'
+    ).toBe(0);
 
     const duplicatePreviewResponse = await crmApiRequest(
       page,
@@ -457,7 +472,10 @@ test.describe('Student admissions CRM E2E', () => {
     );
     await expectOk(duplicatePreviewResponse, 'preview CRM duplicate');
     const duplicatePreview = await duplicatePreviewResponse.json();
-    expect(duplicatePreview?.length, 'Duplicate preview should find the existing lead.').toBeGreaterThan(0);
+    expect(
+      duplicatePreview?.length,
+      'Duplicate preview should find the existing lead.'
+    ).toBeGreaterThan(0);
 
     const duplicateCreateResponse = await crmApiRequest(
       page,
@@ -614,7 +632,9 @@ test.describe('Student admissions CRM E2E', () => {
 
     await examDialog.getByRole('combobox', { name: 'Decision' }).click();
     await page.getByRole('option', { name: 'Eligible' }).click();
-    await examDialog.getByLabel('Decision reason').fill('Eligible from Playwright CRM UI smoke test.');
+    await examDialog
+      .getByLabel('Decision reason')
+      .fill('Eligible from Playwright CRM UI smoke test.');
     await examDialog.getByRole('button', { name: /Save Eligibility/i }).click();
     await expect
       .poll(
@@ -695,8 +715,12 @@ test.describe('Student admissions CRM E2E', () => {
           body: { entranceExamSlotId: slot.id },
         }
       );
-      expect(blockedSchedule.ok(), 'Exam schedule should be blocked before form issue.').toBe(false);
-      expect(await blockedSchedule.text()).toContain('AdmissionCrm:RegistrationFormRequiredBeforeExam');
+      expect(blockedSchedule.ok(), 'Exam schedule should be blocked before form issue.').toBe(
+        false
+      );
+      expect(await blockedSchedule.text()).toContain(
+        'AdmissionCrm:RegistrationFormRequiredBeforeExam'
+      );
 
       const leadCard = await openLeadCardInWorkspace(page, lead.firstName);
       await expect(leadCard.getByText('Form pending')).toBeVisible();
@@ -710,10 +734,10 @@ test.describe('Student admissions CRM E2E', () => {
       await formDialog.getByRole('button', { name: /^Issue Form$/i }).click();
 
       await expect
-        .poll(
-          async () => (await getCrmLead(page, lead.id)).registrationFormNumber,
-          { timeout: 30_000, message: 'Registration form issue should persist.' }
-        )
+        .poll(async () => (await getCrmLead(page, lead.id)).registrationFormNumber, {
+          timeout: 30_000,
+          message: 'Registration form issue should persist.',
+        })
         .toBe(formNumber);
 
       const timeline = await getCrmTimeline(page, lead.id);
@@ -907,7 +931,9 @@ test.describe('Student admissions CRM E2E', () => {
     );
     await expectOk(providersResponse, 'read communication providers');
     const providers = await providersResponse.json();
-    const originalSmsProvider = providers?.items?.find((item: { channel?: number }) => item.channel === 1);
+    const originalSmsProvider = providers?.items?.find(
+      (item: { channel?: number }) => item.channel === 1
+    );
     await expectOk(
       await crmApiRequest(
         page,
@@ -934,7 +960,10 @@ test.describe('Student admissions CRM E2E', () => {
       await expect.poll(() => capturedOtp, { timeout: 30_000 }).toMatch(/^\d{6}$/);
       await parentPage.getByLabel('OTP code').fill(capturedOtp);
       const verifyResponsePromise = parentPage.waitForResponse(
-        (response) => response.url().includes('/status/') && response.url().endsWith('/verify') && response.request().method() === 'POST'
+        (response) =>
+          response.url().includes('/status/') &&
+          response.url().endsWith('/verify') &&
+          response.request().method() === 'POST'
       );
       await parentPage.getByRole('button', { name: 'Verify' }).click();
       const verifiedStatusResponse = await verifyResponsePromise;
@@ -949,23 +978,35 @@ test.describe('Student admissions CRM E2E', () => {
       await expect(parentPage.getByText('Progress saved.')).toBeVisible({ timeout: 15_000 });
       await parentPage.getByLabel('Declaration accepted').check();
       await parentPage.getByRole('button', { name: 'Submit Registration' }).click();
-      await expect(parentPage.getByText('Registration has been submitted and is under review.')).toBeVisible({ timeout: 20_000 });
+      await expect(
+        parentPage.getByText('Registration has been submitted and is under review.')
+      ).toBeVisible({ timeout: 20_000 });
 
       const fileInput = parentPage.locator('input[type="file"]').first();
-      await fileInput.setInputFiles({ name: 'birth.pdf', mimeType: 'application/pdf', buffer: Buffer.from('first unreadable version') });
+      await fileInput.setInputFiles({
+        name: 'birth.pdf',
+        mimeType: 'application/pdf',
+        buffer: Buffer.from('first unreadable version'),
+      });
       await parentPage.getByRole('button', { name: 'Upload' }).click();
-      await expect(parentPage.getByText('Uploaded', { exact: true })).toBeVisible({ timeout: 20_000 });
+      await expect(parentPage.getByText('Uploaded', { exact: true })).toBeVisible({
+        timeout: 20_000,
+      });
 
       const leadCard = await openLeadCardInWorkspace(page, lead.firstName);
       await leadCard.getByRole('button', { name: 'Manage' }).click();
       const operationsDialog = page.getByRole('dialog', { name: 'Applicant Operations' });
       await expect(operationsDialog).toContainText(registration.formNumber);
       await operationsDialog.getByRole('button', { name: 'Verify Registration' }).click();
-      await expect(operationsDialog.getByText('Verified', { exact: true })).toBeVisible({ timeout: 20_000 });
+      await expect(operationsDialog.getByText('Verified', { exact: true })).toBeVisible({
+        timeout: 20_000,
+      });
       const documentReason = operationsDialog.getByLabel('Decision or waiver reason');
       await documentReason.fill('The first scan is unreadable.');
       await operationsDialog.getByRole('button', { name: 'Reject' }).click();
-      await expect(operationsDialog.getByText('Rejected', { exact: true })).toBeVisible({ timeout: 20_000 });
+      await expect(operationsDialog.getByText('Rejected', { exact: true })).toBeVisible({
+        timeout: 20_000,
+      });
 
       const replacementResponse = await parentPage.request.post(
         `${apiBaseUrl()}/api/public/student-enrollment/admissions-crm/${tenantId}/status/${registration.applicantStatusPath.split('/').pop()}/registration/documents`,
@@ -973,7 +1014,11 @@ test.describe('Student admissions CRM E2E', () => {
           multipart: {
             AccessSessionToken: accessSessionToken,
             RequirementKey: 'birth-certificate',
-            File: { name: 'birth.pdf', mimeType: 'application/pdf', buffer: Buffer.from('clear replacement version') },
+            File: {
+              name: 'birth.pdf',
+              mimeType: 'application/pdf',
+              buffer: Buffer.from('clear replacement version'),
+            },
           },
         }
       );
@@ -985,10 +1030,14 @@ test.describe('Student admissions CRM E2E', () => {
       await refreshedLeadCard.getByRole('button', { name: 'Manage' }).click();
       const refreshedDialog = page.getByRole('dialog', { name: 'Applicant Operations' });
       await refreshedDialog.getByRole('button', { name: 'Verify', exact: true }).click();
-      await expect(refreshedDialog.getByRole('button', { name: 'Original Seen' })).toBeVisible({ timeout: 20_000 });
+      await expect(refreshedDialog.getByRole('button', { name: 'Original Seen' })).toBeVisible({
+        timeout: 20_000,
+      });
       await refreshedDialog.getByRole('button', { name: 'Original Seen' }).click();
       await refreshedDialog.getByRole('button', { name: 'Confirm Readiness' }).click();
-      await expect(refreshedDialog.getByText('Readiness confirmed')).toBeVisible({ timeout: 20_000 });
+      await expect(refreshedDialog.getByText('Readiness confirmed')).toBeVisible({
+        timeout: 20_000,
+      });
 
       const handoffResponse = await crmApiRequest(
         page,

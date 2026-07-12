@@ -2,14 +2,14 @@
 
 import type { Dayjs } from 'dayjs';
 import type {
-  ApiAffectedLecture,
   ApiLookupOption,
+  ApiAffectedLecture,
   ApiSubstitutionRow,
   ApiSuggestedTeacher,
   ApiSubstitutionLecture,
   ApiSubstitutionSettings,
-  ApiSubstitutionCreateMetadata,
   ApiTeacherAvailabilityRow,
+  ApiSubstitutionCreateMetadata,
 } from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
 
 import dayjs from 'dayjs';
@@ -1994,9 +1994,11 @@ const SubstitutionManagementScreen = () => {
     >
       {renderSectionHeader('mdi:account-group-outline', 'Teacher Load Snapshot')}
       <Stack spacing={1.75}>
-        {(dashboardResult?.workloadSnapshot?.map((teacher: ApiSuggestedTeacher) =>
-          mapApiSuggestedTeacher(teacher)
-        ) ?? suggestedTeacherRows)
+        {(
+          dashboardResult?.workloadSnapshot?.map((teacher: ApiSuggestedTeacher) =>
+            mapApiSuggestedTeacher(teacher)
+          ) ?? suggestedTeacherRows
+        )
           .slice(0, 3)
           .map((teacher: AvailableTeacherRow) => (
             <Box key={teacher.teacherId}>

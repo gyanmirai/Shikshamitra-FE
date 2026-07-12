@@ -17,12 +17,12 @@ import InquiryPreference from './inquiryPreference';
 import EntranceExamSlots from './entrance-exam-slots';
 import RegistrationAmount from './RegistrationFormAmount';
 import AdmissionsCrmConfiguration from './admissions-crm-configuration';
+import AdmissionsRouteConfiguration from './admissions-route-configuration';
 import AdmissionsSeatPoolConfiguration from './admissions-seat-pool-configuration';
 import AdmissionsFinancialConfiguration from './admissions-financial-configuration';
+import AdmissionsGovernanceConfiguration from './admissions-governance-configuration';
 import AdmissionsPolicyPackConfiguration from './admissions-policy-pack-configuration';
 import AdmissionsNumberSeriesConfiguration from './admissions-number-series-configuration';
-import AdmissionsRouteConfiguration from './admissions-route-configuration';
-import AdmissionsGovernanceConfiguration from './admissions-governance-configuration';
 
 const TABS = [
   {

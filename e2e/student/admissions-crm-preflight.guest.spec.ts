@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies, no-await-in-loop, no-restricted-syntax */
-import { test, expect, type APIResponse, type Page } from '@playwright/test';
+import { test, expect, type Page, type APIResponse } from '@playwright/test';
 
 const studentCrmPreflightEnabled = process.env.E2E_STUDENT_CRM_PREFLIGHT === '1';
 const tenantCode = () => process.env.E2E_TENANT || 'DDVS';
@@ -114,7 +114,11 @@ async function resolveAcademicYearId(page: Page) {
   const response = await crmApiRequest(page, '/app/academic-year?Sorting=name');
   await expectOk(response, 'GET academic years');
   const payload = await response.json();
-  const items = (payload?.items ?? []) as Array<{ id?: string; startDate?: string; endDate?: string }>;
+  const items = (payload?.items ?? []) as Array<{
+    id?: string;
+    startDate?: string;
+    endDate?: string;
+  }>;
   const now = Date.now();
   const currentYear = items.find((item) => {
     const start = item.startDate ? Date.parse(item.startDate) : Number.NaN;
@@ -128,7 +132,10 @@ async function resolveAcademicYearId(page: Page) {
     })
     .sort((a, b) => Date.parse(b.startDate ?? '') - Date.parse(a.startDate ?? ''))[0];
   const academicYearId = (currentYear ?? latestStartedYear ?? items[0])?.id;
-  expect(academicYearId, 'Seeded academic year is required for admissions CRM preflight.').toBeTruthy();
+  expect(
+    academicYearId,
+    'Seeded academic year is required for admissions CRM preflight.'
+  ).toBeTruthy();
   return academicYearId as string;
 }
 

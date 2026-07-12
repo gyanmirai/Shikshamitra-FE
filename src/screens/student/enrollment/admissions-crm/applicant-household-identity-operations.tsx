@@ -1,43 +1,42 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { Add, Badge, CheckCircle, Gavel, Link, Shield } from '@mui/icons-material';
+import { useState, useEffect } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
+import { Add, Link, Badge, Gavel, Shield, CheckCircle } from '@mui/icons-material';
 import {
-  Alert,
   Box,
-  Button,
-  Checkbox,
   Chip,
-  Divider,
-  FormControlLabel,
-  LinearProgress,
-  MenuItem,
+  Alert,
   Paper,
   Stack,
+  Divider,
+  Checkbox,
+  MenuItem,
   TextField,
   Typography,
+  LinearProgress,
+  FormControlLabel,
 } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import {
   AdmissionCrmConsentStatus,
+  AdmissionCrmUdiseSyncStatus,
+  useGetAdmissionCrmLeadQuery,
+  AdmissionCrmPersonProvenance,
+  useSearchAdmissionCrmPersonsQuery,
   AdmissionCrmGuardianRelationshipType,
   AdmissionCrmIdentityResolutionStatus,
-  AdmissionCrmIdentityVerificationStatus,
-  AdmissionCrmPersonProvenance,
-  AdmissionCrmUdiseSyncStatus,
-  useAddAdmissionCrmGuardianRelationshipMutation,
-  useCreateAdmissionCrmHouseholdIdentityProfileMutation,
-  useGetAdmissionCrmHouseholdIdentityProfileQuery,
-  useGetAdmissionCrmLeadQuery,
-  useLinkAdmissionCrmPersonAccountMutation,
-  useOverrideAdmissionCrmIdentityReadinessMutation,
-  useRecordAdmissionCrmIdentityConsentMutation,
   useSearchAdmissionCrmHouseholdsQuery,
-  useSearchAdmissionCrmPersonsQuery,
-  useSetAdmissionCrmGuardianRestrictionMutation,
+  AdmissionCrmIdentityVerificationStatus,
+  useLinkAdmissionCrmPersonAccountMutation,
   useUpdateAdmissionCrmPersonIdentityMutation,
+  useRecordAdmissionCrmIdentityConsentMutation,
+  useSetAdmissionCrmGuardianRestrictionMutation,
+  useAddAdmissionCrmGuardianRelationshipMutation,
   useVerifyAdmissionCrmGuardianAuthorityMutation,
+  useGetAdmissionCrmHouseholdIdentityProfileQuery,
+  useOverrideAdmissionCrmIdentityReadinessMutation,
+  useCreateAdmissionCrmHouseholdIdentityProfileMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 type Props = { leadId: string };
@@ -65,7 +64,7 @@ const readinessLabels: Record<AdmissionCrmIdentityResolutionStatus, string> = {
 
 const readError = (error: unknown) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { errorCode?: string; detail?: string } }).data;
+    const { data } = error as { data?: { errorCode?: string; detail?: string } };
     return data?.errorCode || data?.detail || 'Unable to update household identity.';
   }
   return 'Unable to update household identity.';

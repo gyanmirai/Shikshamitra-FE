@@ -1,48 +1,47 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { CheckCircle, Description, FactCheck, History, Replay, TaskAlt } from '@mui/icons-material';
+import { useMemo, useState } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
+import { Replay, History, TaskAlt, FactCheck, CheckCircle, Description } from '@mui/icons-material';
 import {
-  Alert,
   Box,
-  Button,
-  Checkbox,
   Chip,
-  Divider,
-  FormControlLabel,
-  LinearProgress,
-  MenuItem,
+  Alert,
   Paper,
   Stack,
+  Divider,
+  Checkbox,
+  MenuItem,
   TextField,
   Typography,
+  LinearProgress,
+  FormControlLabel,
 } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import {
-  AdmissionCrmApplicantDocumentStatus,
-  AdmissionCrmDocumentChecklistTemplateStatus,
-  AdmissionCrmRegistrationFeeStatus,
   AdmissionCrmRegistrationStatus,
+  AdmissionCrmRegistrationFeeStatus,
+  AdmissionCrmApplicantDocumentStatus,
   AdmissionCrmRegistrationTemplateStatus,
-  useAssignAdmissionCrmDocumentChecklistMutation,
-  useConfirmAdmissionCrmDocumentOriginalSeenMutation,
-  useConfirmAdmissionCrmDocumentReadinessMutation,
-  useExtendAdmissionCrmRegistrationMutation,
-  useGetAdmissionCrmApplicantDocumentChecklistQuery,
-  useGetAdmissionCrmDocumentChecklistTemplatesQuery,
   useGetAdmissionCrmFormNumberSeriesQuery,
-  useGetAdmissionCrmRegistrationTemplatesQuery,
-  useGetCurrentAdmissionCrmRegistrationByLeadQuery,
-  useIssueAdmissionCrmRegistrationApplicationMutation,
-  useRecordAdmissionCrmRegistrationPaymentReferenceMutation,
-  useReissueAdmissionCrmRegistrationMutation,
-  useReturnAdmissionCrmRegistrationForCorrectionMutation,
-  useReviewAdmissionCrmApplicantDocumentMutation,
+  useExtendAdmissionCrmRegistrationMutation,
   useRevokeAdmissionCrmRegistrationMutation,
   useVerifyAdmissionCrmRegistrationMutation,
-  useWaiveAdmissionCrmApplicantDocumentMutation,
+  useReissueAdmissionCrmRegistrationMutation,
+  AdmissionCrmDocumentChecklistTemplateStatus,
   useWaiveAdmissionCrmRegistrationFeeMutation,
+  useGetAdmissionCrmRegistrationTemplatesQuery,
+  useWaiveAdmissionCrmApplicantDocumentMutation,
+  useAssignAdmissionCrmDocumentChecklistMutation,
+  useReviewAdmissionCrmApplicantDocumentMutation,
+  useConfirmAdmissionCrmDocumentReadinessMutation,
+  useGetCurrentAdmissionCrmRegistrationByLeadQuery,
+  useGetAdmissionCrmApplicantDocumentChecklistQuery,
+  useGetAdmissionCrmDocumentChecklistTemplatesQuery,
+  useConfirmAdmissionCrmDocumentOriginalSeenMutation,
+  useIssueAdmissionCrmRegistrationApplicationMutation,
+  useReturnAdmissionCrmRegistrationForCorrectionMutation,
+  useRecordAdmissionCrmRegistrationPaymentReferenceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 type Props = {
@@ -83,7 +82,7 @@ const dateInDays = (days: number) => {
 
 const readError = (error: unknown, fallback: string) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { detail?: string; errorCode?: string } }).data;
+    const { data } = error as { data?: { detail?: string; errorCode?: string } };
     return data?.detail || data?.errorCode || fallback;
   }
   return fallback;

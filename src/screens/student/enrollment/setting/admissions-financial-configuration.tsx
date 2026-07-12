@@ -4,34 +4,34 @@ import type { RootState } from 'src/redux/store';
 import type { AdmissionCrmFeeComponentDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { LoadingButton } from '@mui/lab';
-import { Add, Approval, Delete, Publish, Send } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
+import { Add, Send, Delete, Publish, Approval } from '@mui/icons-material';
 import {
-  Alert,
   Box,
-  Button,
   Chip,
-  Divider,
-  IconButton,
-  LinearProgress,
-  MenuItem,
+  Alert,
   Paper,
   Stack,
-  TextField,
+  Button,
+  Divider,
   Tooltip,
+  MenuItem,
+  TextField,
+  IconButton,
   Typography,
+  LinearProgress,
 } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import {
   AdmissionCrmFeePolicyStatus,
-  AdmissionCrmPaymentGateMilestone,
   AdmissionCrmPaymentGateType,
-  useApproveAdmissionCrmFeePolicyMutation,
-  useCreateAdmissionCrmFeePolicyMutation,
+  AdmissionCrmPaymentGateMilestone,
   useGetAdmissionCrmFeePoliciesQuery,
-  usePublishAdmissionCrmFeePolicyMutation,
+  useCreateAdmissionCrmFeePolicyMutation,
   useSubmitAdmissionCrmFeePolicyMutation,
+  useApproveAdmissionCrmFeePolicyMutation,
+  usePublishAdmissionCrmFeePolicyMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 const startOfToday = () => new Date().toISOString().slice(0, 10);
@@ -75,7 +75,7 @@ const milestoneLabels: Record<AdmissionCrmPaymentGateMilestone, string> = {
 
 const readError = (error: unknown) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { errorCode?: string; detail?: string } }).data;
+    const { data } = error as { data?: { errorCode?: string; detail?: string } };
     return data?.errorCode || data?.detail || 'Unable to update financial policy.';
   }
   return 'Unable to update financial policy.';

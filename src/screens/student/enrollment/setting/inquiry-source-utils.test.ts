@@ -2,9 +2,9 @@ import { it, expect, describe } from 'vitest';
 
 import {
   buildInquirySourceOptions,
+  sortInquirySourcesForSelection,
   buildInquirySourceSelectOptions,
   resolveInquirySourceAcademicYearId,
-  sortInquirySourcesForSelection,
 } from './inquiry-source-utils';
 
 describe('Inquiry Source helpers', () => {

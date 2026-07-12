@@ -1,26 +1,25 @@
 import { it, expect, describe } from 'vitest';
-
 import {
   AdmissionInquiryStage,
+  EntranceExamStatusEnum,
   AdmissionInquiryChannel,
   AdmissionCrmLeadPriority,
+  type AdmissionCrmLeadDto,
   AdmissionCrmMessageChannel,
   AdmissionCrmEligibilityDecision,
   AdmissionCrmExamAttendanceStatus,
-  EntranceExamStatusEnum,
-  type AdmissionCrmLeadDto,
-  type AdmissionCrmPipelineStageDto,
   type AdmissionCrmEntranceExamDto,
+  type AdmissionCrmPipelineStageDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import {
   getAdmissionCrmKpis,
   getAdmissionCrmLeadName,
-  canRetryAdmissionCrmDeliveryLog,
   buildAdmissionCrmBoardColumns,
+  canRetryAdmissionCrmDeliveryLog,
   getAdmissionCrmMessageChannelLabel,
-  getAdmissionCrmRecipientForMessageChannel,
   getAdmissionCrmDeliveryLogStatusLabel,
+  getAdmissionCrmRecipientForMessageChannel,
 } from './admissions-crm-utils';
 
 const makeLead = (id: string, stage: AdmissionInquiryStage): AdmissionCrmLeadDto => ({

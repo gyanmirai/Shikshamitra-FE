@@ -2,40 +2,27 @@
 
 import type {
   AdmissionCrmPlaybookDto,
-  AdmissionCrmPlaybookUpsertDto,
   AdmissionCrmSeatPlanDto,
-  AdmissionCrmAdmissionRoundDto,
-  AdmissionCrmExamDefinitionDto,
   AdmissionCrmSlotTemplateDto,
   AdmissionCrmPlaybookStageDto,
+  AdmissionCrmPlaybookUpsertDto,
+  AdmissionCrmAdmissionRoundDto,
+  AdmissionCrmExamDefinitionDto,
   AdmissionCrmSlotAssignmentRuleDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { shikshaMitraToast } from 'src/components/toast';
 import {
   Add,
   Edit,
   Archive,
   Publish,
-  EventAvailable,
-  DeleteOutline,
   ContentCopy,
+  DeleteOutline,
+  EventAvailable,
 } from '@mui/icons-material';
-import { shikshaMitraToast } from 'src/components/toast';
-import {
-  AdmissionInquiryStage,
-  AdmissionCrmPlaybookStatus,
-  AdmissionCrmRegistrationPath,
-  AdmissionCrmSlotAssignmentStrategy,
-  AdmissionCrmAssessmentComponentType,
-  useGetAdmissionCrmPlaybooksQuery,
-  useCreateAdmissionCrmPlaybookMutation,
-  useUpdateAdmissionCrmPlaybookMutation,
-  usePublishAdmissionCrmPlaybookMutation,
-  useRetireAdmissionCrmPlaybookMutation,
-  useCreateAdmissionCrmPlaybookVersionMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
 import {
   Box,
   Tab,
@@ -57,16 +44,29 @@ import {
   DialogTitle,
   DialogActions,
   DialogContent,
-  FormControlLabel,
   LinearProgress,
+  FormControlLabel,
 } from '@mui/material';
-
 import {
+  AdmissionInquiryStage,
+  AdmissionCrmPlaybookStatus,
+  AdmissionCrmRegistrationPath,
+  useGetAdmissionCrmPlaybooksQuery,
+  AdmissionCrmSlotAssignmentStrategy,
+  AdmissionCrmAssessmentComponentType,
+  useCreateAdmissionCrmPlaybookMutation,
+  useUpdateAdmissionCrmPlaybookMutation,
+  useRetireAdmissionCrmPlaybookMutation,
+  usePublishAdmissionCrmPlaybookMutation,
+  useCreateAdmissionCrmPlaybookVersionMutation,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { AdmissionsPlaybookOperations } from './admissions-playbook-operations';
+import {
+  validateAdmissionPlaybook,
   createDefaultAdmissionPlaybook,
   prepareAdmissionPlaybookPayload,
-  validateAdmissionPlaybook,
 } from './admissions-playbook-configuration-utils';
-import { AdmissionsPlaybookOperations } from './admissions-playbook-operations';
 
 type Props = {
   academicYearId?: string;
@@ -203,7 +203,7 @@ const createAssignmentRule = (): AdmissionCrmSlotAssignmentRuleDto => ({
 
 const errorMessage = (error: unknown) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { detail?: string; errorCode?: string } }).data;
+    const { data } = error as { data?: { detail?: string; errorCode?: string } };
     return data?.detail || data?.errorCode || 'The playbook action failed.';
   }
   return 'The playbook action failed.';

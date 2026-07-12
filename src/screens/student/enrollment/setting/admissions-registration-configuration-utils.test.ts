@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
 import {
   createRegistrationTemplate,
-  normalizeRegistrationTemplate,
   validateRegistrationTemplate,
+  normalizeRegistrationTemplate,
 } from './admissions-registration-configuration-utils';
 
 describe('admissions registration configuration', () => {

@@ -5,55 +5,25 @@
 import type { RootState } from 'src/redux/store';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import type {
-  AdmissionCrmApplicantChecklistItemDto,
-  AdmissionCrmChannelSettingDto,
-  AdmissionCrmCycleConfigurationDto,
   AdmissionCrmFormFieldDto,
-  AdmissionCrmFormTemplateDto,
   AdmissionCrmJourneyRuleDto,
-  AdmissionCrmLeadRoutingRuleDto,
-  AdmissionCrmLeadRoutingSettingsDto,
-  AdmissionCrmLeadScoringRulesDto,
-  AdmissionCrmMessageTemplateDto,
-  AdmissionCrmMessageTemplatePreviewDto,
+  AdmissionCrmFormTemplateDto,
   AdmissionCrmPipelineStageDto,
+  AdmissionCrmChannelSettingDto,
+  AdmissionCrmLeadRoutingRuleDto,
+  AdmissionCrmMessageTemplateDto,
+  AdmissionCrmLeadScoringRulesDto,
+  AdmissionCrmCycleConfigurationDto,
+  AdmissionCrmLeadRoutingSettingsDto,
+  AdmissionCrmApplicantChecklistItemDto,
+  AdmissionCrmMessageTemplatePreviewDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { LoadingButton } from '@mui/lab';
-import { ContentCopy, Visibility } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import {
-  AdmissionInquiryChannel,
-  AdmissionInquiryStage,
-  AdmissionCrmLeadPriority,
-  AdmissionCrmFormFieldType,
-  AdmissionCrmJourneyTrigger,
-  AdmissionCrmMessageChannel,
-  AdmissionCrmExamReadinessField,
-  AdmissionCrmLeadRoutingStrategy,
-  AdmissionCrmMeritRankingMode,
-  AdmissionCrmMessageTemplateStatus,
-  useGetAdmissionCrmFormTemplatesQuery,
-  useGetAdmissionCrmMessageTemplatesQuery,
-  useGetAdmissionCrmPipelineStagesQuery,
-  useCreateAdmissionCrmFormTemplateMutation,
-  useCreateAdmissionCrmMessageTemplateMutation,
-  useGetAdmissionCrmCommunicationProvidersQuery,
-  useGetAdmissionCrmCycleConfigurationQuery,
-  useGetAdmissionCrmSchoolDefaultCycleConfigurationQuery,
-  usePreviewAdmissionCrmMessageTemplateMutation,
-  useUpdateAdmissionCrmCommunicationProviderMutation,
-  useUpdateAdmissionCrmPipelineStageMutation,
-  useUpdateAdmissionCrmCycleConfigurationMutation,
-  useUpdateAdmissionCrmFormTemplateMutation,
-  useUpdateAdmissionCrmFormTemplateStatusMutation,
-  useUpdateAdmissionCrmSchoolDefaultCycleConfigurationMutation,
-  useUpdateAdmissionCrmMessageTemplateStatusMutation,
-  useGetAdmissionCrmInquirySourcesQuery,
-  useGetAdmissionCrmStaffQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { Visibility, ContentCopy } from '@mui/icons-material';
 import {
   Box,
   Chip,
@@ -74,30 +44,60 @@ import {
   FormControl,
   DialogActions,
   DialogContent,
-  FormControlLabel,
   LinearProgress,
+  FormControlLabel,
 } from '@mui/material';
+import {
+  AdmissionInquiryStage,
+  AdmissionInquiryChannel,
+  AdmissionCrmLeadPriority,
+  AdmissionCrmFormFieldType,
+  AdmissionCrmJourneyTrigger,
+  AdmissionCrmMessageChannel,
+  AdmissionCrmMeritRankingMode,
+  useGetAdmissionCrmStaffQuery,
+  AdmissionCrmExamReadinessField,
+  AdmissionCrmLeadRoutingStrategy,
+  AdmissionCrmMessageTemplateStatus,
+  useGetAdmissionCrmFormTemplatesQuery,
+  useGetAdmissionCrmPipelineStagesQuery,
+  useGetAdmissionCrmInquirySourcesQuery,
+  useGetAdmissionCrmMessageTemplatesQuery,
+  useCreateAdmissionCrmFormTemplateMutation,
+  useGetAdmissionCrmCycleConfigurationQuery,
+  useUpdateAdmissionCrmFormTemplateMutation,
+  useUpdateAdmissionCrmPipelineStageMutation,
+  useCreateAdmissionCrmMessageTemplateMutation,
+  useGetAdmissionCrmCommunicationProvidersQuery,
+  usePreviewAdmissionCrmMessageTemplateMutation,
+  useUpdateAdmissionCrmCycleConfigurationMutation,
+  useUpdateAdmissionCrmFormTemplateStatusMutation,
+  useUpdateAdmissionCrmCommunicationProviderMutation,
+  useUpdateAdmissionCrmMessageTemplateStatusMutation,
+  useGetAdmissionCrmSchoolDefaultCycleConfigurationQuery,
+  useUpdateAdmissionCrmSchoolDefaultCycleConfigurationMutation,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { buildInquirySourceSelectOptions } from './inquiry-source-utils';
+import AdmissionsPlaybookConfiguration from './admissions-playbook-configuration';
+import AdmissionsDocumentConfiguration from './admissions-document-configuration';
+import AdmissionsRegistrationConfiguration from './admissions-registration-configuration';
 import {
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
 } from '../admissions-crm/admissions-crm-utils';
-import AdmissionsPlaybookConfiguration from './admissions-playbook-configuration';
-import AdmissionsRegistrationConfiguration from './admissions-registration-configuration';
-import AdmissionsDocumentConfiguration from './admissions-document-configuration';
-import { buildInquirySourceSelectOptions } from './inquiry-source-utils';
 import {
   getCrmUserLabel,
   getCrmUserOptionLabel,
-  getAdmissionCrmProviderAdapter,
-  getAdmissionCrmProviderCallbackSecret,
   buildCrmUserSelectOptions,
-  buildAdmissionCrmProviderDeliveryCallbackUrl,
+  getAdmissionCrmProviderAdapter,
   buildPublicAdmissionInquiryUrl,
-  getAdmissionCrmProviderCallbackMappingPath,
-  getAdmissionCrmProviderResponseMessageIdPath,
   updateAdmissionCrmProviderAdapter,
+  getAdmissionCrmProviderCallbackSecret,
   updateAdmissionCrmProviderCallbackSecret,
+  getAdmissionCrmProviderCallbackMappingPath,
+  buildAdmissionCrmProviderDeliveryCallbackUrl,
+  getAdmissionCrmProviderResponseMessageIdPath,
   updateAdmissionCrmProviderCallbackMappingPath,
   updateAdmissionCrmProviderResponseMessageIdPath,
 } from './admissions-crm-configuration-utils';
@@ -986,7 +986,7 @@ const AdmissionsCrmConfiguration = ({
       return null;
     }
 
-    const slaPolicy = cycleForm.slaPolicy;
+    const { slaPolicy } = cycleForm;
     if (!slaPolicy.timeZoneId.trim() || slaPolicy.workingDays.length === 0) {
       shikshaMitraToast.error({ message: 'SLA time zone and working days are required.' });
       return null;
@@ -1540,7 +1540,7 @@ const AdmissionsCrmConfiguration = ({
           (field.options ?? []).length > 0
       )
       .map((field, index) => {
-        const fieldType = field.fieldType;
+        const { fieldType } = field;
         const options = fieldNeedsOptions(fieldType)
           ? [...new Set((field.options ?? []).map((option) => option.trim()).filter(Boolean))]
           : [];
@@ -1892,9 +1892,9 @@ const AdmissionsCrmConfiguration = ({
       preferenceName: source.displayName,
     })),
     [
-    ...channelSettings.map((setting) => setting.defaultInquirySourceId),
-    ...cycleForm.leadRoutingSettings.rules.map((rule) => rule.inquirySourceId),
-    ...cycleForm.journeyRules.map((rule) => rule.inquirySourceId),
+      ...channelSettings.map((setting) => setting.defaultInquirySourceId),
+      ...cycleForm.leadRoutingSettings.rules.map((rule) => rule.inquirySourceId),
+      ...cycleForm.journeyRules.map((rule) => rule.inquirySourceId),
     ]
   );
   const ownerOptions = buildCrmUserSelectOptions(users, [
@@ -2708,7 +2708,7 @@ const AdmissionsCrmConfiguration = ({
                             : 'None'
                         }
                         onChange={(event) => {
-                          const value = event.target.value;
+                          const { value } = event.target;
                           const selectedValues = Array.isArray(value)
                             ? value.map(Number)
                             : String(value).split(',').filter(Boolean).map(Number);
@@ -2876,7 +2876,7 @@ const AdmissionsCrmConfiguration = ({
                   (selected as string[]).map((id) => getCrmUserLabel(ownerOptions, id)).join(', ')
                 }
                 onChange={(event) => {
-                  const value = event.target.value;
+                  const { value } = event.target;
                   handleRoutingSettingsChange(
                     'ownerPoolUserIds',
                     typeof value === 'string' ? value.split(',').filter(Boolean) : value

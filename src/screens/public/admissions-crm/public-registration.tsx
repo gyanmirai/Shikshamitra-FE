@@ -20,11 +20,11 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import {
   getPublicRegistrationValue,
   isPublicRegistrationFieldVisible,
 } from './public-registration-utils';
-import { readPublicAdmissionStatusProblem } from './public-status-utils';
 
 type Field = {
   key: string;

@@ -8,18 +8,8 @@ import type {
 
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { Add, Edit, Archive, Publish, DeleteOutline, ContentCopy } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
-import {
-  AdmissionCrmDocumentRequirementLevel,
-  AdmissionCrmDocumentChecklistTemplateStatus,
-  useGetAdmissionCrmDocumentChecklistTemplatesQuery,
-  useCreateAdmissionCrmDocumentChecklistTemplateMutation,
-  useUpdateAdmissionCrmDocumentChecklistTemplateMutation,
-  usePublishAdmissionCrmDocumentChecklistTemplateMutation,
-  useCreateAdmissionCrmDocumentChecklistTemplateVersionMutation,
-  useRetireAdmissionCrmDocumentChecklistTemplateMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { Add, Edit, Archive, Publish, ContentCopy, DeleteOutline } from '@mui/icons-material';
 import {
   Box,
   Chip,
@@ -36,15 +26,25 @@ import {
   DialogTitle,
   DialogActions,
   DialogContent,
-  FormControlLabel,
   LinearProgress,
+  FormControlLabel,
 } from '@mui/material';
+import {
+  AdmissionCrmDocumentRequirementLevel,
+  AdmissionCrmDocumentChecklistTemplateStatus,
+  useGetAdmissionCrmDocumentChecklistTemplatesQuery,
+  useCreateAdmissionCrmDocumentChecklistTemplateMutation,
+  useUpdateAdmissionCrmDocumentChecklistTemplateMutation,
+  useRetireAdmissionCrmDocumentChecklistTemplateMutation,
+  usePublishAdmissionCrmDocumentChecklistTemplateMutation,
+  useCreateAdmissionCrmDocumentChecklistTemplateVersionMutation,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import {
   createDocumentRequirement,
   createDocumentChecklistTemplate,
-  normalizeDocumentChecklistTemplate,
   validateDocumentChecklistTemplate,
+  normalizeDocumentChecklistTemplate,
 } from './admissions-document-configuration-utils';
 
 type Props = { academicYearId?: string };

@@ -1,35 +1,35 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { AccountBalance, Add, CheckCircle, Gavel, Sync } from '@mui/icons-material';
+import { useMemo, useState, useEffect } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
+import { Add, Sync, Gavel, CheckCircle, AccountBalance } from '@mui/icons-material';
 import {
-  Alert,
   Box,
-  Button,
   Chip,
-  Divider,
-  LinearProgress,
-  MenuItem,
+  Alert,
   Paper,
   Stack,
+  Button,
+  Divider,
+  MenuItem,
   TextField,
   Typography,
+  LinearProgress,
 } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import {
-  AdmissionCrmConcessionStatus,
+  AdmissionCrmFinanceState,
   AdmissionCrmConcessionType,
   AdmissionCrmFeePolicyStatus,
-  AdmissionCrmFinanceState,
-  useAcknowledgeAdmissionCrmConcessionFinanceMutation,
-  useDecideAdmissionCrmConcessionMutation,
+  AdmissionCrmConcessionStatus,
   useGetAdmissionCrmFeePoliciesQuery,
-  useGetAdmissionCrmFinancialReadinessQuery,
   useIssueAdmissionCrmQuotationMutation,
-  useOverrideAdmissionCrmPaymentGateMutation,
-  useRecordAdmissionCrmFinanceStateMutation,
+  useDecideAdmissionCrmConcessionMutation,
   useRequestAdmissionCrmConcessionMutation,
+  useGetAdmissionCrmFinancialReadinessQuery,
+  useRecordAdmissionCrmFinanceStateMutation,
+  useOverrideAdmissionCrmPaymentGateMutation,
+  useAcknowledgeAdmissionCrmConcessionFinanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 type Props = { leadId: string; academicYearId: string };
@@ -63,7 +63,7 @@ const concessionLabels: Record<AdmissionCrmConcessionType, string> = {
 
 const readError = (error: unknown, fallback: string) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { errorCode?: string; detail?: string } }).data;
+    const { data } = error as { data?: { errorCode?: string; detail?: string } };
     return data?.errorCode || data?.detail || fallback;
   }
   return fallback;

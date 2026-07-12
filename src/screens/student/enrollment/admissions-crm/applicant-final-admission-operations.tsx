@@ -1,59 +1,58 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import {
-  Add,
-  Approval,
-  Cancel,
-  CheckCircle,
-  Gavel,
-  HourglassTop,
-  Send,
-  SyncAlt,
-} from '@mui/icons-material';
-import {
-  Alert,
-  Box,
-  Button,
-  Checkbox,
-  Chip,
-  Divider,
-  FormControlLabel,
-  LinearProgress,
-  MenuItem,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import {
-  AdmissionCrmAdmissionDecisionStatus,
-  AdmissionCrmSeatOfferStatus,
+  Add,
+  Send,
+  Gavel,
+  Cancel,
+  SyncAlt,
+  Approval,
+  CheckCircle,
+  HourglassTop,
+} from '@mui/icons-material';
+import {
+  Box,
+  Chip,
+  Alert,
+  Paper,
+  Stack,
+  Divider,
+  Checkbox,
+  MenuItem,
+  TextField,
+  Typography,
+  LinearProgress,
+  FormControlLabel,
+} from '@mui/material';
+import {
   AdmissionCrmSeatOfferType,
   AdmissionCrmSeatPoolStatus,
   AdmissionCrmWaitlistStatus,
+  AdmissionCrmSeatOfferStatus,
+  useGetAdmissionCrmWaitlistQuery,
+  useGetAdmissionCrmSeatPoolsQuery,
+  useGetAdmissionCrmSeatOffersQuery,
+  AdmissionCrmAdmissionDecisionStatus,
   type CreateAdmissionCrmSeatOfferDto,
-  useAddAdmissionCrmLeadToWaitlistMutation,
-  useApproveAdmissionCrmSeatOfferMutation,
+  useIssueAdmissionCrmSeatOfferMutation,
   useCreateAdmissionCrmSeatOfferMutation,
   useExpireAdmissionCrmSeatOfferMutation,
-  useGetAdmissionCrmAdmissionDecisionHistoryQuery,
-  useGetAdmissionCrmSeatOffersQuery,
-  useGetAdmissionCrmSeatPoolsQuery,
-  useGetAdmissionCrmWaitlistQuery,
-  useIssueAdmissionCrmSeatOfferMutation,
-  usePrepareAdmissionCrmWaitlistPromotionMutation,
-  useRecordAdmissionCrmAdmissionDecisionMutation,
-  useRespondAdmissionCrmSeatOfferMutation,
   useRevokeAdmissionCrmSeatOfferMutation,
   useSubmitAdmissionCrmSeatOfferMutation,
-  useSupersedeAdmissionCrmSeatOfferMutation,
-  useWithdrawAdmissionCrmWaitlistEntryMutation,
-  useUpdateAdmissionCrmWaitlistGovernanceMutation,
   useGetAdmissionCrmWaitlistHistoryQuery,
+  useApproveAdmissionCrmSeatOfferMutation,
+  useRespondAdmissionCrmSeatOfferMutation,
+  useAddAdmissionCrmLeadToWaitlistMutation,
+  useSupersedeAdmissionCrmSeatOfferMutation,
   useRunAdmissionCrmWaitlistPromotionMutation,
+  useWithdrawAdmissionCrmWaitlistEntryMutation,
+  useRecordAdmissionCrmAdmissionDecisionMutation,
+  useGetAdmissionCrmAdmissionDecisionHistoryQuery,
+  usePrepareAdmissionCrmWaitlistPromotionMutation,
+  useUpdateAdmissionCrmWaitlistGovernanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 type Props = {
@@ -101,7 +100,7 @@ const dateTimeLocal = (daysFromNow: number) => {
 
 const readError = (error: unknown, fallback: string) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { detail?: string; errorCode?: string } }).data;
+    const { data } = error as { data?: { detail?: string; errorCode?: string } };
     return data?.errorCode || data?.detail || fallback;
   }
   return fallback;

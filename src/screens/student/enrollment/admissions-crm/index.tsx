@@ -3,24 +3,89 @@
 import type { RootState } from 'src/redux/store';
 import type {
   AdmissionCrmLeadDto,
-  AdmissionCrmLeadDuplicateDto,
+  AdmissionInquiryStage,
+  EntranceExamStatusEnum,
+  AdmissionInquiryChannel,
+  AdmissionCrmLeadPriority,
+  AdmissionCrmSlaHoldReason,
+  AdmissionCrmJourneyTrigger,
+  AdmissionCrmMessageChannel,
   AdmissionCrmFollowUpTaskDto,
-  AdmissionCrmStaffWorkloadDto,
   AdmissionCrmEntranceExamDto,
-  AdmissionCrmAnalyticsSummaryDto,
+  AdmissionCrmLeadDuplicateDto,
+  AdmissionCrmStaffWorkloadDto,
   AdmissionCrmPipelineStageDto,
+  useGetAdmissionCrmStaffQuery,
+  useGetAdmissionCrmLeadsQuery,
+  useGetAdmissionCrmTasksQuery,
+  AdmissionCrmAutomationRunType,
+  type CreateAdmissionCrmLeadDto,
+  AdmissionCrmAnalyticsSummaryDto,
+  AdmissionCrmAutomationRunStatus,
+  AdmissionCrmOperationsQueueType,
+  AdmissionCrmEligibilityDecision,
+  useGetAdmissionCrmSlaHoldsQuery,
+  useGetAdmissionCrmTimelineQuery,
+  AdmissionCrmExamAttendanceStatus,
+  useGetAdmissionCrmExamSlotsQuery,
   AdmissionCrmMessageDeliveryLogDto,
-  AdmissionCrmExamClassPerformanceDto,
-  AdmissionCrmApplicantChecklistProgressDto,
+  AdmissionCrmMessageTemplateStatus,
+  useCreateAdmissionCrmLeadMutation,
+  useCreateAdmissionCrmTaskMutation,
+  useReopenAdmissionCrmLeadMutation,
   AdmissionCrmOperationsQueueItemDto,
   AdmissionCrmOperationsQueueFilters,
+  useAddAdmissionCrmLeadNoteMutation,
+  useArchiveAdmissionCrmLeadMutation,
+  AdmissionCrmExamClassPerformanceDto,
+  useCompleteAdmissionCrmTaskMutation,
+  useGetAdmissionCrmEntranceExamsQuery,
+  useRunAdmissionCrmStaleRulesMutation,
+  useCreateAdmissionCrmSlaHoldMutation,
+  useResumeAdmissionCrmSlaHoldMutation,
+  useGetAdmissionCrmPipelineStagesQuery,
+  useAssignAdmissionCrmLeadOwnerMutation,
+  useChangeAdmissionCrmLeadStageMutation,
+  useGetAdmissionCrmOperationsQueueQuery,
+  useRunAdmissionCrmSlaRemindersMutation,
+  useBulkCreateAdmissionCrmTasksMutation,
+  useGetAdmissionCrmMessageTemplatesQuery,
+  useGetAdmissionCrmAnalyticsSummaryQuery,
+  useUploadAdmissionCrmExamResultMutation,
+  useBulkChangeAdmissionCrmStagesMutation,
+  useBulkArchiveAdmissionCrmLeadsMutation,
+  useBulkSendAdmissionCrmMessagesMutation,
+  useDecideAdmissionCrmEligibilityMutation,
+  AdmissionCrmApplicantChecklistProgressDto,
+  useChangeAdmissionCrmLeadPriorityMutation,
+  useGetAdmissionCrmEligibilityHandoffQuery,
+  useMarkAdmissionCrmExamAttendanceMutation,
+  useMergeAdmissionCrmDuplicateLeadMutation,
+  useGetAdmissionCrmMessageDeliveryLogsQuery,
+  useSendAdmissionCrmTemplateMessageMutation,
+  useGetAdmissionCrmCommunicationOptOutsQuery,
+  useRetryAdmissionCrmMessageDeliveryMutation,
+  useScheduleAdmissionCrmEntranceExamMutation,
+  useRecalculateAdmissionCrmLeadScoreMutation,
+  useBulkAssignAdmissionCrmLeadOwnersMutation,
+  useGetAdmissionCrmOperationsSavedViewsQuery,
+  AdmissionCrmApplicantChecklistProgressStatus,
+  useIssueAdmissionCrmRegistrationFormMutation,
+  usePreviewAdmissionCrmLeadDuplicatesMutation,
+  useGetAdmissionCrmOperationsQueueSummaryQuery,
+  useGetAdmissionCrmLeadApplicantChecklistQuery,
+  useClearAdmissionCrmCommunicationOptOutMutation,
+  useCreateAdmissionCrmCommunicationOptOutMutation,
+  useCreateAdmissionCrmOperationsSavedViewMutation,
+  useDeleteAdmissionCrmOperationsSavedViewMutation,
+  useUpdateAdmissionCrmLeadApplicantChecklistMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import dayjs from 'dayjs';
-import { useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
@@ -28,30 +93,29 @@ import {
   Star,
   Edit,
   Flag,
-  Notes,
   Send,
+  Notes,
   Replay,
-  ReceiptLong,
+  Delete,
   TaskAlt,
   Archive,
-  CallMerge,
   History,
-  SwapHoriz,
-  FilterAltOff,
-  AssignmentInd,
   Refresh,
-  WarningAmber,
-  EventAvailable,
+  CallMerge,
+  SwapHoriz,
   ViewColumn,
+  ReceiptLong,
+  BookmarkAdd,
+  FilterAltOff,
+  WarningAmber,
+  AssignmentInd,
+  EventAvailable,
   FormatListBulleted,
   AssignmentTurnedIn,
   NotificationsActive,
-  BookmarkAdd,
-  Delete,
 } from '@mui/icons-material';
 import {
   Box,
-  Tab,
   Card,
   Chip,
   Table,
@@ -62,8 +126,8 @@ import {
   Dialog,
   Select,
   Tooltip,
-  Checkbox,
   Divider,
+  Checkbox,
   MenuItem,
   TableRow,
   TextField,
@@ -75,81 +139,24 @@ import {
   InputLabel,
   DialogTitle,
   FormControl,
+  ToggleButton,
   DialogContent,
   DialogActions,
-  FormControlLabel,
   LinearProgress,
-  ToggleButton,
+  FormControlLabel,
   ToggleButtonGroup,
 } from '@mui/material';
-import {
-  AdmissionInquiryStage,
-  AdmissionInquiryChannel,
-  AdmissionCrmLeadPriority,
-  AdmissionCrmApplicantChecklistProgressStatus,
-  EntranceExamStatusEnum,
-  AdmissionCrmJourneyTrigger,
-  AdmissionCrmMessageChannel,
-  AdmissionCrmAutomationRunType,
-  AdmissionCrmExamAttendanceStatus,
-  AdmissionCrmAutomationRunStatus,
-  AdmissionCrmOperationsQueueType,
-  AdmissionCrmMessageTemplateStatus,
-  AdmissionCrmSlaHoldReason,
-  AdmissionCrmEligibilityDecision,
-  useGetAdmissionCrmExamSlotsQuery,
-  useGetAdmissionCrmStaffQuery,
-  type CreateAdmissionCrmLeadDto,
-  useGetAdmissionCrmLeadsQuery,
-  useGetAdmissionCrmTasksQuery,
-  useCreateAdmissionCrmLeadMutation,
-  useCreateAdmissionCrmTaskMutation,
-  useAddAdmissionCrmLeadNoteMutation,
-  useCompleteAdmissionCrmTaskMutation,
-  useAssignAdmissionCrmLeadOwnerMutation,
-  useChangeAdmissionCrmLeadPriorityMutation,
-  useChangeAdmissionCrmLeadStageMutation,
-  useGetAdmissionCrmMessageTemplatesQuery,
-  useGetAdmissionCrmMessageDeliveryLogsQuery,
-  useGetAdmissionCrmCommunicationOptOutsQuery,
-  useSendAdmissionCrmTemplateMessageMutation,
-  useRetryAdmissionCrmMessageDeliveryMutation,
-  useClearAdmissionCrmCommunicationOptOutMutation,
-  useCreateAdmissionCrmCommunicationOptOutMutation,
-  useGetAdmissionCrmPipelineStagesQuery,
-  useGetAdmissionCrmEntranceExamsQuery,
-  useGetAdmissionCrmAnalyticsSummaryQuery,
-  useGetAdmissionCrmOperationsQueueSummaryQuery,
-  useGetAdmissionCrmOperationsQueueQuery,
-  useGetAdmissionCrmEligibilityHandoffQuery,
-  useRunAdmissionCrmStaleRulesMutation,
-  useRunAdmissionCrmSlaRemindersMutation,
-  useGetAdmissionCrmSlaHoldsQuery,
-  useCreateAdmissionCrmSlaHoldMutation,
-  useResumeAdmissionCrmSlaHoldMutation,
-  useReopenAdmissionCrmLeadMutation,
-  useArchiveAdmissionCrmLeadMutation,
-  useScheduleAdmissionCrmEntranceExamMutation,
-  useIssueAdmissionCrmRegistrationFormMutation,
-  useMarkAdmissionCrmExamAttendanceMutation,
-  useUploadAdmissionCrmExamResultMutation,
-  useGetAdmissionCrmTimelineQuery,
-  useGetAdmissionCrmLeadApplicantChecklistQuery,
-  useUpdateAdmissionCrmLeadApplicantChecklistMutation,
-  useDecideAdmissionCrmEligibilityMutation,
-  usePreviewAdmissionCrmLeadDuplicatesMutation,
-  useMergeAdmissionCrmDuplicateLeadMutation,
-  useRecalculateAdmissionCrmLeadScoreMutation,
-  useBulkAssignAdmissionCrmLeadOwnersMutation,
-  useBulkCreateAdmissionCrmTasksMutation,
-  useBulkChangeAdmissionCrmStagesMutation,
-  useBulkArchiveAdmissionCrmLeadsMutation,
-  useBulkSendAdmissionCrmMessagesMutation,
-  useGetAdmissionCrmOperationsSavedViewsQuery,
-  useCreateAdmissionCrmOperationsSavedViewMutation,
-  useDeleteAdmissionCrmOperationsSavedViewMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { RteAllotmentImport } from './rte-allotment-import';
+import { AdmissionsDataQuality } from './admissions-data-quality';
+import { ApplicantPolicyReadiness } from './applicant-policy-readiness';
+import { ApplicantRouteOperations } from './applicant-route-operations';
+import { ApplicantFinancialReadiness } from './applicant-financial-readiness';
+import { GeneratedDocumentOperations } from './generated-document-operations';
+import { ApplicantActivationOperations } from './applicant-activation-operations';
+import { ApplicantRegistrationOperations } from './applicant-registration-operations';
+import { ApplicantFinalAdmissionOperations } from './applicant-final-admission-operations';
+import { ApplicantHouseholdIdentityOperations } from './applicant-household-identity-operations';
 import {
   getAdmissionCrmKpis,
   getAdmissionCrmLeadName,
@@ -157,22 +164,12 @@ import {
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
   admissionCrmEligibilityLabels,
+  buildAdmissionCrmBoardColumns,
   canRetryAdmissionCrmDeliveryLog,
   getAdmissionCrmMessageChannelLabel,
   getAdmissionCrmDeliveryLogStatusLabel,
   getAdmissionCrmRecipientForMessageChannel,
-  buildAdmissionCrmBoardColumns,
 } from './admissions-crm-utils';
-import { ApplicantRegistrationOperations } from './applicant-registration-operations';
-import { ApplicantFinalAdmissionOperations } from './applicant-final-admission-operations';
-import { ApplicantFinancialReadiness } from './applicant-financial-readiness';
-import { ApplicantHouseholdIdentityOperations } from './applicant-household-identity-operations';
-import { ApplicantPolicyReadiness } from './applicant-policy-readiness';
-import { ApplicantActivationOperations } from './applicant-activation-operations';
-import { ApplicantRouteOperations } from './applicant-route-operations';
-import { AdmissionsDataQuality } from './admissions-data-quality';
-import { GeneratedDocumentOperations } from './generated-document-operations';
-import { RteAllotmentImport } from './rte-allotment-import';
 
 type WorkspaceView = 'board' | 'list' | 'exams' | 'operations';
 
@@ -520,7 +517,9 @@ const getWorkloadOwnerLabel = (item: AdmissionCrmStaffWorkloadDto) =>
 const getLeadOwnerLabel = (
   lead: AdmissionCrmLeadDto,
   staff: Array<{ id: string; displayName: string }> = []
-) => staff.find((item) => item.id === lead.ownerUserId)?.displayName || (lead.ownerUserId ? 'Assigned staff' : 'Unassigned');
+) =>
+  staff.find((item) => item.id === lead.ownerUserId)?.displayName ||
+  (lead.ownerUserId ? 'Assigned staff' : 'Unassigned');
 
 const formatRate = (value?: number | null) => `${(value ?? 0).toFixed(1)}%`;
 
@@ -3328,29 +3327,31 @@ const StudentAdmissionsCrmScreen = ({
           justifyContent="space-between"
           alignItems={{ xs: 'stretch', md: 'center' }}
         >
-          {!fixedView && <ToggleButtonGroup
-            exclusive
-            size="small"
-            value={view}
-            onChange={(_, value) => value && setView(value)}
-          >
-            <ToggleButton value="board">
-              <ViewColumn sx={{ mr: 0.75 }} />
-              Board
-            </ToggleButton>
-            <ToggleButton value="list">
-              <FormatListBulleted sx={{ mr: 0.75 }} />
-              List
-            </ToggleButton>
-            <ToggleButton value="exams">
-              <EventAvailable sx={{ mr: 0.75 }} />
-              Exams
-            </ToggleButton>
-            <ToggleButton value="operations">
-              <AssignmentTurnedIn sx={{ mr: 0.75 }} />
-              Operations
-            </ToggleButton>
-          </ToggleButtonGroup>}
+          {!fixedView && (
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={view}
+              onChange={(_, value) => value && setView(value)}
+            >
+              <ToggleButton value="board">
+                <ViewColumn sx={{ mr: 0.75 }} />
+                Board
+              </ToggleButton>
+              <ToggleButton value="list">
+                <FormatListBulleted sx={{ mr: 0.75 }} />
+                List
+              </ToggleButton>
+              <ToggleButton value="exams">
+                <EventAvailable sx={{ mr: 0.75 }} />
+                Exams
+              </ToggleButton>
+              <ToggleButton value="operations">
+                <AssignmentTurnedIn sx={{ mr: 0.75 }} />
+                Operations
+              </ToggleButton>
+            </ToggleButtonGroup>
+          )}
 
           <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} flexWrap="wrap">
             <TextField
@@ -3493,7 +3494,7 @@ const StudentAdmissionsCrmScreen = ({
                 label="Priority"
                 value={priorityFilter}
                 onChange={(event) => {
-                  const value = event.target.value;
+                  const { value } = event.target;
                   setPriorityFilter(
                     value === 'all' ? 'all' : (Number(value) as AdmissionCrmLeadPriority)
                   );
@@ -3905,7 +3906,7 @@ const StudentAdmissionsCrmScreen = ({
             <Table size="small">
               <TableHead>
                 <TableRow>
-                <TableCell>Applicant</TableCell>
+                  <TableCell>Applicant</TableCell>
                   <TableCell>Action required</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Age</TableCell>
@@ -3983,7 +3984,7 @@ const StudentAdmissionsCrmScreen = ({
           <Table size="small">
             <TableHead>
               <TableRow>
-				<TableCell>Applicant</TableCell>
+                <TableCell>Applicant</TableCell>
                 <TableCell>Slot</TableCell>
                 <TableCell>Exam Time</TableCell>
                 <TableCell>Room</TableCell>
@@ -4552,7 +4553,9 @@ const StudentAdmissionsCrmScreen = ({
                     label="Owner user ID"
                     value={ownerUserIdText}
                     onChange={(event) => setOwnerUserIdText(event.target.value)}
-                    helperText={operationsLead ? getLeadOwnerLabel(operationsLead, crmStaff) : 'Unassigned'}
+                    helperText={
+                      operationsLead ? getLeadOwnerLabel(operationsLead, crmStaff) : 'Unassigned'
+                    }
                     fullWidth
                   />
                   <LoadingButton
@@ -4925,8 +4928,8 @@ const StudentAdmissionsCrmScreen = ({
                           </TableCell>
                           <TableCell>{dayjs(task.dueAt).format('DD MMM YYYY, HH:mm')}</TableCell>
                           <TableCell>
-                            {crmStaff.find((staff) => staff.id === task.assignedUserId)?.displayName ||
-                              'Unassigned'}
+                            {crmStaff.find((staff) => staff.id === task.assignedUserId)
+                              ?.displayName || 'Unassigned'}
                           </TableCell>
                           <TableCell>
                             <Chip

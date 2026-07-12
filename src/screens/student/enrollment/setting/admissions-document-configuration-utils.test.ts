@@ -1,11 +1,10 @@
-import { describe, expect, it } from 'vitest';
-
+import { it, expect, describe } from 'vitest';
 import { AdmissionCrmDocumentRequirementLevel } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import {
   createDocumentChecklistTemplate,
-  normalizeDocumentChecklistTemplate,
   validateDocumentChecklistTemplate,
+  normalizeDocumentChecklistTemplate,
 } from './admissions-document-configuration-utils';
 
 describe('admissions document checklist configuration', () => {

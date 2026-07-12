@@ -2,20 +2,15 @@
 
 import type {
   AdmissionCrmPlaybookDto,
-  AdmissionCrmSlotGenerationResultDto,
-  AdmissionCrmSlotRecommendationDto,
   AdmissionCrmExamResultPreviewDto,
+  AdmissionCrmSlotRecommendationDto,
+  AdmissionCrmSlotGenerationResultDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { EventAvailable, Rule, Calculate } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
-import {
-  useGenerateAdmissionCrmPlaybookSlotsMutation,
-  useRecommendAdmissionCrmPlaybookSlotMutation,
-  usePreviewAdmissionCrmExamResultMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { Rule, Calculate, EventAvailable } from '@mui/icons-material';
 import {
   Box,
   Tab,
@@ -32,6 +27,11 @@ import {
   DialogActions,
   DialogContent,
 } from '@mui/material';
+import {
+  usePreviewAdmissionCrmExamResultMutation,
+  useGenerateAdmissionCrmPlaybookSlotsMutation,
+  useRecommendAdmissionCrmPlaybookSlotMutation,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 type Props = {
   playbook: AdmissionCrmPlaybookDto;
@@ -49,7 +49,7 @@ const addDays = (date: string, days: number) => {
 
 const getErrorMessage = (error: unknown) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { detail?: string; errorCode?: string } }).data;
+    const { data } = error as { data?: { detail?: string; errorCode?: string } };
     return data?.detail || data?.errorCode || 'The operation could not be completed.';
   }
   return 'The operation could not be completed.';

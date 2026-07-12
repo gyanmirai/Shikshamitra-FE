@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
 import {
+  validateAdmissionPlaybook,
   createDefaultAdmissionPlaybook,
   prepareAdmissionPlaybookPayload,
-  validateAdmissionPlaybook,
 } from './admissions-playbook-configuration-utils';
 
 describe('admissions playbook configuration utilities', () => {

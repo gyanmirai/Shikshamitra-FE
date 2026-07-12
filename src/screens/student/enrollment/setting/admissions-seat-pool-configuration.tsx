@@ -7,27 +7,27 @@ import type {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { LoadingButton } from '@mui/lab';
-import { Add, Edit, RestartAlt, Save } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
+import { Add, Edit, Save, RestartAlt } from '@mui/icons-material';
 import {
-  Alert,
   Box,
   Chip,
-  IconButton,
-  LinearProgress,
-  MenuItem,
+  Alert,
   Paper,
   Stack,
-  TextField,
   Tooltip,
+  MenuItem,
+  TextField,
+  IconButton,
   Typography,
+  LinearProgress,
 } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import {
   AdmissionCrmSeatPoolStatus,
-  useCreateAdmissionCrmSeatPoolMutation,
   useGetAdmissionCrmSeatPoolsQuery,
+  useCreateAdmissionCrmSeatPoolMutation,
   useUpdateAdmissionCrmSeatPoolMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
@@ -47,7 +47,7 @@ const emptyForm = (): AdmissionCrmSeatPoolUpsertDto => ({
 
 const readError = (error: unknown) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { errorCode?: string; detail?: string } }).data;
+    const { data } = error as { data?: { errorCode?: string; detail?: string } };
     return data?.errorCode || data?.detail || 'Unable to save the seat pool.';
   }
   return 'Unable to save the seat pool.';

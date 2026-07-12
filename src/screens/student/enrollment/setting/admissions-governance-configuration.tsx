@@ -2,51 +2,51 @@
 
 import type { RootState } from 'src/redux/store';
 
+import { LoadingButton } from '@mui/lab';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { LoadingButton } from '@mui/lab';
-import { Cancel, Download, PlayArrow, Publish, Send } from '@mui/icons-material';
+import { shikshaMitraToast } from 'src/components/toast';
+import { Send, Cancel, Publish, Download, PlayArrow } from '@mui/icons-material';
 import {
-  Alert,
-  Button,
   Chip,
-  Divider,
-  LinearProgress,
-  MenuItem,
+  Alert,
   Paper,
   Stack,
+  Button,
   Switch,
+  Divider,
+  MenuItem,
   TextField,
   Typography,
+  LinearProgress,
 } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import {
-  AdmissionCrmDelegationStatus,
-  AdmissionCrmExportReportType,
-  AdmissionCrmGovernedConfigurationStatus,
-  AdmissionCrmOperationsQueueType,
-  AdmissionCrmPrivacyRequestStatus,
   AdmissionCrmReportFrequency,
   AdmissionCrmRetentionAction,
+  AdmissionCrmDelegationStatus,
+  AdmissionCrmExportReportType,
   AdmissionCrmRetentionCategory,
-  useCancelAdmissionCrmDelegationMutation,
-  useCompleteAdmissionCrmPrivacyRequestMutation,
-  useCreateAdmissionCrmDelegationMutation,
-  useCreateAdmissionCrmReportScheduleMutation,
-  useCreateAdmissionCrmRetentionPolicyMutation,
-  useDecideAdmissionCrmPrivacyRequestMutation,
-  useDownloadAdmissionCrmExportMutation,
-  useGetAdmissionCrmAdvisoryForecastQuery,
-  useGetAdmissionCrmDelegationsQuery,
   useGetAdmissionCrmExportsQuery,
+  AdmissionCrmOperationsQueueType,
+  AdmissionCrmPrivacyRequestStatus,
+  useGetAdmissionCrmDelegationsQuery,
+  useRequestAdmissionCrmExportMutation,
+  useDownloadAdmissionCrmExportMutation,
   useGetAdmissionCrmPrivacyRequestsQuery,
   useGetAdmissionCrmReportSchedulesQuery,
+  AdmissionCrmGovernedConfigurationStatus,
+  useCancelAdmissionCrmDelegationMutation,
+  useCreateAdmissionCrmDelegationMutation,
+  useGetAdmissionCrmAdvisoryForecastQuery,
   useGetAdmissionCrmRetentionPoliciesQuery,
-  usePublishAdmissionCrmRetentionPolicyMutation,
-  useRequestAdmissionCrmExportMutation,
-  useSetAdmissionCrmReportScheduleActiveMutation,
+  useCreateAdmissionCrmReportScheduleMutation,
+  useDecideAdmissionCrmPrivacyRequestMutation,
+  useCreateAdmissionCrmRetentionPolicyMutation,
   useRunDueAdmissionCrmReportSchedulesMutation,
   useSubmitAdmissionCrmRetentionPolicyMutation,
+  useCompleteAdmissionCrmPrivacyRequestMutation,
+  usePublishAdmissionCrmRetentionPolicyMutation,
+  useSetAdmissionCrmReportScheduleActiveMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 const reportLabels: Record<AdmissionCrmExportReportType, string> = {
@@ -67,7 +67,7 @@ const queueLabels: Partial<Record<AdmissionCrmOperationsQueueType, string>> = {
 
 const errorMessage = (error: unknown) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { errorCode?: string; detail?: string } }).data;
+    const { data } = error as { data?: { errorCode?: string; detail?: string } };
     return data?.errorCode || data?.detail || 'Governance action failed.';
   }
   return 'Governance action failed.';

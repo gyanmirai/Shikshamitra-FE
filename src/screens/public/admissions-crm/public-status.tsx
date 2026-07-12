@@ -14,21 +14,21 @@ import {
   Alert,
   Stack,
   Paper,
-  Divider,
   Select,
+  Divider,
   MenuItem,
-  InputLabel,
-  FormControl,
   TextField,
+  InputLabel,
   Typography,
+  FormControl,
   LinearProgress,
 } from '@mui/material';
 
+import PublicOffer, { type PublicAdmissionOffer } from './public-offer';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
-import PublicRegistration, { type PublicRegistrationApplication } from './public-registration';
 import PublicDocuments, { type PublicDocumentChecklist } from './public-documents';
 import PublicExamScheduling, { type PublicExamSnapshot } from './public-exam-scheduling';
-import PublicOffer, { type PublicAdmissionOffer } from './public-offer';
+import PublicRegistration, { type PublicRegistrationApplication } from './public-registration';
 
 type OtpChallenge = {
   maskedDestination: string;

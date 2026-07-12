@@ -2,22 +2,13 @@
 
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { Description, Download, Visibility } from '@mui/icons-material';
-import {
-  Alert,
-  Button,
-  Chip,
-  MenuItem,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
+import { Download, Visibility, Description } from '@mui/icons-material';
+import { Chip, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
 import {
   AdmissionCrmGeneratedDocumentType,
-  useGetAdmissionCrmGeneratedDocumentHistoryQuery,
   useIssueAdmissionCrmGeneratedDocumentMutation,
+  useGetAdmissionCrmGeneratedDocumentHistoryQuery,
   usePreviewAdmissionCrmGeneratedDocumentMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
@@ -40,7 +31,7 @@ const documentTypes = Object.values(AdmissionCrmGeneratedDocumentType).filter(
 
 const readError = (error: unknown, fallback: string) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { detail?: string; errorCode?: string } }).data;
+    const { data } = error as { data?: { detail?: string; errorCode?: string } };
     return data?.detail || data?.errorCode || fallback;
   }
   return fallback;
@@ -121,7 +112,9 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
             size="small"
             label="Document"
             value={documentType}
-            onChange={(event) => setDocumentType(Number(event.target.value) as AdmissionCrmGeneratedDocumentType)}
+            onChange={(event) =>
+              setDocumentType(Number(event.target.value) as AdmissionCrmGeneratedDocumentType)
+            }
           >
             {documentTypes.map((type) => (
               <MenuItem key={type} value={type}>
@@ -168,7 +161,9 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
             Issue document
           </LoadingButton>
         </Stack>
-        {historyQuery.isFetching ? <Typography variant="caption">Loading issue history...</Typography> : null}
+        {historyQuery.isFetching ? (
+          <Typography variant="caption">Loading issue history...</Typography>
+        ) : null}
         {historyQuery.isError ? (
           <Alert severity="warning">Document history is temporarily unavailable.</Alert>
         ) : null}

@@ -2,24 +2,25 @@
 
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { CheckCircle, Close } from '@mui/icons-material';
-import {
-  Alert,
-  Box,
-  Checkbox,
-  Chip,
-  Divider,
-  FormControlLabel,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Close, CheckCircle } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
 import {
-  AdmissionCrmSeatOfferStatus,
   AdmissionCrmSeatOfferType,
+  AdmissionCrmSeatOfferStatus,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import {
+  Box,
+  Chip,
+  Alert,
+  Paper,
+  Stack,
+  Divider,
+  Checkbox,
+  TextField,
+  Typography,
+  FormControlLabel,
+} from '@mui/material';
+
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
 
 export type PublicAdmissionOffer = {

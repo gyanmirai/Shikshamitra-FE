@@ -1,20 +1,20 @@
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
 import {
   getCrmUserLabel,
   getCrmUserOptionLabel,
-  getAdmissionCrmProviderAdapter,
-  getAdmissionCrmProviderCallbackSecret,
   buildCrmUserSelectOptions,
-  buildAdmissionCrmProviderDeliveryCallbackPath,
-  buildAdmissionCrmProviderDeliveryCallbackUrl,
-  buildPublicAdmissionInquiryPath,
+  getAdmissionCrmProviderAdapter,
   buildPublicAdmissionInquiryUrl,
+  buildPublicAdmissionInquiryPath,
   parseAdmissionCrmProviderSettings,
-  getAdmissionCrmProviderCallbackMappingPath,
-  getAdmissionCrmProviderResponseMessageIdPath,
   updateAdmissionCrmProviderAdapter,
+  getAdmissionCrmProviderCallbackSecret,
   updateAdmissionCrmProviderCallbackSecret,
+  getAdmissionCrmProviderCallbackMappingPath,
+  buildAdmissionCrmProviderDeliveryCallbackUrl,
+  getAdmissionCrmProviderResponseMessageIdPath,
+  buildAdmissionCrmProviderDeliveryCallbackPath,
   updateAdmissionCrmProviderCallbackMappingPath,
   updateAdmissionCrmProviderResponseMessageIdPath,
 } from './admissions-crm-configuration-utils';

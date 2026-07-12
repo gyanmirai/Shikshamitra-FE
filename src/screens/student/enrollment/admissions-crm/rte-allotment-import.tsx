@@ -1,31 +1,31 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { CheckCircle, CloudUpload, FactCheck } from '@mui/icons-material';
+import { useRef, useMemo, useState } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
+import { FactCheck, CheckCircle, CloudUpload } from '@mui/icons-material';
 import {
-  Alert,
-  Button,
   Chip,
-  MenuItem,
+  Alert,
   Paper,
   Stack,
   Table,
+  Button,
+  MenuItem,
+  TableRow,
   TableBody,
   TableCell,
   TableHead,
-  TableRow,
   TextField,
   Typography,
 } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import {
   AdmissionCrmRouteDefinitionStatus,
-  type AdmissionCrmRteAllotmentImportResultDto,
-  type AdmissionCrmRteAllotmentImportRowDto,
   useGetAdmissionCrmRouteDefinitionsQuery,
+  type AdmissionCrmRteAllotmentImportRowDto,
   useImportAdmissionCrmRteAllotmentsMutation,
   usePreviewAdmissionCrmRteAllotmentsMutation,
+  type AdmissionCrmRteAllotmentImportResultDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 type Props = {
@@ -74,13 +74,18 @@ const toDate = (value: string) => {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 };
 
-const mapRows = (csv: string, routeDefinitionId: string): AdmissionCrmRteAllotmentImportRowDto[] => {
+const mapRows = (
+  csv: string,
+  routeDefinitionId: string
+): AdmissionCrmRteAllotmentImportRowDto[] => {
   const parsed = parseCsv(csv);
   if (parsed.length < 2) return [];
   const headers = parsed[0].map((header) => header.toLowerCase().replace(/\s+/g, ''));
 
   return parsed.slice(1).map((values) => {
-    const record = Object.fromEntries(headers.map((header, index) => [header, values[index] || '']));
+    const record = Object.fromEntries(
+      headers.map((header, index) => [header, values[index] || ''])
+    );
     const evidence = valueAt(record, 'evidenceReferences', 'evidence', 'documents')
       .split(/[|;]/)
       .map((item) => item.trim())
@@ -90,7 +95,8 @@ const mapRows = (csv: string, routeDefinitionId: string): AdmissionCrmRteAllotme
       applicantReference: valueAt(record, 'applicantReference', 'applicationNumber') || null,
       routeDefinitionId,
       routeData: {
-        authoritativeReference: valueAt(record, 'authoritativeReference', 'authorityReference') || null,
+        authoritativeReference:
+          valueAt(record, 'authoritativeReference', 'authorityReference') || null,
         authorityName: valueAt(record, 'authorityName', 'authority') || null,
         allotmentNumber: valueAt(record, 'allotmentNumber', 'allotmentNo') || null,
         allotmentRound: valueAt(record, 'allotmentRound', 'round') || null,
@@ -109,7 +115,7 @@ const mapRows = (csv: string, routeDefinitionId: string): AdmissionCrmRteAllotme
 
 const readError = (error: unknown) => {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { detail?: string; errorCode?: string } }).data;
+    const { data } = error as { data?: { detail?: string; errorCode?: string } };
     return data?.detail || data?.errorCode || 'The allotment import failed.';
   }
   return 'The allotment import failed.';
@@ -123,9 +129,12 @@ export function RteAllotmentImport({ academicYearId }: Props) {
   const [result, setResult] = useState<AdmissionCrmRteAllotmentImportResultDto>();
   const [preview, previewState] = usePreviewAdmissionCrmRteAllotmentsMutation();
   const [importRows, importState] = useImportAdmissionCrmRteAllotmentsMutation();
-  const routesQuery = useGetAdmissionCrmRouteDefinitionsQuery({ academicYearId }, {
-    skip: !academicYearId,
-  });
+  const routesQuery = useGetAdmissionCrmRouteDefinitionsQuery(
+    { academicYearId },
+    {
+      skip: !academicYearId,
+    }
+  );
   const publishedRteRoutes = useMemo(
     () =>
       (routesQuery.data || []).filter(
@@ -181,9 +190,9 @@ export function RteAllotmentImport({ academicYearId }: Props) {
           <Chip size="small" label="Preview before commit" color="warning" variant="outlined" />
         </Stack>
         <Typography variant="caption" color="text.secondary">
-          Upload a CSV from the applicable authority export. Supported columns include applicantReference,
-          leadId, allotmentNumber, allotmentRound, authorityName, admissionDeadline, allottedClass,
-          allottedCampus, evidenceReferences, and notes.
+          Upload a CSV from the applicable authority export. Supported columns include
+          applicantReference, leadId, allotmentNumber, allotmentRound, authorityName,
+          admissionDeadline, allottedClass, allottedCampus, evidenceReferences, and notes.
         </Typography>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
           <TextField
@@ -194,7 +203,9 @@ export function RteAllotmentImport({ academicYearId }: Props) {
             value={routeDefinitionId}
             onChange={(event) => {
               setRouteDefinitionId(event.target.value);
-              setRows((current) => current.map((row) => ({ ...row, routeDefinitionId: event.target.value })));
+              setRows((current) =>
+                current.map((row) => ({ ...row, routeDefinitionId: event.target.value }))
+              );
               setResult(undefined);
             }}
           >
@@ -204,7 +215,11 @@ export function RteAllotmentImport({ academicYearId }: Props) {
               </MenuItem>
             ))}
           </TextField>
-          <Button variant="outlined" startIcon={<CloudUpload />} onClick={() => fileInput.current?.click()}>
+          <Button
+            variant="outlined"
+            startIcon={<CloudUpload />}
+            onClick={() => fileInput.current?.click()}
+          >
             Choose CSV
           </Button>
           <input
@@ -219,7 +234,9 @@ export function RteAllotmentImport({ academicYearId }: Props) {
           </Typography>
         </Stack>
         {rows.length > 0 ? (
-          <Alert severity="info">{rows.length} allotment row(s) parsed and ready for validation.</Alert>
+          <Alert severity="info">
+            {rows.length} allotment row(s) parsed and ready for validation.
+          </Alert>
         ) : null}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           <LoadingButton
