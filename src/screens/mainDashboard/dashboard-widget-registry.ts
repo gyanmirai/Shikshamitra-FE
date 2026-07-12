@@ -82,8 +82,8 @@ export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
     id: 'leadership-admission-approvals',
     zone: DASHBOARD_ZONE_KEYS.actions,
     owner: 'Admissions',
-    drilldownUrl: studentPaths.enrollment.admission,
-    requiredPermissions: studentPermissions.enrollment.admission,
+    drilldownUrl: studentPaths.enrollment.activation,
+    requiredPermissions: studentPermissions.enrollment.activation,
   },
   'leadership-payroll-review': {
     id: 'leadership-payroll-review',
@@ -132,8 +132,8 @@ export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
   'principal-pending-admissions': {
     id: 'principal-pending-admissions',
     zone: DASHBOARD_ZONE_KEYS.kpis,
-    drilldownUrl: studentPaths.enrollment.admission,
-    requiredPermissions: studentPermissions.enrollment.admission,
+    drilldownUrl: studentPaths.enrollment.activation,
+    requiredPermissions: studentPermissions.enrollment.activation,
   },
   'principal-leave-approvals': {
     id: 'principal-leave-approvals',

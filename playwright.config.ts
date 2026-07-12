@@ -39,7 +39,6 @@ export default defineConfig({
     },
     {
       name: 'chromium-guest',
-      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
       },

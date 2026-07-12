@@ -80,7 +80,7 @@ import type {
   TeachingHealthScore,
 } from './lessonPlanData';
 
-type ReviewTarget = { type: 'plan'; id: string };
+type ReviewTarget = { type: 'plan' | 'diary'; id: string };
 
 type HomeworkFromPlanForm = {
   homeworkTypeId: string;
@@ -429,7 +429,6 @@ const LessonPlanScreen = () => {
   const handleResetFilters = useCallback(() => {
     setAcademicYearFilter('2026-27');
     setTeacherFilter('all');
-    setTeacherFilterObj(null);
     setClassFilter('all');
     setDivisionFilter('all');
     setSubjectFilter('all');
@@ -865,8 +864,16 @@ const LessonPlanScreen = () => {
   // ─── Review Handlers ─────────────────────────────────────────────────────────
 
   const handleApprove = useCallback(
-    async (target: ReviewTarget, comment: string) => {
+    async (target: ReviewTarget, comment: string, updateProgress = true) => {
       try {
+        if (target.type === 'diary') {
+          shikshaMitraToast.info({
+            message: updateProgress
+              ? 'Diary approval with progress update is not wired yet.'
+              : 'Diary approval is not wired yet.',
+          });
+          return;
+        }
         await approveLessonPlan({ id: target.id, body: { comment } }).unwrap();
         refetchTimeline();
         refetchLessonPlans();
@@ -881,6 +888,10 @@ const LessonPlanScreen = () => {
   const handleReject = useCallback(
     async (target: ReviewTarget, comment: string) => {
       try {
+        if (target.type === 'diary') {
+          shikshaMitraToast.info({ message: 'Diary rejection is not wired yet.' });
+          return;
+        }
         if (!comment) {
           shikshaMitraToast.warning({ message: 'Please provide a reason.' });
           return;
@@ -899,6 +910,10 @@ const LessonPlanScreen = () => {
   const handleRequestChanges = useCallback(
     async (target: ReviewTarget, comment: string) => {
       try {
+        if (target.type === 'diary') {
+          shikshaMitraToast.info({ message: 'Diary change request is not wired yet.' });
+          return;
+        }
         if (!comment) {
           shikshaMitraToast.warning({ message: 'Please provide comments.' });
           return;
@@ -1368,6 +1383,7 @@ const LessonPlanScreen = () => {
       {activeTab === 'reviewQueue' && (
         <ReviewQueueTab
           lessonPlans={lessonPlans}
+          diaryEntries={diaryEntries}
           onApprove={handleApprove}
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}

@@ -3,10 +3,12 @@
 import type { Dayjs } from 'dayjs';
 import type {
   ApiAffectedLecture,
+  ApiLookupOption,
   ApiSubstitutionRow,
   ApiSuggestedTeacher,
   ApiSubstitutionLecture,
   ApiSubstitutionSettings,
+  ApiSubstitutionCreateMetadata,
   ApiTeacherAvailabilityRow,
 } from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
 
@@ -218,6 +220,11 @@ const formatViewDate = (value?: string | null) =>
 
 const toDateTimeOffset = (value?: Dayjs | null) =>
   value?.isValid() ? dateConvertor(value.format(dateFormat)) : '';
+
+type SelectOption = {
+  value: string;
+  label: string;
+};
 
 const normalizeEnumText = (value: string | number | undefined | null): string =>
   typeof value === 'number' ? '' : (value ?? '').replace(/([a-z])([A-Z])/g, '$1 $2');
@@ -669,8 +676,9 @@ const SubstitutionManagementScreen = () => {
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
   });
-  const { data: createMetadata } = useSubstitutionCreateMetadataDataQuery();
-  const { data: createLectureResult = [] } = useSubstitutionLecturesDataQuery(
+  const { data: rawCreateMetadata } = useSubstitutionCreateMetadataDataQuery();
+  const createMetadata = rawCreateMetadata as ApiSubstitutionCreateMetadata | undefined;
+  const { data: rawCreateLectureResult } = useSubstitutionLecturesDataQuery(
     {
       date: toDateTimeOffset(substitutionForm.date?.startOf('day')),
       standardId: substitutionForm.standardId,
@@ -684,6 +692,7 @@ const SubstitutionManagementScreen = () => {
         !substitutionForm.divisionId,
     }
   );
+  const createLectureResult = (rawCreateLectureResult ?? []) as ApiSubstitutionLecture[];
   const { data: suggestedTeacherResult } = useSuggestedTeachersDataQuery(selectedSubstitutionId, {
     skip: !selectedSubstitutionId || !assignDialogOpen,
   });
@@ -800,25 +809,41 @@ const SubstitutionManagementScreen = () => {
     }
   }, [settingsResult]);
 
-  const classSelectOptions =
-    createMetadata?.standards.map((item) => ({ value: item.id, label: item.name })) ?? classOptions;
-  const divisionSelectOptions =
-    createMetadata?.divisions
-      .filter(
-        (item) => !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-      )
-      .map((item) => ({ value: item.id, label: item.name })) ?? divisionOptions;
-  const subjectSelectOptions =
-    createMetadata?.subjects
-      .filter(
-        (item) => !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-      )
-      .map((item) => ({ value: item.id, label: item.name })) ?? subjectOptions;
-  const teacherSelectOptions =
-    createMetadata?.teachers.map((item) => ({ value: item.id, label: item.name })) ??
-    teacherOptions;
-  const roomSelectOptions =
-    createMetadata?.rooms.map((item) => ({ value: item.id, label: item.name })) ?? roomOptions;
+  const metadataStandards = createMetadata?.standards ?? [];
+  const metadataDivisions = createMetadata?.divisions ?? [];
+  const metadataSubjects = createMetadata?.subjects ?? [];
+  const metadataTeachers = createMetadata?.teachers ?? [];
+  const metadataRooms = createMetadata?.rooms ?? [];
+  const classSelectOptions: SelectOption[] =
+    metadataStandards.length > 0
+      ? metadataStandards.map((item: ApiLookupOption) => ({ value: item.id, label: item.name }))
+      : classOptions;
+  const divisionSelectOptions: SelectOption[] =
+    metadataDivisions.length > 0
+      ? metadataDivisions
+          .filter(
+            (item) =>
+              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+          )
+          .map((item) => ({ value: item.id, label: item.name }))
+      : divisionOptions;
+  const subjectSelectOptions: SelectOption[] =
+    metadataSubjects.length > 0
+      ? metadataSubjects
+          .filter(
+            (item) =>
+              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+          )
+          .map((item) => ({ value: item.id, label: item.name }))
+      : subjectOptions;
+  const teacherSelectOptions: SelectOption[] =
+    metadataTeachers.length > 0
+      ? metadataTeachers.map((item: ApiLookupOption) => ({ value: item.id, label: item.name }))
+      : teacherOptions;
+  const roomSelectOptions: SelectOption[] =
+    metadataRooms.length > 0
+      ? metadataRooms.map((item: ApiLookupOption) => ({ value: item.id, label: item.name }))
+      : roomOptions;
   const lectureSelectOptions =
     createLectureResult.length > 0
       ? createLectureResult.map((item) => ({
@@ -881,12 +906,12 @@ const SubstitutionManagementScreen = () => {
     [substitutions]
   );
 
-  const myDutyRows = useMemo(
+  const myDutyRows = useMemo<SubstitutionRow[]>(
     () => myDutiesResult?.items.map(mapApiSubstitution) ?? [],
     [myDutiesResult]
   );
 
-  const suggestedTeacherRows = useMemo(
+  const suggestedTeacherRows = useMemo<AvailableTeacherRow[]>(
     () =>
       createDialogOpen
         ? selectedCreateLecture
@@ -1335,7 +1360,7 @@ const SubstitutionManagementScreen = () => {
       assignedRoomName: lecture.roomName,
       reason: context.reason || 'Teacher Unavailable',
       priority: 'High',
-      remarks: context.remarks,
+      remarks: context.remarks || '',
       acknowledgementRequired: true,
       sendNotification: true,
       notificationMethod: defaultSubstitutionForm.notificationMethod,
@@ -1891,7 +1916,7 @@ const SubstitutionManagementScreen = () => {
         icon: 'mdi:clock-alert-outline',
       },
     ];
-    const riskMessages = dashboardResult?.riskAlerts?.length
+    const riskMessages: string[] = dashboardResult?.riskAlerts?.length
       ? dashboardResult.riskAlerts
       : ['No active substitution risks for the selected day.'];
 
@@ -1969,9 +1994,11 @@ const SubstitutionManagementScreen = () => {
     >
       {renderSectionHeader('mdi:account-group-outline', 'Teacher Load Snapshot')}
       <Stack spacing={1.75}>
-        {(dashboardResult?.workloadSnapshot?.map(mapApiSuggestedTeacher) ?? suggestedTeacherRows)
+        {(dashboardResult?.workloadSnapshot?.map((teacher: ApiSuggestedTeacher) =>
+          mapApiSuggestedTeacher(teacher)
+        ) ?? suggestedTeacherRows)
           .slice(0, 3)
-          .map((teacher) => (
+          .map((teacher: AvailableTeacherRow) => (
             <Box key={teacher.teacherId}>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Typography variant="subtitle2">{teacher.teacherName}</Typography>
