@@ -25,6 +25,8 @@ export enum GradeEntryWorkflowStatus {
   Submitted = 1,
   Verified = 2,
   Published = 3, // Published = Locked (final state)
+  ChangesRequested = 4,
+  UnderVerification = 5,
 }
 
 export const GradeEntryWorkflowStatusLabel: Record<GradeEntryWorkflowStatus, string> = {
@@ -32,6 +34,8 @@ export const GradeEntryWorkflowStatusLabel: Record<GradeEntryWorkflowStatus, str
   [GradeEntryWorkflowStatus.Submitted]: 'Submitted',
   [GradeEntryWorkflowStatus.Verified]: 'Verified',
   [GradeEntryWorkflowStatus.Published]: 'Published',
+  [GradeEntryWorkflowStatus.ChangesRequested]: 'Changes Requested',
+  [GradeEntryWorkflowStatus.UnderVerification]: 'Under Verification',
 };
 
 export const GradeEntryWorkflowStatusColor: Record<GradeEntryWorkflowStatus, string> = {
@@ -39,6 +43,8 @@ export const GradeEntryWorkflowStatusColor: Record<GradeEntryWorkflowStatus, str
   [GradeEntryWorkflowStatus.Submitted]: 'info',
   [GradeEntryWorkflowStatus.Verified]: 'warning',
   [GradeEntryWorkflowStatus.Published]: 'success',
+  [GradeEntryWorkflowStatus.ChangesRequested]: 'error',
+  [GradeEntryWorkflowStatus.UnderVerification]: 'secondary',
 };
 
 export const GradeEntryWorkflowStatusOptions = Object.entries(GradeEntryWorkflowStatusLabel).map(

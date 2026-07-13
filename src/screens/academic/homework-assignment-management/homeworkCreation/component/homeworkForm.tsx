@@ -11,7 +11,6 @@ import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -20,6 +19,7 @@ import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -42,14 +42,15 @@ import {
   Autocomplete,
 } from '@mui/material';
 import {
-  useAddHomeworkMutation,
-  useGetHomeworkByIdQuery,
-  useUpdateHomeworkMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
-import {
   useGetSubjectAssignmentsQuery,
   useUploadCurriculumFileMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import {
+  useAddHomeworkMutation,
+  useGetHomeworkByIdQuery,
+  useUpdateHomeworkMutation,
+  useUpdateHomeworkStatusMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 
 import { getHomeworkInitialValues } from './homeworkInitialValues';
 import { homeworkValidationSchema } from './homeworkValidationSchema';
@@ -114,6 +115,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   });
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [previewFileState, setPreviewFileState] = useState<any>(null);
+  const submitModeRef = useRef<'draft' | 'publish' | 'schedule'>('draft');
+  const setHomeworkSubmitMode = (mode: 'draft' | 'publish' | 'schedule') => {
+    submitModeRef.current = mode;
+  };
 
   const [addHomework, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -124,6 +129,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   const [updateHomework, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkMutation,
+  });
+  const [updateHomeworkStatus, { isLoading: isPublishLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHomeworkStatusMutation,
   });
   const {
     data: homeworkData,
@@ -169,6 +178,34 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     onSubmit: async (values) => {
       try {
         const activeClassId = values.classId || values.class;
+
+        // Check if user is overriding selected template defaults
+        const selectedType = activeHomeworkTypes.find((t: any) => t.id === values.homeworkTypeId);
+        if (selectedType) {
+          let hasOverride = false;
+          if (selectedType.defaultSubmissionType !== undefined && selectedType.defaultSubmissionType !== null && selectedType.defaultSubmissionType !== values.submissionType) {
+            hasOverride = true;
+          }
+
+          if (selectedType.defaultDueDays !== undefined && selectedType.defaultDueDays !== null) {
+            const hasDueDaysDiff = values.divisions.some((d: any) => {
+              if (!d.publishDate || !d.dueDate) return false;
+              const diff = dayjs(d.dueDate).diff(dayjs(d.publishDate), 'day');
+              return diff !== selectedType.defaultDueDays;
+            });
+            if (hasDueDaysDiff) {
+              hasOverride = true;
+            }
+          }
+
+          if (hasOverride) {
+            const confirmOverride = window.confirm(
+              'Warning: You have modified submission settings or due days from the default homework type template. Are you sure you want to override these settings?'
+            );
+            if (!confirmOverride) return;
+          }
+        }
+
         const payload = {
           classId: activeClassId,
           standardId: values.standardId || activeClassId,
@@ -266,9 +303,18 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             formData.append(`DivisionSchedules[${index}].DueAt`, division.dueDate.toISOString());
           });
 
-          await addHomework({ academicMediumId: medium?.id, body: formData }).unwrap();
+          const response = await addHomework({ academicMediumId: medium?.id, body: formData }).unwrap();
+          const createdHomeworkId = response?.data?.id || response?.id;
+          if (submitModeRef.current === 'publish' && createdHomeworkId) {
+            await updateHomeworkStatus({ homeworkId: createdHomeworkId, status: 1 }).unwrap();
+          }
           shikshaMitraToast.success({
-            message: `Homework "${values.title}" has been created successfully.`,
+            message:
+              submitModeRef.current === 'publish'
+                ? `Homework "${values.title}" has been published successfully.`
+                : submitModeRef.current === 'schedule'
+                  ? `Homework "${values.title}" has been scheduled successfully.`
+                  : `Homework "${values.title}" has been saved as draft.`,
           });
         }
         onClose(null, true);
@@ -347,7 +393,20 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     },
   });
 
+  const activeHomeworkTypes = useMemo(() => {
+    const list = (homeworkTypeData?.data || []).filter((t: any) => t.status === 0);
+    if (editData?.homeworkTypeId) {
+      const editType = (homeworkTypeData?.data || []).find((t: any) => t.id === editData.homeworkTypeId);
+      if (editType && editType.status === 1) {
+        list.push(editType);
+      }
+    }
+    return list;
+  }, [homeworkTypeData?.data, editData?.homeworkTypeId]);
+
   const isLoadingData = isHomeworkLoading || isHomeworkFetching;
+  const firstPublishDate = formik.values.divisions?.[0]?.publishDate;
+  const shouldSchedule = !!firstPublishDate && dayjs(firstPublishDate).isAfter(dayjs());
 
   if (isLoadingData) {
     return (
@@ -443,11 +502,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             {/* Basic Details Section */}
             <Grid size={{ xs: 12 }}>
               <SectionCard
-                title="Basic Information"
+                title="Academic Details"
                 paperProps={{ sx: cardStyle }}
                 headerContent={
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Define the core details of the homework
+                    Select the class, division, subject, and curriculum context.
                   </Typography>
                 }
               >
@@ -490,15 +549,20 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       onChange={(val) => {
                         const selectedDivs = val as string[];
                         const existingDivs = formik.values.divisions || [];
+                        const selectedType = activeHomeworkTypes.find(
+                          (t: any) => t.id === formik.values.homeworkTypeId
+                        );
+                        const defaultDueDays = selectedType?.defaultDueDays;
 
                         const newDivisions = selectedDivs.map((divId) => {
                           const existing = existingDivs.find((d) => d.divisionId === divId);
+                          const publishDate = dayjs();
                           return (
                             existing || {
                               divisionId: divId,
                               createdAt: dayjs(),
-                              publishDate: null,
-                              dueDate: null,
+                              publishDate: publishDate,
+                              dueDate: defaultDueDays !== undefined && defaultDueDays !== null ? publishDate.add(defaultDueDays, 'day') : null,
                             }
                           );
                         });
@@ -589,8 +653,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       disableCloseOnSelect
                       options={
                         Array.isArray(chapterResponse)
-                          ? chapterResponse
-                          : chapterResponse?.data?.items || []
+                           ? chapterResponse
+                           : chapterResponse?.data?.items || []
                       }
                       disabled={!(formik.values.subjectId || formik.values.subject)}
                       loading={isChapterLoading || isChapterFetching}
@@ -677,12 +741,30 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   >
                     <CustomSelect
                       label="Homework Type *"
-                      options={homeworkTypeData?.data || []}
+                      options={activeHomeworkTypes}
                       labelKey="homeworkTypeName"
                       valueKey="id"
                       isLoading={isHomeworkTypeLoading || isHomeworkTypeFetching}
                       value={formik.values.homeworkTypeId || ''}
-                      onChange={(val) => formik.setFieldValue('homeworkTypeId', val)}
+                      onChange={(val) => {
+                        formik.setFieldValue('homeworkTypeId', val);
+                        const selectedType = activeHomeworkTypes.find((t: any) => t.id === val);
+                        if (selectedType) {
+                          if (selectedType.defaultSubmissionType !== undefined && selectedType.defaultSubmissionType !== null) {
+                            formik.setFieldValue('submissionType', selectedType.defaultSubmissionType);
+                          }
+                          if (selectedType.defaultDueDays !== undefined && selectedType.defaultDueDays !== null) {
+                            const newDivisions = formik.values.divisions.map((d: any) => {
+                              const pubDate = d.publishDate ? dayjs(d.publishDate) : dayjs();
+                              return {
+                                ...d,
+                                dueDate: pubDate.add(selectedType.defaultDueDays, 'day'),
+                              };
+                            });
+                            formik.setFieldValue('divisions', newDivisions);
+                          }
+                        }
+                      }}
                       formControlProps={{ fullWidth: true }}
                       error={!!(formik.touched.homeworkTypeId && formik.errors.homeworkTypeId)}
                       helperText={
@@ -710,11 +792,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             {/* Description Section */}
             <Grid size={{ xs: 12 }}>
               <SectionCard
-                title="Description & Attachments *"
+                title="Instructions & Attachments *"
                 paperProps={{ sx: cardStyle }}
                 headerContent={
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Provide instructions and upload necessary files
+                    Provide clear instructions and upload reference files.
                   </Typography>
                 }
               >
@@ -784,11 +866,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             {formik.values.divisions.length > 0 && (
               <Grid size={{ xs: 12 }}>
                 <SectionCard
-                  title="Schedule & Deadlines"
+                title="Publish Settings"
                   paperProps={{ sx: cardStyle }}
                   headerContent={
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Set publish and due dates for each division
+                      Save as draft, publish now, or schedule visibility by division.
                     </Typography>
                   }
                 >
@@ -836,6 +918,19 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                     value={div.publishDate ? dayjs(div.publishDate) : null}
                                     onChange={(val) => {
                                       formik.setFieldValue(`divisions[${idx}].publishDate`, val);
+                                      const selectedType = activeHomeworkTypes.find(
+                                        (t: any) => t.id === formik.values.homeworkTypeId
+                                      );
+                                      if (
+                                        val &&
+                                        selectedType?.defaultDueDays !== undefined &&
+                                        selectedType.defaultDueDays !== null
+                                      ) {
+                                        formik.setFieldValue(
+                                          `divisions[${idx}].dueDate`,
+                                          dayjs(val).add(selectedType.defaultDueDays, 'day')
+                                        );
+                                      }
                                       formik.validateField(`divisions[${idx}].publishDate`);
                                     }}
                                     ampm={false}
@@ -910,7 +1005,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             {/* Submission Type */}
             <Grid size={{ xs: 12 }}>
               <SectionCard
-                title="Submission Type"
+                title="Submission Settings"
                 paperProps={{ sx: cardStyle }}
                 headerContent={
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -929,8 +1024,9 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                         { value: 0, label: 'Online Text' },
                         { value: 1, label: 'File Upload' },
                         { value: 2, label: 'In-Person' },
+                        { value: 3, label: 'No Submission Required' },
                       ].map((item) => (
-                        <Grid size={{ xs: 12, md: 4 }} key={item.value}>
+                        <Grid size={{ xs: 12, md: 3 }} key={item.value}>
                           <SubmissionTypeCard
                             value={item.value}
                             label={item.label}
@@ -984,12 +1080,27 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
               />
             }
             onClick={(e: any) => {
+              setHomeworkSubmitMode('draft');
               formik.handleSubmit(e);
             }}
             type="submit"
           >
-            {editData ? 'Update' : 'Create'}
+            {editData ? 'Update Draft' : 'Save Draft'}
           </LoadingButton>
+          {!editData && (
+            <LoadingButton
+              variant="contained"
+              size="small"
+              loading={isUpdateLoading || isAddLoading || isPublishLoading}
+              startIcon={<Iconify icon={shouldSchedule ? 'solar:calendar-mark-bold' : 'solar:upload-bold'} />}
+              onClick={(e: any) => {
+                setHomeworkSubmitMode(shouldSchedule ? 'schedule' : 'publish');
+                formik.handleSubmit(e);
+              }}
+            >
+              {shouldSchedule ? 'Schedule Publish' : 'Publish Now'}
+            </LoadingButton>
+          )}
           <DocumentPreviewDialog
             open={!!previewDoc}
             onClose={() => setPreviewDoc(null)}

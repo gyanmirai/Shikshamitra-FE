@@ -147,7 +147,7 @@ const LectureSlots = () => {
 
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'standardName', label: 'Class', filterType: 'number', align: 'left' },
+      { id: 'standardName', label: 'Class', filterType: 'number', align: 'left', sticky: true },
       {
         id: 'activeDaysCount',
         label: 'Active Days',

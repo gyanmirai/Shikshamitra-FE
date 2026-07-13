@@ -235,58 +235,37 @@ function StatCard({
   return (
     <Card
       sx={{
-        p: 2.5,
-        borderRadius: 2.5,
-        position: 'relative',
-        overflow: 'hidden',
-        border: `1px solid ${alpha(palette.main, 0.12)}`,
-        background: `linear-gradient(135deg, ${alpha(palette.main, 0.06)} 0%, transparent 55%)`,
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        '&:hover': {
-          transform: 'translateY(-3px)',
-          boxShadow: `0 12px 28px ${alpha(palette.main, 0.18)}`,
-        },
-        '&::after': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          borderRadius: '10px 10px 0 0',
-          background: `linear-gradient(90deg, ${palette.main}, ${alpha(palette.main, 0.3)})`,
-        },
+        p: 1.5,
+        borderRadius: 1,
+        border: '1px solid',
+        borderColor: 'divider',
+        boxShadow: 'none',
       }}
     >
-      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" mb={2}>
+      <Stack direction="row" alignItems="center" spacing={1.25}>
         <Box
           sx={{
-            width: 46,
-            height: 46,
-            borderRadius: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: `linear-gradient(135deg, ${alpha(palette.main, 0.22)}, ${alpha(palette.main, 0.08)})`,
+            width: 34,
+            height: 34,
+            borderRadius: 1,
+            display: 'grid',
+            placeItems: 'center',
+            bgcolor: 'background.neutral',
             color: palette.main,
+            flexShrink: 0,
           }}
         >
-          <Iconify icon={icon} width={22} />
+          <Iconify icon={icon} width={20} />
         </Box>
-        <Typography
-          variant="h4"
-          fontWeight={700}
-          lineHeight={1}
-          sx={{ color: palette.dark || palette.main }}
-        >
-          {value}
-        </Typography>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h5" sx={{ lineHeight: 1 }}>
+            {value}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" noWrap>
+            {label}
+          </Typography>
+        </Box>
       </Stack>
-      <Box>
-        <Typography variant="body2" color="text.secondary" fontWeight={500}>
-          {label}
-        </Typography>
-      </Box>
     </Card>
   );
 }
@@ -813,14 +792,11 @@ export default function QuestionPaperScreen() {
       <Stack
         direction="row"
         spacing={1}
-        sx={{
-          overflowX: 'auto',
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { display: 'none' },
-        }}
+        flexWrap="wrap"
+        useFlexGap
       >
         {statCards.map((card) => (
-          <Box key={card.label} sx={{ flex: 1, minWidth: 140 }}>
+          <Box key={card.label} sx={{ flex: '1 1 180px', minWidth: 180 }}>
             <StatCard {...card} />
           </Box>
         ))}

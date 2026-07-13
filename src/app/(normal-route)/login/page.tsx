@@ -154,6 +154,9 @@ export default function LoginPage() {
         color: '#111827',
         paddingLeft: '44px',
       },
+      '& legend': {
+        textTransform: 'uppercase',
+      },
     },
     '& .MuiInputLabel-root': {
       fontSize: '0.8125rem',
@@ -164,7 +167,8 @@ export default function LoginPage() {
       backgroundColor: '#ffffff',
       padding: '0 4px',
       marginLeft: '-4px',
-      '&:not(.MuiInputLabel-shrink)': { transform: 'translate(44px, 16px) scale(1)' },
+      zIndex: 1,
+      '&:not(.MuiInputLabel-shrink)': { transform: 'translate(44px, 18px) scale(1)' },
       '&.Mui-focused': { color: BRAND_GREEN },
       '&.Mui-error': { color: '#ff4842' },
     },
@@ -671,7 +675,11 @@ export default function LoginPage() {
                               onChange={loginFormik.handleChange}
                               onBlur={loginFormik.handleBlur}
                               error={loginFormik.touched.email && Boolean(loginFormik.errors.email)}
-                              helperText={loginFormik.touched.email && loginFormik.errors.email}
+                              helperText={
+                                loginFormik.touched.email && loginFormik.errors.email
+                                  ? loginFormik.errors.email
+                                  : ' '
+                              }
                               sx={inputStyle}
                             />
                           </Box>
@@ -708,6 +716,8 @@ export default function LoginPage() {
                               }
                               helperText={
                                 loginFormik.touched.password && loginFormik.errors.password
+                                  ? loginFormik.errors.password
+                                  : ' '
                               }
                               sx={inputStyle}
                               InputProps={{
@@ -931,7 +941,11 @@ export default function LoginPage() {
                                 error={
                                   forgotFormik.touched.email && Boolean(forgotFormik.errors.email)
                                 }
-                                helperText={forgotFormik.touched.email && forgotFormik.errors.email}
+                                helperText={
+                                  forgotFormik.touched.email && forgotFormik.errors.email
+                                    ? forgotFormik.errors.email
+                                    : ' '
+                                }
                                 sx={inputStyle}
                               />
                             </Box>

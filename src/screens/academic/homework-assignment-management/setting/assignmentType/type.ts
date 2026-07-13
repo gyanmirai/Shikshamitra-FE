@@ -1,6 +1,14 @@
 export interface IAssignmentType {
   id?: string;
   assignmentTypeName: string;
+  description?: string;
+  defaultSubmissionType?: number;
+  defaultMarks?: number;
+  defaultDueDays?: number;
+  evaluationRequired?: boolean;
+  defaultEvaluationMethod?: number;
+  status?: number;
+  usageCount?: number;
 }
 
 export interface IAssignmentTypeFormProps {

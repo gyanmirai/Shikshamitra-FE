@@ -17,7 +17,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetSubjectUsageQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import {
   Box,
-  List,
+  Chip,
   Alert,
   Drawer,
   Button,
@@ -25,7 +25,6 @@ import {
   TextField,
   Typography,
   IconButton,
-  ListItemText,
 } from '@mui/material';
 
 import SettingSubjectForm from './subjectForm';
@@ -193,7 +192,12 @@ const SubjectCreation = () => {
         PaperProps={{ sx: { width: { xs: '100%', sm: 460 } } }}
       >
         <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h6">{selectedSubject?.name} Usage</Typography>
+          <Box>
+            <Typography variant="h6">{selectedSubject?.name}</Typography>
+            <Typography variant="caption" color="text.secondary">
+              Usage across the system
+            </Typography>
+          </Box>
           <IconButton onClick={usageDrawer.onFalse}>
             <Iconify icon="mingcute:close-line" />
           </IconButton>
@@ -204,48 +208,65 @@ const SubjectCreation = () => {
             <Typography variant="body2">Loading usage...</Typography>
           ) : (
             <>
-              <UsageSection
-                title="Subject Allocation"
-                items={
-                  usageData?.usage?.subjectAllocations?.map(
-                    (item: any) => `${item.standard || 'Class'} - ${item.code || 'No code'}`
-                  ) || []
-                }
-              />
-              <UsageSection
-                title="Elective Groups"
-                items={usageData?.usage?.electiveGroups || []}
-              />
-              <UsageCount
-                title="Syllabus"
-                count={usageData?.usage?.chaptersCount}
-                suffix="chapters"
-              />
-              <UsageCount
-                title="Timetable"
-                count={usageData?.usage?.timetablePeriodsCount}
-                suffix="periods"
-              />
-              <UsageCount
-                title="Examination"
-                count={usageData?.usage?.examSchedulesCount}
-                suffix="exam schedules"
-              />
-              <UsageCount
-                title="Lesson Plan"
-                count={usageData?.usage?.lessonPlansCount}
-                suffix="lesson plans"
-              />
-              <UsageCount
-                title="Homework"
-                count={usageData?.usage?.homeworkCount}
-                suffix="homework records"
-              />
-              <UsageCount
-                title="Teacher Mapping"
-                count={usageData?.usage?.teacherMappingsCount}
-                suffix="teachers assigned"
-              />
+              <Box
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                }}
+              >
+                <UsageRow
+                  icon="lucide:layout-grid"
+                  title="Subject Allocation"
+                  items={
+                    usageData?.usage?.subjectAllocations?.map(
+                      (item: any) => `${item.standard || 'Class'} - ${item.code || 'No code'}`
+                    ) || []
+                  }
+                />
+                <UsageRow
+                  icon="lucide:users"
+                  title="Elective Groups"
+                  items={usageData?.usage?.electiveGroups || []}
+                />
+                <UsageRow
+                  icon="lucide:book-open"
+                  title="Syllabus"
+                  count={usageData?.usage?.chaptersCount}
+                  suffix="chapters"
+                />
+                <UsageRow
+                  icon="lucide:calendar-clock"
+                  title="Timetable"
+                  count={usageData?.usage?.timetablePeriodsCount}
+                  suffix="periods"
+                />
+                <UsageRow
+                  icon="lucide:file-check"
+                  title="Examination"
+                  count={usageData?.usage?.examSchedulesCount}
+                  suffix="exam schedules"
+                />
+                <UsageRow
+                  icon="lucide:notebook-pen"
+                  title="Lesson Plan"
+                  count={usageData?.usage?.lessonPlansCount}
+                  suffix="lesson plans"
+                />
+                <UsageRow
+                  icon="lucide:clipboard-list"
+                  title="Homework"
+                  count={usageData?.usage?.homeworkCount}
+                  suffix="homework records"
+                />
+                <UsageRow
+                  icon="lucide:user-check"
+                  title="Teacher Mapping"
+                  count={usageData?.usage?.teacherMappingsCount}
+                  suffix="teachers assigned"
+                />
+              </Box>
               <Alert severity={usageData?.canDelete ? 'success' : 'warning'} sx={{ mt: 2 }}>
                 {usageData?.canDelete
                   ? 'Safe to delete because this subject is not used.'
@@ -362,32 +383,66 @@ const SubjectCreation = () => {
 
 export default SubjectCreation;
 
-const UsageSection = ({ title, items }: { title: string; items: string[] }) => (
-  <Box sx={{ mb: 1.5 }}>
-    <Typography variant="subtitle2">{title}</Typography>
-    <List dense disablePadding>
-      {items.length > 0 ? (
-        items.map((item) => <ListItemText key={item} primary={`- ${item}`} />)
-      ) : (
-        <ListItemText primary="- Not used" />
-      )}
-    </List>
-  </Box>
-);
-
-const UsageCount = ({
+const UsageRow = ({
+  icon,
   title,
-  count = 0,
+  items,
+  count,
   suffix,
 }: {
+  icon: string;
   title: string;
+  items?: string[];
   count?: number;
-  suffix: string;
-}) => (
-  <Box sx={{ mb: 1.5 }}>
-    <Typography variant="subtitle2">{title}</Typography>
-    <Typography variant="body2" color="text.secondary">
-      {count || 0} {suffix}
-    </Typography>
-  </Box>
-);
+  suffix?: string;
+}) => {
+  const hasItems = items !== undefined;
+  const value = hasItems ? items.length : count || 0;
+  const isEmpty = value === 0;
+
+  return (
+    <Box
+      sx={{
+        p: 1.5,
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        '&:last-of-type': { borderBottom: 'none' },
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box
+          sx={{
+            width: 32,
+            height: 32,
+            flexShrink: 0,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: isEmpty ? 'action.hover' : 'primary.lighter',
+          }}
+        >
+          <Iconify
+            icon={icon}
+            width={16}
+            height={16}
+            sx={{ color: isEmpty ? 'text.disabled' : 'primary.main' }}
+          />
+        </Box>
+        <Typography variant="body2" sx={{ flex: 1 }}>
+          {title}
+        </Typography>
+        <Typography variant="caption" fontWeight={600} color={isEmpty ? 'text.disabled' : 'text.primary'}>
+          {isEmpty ? 'Not used' : `${value} ${suffix || ''}`.trim()}
+        </Typography>
+      </Box>
+      {hasItems && value > 0 && (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1, ml: '44px' }}>
+          {items.map((item) => (
+            <Chip key={item} label={item} size="small" variant="outlined" sx={{ height: 22, fontSize: '11px' }} />
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+};

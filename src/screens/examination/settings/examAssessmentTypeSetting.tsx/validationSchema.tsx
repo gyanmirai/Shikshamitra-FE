@@ -11,6 +11,22 @@ export const examTypeValidationSchema = (existingNames: Set<string>, editData?: 
         if (editData && editData.examType.trim().toLowerCase() === trimmed) return true;
         return !existingNames.has(trimmed);
       }),
+    category: Yup.string().nullable(),
+    status: Yup.number().required('Status is required'),
+    defaultTotalMarks: Yup.number()
+      .transform((value, originalValue) => (originalValue === '' ? null : value))
+      .nullable()
+      .min(1, 'Default Total Marks must be greater than 0'),
+    defaultWeightage: Yup.number()
+      .transform((value, originalValue) => (originalValue === '' ? null : value))
+      .nullable()
+      .min(0, 'Weightage cannot be negative')
+      .max(100, 'Weightage cannot exceed 100%'),
+    includedInResult: Yup.boolean(),
+    marksEntryRequired: Yup.boolean(),
+    gradeScaleRequired: Yup.boolean(),
+    allowPracticalOral: Yup.boolean(),
+    defaultGradeScaleId: Yup.string().nullable(),
   });
 
 export const assessmentTypeValidationSchema = Yup.object().shape({

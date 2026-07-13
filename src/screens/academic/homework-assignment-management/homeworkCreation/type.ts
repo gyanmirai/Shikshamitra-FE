@@ -77,6 +77,10 @@ export interface IAssignGradeProps {
   homeworkId?: string;
   assignmentId?: string;
   onClose: (e: any, isSubmit: boolean) => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
 }
 
 /**
@@ -124,4 +128,9 @@ export interface TStudentGrade {
   status: string;
   submissionDate: Dayjs | null;
   submissionType?: string;
+  submittedContent?: string;
+  submittedDocumentUrl?: string;
+  originalFileName?: string;
+  evaluationStatus?: string;
+  submissionStatusLabel?: string;
 }

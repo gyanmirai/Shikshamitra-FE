@@ -13,12 +13,23 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Grid, Checkbox, TextField, Typography, Autocomplete } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
+import {
+  Box,
+  Chip,
+  Grid,
+  Paper,
+  Stack,
+  Switch,
+  Checkbox,
+  TextField,
+  Typography,
+  Autocomplete,
+} from '@mui/material';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
@@ -118,7 +129,15 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   return (
     <Grid container>
       <Grid size={{ xs: 12 }}>
-        <SectionCard title="Schedule & Deadlines" paperProps={{ sx: cardStyle }}>
+        <SectionCard
+          title="Exam Setup"
+          paperProps={{ sx: cardStyle }}
+          headerContent={
+            <Typography variant="body2" color="text.secondary">
+              Define exam identity, scope, defaults, and planning strategy.
+            </Typography>
+          }
+        >
           <motion.div
             variants={formContainerVariants}
             initial="hidden"
@@ -143,6 +162,10 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         );
                         formik.setFieldValue('examTypeName', selectedType?.examType ?? '');
                         formik.setFieldTouched(`examType`, false);
+
+                        if (selectedType?.defaultGradeScaleId) {
+                          formik.setFieldValue('gradingScaleId', selectedType.defaultGradeScaleId);
+                        }
                       }}
                       labelKey="examType"
                       valueKey="id"
@@ -333,6 +356,12 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       }}
                       value={formik.values.subjects}
                       onChange={(event, value) => {
+                        const selectedType = examTypeData?.items?.find(
+                          (item: any) => item.id === formik.values.examType
+                        );
+                        const defaultTotalMarks = selectedType?.defaultTotalMarks ?? '';
+                        const defaultGradeScaleId = selectedType?.defaultGradeScaleId || null;
+
                         const normalizedSubjects = value.map((sub: any, index: number) => {
                           const isElective = !!sub.electiveGroupId;
                           return {
@@ -347,10 +376,10 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                             examDate: sub?.examDate || null,
                             startTime: sub?.startTime || null,
                             endTime: sub?.endTime || null,
-                            totalMarks: sub?.totalMarks ?? '',
+                            totalMarks: sub?.totalMarks || defaultTotalMarks,
                             passingMarks: sub?.passingMarks ?? '',
                             notes: sub?.notes || '',
-                            gradeScalingId: sub?.gradeScalingId || null,
+                            gradeScalingId: sub?.gradeScalingId || defaultGradeScaleId,
                             // Elective groups have no meaningful single subjectCode
                             subjectCode: isElective
                               ? ''
@@ -368,10 +397,10 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                                   examDate: s.examDate || null,
                                   startTime: s.startTime || null,
                                   endTime: s.endTime || null,
-                                  totalMarks: s.totalMarks ?? '',
+                                  totalMarks: s.totalMarks || defaultTotalMarks,
                                   passingMarks: s.passingMarks ?? '',
                                   notes: s.notes || '',
-                                  gradeScalingId: s.gradeScalingId || null,
+                                  gradeScalingId: s.gradeScalingId || defaultGradeScaleId,
                                 }))
                               : sub.subjects,
                           };
@@ -428,6 +457,69 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       }
                     />
                   </ShakingTextField>
+                </motion.div>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      minHeight: 40,
+                      borderRadius: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 1.5,
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="subtitle2">Enable Room Assignment</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Turn on room planning in Step 3.
+                      </Typography>
+                    </Box>
+                    <Switch
+                      checked={formik.values.isRoomAssign}
+                      onChange={(event) => {
+                        formik.setFieldValue('isRoomAssign', event.target.checked);
+                      }}
+                      inputProps={{ 'aria-label': 'Enable room assignment' }}
+                    />
+                  </Paper>
+                </motion.div>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 1,
+                      bgcolor: 'background.neutral',
+                    }}
+                  >
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+                      <Chip
+                        icon={<Iconify icon="solar:pen-new-square-bold-duotone" />}
+                        label="Manual scheduling"
+                        color="primary"
+                        variant="soft"
+                      />
+                      <Chip
+                        icon={<Iconify icon="solar:copy-bold-duotone" />}
+                        label="Copy from existing exam - coming soon"
+                        variant="outlined"
+                      />
+                      <Chip
+                        icon={<Iconify icon="solar:magic-stick-3-bold-duotone" />}
+                        label="Auto-generate schedule - coming soon"
+                        variant="outlined"
+                      />
+                    </Stack>
+                  </Paper>
                 </motion.div>
               </Grid>
 

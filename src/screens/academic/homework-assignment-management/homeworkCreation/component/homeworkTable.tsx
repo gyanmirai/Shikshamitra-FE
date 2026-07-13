@@ -1,16 +1,17 @@
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
-import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Typography, IconButton } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, Typography, IconButton } from '@mui/material';
+
 import {
-  PublishUnpublishStatusType,
-  PublishUnpublishStatusOptions,
-} from 'src/enums/publishUnpublish-status';
+  getSubmissionProgress,
+  getEvaluationProgress,
+  LearningTaskStatusChip,
+  SUBMISSION_TYPE_LABELS,
+  LearningTaskSummaryCards,
+} from './learningTaskUi';
 
 import type { IHomework, IHomeworkTableProps, DivisionHomeworkMeta } from '../type';
 
@@ -45,27 +46,12 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
    * Get the MUI theme object for styling
    * Used for accessing theme colors and other theme properties
    */
-  const theme = useTheme();
-  // const {
-  //   data: assignmentData,
-  //   isLoading,
-  //   isFetching,
-  // } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetAssignmentsQuery,
-  //   params: { academicMediumId: (currentMedium as Medium)?.id, classId: selectedClass },
-  //   options: {
-  //     skip: !(currentMedium as Medium)?.id,
-  //   },
-  // });
   /**
-   * Memoized actions menu renderer for the table
-   * @param {Object} params - Action menu parameters
-   * @param {Object} params.popover - Popover control object
-   * @param {IHomework} params.row - Current row data
-   * @returns {JSX.Element} Menu list with view submission action
+   * Memoization Justification:
+   * - The table receives normalized row objects with selected-division schedule data.
+   * - It prevents rebuilding every row object unless the API data or selected division changes.
+   * - CustomizableTable does extra column/filter work, so stable row normalization keeps re-renders tighter.
    */
-
   const filteredData = useMemo(
     () =>
       (homeworkData || []).map((hw) => {
@@ -75,6 +61,10 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
         return {
           ...hw,
           homeworkType: hw.homeworkType || hw.homeworkTypeName,
+          classDivision: `${hw.standardName || hw.className || '-'} / ${currentDivision?.divisionName || '-'}`,
+          subjectChapter: [hw.subjectName || hw.subject, hw.chapterName || hw.chapterNames?.join(', ')]
+            .filter(Boolean)
+            .join(' / '),
           currentDivisionId: currentDivision?.divisionId,
           createdAt: hw.createdAt,
           publishDate: currentDivision?.publishDate || currentDivision?.publishAt,
@@ -84,7 +74,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
               ? currentDivision.status
               : currentDivision?.isPublished
                 ? 1
-                : (hw.status ?? 0),
+              : (hw.status ?? 0),
           divisions: hw.divisionSchedules || hw.divisions || [],
         };
       }),
@@ -92,171 +82,178 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
   );
 
   return (
-    <CustomizableTable
-      tableId="homework-assignment-management"
-      isLoading={isLoading}
-      // Custom no data message with action to create new homework
-      noDataText={
-        <>
-          Homework Data Not Found
-          {canAdd && (
-            <Box
-              onClick={() => {
-                dialog.onTrue();
-                setOpen(true);
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Create Homework
-            </Box>
-          )}
-        </>
-      }
-      columns={[
-        { id: 'title', label: 'Title', align: 'left', filterType: 'string', sticky: true },
-        { id: 'homeworkType', label: 'Type', align: 'left', filterType: 'string' },
-        {
-          id: 'createdAt',
-          label: 'Created On',
-          align: 'left',
-          filterType: 'date',
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'publishDate',
-          label: 'Publish Date',
-          align: 'left',
-          filterType: 'date',
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'dueDate',
-          label: 'Due Date',
-          align: 'left',
-          filterType: 'date',
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'status',
-          label: 'Status',
-          align: 'left',
-          minWidth: 40,
-          isFilter: false,
-          sticky: true,
-          isSort: false,
-          filterType: 'enum',
-          enumOptions: PublishUnpublishStatusOptions,
-          render(value, row) {
-            const statusColor =
-              value === PublishUnpublishStatusType.Published
-                ? theme.vars.palette.success.main
-                : theme.vars.palette.text.secondary;
-
-            return (
-              <CustomTooltip
-                title={value === PublishUnpublishStatusType.Draft ? 'Draft' : 'Published'}
-                arrow
-                placement="left"
-                PopperProps={{
-                  modifiers: [
-                    {
-                      name: 'offset',
-                      options: {
-                        offset: [0, 0], // Try 0 or adjust closer
-                      },
-                    },
-                  ],
+    <Box>
+      <LearningTaskSummaryCards tasks={filteredData} />
+      <CustomizableTable
+        tableId="homework-assignment-management"
+        isLoading={isLoading}
+        noDataText={
+          <>
+            No learning tasks created yet.
+            {canAdd && (
+              <Box
+                onClick={() => {
+                  dialog.onTrue();
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
                 }}
               >
-                <span>
-                  <IconButton
-                    onClick={() => {
-                      // Only allow click action when status is draft (1)
-                      if (value === PublishUnpublishStatusType.Draft) {
-                        handleSwitchChange(row as IHomework);
-                      }
-                    }}
-                    sx={{
-                      p: 0.6, // some padding for a more clickable area
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(0,0,0,0.06)', // light background to indicate clickability
-                      transition: 'transform 0.2s ease-in-out, background-color 0.2s',
-                      cursor: 'pointer',
-                      '&:hover': { transform: 'scale(1.1)', backgroundColor: 'rgba(0,0,0,0.08)' },
-                    }}
-                    disabled={value === PublishUnpublishStatusType.Published}
-                  >
-                    <Iconify
-                      icon={GlobalIcons.tick}
-                      sx={{
-                        width: 20,
-                        height: 20,
-                        cursor:
-                          value === PublishUnpublishStatusType.Draft ? 'pointer' : 'not-allowed',
-                        color: statusColor,
-                      }}
-                    />
-                  </IconButton>
-                </span>
-              </CustomTooltip>
-            );
+                Create homework to share work with students.
+              </Box>
+            )}
+          </>
+        }
+        columns={[
+          { id: 'title', label: 'Title', align: 'left', filterType: 'string', sticky: true },
+          { id: 'classDivision', label: 'Class / Division', align: 'left', filterType: 'string' },
+          { id: 'subjectChapter', label: 'Subject / Chapter', align: 'left', filterType: 'string' },
+          {
+            id: 'homeworkType',
+            label: 'Task Type',
+            align: 'left',
+            filterType: 'string',
+            render: (value, row) => (
+              <Stack spacing={0.5}>
+                <Typography variant="body2">{value || '-'}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {SUBMISSION_TYPE_LABELS[Number((row as any).submissionType)] || '-'}
+                </Typography>
+              </Stack>
+            ),
           },
-        },
-        {
-          id: 'action',
-          label: 'Actions',
-          isSort: false,
-          isFilter: false,
-          sticky: true,
-          align: 'left',
-          minWidth: 80,
-          render: (value, row) => (
-            <ThreeDotsActions
-              placement="right-top"
-              showThreeDots={false}
-              // actions={(prop) => actions({ ...prop, row })}
-              showViewIcon={canView}
-              showEditIcon={canAdd && (row as any).status !== PublishUnpublishStatusType.Published}
-              showDeleteIcon={canDelete}
-              handleDeleteClick={() => {
-                onDeleteDetails(row as IHomework);
-              }}
-              handleEditClick={() => onEditDetails(row as IHomework)}
-              handleViewClick={() => {
-                const divisionData = row.divisions?.find(
-                  (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
-                );
+          {
+            id: 'publishDate',
+            label: 'Publish Date',
+            align: 'left',
+            filterType: 'date',
+            render: (value) => (
+              <Typography variant="caption" fontSize="13px">
+                {value ? dayjs(value).format('DD-MM-YYYY HH:mm') : '-'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'dueDate',
+            label: 'Due Date',
+            align: 'left',
+            filterType: 'date',
+            render: (value) => (
+              <Typography variant="caption" fontSize="13px">
+                {value ? dayjs(value).format('DD-MM-YYYY HH:mm') : '-'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'submittedCount',
+            label: 'Submission Progress',
+            align: 'left',
+            filterType: 'number',
+            render: (_value, row) => (
+              <Typography variant="caption">{getSubmissionProgress(row)}</Typography>
+            ),
+          },
+          {
+            id: 'evaluationPendingCount',
+            label: 'Evaluation Progress',
+            align: 'left',
+            filterType: 'number',
+            render: (_value, row) => (
+              <Typography variant="caption">{getEvaluationProgress(row)}</Typography>
+            ),
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            align: 'left',
+            isFilter: false,
+            sticky: true,
+            stickyPosition: 'right',
+            isSort: false,
+            render: (_value, row) => <LearningTaskStatusChip task={row} />,
+          },
+          {
+            id: 'action',
+            label: 'Actions',
+            isSort: false,
+            isFilter: false,
+            sticky: true,
+            stickyPosition: 'right',
+            align: 'left',
+            minWidth: 220,
+            render: (_value, row) => {
+              const isDraft = Number((row as any).status ?? 0) === 0;
+              const divisionData = row.divisions?.find(
+                (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
+              );
+              const rowWithDivision = { ...row, divisionMeta: divisionData } as IHomework & {
+                divisionMeta?: DivisionHomeworkMeta;
+              };
 
-                onViewDetails({ ...row, divisionMeta: divisionData } as IHomework & {
-                  divisionMeta?: DivisionHomeworkMeta;
-                });
-              }}
-            />
-          ),
-        },
-      ]}
-      data={filteredData}
-    />
+              return (
+                <Stack direction="row" spacing={0.5}>
+                  {canView && (
+                    <CustomTooltip title="View Details" arrow>
+                      <IconButton size="small" onClick={() => onViewDetails(rowWithDivision)}>
+                        <Iconify icon="solar:eye-bold" width={18} />
+                      </IconButton>
+                    </CustomTooltip>
+                  )}
+                  {canAdd && isDraft && (
+                    <CustomTooltip title="Edit" arrow>
+                      <IconButton size="small" onClick={() => onEditDetails(row as IHomework)}>
+                        <Iconify icon="solar:pen-bold" width={18} />
+                      </IconButton>
+                    </CustomTooltip>
+                  )}
+                  {canAdd && isDraft && (
+                    <CustomTooltip title="Publish Now" arrow>
+                      <IconButton size="small" onClick={() => handleSwitchChange(row as IHomework)}>
+                        <Iconify icon="solar:upload-bold" width={18} />
+                      </IconButton>
+                    </CustomTooltip>
+                  )}
+                  <CustomTooltip title="View Submissions" arrow>
+                    <IconButton size="small" onClick={() => onViewSubmission(row as any)}>
+                      <Iconify icon="solar:inbox-in-bold" width={18} />
+                    </IconButton>
+                  </CustomTooltip>
+                  <CustomTooltip title="Send Reminder will be enabled after notification wiring" arrow>
+                    <span>
+                      <IconButton size="small" disabled>
+                        <Iconify icon="solar:bell-bold" width={18} />
+                      </IconButton>
+                    </span>
+                  </CustomTooltip>
+                  {canDelete && (
+                    <CustomTooltip title={isDraft ? 'Delete' : 'Archive published tasks later'} arrow>
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          disabled={!isDraft}
+                          onClick={() => onDeleteDetails(row as IHomework)}
+                        >
+                          <Iconify icon="solar:trash-bin-trash-bold" width={18} />
+                        </IconButton>
+                      </span>
+                    </CustomTooltip>
+                  )}
+                </Stack>
+              );
+            },
+          },
+        ]}
+        data={filteredData}
+      />
+    </Box>
   );
 };
 

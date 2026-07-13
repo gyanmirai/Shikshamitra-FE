@@ -106,6 +106,21 @@ const HomeworkTypeCreation = () => {
     },
   });
 
+  const homeworkTypes = homeworkTypeData?.data || [];
+  const totalTypes = homeworkTypes.length;
+  const activeTypes = homeworkTypes.filter((t: any) => t.status === 0).length;
+  const inactiveTypes = homeworkTypes.filter((t: any) => t.status === 1).length;
+  
+  let mostUsedType = '-';
+  let maxUsage = 0;
+  homeworkTypes.forEach((t: any) => {
+    if (t.usageCount && t.usageCount > maxUsage) {
+      maxUsage = t.usageCount;
+      mostUsedType = t.homeworkTypeName;
+    }
+  });
+  const unusedTypes = homeworkTypes.filter((t: any) => !t.usageCount).length;
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
@@ -132,9 +147,39 @@ const HomeworkTypeCreation = () => {
         }
       />
 
+      {/* Summary Cards */}
+      <Box display="grid" gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' }} gap={2} mb={3}>
+        {[
+          { label: 'Total Types', value: totalTypes, color: 'primary.main' },
+          { label: 'Active Types', value: activeTypes, color: 'success.main' },
+          { label: 'Inactive Types', value: inactiveTypes, color: 'error.main' },
+          { label: 'Most Used Type', value: mostUsedType, color: 'warning.main' },
+          { label: 'Unused Types', value: unusedTypes, color: 'text.secondary' },
+        ].map((card, idx) => (
+          <Box
+            key={idx}
+            sx={{
+              p: 2,
+              borderRadius: 1,
+              bgcolor: 'background.neutral',
+              border: '1px solid',
+              borderColor: 'divider',
+              textAlign: 'center',
+            }}
+          >
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {card.label}
+            </Typography>
+            <Typography variant="h5" color={card.color} sx={{ fontWeight: 'bold', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+              {card.value}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+
       <HomeworkTypeTable
         isLoading={isLoading || isFetching}
-        data={homeworkTypeData?.data}
+        data={homeworkTypes}
         canAdd={canAdd}
         canDelete={canDelete}
         onEdit={(data) => {

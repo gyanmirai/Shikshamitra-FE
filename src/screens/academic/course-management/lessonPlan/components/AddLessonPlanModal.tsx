@@ -7,6 +7,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import React, { useState, useCallback } from 'react';
+import { LoadingButton } from '@mui/lab';
 import CustomSelect from 'src/components/custom-select';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -21,7 +22,9 @@ import {
   Slider,
   Divider,
   TextField,
+  Tooltip,
   Typography,
+  IconButton,
   InputAdornment,
   LinearProgress,
 } from '@mui/material';
@@ -102,6 +105,7 @@ type Props = {
   onClose: () => void;
   onSave: (form: LessonFormState, submitAfterSave: boolean) => void;
   onAiGenerate?: () => void;
+  isLoading?: boolean;
 };
 
 type SelectOption = {
@@ -183,9 +187,15 @@ const AutoFilledField = ({ label, value }: { label: string; value: string }) => 
             <Iconify icon="mdi:auto-fix" width={14} sx={{ color: 'text.disabled' }} />
           </InputAdornment>
         ),
+        endAdornment: (
+          <InputAdornment position="end">
+            <Tooltip title="Auto-filled from the selected timetable period.">
+              <Iconify icon="mdi:information-outline" width={16} sx={{ color: 'text.disabled' }} />
+            </Tooltip>
+          </InputAdornment>
+        ),
       },
     }}
-    helperText="Auto-filled from period"
     sx={{
       '& .MuiOutlinedInput-root': {
         bgcolor: 'background.neutral',
@@ -195,6 +205,22 @@ const AutoFilledField = ({ label, value }: { label: string; value: string }) => 
 );
 
 const normalizeText = (value?: string | null) => value?.trim().toLowerCase() || '';
+
+const hasDuplicateLessonTopic = (form: LessonFormState, lessonPlans: LessonPlanRow[]) => {
+  const topic = normalizeText(form.topic);
+  const plannedDate = form.plannedDate?.format('YYYY-MM-DD');
+
+  if (!topic || !plannedDate) return false;
+
+  return lessonPlans.some((plan) => {
+    const sameRecord = form.id && plan.id === form.id;
+    const sameTeacher = !form.teacherId || !plan.teacherId || plan.teacherId === form.teacherId;
+    const sameDate = dayjs(plan.plannedDate).format('YYYY-MM-DD') === plannedDate;
+    const sameTopic = normalizeText(plan.topic) === topic;
+
+    return !sameRecord && sameTeacher && sameDate && sameTopic;
+  });
+};
 
 const resolvePreviousProgress = (
   lessonPlans: LessonPlanRow[],
@@ -230,6 +256,7 @@ const AddLessonPlanModal = ({
   onClose,
   onSave,
   onAiGenerate,
+  isLoading = false,
 }: Props) => {
   const [form, setForm] = useState<LessonFormState>(() => ({
     ...defaultForm,
@@ -237,6 +264,7 @@ const AddLessonPlanModal = ({
   }));
 
   const [error, setError] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
   const isTimelinePrefill = Boolean(timelinePrefill?.timetableSlotId);
 
   /**
@@ -419,6 +447,7 @@ const AddLessonPlanModal = ({
 
   React.useEffect(() => {
     if (open) {
+      setShowValidation(false);
       if (editData) {
         setForm({
           id: editData.id,
@@ -487,12 +516,15 @@ const AddLessonPlanModal = ({
       return 'Please select a valid timetable period with subject details.';
     if (!form.chapterId || !form.chapterName) return 'Chapter is required.';
     if (!form.topic.trim()) return 'Topic is required.';
+    if (hasDuplicateLessonTopic(form, lessonPlans))
+      return 'A lesson plan with the same topic already exists for this teacher on this date.';
     if (form.plannedCompletionPercentage < 0 || form.plannedCompletionPercentage > 100)
       return 'Planned completion must be between 0 and 100.';
     return '';
   };
 
   const handleSave = (submit: boolean) => {
+    setShowValidation(true);
     const err = validate();
     if (err) {
       setError(err);
@@ -522,15 +554,17 @@ const AddLessonPlanModal = ({
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               {form.id ? 'Edit Lesson Plan' : 'Add Lesson Plan'}
             </Typography>
+            <Tooltip title="Schedule a lesson, set its coverage plan, and track expected progress.">
+              <IconButton size="small" sx={{ color: 'text.secondary', p: 0.25 }}>
+                <Iconify icon="mdi:information-outline" width={18} />
+              </IconButton>
+            </Tooltip>
             {form.source === 'AiGenerated' && (
               <Label color="info" variant="soft" startIcon={<Iconify icon="mdi:robot-outline" />}>
                 AI Generated
               </Label>
             )}
           </Stack>
-          <Typography variant="caption" color="text.secondary">
-            Schedule a lesson, set its coverage plan, and track expected progress.
-          </Typography>
         </Stack>
       }
       maxWidth="md"
@@ -543,33 +577,6 @@ const AddLessonPlanModal = ({
               {error}
             </Alert>
           )}
-
-          {/* Progress indicator */}
-          <Stack
-            direction="row"
-            alignItems="center"
-            spacing={1.5}
-            sx={{
-              px: 2,
-              py: 1.25,
-              borderRadius: 2,
-              bgcolor: 'background.paper',
-              border: (theme) => `1px solid ${theme.palette.divider}`,
-            }}
-          >
-            <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-              Required fields
-            </Typography>
-            <LinearProgress
-              variant="determinate"
-              value={(requiredFieldsFilled / totalRequiredFields) * 100}
-              sx={{ flex: 1, height: 6, borderRadius: 1 }}
-              color={requiredFieldsFilled === totalRequiredFields ? 'success' : 'primary'}
-            />
-            <Typography variant="caption" fontWeight={700} sx={{ whiteSpace: 'nowrap' }}>
-              {requiredFieldsFilled}/{totalRequiredFields}
-            </Typography>
-          </Stack>
 
           {/* Template selector */}
           <FormSection icon="mdi:lightning-bolt-outline" title="Quick Template">
@@ -659,6 +666,8 @@ const AddLessonPlanModal = ({
                 options={chapterOptions}
                 value={form.chapterName}
                 onChange={(v) => handleChapterChange(v as string)}
+                error={showValidation && (!form.chapterId || !form.chapterName)}
+                helperText={showValidation && (!form.chapterId || !form.chapterName) ? 'Chapter is required' : ''}
               />
 
               <TextField
@@ -669,7 +678,12 @@ const AddLessonPlanModal = ({
                 onBlur={handleTopicBlur}
                 fullWidth
                 placeholder="e.g. Addition of Fractions"
-                helperText="Matches prior progress for this chapter automatically on blur"
+                error={showValidation && !form.topic.trim()}
+                helperText={
+                  showValidation && !form.topic.trim()
+                    ? 'Topic is required'
+                    : 'Matches prior progress for this chapter automatically on blur'
+                }
               />
 
               <TextField
@@ -825,25 +839,28 @@ const AddLessonPlanModal = ({
             color="inherit"
             startIcon={<Iconify icon="mdi:close" />}
             onClick={onClose}
+            disabled={isLoading}
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             size="small"
             variant="outlined"
+            loading={isLoading}
             startIcon={<Iconify icon="mdi:content-save-outline" />}
             onClick={() => handleSave(false)}
           >
             Save Draft
-          </Button>
-          <Button
+          </LoadingButton>
+          <LoadingButton
             size="small"
             variant="contained"
+            loading={isLoading}
             startIcon={<Iconify icon="mdi:check-circle-outline" />}
             onClick={() => handleSave(true)}
           >
             Submit Plan
-          </Button>
+          </LoadingButton>
         </Stack>
       </Stack>
     </CustomDialog>

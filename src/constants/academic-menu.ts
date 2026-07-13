@@ -7,6 +7,7 @@ const defaultAcademicPermissionName = 'Academics.';
 
 export const academicPaths = {
   dashboard: '/academic/dashboard',
+  studentAcademic360: '/academic/studentAcademic360',
   academicCalendar: {
     root: '/academic/academic-calendar',
     dashboard: '/academic/academicCalendarDashboard',
@@ -96,6 +97,7 @@ export const academicPaths = {
 export const academicPermissions = {
   root: `${defaultModulePermissionName}Academics`,
   dashboard: `${defaultModulePermissionName}${defaultAcademicPermissionName}Dashboard`,
+  studentAcademic360: `${defaultModulePermissionName}${defaultAcademicPermissionName}Dashboard`,
   academicCalendar: {
     root: `${defaultModulePermissionName}${defaultAcademicPermissionName}Timetable`,
     dashboard: `${defaultAcademicPermissionName}Timetable.TimetableManagement`,
@@ -195,6 +197,15 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKeyName: 'Alt+A+1',
           permissionName: academicPermissions.dashboard,
           icon: menuIconView('mdi:view-dashboard-outline'),
+        },
+        {
+          title: 'Student Academic 360',
+          path: academicPaths.studentAcademic360,
+          _action: 'student-academic-360',
+          shortcutKey: 'Alt+A+2',
+          shortcutKeyName: 'Alt+A+2',
+          permissionName: academicPermissions.studentAcademic360,
+          icon: menuIconView('mdi:account-school-outline'),
         },
         {
           title: 'Curriculum',

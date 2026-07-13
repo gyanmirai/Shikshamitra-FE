@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { IDocument } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
 import { useFormik } from 'formik';
+import { useRef } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -48,7 +49,12 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   data,
   homeworkId,
   onClose,
+  onNext,
+  hasNext,
+  onPrevious,
+  hasPrevious,
 }: IAssignGradeProps) => {
+  const submitAndNextRef = useRef(false);
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
@@ -67,6 +73,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
    * @param onSubmit Handler function that gets called when form is submitted
    */
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       marks: typeof data?.marks === 'number' ? data.marks : '',
       totalMarks: typeof data?.totalMarks === 'number' ? data.totalMarks : '',
@@ -101,7 +108,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             isUpdate ? 'updated' : 'added'
           } successfully for ${data?.studentName ?? 'the student'}.`,
         });
-        onClose(null, true);
+        if (submitAndNextRef.current && hasNext && onNext) {
+          submitAndNextRef.current = false;
+          onNext();
+        } else {
+          submitAndNextRef.current = false;
+          onClose(null, true);
+        }
       } catch (error) {
         console.error('Failed to submit feedback and marks', error);
       }
@@ -173,43 +186,61 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                     </Typography>
                   </Box>
                   <Box sx={{ p: 2 }}>
-                    <Card
-                      variant="outlined"
-                      sx={{
-                        p: 1.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        bgcolor: 'background.paper',
-                        '&:hover': {
-                          bgcolor: 'background.neutral',
-                        },
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        {getFileIconByType(document.type ?? 'txt', 32)}
-                        <Box>
-                          <Typography variant="subtitle2" noWrap sx={{ maxWidth: 200 }}>
-                            {document.name}
-                          </Typography>
-                          {document.size && (
-                            <Typography variant="caption" color="text.secondary">
-                              {document.size}
+                    {data?.submittedDocumentUrl ? (
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          p: 1.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          bgcolor: 'background.paper',
+                          '&:hover': {
+                            bgcolor: 'background.neutral',
+                          },
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          {getFileIconByType(data.originalFileName ?? document.type ?? 'txt', 32)}
+                          <Box>
+                            <Typography variant="subtitle2" noWrap sx={{ maxWidth: 240 }}>
+                              {data.originalFileName || 'Submitted document'}
                             </Typography>
-                          )}
+                            <Typography variant="caption" color="text.secondary">
+                              {data.submissionDate ? `Submitted on ${data.submissionDate}` : 'Uploaded by student'}
+                            </Typography>
+                          </Box>
                         </Box>
-                      </Box>
 
-                      <Tooltip title="Preview">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDownload(document)}
-                          sx={{ color: 'text.secondary' }}
-                        >
-                          <Iconify icon={GlobalIcons.eye} width={20} />
-                        </IconButton>
-                      </Tooltip>
-                    </Card>
+                        <Tooltip title="Preview">
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              handleDownload({
+                                ...document,
+                                name: data.originalFileName || document.name,
+                                url: data.submittedDocumentUrl!,
+                              })
+                            }
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            <Iconify icon={GlobalIcons.eye} width={20} />
+                          </IconButton>
+                        </Tooltip>
+                      </Card>
+                    ) : (
+                      <Box
+                        sx={{
+                          p: 2,
+                          textAlign: 'center',
+                          borderRadius: 1,
+                          bgcolor: 'background.neutral',
+                          color: 'text.secondary',
+                        }}
+                      >
+                        <Typography variant="body2">No submission uploaded yet.</Typography>
+                      </Box>
+                    )}
                   </Box>
                 </Card>
               </Grid>
@@ -335,6 +366,26 @@ I have completed all answers according to the given instructions and provided sc
             <Button
               variant="outlined"
               color="inherit"
+              onClick={onPrevious}
+              disabled={!hasPrevious}
+              size="small"
+              startIcon={<Iconify icon="solar:alt-arrow-left-bold" />}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={onNext}
+              disabled={!hasNext}
+              size="small"
+              endIcon={<Iconify icon="solar:alt-arrow-right-bold" />}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
               onClick={() => {
                 onClose(null, false);
               }}
@@ -344,10 +395,26 @@ I have completed all answers according to the given instructions and provided sc
               Cancel
             </Button>
             <LoadingButton
+              variant="outlined"
+              size="small"
+              disabled={!hasNext}
+              loading={isUpdateLoading || isStatusLoading}
+              onClick={(e: any) => {
+                submitAndNextRef.current = true;
+                formik.handleSubmit(e);
+              }}
+              startIcon={<Iconify icon="solar:double-alt-arrow-right-bold" />}
+            >
+              Submit & Next
+            </LoadingButton>
+            <LoadingButton
               variant="contained"
               size="small"
               loading={isUpdateLoading || isStatusLoading}
-              onClick={(e: any) => formik.handleSubmit(e)}
+              onClick={(e: any) => {
+                submitAndNextRef.current = false;
+                formik.handleSubmit(e);
+              }}
               startIcon={
                 <Iconify
                   icon={data?.feedback ? GlobalIcons.edit : GlobalIcons.submit}

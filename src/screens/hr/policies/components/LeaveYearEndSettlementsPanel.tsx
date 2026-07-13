@@ -26,6 +26,8 @@ import {
   Typography,
   TableContainer,
   CircularProgress,
+  Collapse,
+  IconButton,
 } from '@mui/material';
 import {
   useGetLeaveYearEndSettlementsQuery,
@@ -65,6 +67,7 @@ export function LeaveYearEndSettlementsPanel() {
   const academicYearId = currentYear?.id || '';
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const {
     data: runs = [],
@@ -119,6 +122,7 @@ export function LeaveYearEndSettlementsPanel() {
     try {
       const run = await previewSettlement({ academicYearId }).unwrap();
       setSelectedRunId(run.id);
+      setExpanded(true);
       shikshaMitraToast.success({ message: 'Year-end settlement preview refreshed.' });
     } catch (error: any) {
       shikshaMitraToast.error({
@@ -181,7 +185,7 @@ export function LeaveYearEndSettlementsPanel() {
               </Typography>
             ) : null}
           </Stack>
-          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
             <LoadingButton
               size="small"
               variant="outlined"
@@ -203,103 +207,116 @@ export function LeaveYearEndSettlementsPanel() {
             >
               Finalize
             </LoadingButton>
+            <IconButton size="small" onClick={() => setExpanded(!expanded)}>
+              <Iconify
+                icon={
+                  expanded
+                    ? 'solar:alt-arrow-up-bold-duotone'
+                    : 'solar:alt-arrow-down-bold-duotone'
+                }
+              />
+            </IconButton>
           </Stack>
         </Stack>
 
-        {!academicYearId ? (
-          <Alert severity="warning">Select an academic year.</Alert>
-        ) : loading && !activeRun ? (
-          <Stack alignItems="center" sx={{ py: 2 }}>
-            <CircularProgress size={22} />
-          </Stack>
-        ) : !activeRun ? (
-          <Alert severity="info">No settlement run found.</Alert>
-        ) : (
-          <>
-            {runs.length > 1 ? (
-              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                {runs.map((run) => (
-                  <Chip
-                    key={run.id}
-                    clickable
-                    size="small"
-                    color={run.id === activeRun.id ? 'primary' : 'default'}
-                    variant={run.id === activeRun.id ? 'filled' : 'outlined'}
-                    label={`${run.status} ${run.previewedAt ? new Date(run.previewedAt).toLocaleDateString() : ''}`}
-                    onClick={() => setSelectedRunId(run.id)}
-                  />
-                ))}
+        <Collapse in={expanded}>
+          <Stack spacing={1.25} sx={{ mt: 1.25 }}>
+            {!academicYearId ? (
+              <Alert severity="warning">Select an academic year.</Alert>
+            ) : loading && !activeRun ? (
+              <Stack alignItems="center" sx={{ py: 2 }}>
+                <CircularProgress size={22} />
               </Stack>
-            ) : null}
-
-            <Divider />
-
-            {items.length ? (
-              <TableContainer sx={{ maxHeight: 360 }}>
-                <Table size="small" stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Employee</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell align="right">Accrued</TableCell>
-                      <TableCell align="right">Carry In</TableCell>
-                      <TableCell align="right">Used</TableCell>
-                      <TableCell align="right">Pending</TableCell>
-                      <TableCell align="right">Unused</TableCell>
-                      <TableCell align="right">Carried</TableCell>
-                      <TableCell align="right">Encashed</TableCell>
-                      <TableCell align="right">Amount</TableCell>
-                      <TableCell>Issues</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {items.map((item) => {
-                      const issueLabels = getIssueLabels(item);
-                      return (
-                        <TableRow key={item.id} hover>
-                          <TableCell sx={{ minWidth: 180 }}>
-                            <Stack spacing={0.25}>
-                              <Typography variant="body2" fontWeight={600} noWrap>
-                                {item.employeeName || '-'}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary" noWrap>
-                                {item.employeeCode || item.employeeId}
-                              </Typography>
-                            </Stack>
-                          </TableCell>
-                          <TableCell>
-                            <Label color={statusColor(item.status) as any}>{item.status}</Label>
-                          </TableCell>
-                          <TableCell align="right">{formatDays(item.accruedDays)}</TableCell>
-                          <TableCell align="right">{formatDays(item.carryInDays)}</TableCell>
-                          <TableCell align="right">{formatDays(item.approvedUsedDays)}</TableCell>
-                          <TableCell align="right">{formatDays(item.pendingDays)}</TableCell>
-                          <TableCell align="right">{formatDays(item.unusedDays)}</TableCell>
-                          <TableCell align="right">{formatDays(item.carriedDays)}</TableCell>
-                          <TableCell align="right">{formatDays(item.encashedDays)}</TableCell>
-                          <TableCell align="right">{formatCurrency(item.amount || 0)}</TableCell>
-                          <TableCell sx={{ minWidth: 170 }}>
-                            {issueLabels.length ? (
-                              <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                                {issueLabels.map((label) => (
-                                  <Chip key={label} size="small" label={label} color="warning" />
-                                ))}
-                              </Stack>
-                            ) : (
-                              <Chip size="small" label="Clear" color="success" variant="outlined" />
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+            ) : !activeRun ? (
+              <Alert severity="info">No settlement run found.</Alert>
             ) : (
-              <Alert severity="info">No eligible paid leave settlement items.</Alert>
+              <>
+                {runs.length > 1 ? (
+                  <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mb: 1.25 }}>
+                    {runs.map((run) => (
+                      <Chip
+                        key={run.id}
+                        clickable
+                        size="small"
+                        color={run.id === activeRun.id ? 'primary' : 'default'}
+                        variant={run.id === activeRun.id ? 'filled' : 'outlined'}
+                        label={`${run.status} ${run.previewedAt ? new Date(run.previewedAt).toLocaleDateString() : ''}`}
+                        onClick={() => setSelectedRunId(run.id)}
+                      />
+                    ))}
+                  </Stack>
+                ) : null}
+
+                <Divider />
+
+                {items.length ? (
+                  <TableContainer sx={{ maxHeight: 360 }}>
+                    <Table size="small" stickyHeader>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Employee</TableCell>
+                          <TableCell>Status</TableCell>
+                          <TableCell align="right">Accrued</TableCell>
+                          <TableCell align="right">Carry In</TableCell>
+                          <TableCell align="right">Used</TableCell>
+                          <TableCell align="right">Pending</TableCell>
+                          <TableCell align="right">Unused</TableCell>
+                          <TableCell align="right">Carried</TableCell>
+                          <TableCell align="right">Encashed</TableCell>
+                          <TableCell align="right">Amount</TableCell>
+                          <TableCell>Issues</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {items.map((item) => {
+                          const issueLabels = getIssueLabels(item);
+                          return (
+                            <TableRow key={item.id} hover>
+                              <TableCell sx={{ minWidth: 180 }}>
+                                <Stack spacing={0.25}>
+                                  <Typography variant="body2" fontWeight={600} noWrap>
+                                    {item.employeeName || '-'}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" noWrap>
+                                    {item.employeeCode || item.employeeId}
+                                  </Typography>
+                                </Stack>
+                              </TableCell>
+                              <TableCell>
+                                <Label color={statusColor(item.status) as any}>{item.status}</Label>
+                              </TableCell>
+                              <TableCell align="right">{formatDays(item.accruedDays)}</TableCell>
+                              <TableCell align="right">{formatDays(item.carryInDays)}</TableCell>
+                              <TableCell align="right">{formatDays(item.approvedUsedDays)}</TableCell>
+                              <TableCell align="right">{formatDays(item.pendingDays)}</TableCell>
+                              <TableCell align="right">{formatDays(item.unusedDays)}</TableCell>
+                              <TableCell align="right">{formatDays(item.carriedDays)}</TableCell>
+                              <TableCell align="right">{formatDays(item.encashedDays)}</TableCell>
+                              <TableCell align="right">{formatCurrency(item.amount || 0)}</TableCell>
+                              <TableCell sx={{ minWidth: 170 }}>
+                                {issueLabels.length ? (
+                                  <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                                    {issueLabels.map((label) => (
+                                      <Chip key={label} size="small" label={label} color="warning" />
+                                    ))}
+                                  </Stack>
+                                ) : (
+                                  <Chip size="small" label="Clear" color="success" variant="outlined" />
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                ) : (
+                  <Alert severity="info">No eligible paid leave settlement items.</Alert>
+                )}
+              </>
             )}
-          </>
-        )}
+          </Stack>
+        </Collapse>
       </Stack>
 
       <ConfirmDialog

@@ -388,9 +388,13 @@ export function serializeSchedulePayload(values: IExamFormValues) {
       subjects.push({
         subjectId: sub.subjectId,
         // electiveGroupId: sub.electiveGroupId ?? null,
-        examDate: sub.examDate?.toISOString() ?? null,
-        startTime: combineDateAndTime(sub.examDate, sub.startTime),
-        endTime: combineDateAndTime(sub.examDate, sub.endTime),
+        examDate: sub?.examDate?.toISOString() ?? null,
+        startTime: sub?.startTime?.format?.(dateFormat)
+          ? dateConvertor(sub?.startTime?.format?.(dateFormat))
+          : null,
+        endTime: sub?.endTime?.format?.(dateFormat)
+          ? dateConvertor(sub?.endTime?.format?.(dateFormat))
+          : null,
         gradeScalingId: sub.gradeScalingId ?? null,
         totalMarks: Number(sub.totalMarks),
         passingMarks: Number(sub.passingMarks),

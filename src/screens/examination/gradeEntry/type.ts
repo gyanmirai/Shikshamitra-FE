@@ -75,6 +75,7 @@ export interface IExamMarksQueryParams {
 /** Single student marks item returned by the API */
 export interface IExamMarkItem {
   id: string;
+  studentId: string;
   rollNo: string;
   studentName: string;
   subject?: string;

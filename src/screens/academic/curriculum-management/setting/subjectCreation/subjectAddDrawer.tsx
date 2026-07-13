@@ -222,7 +222,10 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                   <MenuItem value="">None</MenuItem>
                   {subjectIcons.map((icon) => (
                     <MenuItem key={icon.value} value={icon.value}>
-                      {icon.label}
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Iconify icon={icon.icon} width={16} height={16} />
+                        {icon.label}
+                      </Box>
                     </MenuItem>
                   ))}
                 </TextField>
@@ -350,11 +353,11 @@ const subjectCategories = [
 ];
 
 const subjectIcons = [
-  { value: 'book', label: 'Book' },
-  { value: 'calculator', label: 'Calculator' },
-  { value: 'flask', label: 'Flask' },
-  { value: 'monitor', label: 'Monitor' },
-  { value: 'music', label: 'Music' },
-  { value: 'trophy', label: 'Trophy' },
-  { value: 'palette', label: 'Palette' },
+  { value: 'book', label: 'Book', icon: 'lucide:book-open' },
+  { value: 'calculator', label: 'Calculator', icon: 'lucide:calculator' },
+  { value: 'flask', label: 'Flask', icon: 'lucide:flask-conical' },
+  { value: 'monitor', label: 'Monitor', icon: 'lucide:monitor' },
+  { value: 'music', label: 'Music', icon: 'lucide:music' },
+  { value: 'trophy', label: 'Trophy', icon: 'lucide:trophy' },
+  { value: 'palette', label: 'Palette', icon: 'lucide:palette' },
 ];

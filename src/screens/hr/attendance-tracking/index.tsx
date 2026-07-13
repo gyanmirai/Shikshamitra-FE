@@ -361,18 +361,37 @@ const AttendanceTrackingScreen = () => {
 
   const rows = useMemo(() => (data?.items || []) as GroupedAttendanceRegisterRow[], [data?.items]);
   const allDayRows = useMemo(() => rows.flatMap((row) => row.days || []), [rows]);
+  const getDayIdentifier = useCallback((day: AttendanceRegisterRow) =>
+    day.attendanceId || `${day.employeeId}_${day.attendanceDate}`,
+    []
+  );
+
   const selectableDayRows = useMemo(
-    () => allDayRows.filter((row) => row.canEdit && row.attendanceId),
+    () => allDayRows.filter((row) => row.canEdit),
     [allDayRows]
   );
   const selectedRows = useMemo(
-    () => allDayRows.filter((row) => row.attendanceId && selectedIds.includes(row.attendanceId)),
-    [allDayRows, selectedIds]
+    () => allDayRows.filter((row) => selectedIds.includes(getDayIdentifier(row))),
+    [allDayRows, selectedIds, getDayIdentifier]
   );
   const blockedSelectedCount = selectedRows.filter((row) => !row.canEdit).length;
-  const editableSelectedIds = selectedRows
-    .filter((row) => row.canEdit && row.attendanceId)
-    .map((row) => row.attendanceId as string);
+  const editableSelectedIds = useMemo(
+    () =>
+      selectedRows
+        .filter((row) => row.canEdit && row.attendanceId)
+        .map((row) => row.attendanceId as string),
+    [selectedRows]
+  );
+  const editableSelectedEmployeeDates = useMemo(
+    () =>
+      selectedRows
+        .filter((row) => row.canEdit && !row.attendanceId)
+        .map((row) => ({
+          employeeId: row.employeeId,
+          attendanceDate: row.attendanceDate,
+        })),
+    [selectedRows]
+  );
   const summary = data?.summary || {};
   const summaryMetrics = [
     {
@@ -454,7 +473,10 @@ const AttendanceTrackingScreen = () => {
       ? row.attendanceId
         ? { attendanceId: row.attendanceId }
         : { employeeId: row.employeeId, attendanceDate: row.attendanceDate }
-      : { attendanceIds: editableSelectedIds }),
+      : {
+          attendanceIds: editableSelectedIds,
+          employeeDates: editableSelectedEmployeeDates,
+        }),
     statusWire: editableStatusMeta(draft.status).wire,
     inTime: toWireTime(draft.inTime),
     outTime: toWireTime(draft.outTime),
@@ -482,7 +504,7 @@ const AttendanceTrackingScreen = () => {
   };
 
   const saveBulk = async () => {
-    if (!editableSelectedIds.length) {
+    if (!editableSelectedIds.length && !editableSelectedEmployeeDates.length) {
       shikshaMitraToast.error({ message: 'No editable rows selected.' });
       return;
     }
@@ -508,8 +530,8 @@ const AttendanceTrackingScreen = () => {
 
   const getEditableDayIds = (group: GroupedAttendanceRegisterRow) =>
     (group.days || [])
-      .filter((day) => day.canEdit && day.attendanceId)
-      .map((day) => day.attendanceId as string);
+      .filter((day) => day.canEdit)
+      .map((day) => getDayIdentifier(day));
 
   const isGroupSelected = (group: GroupedAttendanceRegisterRow) => {
     const editableIds = getEditableDayIds(group);
@@ -551,12 +573,10 @@ const AttendanceTrackingScreen = () => {
       render: (_value, row) => (
         <Checkbox
           size="small"
-          disabled={!row.canEdit || !row.attendanceId}
-          checked={Boolean(row.attendanceId && selectedIds.includes(row.attendanceId))}
+          disabled={!row.canEdit}
+          checked={Boolean(selectedIds.includes(getDayIdentifier(row)))}
           onChange={(event) => {
-            if (row.attendanceId) {
-              toggleDaySelection(row.attendanceId, event.target.checked);
-            }
+            toggleDaySelection(getDayIdentifier(row), event.target.checked);
           }}
         />
       ),
@@ -811,15 +831,15 @@ const AttendanceTrackingScreen = () => {
           size="small"
           checked={
             selectableDayRows.length > 0 &&
-            selectableDayRows.every((row) => selectedIds.includes(row.attendanceId as string))
+            selectableDayRows.every((row) => selectedIds.includes(getDayIdentifier(row)))
           }
           indeterminate={
             selectedIds.length > 0 &&
-            !selectableDayRows.every((row) => selectedIds.includes(row.attendanceId as string))
+            !selectableDayRows.every((row) => selectedIds.includes(getDayIdentifier(row)))
           }
           onChange={(event) => {
             setSelectedIds(
-              event.target.checked ? selectableDayRows.map((row) => row.attendanceId as string) : []
+              event.target.checked ? selectableDayRows.map((row) => getDayIdentifier(row)) : []
             );
           }}
         />
@@ -1047,7 +1067,7 @@ const AttendanceTrackingScreen = () => {
           </Typography>
           {isBulk && (
             <Typography variant="body2" color="text.secondary">
-              {editableSelectedIds.length} editable selected, {blockedSelectedCount} locked
+              {editableSelectedIds.length + editableSelectedEmployeeDates.length} editable selected, {blockedSelectedCount} locked
               selected.
             </Typography>
           )}
@@ -1337,15 +1357,15 @@ const AttendanceTrackingScreen = () => {
                 variant="contained"
                 size="small"
                 startIcon={<Iconify icon="solar:pen-2-bold" />}
-                disabled={!editableSelectedIds.length}
+                disabled={!editableSelectedIds.length && !editableSelectedEmployeeDates.length}
                 onClick={() => {
                   setDraft({ status: 'Present', inTime: '', outTime: '', remarks: '', reason: '' });
                   setDraftErrors({});
                   setBulkOpen(true);
                 }}
               >
-                {editableSelectedIds.length
-                  ? `Bulk adjust (${editableSelectedIds.length})`
+                {editableSelectedIds.length + editableSelectedEmployeeDates.length
+                  ? `Bulk adjust (${editableSelectedIds.length + editableSelectedEmployeeDates.length})`
                   : 'Bulk adjust'}
               </Button>
             </Stack>

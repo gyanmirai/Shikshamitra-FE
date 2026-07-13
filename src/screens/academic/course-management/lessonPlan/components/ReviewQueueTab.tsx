@@ -1,8 +1,11 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
+
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { DatePicker } from '@mui/x-date-pickers';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -26,6 +29,10 @@ import {
 import type { LessonPlanRow, TeacherDiaryRow } from '../lessonPlanData';
 
 type ReviewTarget = { type: 'plan' | 'diary'; id: string };
+type ReviewDateFilterMode = 'all' | 'day' | 'week' | 'range';
+
+const getWeekStart = (date: Dayjs) => date.startOf('day').subtract((date.day() + 6) % 7, 'day');
+const getWeekEnd = (date: Dayjs) => getWeekStart(date).add(6, 'day');
 
 type ReviewState = {
   target: ReviewTarget | null;
@@ -56,6 +63,7 @@ type ReviewRow = {
 type Props = {
   lessonPlans: LessonPlanRow[];
   diaryEntries: TeacherDiaryRow[];
+  canReviewSubmissions: boolean;
   onApprove: (target: ReviewTarget, comment: string, updateProgress: boolean) => void;
   onReject: (target: ReviewTarget, comment: string) => void;
   onRequestChanges: (target: ReviewTarget, comment: string) => void;
@@ -64,11 +72,16 @@ type Props = {
 const ReviewQueueTab = ({
   lessonPlans,
   diaryEntries,
+  canReviewSubmissions,
   onApprove,
   onReject,
   onRequestChanges,
 }: Props) => {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
+  const [dateFilterMode, setDateFilterMode] = useState<ReviewDateFilterMode>('all');
+  const [filterDate, setFilterDate] = useState<Dayjs | null>(dayjs());
+  const [rangeStart, setRangeStart] = useState<Dayjs | null>(getWeekStart(dayjs()));
+  const [rangeEnd, setRangeEnd] = useState<Dayjs | null>(getWeekEnd(dayjs()));
   const [reviewDialog, setReviewDialog] = useState(false);
   const [review, setReview] = useState<ReviewState>({
     target: null,
@@ -78,6 +91,7 @@ const ReviewQueueTab = ({
   });
 
   const openReview = (target: ReviewTarget, defaultAction: ReviewState['action'] = 'approve') => {
+    if (!canReviewSubmissions) return;
     setReview({ target, action: defaultAction, comment: '', updateProgress: true });
     setReviewDialog(true);
   };
@@ -148,6 +162,39 @@ const ReviewQueueTab = ({
       }),
   ];
 
+  const filteredReviewRows = reviewRows.filter((row) => {
+    const submittedDate = dayjs(row.submittedDate);
+    if (!submittedDate.isValid() || dateFilterMode === 'all') return true;
+
+    if (dateFilterMode === 'day') {
+      return filterDate ? submittedDate.isSame(filterDate, 'day') : true;
+    }
+
+    if (dateFilterMode === 'week') {
+      if (!filterDate) return true;
+      const start = getWeekStart(filterDate);
+      const end = getWeekEnd(filterDate);
+      return (
+        submittedDate.isSame(start, 'day') ||
+        submittedDate.isSame(end, 'day') ||
+        (submittedDate.isAfter(start, 'day') && submittedDate.isBefore(end, 'day'))
+      );
+    }
+
+    const start = rangeStart?.startOf('day');
+    const end = rangeEnd?.endOf('day');
+    if (start && submittedDate.isBefore(start, 'day')) return false;
+    if (end && submittedDate.isAfter(end, 'day')) return false;
+    return true;
+  });
+
+  const clearDateFilter = () => {
+    setDateFilterMode('all');
+    setFilterDate(dayjs());
+    setRangeStart(getWeekStart(dayjs()));
+    setRangeEnd(getWeekEnd(dayjs()));
+  };
+
   const getActionColor = (action: ReviewState['action']) => {
     if (action === 'approve') return 'success';
     if (action === 'reject') return 'error';
@@ -157,22 +204,92 @@ const ReviewQueueTab = ({
   return (
     <Box>
       {/* Toolbar */}
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-        <Typography variant="subtitle1">Review Queue ({reviewRows.length} pending)</Typography>
-        <ToggleButtonGroup
-          value={viewMode}
-          exclusive
-          onChange={(_, v) => v && setViewMode(v)}
-          size="small"
+      <Stack spacing={1.5} sx={{ mb: 2 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="subtitle1">
+            Review Queue ({filteredReviewRows.length}/{reviewRows.length} pending)
+          </Typography>
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(_, v) => v && setViewMode(v)}
+            size="small"
+          >
+            <ToggleButton value="card">
+              <Iconify icon="mdi:view-grid-outline" width={18} />
+            </ToggleButton>
+            <ToggleButton value="table">
+              <Iconify icon="mdi:table" width={18} />
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
+
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={1}
+          alignItems={{ xs: 'stretch', md: 'center' }}
         >
-          <ToggleButton value="card">
-            <Iconify icon="mdi:view-grid-outline" width={18} />
-          </ToggleButton>
-          <ToggleButton value="table">
-            <Iconify icon="mdi:table" width={18} />
-          </ToggleButton>
-        </ToggleButtonGroup>
+          <ToggleButtonGroup
+            value={dateFilterMode}
+            exclusive
+            onChange={(_, value) => value && setDateFilterMode(value)}
+            size="small"
+            sx={{ flexShrink: 0 }}
+          >
+            <ToggleButton value="all">All</ToggleButton>
+            <ToggleButton value="day">Day</ToggleButton>
+            <ToggleButton value="week">Week</ToggleButton>
+            <ToggleButton value="range">Range</ToggleButton>
+          </ToggleButtonGroup>
+
+          {(dateFilterMode === 'day' || dateFilterMode === 'week') && (
+            <DatePicker
+              label={dateFilterMode === 'day' ? 'Review date' : 'Week of'}
+              value={filterDate}
+              onChange={setFilterDate}
+              format="DD/MM/YYYY"
+              slotProps={{ textField: { size: 'small', sx: { minWidth: 180 } } }}
+            />
+          )}
+
+          {dateFilterMode === 'range' && (
+            <>
+              <DatePicker
+                label="From"
+                value={rangeStart}
+                onChange={setRangeStart}
+                format="DD/MM/YYYY"
+                slotProps={{ textField: { size: 'small', sx: { minWidth: 160 } } }}
+              />
+              <DatePicker
+                label="To"
+                value={rangeEnd}
+                onChange={setRangeEnd}
+                format="DD/MM/YYYY"
+                slotProps={{ textField: { size: 'small', sx: { minWidth: 160 } } }}
+              />
+            </>
+          )}
+
+          <Button
+            size="small"
+            variant="text"
+            color="inherit"
+            startIcon={<Iconify icon="mdi:filter-remove-outline" />}
+            onClick={clearDateFilter}
+            disabled={dateFilterMode === 'all'}
+            sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}
+          >
+            Clear
+          </Button>
+        </Stack>
       </Stack>
+
+      {!canReviewSubmissions && reviewRows.length > 0 && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Review actions are available only to Admin or Coordinator roles.
+        </Alert>
+      )}
 
       {reviewRows.length === 0 && (
         <Card sx={{ p: 4, textAlign: 'center' }}>
@@ -186,8 +303,24 @@ const ReviewQueueTab = ({
         </Card>
       )}
 
+      {reviewRows.length > 0 && filteredReviewRows.length === 0 && (
+        <Card sx={{ p: 4, textAlign: 'center' }}>
+          <Iconify
+            icon="mdi:calendar-search-outline"
+            width={48}
+            sx={{ color: 'text.disabled', mb: 1 }}
+          />
+          <Typography variant="h6" color="text.secondary">
+            No submissions match this date filter
+          </Typography>
+          <Typography variant="body2" color="text.disabled">
+            Try another day, week, or date range.
+          </Typography>
+        </Card>
+      )}
+
       {/* Card View */}
-      {viewMode === 'card' && reviewRows.length > 0 && (
+      {viewMode === 'card' && filteredReviewRows.length > 0 && (
         <Box
           sx={{
             display: 'grid',
@@ -195,7 +328,7 @@ const ReviewQueueTab = ({
             gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', xl: 'repeat(3, 1fr)' },
           }}
         >
-          {reviewRows.map((row) => (
+          {filteredReviewRows.map((row) => (
             <Card key={row.id} variant="outlined" sx={{ borderRadius: 2 }}>
               <CardContent sx={{ pb: 1 }}>
                 {/* Header */}
@@ -298,44 +431,48 @@ const ReviewQueueTab = ({
                 )}
               </CardContent>
 
-              <Divider />
-              <CardActions sx={{ px: 2, py: 1, gap: 1 }}>
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="success"
-                  onClick={() => openReview({ type: row.targetType, id: row.id }, 'approve')}
-                >
-                  Approve
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="warning"
-                  onClick={() => openReview({ type: row.targetType, id: row.id }, 'changes')}
-                >
-                  Request Changes
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  onClick={() => openReview({ type: row.targetType, id: row.id }, 'reject')}
-                >
-                  Reject
-                </Button>
-              </CardActions>
+              {canReviewSubmissions && (
+                <>
+                  <Divider />
+                  <CardActions sx={{ px: 2, py: 1, gap: 1 }}>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="success"
+                      onClick={() => openReview({ type: row.targetType, id: row.id }, 'approve')}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="warning"
+                      onClick={() => openReview({ type: row.targetType, id: row.id }, 'changes')}
+                    >
+                      Request Changes
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      onClick={() => openReview({ type: row.targetType, id: row.id }, 'reject')}
+                    >
+                      Reject
+                    </Button>
+                  </CardActions>
+                </>
+              )}
             </Card>
           ))}
         </Box>
       )}
 
       {/* Table View */}
-      {viewMode === 'table' && reviewRows.length > 0 && (
+      {viewMode === 'table' && filteredReviewRows.length > 0 && (
         <CustomizableTable
           tableId="review-queue-table"
           tableTitle="Review Queue"
-          data={reviewRows}
+          data={filteredReviewRows}
           columns={[
             { id: 'teacherName', label: 'Teacher', minWidth: 160, sticky: true },
             {
@@ -415,44 +552,54 @@ const ReviewQueueTab = ({
                 />
               ),
             },
-            {
-              id: 'actions',
-              label: 'Actions',
-              minWidth: 200,
-              align: 'center' as const,
-              isFilter: false,
-              isSort: false,
-              sticky: true,
-              stickyPosition: 'right' as const,
-              render: (_: any, row: any) => (
-                <Stack direction="row" spacing={0.5} justifyContent="center">
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="success"
-                    onClick={() => openReview({ type: row.targetType, id: row.id }, 'approve')}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="warning"
-                    onClick={() => openReview({ type: row.targetType, id: row.id }, 'changes')}
-                  >
-                    Changes
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="error"
-                    onClick={() => openReview({ type: row.targetType, id: row.id }, 'reject')}
-                  >
-                    Reject
-                  </Button>
-                </Stack>
-              ),
-            },
+            ...(canReviewSubmissions
+              ? [
+                  {
+                    id: 'actions',
+                    label: 'Actions',
+                    minWidth: 200,
+                    align: 'center' as const,
+                    isFilter: false,
+                    isSort: false,
+                    sticky: true,
+                    stickyPosition: 'right' as const,
+                    render: (_: any, row: any) => (
+                      <Stack direction="row" spacing={0.5} justifyContent="center">
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="success"
+                          onClick={() =>
+                            openReview({ type: row.targetType, id: row.id }, 'approve')
+                          }
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="warning"
+                          onClick={() =>
+                            openReview({ type: row.targetType, id: row.id }, 'changes')
+                          }
+                        >
+                          Changes
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          onClick={() =>
+                            openReview({ type: row.targetType, id: row.id }, 'reject')
+                          }
+                        >
+                          Reject
+                        </Button>
+                      </Stack>
+                    ),
+                  },
+                ]
+              : []),
           ]}
         />
       )}

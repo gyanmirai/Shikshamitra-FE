@@ -2931,7 +2931,7 @@ export default function EmployeeOnboardingScreen() {
           return (
             <Box
               data-testid="employee-onboarding-row-details"
-              sx={{ display: 'flex', justifyContent: 'flex-end' }}
+              sx={{ display: 'flex', justifyContent: 'flex-start' }}
             >
               <ThreeDotsActions
                 showViewIcon
