@@ -1,7 +1,9 @@
 'use client';
 
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmStaffLookupDto,
+  AdmissionCrmOperationsQueueItemDto,
   AdmissionCrmOperationsSavedViewDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
@@ -10,6 +12,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import BookmarkAddOutlined from '@mui/icons-material/BookmarkAddOutlined';
 import DeleteOutlineRounded from '@mui/icons-material/DeleteOutlineRounded';
 import {
@@ -18,21 +21,13 @@ import {
   Alert,
   Stack,
   Paper,
-  Table,
   Button,
   Switch,
   Divider,
   MenuItem,
-  TableRow,
   TextField,
-  TableBody,
-  TableCell,
-  TableHead,
   Typography,
   Autocomplete,
-  LinearProgress,
-  TableContainer,
-  TablePagination,
   FormControlLabel,
 } from '@mui/material';
 import {
@@ -49,11 +44,6 @@ import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
 import { IntegrationCapabilitiesPanel } from './integration-capabilities-panel';
-import {
-  enrollmentTableSx,
-  enrollmentActionCellSx,
-  enrollmentActionHeaderSx,
-} from './enrollment-table-styles';
 
 import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
 
@@ -79,6 +69,13 @@ const dateFormatter = new Intl.DateTimeFormat('en-IN', {
   month: 'short',
   year: 'numeric',
 });
+
+const formatQueueDate = (value: unknown) => {
+  if (!value) return '—';
+
+  const date = new Date(value as string | number | Date);
+  return Number.isNaN(date.getTime()) ? '—' : dateFormatter.format(date);
+};
 
 const queueLabels: Record<AdmissionCrmOperationsQueueType, string> = {
   [AdmissionCrmOperationsQueueType.UnassignedExam]: 'Unassigned Exams',
@@ -189,6 +186,111 @@ export function OperationsQueueWorkspace({
     [allowedQueues, summaryQuery.data?.queues]
   );
 
+  const columns = useMemo<IColumn[]>(
+    () => [
+      {
+        id: 'applicantName',
+        label: 'Applicant',
+        width: 230,
+        minWidth: 210,
+        sticky: true,
+        stickyPosition: 'left',
+        stickyOnMobile: false,
+        isSort: false,
+        isFilter: false,
+        render: (value) => (
+          <Typography variant="subtitle2" noWrap>
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'title',
+        label: 'Action Required',
+        width: 360,
+        minWidth: 280,
+        isSort: false,
+        isFilter: false,
+        render: (value, row) => {
+          const item = row as AdmissionCrmOperationsQueueItemDto;
+          return (
+            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+              <Typography variant="body2" noWrap>
+                {value}
+              </Typography>
+              {item.details && (
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {item.details}
+                </Typography>
+              )}
+            </Stack>
+          );
+        },
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        width: 210,
+        minWidth: 180,
+        isSort: false,
+        isFilter: false,
+        render: (value, row) => {
+          const item = row as AdmissionCrmOperationsQueueItemDto;
+          return (
+            <Stack direction="row" gap={0.5} alignItems="center">
+              <Chip size="small" variant="outlined" label={value} />
+              {item.isUrgent && <Chip size="small" color="warning" label="Urgent" />}
+            </Stack>
+          );
+        },
+      },
+      {
+        id: 'ageDays',
+        label: 'Age',
+        width: 100,
+        minWidth: 90,
+        isSort: false,
+        isFilter: false,
+        render: (value) => `${value} days`,
+      },
+      {
+        id: 'dueAt',
+        label: 'Due',
+        width: 135,
+        minWidth: 125,
+        isSort: false,
+        isFilter: false,
+        render: formatQueueDate,
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        width: 80,
+        minWidth: 72,
+        sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
+        isSort: false,
+        isFilter: false,
+        headerSx: { px: 1.5 },
+        cellSx: { px: 1.5 },
+        render: (_value, row) => {
+          const item = row as AdmissionCrmOperationsQueueItemDto;
+          return (
+            <ThreeDotsActions
+              placement="right-top"
+              showViewIcon
+              viewLabel="Review Applicant"
+              handleViewClick={() => openApplicant(item.leadId)}
+              showThreeDots={false}
+            />
+          );
+        },
+      },
+    ],
+    [openApplicant]
+  );
+
   const applySavedView = (savedView: AdmissionCrmOperationsSavedViewDto) => {
     if (!allowedQueues.includes(savedView.queueType)) {
       shikshaMitraToast.error({
@@ -272,14 +374,6 @@ export function OperationsQueueWorkspace({
       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
         <Stack spacing={1.25}>
           <Stack direction={{ xs: 'column', lg: 'row' }} gap={1.25} alignItems={{ lg: 'center' }}>
-            <TextField
-              size="small"
-              label="Search this queue"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              autoComplete="off"
-              sx={{ minWidth: { lg: 240 } }}
-            />
             <Autocomplete
               size="small"
               options={staffQuery.data || []}
@@ -390,106 +484,53 @@ export function OperationsQueueWorkspace({
         </Stack>
       </Paper>
 
-      <Paper variant="outlined" sx={{ borderRadius: 1, overflow: 'hidden' }}>
-        {queueQuery.isFetching && <LinearProgress aria-label="Loading operations queue" />}
-        {queueQuery.isError ? (
-          <Alert
-            severity="error"
-            action={
-              <Button color="inherit" size="small" onClick={() => queueQuery.refetch()}>
-                Retry
-              </Button>
-            }
-            sx={{ m: 1.5 }}
-          >
-            This operations queue is unavailable.
-          </Alert>
-        ) : (
-          <TableContainer>
-            <Table stickyHeader size="small" sx={enrollmentTableSx}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Applicant</TableCell>
-                  <TableCell>Action Required</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Age</TableCell>
-                  <TableCell>Due</TableCell>
-                  <TableCell align="right" sx={enrollmentActionHeaderSx}>
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {(queueQuery.data?.items || []).map((item) => (
-                  <TableRow key={item.key} hover>
-                    <TableCell>
-                      <Typography variant="subtitle2">{item.applicantName}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">{item.title}</Typography>
-                      {item.details && (
-                        <Typography variant="caption" color="text.primary">
-                          {item.details}
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" gap={0.5} alignItems="center">
-                        <Chip
-                          size="small"
-                          variant="outlined"
-                          label={item.status}
-                          sx={{ color: 'text.primary', borderColor: 'text.primary' }}
-                        />
-                        {item.isUrgent && (
-                          <Chip
-                            size="small"
-                            variant="outlined"
-                            label="Urgent"
-                            sx={{ color: 'text.primary', borderColor: 'warning.darker' }}
-                          />
-                        )}
-                      </Stack>
-                    </TableCell>
-                    <TableCell>{item.ageDays} days</TableCell>
-                    <TableCell>
-                      {item.dueAt ? dateFormatter.format(new Date(item.dueAt)) : '—'}
-                    </TableCell>
-                    <TableCell align="right" sx={enrollmentActionCellSx}>
-                      <ThreeDotsActions
-                        showViewIcon
-                        viewLabel="Review Applicant"
-                        handleViewClick={() => openApplicant(item.leadId)}
-                        showThreeDots={false}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!queueQuery.isFetching && !queueQuery.data?.items.length && (
-                  <TableRow>
-                    <TableCell colSpan={6}>
-                      <Box sx={{ py: 5, textAlign: 'center' }}>
-                        <Typography variant="subtitle2">Queue cleared</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          No applicants currently need action in this queue.
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-        <TablePagination
-          component="div"
-          count={queueQuery.data?.totalCount || 0}
+      {queueQuery.isError ? (
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={() => queueQuery.refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          This operations queue is unavailable.
+        </Alert>
+      ) : (
+        <CustomizableTable
+          tableId={`student-enrollment-operations-${selectedQueue}`}
+          tableTitle={queueLabels[selectedQueue]}
+          columns={columns}
+          data={queueQuery.data?.items || []}
+          isLoading={queueQuery.isLoading}
+          serverSide
+          serverSidePagination
+          serverSideSearch
+          serverSideFilter
+          searchTerm={search}
+          defaultSearchTerm={search}
+          searchFieldProps={{ placeholder: 'Search this queue...' }}
+          totalCount={queueQuery.data?.totalCount || 0}
           page={page}
-          onPageChange={(_, nextPage) => updateState({ page: nextPage + 1 }, 'push')}
           rowsPerPage={pageSize}
+          defaultRowsPerPage={pageSize}
           rowsPerPageOptions={[pageSize]}
+          onServerSearch={setSearch}
+          onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
+          noDataText={
+            <Stack spacing={0.5} alignItems="center">
+              <Typography variant="subtitle2">Queue cleared</Typography>
+              <Typography variant="body2" color="text.secondary">
+                No applicants currently need action in this queue.
+              </Typography>
+            </Stack>
+          }
+          rowProps={(row) => ({
+            'data-testid': 'student-enrollment-operations-row',
+            'data-queue-key': row.key,
+          })}
+          tableContainerProps={{ sx: { minHeight: 360 } }}
         />
-      </Paper>
+      )}
 
       {showOperationsUtilities && (
         <Stack spacing={1.5}>

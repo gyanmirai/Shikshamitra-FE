@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmLeadDto,
   CreateAdmissionCrmLeadDto,
@@ -9,13 +10,14 @@ import type {
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { useMemo, useState, useEffect } from 'react';
 import AddRounded from '@mui/icons-material/AddRounded';
 import { shikshaMitraToast } from 'src/components/toast';
 import EventRounded from '@mui/icons-material/EventRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import CustomizableTable from 'src/components/customizabaleTable';
 import ViewColumnRounded from '@mui/icons-material/ViewColumnRounded';
 import ReceiptLongRounded from '@mui/icons-material/ReceiptLongRounded';
 import FormatListBulletedRounded from '@mui/icons-material/FormatListBulletedRounded';
@@ -26,7 +28,6 @@ import {
   Alert,
   Stack,
   Paper,
-  Table,
   Button,
   Dialog,
   Select,
@@ -35,11 +36,7 @@ import {
   Checkbox,
   MenuItem,
   MenuList,
-  TableRow,
   TextField,
-  TableBody,
-  TableCell,
-  TableHead,
   Typography,
   InputLabel,
   DialogTitle,
@@ -49,8 +46,6 @@ import {
   DialogContent,
   DialogActions,
   LinearProgress,
-  TableContainer,
-  TablePagination,
   FormControlLabel,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -77,11 +72,6 @@ import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
 import {
-  enrollmentTableSx,
-  enrollmentActionCellSx,
-  enrollmentActionHeaderSx,
-} from './enrollment-table-styles';
-import {
   getAdmissionCrmLeadName,
   admissionCrmStageColors,
   getAdmissionCrmStageLabel,
@@ -106,6 +96,11 @@ const channels = Object.values(AdmissionInquiryChannel).filter(
 const priorities = Object.values(AdmissionCrmLeadPriority).filter(
   (value): value is AdmissionCrmLeadPriority => typeof value === 'number'
 );
+
+const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  return filter ? Number(filter.value) : undefined;
+};
 
 const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
   [AdmissionCrmLeadPriority.None]: 'Not set',
@@ -279,9 +274,12 @@ export function PipelineWorkspace() {
   const [bulkReason, setBulkReason] = useState('');
 
   useEffect(() => {
+    if ((state.view || 'list') === 'list') {
+      return undefined;
+    }
     const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
     return () => window.clearTimeout(timer);
-  }, [search]);
+  }, [search, state.view]);
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedStaffSearch(staffSearch.trim()), 300);
     return () => window.clearTimeout(timer);
@@ -347,12 +345,273 @@ export function PipelineWorkspace() {
     state.stage != null && stages.some((stage) => stage.systemStage === state.stage)
       ? state.stage
       : '';
-  const leads = leadsQuery.data?.items || [];
+  const leads = useMemo(() => leadsQuery.data?.items || [], [leadsQuery.data?.items]);
   const selectedLeadSet = useMemo(() => new Set(selectedLeadIds), [selectedLeadIds]);
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
-  const ownerName = (lead: AdmissionCrmLeadDto) =>
-    (staffQuery.data || []).find((staff) => staff.id === lead.ownerUserId)?.displayName ||
-    (lead.ownerUserId ? 'Assigned staff' : 'Unassigned');
+  const ownerName = useCallback(
+    (lead: AdmissionCrmLeadDto) =>
+      (staffQuery.data || []).find((staff) => staff.id === lead.ownerUserId)?.displayName ||
+      (lead.ownerUserId ? 'Assigned staff' : 'Unassigned'),
+    [staffQuery.data]
+  );
+
+  const tableFilters = useMemo<IParams['filters']>(
+    () => [
+      ...(state.stage == null
+        ? []
+        : [
+            {
+              column: 'stage',
+              type: 'equals',
+              value: state.stage,
+              valueType: 'enum',
+              label: 'Stage',
+              displayValue: getAdmissionCrmStageLabel(state.stage as AdmissionInquiryStage),
+            },
+          ]),
+      ...(state.channel == null
+        ? []
+        : [
+            {
+              column: 'channel',
+              type: 'equals',
+              value: state.channel,
+              valueType: 'enum',
+              label: 'Channel',
+              displayValue: getAdmissionCrmChannelLabel(state.channel as AdmissionInquiryChannel),
+            },
+          ]),
+      ...(state.priority == null
+        ? []
+        : [
+            {
+              column: 'priority',
+              type: 'equals',
+              value: state.priority,
+              valueType: 'enum',
+              label: 'Priority',
+              displayValue: priorityLabels[state.priority as AdmissionCrmLeadPriority],
+            },
+          ]),
+    ],
+    [state.channel, state.priority, state.stage]
+  );
+
+  const columns = useMemo<IColumn[]>(
+    () => [
+      {
+        id: 'selection',
+        label: '',
+        width: 56,
+        minWidth: 56,
+        maxWidth: 56,
+        sticky: true,
+        stickyPosition: 'left',
+        stickyOnMobile: false,
+        isSort: false,
+        isFilter: false,
+        excludeFromExport: true,
+        renderColumn: () => (
+          <Checkbox
+            checked={leads.length > 0 && leads.every((lead) => selectedLeadSet.has(lead.id))}
+            indeterminate={
+              selectedLeadIds.length > 0 && !leads.every((lead) => selectedLeadSet.has(lead.id))
+            }
+            onChange={(_, checked) =>
+              setSelectedLeadIds(checked ? leads.map((lead) => lead.id) : [])
+            }
+            inputProps={{ 'aria-label': 'Select visible inquiry leads' }}
+            size="small"
+          />
+        ),
+        render: (_value, row) => {
+          const lead = row as AdmissionCrmLeadDto;
+          return (
+            <Checkbox
+              checked={selectedLeadSet.has(lead.id)}
+              onClick={(event) => event.stopPropagation()}
+              onChange={() =>
+                setSelectedLeadIds((current) =>
+                  current.includes(lead.id)
+                    ? current.filter((id) => id !== lead.id)
+                    : [...current, lead.id]
+                )
+              }
+              inputProps={{ 'aria-label': `Select ${getAdmissionCrmLeadName(lead)}` }}
+              size="small"
+            />
+          );
+        },
+      },
+      {
+        id: 'applicant',
+        label: 'Applicant',
+        width: 250,
+        minWidth: 220,
+        sticky: true,
+        stickyPosition: 'left',
+        stickyOnMobile: false,
+        isSort: false,
+        isFilter: false,
+        render: (_value, row) => {
+          const lead = row as AdmissionCrmLeadDto;
+          return (
+            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle2" noWrap>
+                {getAdmissionCrmLeadName(lead)}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {lead.primaryContactNo || lead.email || 'No contact'}
+              </Typography>
+            </Stack>
+          );
+        },
+      },
+      {
+        id: 'stage',
+        label: 'Stage',
+        width: 155,
+        minWidth: 145,
+        filterType: 'enum',
+        enumOptions: stages.map((stage) => ({
+          value: stage.systemStage,
+          label: stage.stageName,
+        })),
+        isSort: false,
+        render: (value) => (
+          <Chip
+            size="small"
+            label={getAdmissionCrmStageLabel(value as AdmissionInquiryStage)}
+            color={admissionCrmStageColors[value as AdmissionInquiryStage]}
+          />
+        ),
+      },
+      {
+        id: 'channel',
+        label: 'Channel',
+        width: 155,
+        minWidth: 140,
+        filterType: 'enum',
+        enumOptions: channels.map((channel) => ({
+          value: channel,
+          label: getAdmissionCrmChannelLabel(channel),
+        })),
+        isSort: false,
+        render: (value) => getAdmissionCrmChannelLabel(value as AdmissionInquiryChannel),
+      },
+      {
+        id: 'admissionIntent',
+        label: 'Intent',
+        width: 220,
+        minWidth: 180,
+        isSort: false,
+        isFilter: false,
+        render: (value, row) => {
+          const lead = row as AdmissionCrmLeadDto;
+          return lead.desiredClassName || value;
+        },
+      },
+      {
+        id: 'ownerUserId',
+        label: 'Owner',
+        width: 170,
+        minWidth: 150,
+        isSort: false,
+        isFilter: false,
+        render: (_value, row) => ownerName(row as AdmissionCrmLeadDto),
+      },
+      {
+        id: 'priority',
+        label: 'Priority',
+        width: 125,
+        minWidth: 115,
+        filterType: 'enum',
+        enumOptions: priorities.map((priority) => ({
+          value: priority,
+          label: priorityLabels[priority],
+        })),
+        isSort: false,
+        render: (value) => priorityLabels[value as AdmissionCrmLeadPriority],
+      },
+      {
+        id: 'leadScore',
+        label: 'Score',
+        width: 90,
+        minWidth: 80,
+        align: 'right',
+        isSort: false,
+        isFilter: false,
+      },
+      {
+        id: 'lastActivityTime',
+        label: 'Last Activity',
+        width: 150,
+        minWidth: 140,
+        isSort: false,
+        isFilter: false,
+        render: (value) => dayjs(value).format('DD MMM, HH:mm'),
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        width: 88,
+        minWidth: 80,
+        sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
+        isSort: false,
+        isFilter: false,
+        headerSx: { px: 1.5 },
+        cellSx: { px: 1.5 },
+        render: (_value, row) => {
+          const lead = row as AdmissionCrmLeadDto;
+          const canSchedule =
+            hasGrantedPermission(permissions, actionPermissions.scheduleExam) && isExamReady(lead);
+          const canIssueForm =
+            hasGrantedPermission(permissions, actionPermissions.issueRegistrationForm) &&
+            !lead.registrationFormNumber;
+          return (
+            <ThreeDotsActions
+              placement="right-top"
+              showViewIcon
+              viewLabel="Open Applicant"
+              handleViewClick={() => openApplicant(lead.id)}
+              showThreeDots={canSchedule || canIssueForm}
+              actions={({ popover }) => (
+                <MenuList>
+                  {canSchedule && (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        setScheduleLead(lead);
+                      }}
+                    >
+                      <EventRounded fontSize="small" />
+                      Schedule Exam
+                    </MenuItem>
+                  )}
+                  {canIssueForm && (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        setRegistrationLead(lead);
+                        setRegistrationFormNumber('');
+                        setRegistrationFormAmount('250');
+                      }}
+                    >
+                      <ReceiptLongRounded fontSize="small" />
+                      Issue Registration Form
+                    </MenuItem>
+                  )}
+                </MenuList>
+              )}
+            />
+          );
+        },
+      },
+    ],
+    [leads, openApplicant, ownerName, permissions, selectedLeadIds.length, selectedLeadSet, stages]
+  );
 
   const resetQuickInquiry = () => {
     setQuickForm(emptyQuickInquiry);
@@ -561,56 +820,63 @@ export function PipelineWorkspace() {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+              gridTemplateColumns:
+                state.view === 'board'
+                  ? 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))'
+                  : { xs: '1fr', sm: 'minmax(240px, 320px)' },
               gap: 1,
               alignItems: 'center',
             }}
           >
-            <TextField
-              size="small"
-              label="Search applicants"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              autoComplete="off"
-            />
-            <TextField
-              select
-              size="small"
-              label="Stage"
-              value={stageSelectValue}
-              onChange={(event) =>
-                updateState({
-                  stage: event.target.value === '' ? undefined : Number(event.target.value),
-                  page: 1,
-                })
-              }
-            >
-              <MenuItem value="">All stages</MenuItem>
-              {stages.map((stageItem) => (
-                <MenuItem key={stageItem.id} value={stageItem.systemStage}>
-                  {stageItem.stageName}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              select
-              size="small"
-              label="Channel"
-              value={state.channel ?? ''}
-              onChange={(event) =>
-                updateState({
-                  channel: event.target.value === '' ? undefined : Number(event.target.value),
-                  page: 1,
-                })
-              }
-            >
-              <MenuItem value="">All channels</MenuItem>
-              {channels.map((channel) => (
-                <MenuItem key={channel} value={channel}>
-                  {getAdmissionCrmChannelLabel(channel)}
-                </MenuItem>
-              ))}
-            </TextField>
+            {state.view === 'board' && (
+              <>
+                <TextField
+                  size="small"
+                  label="Search applicants"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  autoComplete="off"
+                />
+                <TextField
+                  select
+                  size="small"
+                  label="Stage"
+                  value={stageSelectValue}
+                  onChange={(event) =>
+                    updateState({
+                      stage: event.target.value === '' ? undefined : Number(event.target.value),
+                      page: 1,
+                    })
+                  }
+                >
+                  <MenuItem value="">All stages</MenuItem>
+                  {stages.map((stageItem) => (
+                    <MenuItem key={stageItem.id} value={stageItem.systemStage}>
+                      {stageItem.stageName}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  size="small"
+                  label="Channel"
+                  value={state.channel ?? ''}
+                  onChange={(event) =>
+                    updateState({
+                      channel: event.target.value === '' ? undefined : Number(event.target.value),
+                      page: 1,
+                    })
+                  }
+                >
+                  <MenuItem value="">All channels</MenuItem>
+                  {channels.map((channel) => (
+                    <MenuItem key={channel} value={channel}>
+                      {getAdmissionCrmChannelLabel(channel)}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </>
+            )}
             <Autocomplete
               size="small"
               options={staffQuery.data || []}
@@ -622,25 +888,27 @@ export function PipelineWorkspace() {
               isOptionEqualToValue={(option, value) => option.id === value.id}
               renderInput={(params) => <TextField {...params} label="Owner" />}
             />
-            <TextField
-              select
-              size="small"
-              label="Priority"
-              value={state.priority ?? ''}
-              onChange={(event) =>
-                updateState({
-                  priority: event.target.value === '' ? undefined : Number(event.target.value),
-                  page: 1,
-                })
-              }
-            >
-              <MenuItem value="">All priorities</MenuItem>
-              {priorities.map((priority) => (
-                <MenuItem key={priority} value={priority}>
-                  {priorityLabels[priority]}
-                </MenuItem>
-              ))}
-            </TextField>
+            {state.view === 'board' && (
+              <TextField
+                select
+                size="small"
+                label="Priority"
+                value={state.priority ?? ''}
+                onChange={(event) =>
+                  updateState({
+                    priority: event.target.value === '' ? undefined : Number(event.target.value),
+                    page: 1,
+                  })
+                }
+              >
+                <MenuItem value="">All priorities</MenuItem>
+                {priorities.map((priority) => (
+                  <MenuItem key={priority} value={priority}>
+                    {priorityLabels[priority]}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
           </Box>
           <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
             <ToggleButtonGroup
@@ -747,164 +1015,72 @@ export function PipelineWorkspace() {
         </Stack>
       )}
 
-      {(state.view || 'list') === 'list' && (
-        <Paper variant="outlined" sx={{ borderRadius: 1, overflow: 'hidden' }}>
-          {leadsQuery.isFetching && <LinearProgress aria-label="Loading inquiry leads" />}
-          {leadsQuery.isError ? (
-            <Alert
-              severity="error"
-              action={
-                <Button size="small" color="inherit" onClick={() => leadsQuery.refetch()}>
-                  Retry
-                </Button>
-              }
-              sx={{ m: 1.5 }}
-            >
-              Inquiry leads are unavailable.
-            </Alert>
-          ) : (
-            <Box sx={{ overflowX: 'auto' }}>
-              <TableContainer>
-                <Table stickyHeader size="small" sx={enrollmentTableSx}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          checked={
-                            leads.length > 0 && leads.every((lead) => selectedLeadSet.has(lead.id))
-                          }
-                          indeterminate={
-                            selectedLeadIds.length > 0 &&
-                            !leads.every((lead) => selectedLeadSet.has(lead.id))
-                          }
-                          onChange={(_, checked) =>
-                            setSelectedLeadIds(checked ? leads.map((lead) => lead.id) : [])
-                          }
-                          inputProps={{ 'aria-label': 'Select visible inquiry leads' }}
-                        />
-                      </TableCell>
-                      <TableCell>Applicant</TableCell>
-                      <TableCell>Stage</TableCell>
-                      <TableCell>Intent</TableCell>
-                      <TableCell>Owner</TableCell>
-                      <TableCell>Score</TableCell>
-                      <TableCell>Last Activity</TableCell>
-                      <TableCell align="right" sx={enrollmentActionHeaderSx}>
-                        Actions
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {leads.map((lead) => {
-                      const canSchedule = can(actionPermissions.scheduleExam) && isExamReady(lead);
-                      const canIssueForm =
-                        can(actionPermissions.issueRegistrationForm) &&
-                        !lead.registrationFormNumber;
-
-                      return (
-                        <TableRow key={lead.id} hover>
-                          <TableCell padding="checkbox">
-                            <Checkbox
-                              checked={selectedLeadSet.has(lead.id)}
-                              onChange={() =>
-                                setSelectedLeadIds((current) =>
-                                  current.includes(lead.id)
-                                    ? current.filter((id) => id !== lead.id)
-                                    : [...current, lead.id]
-                                )
-                              }
-                              inputProps={{
-                                'aria-label': `Select ${getAdmissionCrmLeadName(lead)}`,
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="subtitle2">
-                              {getAdmissionCrmLeadName(lead)}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {lead.primaryContactNo || lead.email || 'No contact'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              size="small"
-                              label={getAdmissionCrmStageLabel(lead.stage)}
-                              color={admissionCrmStageColors[lead.stage]}
-                            />
-                          </TableCell>
-                          <TableCell>{lead.desiredClassName || lead.admissionIntent}</TableCell>
-                          <TableCell>{ownerName(lead)}</TableCell>
-                          <TableCell>{lead.leadScore}</TableCell>
-                          <TableCell>
-                            {dayjs(lead.lastActivityTime).format('DD MMM, HH:mm')}
-                          </TableCell>
-                          <TableCell align="right" sx={enrollmentActionCellSx}>
-                            <ThreeDotsActions
-                              showViewIcon
-                              viewLabel="Open Applicant"
-                              handleViewClick={() => openApplicant(lead.id)}
-                              showThreeDots={canSchedule || canIssueForm}
-                              actions={({ popover }) => (
-                                <MenuList>
-                                  {canSchedule && (
-                                    <MenuItem
-                                      onClick={() => {
-                                        popover.onClose();
-                                        setScheduleLead(lead);
-                                      }}
-                                    >
-                                      <EventRounded fontSize="small" />
-                                      Schedule Exam
-                                    </MenuItem>
-                                  )}
-                                  {canIssueForm && (
-                                    <MenuItem
-                                      onClick={() => {
-                                        popover.onClose();
-                                        setRegistrationLead(lead);
-                                        setRegistrationFormNumber('');
-                                        setRegistrationFormAmount('250');
-                                      }}
-                                    >
-                                      <ReceiptLongRounded fontSize="small" />
-                                      Issue Registration Form
-                                    </MenuItem>
-                                  )}
-                                </MenuList>
-                              )}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    {!leadsQuery.isFetching && !leads.length && (
-                      <TableRow>
-                        <TableCell colSpan={8}>
-                          <Box sx={{ py: 5, textAlign: 'center' }}>
-                            <Typography variant="subtitle2">No matching inquiries</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Change the filters or create a new inquiry.
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          )}
-          <TablePagination
-            component="div"
-            count={leadsQuery.data?.totalCount || 0}
+      {(state.view || 'list') === 'list' &&
+        (leadsQuery.isError ? (
+          <Alert
+            severity="error"
+            action={
+              <Button size="small" color="inherit" onClick={() => leadsQuery.refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Inquiry leads are unavailable.
+          </Alert>
+        ) : (
+          <CustomizableTable
+            tableId="student-enrollment-pipeline"
+            tableTitle="Admissions Pipeline"
+            columns={columns}
+            data={leads}
+            isLoading={leadsQuery.isLoading}
+            serverSide
+            serverSidePagination
+            serverSideSearch
+            serverSideFilter
+            searchTerm={search}
+            defaultSearchTerm={search}
+            searchFieldProps={{
+              placeholder: 'Search applicants...',
+              inputProps: { 'aria-label': 'Search applicants' },
+            }}
+            filters={tableFilters}
+            totalCount={leadsQuery.data?.totalCount || 0}
             page={page}
-            onPageChange={(_, nextPage) => updateState({ page: nextPage + 1 }, 'push')}
             rowsPerPage={pageSize}
+            defaultRowsPerPage={pageSize}
             rowsPerPageOptions={[pageSize]}
+            onServerSearch={(value) => {
+              setSearch(value);
+              setDebouncedSearch(value.trim());
+            }}
+            onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
+            onServerFilter={(filters) =>
+              updateState(
+                {
+                  stage: getLatestEnumFilter(filters, 'stage'),
+                  channel: getLatestEnumFilter(filters, 'channel'),
+                  priority: getLatestEnumFilter(filters, 'priority'),
+                  page: 1,
+                },
+                'push'
+              )
+            }
+            noDataText={
+              <Stack spacing={0.5} alignItems="center">
+                <Typography variant="subtitle2">No matching inquiries</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Change the table filters or create a new inquiry.
+                </Typography>
+              </Stack>
+            }
+            rowProps={(row) => ({
+              'data-testid': 'student-enrollment-pipeline-row',
+              'data-lead-id': row.id,
+            })}
+            tableContainerProps={{ sx: { minHeight: 420 } }}
           />
-        </Paper>
-      )}
+        ))}
 
       <Dialog
         open={quickDialogOpen}
