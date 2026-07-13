@@ -57,7 +57,12 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   data,
   homeworkId,
   onClose,
+  onNext,
+  hasNext,
+  onPrevious,
+  hasPrevious,
 }: IAssignGradeProps) => {
+  const submitAndNextRef = useRef(false);
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
@@ -74,6 +79,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   const templateBtnRef = useRef<HTMLButtonElement>(null);
 
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       marks: typeof data?.marks === 'number' ? data.marks : '',
       totalMarks: typeof data?.totalMarks === 'number' ? data.totalMarks : '',
@@ -108,7 +114,13 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
             data?.studentName ?? 'the student'
           }.`,
         });
-        onClose(null, true);
+        if (submitAndNextRef.current && hasNext && onNext) {
+          submitAndNextRef.current = false;
+          onNext();
+        } else {
+          submitAndNextRef.current = false;
+          onClose(null, true);
+        }
       } catch (error) {
         console.error('Failed to submit feedback and marks', error);
       }
@@ -531,6 +543,26 @@ I have completed all answers as per the instructions.`}
             <Button
               variant="outlined"
               color="inherit"
+              onClick={onPrevious}
+              disabled={!hasPrevious}
+              size="small"
+              startIcon={<Iconify icon="solar:alt-arrow-left-bold" />}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={onNext}
+              disabled={!hasNext}
+              size="small"
+              endIcon={<Iconify icon="solar:alt-arrow-right-bold" />}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
               onClick={() => onClose(null, false)}
               size="small"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -538,10 +570,26 @@ I have completed all answers as per the instructions.`}
               Cancel
             </Button>
             <LoadingButton
+              variant="outlined"
+              size="small"
+              disabled={!hasNext}
+              loading={isUpdateLoading || isStatusLoading}
+              onClick={(e: any) => {
+                submitAndNextRef.current = true;
+                formik.handleSubmit(e);
+              }}
+              startIcon={<Iconify icon="solar:double-alt-arrow-right-bold" />}
+            >
+              Submit & Next
+            </LoadingButton>
+            <LoadingButton
               variant="contained"
               size="small"
               loading={isUpdateLoading || isStatusLoading}
-              onClick={(e: any) => formik.handleSubmit(e)}
+              onClick={(e: any) => {
+                submitAndNextRef.current = false;
+                formik.handleSubmit(e);
+              }}
               startIcon={
                 <Iconify
                   icon={data?.feedback ? GlobalIcons.edit : GlobalIcons.submit}

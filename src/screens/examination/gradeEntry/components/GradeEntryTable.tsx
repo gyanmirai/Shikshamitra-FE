@@ -1,22 +1,31 @@
 import type { LabelColor } from 'src/components/label';
-import type { AttendanceStatus } from 'src/enums/grade-entry-status';
 
 import { Label } from 'src/components/label';
-import { Box, Typography } from '@mui/material';
 import { useMemo, useState, useEffect } from 'react';
-import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetExamMarksQuery } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
+import { Box, Select, Checkbox, MenuItem, TextField, Typography, FormControl } from '@mui/material';
+import {
+  useGetExamMarksQuery,
+} from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
 import {
   ExamGradeStatusType,
   ExamGradeStatusColor,
-  AttendanceStatusColor,
-  AttendanceStatusLabel,
   ExamGradeStatusOptions,
+  AttendanceStatusOptions,
 } from 'src/enums/grade-entry-status';
 
 import type { IExamMarkItem, IGradeEntryTableProps, IExamMarksWorkflowFlags } from '../type';
+
+interface ExtendedGradeEntryTableProps extends IGradeEntryTableProps {
+  onRowsChange?: (rows: IExamMarkItem[]) => void;
+  bulkEditRequest?: {
+    id: number;
+    studentIds: string[];
+    action: 'attendance' | 'marks' | 'remark' | 'clear';
+    value?: number | string;
+  } | null;
+}
 
 const GradeEntryTable = ({
   selectedStudents,
@@ -30,12 +39,14 @@ const GradeEntryTable = ({
   onAllAssignedChange,
   onStatsChange,
   onWorkflowFlagsChange,
-}: IGradeEntryTableProps) => {
+  onRowsChange,
+  bulkEditRequest,
+}: ExtendedGradeEntryTableProps) => {
   const allParamsReady = !!(examId && classId && divisionId && subjectId);
 
   const [query, setQuery] = useState<{ page: number; pageSize: number }>({
     page: 1,
-    pageSize: 10,
+    pageSize: 100, // Show all or larger chunk for fast inline entry
   });
 
   const {
@@ -64,25 +75,148 @@ const GradeEntryTable = ({
       : gradingData;
   }, [gradingData]);
 
-  const tableData = useMemo<IExamMarkItem[]>(() => {
+  const apiRows = useMemo<IExamMarkItem[]>(() => {
     const raw: any[] = targetData?.items ?? [];
     return raw.map((item: any) => ({
       ...item,
       id: item.id ?? item.studentId ?? '',
-      // Normalise field name: the API returns `obtainedMarks`, analytics code reads `marks`
+      studentId: item.studentId ?? item.id ?? '',
       marks: item.obtainedMarks ?? item.marks ?? null,
       passingMarks: item.passingMarks ?? null,
     }));
   }, [targetData]);
 
-  // Notify parent whether all students have marks assigned (status === 1)
+  // Local state for inline edits
+  const [localRows, setLocalRows] = useState<IExamMarkItem[]>([]);
+
+  useEffect(() => {
+    setLocalRows(apiRows);
+  }, [apiRows]);
+
+  useEffect(() => {
+    if (onRowsChange) {
+      onRowsChange(localRows);
+    }
+  }, [localRows, onRowsChange]);
+
+  useEffect(() => {
+    if (!bulkEditRequest) return;
+    const selectedIds = new Set(bulkEditRequest.studentIds);
+    setLocalRows((prev) => {
+      const nextRows = prev.map((row) => {
+        if (!selectedIds.has(row.studentId)) return row;
+        const next = { ...row };
+
+        if (bulkEditRequest.action === 'attendance') {
+          const attendanceStatus = Number(bulkEditRequest.value ?? 0);
+          next.attendanceStatus = attendanceStatus;
+          next.marks = attendanceStatus === 0 ? 0 : null;
+          next.feedback = '';
+          next.grade = attendanceStatus === 0 ? next.grade : 'â€”';
+          next.status = 1;
+        }
+
+        if (bulkEditRequest.action === 'marks') {
+          const marks = Number(bulkEditRequest.value ?? 0);
+          next.attendanceStatus = 0;
+          next.marks = marks;
+          const pct = (marks / next.totalMarks) * 100;
+          next.grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
+          next.status = 1;
+        }
+
+        if (bulkEditRequest.action === 'remark') {
+          next.feedback = String(bulkEditRequest.value ?? '');
+        }
+
+        if (bulkEditRequest.action === 'clear') {
+          next.attendanceStatus = 0;
+          next.marks = null;
+          next.feedback = '';
+          next.grade = 'â€”';
+          next.status = 0;
+        }
+
+        return next;
+      });
+      onRowsChange?.(nextRows);
+      return nextRows;
+    });
+  }, [bulkEditRequest, onRowsChange]);
+
+  // Handle cell edit
+  const handleCellEdit = (studentId: string, field: 'marks' | 'feedback' | 'attendanceStatus', value: any) => {
+    setLocalRows((prev) => {
+      const nextRows = prev.map((row) => {
+        if (row.studentId !== studentId) return row;
+
+        const updatedRow = { ...row, [field]: value };
+        
+        // If marks are edited, automatically calculate grade and status preview
+        if (field === 'marks' || field === 'attendanceStatus') {
+          const isPresent = updatedRow.attendanceStatus === 0;
+          if (isPresent && updatedRow.marks !== null) {
+            const pct = (updatedRow.marks / updatedRow.totalMarks) * 100;
+            updatedRow.grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
+            updatedRow.status = 1; // Assigned
+          } else if (!isPresent) {
+            updatedRow.marks = null;
+            updatedRow.grade = '—';
+            updatedRow.status = 1; // Attendance status saved counts as assigned
+          } else {
+            updatedRow.status = 0; // Pending
+          }
+        }
+
+        return updatedRow;
+      });
+      onRowsChange?.(nextRows);
+      return nextRows;
+    });
+  };
+
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent, studentId: string, colType: 'marks' | 'remarks') => {
+    const studentIds = localRows.map((r) => r.studentId);
+    const currentIndex = studentIds.indexOf(studentId);
+
+    if (e.key === 'Enter' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextIndex = currentIndex + 1;
+      if (nextIndex < studentIds.length) {
+        const nextId = studentIds[nextIndex];
+        const selector = `input[data-student-id="${nextId}"][data-col-type="${colType}"]`;
+        const el = document.querySelector(selector) as HTMLInputElement;
+        el?.focus();
+        el?.select();
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prevIndex = currentIndex - 1;
+      if (prevIndex >= 0) {
+        const prevId = studentIds[prevIndex];
+        const selector = `input[data-student-id="${prevId}"][data-col-type="${colType}"]`;
+        const el = document.querySelector(selector) as HTMLInputElement;
+        el?.focus();
+        el?.select();
+      }
+    } else if (e.key === 'ArrowRight' && colType === 'marks') {
+      const el = document.querySelector(`input[data-student-id="${studentId}"][data-col-type="remarks"]`) as HTMLInputElement;
+      el?.focus();
+    } else if (e.key === 'ArrowLeft' && colType === 'remarks') {
+      const el = document.querySelector(`input[data-student-id="${studentId}"][data-col-type="marks"]`) as HTMLInputElement;
+      el?.focus();
+    }
+  };
+
+  // Notify parent whether all students have marks assigned
   useEffect(() => {
     if (!onAllAssignedChange) return;
-    const allAssigned = tableData.length > 0 && tableData.every((item) => item.status === 1);
+    const allAssigned = localRows.length > 0 && localRows.every((item) => item.status === 1);
     onAllAssignedChange(allAssigned);
-  }, [tableData, onAllAssignedChange]);
+  }, [localRows, onAllAssignedChange]);
 
-  // Emit workflow flags to parent whenever the API response changes
+  // Emit workflow flags to parent
   useEffect(() => {
     if (!onWorkflowFlagsChange) return;
     if (!targetData) {
@@ -107,11 +241,11 @@ const GradeEntryTable = ({
     onWorkflowFlagsChange(flags);
   }, [targetData, onWorkflowFlagsChange]);
 
-  // Compute and emit analytics stats to parent
+  // Compute and emit analytics stats
   useEffect(() => {
     if (!onStatsChange) return;
-    const assigned = tableData.filter((item) => item.status === 1 && item.marks != null);
-    const totalCount = targetData?.totalCount ?? tableData.length;
+    const assigned = localRows.filter((item) => item.status === 1 && item.marks != null);
+    const totalCount = targetData?.totalCount ?? localRows.length;
     const pendingCount = totalCount - assigned.length;
 
     if (assigned.length === 0) {
@@ -133,7 +267,7 @@ const GradeEntryTable = ({
     const highest = Math.max(...markValues);
     const lowest = Math.min(...markValues);
     const average = markValues.reduce((a, b) => a + b, 0) / markValues.length;
-    // Pass = marks >= passingMarks (if available) or >= 33% of totalMarks
+    
     const passItems = assigned.filter((item) => {
       const total = item.totalMarks || 100;
       const threshold = item.passingMarks != null ? item.passingMarks : total * 0.33;
@@ -153,7 +287,7 @@ const GradeEntryTable = ({
       pendingCount,
       totalCount,
     });
-  }, [tableData, targetData, onStatsChange]);
+  }, [localRows, targetData, onStatsChange]);
 
   return (
     <CustomizableTable
@@ -163,15 +297,44 @@ const GradeEntryTable = ({
       isLoading={isLoading || isFetching}
       columns={[
         {
+          id: 'select',
+          label: (
+            <Checkbox
+              size="small"
+              checked={selectedStudents.length === localRows.length && localRows.length > 0}
+              indeterminate={selectedStudents.length > 0 && selectedStudents.length < localRows.length}
+              onChange={(e) => {
+                localRows.forEach((row) => {
+                  const isSelected = selectedStudents.includes(row.studentId);
+                  if (e.target.checked && !isSelected) {
+                    handleSelectStudent(row.studentId);
+                  } else if (!e.target.checked && isSelected) {
+                    handleSelectStudent(row.studentId);
+                  }
+                });
+              }}
+            />
+          ),
+          minWidth: 50,
+          render: (value, row) => (
+            <Checkbox
+              size="small"
+              checked={selectedStudents.includes(row.studentId)}
+              onChange={() => handleSelectStudent(row.studentId)}
+            />
+          ),
+        },
+        {
           id: 'studentName',
           label: 'Student Name/Gr No.',
           sticky: true,
+          stickyPosition: 'left',
           minWidth: 180,
           align: 'left',
           render: (value, row) => (
             <Box>
-              <Typography variant="body2">{value}</Typography>
-              <Typography variant="caption">({row.grNo})</Typography>
+              <Typography variant="body2" fontWeight={600}>{value}</Typography>
+              <Typography variant="caption" color="text.secondary">({row.grNo})</Typography>
             </Box>
           ),
         },
@@ -180,84 +343,104 @@ const GradeEntryTable = ({
           id: 'attendanceStatus',
           label: 'Attendance',
           align: 'left',
-          minWidth: 130,
-          filterType: 'enum',
-          enumOptions: Object.entries(AttendanceStatusLabel).map(([value, label]) => ({
-            label,
-            value: Number(value),
-          })),
-          render: (value: AttendanceStatus) => {
-            if (value == null)
-              return (
-                <Typography variant="caption" color="textSecondary">
-                  —
-                </Typography>
-              );
-            const color = AttendanceStatusColor[value as AttendanceStatus] as LabelColor;
-            const label = AttendanceStatusLabel[value as AttendanceStatus] ?? String(value);
-            return <Label color={color}>{label}</Label>;
-          },
+          minWidth: 140,
+          render: (value, row) => (
+            <FormControl size="small" sx={{ minWidth: 110 }}>
+              <Select
+                value={value ?? 0}
+                disabled={isLocked}
+                onChange={(e) => handleCellEdit(row.studentId, 'attendanceStatus', Number(e.target.value))}
+                sx={{ height: 32, fontSize: '13px' }}
+              >
+                {AttendanceStatusOptions.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value} sx={{ fontSize: '13px' }}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ),
         },
         {
           id: 'totalMarks',
           label: 'Total Marks',
           align: 'left',
-          minWidth: 120,
-          filterType: 'number',
+          minWidth: 100,
         },
         {
-          id: 'obtainedMarks',
+          id: 'marks',
           label: 'Obtained Marks',
           align: 'left',
-          minWidth: 150,
-          filterType: 'number',
-          render: (value, row) =>
-            value == null ? (
-              <Typography variant="subtitle2" color="textSecondary">
-                -
-              </Typography>
-            ) : (
-              <Typography variant="caption" gutterBottom>
-                {value}
-              </Typography>
-            ),
+          minWidth: 130,
+          render: (value, row) => {
+            const isAbsent = row.attendanceStatus !== 0;
+            return (
+              <TextField
+                size="small"
+                type="number"
+                disabled={isLocked || isAbsent}
+                value={value === null ? '' : value}
+                inputProps={{
+                  min: 0,
+                  max: row.totalMarks,
+                  style: { padding: '4px 8px', fontSize: '13px' },
+                  'data-student-id': row.studentId,
+                  'data-col-type': 'marks',
+                }}
+                onChange={(e) => {
+                  const val = e.target.value === '' ? null : Number(e.target.value);
+                  handleCellEdit(row.studentId, 'marks', val);
+                }}
+                onKeyDown={(e) => handleKeyDown(e, row.studentId, 'marks')}
+                error={value !== null && (value < 0 || value > row.totalMarks)}
+                sx={{
+                  width: '90px',
+                  '& .MuiInputBase-root': {
+                    height: 32,
+                  },
+                }}
+              />
+            );
+          },
         },
         {
           id: 'grade',
           label: 'Grade',
-          render: (value, row) =>
-            value === '' || value == null ? (
-              <Typography variant="subtitle2" color="textSecondary">
-                -
-              </Typography>
-            ) : (
-              <Typography variant="caption" gutterBottom>
-                {value}
-              </Typography>
-            ),
+          minWidth: 80,
+          render: (value) => (
+            <Label color={(value === 'F' || value === '—') ? 'error' : 'success'} variant="soft">
+              {value || '—'}
+            </Label>
+          ),
         },
         {
           id: 'feedback',
-          label: 'Remarks',
-          render: (value, row) => (
-            <CustomTooltip title={value || '-'} arrow>
-              <Typography
-                variant="caption"
-                fontSize="13px"
-                noWrap
-                sx={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  display: 'block',
-                  maxWidth: 0,
-                  minWidth: '100%',
+          label: 'Remarks / Feedback',
+          minWidth: 220,
+          render: (value, row) => {
+            const isAbsent = row.attendanceStatus !== 0;
+            return (
+              <TextField
+                size="small"
+                disabled={isLocked || isAbsent}
+                placeholder="Feedback remarks..."
+                value={value || ''}
+                inputProps={{
+                  style: { padding: '4px 8px', fontSize: '13px' },
+                  'data-student-id': row.studentId,
+                  'data-col-type': 'remarks',
                 }}
-              >
-                {value || '-'}
-              </Typography>
-            </CustomTooltip>
-          ),
+                onChange={(e) => handleCellEdit(row.studentId, 'feedback', e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, row.studentId, 'remarks')}
+                sx={{
+                  width: '100%',
+                  '& .MuiInputBase-root': {
+                    height: 32,
+                  },
+                }}
+              />
+            );
+          },
         },
         {
           id: 'status',
@@ -265,9 +448,10 @@ const GradeEntryTable = ({
           align: 'left',
           minWidth: 90,
           sticky: true,
+          stickyPosition: 'right',
           filterType: 'enum',
           enumOptions: ExamGradeStatusOptions,
-          render(value: ExamGradeStatusType, row: any) {
+          render(value: ExamGradeStatusType) {
             const color = ExamGradeStatusColor[value as ExamGradeStatusType] as LabelColor;
             return <Label color={color}>{ExamGradeStatusType[value]}</Label>;
           },
@@ -275,8 +459,9 @@ const GradeEntryTable = ({
         {
           id: 'actions',
           label: 'Action',
-          minWidth: 40,
+          minWidth: 50,
           sticky: true,
+          stickyPosition: 'right',
           align: 'left',
           isFilter: false,
           isSort: false,
@@ -285,7 +470,7 @@ const GradeEntryTable = ({
           },
         },
       ]}
-      data={tableData}
+      data={localRows}
       serverSidePagination
       onServerPagination={(page, rowPerPage) => {
         setQuery({

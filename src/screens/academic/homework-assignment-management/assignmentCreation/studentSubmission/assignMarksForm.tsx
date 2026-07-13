@@ -72,7 +72,12 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   data,
   onClose,
   assignmentId,
+  onNext,
+  hasNext,
+  onPrevious,
+  hasPrevious,
 }: IAssignGradeProps) => {
+  const submitAndNextRef = useRef(false);
   const resolveTotalMarks = (value: unknown): number => {
     const parsed = Number(value);
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
@@ -136,7 +141,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             isUpdate ? 'updated' : 'added'
           } successfully for ${data?.studentName ?? 'the student'}.`,
         });
-        onClose(null, true);
+        if (submitAndNextRef.current && hasNext && onNext) {
+          submitAndNextRef.current = false;
+          onNext();
+        } else {
+          submitAndNextRef.current = false;
+          onClose(null, true);
+        }
       } catch (error) {
         console.error('Failed to submit feedback and marks', error);
       }
@@ -643,6 +654,26 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             <Button
               variant="outlined"
               color="inherit"
+              onClick={onPrevious}
+              disabled={!hasPrevious}
+              size="small"
+              startIcon={<Iconify icon="solar:alt-arrow-left-bold" />}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={onNext}
+              disabled={!hasNext}
+              size="small"
+              endIcon={<Iconify icon="solar:alt-arrow-right-bold" />}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
               onClick={() => onClose(null, false)}
               size="small"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -650,10 +681,26 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
               Cancel
             </Button>
             <LoadingButton
+              variant="outlined"
+              loading={isUpdateLoading || isStatusLoading}
+              disabled={!hasNext}
+              size="small"
+              onClick={(e: any) => {
+                submitAndNextRef.current = true;
+                formik.handleSubmit(e);
+              }}
+              startIcon={<Iconify icon="solar:double-alt-arrow-right-bold" />}
+            >
+              Submit & Next
+            </LoadingButton>
+            <LoadingButton
               variant="contained"
               loading={isUpdateLoading || isStatusLoading}
               size="small"
-              onClick={(e: any) => formik.handleSubmit(e)}
+              onClick={(e: any) => {
+                submitAndNextRef.current = false;
+                formik.handleSubmit(e);
+              }}
               startIcon={
                 <Iconify
                   icon={data?.marks ? GlobalIcons.edit : GlobalIcons.submit}

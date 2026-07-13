@@ -5,11 +5,13 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
+import { alpha } from '@mui/material/styles';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Grid, Button, Typography, Paper, Stack } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -30,6 +32,14 @@ import {
 import ExamTypeForm from './examTypeForm';
 
 import type { IExamType } from '../type';
+
+const getStatusLabel = (status: any) => {
+  if (status === 0 || status === 'Active') return { label: 'Active', color: 'success' };
+  if (status === 1 || status === 'Inactive') return { label: 'Inactive', color: 'error' };
+  if (status === 2 || status === 'SystemDefault') return { label: 'System Default', color: 'info' };
+  if (status === 3 || status === 'Archived') return { label: 'Archived', color: 'warning' };
+  return { label: 'Unknown', color: 'default' };
+};
 
 const ExamTypeSettings = () => {
   // Dialog state for managing the create/edit exam type form.
@@ -77,6 +87,13 @@ const ExamTypeSettings = () => {
   const [isEdit, setIsEdit] = useState(false);
   // State for storing the currently selected exam type for editing or other actions.
   const [selectedExamType, setSelectedExamType] = useState<IExamType | null>(null);
+
+  // Statistics calculations
+  const examTypeList = examTypeData?.items || [];
+  const totalTypes = examTypeList.length;
+  const activeTypes = examTypeList.filter((t: any) => t.status === 0 || t.status === 'Active' || t.status === 2 || t.status === 'SystemDefault').length;
+  const usedTypes = examTypeList.filter((t: any) => t.usageCount > 0).length;
+  const includedInResult = examTypeList.filter((t: any) => t.includedInResult).length;
 
   // Function to handle form submission for creating or editing an exam type.
   const handleSubmit = (values: any) => {
@@ -143,6 +160,45 @@ const ExamTypeSettings = () => {
           ) : null
         }
       />
+
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(4, minmax(0, 1fr))',
+          },
+          gap: 1,
+          mb: 2,
+        }}
+      >
+        {[
+          { label: 'Total Exam Types', value: totalTypes, color: 'text.primary' },
+          { label: 'Active Types', value: activeTypes, color: 'success.main' },
+          { label: 'Used Types', value: usedTypes, color: 'info.main' },
+          { label: 'Included in Result', value: includedInResult, color: 'secondary.main' },
+        ].map((card) => (
+          <Paper
+            key={card.label}
+            variant="outlined"
+            sx={{
+              p: 1.25,
+              borderRadius: 1,
+              bgcolor: (theme) => alpha(theme.palette.background.paper, 0.9),
+            }}
+          >
+            <Stack spacing={0.5}>
+              <Typography variant="caption" color="text.secondary">
+                {card.label}
+              </Typography>
+              <Typography variant="h6" sx={{ color: card.color, lineHeight: 1.1 }}>
+                {card.value}
+              </Typography>
+            </Stack>
+          </Paper>
+        ))}
+      </Box>
+
       <CustomizableTable
         tableId="examTypeTable"
         isLoading={isLoading || isFetching}
@@ -170,6 +226,19 @@ const ExamTypeSettings = () => {
         columns={[
           { id: 'examType', label: 'Exam Types' },
           { id: 'description', label: 'Description' },
+          { id: 'category', label: 'Category', render: (val) => val || '-' },
+          { id: 'defaultTotalMarks', label: 'Default Marks', filterType: 'number', render: (val) => val ?? '-' },
+          { id: 'defaultWeightage', label: 'Weightage', filterType: 'number', render: (val) => val !== null && val !== undefined ? `${val}%` : '-' },
+          { id: 'includedInResult', label: 'Result Impact', render: (val) => val ? <Label color="success">Included</Label> : <Label color="default">Optional</Label> },
+          {
+            id: 'status',
+            label: 'Status',
+            render: (value, row: any) => {
+              const { label, color } = getStatusLabel(row.status);
+              return <Label color={color as any}>{label}</Label>;
+            }
+          },
+          { id: 'usageCount', label: 'Usage Count', filterType: 'number', render: (val) => `${val || 0} exams` },
           {
             id: 'actions',
             label: 'Actions',
@@ -205,6 +274,7 @@ const ExamTypeSettings = () => {
       />
 
       <CustomDialog
+        maxWidth="sm"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">

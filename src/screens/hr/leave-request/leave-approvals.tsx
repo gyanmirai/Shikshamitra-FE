@@ -16,7 +16,7 @@ import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -60,7 +60,28 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { employee } = useSelector((state: RootState) => state.auth);
   const { byId: organizationById } = useAcademicOrganizationOptions(currentYear?.id);
-  const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
+  const [date, setDate] = useState<Dayjs | null>(() => {
+    const today = dayjs();
+    const start = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
+    const end = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
+    if (start && end && (today.isBefore(start, 'month') || today.isAfter(end, 'month'))) {
+      return start;
+    }
+    return today;
+  });
+
+  useEffect(() => {
+    if (currentYear) {
+      const today = dayjs();
+      const start = dayjs(currentYear.startDate);
+      const end = dayjs(currentYear.endDate);
+      if (today.isBefore(start, 'month') || today.isAfter(end, 'month')) {
+        setDate(start);
+      } else {
+        setDate(today);
+      }
+    }
+  }, [currentYear]);
   const [statusFilter, setStatusFilter] = useState<EmployeeLeaveStatusType | ''>(
     EmployeeLeaveStatusType.Pending
   );

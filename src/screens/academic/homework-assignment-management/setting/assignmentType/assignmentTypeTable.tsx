@@ -1,10 +1,27 @@
 'use client';
 
 import React from 'react';
+import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IAssignmentType, IAssignmentTypeTableProps } from './type';
+
+const SUBMISSION_TYPE_MAP: Record<number, string> = {
+  0: 'Online Text',
+  1: 'File Upload',
+  2: 'In-Person',
+  3: 'No Submission Required',
+};
+
+const EVALUATION_METHOD_MAP: Record<number, string> = {
+  0: 'Marks',
+  1: 'Grade',
+  2: 'Rubric',
+  3: 'Checklist',
+  4: 'Feedback Only',
+  5: 'No Evaluation',
+};
 
 const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
   isLoading,
@@ -23,6 +40,56 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
         id: 'assignmentTypeName',
         label: 'Name',
         align: 'left',
+      },
+      {
+        id: 'defaultSubmissionType',
+        label: 'Default Submission',
+        align: 'left',
+        render: (_value, row) => {
+          const type = row.defaultSubmissionType;
+          if (type === undefined || type === null || type === '') return '-';
+          return (
+            <Label variant="soft" color="info">
+              {SUBMISSION_TYPE_MAP[type] || 'Unknown'}
+            </Label>
+          );
+        },
+      },
+      {
+        id: 'defaultEvaluationMethod',
+        label: 'Evaluation',
+        align: 'left',
+        render: (_value, row) => {
+          if (!row.evaluationRequired) {
+            return (
+              <Label variant="soft" color="default">
+                No Evaluation
+              </Label>
+            );
+          }
+          const method = row.defaultEvaluationMethod;
+          if (method === undefined || method === null || method === '') return 'Required';
+          return EVALUATION_METHOD_MAP[method] || 'Unknown';
+        },
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        align: 'center',
+        render: (_value, row) => {
+          const isActive = row.status === 0;
+          return (
+            <Label variant="soft" color={isActive ? 'success' : 'error'}>
+              {isActive ? 'Active' : 'Inactive'}
+            </Label>
+          );
+        },
+      },
+      {
+        id: 'usageCount',
+        label: 'Usage',
+        align: 'right',
+        render: (_value, row) => row.usageCount ?? 0,
       },
       {
         id: 'action',

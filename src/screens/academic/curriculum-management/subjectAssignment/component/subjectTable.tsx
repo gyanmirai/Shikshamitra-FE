@@ -140,7 +140,7 @@ const SubjectTable = ({
         ),
         subjectCodeValue: item?.subjects?.map((sub: any) => sub.subjectCode).join(', ') || '—',
         statusValue: SubjectAssignmentStatus[item.status] || 'Draft',
-        primaryTeacherDisplay: item.primaryTeacherName || '—',
+        primaryTeacherDisplay: item?.primaryTeacherName || '—',
         chaptersDisplay: item.chaptersCount ?? 0,
         weeklyPeriodsDisplay: item.weeklyPeriods ? `${item.weeklyPeriods}` : '—',
         lastUpdatedDisplay: item.lastUpdatedAt

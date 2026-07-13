@@ -50,7 +50,6 @@ type Props = {
   onMarkMissed: (plan: LessonPlanRow) => void;
   onCreateFromTimetable: (date: Dayjs) => void;
   onCopyPreviousWeek: () => void;
-  onSubmitWeekPlan: (plans: LessonPlanRow[]) => void;
 };
 
 const WeeklyPlannerTab = ({
@@ -63,7 +62,6 @@ const WeeklyPlannerTab = ({
   onMarkMissed,
   onCreateFromTimetable,
   onCopyPreviousWeek,
-  onSubmitWeekPlan,
 }: Props) => {
   const [weekStart, setWeekStart] = useState<Dayjs | null>(dayjs(weekStartIso));
   const [cardMenuAnchor, setCardMenuAnchor] = useState<{
@@ -73,12 +71,6 @@ const WeeklyPlannerTab = ({
 
   const openCardMenu = (el: HTMLElement, plan: LessonPlanRow) => setCardMenuAnchor({ el, plan });
   const closeCardMenu = () => setCardMenuAnchor(null);
-
-  const weekDraftPlans = lessonPlans.filter((p) => {
-    const start = (weekStart || dayjs(weekStartIso)).format('YYYY-MM-DD');
-    const end = (weekStart || dayjs(weekStartIso)).add(6, 'day').format('YYYY-MM-DD');
-    return p.plannedDate >= start && p.plannedDate <= end && p.planStatus === 'Draft';
-  });
 
   const diaryColor = (status: string) => {
     if (status === 'Approved') return 'success';
@@ -116,15 +108,6 @@ const WeeklyPlannerTab = ({
             onClick={onCopyPreviousWeek}
           >
             Copy Previous Week
-          </Button>
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<Iconify icon="mdi:send-outline" />}
-            disabled={weekDraftPlans.length === 0}
-            onClick={() => onSubmitWeekPlan(weekDraftPlans)}
-          >
-            Submit Week Plan ({weekDraftPlans.length})
           </Button>
         </Stack>
       </Stack>

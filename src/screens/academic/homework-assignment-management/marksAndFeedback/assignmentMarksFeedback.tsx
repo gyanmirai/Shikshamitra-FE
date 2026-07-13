@@ -98,12 +98,18 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
 
   const assignmentOptions =
     (assignmentData?.items || [])
-      .filter((hw: any) => hw.status === 1 && (hw.submissionType === 0 || hw.submissionType === 1))
+      .filter((hw: any) => isPublishedTask(hw) && isEvaluationEnabledTask(hw))
       .map((hw: any) => ({
         id: hw.id,
-        label: hw.title,
+        label: `${hw.title} - ${submissionTypeLabels[Number(hw.submissionType)] || 'Submission'}`,
         submissionType: hw.submissionType,
         totalMarks: hw.totalMarks ?? hw.totalmarks ?? hw.maximumMarks ?? hw.maxMarks ?? null,
+        evaluationRequired: hw.evaluationRequired,
+        defaultEvaluationMethod: hw.defaultEvaluationMethod,
+        defaultMarks: hw.defaultMarks,
+        defaultDueDays: hw.defaultDueDays,
+        assignmentTypeId: hw.assignmentTypeId,
+        assignmentTypeName: hw.assignmentTypeName,
       })) || [];
 
   // Dialog control for bulk grade assignment
@@ -228,3 +234,18 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
 };
 
 export default AssignmentMarksAndFeedback;
+
+const submissionTypeLabels: Record<number, string> = {
+  0: 'Online Text',
+  1: 'File Upload',
+  2: 'In-Person',
+  3: 'No Submission Required',
+};
+
+const isPublishedTask = (task: any) =>
+  Number(task?.status) === 1 || String(task?.status || '').toLowerCase() === 'published';
+
+const isEvaluationEnabledTask = (task: any) =>
+  Number(task?.submissionType) !== 3 &&
+  task?.evaluationRequired !== false &&
+  Number(task?.defaultEvaluationMethod) !== 5;

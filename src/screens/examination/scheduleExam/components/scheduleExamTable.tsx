@@ -1,14 +1,15 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
+import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
+import { useMemo, useState } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -17,11 +18,14 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
-import { Box, Tab, Tabs, Paper, Button, MenuList, MenuItem } from '@mui/material';
+import { Box, Tab, Chip, Tabs, Paper, Stack, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   usePublishExamMutation,
   useUpdateExamStatusMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
+
+import ScheduleExamKpiStrip from './ScheduleExamKpiStrip';
+import ScheduleExamPreviewDrawer from './ScheduleExamPreviewDrawer';
 
 import type { IExamFormValues, IScheduledExamTableProps } from '../type';
 
@@ -69,6 +73,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   // Add this outside your component
   // const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [selectedTimetable, setSelectedTimetable] = useState<IExamFormValues | null>(null);
+  const [previewExam, setPreviewExam] = useState<IExamFormValues | null>(null);
 
   const handlePublishExam = async () => {
     try {
@@ -84,6 +89,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const requestPublishExam = (row: any) => {
+    publishExamDialog.onTrue();
+    setSelectedTimetable(row);
   };
 
   // Define tab configuration with labels, values, counts and colors
@@ -124,12 +134,31 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   // Actions component for the three dots menu
   // Renders menu items for printing and publishing timetables
   // Uses useCallback to memoize the component for performance
-  const actions = useCallback(
-    ({ popover: pop, row }: any) =>
-      canAdd ? (
+  const actions = ({ popover: pop, row }: any) =>
+    canView || canAdd ? (
         <>
           {' '}
           <MenuList>
+            <MenuItem
+              onClick={() => {
+                setPreviewExam(row);
+                pop.onClose();
+              }}
+            >
+              <Iconify icon="solar:eye-bold" />
+              Preview
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => {
+                onViewTimetable?.(row as IExamFormValues);
+                pop.onClose();
+              }}
+            >
+              <Iconify icon="solar:calendar-bold-duotone" />
+              View Timetable
+            </MenuItem>
+
             {/* Menu item for printing the timetable */}
             <MenuItem
               onClick={() => {
@@ -142,13 +171,13 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
             {/* Menu item for publishing the timetable 
               Sets the selected timetable name and shows confirmation dialog */}
-            {row.status === examScheduledStatus.Pending && (
+            {canAdd && row.status === examScheduledStatus.Pending && (
               <MenuItem
                 onClick={() => {
-                  publishExamDialog.onTrue();
-                  setSelectedTimetable(row);
+                  requestPublishExam(row);
                   pop.onClose();
                 }}
+                disabled={(row.issueCount ?? 0) > 0}
               >
                 <Iconify icon="solar:cloud-upload-outline" />
                 Publish Exam
@@ -156,49 +185,58 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             )}
           </MenuList>
         </>
-      ) : null,
-    [publishExamDialog, canAdd]
-  );
+    ) : null;
 
   return (
     <>
-      <Paper
-        elevation={2}
-        sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, mb: 1, borderRadius: '15px' }}
-      >
-        <Tabs
-          value={tabs.value}
-          onChange={handleTabChange}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 2 }, flexGrow: 1 }}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 1 }}>
+        <ScheduleExamKpiStrip summary={getExams?.data} rows={tableData} />
+        <Paper
+          elevation={0}
+          sx={{
+            display: 'flex',
+            gap: 1,
+            alignItems: 'center',
+            px: 2,
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: 'divider',
+          }}
         >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              label={
-                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                  {tab.label}{' '}
-                  <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
-                </Box>
-              }
-              value={tab.value}
-            />
-          ))}
-        </Tabs>
-        {isScheduleExamButton && canAdd && (
-          <Button
-            size="small"
-            startIcon={<Add />}
-            variant="contained"
-            onClick={() => {
-              setOpenDialog?.(true);
-            }}
-            sx={{ px: '32px' }}
+          <Tabs
+            value={tabs.value}
+            onChange={handleTabChange}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 2 }, flexGrow: 1 }}
           >
-            Schedule Exam
-          </Button>
-        )}
-      </Paper>
+            {TABS.map((tab) => (
+              <Tab
+                sx={{ fontSize: '12px' }}
+                key={tab.value}
+                label={
+                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                    {tab.label}{' '}
+                    <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
+                  </Box>
+                }
+                value={tab.value}
+              />
+            ))}
+          </Tabs>
+          {isScheduleExamButton && canAdd && (
+            <Button
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              onClick={() => {
+                setOpenDialog?.(true);
+              }}
+              sx={{ px: '32px' }}
+            >
+              Schedule Exam
+            </Button>
+          )}
+        </Paper>
+      </Box>
       {isAction ? (
         <CustomizableTable
           tableId="schedule-exam-table"
@@ -226,7 +264,24 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             </>
           }
           columns={[
-            { id: 'examName', label: 'Exam Name', align: 'left' },
+            {
+              id: 'examName',
+              label: 'Exam Name',
+              align: 'left',
+              sticky: true,
+              minWidth: 260,
+              render: (value, row) => (
+                <Box>
+                  <Typography variant="subtitle2">{value}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {row.subjectCount ?? 0} subjects
+                    {row.lastUpdatedAt
+                      ? ` · Updated ${dayjs(row.lastUpdatedAt).format('DD MMM')}`
+                      : ''}
+                  </Typography>
+                </Box>
+              ),
+            },
             { id: 'examTypeName', label: 'Exam Type', align: 'left' },
             { id: 'standardName', label: 'Class', align: 'left', filterType: 'number' },
             {
@@ -235,7 +290,64 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               align: 'left',
               isFilter: false,
               isSort: false,
-              render: (value) => <Box>{(value || []).join(', ')}</Box>,
+              render: (value) => (
+                <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                  {(value || []).slice(0, 2).map((division: string) => (
+                    <Chip key={division} label={division} size="small" variant="soft" />
+                  ))}
+                  {(value || []).length > 2 && (
+                    <Chip label={`+${(value || []).length - 2}`} size="small" variant="outlined" />
+                  )}
+                </Stack>
+              ),
+            },
+            {
+              id: 'startDate',
+              label: 'Date Range',
+              align: 'left',
+              isFilter: false,
+              render: (_value, row) =>
+                row.startDate && row.endDate
+                  ? `${dayjs(row.startDate).format('DD MMM')} - ${dayjs(row.endDate).format('DD MMM YYYY')}`
+                  : 'Not scheduled',
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              align: 'left',
+              render: (value) => {
+                const meta =
+                  value === examScheduledStatus.Published
+                    ? { label: 'Published', color: 'info' }
+                    : value === examScheduledStatus.Completed
+                      ? { label: 'Completed', color: 'success' }
+                      : { label: 'Draft', color: 'warning' };
+                return <Label color={meta.color as LabelColor}>{meta.label}</Label>;
+              },
+            },
+            {
+              id: 'issueCount',
+              label: 'Issues',
+              align: 'left',
+              isFilter: false,
+              isSort: false,
+              render: (_value, row) => (
+                <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                  {(row.issueCount ?? 0) > 0 ? (
+                    <Chip
+                      label={`${row.issueCount} issue${row.issueCount > 1 ? 's' : ''}`}
+                      color="error"
+                      size="small"
+                      variant="soft"
+                    />
+                  ) : (
+                    <Chip label="Ready" color="success" size="small" variant="soft" />
+                  )}
+                  {(row.missingRoomAssignmentCount ?? 0) > 0 && (
+                    <Chip label="Missing rooms" color="warning" size="small" variant="soft" />
+                  )}
+                </Stack>
+              ),
             },
             { id: 'creatorName', label: 'Created By', align: 'left' },
             {
@@ -254,7 +366,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                     showViewIcon={canView}
                     showDeleteIcon={tabs.value === examScheduledStatus.Pending && canDelete}
                     showEditIcon={tabs.value === examScheduledStatus.Pending && canAdd}
-                    handleViewClick={() => onViewTimetable?.(row as IExamFormValues)}
+                    handleViewClick={() => setPreviewExam(row as IExamFormValues)}
                     handleDeleteClick={() => {
                       onDelete?.(row as IExamFormValues);
                     }}
@@ -340,6 +452,25 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             Publish
           </LoadingButton>
         }
+      />
+      <ScheduleExamPreviewDrawer
+        open={!!previewExam}
+        exam={previewExam}
+        canEdit={canAdd}
+        onClose={() => setPreviewExam(null)}
+        onEdit={(row) => {
+          setPreviewExam(null);
+          setOpenDialog?.(true);
+          setEditData?.(row as IExamFormValues);
+        }}
+        onViewTimetable={(row) => {
+          setPreviewExam(null);
+          onViewTimetable?.(row as IExamFormValues);
+        }}
+        onPublish={(row) => {
+          setPreviewExam(null);
+          requestPublishExam(row);
+        }}
       />
     </>
   );

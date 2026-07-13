@@ -1,16 +1,13 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -19,11 +16,16 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetAssignmentSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
+import { AssignmentSubmissionStatusOptions } from 'src/enums/assignment-submission-status';
 import {
-  AssignmentSubmissionStatus,
-  AssignmentSubmissionStatusColor,
-  AssignmentSubmissionStatusOptions,
-} from 'src/enums/assignment-submission-status';
+  FeedbackStatusChip,
+  EvaluationFilterBar,
+  EvaluationStatusChip,
+  EvaluationActionButton,
+  filterEvaluationRows,
+  getEvaluationSummary,
+  EvaluationSummaryCards,
+} from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
 
 import AssignGrade from './assignMarksForm';
 
@@ -69,6 +71,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   );
 
   const [selectedStudents] = useState<any[]>([]);
+  const [activeFilter, setActiveFilter] = useState('all');
   const {
     data: assignmentSubmissions,
     isLoading: isSubmissionsLoading,
@@ -102,6 +105,34 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     [assignmentSubmissions?.data]
   );
 
+  const filteredData = React.useMemo(
+    () => filterEvaluationRows(normalizedData, activeFilter),
+    [activeFilter, normalizedData]
+  );
+
+  const summary = React.useMemo(
+    () => getEvaluationSummary(normalizedData, assignmentSubmissions?.summary),
+    [assignmentSubmissions?.summary, normalizedData]
+  );
+
+  const selectedIndex = React.useMemo(
+    () => filteredData.findIndex((row: any) => row.studentId === selectedStudent?.studentId),
+    [filteredData, selectedStudent?.studentId]
+  );
+
+  const moveStudent = React.useCallback(
+    (direction: 1 | -1) => {
+      const nextRow = filteredData[selectedIndex + direction];
+      if (nextRow) {
+        setSelectedStudent({
+          ...(nextRow as TStudentGrade),
+          totalMarks: resolveTotalMarks(nextRow),
+        });
+      }
+    },
+    [filteredData, resolveTotalMarks, selectedIndex]
+  );
+
   /**
    * Handles closing the view submission dialog and resetting the selected student
    */
@@ -132,8 +163,24 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     }
   };
 
+  const openStudent = React.useCallback(
+    (row: any) => {
+      setSelectedStudent({
+        ...(row as TStudentGrade),
+        totalMarks: resolveTotalMarks(row),
+      });
+      viewSubmissionDialog.onTrue();
+    },
+    [resolveTotalMarks, viewSubmissionDialog]
+  );
+
   return (
     <>
+      <Stack spacing={1.5}>
+        <EvaluationSummaryCards summary={summary} />
+        <EvaluationFilterBar value={activeFilter} onChange={setActiveFilter} />
+      </Stack>
+      <Box sx={{ mt: 1.5 }}>
       <CustomizableTable
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents?.length > 0}
@@ -300,115 +347,44 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             },
           },
           {
-            id: 'status',
-            label: 'Status',
+            id: 'submissionStatusLabel',
+            label: 'Submission Status',
             filterType: 'enum',
-            sticky: true,
             enumOptions: AssignmentSubmissionStatusOptions,
             align: 'left',
-            minWidth: 80,
+            minWidth: 150,
 
-            render(value) {
-              if (value === undefined || value === null)
-                return <Typography variant="body2">-</Typography>;
-
-              const color = (AssignmentSubmissionStatusColor[value as AssignmentSubmissionStatus] ||
-                'default') as LabelColor;
-
-              const label =
-                AssignmentSubmissionStatus[value as AssignmentSubmissionStatus] ||
-                `Unknown (${value})`;
-
-              return <Label color={color}>{label}</Label>;
+            render(_value, row) {
+              return <EvaluationStatusChip row={row} />;
+            },
+          },
+          {
+            id: 'evaluationStatus',
+            label: 'Evaluation Status',
+            sticky: true,
+            align: 'left',
+            minWidth: 150,
+            render(_value, row) {
+              return <FeedbackStatusChip row={row} />;
             },
           },
           {
             id: 'actions',
-            label: 'Action',
+            label: 'Actions',
             isSort: false,
             isFilter: false,
-            align: 'left',
-            minWidth: 170,
+            align: 'center',
+            minWidth: 90,
             sticky: true,
             render(value, row) {
-              if (!canAdd) return null;
-
-              if (row.status === AssignmentSubmissionStatus.Pending) {
-                return (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    sx={{ minWidth: '100px' }}
-                    startIcon={
-                      <Iconify icon="mdi:bell-outline" sx={{ height: '16px', width: '16px' }} />
-                    }
-                    onClick={() => {}}
-                  >
-                    Send Reminder
-                  </Button>
-                );
-              }
-
-              if (
-                [
-                  AssignmentSubmissionStatus.Submitted,
-                  AssignmentSubmissionStatus.NeedsReview,
-                  AssignmentSubmissionStatus.Late,
-                ].includes(row.status)
-              ) {
-                return (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    sx={{ minWidth: '100px' }}
-                    startIcon={
-                      <Iconify
-                        icon="mdi:clipboard-check-outline"
-                        sx={{ height: '16px', width: '16px' }}
-                      />
-                    }
-                    onClick={() => {
-                      setSelectedStudent({
-                        ...(row as TStudentGrade),
-                        totalMarks: resolveTotalMarks(row),
-                      });
-                      viewSubmissionDialog.onTrue();
-                    }}
-                  >
-                    Assign Marks
-                  </Button>
-                );
-              }
-
-              if (row.status === AssignmentSubmissionStatus.Reviewed) {
-                return (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    sx={{ minWidth: '100px' }}
-                    startIcon={
-                      <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
-                    }
-                    onClick={() => {
-                      setSelectedStudent({
-                        ...(row as TStudentGrade),
-                        totalMarks: resolveTotalMarks(row),
-                      });
-                      viewSubmissionDialog.onTrue();
-                    }}
-                  >
-                    Edit/View Marks
-                  </Button>
-                );
-              }
-
-              return null;
+              return <EvaluationActionButton row={row} canAdd={canAdd} onOpen={openStudent} />;
             },
           },
         ]}
         isLoading={isSubmissionsLoading || isFetching}
-        data={normalizedData}
+        data={filteredData}
       />
+      </Box>
 
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
@@ -453,6 +429,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           onClose={handleClose}
           isEdit
           assignmentId={selectedAssignment?.id}
+          hasPrevious={selectedIndex > 0}
+          hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}
+          onPrevious={() => moveStudent(-1)}
+          onNext={() => moveStudent(1)}
         />
       </CustomDialog>
     </>

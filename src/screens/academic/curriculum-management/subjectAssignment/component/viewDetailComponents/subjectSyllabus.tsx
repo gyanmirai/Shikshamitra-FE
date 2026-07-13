@@ -103,7 +103,19 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ lineHeight: 1.8 }}
+                    component="div"
+                    sx={{
+                      lineHeight: 1.8,
+                      '& p, & ul, & ol': {
+                        margin: 0,
+                      },
+                      '& p:not(:last-child), & ul:not(:last-child), & ol:not(:last-child)': {
+                        marginBottom: 1,
+                      },
+                      '& ul, & ol': {
+                        paddingLeft: 2,
+                      },
+                    }}
                     dangerouslySetInnerHTML={{
                       __html: chapter.description || 'No description provided.',
                     }}

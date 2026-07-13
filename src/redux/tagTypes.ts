@@ -42,6 +42,7 @@ export const academicType = {
   academicReport: 'AcademicReport',
   academicReportExport: 'AcademicReportExport',
   examResult: 'ExamResult',
+  academic360: 'Academic360',
   questionBank: 'QuestionBank',
   questionPaper: 'QuestionPaper',
   // Lesson Plan / Teacher Diary

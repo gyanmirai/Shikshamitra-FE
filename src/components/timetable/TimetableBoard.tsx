@@ -518,8 +518,10 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
 
   // --- Conflict Detection ---
   const conflicts = useMemo(() => {
-    const warnings: string[] = [];
+    const groupedConflicts = new Map<string, string[]>();
+
     (Object.keys(slots) as DayOfWeek[]).forEach((day) => {
+      const dayFormatted = day.charAt(0) + day.slice(1).toLowerCase();
       slots[day].forEach((slot) => {
         if (!slot.subjects || slot.subjects.length < 2) return;
 
@@ -528,9 +530,12 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
         const seenTeachers = new Set<string>();
         teacherIds.forEach((id) => {
           if (id && seenTeachers.has(id)) {
-            warnings.push(
-              `${day.charAt(0) + day.slice(1).toLowerCase()}: Same teacher double-booked at ${slot.startTime}–${slot.endTime}`
-            );
+            const conflictKey = `Same teacher double-booked at ${slot.startTime}–${slot.endTime}`;
+            const days = groupedConflicts.get(conflictKey) || [];
+            if (!days.includes(dayFormatted)) {
+              days.push(dayFormatted);
+              groupedConflicts.set(conflictKey, days);
+            }
           } else if (id) {
             seenTeachers.add(id);
           }
@@ -541,16 +546,52 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
         const seenRooms = new Set<string>();
         roomIds.forEach((id) => {
           if (id && seenRooms.has(id)) {
-            warnings.push(
-              `${day.charAt(0) + day.slice(1).toLowerCase()}: Same room double-booked at ${slot.startTime}–${slot.endTime}`
-            );
+            const conflictKey = `Same room double-booked at ${slot.startTime}–${slot.endTime}`;
+            const days = groupedConflicts.get(conflictKey) || [];
+            if (!days.includes(dayFormatted)) {
+              days.push(dayFormatted);
+              groupedConflicts.set(conflictKey, days);
+            }
           } else if (id) {
             seenRooms.add(id);
           }
         });
       });
     });
-    return [...new Set(warnings)]; // deduplicate
+
+    const warnings: string[] = [];
+    groupedConflicts.forEach((days, conflictKey) => {
+      const dayAbbrevMap: Record<string, string> = {
+        Monday: 'Mon',
+        Tuesday: 'Tue',
+        Wednesday: 'Wed',
+        Thursday: 'Thu',
+        Friday: 'Fri',
+        Saturday: 'Sat',
+        Sunday: 'Sun',
+      };
+      
+      const isConsecutiveAllWeek = days.length === 6 && 
+        days.includes('Monday') && days.includes('Tuesday') && days.includes('Wednesday') &&
+        days.includes('Thursday') && days.includes('Friday') && days.includes('Saturday');
+        
+      const isConsecutiveFiveWeek = days.length === 5 && 
+        days.includes('Monday') && days.includes('Tuesday') && days.includes('Wednesday') &&
+        days.includes('Thursday') && days.includes('Friday');
+
+      let daysStr = '';
+      if (isConsecutiveAllWeek) {
+        daysStr = 'Mon - Sat';
+      } else if (isConsecutiveFiveWeek) {
+        daysStr = 'Mon - Fri';
+      } else {
+        daysStr = days.map(d => dayAbbrevMap[d] || d).join(', ');
+      }
+
+      warnings.push(`${daysStr}: ${conflictKey}`);
+    });
+
+    return warnings;
   }, [slots]);
 
   const conflictsKey = useMemo(() => conflicts.join('|'), [conflicts]);
@@ -574,6 +615,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
           selectedClass={selectedClass}
           selectedDivision={selectedDivision}
           subjects={subjects}
+          conflicts={conflicts}
         />
       )}
 

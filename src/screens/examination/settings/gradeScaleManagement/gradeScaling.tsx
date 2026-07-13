@@ -6,11 +6,13 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
+import { alpha } from '@mui/material/styles';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Grid, Button, Typography, Paper, Stack } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -30,6 +32,14 @@ import {
 import GradeForm from './gradeScaleForm';
 
 import type { IGrade } from './type';
+
+const getStatusLabel = (status: any) => {
+  if (status === 0 || status === 'Active') return { label: 'Active', color: 'success' };
+  if (status === 1 || status === 'Inactive') return { label: 'Inactive', color: 'error' };
+  if (status === 2 || status === 'SystemDefault') return { label: 'System Default', color: 'info' };
+  if (status === 3 || status === 'Archived') return { label: 'Archived', color: 'warning' };
+  return { label: 'Unknown', color: 'default' };
+};
 
 const GradingScale = () => {
   // State for storing currently selected grade
@@ -79,6 +89,13 @@ const GradingScale = () => {
       skip: !(currentMedium as Medium)?.id,
     },
   });
+
+  const scalesList = gradeScalings?.data || [];
+  const totalScales = scalesList.length;
+  const activeScales = scalesList.filter((s: any) => s.status === 0 || s.status === 'Active' || s.status === 2 || s.status === 'SystemDefault').length;
+  const usedScales = scalesList.filter((s: any) => s.usageCount > 0).length;
+  const unusedScales = scalesList.filter((s: any) => !s.usageCount || s.usageCount === 0).length;
+  const defaultScale = scalesList.find((s: any) => s.isDefault)?.name || 'None';
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -136,6 +153,46 @@ const GradingScale = () => {
         }
       />
 
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(2, minmax(0, 1fr))',
+            md: 'repeat(3, minmax(0, 1fr))',
+            lg: 'repeat(5, minmax(0, 1fr))',
+          },
+          gap: 1,
+          mb: 2,
+        }}
+      >
+        {[
+          { label: 'Total Scales', value: totalScales, color: 'text.primary' },
+          { label: 'Active Scales', value: activeScales, color: 'success.main' },
+          { label: 'Used Scales', value: usedScales, color: 'info.main' },
+          { label: 'Unused Scales', value: unusedScales, color: 'warning.main' },
+          { label: 'Default Scale', value: defaultScale, color: 'secondary.main' },
+        ].map((card) => (
+          <Paper
+            key={card.label}
+            variant="outlined"
+            sx={{
+              p: 1.25,
+              borderRadius: 1,
+              bgcolor: (theme) => alpha(theme.palette.background.paper, 0.9),
+            }}
+          >
+            <Stack spacing={0.5}>
+              <Typography variant="caption" color="text.secondary">
+                {card.label}
+              </Typography>
+              <Typography variant="h6" sx={{ color: card.color, lineHeight: 1.1 }}>
+                {card.value}
+              </Typography>
+            </Stack>
+          </Paper>
+        ))}
+      </Box>
+
       <CustomizableTable
         tableId="gradesTable"
         isLoading={isLoading || isFetching}
@@ -163,6 +220,35 @@ const GradingScale = () => {
         columns={[
           { id: 'name', label: 'Grade Scale Title' },
           { id: 'totalMarks', label: 'Total Marks', filterType: 'number' },
+          { id: 'passMarks', label: 'Pass Marks', filterType: 'number', render: (val) => val ?? '-' },
+          {
+            id: 'gradeRange',
+            label: 'Grade Range',
+            isSort: false,
+            isFilter: false,
+            render: (value, row: any) => {
+              const ranges = row.gradingScale || [];
+              if (ranges.length === 0) return '-';
+              const sorted = [...ranges].sort((a, b) => b.minMarks - a.minMarks);
+              const highGrade = sorted[0]?.grade || '';
+              const lowGrade = sorted[sorted.length - 1]?.grade || '';
+              return highGrade && lowGrade ? `${highGrade} to ${lowGrade}` : '-';
+            }
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            render: (value, row: any) => {
+              const { label, color } = getStatusLabel(row.status);
+              return <Label color={color as any}>{label}</Label>;
+            }
+          },
+          {
+            id: 'usageCount',
+            label: 'Usage Count',
+            filterType: 'number',
+            render: (val) => `${val || 0} exams`
+          },
           {
             id: 'actions',
             label: 'Actions',

@@ -109,6 +109,196 @@ const getPercentageColor = (
 
 // ─── Student Details Dialog ─────────────────────────────────────────────────
 
+const getWorkflowCopy = (resultHeaderData: any) => {
+  if (!resultHeaderData) {
+    return {
+      label: 'Not Generated',
+      helper: 'Generate a preview after all required checks pass.',
+      icon: 'mdi:file-search-outline',
+      color: 'default' as const,
+    };
+  }
+
+  if (resultHeaderData.statusCode === 0) {
+    return {
+      label: 'Draft Generated',
+      helper: 'Review the preview and publish when it is correct.',
+      icon: 'mdi:file-document-edit-outline',
+      color: 'warning' as const,
+    };
+  }
+
+  if (resultHeaderData.statusCode === 1) {
+    return {
+      label: 'Published',
+      helper: 'Results are visible in downstream academic/report flows.',
+      icon: 'mdi:publish',
+      color: 'success' as const,
+    };
+  }
+
+  return {
+    label: 'Locked',
+    helper: 'Published results are frozen for audit-safe reporting.',
+    icon: 'mdi:lock-outline',
+    color: 'error' as const,
+  };
+};
+
+function ResultWorkflowPanel({
+  readinessData,
+  resultHeaderData,
+  selectedExamName,
+  selectedClassName,
+  selectedDivisionName,
+}: {
+  readinessData: any;
+  resultHeaderData: any;
+  selectedExamName: string;
+  selectedClassName: string;
+  selectedDivisionName: string;
+}) {
+  const workflow = getWorkflowCopy(resultHeaderData);
+  const checks = readinessData?.checks ?? [];
+  const readinessPercentage =
+    typeof readinessData?.percentage === 'number'
+      ? readinessData.percentage
+      : checks.length
+        ? Math.round((checks.filter((check: any) => check.passed).length / checks.length) * 100)
+        : 0;
+  const blockerCount =
+    readinessData?.blockerCount ??
+    checks.filter((check: any) => !check.passed && check.severity !== 'warning').length;
+  const warningCount =
+    readinessData?.warningCount ??
+    checks.filter((check: any) => !check.passed && check.severity === 'warning').length;
+  const pendingSubjects: string[] = readinessData?.pendingSubjects ?? [];
+
+  return (
+    <Card sx={{ p: 2, mb: 2, borderRadius: 1.5 }}>
+      <Box
+        display="grid"
+        gridTemplateColumns={{ xs: '1fr', md: '280px 1fr' }}
+        gap={2}
+        alignItems="stretch"
+      >
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 1,
+            bgcolor: (theme) => alpha(theme.palette.action.selected, 0.06),
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Iconify icon={workflow.icon} width={22} sx={{ color: 'text.secondary' }} />
+            <Label variant="soft" color={workflow.color}>
+              {workflow.label}
+            </Label>
+          </Stack>
+          <Typography variant="body2" fontWeight={700} mt={1}>
+            {selectedExamName || 'Selected exam'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {selectedClassName || 'Class'} / {selectedDivisionName || 'Division'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+            {workflow.helper}
+          </Typography>
+        </Box>
+
+        <Stack spacing={1.25}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
+            <Box>
+              <Typography variant="subtitle2">Result readiness</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {readinessData?.isReady
+                  ? 'Required checks are complete.'
+                  : 'Resolve blockers before generating preview.'}
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Label variant="soft" color={blockerCount ? 'error' : 'success'}>
+                {blockerCount} Blockers
+              </Label>
+              <Label variant="soft" color={warningCount ? 'warning' : 'success'}>
+                {warningCount} Warnings
+              </Label>
+            </Stack>
+          </Box>
+
+          <LinearProgress
+            variant="determinate"
+            value={Math.min(100, Math.max(0, readinessPercentage))}
+            sx={{ height: 8, borderRadius: 999 }}
+            color={readinessData?.isReady ? 'success' : 'warning'}
+          />
+
+          <Box
+            display="grid"
+            gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }}
+            gap={1}
+          >
+            {checks.map((check: any) => (
+              <Box
+                key={check.label}
+                sx={{
+                  p: 1,
+                  borderRadius: 1,
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                  bgcolor: check.passed
+                    ? (theme) => alpha(theme.palette.success.main, 0.04)
+                    : 'background.paper',
+                }}
+              >
+                <Stack direction="row" alignItems="flex-start" spacing={1}>
+                  <Iconify
+                    icon={check.passed ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
+                    width={17}
+                    sx={{
+                      mt: 0.15,
+                      color: check.passed
+                        ? 'success.main'
+                        : check.severity === 'warning'
+                          ? 'warning.main'
+                          : 'error.main',
+                    }}
+                  />
+                  <Box minWidth={0}>
+                    <Typography variant="caption" fontWeight={700} display="block">
+                      {check.label}
+                    </Typography>
+                    {check.hint && (
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        {check.hint}
+                      </Typography>
+                    )}
+                  </Box>
+                </Stack>
+              </Box>
+            ))}
+          </Box>
+
+          {pendingSubjects.length > 0 && (
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+              {pendingSubjects.slice(0, 5).map((subject) => (
+                <Label key={subject} variant="soft" color="warning">
+                  {subject}
+                </Label>
+              ))}
+              {pendingSubjects.length > 5 && (
+                <Label variant="soft" color="warning">
+                  +{pendingSubjects.length - 5} more
+                </Label>
+              )}
+            </Stack>
+          )}
+        </Stack>
+      </Box>
+    </Card>
+  );
+}
+
 interface StudentDialogProps {
   open: boolean;
   onClose: () => void;
@@ -213,9 +403,15 @@ function StudentDetailsDialog({
 
   const totalMaxMarks = parseFloat(totalMaxMarksStr) || 0;
   const totalValue = parseFloat(totalValueStr) || 0;
+  const backendPct = parseFloat(String((data as any)?.percentage || '').replace('%', ''));
 
-  const pctNum = totalMaxMarks > 0 ? Math.round((totalValue / totalMaxMarks) * 100) : 0;
-  const pctRaw = `${pctNum}%`;
+  const pctNum =
+    !Number.isNaN(backendPct) && backendPct >= 0
+      ? Math.round(backendPct)
+      : totalMaxMarks > 0
+        ? Math.round((totalValue / totalMaxMarks) * 100)
+        : 0;
+  const pctRaw = (data as any)?.percentage || `${pctNum}%`;
   const isPassing = status?.toUpperCase() === 'PASS';
 
   // Radial progress calculations
@@ -827,6 +1023,43 @@ function StudentDetailsDialog({
             </Table>
           </Card>
         )}
+
+        <Card
+          sx={{
+            p: 2,
+            bgcolor: 'background.paper',
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+            borderRadius: 1.5,
+            boxShadow: 'none',
+          }}
+        >
+          <Box display="flex" alignItems="center" gap={1} mb={1}>
+            <Iconify icon="mdi:calculator-variant-outline" width={20} sx={{ color: 'primary.main' }} />
+            <Typography
+              variant="subtitle2"
+              fontWeight="bold"
+              sx={{ letterSpacing: 0.5, textTransform: 'uppercase' }}
+            >
+              Calculation Explanation
+            </Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            Percentage is calculated from the generated result snapshot as obtained marks divided by
+            maximum marks. Grade and pass/fail status are returned by the backend result calculation
+            so this view stays aligned with the result list and reports.
+          </Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap mt={1.5}>
+            <Label variant="soft" color="info">
+              {totalValueStr} / {totalMaxMarksStr}
+            </Label>
+            <Label variant="soft" color={getPercentageColor(pctRaw)}>
+              {pctRaw}
+            </Label>
+            <Label variant="soft" color={getStatusColor(status)}>
+              {gradeValue || 'Grade -'}
+            </Label>
+          </Stack>
+        </Card>
       </DialogScrollContent>
       {/* </Box> */}
 
@@ -845,7 +1078,7 @@ function StudentDetailsDialog({
         <Button onClick={onClose} variant="outlined" size="medium" sx={{ borderRadius: '8px' }}>
           Close
         </Button>
-        {/* <Button
+        <Button
           onClick={() => window.print()}
           variant="outlined"
           color="inherit"
@@ -858,11 +1091,11 @@ function StudentDetailsDialog({
           onClick={() => window.print()}
           variant="contained"
           color="primary"
-          startIcon={<Iconify icon="mdi:arrow-top-right" />}
+          startIcon={<Iconify icon="mdi:file-pdf-box" />}
           sx={{ borderRadius: '8px' }}
         >
-          Download PDF
-        </Button> */}
+          Save PDF
+        </Button>
       </DialogActions>
     </Dialog>
   );
@@ -1144,7 +1377,7 @@ const ResultCreation = (_props: TabComponentType) => {
         forceRegenerate: true,
       }).unwrap();
       shikshaMitraToast.success({
-        message: `Result generated! ${result?.passed ?? 0} passed out of ${result?.totalStudents ?? 0} students.`,
+        message: `Result preview generated. ${result?.passed ?? 0} passed out of ${result?.totalStudents ?? 0} students.`,
       });
       await handleLoadResults();
     } catch {
@@ -1297,6 +1530,38 @@ const ResultCreation = (_props: TabComponentType) => {
       },
     });
 
+    finalCols.push({
+      id: '_issues',
+      label: 'Issues',
+      minWidth: 120,
+      align: 'left' as const,
+      render: (_value: any, row: any) => {
+        const hasValue = (value: any) => value !== null && value !== undefined && value !== '';
+        const missing = [
+          hasValue(row.Total ?? row.total) ? null : 'marks',
+          hasValue(row.Grade ?? row.grade) ? null : 'grade',
+          hasValue(row.Percentage ?? row.percentage) ? null : 'percentage',
+          hasValue(row.Status ?? row.status) ? null : 'status',
+        ].filter(Boolean);
+
+        if (missing.length === 0) {
+          return (
+            <Label variant="soft" color="success">
+              Ready
+            </Label>
+          );
+        }
+
+        return (
+          <Tooltip title={`Missing ${missing.join(', ')}`}>
+            <Label variant="soft" color="warning">
+              Review
+            </Label>
+          </Tooltip>
+        );
+      },
+    });
+
     // Add any other columns that we didn't explicitly place (in case there are any)
     mappedCols.forEach((col) => {
       if (col.id === 'Status' || col.id === 'status') {
@@ -1417,7 +1682,7 @@ const ResultCreation = (_props: TabComponentType) => {
                 onClick={handleGenerate}
                 sx={{ minWidth: 145 }}
               >
-                Generate Result
+                Generate Preview
               </LoadingButton>
             )}
 
@@ -1513,8 +1778,19 @@ const ResultCreation = (_props: TabComponentType) => {
         </Box>
       </motion.div>
 
+      {allFiltersSet && readinessData?.checks?.length > 0 && (
+        <ResultWorkflowPanel
+          readinessData={readinessData}
+          resultHeaderData={resultHeaderData}
+          selectedExamName={selectedExamName}
+          selectedClassName={selectedClassName}
+          selectedDivisionName={selectedDivisionName}
+        />
+      )}
+
       {/* Readiness Panel */}
-      {allFiltersSet &&
+      {false &&
+        allFiltersSet &&
         !previewResult &&
         !isPreviewLoading &&
         readinessData?.checks?.length > 0 && (

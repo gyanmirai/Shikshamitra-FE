@@ -32,6 +32,7 @@ import {
   TextField,
   Typography,
   LinearProgress,
+  IconButton,
 } from '@mui/material';
 import {
   useGetLessonPlansQuery,
@@ -45,7 +46,6 @@ import {
   useCreateTeacherDiaryMutation,
   useUpdateTeacherDiaryMutation,
   useRequestPlanChangesMutation,
-  useBulkSubmitLessonPlansMutation,
   useCreateHomeworkFromLessonPlanMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/LessonPlanApi/lesson-plan-api';
 
@@ -192,6 +192,25 @@ const getCurrentEmployeeName = (employee: any, user: any) =>
   user?.email ||
   '';
 
+const readRoleNames = (employee: any, user: any): string[] => {
+  const roleValues = [
+    employee?.role?.name,
+    employee?.roleName,
+    employee?.designation,
+    user?.role,
+    user?.roles,
+    user?.roleNames,
+  ];
+
+  return roleValues
+    .flatMap((value) => (Array.isArray(value) ? value : [value]))
+    .filter((value): value is string => typeof value === 'string' && Boolean(value.trim()))
+    .map((value) => value.trim().toLowerCase());
+};
+
+const canRoleReviewLessonPlans = (role: string) =>
+  role === 'admin' || role === 'administrator' || role.includes('coordinator');
+
 const toPlanStatus = (value: unknown): PlanStatus =>
   typeof value === 'number'
     ? (PLAN_STATUS_BY_VALUE[value] ?? 'Draft')
@@ -223,6 +242,7 @@ type TabValue = (typeof TABS)[number]['value'];
 const LessonPlanScreen = () => {
   const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
   const { employee, user } = useSelector((state: RootState) => state.auth);
+  const canReviewSubmissions = readRoleNames(employee, user).some(canRoleReviewLessonPlans);
   const [activeTab, setActiveTab] = useState<TabValue>('dailyTimeline');
   const [healthScore] = useState<TeachingHealthScore>(initialHealthScore);
 
@@ -251,10 +271,10 @@ const LessonPlanScreen = () => {
     { skip: !currentMedium?.id }
   );
 
-  const [createLessonPlan] = useCreateLessonPlanMutation();
-  const [updateLessonPlan] = useUpdateLessonPlanMutation();
-  const [submitLessonPlan] = useSubmitLessonPlanMutation();
-  const [bulkSubmitLessonPlans] = useBulkSubmitLessonPlansMutation();
+  const [createLessonPlan, { isLoading: isCreatingLesson }] = useCreateLessonPlanMutation();
+  const [updateLessonPlan, { isLoading: isUpdatingLesson }] = useUpdateLessonPlanMutation();
+  const [submitLessonPlan, { isLoading: isSubmittingLesson }] = useSubmitLessonPlanMutation();
+  const isSavingLesson = isCreatingLesson || isUpdatingLesson || isSubmittingLesson;
   const [approveLessonPlan] = useApproveLessonPlanMutation();
   const [rejectLessonPlan] = useRejectLessonPlanMutation();
   const [requestChanges] = useRequestPlanChangesMutation();
@@ -1039,7 +1059,7 @@ const LessonPlanScreen = () => {
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 120,
+      minWidth: 180,
       align: 'center' as const,
       isSort: false,
       isFilter: false,
@@ -1048,51 +1068,35 @@ const LessonPlanScreen = () => {
       render: (_v: unknown, row: any) => {
         const plan = row as LessonPlanRow;
         const diary = getDiaryForLesson(plan.id);
-        const isPlanLocked = plan.planStatus === 'Approved';
         return (
-          <ThreeDotsActions
-            showViewIcon
-            handleViewClick={() => openDetails(plan)}
-            showEditIcon
-            placement="right-center"
-            disableEditIcon={isPlanLocked}
-            editLabel={isPlanLocked ? 'Approved lesson plan is view only' : 'Edit lesson plan'}
-            handleEditClick={() => openEditLesson(plan)}
-            actions={({ popover: pop }) => (
-              <MenuList>
-                <MenuItem
-                  disabled={!['Draft', 'Rejected', 'NeedsChanges'].includes(plan.planStatus)}
-                  onClick={() => {
-                    pop.onClose();
-                    submitPlan(plan.id);
-                  }}
-                >
-                  <Iconify icon={GlobalIcons.submit} sx={{ mr: 1, width: 16, height: 16 }} />
-                  Submit plan
-                </MenuItem>
-                <MenuItem
-                  disabled={plan.planStatus === 'Cancelled'}
-                  onClick={() => {
-                    pop.onClose();
-                    openDiary(plan);
-                  }}
-                >
-                  <Iconify icon="mdi:notebook-edit-outline" sx={{ mr: 1, width: 16, height: 16 }} />
-                  {diary ? 'Edit diary notes' : 'Add diary notes'}
-                </MenuItem>
-                <MenuItem
-                  disabled={plan.planStatus !== 'Approved'}
-                  onClick={() => {
-                    pop.onClose();
-                    openHomeworkFromPlan(plan);
-                  }}
-                >
-                  <Iconify icon="mdi:book-plus-outline" sx={{ mr: 1, width: 16, height: 16 }} />
-                  Create homework
-                </MenuItem>
-              </MenuList>
-            )}
-          />
+          <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              disabled={plan.planStatus === 'Cancelled'}
+              startIcon={<Iconify icon="mdi:notebook-edit-outline" width={16} />}
+              onClick={() => openDiary(plan)}
+              sx={{
+                fontSize: '0.8125rem',
+                py: 0.5,
+                px: 1,
+                borderColor: 'divider',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+            >
+              {diary ? 'Edit diary notes' : 'Add diary notes'}
+            </Button>
+            <IconButton
+              size="small"
+              onClick={() => openDetails(plan)}
+              sx={{ color: 'text.secondary' }}
+            >
+              <Iconify icon="carbon:view-filled" width={18} />
+            </IconButton>
+          </Stack>
         );
       },
     },
@@ -1352,21 +1356,6 @@ const LessonPlanScreen = () => {
           onCopyPreviousWeek={() =>
             shikshaMitraToast.info({ message: 'Previous week lessons copied as draft.' })
           }
-          onSubmitWeekPlan={async (plans) => {
-            const ids = plans.map((p) => p.id);
-            try {
-              await bulkSubmitLessonPlans({ lessonPlanIds: ids }).unwrap();
-              refetchTimeline();
-              refetchLessonPlans();
-              shikshaMitraToast.success({
-                message: `${plans.length} draft lesson(s) submitted for the week.`,
-              });
-            } catch (err: any) {
-              shikshaMitraToast.error({
-                message: err?.data?.error?.message || 'Failed to submit week plan.',
-              });
-            }
-          }}
         />
       )}
 
@@ -1384,6 +1373,7 @@ const LessonPlanScreen = () => {
         <ReviewQueueTab
           lessonPlans={lessonPlans}
           diaryEntries={diaryEntries}
+          canReviewSubmissions={canReviewSubmissions}
           onApprove={handleApprove}
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}
@@ -1410,6 +1400,7 @@ const LessonPlanScreen = () => {
           setLessonModalOpen(false);
           setAiDrawerOpen(true);
         }}
+        isLoading={isSavingLesson}
       />
 
       <SubmitDiaryModal

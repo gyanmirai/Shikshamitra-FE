@@ -6,14 +6,21 @@ export interface IGradeFormProps {
 }
 
 export interface IGradingScale {
-  minMarks: number;
-  maxMarks: number;
+  minMarks: number | string;
+  maxMarks: number | string;
   grade: string;
+  gradePoint?: number | string;
+  remark?: string;
+  resultStatus?: number | string;
 }
 
 export interface IGrade {
-  id: number;
+  id: string;
   name: string;
-  totalMarks: number;
+  totalMarks: number | string;
+  passMarks?: number | string;
+  description?: string;
+  isDefault?: boolean;
+  status?: number | string;
   gradingScale: IGradingScale[] | null;
 }

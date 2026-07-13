@@ -30,11 +30,84 @@ import OperationalStatus from './Components/OperationalStatus';
 import ConfigurationStatus from './Components/ConfigurationStatus';
 import SubjectPassFailChart from './Components/SubjectPassFailChart';
 import PlannedVsActualProgressChart from './Components/PlannedVsActualProgressChart';
+import { AcademicActionQueue } from '../components/command-center/AcademicActionQueue';
+import { AcademicCommandHeader } from '../components/command-center/AcademicCommandHeader';
+import { AcademicHealthScoreCard } from '../components/command-center/AcademicHealthScoreCard';
+import { AcademicModuleHealthGrid } from '../components/command-center/AcademicModuleHealthGrid';
+
+import type {
+  AcademicActionItem,
+  AcademicModuleHealthItem,
+} from '../components/command-center/types';
 
 const formatCount = (value?: number | null) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 const getPercent = (value: number, total: number) =>
   total > 0 ? Math.round((value / total) * 100) : 0;
+
+const toActionQueue = (data: AdminAcademicDashboardData): AcademicActionItem[] => [
+  ...data.insights.map((insight, index) => ({
+    id: `insight-${index}`,
+    title: insight.title,
+    summary: insight.summary,
+    severity: insight.severity,
+    source: insight.source,
+    actionLabel: insight.actionLabel,
+    actionHref: insight.actionHref,
+  })),
+  ...(data.conflictsCount > 0
+    ? [
+        {
+          id: 'timetable-conflicts',
+          title: `${data.conflictsCount} timetable conflict${data.conflictsCount > 1 ? 's' : ''} need review`,
+          summary: 'Resolve teacher, room or lecture overlap before the next working day.',
+          severity: 'critical' as const,
+          source: 'timetable',
+          actionLabel: 'Resolve',
+          actionHref: academicPaths.timetable.management,
+        },
+      ]
+    : []),
+];
+
+const toModuleHealth = (data: AdminAcademicDashboardData): AcademicModuleHealthItem[] => [
+  {
+    id: 'curriculum',
+    module: 'Curriculum',
+    status: `${data.curriculumCompletion}% completion`,
+    progress: data.curriculumCompletion,
+    tone: data.curriculumCompletion >= 80 ? 'success' : 'warning',
+    icon: 'mdi:book-open-page-variant-outline',
+    href: academicPaths.curriculum.chaptersManagement,
+  },
+  {
+    id: 'timetable',
+    module: 'Timetable',
+    status: `${data.activeTimetables} active | ${data.pendingTimetables} pending`,
+    progress: data.timetableRate,
+    tone: data.conflictsCount > 0 ? 'error' : data.timetableRate >= 80 ? 'success' : 'warning',
+    icon: 'mdi:calendar-clock-outline',
+    href: academicPaths.timetable.management,
+  },
+  {
+    id: 'homework',
+    module: 'Homework Evaluation',
+    status: `${formatCount(data.pendingEvaluations)} pending`,
+    progress: Math.max(0, 100 - data.pendingEvaluations),
+    tone: data.pendingEvaluations > 20 ? 'warning' : 'success',
+    icon: 'mdi:clipboard-check-outline',
+    href: academicPaths.homework.assessment,
+  },
+  {
+    id: 'examination',
+    module: 'Examination',
+    status: `${formatCount(data.pendingGradeEntries)} grade entries pending`,
+    progress: data.readinessRate,
+    tone: data.pendingGradeEntries > 0 ? 'warning' : 'success',
+    icon: 'mdi:file-document-edit-outline',
+    href: academicPaths.examination.recordMarks,
+  },
+];
 
 type TopSummaryTone = 'primary' | 'success' | 'info' | 'warning' | 'error' | 'secondary';
 
@@ -823,54 +896,53 @@ const AcademicDashboardScreen = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pb: 2 }}>
-      {/* Header */}
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        alignItems={{ xs: 'stretch', md: 'flex-start' }}
-        justifyContent="space-between"
-        spacing={1.25}
-      >
-        <Box>
-          <Typography variant="h4">Academic Dashboard</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Stored academic operations snapshot
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" justifyContent="flex-end">
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={handleRefresh}
-            disabled={isRefreshing || isFetching}
-            startIcon={<Iconify icon="solar:refresh-linear" />}
-            sx={{ minHeight: 34 }}
-          >
-            {isRefreshing ? 'Refreshing' : 'Refresh'}
-          </Button>
-          <Button
-            component={Link}
-            href={academicPaths.timetable.management}
-            variant="outlined"
-            size="small"
-            startIcon={<Iconify icon="solar:calendar-linear" />}
-            sx={{ minHeight: 34 }}
-          >
-            Timetables
-          </Button>
-          <Button
-            component={Link}
-            href={academicPaths.examination.schedule}
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon="solar:clipboard-text-linear" />}
-            sx={{ minHeight: 34 }}
-          >
-            Schedule Exam
-          </Button>
-        </Stack>
-      </Stack>
+      <AcademicCommandHeader
+        eyebrow="Admin View"
+        title="Academic Command Center"
+        description="Control setup quality, daily operations, assessment readiness and module health from one place."
+        lastUpdatedLabel="Live academic snapshot"
+        isBusy={isRefreshing || isFetching}
+        onRefresh={handleRefresh}
+        actions={[
+          { label: 'Student 360', href: academicPaths.studentAcademic360, icon: 'mdi:account-school-outline' },
+          { label: 'Timetables', href: academicPaths.timetable.management, icon: 'solar:calendar-linear' },
+          {
+            label: 'Schedule Exam',
+            href: academicPaths.examination.schedule,
+            icon: 'solar:clipboard-text-linear',
+            variant: 'contained',
+          },
+        ]}
+      />
 
       {isRefreshing || isFetching ? <LinearProgress /> : null}
+
+      <Grid container spacing={1.5} alignItems="stretch">
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <AcademicHealthScoreCard
+            title="Academic Health"
+            score={Math.round((data.curriculumCompletion + data.timetableRate + data.readinessRate) / 3)}
+            status={data.conflictsCount > 0 || data.pendingGradeEntries > 0 ? 'Needs Attention' : 'Healthy'}
+            description="Weighted from curriculum progress, timetable readiness and grading readiness."
+            factors={[
+              { label: 'Curriculum', value: `${data.curriculumCompletion}%`, tone: 'success' },
+              { label: 'Timetable', value: `${data.timetableRate}%`, tone: data.conflictsCount ? 'error' : 'info' },
+              { label: 'Readiness', value: `${data.readinessRate}%`, tone: 'warning' },
+              { label: 'Pending Work', value: `${data.pendingGradeEntries + data.pendingEvaluations}`, tone: 'warning' },
+            ]}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <AcademicActionQueue
+            title="Priority Action Queue"
+            subtitle="Most important academic issues to close first"
+            items={toActionQueue(data)}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <AcademicModuleHealthGrid items={toModuleHealth(data)} />
+        </Grid>
+      </Grid>
 
       {/* Snapshot Cards */}
       <Grid container spacing={1.5}>

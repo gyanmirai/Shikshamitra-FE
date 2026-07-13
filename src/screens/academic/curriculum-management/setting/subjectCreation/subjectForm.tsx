@@ -242,13 +242,6 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
               </Alert>
             </Grid>
           )}
-
-          <Grid size={{ xs: 12 }}>
-            <Alert severity="info">
-              Class-wise subject code, teacher mapping, exam rules, timetable usage, and elective
-              grouping will be configured in Subject Allocation and Elective Group Creation.
-            </Alert>
-          </Grid>
         </Grid>
       </DialogScrollContent>
 

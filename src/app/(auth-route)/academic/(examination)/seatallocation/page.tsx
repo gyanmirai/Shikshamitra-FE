@@ -1,6 +1,6 @@
 import React from 'react';
-import SeatAllocation from 'src/screens/examination/seatAllocation';
+import SeatingPlanListPage from 'src/screens/examination/seatingPlan/pages/SeatingPlanListPage';
 
-const page = () => <SeatAllocation />;
+const page = () => <SeatingPlanListPage />;
 
 export default page;

@@ -2,12 +2,12 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Chip, Stack, Tooltip, IconButton, Typography, LinearProgress } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, IconButton, Typography, LinearProgress, MenuList, MenuItem } from '@mui/material';
 
 import { statusColor, getCoverageStatus, getChapterProgress } from '../syllabusPlanningData';
 
@@ -62,6 +62,78 @@ const ChapterTable = ({
       })) || [],
     [data]
   );
+
+  const tableActions = useCallback(
+    ({ popover, row }: { popover: any; row: IChapter }) => (
+      <MenuList disablePadding dense>
+        {canView && (
+          <MenuItem
+            onClick={() => {
+              onViewDocuments(row);
+              popover.onClose();
+            }}
+          >
+            <Iconify icon="carbon:view-filled" sx={{ mr: 1, width: 18, height: 18 }} />
+            View Documents
+          </MenuItem>
+        )}
+        {canAdd && (
+          <MenuItem
+            onClick={() => {
+              setEditData(row);
+              addChapterDialog.onTrue();
+              popover.onClose();
+            }}
+          >
+            <Iconify icon="solar:pen-bold" sx={{ mr: 1, width: 18, height: 18 }} />
+            Edit Chapter
+          </MenuItem>
+        )}
+        <MenuItem
+          onClick={() => {
+            onCreateQuestion?.(row);
+            popover.onClose();
+          }}
+        >
+          <Iconify icon="mingcute:question-line" sx={{ mr: 1, width: 18, height: 18 }} />
+          Create Question
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            onViewQuestions?.(row);
+            popover.onClose();
+          }}
+        >
+          <Iconify icon="mingcute:list-check-line" sx={{ mr: 1, width: 18, height: 18 }} />
+          View Questions
+        </MenuItem>
+        {canDelete && (
+          <MenuItem
+            onClick={() => {
+              onDelete(row);
+              popover.onClose();
+            }}
+            sx={{ color: 'error.main' }}
+          >
+            <Iconify icon="solar:trash-bin-trash-bold" sx={{ mr: 1, width: 18, height: 18 }} />
+            Delete Chapter
+          </MenuItem>
+        )}
+      </MenuList>
+    ),
+    [
+      addChapterDialog,
+      canAdd,
+      canDelete,
+      canView,
+      onCreateQuestion,
+      onDelete,
+      onViewDocuments,
+      onViewQuestions,
+      setEditData,
+    ]
+  );
+
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -197,20 +269,7 @@ const ChapterTable = ({
           </Stack>
         ),
       },
-      {
-        id: 'publishStatus',
-        label: 'Publish',
-        align: 'left',
-        filterType: 'string',
-        render: (value) => (
-          <Chip
-            size="small"
-            variant="soft"
-            color={statusColor(String(value)) as any}
-            label={value}
-          />
-        ),
-      },
+
       {
         id: 'description',
         label: 'Description',
@@ -271,7 +330,8 @@ const ChapterTable = ({
       {
         id: 'actions',
         label: 'Actions',
-        minWidth: 180,
+        minWidth: 80,
+        width: 80,
         isSort: false,
         isFilter: false,
         align: 'left',
@@ -279,63 +339,17 @@ const ChapterTable = ({
         render(value, row) {
           const chapter = row as IChapter;
           return (
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Tooltip title="Create Question" placement="top">
-                <IconButton
-                  size="small"
-                  color="primary"
-                  sx={{ p: 0.5 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCreateQuestion?.(chapter);
-                  }}
-                >
-                  <Iconify icon="mingcute:question-line" width={18} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="View Questions" placement="top">
-                <IconButton
-                  size="small"
-                  color="info"
-                  sx={{ p: 0.5 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onViewQuestions?.(chapter);
-                  }}
-                >
-                  <Iconify icon="mingcute:list-check-line" width={18} />
-                </IconButton>
-              </Tooltip>
-              <ThreeDotsActions
-                showThreeDots={false}
-                placement="right-top"
-                showEditIcon={canAdd}
-                showDeleteIcon={canDelete}
-                showViewIcon={canView}
-                handleViewClick={() => {
-                  onViewDocuments(chapter);
-                }}
-                handleEditClick={() => {
-                  setEditData(chapter);
-                  addChapterDialog.onTrue();
-                }}
-                handleDeleteClick={() => onDelete(chapter)}
-              />
-            </Stack>
+            <ThreeDotsActions
+              showThreeDots={true}
+              placement="right-top"
+              actions={(prop) => tableActions({ ...prop, row: chapter })}
+            />
           );
         },
       },
     ],
     [
-      addChapterDialog,
-      canAdd,
-      canDelete,
-      canView,
-      onCreateQuestion,
-      onDelete,
-      onViewDocuments,
-      onViewQuestions,
-      setEditData,
+      tableActions,
     ]
   );
   return (

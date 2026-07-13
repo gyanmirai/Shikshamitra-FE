@@ -170,6 +170,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
 
   const formik = useFormik<IChapterFormValues>({
     initialValues: getChapterInitialValues(initialValues),
+    enableReinitialize: true,
     validationSchema: getChapterValidationSchema(currentYear, existingChapters, initialValues?.id),
     onSubmit: async (values) => {
       try {
@@ -240,8 +241,11 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   });
 
   const handleDropzoneChange = async (droppedFiles: any[]) => {
-    const newFiles = droppedFiles.filter((f): f is File => typeof f !== 'string');
-    const existingFiles = droppedFiles.filter((f) => typeof f === 'string');
+    const newFiles = droppedFiles.filter((f): f is File => f instanceof File);
+    const existingFiles = droppedFiles
+      .filter((f) => !(f instanceof File))
+      .map((f) => (typeof f === 'string' ? f : f.url || f.filePath || ''))
+      .filter(Boolean);
 
     if (newFiles.length === 0) {
       formik.setFieldValue('documents', existingFiles);
@@ -703,7 +707,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     </Grid>
                   ))}
                   {[
-                    ['publishStatus', 'Publish Status', publishStatusOptions],
                     ['reviewStatus', 'Review Status', reviewStatusOptions],
                     ['visibility', 'Visibility', visibilityOptions],
                     ['coverageStatus', 'Coverage Status', coverageStatusOptions],
@@ -765,17 +768,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       <FormControlLabel
                         control={
                           <Checkbox
-                            checked={formik.values.notifyOnPublish}
-                            onChange={(e) =>
-                              formik.setFieldValue('notifyOnPublish', e.target.checked)
-                            }
-                          />
-                        }
-                        label="Notify on publish"
-                      />
-                      <FormControlLabel
-                        control={
-                          <Checkbox
                             checked={formik.values.isAiGenerated}
                             onChange={(e) =>
                               formik.setFieldValue('isAiGenerated', e.target.checked)
@@ -833,7 +825,16 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       : file?.url || file?.filePath || (typeof file === 'string' ? file : '');
                   setPreviewDoc(url);
                 }}
-                value={formik.values.documents as any[]}
+                value={formik.values.documents?.map((doc: any) => {
+                  if (typeof doc === 'string') {
+                    return {
+                      url: doc,
+                      name: getFileNameFromUrl(doc),
+                      size: undefined,
+                    };
+                  }
+                  return doc;
+                })}
                 primaryText="Drag & drop files here, or click to browse"
               />
             </Paper>
@@ -877,20 +878,13 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               type="submit"
               size="small"
               variant="contained"
-              onClick={async () => {
-                if (initialValues) {
-                  await formik.setFieldValue('notifyOnPublish', true);
-                } else {
-                  await formik.setFieldValue('publishStatus', 'Published');
-                }
-              }}
               sx={{
                 minWidth: 120,
                 transition: 'all 0.2s ease',
                 '&:hover': { boxShadow: 4 },
               }}
             >
-              {initialValues ? 'Update & Notify' : 'Publish Chapter'}
+              {initialValues ? 'Update' : 'Add Chapter'}
             </Button>
           </DialogActions>
 

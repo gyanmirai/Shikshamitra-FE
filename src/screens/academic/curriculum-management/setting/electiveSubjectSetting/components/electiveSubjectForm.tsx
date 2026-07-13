@@ -13,7 +13,6 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import {
   Box,
   Grid,
-  Alert,
   Button,
   Divider,
   MenuItem,
@@ -71,7 +70,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               select
               fullWidth
@@ -91,7 +90,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
             </TextField>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(formik.touched.color && formik.errors.color) || false}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 0.5 }}>
                 <Typography
@@ -206,14 +205,6 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
               helperText={formik.touched.sortOrder && formik.errors.sortOrder}
               inputProps={{ min: 0 }}
             />
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <Alert severity="info">
-              This screen creates a master elective group only. Class-wise group code, min/max
-              selection rules, mandatory/optional setting, selection dates, and approval rules will
-              be configured during Subject Allocation.
-            </Alert>
           </Grid>
         </Grid>
       </DialogScrollContent>

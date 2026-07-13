@@ -7,6 +7,8 @@ import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { MeetingRoom, ClassOutlined } from '@mui/icons-material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import { Box, Card, Chip, Grid, Button, Divider, Typography } from '@mui/material';
 
 import type { IRoomDetails, IExamFormValues } from '../type';
@@ -70,6 +72,17 @@ const RoomAllocationReview = ({
   const { roomDetails } = formik.values;
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { data: roomsApiData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomsQuery,
+  });
+
+  const roomLabelById = new Map(
+    (roomsApiData?.items ?? []).map((room: any) => {
+      const labelParts = [room.buildingName, room.floorName, room.roomName].filter(Boolean);
+      return [room.id, labelParts.length ? labelParts.join(' › ') : room.id];
+    })
+  );
 
   // Flatten all standards/classes from education medium stages into a single array
   const allClass = useMemo(
@@ -83,7 +96,7 @@ const RoomAllocationReview = ({
     [allClass, formik.values.className]
   );
   const hasAnyRoomAssigned = Object.values(formik?.values?.roomDetails ?? {}).some((subject: any) =>
-    Object.values(subject?.divisions ?? {}).some(
+    Object.values(subject ?? {}).some(
       (div: any) => Array.isArray(div?.roomIds) && div.roomIds.length > 0
     )
   );
@@ -199,10 +212,10 @@ const RoomAllocationReview = ({
                               label={`Division ${divisionLabel}`}
                               value={
                                 <Box display="flex" flexWrap="wrap" gap={0.5}>
-                                  {divisionData.roomIds.map((room: string, idx: number) => (
+                                  {divisionData.roomIds.map((roomId: string) => (
                                     <Chip
-                                      key={idx}
-                                      label={room}
+                                      key={roomId}
+                                      label={roomLabelById.get(roomId) ?? roomId}
                                       size="small"
                                       variant="outlined"
                                       icon={<MeetingRoom style={{ fontSize: '1rem' }} />}

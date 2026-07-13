@@ -41,8 +41,22 @@ const InfoItem = ({ icon, label, value }: InfoItemProps) => (
       </Typography>
       <Typography
         variant="subtitle2"
-        component="p"
-        sx={{ fontWeight: 600, color: 'text.primary', wordBreak: 'break-word' }}
+        component="div"
+        sx={{
+          fontWeight: 600,
+          color: 'text.primary',
+          wordBreak: 'break-word',
+          '& p, & ul, & ol': {
+            margin: 0,
+            lineHeight: 1.6,
+          },
+          '& p:not(:last-child), & ul:not(:last-child), & ol:not(:last-child)': {
+            marginBottom: 1.5,
+          },
+          '& ul, & ol': {
+            paddingLeft: 2.5,
+          },
+        }}
         dangerouslySetInnerHTML={{ __html: String(value ?? '') || 'N/A' }}
       />
     </Box>
