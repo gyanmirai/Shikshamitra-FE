@@ -2176,16 +2176,31 @@ export type AdmissionCrmCommunicationProviderDto = {
   isEnabled: boolean;
   providerName?: string | null;
   senderId?: string | null;
-  settingsJson?: string | null;
+  settings: AdmissionCrmCommunicationProviderSettingsDto;
   webhookUrl?: string | null;
   lastValidatedAt?: string | null;
+};
+
+export type AdmissionCrmCommunicationProviderSettingsDto = {
+  adapter: string;
+  payloadMode: string;
+  responseProviderMessageIdPath?: string | null;
+  headers: Record<string, string>;
+  parameters: Record<string, string>;
+  callbackSecret?: string | null;
+  callbackMappings: {
+    statusPath?: string | null;
+    statusDetailsPath?: string | null;
+    providerMessageIdPath?: string | null;
+    callbackSecretPath?: string | null;
+  };
 };
 
 export type UpdateAdmissionCrmCommunicationProviderDto = {
   isEnabled: boolean;
   providerName?: string | null;
   senderId?: string | null;
-  settingsJson?: string | null;
+  settings: AdmissionCrmCommunicationProviderSettingsDto;
   webhookUrl?: string | null;
   lastValidatedAt?: string | null;
 };
@@ -4084,6 +4099,7 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         url: `/student-enrollment/admissions-crm/${academicYearId}/configuration/pipeline-stages`,
         method: 'GET',
       }),
+      transformResponse: (response: PagedResult<AdmissionCrmPipelineStageDto>) => response.items,
       providesTags: [studentAdmissionsCrmType.configuration],
     }),
     updateAdmissionCrmPipelineStage: builder.mutation<

@@ -2,7 +2,7 @@
 import type { AddressInfo } from 'node:net';
 
 import { type Server, createServer } from 'node:http';
-import { test, expect, type Page, type Locator, type APIResponse } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 const studentCrmE2EEnabled = process.env.E2E_STUDENT_CRM === '1';
 const tenantCode = () => process.env.E2E_TENANT || 'DDVS';
@@ -127,7 +127,13 @@ async function publicApiRequest(page: Page, path: string, init: JsonRequestInit 
   });
 }
 
-async function expectOk(response: APIResponse, label: string) {
+type PlaywrightResponse = {
+  ok(): boolean;
+  status(): number;
+  text(): Promise<string>;
+};
+
+async function expectOk(response: PlaywrightResponse, label: string) {
   const details = response.ok() ? '' : await response.text();
   expect(response.ok(), `${label}: ${response.status()} ${details}`).toBe(true);
 }
@@ -615,7 +621,13 @@ test.describe('Student admissions CRM E2E', () => {
     await examDialog.getByLabel('Passing marks').fill('40');
     await examDialog.getByLabel('Obtained marks').fill('82');
     await examDialog.getByLabel('Merit rank').fill('1');
+    const resultResponsePromise = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        response.url().includes(`/admissions-crm/exams/${scheduled.id}/result`)
+    );
     await examDialog.getByRole('button', { name: /Save Result/i }).click();
+    await expectOk(await resultResponsePromise, 'save CRM exam result from the workspace');
     await expect
       .poll(
         async () => {
@@ -944,7 +956,13 @@ test.describe('Student admissions CRM E2E', () => {
             isEnabled: true,
             providerName: 'Playwright OTP webhook',
             senderId: 'e2e',
-            settingsJson: JSON.stringify({ adapter: 'webhook' }),
+            settings: {
+              adapter: 'webhook',
+              payloadMode: 'default',
+              headers: {},
+              parameters: {},
+              callbackMappings: {},
+            },
             webhookUrl: otpWebhookUrl,
           },
         }
@@ -1059,7 +1077,7 @@ test.describe('Student admissions CRM E2E', () => {
                 isEnabled: originalSmsProvider.isEnabled,
                 providerName: originalSmsProvider.providerName,
                 senderId: originalSmsProvider.senderId,
-                settingsJson: originalSmsProvider.settingsJson,
+                settings: originalSmsProvider.settings,
                 webhookUrl: originalSmsProvider.webhookUrl,
                 lastValidatedAt: originalSmsProvider.lastValidatedAt,
               }

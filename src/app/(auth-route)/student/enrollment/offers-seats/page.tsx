@@ -7,6 +7,7 @@ const AdmissionsOffersSeatsPage = () => (
     initialView="operations"
     initialOperationsQueueType={AdmissionCrmOperationsQueueType.FinalApproval}
     fixedView
+    workspace="offers"
   />
 );
 

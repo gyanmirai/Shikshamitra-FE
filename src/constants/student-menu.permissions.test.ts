@@ -48,7 +48,6 @@ describe('student permission groups', () => {
       'src/app/(auth-route)/student/enrollment/activation/page.tsx',
       'src/app/(auth-route)/student/enrollment/operations/page.tsx',
       'src/app/(auth-route)/student/enrollment/analytics/page.tsx',
-      'src/app/(auth-route)/student/enrollment/settings/page.tsx',
       'src/app/(auth-route)/student/attendance/layout.tsx',
       'src/app/(auth-route)/student/attendance/leave-absent/layout.tsx',
       'src/app/(auth-route)/student/attendance/notification/layout.tsx',
@@ -62,5 +61,10 @@ describe('student permission groups', () => {
 
       expect(source, workspacePath).not.toMatch(/^['"]use client['"]/);
     });
+
+    const settingsSource = readSource(
+      'src/app/(auth-route)/student/enrollment/settings/page.tsx'
+    ).trimStart();
+    expect(settingsSource).toMatch(/^['"]use client['"]/);
   });
 });

@@ -134,6 +134,33 @@ export const formatAdmissionCrmProviderSettings = (settings: AdmissionCrmProvide
 export const getAdmissionCrmProviderAdapter = (settingsJson: string) =>
   parseAdmissionCrmProviderSettings(settingsJson).adapter || 'webhook';
 
+export const getAdmissionCrmProviderPayloadMode = (settingsJson: string) =>
+  parseAdmissionCrmProviderSettings(settingsJson).payloadMode || 'default';
+
+export const updateAdmissionCrmProviderPayloadMode = (
+  settingsJson: string,
+  payloadMode: string
+) => {
+  const settings = parseAdmissionCrmProviderSettings(settingsJson);
+  settings.payloadMode = payloadMode || 'default';
+  return formatAdmissionCrmProviderSettings(settings);
+};
+
+export const getAdmissionCrmProviderKeyValueSettings = (
+  settingsJson: string,
+  field: 'headers' | 'parameters'
+) => parseAdmissionCrmProviderSettings(settingsJson)[field] || {};
+
+export const updateAdmissionCrmProviderKeyValueSettings = (
+  settingsJson: string,
+  field: 'headers' | 'parameters',
+  values: Record<string, string>
+) => {
+  const settings = parseAdmissionCrmProviderSettings(settingsJson);
+  settings[field] = values;
+  return formatAdmissionCrmProviderSettings(settings);
+};
+
 export const getAdmissionCrmProviderResponseMessageIdPath = (settingsJson: string) =>
   parseAdmissionCrmProviderSettings(settingsJson).responseProviderMessageIdPath || '';
 
@@ -152,11 +179,7 @@ export const getAdmissionCrmProviderCallbackMappingPath = (
 
 export const updateAdmissionCrmProviderAdapter = (settingsJson: string, adapter: string) => {
   const settings = parseAdmissionCrmProviderSettings(settingsJson);
-  if (adapter === 'webhook') {
-    delete settings.adapter;
-  } else {
-    settings.adapter = adapter;
-  }
+  settings.adapter = adapter || 'webhook';
 
   return formatAdmissionCrmProviderSettings(settings);
 };

@@ -7,6 +7,7 @@ const AdmissionsRegistrationsPage = () => (
     initialView="operations"
     initialOperationsQueueType={AdmissionCrmOperationsQueueType.IncompleteRegistration}
     fixedView
+    workspace="registrations"
   />
 );
 

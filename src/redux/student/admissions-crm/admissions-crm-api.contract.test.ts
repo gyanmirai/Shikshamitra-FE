@@ -672,8 +672,12 @@ describe('admissions CRM API contracts', () => {
       },
     });
 
-    const providerSettingsJson = JSON.stringify({
+    const providerSettings = {
+      adapter: 'webhook',
+      payloadMode: 'default',
       responseProviderMessageIdPath: 'messages.0.id',
+      headers: {},
+      parameters: {},
       callbackSecret: 'secret-1',
       callbackMappings: {
         statusPath: 'event.status',
@@ -681,7 +685,7 @@ describe('admissions CRM API contracts', () => {
         providerMessageIdPath: 'message.id',
         callbackSecretPath: 'auth.secret',
       },
-    });
+    };
 
     expect(
       buildUpdateAdmissionCrmCommunicationProviderRequest({
@@ -691,7 +695,7 @@ describe('admissions CRM API contracts', () => {
           isEnabled: true,
           providerName: 'WhatsApp Sandbox',
           webhookUrl: 'https://provider.example.test/admissions',
-          settingsJson: providerSettingsJson,
+          settings: providerSettings,
         },
       })
     ).toEqual({
@@ -701,7 +705,7 @@ describe('admissions CRM API contracts', () => {
         isEnabled: true,
         providerName: 'WhatsApp Sandbox',
         webhookUrl: 'https://provider.example.test/admissions',
-        settingsJson: providerSettingsJson,
+        settings: providerSettings,
       },
     });
 

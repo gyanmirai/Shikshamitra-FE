@@ -31,6 +31,11 @@ const SubLayout = ({ children }: any) => {
   const [isPinned, setIsPinned] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const leaveTimeout = useRef<any>(null);
+  const contentScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    contentScrollRef.current?.scrollTo({ top: 0, left: 0 });
+  }, [pathname]);
 
   const handleMouseEnter = useCallback(() => {
     if (leaveTimeout.current) clearTimeout(leaveTimeout.current);
@@ -228,6 +233,7 @@ const SubLayout = ({ children }: any) => {
         }}
       >
         <Scrollbar
+          ref={contentScrollRef}
           sx={{
             width: '100%',
             mx: 'auto',

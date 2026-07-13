@@ -21,9 +21,7 @@ const reporter = getArgValue('--reporter', 'list');
 const specPath = [
   'e2e',
   'student',
-  preflightOnly
-    ? 'admissions-crm-preflight.guest.spec.ts'
-    : 'admissions-crm-flow.guest.spec.ts'
+  preflightOnly ? 'admissions-crm-preflight.guest.spec.ts' : 'admissions-crm-flow.guest.spec.ts',
 ].join('/');
 
 const readDotEnv = () => {
@@ -64,7 +62,10 @@ const resolvedApiUrl = getArgValue(
   '--api-url',
   readEnv('E2E_API_URL') || readEnv('NEXT_PUBLIC_API_URL')
 );
-const resolvedBaseUrl = getArgValue('--base-url', readEnv('E2E_BASE_URL') || 'http://localhost:3000');
+const resolvedBaseUrl = getArgValue(
+  '--base-url',
+  readEnv('E2E_BASE_URL') || 'http://localhost:3000'
+);
 
 const normalizeUrl = (url, label) => {
   if (!url) {
@@ -100,6 +101,7 @@ const defaults = {
   E2E_TENANT: 'DDVS',
   E2E_PRINCIPAL_EMAIL: 'principal-gseb@ddvs.com',
   E2E_PASSWORD: 'Temp@123',
+  E2E_STUDENT_CRM_DENIED_EMAIL: 'student-crm-denied@ddvs.com',
 };
 
 const resolvedCredentials = {
@@ -146,9 +148,11 @@ const childEnv = {
   NEXT_PUBLIC_API_URL: apiUrl,
   E2E_BASE_URL: baseUrl,
   E2E_TENANT: resolvedCredentials.E2E_TENANT || defaults.E2E_TENANT,
-  E2E_PRINCIPAL_EMAIL:
-    resolvedCredentials.E2E_PRINCIPAL_EMAIL || defaults.E2E_PRINCIPAL_EMAIL,
+  E2E_PRINCIPAL_EMAIL: resolvedCredentials.E2E_PRINCIPAL_EMAIL || defaults.E2E_PRINCIPAL_EMAIL,
   E2E_PASSWORD: resolvedCredentials.E2E_PASSWORD || defaults.E2E_PASSWORD,
+  E2E_STUDENT_CRM_DENIED_EMAIL:
+    readEnv('E2E_STUDENT_CRM_DENIED_EMAIL') ||
+    (useDefaultCredentials ? defaults.E2E_STUDENT_CRM_DENIED_EMAIL : ''),
 };
 
 const playwrightArgs = [
@@ -170,7 +174,11 @@ const printSummary = () => {
   console.log(`Local HTTPS self-signed TLS allowed: ${isLocalHttpsApi ? 'yes' : 'no'}`);
   console.log(
     `Remote Gyanmirai mutation allowed: ${
-      preflightOnly ? 'not required for read-only preflight' : remoteGyanmiraiHost && allowRemoteMutation ? 'yes' : 'no'
+      preflightOnly
+        ? 'not required for read-only preflight'
+        : remoteGyanmiraiHost && allowRemoteMutation
+          ? 'yes'
+          : 'no'
     }`
   );
   console.log(`Command: npx ${playwrightArgs.join(' ')}`);
@@ -212,7 +220,9 @@ const main = async () => {
 
   if (dryRun) {
     if (!preflightOnly && remoteGyanmiraiHost && !allowRemoteMutation) {
-      console.log('Dry run note: a real run would require --allow-stage-mutation for this API host.');
+      console.log(
+        'Dry run note: a real run would require --allow-stage-mutation for this API host.'
+      );
     }
     if (missingCredentials.length && !useDefaultCredentials) {
       console.log(`Dry run note: a real run would require ${missingCredentials.join(', ')}.`);
