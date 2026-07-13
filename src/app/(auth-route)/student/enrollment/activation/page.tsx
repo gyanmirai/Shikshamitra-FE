@@ -7,6 +7,7 @@ const AdmissionsActivationPage = () => (
     initialView="operations"
     initialOperationsQueueType={AdmissionCrmOperationsQueueType.ActivationRepair}
     fixedView
+    workspace="activation"
   />
 );
 

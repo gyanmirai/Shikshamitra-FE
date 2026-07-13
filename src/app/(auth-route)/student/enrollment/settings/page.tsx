@@ -1,3 +1,5 @@
+'use client';
+
 import { useBoolean } from 'src/hooks/use-boolean';
 import AdmissionsCrmConfiguration from 'src/screens/student/enrollment/setting/admissions-crm-configuration';
 

@@ -23,7 +23,7 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Visibility, ContentCopy } from '@mui/icons-material';
+import { Add, Delete, Visibility, ContentCopy } from '@mui/icons-material';
 import {
   Box,
   Chip,
@@ -39,6 +39,7 @@ import {
   MenuItem,
   TextField,
   Typography,
+  IconButton,
   InputLabel,
   DialogTitle,
   FormControl,
@@ -93,8 +94,12 @@ import {
   getAdmissionCrmProviderAdapter,
   buildPublicAdmissionInquiryUrl,
   updateAdmissionCrmProviderAdapter,
+  getAdmissionCrmProviderPayloadMode,
+  updateAdmissionCrmProviderPayloadMode,
   getAdmissionCrmProviderCallbackSecret,
+  getAdmissionCrmProviderKeyValueSettings,
   updateAdmissionCrmProviderCallbackSecret,
+  updateAdmissionCrmProviderKeyValueSettings,
   getAdmissionCrmProviderCallbackMappingPath,
   buildAdmissionCrmProviderDeliveryCallbackUrl,
   getAdmissionCrmProviderResponseMessageIdPath,
@@ -713,7 +718,7 @@ const AdmissionsCrmConfiguration = ({
             isEnabled: provider.isEnabled,
             providerName: provider.providerName || '',
             senderId: provider.senderId || '',
-            settingsJson: provider.settingsJson || '',
+            settingsJson: JSON.stringify(provider.settings || {}),
             webhookUrl: provider.webhookUrl || '',
           };
           return acc;
@@ -1776,6 +1781,48 @@ const AdmissionsCrmConfiguration = ({
     });
   };
 
+  const handleProviderPayloadModeChange = (
+    channel: AdmissionCrmMessageChannel,
+    payloadMode: string
+  ) => {
+    setProviderForms((prev) => {
+      const current = prev[channel] || defaultProviderForm;
+      return {
+        ...prev,
+        [channel]: {
+          ...current,
+          settingsJson: updateAdmissionCrmProviderPayloadMode(current.settingsJson, payloadMode),
+        },
+      };
+    });
+  };
+
+  const handleProviderKeyValueChange = (
+    channel: AdmissionCrmMessageChannel,
+    field: 'headers' | 'parameters',
+    currentKey: string,
+    nextKey: string,
+    nextValue: string
+  ) => {
+    setProviderForms((prev) => {
+      const current = prev[channel] || defaultProviderForm;
+      const values = { ...getAdmissionCrmProviderKeyValueSettings(current.settingsJson, field) };
+      delete values[currentKey];
+      if (nextKey.trim()) values[nextKey.trim()] = nextValue;
+      return {
+        ...prev,
+        [channel]: {
+          ...current,
+          settingsJson: updateAdmissionCrmProviderKeyValueSettings(
+            current.settingsJson,
+            field,
+            values
+          ),
+        },
+      };
+    });
+  };
+
   const handleProviderResponseMessageIdPathChange = (
     channel: AdmissionCrmMessageChannel,
     value: string
@@ -1873,7 +1920,7 @@ const AdmissionsCrmConfiguration = ({
           isEnabled: providerForm?.isEnabled ?? false,
           providerName: providerForm?.providerName || undefined,
           senderId: providerForm?.senderId || undefined,
-          settingsJson: providerForm?.settingsJson || undefined,
+          settings: JSON.parse(providerForm?.settingsJson || '{}'),
           webhookUrl: providerForm?.webhookUrl || undefined,
         },
       }).unwrap();
@@ -3814,6 +3861,15 @@ const AdmissionsCrmConfiguration = ({
             {(communicationProviders?.items || []).map((provider) => {
               const providerForm = providerForms[provider.channel] || defaultProviderForm;
               const providerAdapter = getAdmissionCrmProviderAdapter(providerForm.settingsJson);
+              const providerPayloadMode = getAdmissionCrmProviderPayloadMode(
+                providerForm.settingsJson
+              );
+              const providerHeaders = Object.entries(
+                getAdmissionCrmProviderKeyValueSettings(providerForm.settingsJson, 'headers')
+              );
+              const providerParameters = Object.entries(
+                getAdmissionCrmProviderKeyValueSettings(providerForm.settingsJson, 'parameters')
+              );
               const providerCallbackUrl = buildAdmissionCrmProviderDeliveryCallbackUrl({
                 apiOrigin: process.env.NEXT_PUBLIC_API_URL,
                 tenantId,
@@ -3886,6 +3942,19 @@ const AdmissionsCrmConfiguration = ({
                         ))}
                       </Select>
                     </FormControl>
+                    <FormControl size="small" disabled={providerAdapter === 'manual'}>
+                      <InputLabel>Payload</InputLabel>
+                      <Select
+                        label="Payload"
+                        value={providerPayloadMode}
+                        onChange={(event) =>
+                          handleProviderPayloadModeChange(provider.channel, event.target.value)
+                        }
+                      >
+                        <MenuItem value="default">Default</MenuItem>
+                        <MenuItem value="envelope">Envelope</MenuItem>
+                      </Select>
+                    </FormControl>
                     <TextField
                       size="small"
                       label="Webhook URL"
@@ -3894,6 +3963,145 @@ const AdmissionsCrmConfiguration = ({
                         handleProviderChange(provider.channel, 'webhookUrl', event.target.value)
                       }
                     />
+                    {providerAdapter !== 'manual' && (
+                      <Stack spacing={1}>
+                        <Typography variant="caption" color="text.secondary">
+                          Request headers
+                        </Typography>
+                        {providerHeaders.map(([key, value]) => (
+                          <Stack key={key} direction="row" spacing={0.75} alignItems="center">
+                            <TextField
+                              size="small"
+                              label="Header"
+                              value={key}
+                              onChange={(event) =>
+                                handleProviderKeyValueChange(
+                                  provider.channel,
+                                  'headers',
+                                  key,
+                                  event.target.value,
+                                  value
+                                )
+                              }
+                            />
+                            <TextField
+                              size="small"
+                              label="Value"
+                              value={value}
+                              type={
+                                key.toLowerCase().includes('authorization') ? 'password' : 'text'
+                              }
+                              onChange={(event) =>
+                                handleProviderKeyValueChange(
+                                  provider.channel,
+                                  'headers',
+                                  key,
+                                  key,
+                                  event.target.value
+                                )
+                              }
+                              fullWidth
+                            />
+                            <IconButton
+                              size="small"
+                              aria-label={`Remove ${key} header`}
+                              onClick={() =>
+                                handleProviderKeyValueChange(
+                                  provider.channel,
+                                  'headers',
+                                  key,
+                                  '',
+                                  ''
+                                )
+                              }
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Stack>
+                        ))}
+                        <Button
+                          size="small"
+                          startIcon={<Add />}
+                          onClick={() =>
+                            handleProviderKeyValueChange(
+                              provider.channel,
+                              'headers',
+                              '',
+                              `Header-${providerHeaders.length + 1}`,
+                              ''
+                            )
+                          }
+                        >
+                          Add header
+                        </Button>
+                        <Typography variant="caption" color="text.secondary">
+                          Payload parameters
+                        </Typography>
+                        {providerParameters.map(([key, value]) => (
+                          <Stack key={key} direction="row" spacing={0.75} alignItems="center">
+                            <TextField
+                              size="small"
+                              label="Parameter"
+                              value={key}
+                              onChange={(event) =>
+                                handleProviderKeyValueChange(
+                                  provider.channel,
+                                  'parameters',
+                                  key,
+                                  event.target.value,
+                                  value
+                                )
+                              }
+                            />
+                            <TextField
+                              size="small"
+                              label="Value"
+                              value={value}
+                              onChange={(event) =>
+                                handleProviderKeyValueChange(
+                                  provider.channel,
+                                  'parameters',
+                                  key,
+                                  key,
+                                  event.target.value
+                                )
+                              }
+                              fullWidth
+                            />
+                            <IconButton
+                              size="small"
+                              aria-label={`Remove ${key} parameter`}
+                              onClick={() =>
+                                handleProviderKeyValueChange(
+                                  provider.channel,
+                                  'parameters',
+                                  key,
+                                  '',
+                                  ''
+                                )
+                              }
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Stack>
+                        ))}
+                        <Button
+                          size="small"
+                          startIcon={<Add />}
+                          onClick={() =>
+                            handleProviderKeyValueChange(
+                              provider.channel,
+                              'parameters',
+                              '',
+                              `parameter${providerParameters.length + 1}`,
+                              ''
+                            )
+                          }
+                        >
+                          Add parameter
+                        </Button>
+                      </Stack>
+                    )}
                     <TextField
                       size="small"
                       label="Response message ID path"
@@ -4002,16 +4210,6 @@ const AdmissionsCrmConfiguration = ({
                         }
                       />
                     </Box>
-                    <TextField
-                      size="small"
-                      label="Settings JSON"
-                      value={providerForm.settingsJson}
-                      onChange={(event) =>
-                        handleProviderChange(provider.channel, 'settingsJson', event.target.value)
-                      }
-                      multiline
-                      minRows={2}
-                    />
                     <LoadingButton
                       size="small"
                       variant="outlined"

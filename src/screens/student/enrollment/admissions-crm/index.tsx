@@ -75,6 +75,7 @@ import {
   InputLabel,
   DialogTitle,
   FormControl,
+  Autocomplete,
   ToggleButton,
   DialogContent,
   DialogActions,
@@ -175,11 +176,21 @@ import {
 
 type WorkspaceView = 'board' | 'list' | 'exams' | 'operations';
 
+export type EnrollmentWorkspace =
+  | 'pipeline'
+  | 'exams'
+  | 'registrations'
+  | 'offers'
+  | 'activation'
+  | 'operations'
+  | 'analytics';
+
 type StudentAdmissionsCrmScreenProps = {
   heading?: string;
   initialView?: WorkspaceView;
   initialOperationsQueueType?: AdmissionCrmOperationsQueueType;
   fixedView?: boolean;
+  workspace?: EnrollmentWorkspace;
 };
 
 type ScoreBandFilter = 'all' | 'hot' | 'warm' | 'needsAttention';
@@ -286,28 +297,6 @@ const defaultStageTransitions: Record<AdmissionInquiryStage, AdmissionInquirySta
   [AdmissionInquiryStage.Stale]: [AdmissionInquiryStage.FollowUp, AdmissionInquiryStage.Archived],
   [AdmissionInquiryStage.Archived]: [],
 };
-
-const fallbackStages = [
-  AdmissionInquiryStage.NewInquiry,
-  AdmissionInquiryStage.FollowUp,
-  AdmissionInquiryStage.ExamReady,
-  AdmissionInquiryStage.ExamScheduled,
-  AdmissionInquiryStage.ExamCompleted,
-  AdmissionInquiryStage.Eligible,
-  AdmissionInquiryStage.Waitlisted,
-  AdmissionInquiryStage.Rejected,
-  AdmissionInquiryStage.Stale,
-  AdmissionInquiryStage.Archived,
-].map((systemStage, index) => ({
-  id: `fallback-${systemStage}`,
-  academicYearId: '',
-  systemStage,
-  stageName: getAdmissionCrmStageLabel(systemStage),
-  displayOrder: index + 1,
-  isEnabled: true,
-  isSystem: true,
-  allowedNextStages: defaultStageTransitions[systemStage],
-}));
 
 const channelOptions = [
   AdmissionInquiryChannel.QuickCallEntry,
@@ -586,6 +575,7 @@ const StudentAdmissionsCrmScreen = ({
   initialView = 'board',
   initialOperationsQueueType = AdmissionCrmOperationsQueueType.UnassignedExam,
   fixedView = false,
+  workspace = 'pipeline',
 }: StudentAdmissionsCrmScreenProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const academicYearId = currentYear?.id as string | undefined;
@@ -699,13 +689,18 @@ const StudentAdmissionsCrmScreen = ({
     },
     { skip: !academicYearId }
   );
-  const { data: stagesData, isFetching: isStagesFetching } = useGetAdmissionCrmPipelineStagesQuery(
+  const {
+    data: stagesData,
+    isFetching: isStagesFetching,
+    isError: isStagesError,
+    refetch: refetchStages,
+  } = useGetAdmissionCrmPipelineStagesQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
   );
   const { data: examsData, isFetching: isExamsFetching } = useGetAdmissionCrmEntranceExamsQuery(
     { academicYearId: academicYearId || '', maxResultCount: 200 },
-    { skip: !academicYearId }
+    { skip: !academicYearId || !['pipeline', 'exams', 'analytics'].includes(workspace) }
   );
   const { data: analyticsSummary, isFetching: isAnalyticsFetching } =
     useGetAdmissionCrmAnalyticsSummaryQuery(
@@ -726,12 +721,12 @@ const StudentAdmissionsCrmScreen = ({
           ? {}
           : { maximumLeadScore: scoreBandRange.maximumLeadScore }),
       },
-      { skip: !academicYearId }
+      { skip: !academicYearId || !['pipeline', 'analytics'].includes(workspace) }
     );
   const { data: operationsQueueSummary, isFetching: isOperationsSummaryFetching } =
     useGetAdmissionCrmOperationsQueueSummaryQuery(
       { academicYearId: academicYearId || '' },
-      { skip: !academicYearId }
+      { skip: !academicYearId || view !== 'operations' }
     );
   const { data: operationsQueue, isFetching: isOperationsQueueFetching } =
     useGetAdmissionCrmOperationsQueueQuery(
@@ -752,9 +747,9 @@ const StudentAdmissionsCrmScreen = ({
   );
   const { data: slotsData, isFetching: isSlotsFetching } = useGetAdmissionCrmExamSlotsQuery(
     { academicYearId: academicYearId || '' },
-    { skip: !academicYearId }
+    { skip: !academicYearId || !['pipeline', 'exams'].includes(workspace) }
   );
-  const { data: crmStaff = [] } = useGetAdmissionCrmStaffQuery();
+  const { data: crmStaff = [] } = useGetAdmissionCrmStaffQuery({ maxResultCount: 100 });
   const { data: tasksData, isFetching: isTasksFetching } = useGetAdmissionCrmTasksQuery(
     { leadId: operationsLead?.id || '', maxResultCount: 50 },
     { skip: !operationsLead }
@@ -771,7 +766,7 @@ const StudentAdmissionsCrmScreen = ({
       isActive: true,
       maxResultCount: 100,
     },
-    { skip: !academicYearId }
+    { skip: !academicYearId || workspace !== 'pipeline' }
   );
   const { data: deliveryLogsData, isFetching: isDeliveryLogsFetching } =
     useGetAdmissionCrmMessageDeliveryLogsQuery(
@@ -785,7 +780,7 @@ const StudentAdmissionsCrmScreen = ({
           ? { providerMessageId: deliveryLogProviderMessageId.trim() }
           : {}),
       },
-      { skip: !academicYearId }
+      { skip: !academicYearId || workspace !== 'analytics' }
     );
   const { data: optOutsData, isFetching: isOptOutsFetching } =
     useGetAdmissionCrmCommunicationOptOutsQuery(
@@ -797,7 +792,7 @@ const StudentAdmissionsCrmScreen = ({
         ...(optOutStatusFilter === 'all' ? {} : { isActive: optOutStatusFilter === 'active' }),
         ...(optOutContactSearch.trim() ? { contactSearch: optOutContactSearch.trim() } : {}),
       },
-      { skip: !academicYearId }
+      { skip: !academicYearId || workspace !== 'analytics' }
     );
   const { data: timelineData, isFetching: isTimelineFetching } = useGetAdmissionCrmTimelineQuery(
     { leadId: timelineLead?.id || '', maxResultCount: 50 },
@@ -868,7 +863,7 @@ const StudentAdmissionsCrmScreen = ({
   const leads = useMemo(() => leadsData?.items || [], [leadsData?.items]);
   const exams = useMemo(() => examsData?.items || [], [examsData?.items]);
   const timelineEvents = timelineData?.items || [];
-  const stages = stagesData?.length ? stagesData : fallbackStages;
+  const stages = useMemo(() => stagesData ?? [], [stagesData]);
   const stageDialogOptions = useMemo(
     () => (stageLead ? getManualStageOptionsForLead(stageLead, stages) : []),
     [stageLead, stages]
@@ -2301,34 +2296,38 @@ const StudentAdmissionsCrmScreen = ({
             >
               Refresh
             </Button>
-            <LoadingButton
-              variant="outlined"
-              startIcon={<AssignmentTurnedIn />}
-              loading={isRunningRules}
-              disabled={!academicYearId}
-              onClick={handleRunStaleRules}
-            >
-              Run Rules
-            </LoadingButton>
-            <LoadingButton
-              variant="outlined"
-              startIcon={<NotificationsActive />}
-              loading={isRunningSlaReminders}
-              disabled={!academicYearId}
-              onClick={handleRunSlaReminders}
-            >
-              Run SLA
-            </LoadingButton>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => {
-                resetQuickForm();
-                setQuickDialogOpen(true);
-              }}
-            >
-              Quick Inquiry
-            </Button>
+            {workspace === 'pipeline' && (
+              <>
+                <LoadingButton
+                  variant="outlined"
+                  startIcon={<AssignmentTurnedIn />}
+                  loading={isRunningRules}
+                  disabled={!academicYearId}
+                  onClick={handleRunStaleRules}
+                >
+                  Run Rules
+                </LoadingButton>
+                <LoadingButton
+                  variant="outlined"
+                  startIcon={<NotificationsActive />}
+                  loading={isRunningSlaReminders}
+                  disabled={!academicYearId}
+                  onClick={handleRunSlaReminders}
+                >
+                  Run SLA
+                </LoadingButton>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={() => {
+                    resetQuickForm();
+                    setQuickDialogOpen(true);
+                  }}
+                >
+                  Quick Inquiry
+                </Button>
+              </>
+            )}
           </Stack>
         }
       />
@@ -2339,1197 +2338,1267 @@ const StudentAdmissionsCrmScreen = ({
 
       {isBusy && <LinearProgress />}
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, minmax(0, 1fr))',
-            lg: 'repeat(6, minmax(0, 1fr))',
-          },
-          gap: 1.25,
-        }}
-      >
-        {summaryKpis.map(([label, value]) => (
-          <Paper key={label} variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-            <Typography variant="caption" color="text.secondary">
-              {label}
-            </Typography>
-            <Typography variant="h5">{value}</Typography>
-          </Paper>
-        ))}
-      </Box>
-
-      {dailyTrends.length > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            gap={1}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', sm: 'center' }}
-            sx={{ mb: 1 }}
-          >
-            <Box>
-              <Typography variant="subtitle2">Daily trends</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {dayjs(analyticsSummary?.trendFromDate).format('DD MMM')} -{' '}
-                {dayjs(analyticsSummary?.trendToDate).format('DD MMM YYYY')}
-              </Typography>
-            </Box>
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
-              <Chip size="small" label={`Leads: ${trendTotals.leads}`} />
-              <Chip size="small" label={`Exams: ${trendTotals.exams}`} />
-              <Chip size="small" label={`Eligible: ${trendTotals.eligible}`} />
-              <Chip size="small" label={`SLA: ${trendTotals.slaMissed}`} />
-            </Stack>
-          </Stack>
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: 840 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Date</TableCell>
-                  <TableCell align="right">Leads</TableCell>
-                  <TableCell align="right">Exams</TableCell>
-                  <TableCell align="right">Completed</TableCell>
-                  <TableCell align="right">Eligible</TableCell>
-                  <TableCell align="right">Waitlist</TableCell>
-                  <TableCell align="right">Rejected</TableCell>
-                  <TableCell align="right">Stale</TableCell>
-                  <TableCell align="right">Archived</TableCell>
-                  <TableCell align="right">SLA</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {recentDailyTrends.map((trend) => (
-                  <TableRow key={trend.date}>
-                    <TableCell>{dayjs(trend.date).format('DD MMM')}</TableCell>
-                    <TableCell align="right">{trend.leadCount}</TableCell>
-                    <TableCell align="right">{trend.examScheduledCount}</TableCell>
-                    <TableCell align="right">{trend.examCompletedCount}</TableCell>
-                    <TableCell align="right">{trend.eligibleCount}</TableCell>
-                    <TableCell align="right">{trend.waitlistedCount}</TableCell>
-                    <TableCell align="right">{trend.rejectedCount}</TableCell>
-                    <TableCell align="right">{trend.staleCount}</TableCell>
-                    <TableCell align="right">{trend.archivedCount}</TableCell>
-                    <TableCell align="right">{trend.slaMissedCount}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Box>
-        </Paper>
-      )}
-
-      {automationAnalytics && automationAnalytics.runCount > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            gap={1}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', sm: 'center' }}
-            sx={{ mb: 1 }}
-          >
-            <Typography variant="subtitle2">Automation runs</Typography>
-            <Stack direction="row" gap={1} flexWrap="wrap">
-              <Chip size="small" label={`${automationAnalytics.runCount} run(s)`} />
-              {automationAnalytics.failedRunCount > 0 && (
-                <Chip
-                  size="small"
-                  color="warning"
-                  label={`${automationAnalytics.failedRunCount} with failure(s)`}
-                />
-              )}
-            </Stack>
-          </Stack>
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: 900 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Completed</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Context</TableCell>
-                  <TableCell align="right">Tasks</TableCell>
-                  <TableCell align="right">Messages</TableCell>
-                  <TableCell align="right">Stale</TableCell>
-                  <TableCell align="right">Archived</TableCell>
-                  <TableCell align="right">Failures</TableCell>
-                  <TableCell>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {recentAutomationRuns.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{dayjs(item.completedAt).format('DD MMM, HH:mm')}</TableCell>
-                    <TableCell>{automationRunTypeLabels[item.runType]}</TableCell>
-                    <TableCell
-                      sx={{ maxWidth: 280, whiteSpace: 'normal', wordBreak: 'break-word' }}
-                    >
-                      {getAutomationRunContext(item)}
-                    </TableCell>
-                    <TableCell align="right">{item.createdTaskCount}</TableCell>
-                    <TableCell align="right">{item.sentMessageCount}</TableCell>
-                    <TableCell align="right">{item.markedStaleCount}</TableCell>
-                    <TableCell align="right">{item.archivedCount}</TableCell>
-                    <TableCell align="right">{item.failedActionCount}</TableCell>
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        color={
-                          item.status === AdmissionCrmAutomationRunStatus.CompletedWithFailures
-                            ? 'warning'
-                            : 'success'
-                        }
-                        label={automationRunStatusLabels[item.status]}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Box>
-        </Paper>
-      )}
-
-      {automationAnalytics && automationAnalytics.failureCount > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            gap={1}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', sm: 'center' }}
-            sx={{ mb: 1 }}
-          >
-            <Typography variant="subtitle2">Automation failures</Typography>
-            <Chip
-              size="small"
-              color="warning"
-              label={`${automationAnalytics.failureCount} failure(s)`}
-            />
-          </Stack>
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: 760 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Time</TableCell>
-                  <TableCell>Failure</TableCell>
-                  <TableCell>Details</TableCell>
-                  <TableCell>Lead</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {recentAutomationFailures.map((item) => (
-                  <TableRow key={item.eventId}>
-                    <TableCell>{dayjs(item.occurredAt).format('DD MMM, HH:mm')}</TableCell>
-                    <TableCell>{item.title}</TableCell>
-                    <TableCell
-                      sx={{ maxWidth: 480, whiteSpace: 'normal', wordBreak: 'break-word' }}
-                    >
-                      {item.details || '-'}
-                    </TableCell>
-                    <TableCell>{item.leadId.slice(0, 8)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Box>
-        </Paper>
-      )}
-
-      {campaignPerformance.length > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            gap={1}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', sm: 'center' }}
-            sx={{ mb: 1 }}
-          >
-            <Typography variant="subtitle2">Campaign performance</Typography>
-            <Chip size="small" label={`${campaignPerformance.length} campaign(s)`} />
-          </Stack>
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: 760 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Campaign</TableCell>
-                  <TableCell align="right">Leads</TableCell>
-                  <TableCell align="right">Exams</TableCell>
-                  <TableCell align="right">Eligible</TableCell>
-                  <TableCell align="right">Waitlist</TableCell>
-                  <TableCell align="right">Rejected</TableCell>
-                  <TableCell align="right">Eligibility</TableCell>
-                  <TableCell align="right">Avg score</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {campaignPerformance.map((campaign) => (
-                  <TableRow key={campaign.campaignName}>
-                    <TableCell>{campaign.campaignName}</TableCell>
-                    <TableCell align="right">{campaign.leadCount}</TableCell>
-                    <TableCell align="right">{campaign.examScheduledCount}</TableCell>
-                    <TableCell align="right">{campaign.eligibleCount}</TableCell>
-                    <TableCell align="right">{campaign.waitlistedCount}</TableCell>
-                    <TableCell align="right">{campaign.rejectedCount}</TableCell>
-                    <TableCell align="right">{formatRate(campaign.eligibilityRate)}</TableCell>
-                    <TableCell align="right">{campaign.averageLeadScore.toFixed(1)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Box>
-        </Paper>
-      )}
-
-      {academicYearId && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            gap={1}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', md: 'center' }}
-            sx={{ mb: 1 }}
-          >
-            <Box>
-              <Typography variant="subtitle2">Communication delivery logs</Typography>
-              <Typography variant="caption" color="text.secondary">
-                Recent template and OTP delivery evidence
-              </Typography>
-            </Box>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-              <FormControl size="small" sx={{ minWidth: { sm: 170 } }}>
-                <InputLabel id="crm-delivery-channel-filter-label">Channel</InputLabel>
-                <Select
-                  labelId="crm-delivery-channel-filter-label"
-                  label="Channel"
-                  value={deliveryLogChannelFilter}
-                  onChange={(event) =>
-                    setDeliveryLogChannelFilter(
-                      event.target.value === 'all'
-                        ? 'all'
-                        : (Number(event.target.value) as AdmissionCrmMessageChannel)
-                    )
-                  }
-                >
-                  <MenuItem value="all">All channels</MenuItem>
-                  {messageChannelOptions.map((channel) => (
-                    <MenuItem key={channel} value={channel}>
-                      {getAdmissionCrmMessageChannelLabel(channel)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: { sm: 210 } }}>
-                <InputLabel id="crm-delivery-status-filter-label">Status</InputLabel>
-                <Select
-                  labelId="crm-delivery-status-filter-label"
-                  label="Status"
-                  value={deliveryLogStatusFilter}
-                  onChange={(event) =>
-                    setDeliveryLogStatusFilter(event.target.value as DeliveryLogStatusFilter)
-                  }
-                >
-                  {deliveryLogStatusOptions.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status === 'all'
-                        ? 'All statuses'
-                        : getAdmissionCrmDeliveryLogStatusLabel(status)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TextField
-                size="small"
-                label="Provider ID"
-                value={deliveryLogProviderMessageId}
-                onChange={(event) => setDeliveryLogProviderMessageId(event.target.value)}
-                sx={{ minWidth: { sm: 210 } }}
-              />
-            </Stack>
-          </Stack>
-          {isDeliveryLogsFetching && <LinearProgress sx={{ mb: 1 }} />}
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: 1020 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Time</TableCell>
-                  <TableCell>Channel</TableCell>
-                  <TableCell>Recipient</TableCell>
-                  <TableCell>Lead</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Provider ID</TableCell>
-                  <TableCell align="right">Attempts</TableCell>
-                  <TableCell>Details</TableCell>
-                  <TableCell align="right">Action</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {deliveryLogs.map((log) => (
-                  <TableRow key={log.id} hover>
-                    <TableCell>{dayjs(log.createdAt).format('DD MMM, HH:mm')}</TableCell>
-                    <TableCell>{getAdmissionCrmMessageChannelLabel(log.channel)}</TableCell>
-                    <TableCell sx={{ wordBreak: 'break-word' }}>{log.recipient}</TableCell>
-                    <TableCell>
-                      {log.leadId ? leadNameById.get(log.leadId) || log.leadId.slice(0, 8) : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        color={getDeliveryLogStatusColor(log.status)}
-                        label={getAdmissionCrmDeliveryLogStatusLabel(log.status)}
-                      />
-                    </TableCell>
-                    <TableCell sx={{ maxWidth: 180, wordBreak: 'break-word' }}>
-                      {log.providerMessageId || '-'}
-                    </TableCell>
-                    <TableCell align="right">{log.attemptCount}</TableCell>
-                    <TableCell
-                      sx={{ maxWidth: 320, whiteSpace: 'normal', wordBreak: 'break-word' }}
-                    >
-                      {log.statusDetails || '-'}
-                    </TableCell>
-                    <TableCell align="right">
-                      {canRetryAdmissionCrmDeliveryLog(log.status) ? (
-                        <LoadingButton
-                          size="small"
-                          variant="text"
-                          startIcon={<Replay />}
-                          loading={isRetryingMessageDelivery}
-                          onClick={() => handleRetryMessageDelivery(log)}
-                        >
-                          Retry
-                        </LoadingButton>
-                      ) : (
-                        <Typography variant="caption" color="text.secondary">
-                          -
-                        </Typography>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!deliveryLogs.length && (
-                  <TableRow>
-                    <TableCell colSpan={9}>
-                      <Typography variant="body2" color="text.secondary" align="center">
-                        No communication delivery logs found
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
-            Showing {deliveryLogs.length} of {deliveryLogsData?.totalCount ?? 0} delivery log(s)
-          </Typography>
-        </Paper>
-      )}
-
-      {academicYearId && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            gap={1}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', md: 'center' }}
-            sx={{ mb: 1 }}
-          >
-            <Box>
-              <Typography variant="subtitle2">Communication opt-outs</Typography>
-              <Typography variant="caption" color="text.secondary">
-                Active and cleared consent blocks by channel and contact
-              </Typography>
-            </Box>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-              <TextField
-                size="small"
-                label="Contact"
-                value={optOutContactSearch}
-                onChange={(event) => setOptOutContactSearch(event.target.value)}
-                sx={{ minWidth: { sm: 160 } }}
-              />
-              <FormControl size="small" sx={{ minWidth: { sm: 170 } }}>
-                <InputLabel id="crm-opt-out-channel-filter-label">Channel</InputLabel>
-                <Select
-                  labelId="crm-opt-out-channel-filter-label"
-                  label="Channel"
-                  value={optOutChannelFilter}
-                  onChange={(event) =>
-                    setOptOutChannelFilter(
-                      event.target.value === 'all'
-                        ? 'all'
-                        : (Number(event.target.value) as AdmissionCrmMessageChannel)
-                    )
-                  }
-                >
-                  <MenuItem value="all">All channels</MenuItem>
-                  {messageChannelOptions.map((channel) => (
-                    <MenuItem key={channel} value={channel}>
-                      {getAdmissionCrmMessageChannelLabel(channel)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: { sm: 150 } }}>
-                <InputLabel id="crm-opt-out-status-filter-label">Status</InputLabel>
-                <Select
-                  labelId="crm-opt-out-status-filter-label"
-                  label="Status"
-                  value={optOutStatusFilter}
-                  onChange={(event) =>
-                    setOptOutStatusFilter(event.target.value as OptOutStatusFilter)
-                  }
-                >
-                  <MenuItem value="all">All statuses</MenuItem>
-                  <MenuItem value="active">Active</MenuItem>
-                  <MenuItem value="cleared">Cleared</MenuItem>
-                </Select>
-              </FormControl>
-            </Stack>
-          </Stack>
-          {isOptOutsFetching && <LinearProgress sx={{ mb: 1 }} />}
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: 900 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Opted out</TableCell>
-                  <TableCell>Channel</TableCell>
-                  <TableCell>Contact</TableCell>
-                  <TableCell>Lead</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Reason</TableCell>
-                  <TableCell>Cleared</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {optOuts.map((optOut) => (
-                  <TableRow key={optOut.id} hover>
-                    <TableCell>{dayjs(optOut.optedOutAt).format('DD MMM, HH:mm')}</TableCell>
-                    <TableCell>{getAdmissionCrmMessageChannelLabel(optOut.channel)}</TableCell>
-                    <TableCell sx={{ wordBreak: 'break-word' }}>{optOut.contactValue}</TableCell>
-                    <TableCell>
-                      {optOut.leadId
-                        ? leadNameById.get(optOut.leadId) || optOut.leadId.slice(0, 8)
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        color={optOut.isActive ? 'warning' : 'default'}
-                        label={optOut.isActive ? 'Active' : 'Cleared'}
-                      />
-                    </TableCell>
-                    <TableCell
-                      sx={{ maxWidth: 320, whiteSpace: 'normal', wordBreak: 'break-word' }}
-                    >
-                      {optOut.reason}
-                    </TableCell>
-                    <TableCell
-                      sx={{ maxWidth: 260, whiteSpace: 'normal', wordBreak: 'break-word' }}
-                    >
-                      {optOut.optedInAt
-                        ? `${dayjs(optOut.optedInAt).format('DD MMM, HH:mm')} - ${
-                            optOut.optInReason || 'No reason'
-                          }`
-                        : '-'}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!optOuts.length && (
-                  <TableRow>
-                    <TableCell colSpan={7}>
-                      <Typography variant="body2" color="text.secondary" align="center">
-                        No communication opt-outs found
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
-            Showing {optOuts.length} of {optOutsData?.totalCount ?? 0} opt-out record(s)
-          </Typography>
-        </Paper>
-      )}
-
-      {staffWorkload.length > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            gap={1}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', sm: 'center' }}
-            sx={{ mb: 1 }}
-          >
-            <Typography variant="subtitle2">Staff workload</Typography>
-            <Chip size="small" label={`${staffWorkload.length} owner group(s)`} />
-          </Stack>
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: 620 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Owner</TableCell>
-                  <TableCell align="right">Leads</TableCell>
-                  <TableCell align="right">Open</TableCell>
-                  <TableCell align="right">Pending tasks</TableCell>
-                  <TableCell align="right">Overdue</TableCell>
-                  <TableCell align="right">Exams</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {staffWorkload.map((item) => (
-                  <TableRow key={item.ownerUserId || 'unassigned'}>
-                    <TableCell>{getWorkloadOwnerLabel(item)}</TableCell>
-                    <TableCell align="right">{item.leadCount}</TableCell>
-                    <TableCell align="right">{item.openLeadCount}</TableCell>
-                    <TableCell align="right">{item.pendingTaskCount}</TableCell>
-                    <TableCell align="right">{item.overdueTaskCount}</TableCell>
-                    <TableCell align="right">{item.examScheduledCount}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Box>
-        </Paper>
-      )}
-
-      {registrationAnalytics && registrationAnalytics.issuedCount > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack spacing={1}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
-              <Box>
-                <Typography variant="subtitle2">Registration and document readiness</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {registrationAnalytics.issuedCount} issued /{' '}
-                  {registrationAnalytics.admissionReadyCount} admission ready
-                </Typography>
-              </Box>
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
-                <Chip
-                  size="small"
-                  label={`Opened: ${formatRate(registrationAnalytics.openRate)}`}
-                />
-                <Chip
-                  size="small"
-                  label={`Completed: ${formatRate(registrationAnalytics.completionRate)}`}
-                />
-                <Chip
-                  size="small"
-                  label={`Verified: ${formatRate(registrationAnalytics.verificationRate)}`}
-                />
-                <Chip
-                  size="small"
-                  color="success"
-                  label={`Yield: ${formatRate(registrationAnalytics.admissionYieldRate)}`}
-                />
-              </Stack>
-            </Stack>
-            <Divider />
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
-              <Chip
-                size="small"
-                color={registrationAnalytics.abandonedCount ? 'warning' : 'default'}
-                label={`Abandoned: ${registrationAnalytics.abandonedCount}`}
-              />
-              <Chip
-                size="small"
-                color={registrationAnalytics.expiredCount ? 'warning' : 'default'}
-                label={`Expired: ${registrationAnalytics.expiredCount}`}
-              />
-              <Chip
-                size="small"
-                label={`Corrections: ${registrationAnalytics.correctionPendingCount}`}
-              />
-              {documentAnalytics ? (
-                <>
-                  <Chip
-                    size="small"
-                    label={`Document review: ${documentAnalytics.underReviewCount}`}
-                  />
-                  <Chip
-                    size="small"
-                    color={documentAnalytics.rejectedCount ? 'error' : 'default'}
-                    label={`Rejected: ${documentAnalytics.rejectedCount}`}
-                  />
-                  <Chip
-                    size="small"
-                    label={`Review age: ${documentAnalytics.averageReviewAgeDays.toFixed(1)} days`}
-                  />
-                  <Chip
-                    size="small"
-                    label={`Readiness overrides: ${documentAnalytics.readinessOverrideCount}`}
-                  />
-                </>
-              ) : null}
-            </Stack>
-          </Stack>
-        </Paper>
-      )}
-
-      {finalAdmissionAnalytics && finalAdmissionAnalytics.seatPoolCount > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack spacing={1}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
-              <Box>
-                <Typography variant="subtitle2">Offers and seat conversion</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {finalAdmissionAnalytics.approvedCapacity} approved seats /{' '}
-                  {finalAdmissionAnalytics.remainingSeatCount} remaining
-                </Typography>
-              </Box>
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
-                <Chip
-                  size="small"
-                  label={`Occupied: ${formatRate(finalAdmissionAnalytics.seatOccupancyRate)}`}
-                />
-                <Chip
-                  size="small"
-                  label={`Offer response: ${formatRate(finalAdmissionAnalytics.offerResponseRate)}`}
-                />
-                <Chip
-                  size="small"
-                  color="success"
-                  label={`Offer acceptance: ${formatRate(finalAdmissionAnalytics.offerAcceptanceRate)}`}
-                />
-                <Chip
-                  size="small"
-                  label={`Waitlist promotion: ${formatRate(finalAdmissionAnalytics.waitlistPromotionRate)}`}
-                />
-              </Stack>
-            </Stack>
-            <Divider />
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
-              <Chip size="small" label={`Reserved: ${finalAdmissionAnalytics.reservedSeatCount}`} />
-              <Chip size="small" label={`Accepted: ${finalAdmissionAnalytics.acceptedSeatCount}`} />
-              <Chip
-                size="small"
-                label={`Activated: ${finalAdmissionAnalytics.activatedSeatCount}`}
-              />
-              <Chip
-                size="small"
-                label={`Offers awaiting approval: ${finalAdmissionAnalytics.approvalPendingOfferCount}`}
-              />
-              <Chip
-                size="small"
-                label={`Offers issued: ${finalAdmissionAnalytics.issuedOfferCount}`}
-              />
-              <Chip
-                size="small"
-                label={`Waitlisted: ${finalAdmissionAnalytics.activeWaitlistCount}`}
-              />
-              <Chip
-                size="small"
-                color={finalAdmissionAnalytics.capacityOverrideCount ? 'warning' : 'default'}
-                label={`Capacity overrides: ${finalAdmissionAnalytics.capacityOverrideCount}`}
-              />
-              <Chip
-                size="small"
-                color={finalAdmissionAnalytics.overCapacityPoolCount ? 'error' : 'default'}
-                label={`Over capacity: ${finalAdmissionAnalytics.overCapacityPoolCount}`}
-              />
-            </Stack>
-          </Stack>
-        </Paper>
-      )}
-
-      {financialAnalytics && financialAnalytics.issuedQuotationCount > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack spacing={1}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
-              <Box>
-                <Typography variant="subtitle2">Financial conversion</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {financialAnalytics.issuedQuotationCount} quotation(s) /{' '}
-                  {financialAnalytics.financeConfirmedCount} Finance confirmed
-                </Typography>
-              </Box>
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
-                <Chip
-                  size="small"
-                  label={`Finance confirmation: ${formatRate(financialAnalytics.financeConfirmationRate)}`}
-                />
-                <Chip
-                  size="small"
-                  color="success"
-                  label={`Gate satisfied: ${formatRate(financialAnalytics.paymentGateSatisfactionRate)}`}
-                />
-              </Stack>
-            </Stack>
-            <Divider />
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
-              <Chip
-                size="small"
-                label={`Quoted: INR ${financialAnalytics.netQuotedAmount.toFixed(2)}`}
-              />
-              <Chip
-                size="small"
-                label={`Confirmed: INR ${financialAnalytics.confirmedAmount.toFixed(2)}`}
-              />
-              <Chip
-                size="small"
-                color={financialAnalytics.outstandingAmount ? 'warning' : 'default'}
-                label={`Outstanding: INR ${financialAnalytics.outstandingAmount.toFixed(2)}`}
-              />
-              <Chip
-                size="small"
-                color={financialAnalytics.pendingGateCount ? 'warning' : 'default'}
-                label={`Pending gates: ${financialAnalytics.pendingGateCount}`}
-              />
-              <Chip
-                size="small"
-                label={`Concessions: INR ${financialAnalytics.concessionAmount.toFixed(2)}`}
-              />
-              <Chip
-                size="small"
-                color={financialAnalytics.concessionApprovalPendingCount ? 'warning' : 'default'}
-                label={`Concession reviews: ${financialAnalytics.concessionApprovalPendingCount}`}
-              />
-              <Chip
-                size="small"
-                color={financialAnalytics.gateOverrideCount ? 'warning' : 'default'}
-                label={`Gate overrides: ${financialAnalytics.gateOverrideCount}`}
-              />
-            </Stack>
-          </Stack>
-        </Paper>
-      )}
-
-      {householdIdentityAnalytics && householdIdentityAnalytics.profileCount > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack spacing={1}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
-              <Box>
-                <Typography variant="subtitle2">Household and identity readiness</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {householdIdentityAnalytics.readyCount} of{' '}
-                  {householdIdentityAnalytics.profileCount} applicant(s) ready
-                </Typography>
-              </Box>
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
-                <Chip
-                  size="small"
-                  color="success"
-                  label={`Readiness: ${formatRate(householdIdentityAnalytics.identityReadinessRate)}`}
-                />
-                <Chip
-                  size="small"
-                  label={`Household reuse: ${formatRate(householdIdentityAnalytics.householdReuseRate)}`}
-                />
-              </Stack>
-            </Stack>
-            <Divider />
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
-              <Chip
-                size="small"
-                label={`Guardian links: ${householdIdentityAnalytics.guardianRelationshipCount}`}
-              />
-              <Chip
-                size="small"
-                label={`Reused households: ${householdIdentityAnalytics.reusedHouseholdCount}`}
-              />
-              <Chip
-                size="small"
-                color={
-                  householdIdentityAnalytics.missingAccountableContactCount ? 'warning' : 'default'
-                }
-                label={`Accountable contact pending: ${householdIdentityAnalytics.missingAccountableContactCount}`}
-              />
-              <Chip
-                size="small"
-                color={
-                  householdIdentityAnalytics.missingIdentityConsentCount ? 'warning' : 'default'
-                }
-                label={`Consent pending: ${householdIdentityAnalytics.missingIdentityConsentCount}`}
-              />
-              <Chip
-                size="small"
-                color={householdIdentityAnalytics.accountLinkPendingCount ? 'warning' : 'default'}
-                label={`Account links pending: ${householdIdentityAnalytics.accountLinkPendingCount}`}
-              />
-              <Chip
-                size="small"
-                color={householdIdentityAnalytics.conflictCount ? 'error' : 'default'}
-                label={`Identity conflicts: ${householdIdentityAnalytics.conflictCount}`}
-              />
-              <Chip
-                size="small"
-                color={householdIdentityAnalytics.overrideCount ? 'warning' : 'default'}
-                label={`Overrides: ${householdIdentityAnalytics.overrideCount}`}
-              />
-            </Stack>
-          </Stack>
-        </Paper>
-      )}
-
-      {policyAnalytics &&
-        (policyAnalytics.activeAdoptionCount > 0 || policyAnalytics.evaluationCount > 0) && (
-          <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-            <Stack spacing={1}>
-              <Typography variant="subtitle2">Policy governance</Typography>
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
-                <Chip size="small" label={`Active packs: ${policyAnalytics.activeAdoptionCount}`} />
-                <Chip size="small" label={`Evaluations: ${policyAnalytics.evaluationCount}`} />
-                <Chip
-                  size="small"
-                  color={policyAnalytics.blockingFailureCount ? 'error' : 'success'}
-                  label={`Blocking: ${policyAnalytics.blockingFailureCount}`}
-                />
-                <Chip
-                  size="small"
-                  color={policyAnalytics.evidencePendingCount ? 'warning' : 'default'}
-                  label={`Evidence pending: ${policyAnalytics.evidencePendingCount}`}
-                />
-                <Chip
-                  size="small"
-                  color={policyAnalytics.sourceReviewOverdueCount ? 'warning' : 'default'}
-                  label={`Source review overdue: ${policyAnalytics.sourceReviewOverdueCount}`}
-                />
-              </Stack>
-            </Stack>
-          </Paper>
-        )}
-
-      {routeAnalytics && routeAnalytics.assignedApplicantCount > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack spacing={1}>
-            <Typography variant="subtitle2">Admission routes</Typography>
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
-              <Chip size="small" label={`Assigned: ${routeAnalytics.assignedApplicantCount}`} />
-              <Chip
-                size="small"
-                color="success"
-                label={`Eligible: ${routeAnalytics.eligibleCount}`}
-              />
-              <Chip
-                size="small"
-                color={routeAnalytics.pendingReviewCount ? 'warning' : 'default'}
-                label={`Review pending: ${routeAnalytics.pendingReviewCount}`}
-              />
-              <Chip
-                size="small"
-                color={routeAnalytics.appealPendingCount ? 'warning' : 'default'}
-                label={`Appeals pending: ${routeAnalytics.appealPendingCount}`}
-              />
-              <Chip
-                size="small"
-                label={`Appeals approved: ${routeAnalytics.appealApprovedCount}`}
-              />
-              <Chip size="small" label={`Route changes: ${routeAnalytics.routeChangeCount}`} />
-              {Object.entries(routeAnalytics.applicantsByRoute).map(([route, count]) => (
-                <Chip key={route} size="small" variant="outlined" label={`${route}: ${count}`} />
-              ))}
-            </Stack>
-          </Stack>
-        </Paper>
-      )}
-
-      {activationAnalytics && activationAnalytics.requestedCount > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack spacing={1}>
-            <Typography variant="subtitle2">Activation and first-day readiness</Typography>
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
-              <Chip size="small" label={`Requested: ${activationAnalytics.requestedCount}`} />
-              <Chip
-                size="small"
-                color="success"
-                label={`First-day ready: ${activationAnalytics.firstDayReadyCount}`}
-              />
-              <Chip
-                size="small"
-                color={activationAnalytics.repairRequiredCount ? 'error' : 'default'}
-                label={`Repair: ${activationAnalytics.repairRequiredCount}`}
-              />
-              <Chip
-                size="small"
-                color={activationAnalytics.cancellationPendingCount ? 'warning' : 'default'}
-                label={`Cancellation review: ${activationAnalytics.cancellationPendingCount}`}
-              />
-              <Chip size="small" label={`Cancelled: ${activationAnalytics.cancelledCount}`} />
-              <Chip
-                size="small"
-                label={`First-pass success: ${formatRate(activationAnalytics.firstPassSuccessRate)}`}
-              />
-              <Chip
-                size="small"
-                label={`Average attempts: ${activationAnalytics.averageAttempts}`}
-              />
-              <Chip
-                size="small"
-                label={`Committed identifiers: ${activationAnalytics.committedIdentifierCount}`}
-              />
-              <Chip
-                size="small"
-                label={`Voided identifiers: ${activationAnalytics.voidedIdentifierCount}`}
-              />
-            </Stack>
-          </Stack>
-        </Paper>
-      )}
-
-      {examAnalytics && examAnalytics.scheduledCount > 0 && (
-        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            gap={1}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', sm: 'center' }}
-            sx={{ mb: 1 }}
-          >
-            <Box>
-              <Typography variant="subtitle2">Exam outcomes</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {examAnalytics.scheduledCount} scheduled / {examAnalytics.meritRankedCount} ranked
-              </Typography>
-            </Box>
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
-              {examOutcomeMetrics.map(([label, value]) => (
-                <Chip key={label} size="small" label={`${label}: ${value}`} />
-              ))}
-            </Stack>
-          </Stack>
-          {examClassPerformance.length > 0 && (
-            <Box sx={{ overflowX: 'auto' }}>
-              <Table size="small" sx={{ minWidth: 720 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Class</TableCell>
-                    <TableCell align="right">Scheduled</TableCell>
-                    <TableCell align="right">Present</TableCell>
-                    <TableCell align="right">Pass</TableCell>
-                    <TableCell align="right">Eligible</TableCell>
-                    <TableCell align="right">Waitlist</TableCell>
-                    <TableCell align="right">Rejected</TableCell>
-                    <TableCell align="right">Avg %</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {examClassPerformance.map((item) => (
-                    <TableRow key={getExamClassKey(item)}>
-                      <TableCell>{item.className}</TableCell>
-                      <TableCell align="right">{item.scheduledCount}</TableCell>
-                      <TableCell align="right">{item.presentCount}</TableCell>
-                      <TableCell align="right">{item.passCount}</TableCell>
-                      <TableCell align="right">{item.eligibleCount}</TableCell>
-                      <TableCell align="right">{item.waitlistedCount}</TableCell>
-                      <TableCell align="right">{item.rejectedCount}</TableCell>
-                      <TableCell align="right">{formatRate(item.averagePercentage)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Box>
-          )}
-        </Paper>
-      )}
-
-      <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-        <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          gap={1}
-          justifyContent="space-between"
-          alignItems={{ xs: 'stretch', md: 'center' }}
-        >
-          {!fixedView && (
-            <ToggleButtonGroup
-              exclusive
-              size="small"
-              value={view}
-              onChange={(_, value) => value && setView(value)}
-            >
-              <ToggleButton value="board">
-                <ViewColumn sx={{ mr: 0.75 }} />
-                Board
-              </ToggleButton>
-              <ToggleButton value="list">
-                <FormatListBulleted sx={{ mr: 0.75 }} />
-                List
-              </ToggleButton>
-              <ToggleButton value="exams">
-                <EventAvailable sx={{ mr: 0.75 }} />
-                Exams
-              </ToggleButton>
-              <ToggleButton value="operations">
-                <AssignmentTurnedIn sx={{ mr: 0.75 }} />
-                Operations
-              </ToggleButton>
-            </ToggleButtonGroup>
-          )}
-
-          <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} flexWrap="wrap">
-            <TextField
-              size="small"
-              label="Search"
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-              sx={{ minWidth: { sm: 180 } }}
-            />
-            <TextField
-              size="small"
-              type="date"
-              label="From"
-              value={analyticsFromDate}
-              onChange={(event) => setAnalyticsFromDate(event.target.value)}
-              InputLabelProps={{ shrink: true }}
-              sx={{ minWidth: { sm: 150 } }}
-            />
-            <TextField
-              size="small"
-              type="date"
-              label="To"
-              value={analyticsToDate}
-              onChange={(event) => setAnalyticsToDate(event.target.value)}
-              InputLabelProps={{ shrink: true }}
-              sx={{ minWidth: { sm: 150 } }}
-            />
-            <FormControl size="small" sx={{ minWidth: 170 }}>
-              <InputLabel id="crm-stage-filter-label">Stage</InputLabel>
-              <Select
-                labelId="crm-stage-filter-label"
-                label="Stage"
-                value={stageFilter}
-                onChange={(event) =>
-                  setStageFilter(event.target.value === 'all' ? 'all' : Number(event.target.value))
-                }
-              >
-                <MenuItem value="all">All stages</MenuItem>
-                {stages.map((stage) => (
-                  <MenuItem key={stage.id} value={stage.systemStage}>
-                    {stage.stageName}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl size="small" sx={{ minWidth: 190 }}>
-              <InputLabel id="crm-channel-filter-label">Channel</InputLabel>
-              <Select
-                labelId="crm-channel-filter-label"
-                label="Channel"
-                value={channelFilter}
-                onChange={(event) =>
-                  setChannelFilter(
-                    event.target.value === 'all'
-                      ? 'all'
-                      : (Number(event.target.value) as AdmissionInquiryChannel)
-                  )
-                }
-              >
-                <MenuItem value="all">All channels</MenuItem>
-                {channelOptions.map((channel) => (
-                  <MenuItem key={channel} value={channel}>
-                    {getAdmissionCrmChannelLabel(channel)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {campaignOptions.length > 0 && (
-              <FormControl size="small" sx={{ minWidth: 190 }}>
-                <InputLabel id="crm-campaign-filter-label">Campaign</InputLabel>
-                <Select
-                  labelId="crm-campaign-filter-label"
-                  label="Campaign"
-                  value={campaignFilter}
-                  onChange={(event) => setCampaignFilter(event.target.value)}
-                >
-                  <MenuItem value="all">All campaigns</MenuItem>
-                  {campaignOptions.map((campaign) => (
-                    <MenuItem key={campaign} value={campaign}>
-                      {campaign}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-            <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel id="crm-owner-filter-label">Owner</InputLabel>
-              <Select
-                labelId="crm-owner-filter-label"
-                label="Owner"
-                value={ownerFilter}
-                onChange={(event) => setOwnerFilter(event.target.value)}
-              >
-                <MenuItem value="all">All owners</MenuItem>
-                <MenuItem value="unassigned">Unassigned</MenuItem>
-                {ownerOptions.map((ownerUserId) => (
-                  <MenuItem key={ownerUserId} value={ownerUserId}>
-                    {getOwnerDisplayName(ownerUserId)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {classOptions.length > 0 && (
-              <FormControl size="small" sx={{ minWidth: 170 }}>
-                <InputLabel id="crm-class-filter-label">Class</InputLabel>
-                <Select
-                  labelId="crm-class-filter-label"
-                  label="Class"
-                  value={classFilter}
-                  onChange={(event) => setClassFilter(event.target.value)}
-                >
-                  <MenuItem value="all">All classes</MenuItem>
-                  {classOptions.map((leadClass) => (
-                    <MenuItem key={leadClass} value={leadClass}>
-                      {leadClass}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-            <FormControl size="small" sx={{ minWidth: 190 }}>
-              <InputLabel id="crm-score-filter-label">Score</InputLabel>
-              <Select
-                labelId="crm-score-filter-label"
-                label="Score"
-                value={scoreBandFilter}
-                onChange={(event) => setScoreBandFilter(event.target.value as ScoreBandFilter)}
-              >
-                {scoreBandOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl size="small" sx={{ minWidth: 170 }}>
-              <InputLabel id="crm-priority-filter-label">Priority</InputLabel>
-              <Select
-                labelId="crm-priority-filter-label"
-                label="Priority"
-                value={priorityFilter}
-                onChange={(event) => {
-                  const { value } = event.target;
-                  setPriorityFilter(
-                    value === 'all' ? 'all' : (Number(value) as AdmissionCrmLeadPriority)
-                  );
-                }}
-              >
-                <MenuItem value="all">All priorities</MenuItem>
-                {leadPriorityOptions.map((priority) => (
-                  <MenuItem key={priority} value={priority}>
-                    {leadPriorityLabels[priority]}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Button
-              size="small"
-              variant="text"
-              startIcon={<FilterAltOff />}
-              onClick={handleClearWorkspaceFilters}
-              sx={{ alignSelf: { xs: 'stretch', sm: 'center' } }}
-            >
-              Clear
+      {workspace === 'pipeline' && academicYearId && isStagesError && (
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={() => refetchStages()}>
+              Retry
             </Button>
-          </Stack>
-        </Stack>
-      </Paper>
+          }
+        >
+          Pipeline configuration could not be loaded. Lead stages and stage actions are unavailable.
+        </Alert>
+      )}
 
-      {view === 'board' && (
+      {(workspace === 'pipeline' || workspace === 'analytics') && (
         <Box
           sx={{
             display: 'grid',
-            gridAutoFlow: { xs: 'row', lg: 'column' },
-            gridAutoColumns: { lg: 'minmax(260px, 1fr)' },
-            gridTemplateColumns: { xs: '1fr' },
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              lg: 'repeat(6, minmax(0, 1fr))',
+            },
+            gap: 1.25,
+          }}
+        >
+          {summaryKpis.map(([label, value]) => (
+            <Paper key={label} variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                {label}
+              </Typography>
+              <Typography variant="h5">{value}</Typography>
+            </Paper>
+          ))}
+        </Box>
+      )}
+
+      {workspace === 'analytics' && (
+        <>
+          {dailyTrends.length > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                gap={1}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                sx={{ mb: 1 }}
+              >
+                <Box>
+                  <Typography variant="subtitle2">Daily trends</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {dayjs(analyticsSummary?.trendFromDate).format('DD MMM')} -{' '}
+                    {dayjs(analyticsSummary?.trendToDate).format('DD MMM YYYY')}
+                  </Typography>
+                </Box>
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                  <Chip size="small" label={`Leads: ${trendTotals.leads}`} />
+                  <Chip size="small" label={`Exams: ${trendTotals.exams}`} />
+                  <Chip size="small" label={`Eligible: ${trendTotals.eligible}`} />
+                  <Chip size="small" label={`SLA: ${trendTotals.slaMissed}`} />
+                </Stack>
+              </Stack>
+              <Box sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 840 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Date</TableCell>
+                      <TableCell align="right">Leads</TableCell>
+                      <TableCell align="right">Exams</TableCell>
+                      <TableCell align="right">Completed</TableCell>
+                      <TableCell align="right">Eligible</TableCell>
+                      <TableCell align="right">Waitlist</TableCell>
+                      <TableCell align="right">Rejected</TableCell>
+                      <TableCell align="right">Stale</TableCell>
+                      <TableCell align="right">Archived</TableCell>
+                      <TableCell align="right">SLA</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {recentDailyTrends.map((trend) => (
+                      <TableRow key={trend.date}>
+                        <TableCell>{dayjs(trend.date).format('DD MMM')}</TableCell>
+                        <TableCell align="right">{trend.leadCount}</TableCell>
+                        <TableCell align="right">{trend.examScheduledCount}</TableCell>
+                        <TableCell align="right">{trend.examCompletedCount}</TableCell>
+                        <TableCell align="right">{trend.eligibleCount}</TableCell>
+                        <TableCell align="right">{trend.waitlistedCount}</TableCell>
+                        <TableCell align="right">{trend.rejectedCount}</TableCell>
+                        <TableCell align="right">{trend.staleCount}</TableCell>
+                        <TableCell align="right">{trend.archivedCount}</TableCell>
+                        <TableCell align="right">{trend.slaMissedCount}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </Paper>
+          )}
+
+          {automationAnalytics && automationAnalytics.runCount > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                gap={1}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                sx={{ mb: 1 }}
+              >
+                <Typography variant="subtitle2">Automation runs</Typography>
+                <Stack direction="row" gap={1} flexWrap="wrap">
+                  <Chip size="small" label={`${automationAnalytics.runCount} run(s)`} />
+                  {automationAnalytics.failedRunCount > 0 && (
+                    <Chip
+                      size="small"
+                      color="warning"
+                      label={`${automationAnalytics.failedRunCount} with failure(s)`}
+                    />
+                  )}
+                </Stack>
+              </Stack>
+              <Box sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 900 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Completed</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Context</TableCell>
+                      <TableCell align="right">Tasks</TableCell>
+                      <TableCell align="right">Messages</TableCell>
+                      <TableCell align="right">Stale</TableCell>
+                      <TableCell align="right">Archived</TableCell>
+                      <TableCell align="right">Failures</TableCell>
+                      <TableCell>Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {recentAutomationRuns.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{dayjs(item.completedAt).format('DD MMM, HH:mm')}</TableCell>
+                        <TableCell>{automationRunTypeLabels[item.runType]}</TableCell>
+                        <TableCell
+                          sx={{ maxWidth: 280, whiteSpace: 'normal', wordBreak: 'break-word' }}
+                        >
+                          {getAutomationRunContext(item)}
+                        </TableCell>
+                        <TableCell align="right">{item.createdTaskCount}</TableCell>
+                        <TableCell align="right">{item.sentMessageCount}</TableCell>
+                        <TableCell align="right">{item.markedStaleCount}</TableCell>
+                        <TableCell align="right">{item.archivedCount}</TableCell>
+                        <TableCell align="right">{item.failedActionCount}</TableCell>
+                        <TableCell>
+                          <Chip
+                            size="small"
+                            color={
+                              item.status === AdmissionCrmAutomationRunStatus.CompletedWithFailures
+                                ? 'warning'
+                                : 'success'
+                            }
+                            label={automationRunStatusLabels[item.status]}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </Paper>
+          )}
+
+          {automationAnalytics && automationAnalytics.failureCount > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                gap={1}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                sx={{ mb: 1 }}
+              >
+                <Typography variant="subtitle2">Automation failures</Typography>
+                <Chip
+                  size="small"
+                  color="warning"
+                  label={`${automationAnalytics.failureCount} failure(s)`}
+                />
+              </Stack>
+              <Box sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 760 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Time</TableCell>
+                      <TableCell>Failure</TableCell>
+                      <TableCell>Details</TableCell>
+                      <TableCell>Lead</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {recentAutomationFailures.map((item) => (
+                      <TableRow key={item.eventId}>
+                        <TableCell>{dayjs(item.occurredAt).format('DD MMM, HH:mm')}</TableCell>
+                        <TableCell>{item.title}</TableCell>
+                        <TableCell
+                          sx={{ maxWidth: 480, whiteSpace: 'normal', wordBreak: 'break-word' }}
+                        >
+                          {item.details || '-'}
+                        </TableCell>
+                        <TableCell>{item.leadId.slice(0, 8)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </Paper>
+          )}
+
+          {campaignPerformance.length > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                gap={1}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                sx={{ mb: 1 }}
+              >
+                <Typography variant="subtitle2">Campaign performance</Typography>
+                <Chip size="small" label={`${campaignPerformance.length} campaign(s)`} />
+              </Stack>
+              <Box sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 760 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Campaign</TableCell>
+                      <TableCell align="right">Leads</TableCell>
+                      <TableCell align="right">Exams</TableCell>
+                      <TableCell align="right">Eligible</TableCell>
+                      <TableCell align="right">Waitlist</TableCell>
+                      <TableCell align="right">Rejected</TableCell>
+                      <TableCell align="right">Eligibility</TableCell>
+                      <TableCell align="right">Avg score</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {campaignPerformance.map((campaign) => (
+                      <TableRow key={campaign.campaignName}>
+                        <TableCell>{campaign.campaignName}</TableCell>
+                        <TableCell align="right">{campaign.leadCount}</TableCell>
+                        <TableCell align="right">{campaign.examScheduledCount}</TableCell>
+                        <TableCell align="right">{campaign.eligibleCount}</TableCell>
+                        <TableCell align="right">{campaign.waitlistedCount}</TableCell>
+                        <TableCell align="right">{campaign.rejectedCount}</TableCell>
+                        <TableCell align="right">{formatRate(campaign.eligibilityRate)}</TableCell>
+                        <TableCell align="right">{campaign.averageLeadScore.toFixed(1)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </Paper>
+          )}
+
+          {academicYearId && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                gap={1}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', md: 'center' }}
+                sx={{ mb: 1 }}
+              >
+                <Box>
+                  <Typography variant="subtitle2">Communication delivery logs</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Recent template and OTP delivery evidence
+                  </Typography>
+                </Box>
+                <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                  <FormControl size="small" sx={{ minWidth: { sm: 170 } }}>
+                    <InputLabel id="crm-delivery-channel-filter-label">Channel</InputLabel>
+                    <Select
+                      labelId="crm-delivery-channel-filter-label"
+                      label="Channel"
+                      value={deliveryLogChannelFilter}
+                      onChange={(event) =>
+                        setDeliveryLogChannelFilter(
+                          event.target.value === 'all'
+                            ? 'all'
+                            : (Number(event.target.value) as AdmissionCrmMessageChannel)
+                        )
+                      }
+                    >
+                      <MenuItem value="all">All channels</MenuItem>
+                      {messageChannelOptions.map((channel) => (
+                        <MenuItem key={channel} value={channel}>
+                          {getAdmissionCrmMessageChannelLabel(channel)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl size="small" sx={{ minWidth: { sm: 210 } }}>
+                    <InputLabel id="crm-delivery-status-filter-label">Status</InputLabel>
+                    <Select
+                      labelId="crm-delivery-status-filter-label"
+                      label="Status"
+                      value={deliveryLogStatusFilter}
+                      onChange={(event) =>
+                        setDeliveryLogStatusFilter(event.target.value as DeliveryLogStatusFilter)
+                      }
+                    >
+                      {deliveryLogStatusOptions.map((status) => (
+                        <MenuItem key={status} value={status}>
+                          {status === 'all'
+                            ? 'All statuses'
+                            : getAdmissionCrmDeliveryLogStatusLabel(status)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    size="small"
+                    label="Provider ID"
+                    value={deliveryLogProviderMessageId}
+                    onChange={(event) => setDeliveryLogProviderMessageId(event.target.value)}
+                    sx={{ minWidth: { sm: 210 } }}
+                  />
+                </Stack>
+              </Stack>
+              {isDeliveryLogsFetching && <LinearProgress sx={{ mb: 1 }} />}
+              <Box sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 1020 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Time</TableCell>
+                      <TableCell>Channel</TableCell>
+                      <TableCell>Recipient</TableCell>
+                      <TableCell>Lead</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Provider ID</TableCell>
+                      <TableCell align="right">Attempts</TableCell>
+                      <TableCell>Details</TableCell>
+                      <TableCell align="right">Action</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {deliveryLogs.map((log) => (
+                      <TableRow key={log.id} hover>
+                        <TableCell>{dayjs(log.createdAt).format('DD MMM, HH:mm')}</TableCell>
+                        <TableCell>{getAdmissionCrmMessageChannelLabel(log.channel)}</TableCell>
+                        <TableCell sx={{ wordBreak: 'break-word' }}>{log.recipient}</TableCell>
+                        <TableCell>
+                          {log.leadId
+                            ? leadNameById.get(log.leadId) || log.leadId.slice(0, 8)
+                            : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            size="small"
+                            color={getDeliveryLogStatusColor(log.status)}
+                            label={getAdmissionCrmDeliveryLogStatusLabel(log.status)}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ maxWidth: 180, wordBreak: 'break-word' }}>
+                          {log.providerMessageId || '-'}
+                        </TableCell>
+                        <TableCell align="right">{log.attemptCount}</TableCell>
+                        <TableCell
+                          sx={{ maxWidth: 320, whiteSpace: 'normal', wordBreak: 'break-word' }}
+                        >
+                          {log.statusDetails || '-'}
+                        </TableCell>
+                        <TableCell align="right">
+                          {canRetryAdmissionCrmDeliveryLog(log.status) ? (
+                            <LoadingButton
+                              size="small"
+                              variant="text"
+                              startIcon={<Replay />}
+                              loading={isRetryingMessageDelivery}
+                              onClick={() => handleRetryMessageDelivery(log)}
+                            >
+                              Retry
+                            </LoadingButton>
+                          ) : (
+                            <Typography variant="caption" color="text.secondary">
+                              -
+                            </Typography>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {!deliveryLogs.length && (
+                      <TableRow>
+                        <TableCell colSpan={9}>
+                          <Typography variant="body2" color="text.secondary" align="center">
+                            No communication delivery logs found
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </Box>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mt: 0.75 }}
+              >
+                Showing {deliveryLogs.length} of {deliveryLogsData?.totalCount ?? 0} delivery log(s)
+              </Typography>
+            </Paper>
+          )}
+
+          {academicYearId && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                gap={1}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', md: 'center' }}
+                sx={{ mb: 1 }}
+              >
+                <Box>
+                  <Typography variant="subtitle2">Communication opt-outs</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Active and cleared consent blocks by channel and contact
+                  </Typography>
+                </Box>
+                <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                  <TextField
+                    size="small"
+                    label="Contact"
+                    value={optOutContactSearch}
+                    onChange={(event) => setOptOutContactSearch(event.target.value)}
+                    sx={{ minWidth: { sm: 160 } }}
+                  />
+                  <FormControl size="small" sx={{ minWidth: { sm: 170 } }}>
+                    <InputLabel id="crm-opt-out-channel-filter-label">Channel</InputLabel>
+                    <Select
+                      labelId="crm-opt-out-channel-filter-label"
+                      label="Channel"
+                      value={optOutChannelFilter}
+                      onChange={(event) =>
+                        setOptOutChannelFilter(
+                          event.target.value === 'all'
+                            ? 'all'
+                            : (Number(event.target.value) as AdmissionCrmMessageChannel)
+                        )
+                      }
+                    >
+                      <MenuItem value="all">All channels</MenuItem>
+                      {messageChannelOptions.map((channel) => (
+                        <MenuItem key={channel} value={channel}>
+                          {getAdmissionCrmMessageChannelLabel(channel)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl size="small" sx={{ minWidth: { sm: 150 } }}>
+                    <InputLabel id="crm-opt-out-status-filter-label">Status</InputLabel>
+                    <Select
+                      labelId="crm-opt-out-status-filter-label"
+                      label="Status"
+                      value={optOutStatusFilter}
+                      onChange={(event) =>
+                        setOptOutStatusFilter(event.target.value as OptOutStatusFilter)
+                      }
+                    >
+                      <MenuItem value="all">All statuses</MenuItem>
+                      <MenuItem value="active">Active</MenuItem>
+                      <MenuItem value="cleared">Cleared</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Stack>
+              </Stack>
+              {isOptOutsFetching && <LinearProgress sx={{ mb: 1 }} />}
+              <Box sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 900 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Opted out</TableCell>
+                      <TableCell>Channel</TableCell>
+                      <TableCell>Contact</TableCell>
+                      <TableCell>Lead</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Reason</TableCell>
+                      <TableCell>Cleared</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {optOuts.map((optOut) => (
+                      <TableRow key={optOut.id} hover>
+                        <TableCell>{dayjs(optOut.optedOutAt).format('DD MMM, HH:mm')}</TableCell>
+                        <TableCell>{getAdmissionCrmMessageChannelLabel(optOut.channel)}</TableCell>
+                        <TableCell sx={{ wordBreak: 'break-word' }}>
+                          {optOut.contactValue}
+                        </TableCell>
+                        <TableCell>
+                          {optOut.leadId
+                            ? leadNameById.get(optOut.leadId) || optOut.leadId.slice(0, 8)
+                            : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            size="small"
+                            color={optOut.isActive ? 'warning' : 'default'}
+                            label={optOut.isActive ? 'Active' : 'Cleared'}
+                          />
+                        </TableCell>
+                        <TableCell
+                          sx={{ maxWidth: 320, whiteSpace: 'normal', wordBreak: 'break-word' }}
+                        >
+                          {optOut.reason}
+                        </TableCell>
+                        <TableCell
+                          sx={{ maxWidth: 260, whiteSpace: 'normal', wordBreak: 'break-word' }}
+                        >
+                          {optOut.optedInAt
+                            ? `${dayjs(optOut.optedInAt).format('DD MMM, HH:mm')} - ${
+                                optOut.optInReason || 'No reason'
+                              }`
+                            : '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {!optOuts.length && (
+                      <TableRow>
+                        <TableCell colSpan={7}>
+                          <Typography variant="body2" color="text.secondary" align="center">
+                            No communication opt-outs found
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </Box>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mt: 0.75 }}
+              >
+                Showing {optOuts.length} of {optOutsData?.totalCount ?? 0} opt-out record(s)
+              </Typography>
+            </Paper>
+          )}
+
+          {staffWorkload.length > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                gap={1}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                sx={{ mb: 1 }}
+              >
+                <Typography variant="subtitle2">Staff workload</Typography>
+                <Chip size="small" label={`${staffWorkload.length} owner group(s)`} />
+              </Stack>
+              <Box sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 620 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Owner</TableCell>
+                      <TableCell align="right">Leads</TableCell>
+                      <TableCell align="right">Open</TableCell>
+                      <TableCell align="right">Pending tasks</TableCell>
+                      <TableCell align="right">Overdue</TableCell>
+                      <TableCell align="right">Exams</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {staffWorkload.map((item) => (
+                      <TableRow key={item.ownerUserId || 'unassigned'}>
+                        <TableCell>{getWorkloadOwnerLabel(item)}</TableCell>
+                        <TableCell align="right">{item.leadCount}</TableCell>
+                        <TableCell align="right">{item.openLeadCount}</TableCell>
+                        <TableCell align="right">{item.pendingTaskCount}</TableCell>
+                        <TableCell align="right">{item.overdueTaskCount}</TableCell>
+                        <TableCell align="right">{item.examScheduledCount}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </Paper>
+          )}
+
+          {registrationAnalytics && registrationAnalytics.issuedCount > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack spacing={1}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  gap={1}
+                >
+                  <Box>
+                    <Typography variant="subtitle2">Registration and document readiness</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {registrationAnalytics.issuedCount} issued /{' '}
+                      {registrationAnalytics.admissionReadyCount} admission ready
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    <Chip
+                      size="small"
+                      label={`Opened: ${formatRate(registrationAnalytics.openRate)}`}
+                    />
+                    <Chip
+                      size="small"
+                      label={`Completed: ${formatRate(registrationAnalytics.completionRate)}`}
+                    />
+                    <Chip
+                      size="small"
+                      label={`Verified: ${formatRate(registrationAnalytics.verificationRate)}`}
+                    />
+                    <Chip
+                      size="small"
+                      color="success"
+                      label={`Yield: ${formatRate(registrationAnalytics.admissionYieldRate)}`}
+                    />
+                  </Stack>
+                </Stack>
+                <Divider />
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                  <Chip
+                    size="small"
+                    color={registrationAnalytics.abandonedCount ? 'warning' : 'default'}
+                    label={`Abandoned: ${registrationAnalytics.abandonedCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={registrationAnalytics.expiredCount ? 'warning' : 'default'}
+                    label={`Expired: ${registrationAnalytics.expiredCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Corrections: ${registrationAnalytics.correctionPendingCount}`}
+                  />
+                  {documentAnalytics ? (
+                    <>
+                      <Chip
+                        size="small"
+                        label={`Document review: ${documentAnalytics.underReviewCount}`}
+                      />
+                      <Chip
+                        size="small"
+                        color={documentAnalytics.rejectedCount ? 'error' : 'default'}
+                        label={`Rejected: ${documentAnalytics.rejectedCount}`}
+                      />
+                      <Chip
+                        size="small"
+                        label={`Review age: ${documentAnalytics.averageReviewAgeDays.toFixed(1)} days`}
+                      />
+                      <Chip
+                        size="small"
+                        label={`Readiness overrides: ${documentAnalytics.readinessOverrideCount}`}
+                      />
+                    </>
+                  ) : null}
+                </Stack>
+              </Stack>
+            </Paper>
+          )}
+
+          {finalAdmissionAnalytics && finalAdmissionAnalytics.seatPoolCount > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack spacing={1}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  gap={1}
+                >
+                  <Box>
+                    <Typography variant="subtitle2">Offers and seat conversion</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {finalAdmissionAnalytics.approvedCapacity} approved seats /{' '}
+                      {finalAdmissionAnalytics.remainingSeatCount} remaining
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    <Chip
+                      size="small"
+                      label={`Occupied: ${formatRate(finalAdmissionAnalytics.seatOccupancyRate)}`}
+                    />
+                    <Chip
+                      size="small"
+                      label={`Offer response: ${formatRate(finalAdmissionAnalytics.offerResponseRate)}`}
+                    />
+                    <Chip
+                      size="small"
+                      color="success"
+                      label={`Offer acceptance: ${formatRate(finalAdmissionAnalytics.offerAcceptanceRate)}`}
+                    />
+                    <Chip
+                      size="small"
+                      label={`Waitlist promotion: ${formatRate(finalAdmissionAnalytics.waitlistPromotionRate)}`}
+                    />
+                  </Stack>
+                </Stack>
+                <Divider />
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                  <Chip
+                    size="small"
+                    label={`Reserved: ${finalAdmissionAnalytics.reservedSeatCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Accepted: ${finalAdmissionAnalytics.acceptedSeatCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Activated: ${finalAdmissionAnalytics.activatedSeatCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Offers awaiting approval: ${finalAdmissionAnalytics.approvalPendingOfferCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Offers issued: ${finalAdmissionAnalytics.issuedOfferCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Waitlisted: ${finalAdmissionAnalytics.activeWaitlistCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={finalAdmissionAnalytics.capacityOverrideCount ? 'warning' : 'default'}
+                    label={`Capacity overrides: ${finalAdmissionAnalytics.capacityOverrideCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={finalAdmissionAnalytics.overCapacityPoolCount ? 'error' : 'default'}
+                    label={`Over capacity: ${finalAdmissionAnalytics.overCapacityPoolCount}`}
+                  />
+                </Stack>
+              </Stack>
+            </Paper>
+          )}
+
+          {financialAnalytics && financialAnalytics.issuedQuotationCount > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack spacing={1}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  gap={1}
+                >
+                  <Box>
+                    <Typography variant="subtitle2">Financial conversion</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {financialAnalytics.issuedQuotationCount} quotation(s) /{' '}
+                      {financialAnalytics.financeConfirmedCount} Finance confirmed
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    <Chip
+                      size="small"
+                      label={`Finance confirmation: ${formatRate(financialAnalytics.financeConfirmationRate)}`}
+                    />
+                    <Chip
+                      size="small"
+                      color="success"
+                      label={`Gate satisfied: ${formatRate(financialAnalytics.paymentGateSatisfactionRate)}`}
+                    />
+                  </Stack>
+                </Stack>
+                <Divider />
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                  <Chip
+                    size="small"
+                    label={`Quoted: INR ${financialAnalytics.netQuotedAmount.toFixed(2)}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Confirmed: INR ${financialAnalytics.confirmedAmount.toFixed(2)}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={financialAnalytics.outstandingAmount ? 'warning' : 'default'}
+                    label={`Outstanding: INR ${financialAnalytics.outstandingAmount.toFixed(2)}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={financialAnalytics.pendingGateCount ? 'warning' : 'default'}
+                    label={`Pending gates: ${financialAnalytics.pendingGateCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Concessions: INR ${financialAnalytics.concessionAmount.toFixed(2)}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={
+                      financialAnalytics.concessionApprovalPendingCount ? 'warning' : 'default'
+                    }
+                    label={`Concession reviews: ${financialAnalytics.concessionApprovalPendingCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={financialAnalytics.gateOverrideCount ? 'warning' : 'default'}
+                    label={`Gate overrides: ${financialAnalytics.gateOverrideCount}`}
+                  />
+                </Stack>
+              </Stack>
+            </Paper>
+          )}
+
+          {householdIdentityAnalytics && householdIdentityAnalytics.profileCount > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack spacing={1}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  gap={1}
+                >
+                  <Box>
+                    <Typography variant="subtitle2">Household and identity readiness</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {householdIdentityAnalytics.readyCount} of{' '}
+                      {householdIdentityAnalytics.profileCount} applicant(s) ready
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    <Chip
+                      size="small"
+                      color="success"
+                      label={`Readiness: ${formatRate(householdIdentityAnalytics.identityReadinessRate)}`}
+                    />
+                    <Chip
+                      size="small"
+                      label={`Household reuse: ${formatRate(householdIdentityAnalytics.householdReuseRate)}`}
+                    />
+                  </Stack>
+                </Stack>
+                <Divider />
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                  <Chip
+                    size="small"
+                    label={`Guardian links: ${householdIdentityAnalytics.guardianRelationshipCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Reused households: ${householdIdentityAnalytics.reusedHouseholdCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={
+                      householdIdentityAnalytics.missingAccountableContactCount
+                        ? 'warning'
+                        : 'default'
+                    }
+                    label={`Accountable contact pending: ${householdIdentityAnalytics.missingAccountableContactCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={
+                      householdIdentityAnalytics.missingIdentityConsentCount ? 'warning' : 'default'
+                    }
+                    label={`Consent pending: ${householdIdentityAnalytics.missingIdentityConsentCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={
+                      householdIdentityAnalytics.accountLinkPendingCount ? 'warning' : 'default'
+                    }
+                    label={`Account links pending: ${householdIdentityAnalytics.accountLinkPendingCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={householdIdentityAnalytics.conflictCount ? 'error' : 'default'}
+                    label={`Identity conflicts: ${householdIdentityAnalytics.conflictCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={householdIdentityAnalytics.overrideCount ? 'warning' : 'default'}
+                    label={`Overrides: ${householdIdentityAnalytics.overrideCount}`}
+                  />
+                </Stack>
+              </Stack>
+            </Paper>
+          )}
+
+          {policyAnalytics &&
+            (policyAnalytics.activeAdoptionCount > 0 || policyAnalytics.evaluationCount > 0) && (
+              <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+                <Stack spacing={1}>
+                  <Typography variant="subtitle2">Policy governance</Typography>
+                  <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    <Chip
+                      size="small"
+                      label={`Active packs: ${policyAnalytics.activeAdoptionCount}`}
+                    />
+                    <Chip size="small" label={`Evaluations: ${policyAnalytics.evaluationCount}`} />
+                    <Chip
+                      size="small"
+                      color={policyAnalytics.blockingFailureCount ? 'error' : 'success'}
+                      label={`Blocking: ${policyAnalytics.blockingFailureCount}`}
+                    />
+                    <Chip
+                      size="small"
+                      color={policyAnalytics.evidencePendingCount ? 'warning' : 'default'}
+                      label={`Evidence pending: ${policyAnalytics.evidencePendingCount}`}
+                    />
+                    <Chip
+                      size="small"
+                      color={policyAnalytics.sourceReviewOverdueCount ? 'warning' : 'default'}
+                      label={`Source review overdue: ${policyAnalytics.sourceReviewOverdueCount}`}
+                    />
+                  </Stack>
+                </Stack>
+              </Paper>
+            )}
+
+          {routeAnalytics && routeAnalytics.assignedApplicantCount > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack spacing={1}>
+                <Typography variant="subtitle2">Admission routes</Typography>
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                  <Chip size="small" label={`Assigned: ${routeAnalytics.assignedApplicantCount}`} />
+                  <Chip
+                    size="small"
+                    color="success"
+                    label={`Eligible: ${routeAnalytics.eligibleCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={routeAnalytics.pendingReviewCount ? 'warning' : 'default'}
+                    label={`Review pending: ${routeAnalytics.pendingReviewCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={routeAnalytics.appealPendingCount ? 'warning' : 'default'}
+                    label={`Appeals pending: ${routeAnalytics.appealPendingCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Appeals approved: ${routeAnalytics.appealApprovedCount}`}
+                  />
+                  <Chip size="small" label={`Route changes: ${routeAnalytics.routeChangeCount}`} />
+                  {Object.entries(routeAnalytics.applicantsByRoute).map(([route, count]) => (
+                    <Chip
+                      key={route}
+                      size="small"
+                      variant="outlined"
+                      label={`${route}: ${count}`}
+                    />
+                  ))}
+                </Stack>
+              </Stack>
+            </Paper>
+          )}
+
+          {activationAnalytics && activationAnalytics.requestedCount > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack spacing={1}>
+                <Typography variant="subtitle2">Activation and first-day readiness</Typography>
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                  <Chip size="small" label={`Requested: ${activationAnalytics.requestedCount}`} />
+                  <Chip
+                    size="small"
+                    color="success"
+                    label={`First-day ready: ${activationAnalytics.firstDayReadyCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={activationAnalytics.repairRequiredCount ? 'error' : 'default'}
+                    label={`Repair: ${activationAnalytics.repairRequiredCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    color={activationAnalytics.cancellationPendingCount ? 'warning' : 'default'}
+                    label={`Cancellation review: ${activationAnalytics.cancellationPendingCount}`}
+                  />
+                  <Chip size="small" label={`Cancelled: ${activationAnalytics.cancelledCount}`} />
+                  <Chip
+                    size="small"
+                    label={`First-pass success: ${formatRate(activationAnalytics.firstPassSuccessRate)}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Average attempts: ${activationAnalytics.averageAttempts}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Committed identifiers: ${activationAnalytics.committedIdentifierCount}`}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Voided identifiers: ${activationAnalytics.voidedIdentifierCount}`}
+                  />
+                </Stack>
+              </Stack>
+            </Paper>
+          )}
+
+          {examAnalytics && examAnalytics.scheduledCount > 0 && (
+            <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                gap={1}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                sx={{ mb: 1 }}
+              >
+                <Box>
+                  <Typography variant="subtitle2">Exam outcomes</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {examAnalytics.scheduledCount} scheduled / {examAnalytics.meritRankedCount}{' '}
+                    ranked
+                  </Typography>
+                </Box>
+                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                  {examOutcomeMetrics.map(([label, value]) => (
+                    <Chip key={label} size="small" label={`${label}: ${value}`} />
+                  ))}
+                </Stack>
+              </Stack>
+              {examClassPerformance.length > 0 && (
+                <Box sx={{ overflowX: 'auto' }}>
+                  <Table size="small" sx={{ minWidth: 720 }}>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Class</TableCell>
+                        <TableCell align="right">Scheduled</TableCell>
+                        <TableCell align="right">Present</TableCell>
+                        <TableCell align="right">Pass</TableCell>
+                        <TableCell align="right">Eligible</TableCell>
+                        <TableCell align="right">Waitlist</TableCell>
+                        <TableCell align="right">Rejected</TableCell>
+                        <TableCell align="right">Avg %</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {examClassPerformance.map((item) => (
+                        <TableRow key={getExamClassKey(item)}>
+                          <TableCell>{item.className}</TableCell>
+                          <TableCell align="right">{item.scheduledCount}</TableCell>
+                          <TableCell align="right">{item.presentCount}</TableCell>
+                          <TableCell align="right">{item.passCount}</TableCell>
+                          <TableCell align="right">{item.eligibleCount}</TableCell>
+                          <TableCell align="right">{item.waitlistedCount}</TableCell>
+                          <TableCell align="right">{item.rejectedCount}</TableCell>
+                          <TableCell align="right">{formatRate(item.averagePercentage)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Box>
+              )}
+            </Paper>
+          )}
+        </>
+      )}
+
+      {workspace === 'pipeline' && (
+        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            gap={1}
+            justifyContent="space-between"
+            alignItems={{ xs: 'stretch', md: 'center' }}
+          >
+            {!fixedView && (
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={view}
+                onChange={(_, value) => value && setView(value)}
+              >
+                <ToggleButton value="board">
+                  <ViewColumn sx={{ mr: 0.75 }} />
+                  Board
+                </ToggleButton>
+                <ToggleButton value="list">
+                  <FormatListBulleted sx={{ mr: 0.75 }} />
+                  List
+                </ToggleButton>
+                <ToggleButton value="exams">
+                  <EventAvailable sx={{ mr: 0.75 }} />
+                  Exams
+                </ToggleButton>
+                <ToggleButton value="operations">
+                  <AssignmentTurnedIn sx={{ mr: 0.75 }} />
+                  Operations
+                </ToggleButton>
+              </ToggleButtonGroup>
+            )}
+
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} flexWrap="wrap">
+              <TextField
+                size="small"
+                label="Search"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                sx={{ minWidth: { sm: 180 } }}
+              />
+              <TextField
+                size="small"
+                type="date"
+                label="From"
+                value={analyticsFromDate}
+                onChange={(event) => setAnalyticsFromDate(event.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ minWidth: { sm: 150 } }}
+              />
+              <TextField
+                size="small"
+                type="date"
+                label="To"
+                value={analyticsToDate}
+                onChange={(event) => setAnalyticsToDate(event.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ minWidth: { sm: 150 } }}
+              />
+              <FormControl size="small" sx={{ minWidth: 170 }}>
+                <InputLabel id="crm-stage-filter-label">Stage</InputLabel>
+                <Select
+                  labelId="crm-stage-filter-label"
+                  label="Stage"
+                  value={stageFilter}
+                  onChange={(event) =>
+                    setStageFilter(
+                      event.target.value === 'all' ? 'all' : Number(event.target.value)
+                    )
+                  }
+                >
+                  <MenuItem value="all">All stages</MenuItem>
+                  {stages.map((stage) => (
+                    <MenuItem key={stage.id} value={stage.systemStage}>
+                      {stage.stageName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl size="small" sx={{ minWidth: 190 }}>
+                <InputLabel id="crm-channel-filter-label">Channel</InputLabel>
+                <Select
+                  labelId="crm-channel-filter-label"
+                  label="Channel"
+                  value={channelFilter}
+                  onChange={(event) =>
+                    setChannelFilter(
+                      event.target.value === 'all'
+                        ? 'all'
+                        : (Number(event.target.value) as AdmissionInquiryChannel)
+                    )
+                  }
+                >
+                  <MenuItem value="all">All channels</MenuItem>
+                  {channelOptions.map((channel) => (
+                    <MenuItem key={channel} value={channel}>
+                      {getAdmissionCrmChannelLabel(channel)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {campaignOptions.length > 0 && (
+                <FormControl size="small" sx={{ minWidth: 190 }}>
+                  <InputLabel id="crm-campaign-filter-label">Campaign</InputLabel>
+                  <Select
+                    labelId="crm-campaign-filter-label"
+                    label="Campaign"
+                    value={campaignFilter}
+                    onChange={(event) => setCampaignFilter(event.target.value)}
+                  >
+                    <MenuItem value="all">All campaigns</MenuItem>
+                    {campaignOptions.map((campaign) => (
+                      <MenuItem key={campaign} value={campaign}>
+                        {campaign}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+              <FormControl size="small" sx={{ minWidth: 180 }}>
+                <InputLabel id="crm-owner-filter-label">Owner</InputLabel>
+                <Select
+                  labelId="crm-owner-filter-label"
+                  label="Owner"
+                  value={ownerFilter}
+                  onChange={(event) => setOwnerFilter(event.target.value)}
+                >
+                  <MenuItem value="all">All owners</MenuItem>
+                  <MenuItem value="unassigned">Unassigned</MenuItem>
+                  {ownerOptions.map((ownerUserId) => (
+                    <MenuItem key={ownerUserId} value={ownerUserId}>
+                      {getOwnerDisplayName(ownerUserId)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {classOptions.length > 0 && (
+                <FormControl size="small" sx={{ minWidth: 170 }}>
+                  <InputLabel id="crm-class-filter-label">Class</InputLabel>
+                  <Select
+                    labelId="crm-class-filter-label"
+                    label="Class"
+                    value={classFilter}
+                    onChange={(event) => setClassFilter(event.target.value)}
+                  >
+                    <MenuItem value="all">All classes</MenuItem>
+                    {classOptions.map((leadClass) => (
+                      <MenuItem key={leadClass} value={leadClass}>
+                        {leadClass}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+              <FormControl size="small" sx={{ minWidth: 190 }}>
+                <InputLabel id="crm-score-filter-label">Score</InputLabel>
+                <Select
+                  labelId="crm-score-filter-label"
+                  label="Score"
+                  value={scoreBandFilter}
+                  onChange={(event) => setScoreBandFilter(event.target.value as ScoreBandFilter)}
+                >
+                  {scoreBandOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl size="small" sx={{ minWidth: 170 }}>
+                <InputLabel id="crm-priority-filter-label">Priority</InputLabel>
+                <Select
+                  labelId="crm-priority-filter-label"
+                  label="Priority"
+                  value={priorityFilter}
+                  onChange={(event) => {
+                    const { value } = event.target;
+                    setPriorityFilter(
+                      value === 'all' ? 'all' : (Number(value) as AdmissionCrmLeadPriority)
+                    );
+                  }}
+                >
+                  <MenuItem value="all">All priorities</MenuItem>
+                  {leadPriorityOptions.map((priority) => (
+                    <MenuItem key={priority} value={priority}>
+                      {leadPriorityLabels[priority]}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Button
+                size="small"
+                variant="text"
+                startIcon={<FilterAltOff />}
+                onClick={handleClearWorkspaceFilters}
+                sx={{ alignSelf: { xs: 'stretch', sm: 'center' } }}
+              >
+                Clear
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      )}
+
+      {workspace === 'pipeline' && view === 'board' && (
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', lg: 'row' },
             gap: 1.25,
             overflowX: { lg: 'auto' },
             pb: 1,
@@ -3545,7 +3614,9 @@ const StudentAdmissionsCrmScreen = ({
                 sx={{
                   p: 1.25,
                   borderRadius: 1,
-                  minWidth: 0,
+                  width: { xs: '100%', lg: 300 },
+                  minWidth: { xs: 0, lg: 300 },
+                  flex: { lg: '0 0 300px' },
                   bgcolor: 'background.neutral',
                   borderTop: configuredStageColor ? `3px solid ${configuredStageColor}` : undefined,
                 }}
@@ -3585,7 +3656,7 @@ const StudentAdmissionsCrmScreen = ({
         </Box>
       )}
 
-      {view === 'list' && (
+      {workspace === 'pipeline' && view === 'list' && (
         <Stack spacing={1}>
           {selectedLeads.length > 0 && (
             <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
@@ -3779,8 +3850,12 @@ const StudentAdmissionsCrmScreen = ({
 
       {view === 'operations' && (
         <Stack spacing={1}>
-          <RteAllotmentImport academicYearId={academicYearId || ''} />
-          <AdmissionsDataQuality academicYearId={academicYearId || ''} />
+          {workspace === 'operations' && (
+            <>
+              <RteAllotmentImport academicYearId={academicYearId || ''} />
+              <AdmissionsDataQuality academicYearId={academicYearId || ''} />
+            </>
+          )}
           <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
             {(isOperationsSummaryFetching || isOperationsQueueFetching) && <LinearProgress />}
             <Box
@@ -3826,17 +3901,29 @@ const StudentAdmissionsCrmScreen = ({
                   onChange={(event) => setOperationsSearch(event.target.value)}
                   sx={{ flex: 1 }}
                 />
-                <TextField
+                <Autocomplete
                   size="small"
-                  label="Owner user ID"
-                  value={operationsOwnerUserId}
-                  onChange={(event) => setOperationsOwnerUserId(event.target.value)}
+                  options={crmStaff}
+                  value={crmStaff.find((staff) => staff.id === operationsOwnerUserId) ?? null}
+                  onChange={(_, staff) => setOperationsOwnerUserId(staff?.id ?? '')}
+                  getOptionLabel={(staff) =>
+                    `${staff.displayName}${staff.email ? ` - ${staff.email}` : ''}`
+                  }
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  sx={{ minWidth: { md: 240 } }}
+                  renderInput={(params) => <TextField {...params} label="Owner" />}
                 />
-                <TextField
+                <Autocomplete
                   size="small"
-                  label="Assigned to user ID"
-                  value={operationsAssignedToUserId}
-                  onChange={(event) => setOperationsAssignedToUserId(event.target.value)}
+                  options={crmStaff}
+                  value={crmStaff.find((staff) => staff.id === operationsAssignedToUserId) ?? null}
+                  onChange={(_, staff) => setOperationsAssignedToUserId(staff?.id ?? '')}
+                  getOptionLabel={(staff) =>
+                    `${staff.displayName}${staff.email ? ` - ${staff.email}` : ''}`
+                  }
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  sx={{ minWidth: { md: 240 } }}
+                  renderInput={(params) => <TextField {...params} label="Assigned to" />}
                 />
                 <TextField
                   size="small"
@@ -4551,14 +4638,26 @@ const StudentAdmissionsCrmScreen = ({
               <Stack spacing={1.25}>
                 <Typography variant="subtitle2">Lead Owner</Typography>
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25} alignItems="flex-start">
-                  <TextField
-                    label="Owner user ID"
-                    value={ownerUserIdText}
-                    onChange={(event) => setOwnerUserIdText(event.target.value)}
-                    helperText={
-                      operationsLead ? getLeadOwnerLabel(operationsLead, crmStaff) : 'Unassigned'
+                  <Autocomplete
+                    options={crmStaff}
+                    value={crmStaff.find((staff) => staff.id === ownerUserIdText) ?? null}
+                    onChange={(_, staff) => setOwnerUserIdText(staff?.id ?? '')}
+                    getOptionLabel={(staff) =>
+                      `${staff.displayName}${staff.email ? ` - ${staff.email}` : ''}`
                     }
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
                     fullWidth
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Lead owner"
+                        helperText={
+                          operationsLead
+                            ? getLeadOwnerLabel(operationsLead, crmStaff)
+                            : 'Unassigned'
+                        }
+                      />
+                    )}
                   />
                   <LoadingButton
                     variant="outlined"

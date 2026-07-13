@@ -9,8 +9,12 @@ import {
   buildPublicAdmissionInquiryPath,
   parseAdmissionCrmProviderSettings,
   updateAdmissionCrmProviderAdapter,
+  getAdmissionCrmProviderPayloadMode,
+  updateAdmissionCrmProviderPayloadMode,
   getAdmissionCrmProviderCallbackSecret,
+  getAdmissionCrmProviderKeyValueSettings,
   updateAdmissionCrmProviderCallbackSecret,
+  updateAdmissionCrmProviderKeyValueSettings,
   getAdmissionCrmProviderCallbackMappingPath,
   buildAdmissionCrmProviderDeliveryCallbackUrl,
   getAdmissionCrmProviderResponseMessageIdPath,
@@ -158,7 +162,7 @@ describe('Admissions CRM configuration helpers', () => {
     });
   });
 
-  it('removes default webhook adapter and blank provider response ID paths', () => {
+  it('keeps an explicit webhook adapter and removes blank provider response ID paths', () => {
     const withoutAdapter = updateAdmissionCrmProviderAdapter(
       JSON.stringify({ adapter: 'manual', responseProviderMessageIdPath: 'messages.0.id' }),
       'webhook'
@@ -170,10 +174,28 @@ describe('Admissions CRM configuration helpers', () => {
 
     expect(getAdmissionCrmProviderAdapter(withoutResponsePath)).toBe('webhook');
     expect(getAdmissionCrmProviderResponseMessageIdPath(withoutResponsePath)).toBe('');
-    expect(parseAdmissionCrmProviderSettings(withoutResponsePath)).not.toHaveProperty('adapter');
+    expect(parseAdmissionCrmProviderSettings(withoutResponsePath).adapter).toBe('webhook');
     expect(parseAdmissionCrmProviderSettings(withoutResponsePath)).not.toHaveProperty(
       'responseProviderMessageIdPath'
     );
+  });
+
+  it('updates structured payload, header, and parameter settings', () => {
+    const withPayload = updateAdmissionCrmProviderPayloadMode('{}', 'envelope');
+    const withHeaders = updateAdmissionCrmProviderKeyValueSettings(withPayload, 'headers', {
+      Authorization: 'Bearer token',
+    });
+    const withParameters = updateAdmissionCrmProviderKeyValueSettings(withHeaders, 'parameters', {
+      language: 'en',
+    });
+
+    expect(getAdmissionCrmProviderPayloadMode(withParameters)).toBe('envelope');
+    expect(getAdmissionCrmProviderKeyValueSettings(withParameters, 'headers')).toEqual({
+      Authorization: 'Bearer token',
+    });
+    expect(getAdmissionCrmProviderKeyValueSettings(withParameters, 'parameters')).toEqual({
+      language: 'en',
+    });
   });
 
   it('updates provider callback secret and mapping paths while preserving settings', () => {
