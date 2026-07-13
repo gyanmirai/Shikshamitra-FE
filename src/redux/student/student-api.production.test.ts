@@ -120,19 +120,6 @@ describe('student production API wiring', () => {
     expect(screenSource).toContain('skipCount: (page - 1) * rowsPerPage');
   });
 
-  it('keeps registration list wired to server pagination params', () => {
-    const apiSource = readSource('src/redux/student/registration/registration-api.ts');
-    const screenSource = readSource(
-      'src/screens/student/enrollment/register/registration-table.tsx'
-    );
-
-    expect(apiSource).toContain("url: '/student/enrollment/registrations'");
-    expect(apiSource).toContain('params,');
-    expect(apiSource).not.toContain('registrations?academicMediumId=');
-    expect(screenSource).toContain('serverSide');
-    expect(screenSource).toContain('onServerPagination');
-  });
-
   it('does not keep stale student document endpoints or multipart headers', () => {
     const studentIdPlaceholder = `$${'{studentId}'}`;
     const documentIdPlaceholder = `$${'{documentId}'}`;
@@ -159,27 +146,6 @@ describe('student production API wiring', () => {
 
     expect(offenders).toEqual([]);
     expect(registrationSource).toContain(registrationDocumentEndpoint);
-  });
-
-  it('keeps registration family details payload aligned to backend field names', () => {
-    const source = readSource('src/screens/student/enrollment/register/register-form.tsx');
-
-    expect(source).toContain('yearOfPassing: values.fatherPassOutYear');
-    expect(source).toContain('yearOfPassing: values.motherPassOutYear');
-    expect(source).toContain('yearOfPassing: values.guardianPassOutYear');
-    expect(source).toContain('organization: values.fatherOrganization');
-    expect(source).toContain('organization: values.motherOrganization');
-    expect(source).toContain('organization: values.guardianOrganization');
-    expect(source).toContain('aadharNo: String(values.fatherAadharNo)');
-    expect(source).toContain('aadharNo: String(values.motherAadharNo)');
-    expect(source).toContain('aadharNo: String(values.guardianAadharNo)');
-    expect(source).toContain('officeAddress: {');
-    expect(source).toContain('localAddress: {');
-    expect(source).not.toContain('organisation: values');
-    expect(source).not.toContain('aadhaarNo: values');
-    expect(source).not.toContain('officeAddress1: values');
-    expect(source).not.toContain('officeAddress2: values');
-    expect(source).not.toContain('officeAddress3: values');
   });
 
   it('validates manual roll numbers against duplicates, positive values, and student count', () => {

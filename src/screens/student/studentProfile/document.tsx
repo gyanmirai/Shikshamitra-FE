@@ -1,6 +1,5 @@
 import React from 'react';
-
-import { RenderDocuments } from '../enrollment/register/RenderDocument';
+import { RenderDocuments } from 'src/components/studentProfile/form-fields/RenderDocument';
 
 import type { StudentTabsComponentType } from '.';
 

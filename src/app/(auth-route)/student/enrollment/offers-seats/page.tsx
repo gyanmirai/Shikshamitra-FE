@@ -1,14 +1,5 @@
-import StudentAdmissionsCrmScreen from 'src/screens/student/enrollment/admissions-crm';
-import { AdmissionCrmOperationsQueueType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionsOffersWorkspace } from 'src/screens/student/enrollment/admissions-crm/workspace-pages';
 
-const AdmissionsOffersSeatsPage = () => (
-  <StudentAdmissionsCrmScreen
-    heading="Offers and Seats"
-    initialView="operations"
-    initialOperationsQueueType={AdmissionCrmOperationsQueueType.FinalApproval}
-    fixedView
-    workspace="offers"
-  />
-);
+const AdmissionsOffersSeatsPage = () => <AdmissionsOffersWorkspace />;
 
 export default AdmissionsOffersSeatsPage;

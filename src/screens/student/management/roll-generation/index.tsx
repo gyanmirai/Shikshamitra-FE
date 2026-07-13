@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IInquiryData } from 'src/types/student-enrollment';
 
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
@@ -31,8 +32,6 @@ import {
   hasRollNumberValidationErrors,
   buildRollNumberValidationErrors,
 } from './roll-number-validation';
-
-import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 const RollNoGenerationScreen = ({ division }: { division: string }) => {
   // State for controlling how students are arranged (e.g., boys first, girls first)

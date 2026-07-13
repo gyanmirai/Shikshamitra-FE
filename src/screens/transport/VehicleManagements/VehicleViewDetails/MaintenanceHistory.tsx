@@ -7,10 +7,10 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { FormSlider } from 'src/components/form-slider';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { Tab, Card, Tooltip, IconButton } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import {
   VehicleRouteType,
   VehicleRouteTypeColor,

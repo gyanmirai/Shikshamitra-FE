@@ -187,7 +187,13 @@ export function RteAllotmentImport({ academicYearId }: Props) {
       <Stack spacing={1.25}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
           <Typography variant="subtitle2">RTE allotment import</Typography>
-          <Chip size="small" label="Preview before commit" color="warning" variant="outlined" />
+          <Chip
+            size="small"
+            label="Preview before commit"
+            color="warning"
+            variant="outlined"
+            sx={{ color: 'warning.darker', borderColor: 'warning.darker' }}
+          />
         </Stack>
         <Typography variant="caption" color="text.secondary">
           Upload a CSV from the applicable authority export. Supported columns include

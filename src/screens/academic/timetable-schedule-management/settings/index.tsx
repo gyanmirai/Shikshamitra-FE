@@ -10,11 +10,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { FormSlider } from 'src/components/form-slider';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import RoomDetails from './components/roomSetting/roomDetails';
 import LectureSlots from './components/lectureSlots/lectureSlots';

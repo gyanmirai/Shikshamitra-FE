@@ -20,8 +20,7 @@ Use this table to find the first integration file.
 | Surface                                                                  | Client source                                                                                                          |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
 | Shared student records, dashboard, lookup, photo, and attendance history | `src/redux/student/index.ts`                                                                                           |
-| Inquiry CRM                                                              | `src/redux/student/admissions-crm/admissions-crm-api.ts`                                                               |
-| Follow-up                                                                | `src/redux/student/follow-up/follow-up-api.ts`                                                                         |
+| Admissions CRM from inquiry through activation                          | `src/redux/student/admissions-crm/admissions-crm-api.ts`                                                               |
 | Student group and pending assignment                                     | `src/redux/student/student-group/student-group.ts`, `src/redux/student/pending-assignment/pending-assignment-api.ts`   |
 | Student records reports                                                  | `src/redux/student/student-report/student-report-api.ts`                                                               |
 | Bulk student upload                                                      | `src/redux/student/buik-student/bulk-student-api.ts`                                                                   |

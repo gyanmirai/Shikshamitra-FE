@@ -7,12 +7,12 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { hrPaths } from 'src/constants/hr-menus';
 import React, { useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { FormSlider } from 'src/components/form-slider';
 import { EmptyContent } from 'src/components/empty-content';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import { Tab, Box, Tabs, Paper, Avatar, Divider, Skeleton, Typography } from '@mui/material';
 
 import PayrollSummary from './payroll-summary';

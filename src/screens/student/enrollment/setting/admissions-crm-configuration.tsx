@@ -21,7 +21,7 @@ import type {
 
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Add, Delete, Visibility, ContentCopy } from '@mui/icons-material';
 import {
@@ -80,9 +80,6 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { buildInquirySourceSelectOptions } from './inquiry-source-utils';
-import AdmissionsPlaybookConfiguration from './admissions-playbook-configuration';
-import AdmissionsDocumentConfiguration from './admissions-document-configuration';
-import AdmissionsRegistrationConfiguration from './admissions-registration-configuration';
 import {
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
@@ -109,6 +106,12 @@ import {
 
 type AdmissionsCrmConfigurationProps = {
   admissionsCrmConfigurationDialog: UseBooleanReturn;
+  focusSection?: 'journey' | 'capture' | 'routing' | 'communications' | 'automation';
+};
+
+const getSettingsErrorMessage = (error: unknown, fallback: string) => {
+  const message = (error as any)?.data?.error?.message || (error as any)?.data?.message;
+  return typeof message === 'string' && message.trim() ? message : fallback;
 };
 
 type TemplateForm = {
@@ -610,6 +613,7 @@ const buildCycleFormFromConfiguration = (
 
 const AdmissionsCrmConfiguration = ({
   admissionsCrmConfigurationDialog,
+  focusSection = 'journey',
 }: AdmissionsCrmConfigurationProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { user } = useSelector((state: RootState) => state.auth);
@@ -640,27 +644,30 @@ const AdmissionsCrmConfiguration = ({
     useGetAdmissionCrmSchoolDefaultCycleConfigurationQuery();
   const { data: stages = [], isFetching: isStagesFetching } = useGetAdmissionCrmPipelineStagesQuery(
     { academicYearId: academicYearId || '' },
-    { skip: !academicYearId }
+    { skip: !academicYearId || !['journey', 'automation'].includes(focusSection) }
   );
   const { data: templates, isFetching: isTemplatesFetching } = useGetAdmissionCrmFormTemplatesQuery(
     { academicYearId: academicYearId || '', maxResultCount: 100 },
-    { skip: !academicYearId }
+    { skip: !academicYearId || focusSection !== 'capture' }
   );
   const { data: messageTemplates, isFetching: isMessageTemplatesFetching } =
     useGetAdmissionCrmMessageTemplatesQuery(
       { academicYearId: academicYearId || '', maxResultCount: 100 },
-      { skip: !academicYearId }
+      { skip: !academicYearId || !['capture', 'communications'].includes(focusSection) }
     );
   const { data: inquirySources, isFetching: isInquirySourcesFetching } =
     useGetAdmissionCrmInquirySourcesQuery(
       { academicYearId: academicYearId || '', includeInactive: true },
-      { skip: !academicYearId }
+      { skip: !academicYearId || !['capture', 'routing', 'automation'].includes(focusSection) }
     );
-  const { data: users = [], isFetching: isUsersFetching } = useGetAdmissionCrmStaffQuery();
+  const { data: users = [], isFetching: isUsersFetching } = useGetAdmissionCrmStaffQuery(
+    { maxResultCount: 25 },
+    { skip: !['journey', 'capture', 'routing', 'automation'].includes(focusSection) }
+  );
   const { data: communicationProviders, isFetching: isCommunicationProvidersFetching } =
     useGetAdmissionCrmCommunicationProvidersQuery(
       { academicYearId: academicYearId || '' },
-      { skip: !academicYearId }
+      { skip: !academicYearId || focusSection !== 'communications' }
     );
   const [createTemplate, { isLoading: isCreatingTemplate }] =
     useCreateAdmissionCrmFormTemplateMutation();
@@ -700,6 +707,24 @@ const AdmissionsCrmConfiguration = ({
 
     setCycleForm(buildCycleFormFromConfiguration(cycle));
   }, [cycle]);
+
+  const isCycleDirty = useMemo(
+    () =>
+      Boolean(cycle) &&
+      JSON.stringify(cycleForm) !== JSON.stringify(buildCycleFormFromConfiguration(cycle!)),
+    [cycle, cycleForm]
+  );
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent('admissions-settings-dirty', { detail: { dirty: isCycleDirty } })
+    );
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent('admissions-settings-dirty', { detail: { dirty: false } })
+      );
+    };
+  }, [isCycleDirty]);
 
   useEffect(() => {
     setStageForms(
@@ -1045,7 +1070,7 @@ const AdmissionsCrmConfiguration = ({
       }).unwrap();
       shikshaMitraToast.success({ message: 'Admission cycle updated.' });
     } catch (error) {
-      const message = (error as any)?.data?.error?.code || 'Unable to update admission cycle.';
+      const message = getSettingsErrorMessage(error, 'Unable to update admission cycle.');
       shikshaMitraToast.error({ message });
     }
   };
@@ -1070,8 +1095,7 @@ const AdmissionsCrmConfiguration = ({
       }).unwrap();
       shikshaMitraToast.success({ message: 'School admission defaults updated.' });
     } catch (error) {
-      const message =
-        (error as any)?.data?.error?.code || 'Unable to update school admission defaults.';
+      const message = getSettingsErrorMessage(error, 'Unable to update school admission defaults.');
       shikshaMitraToast.error({ message });
     }
   };
@@ -1326,7 +1350,7 @@ const AdmissionsCrmConfiguration = ({
       }).unwrap();
       shikshaMitraToast.success({ message: 'Pipeline stage updated.' });
     } catch (error) {
-      const message = (error as any)?.data?.error?.code || 'Unable to update pipeline stage.';
+      const message = getSettingsErrorMessage(error, 'Unable to update pipeline stage.');
       shikshaMitraToast.error({ message });
     }
   };
@@ -1389,7 +1413,7 @@ const AdmissionsCrmConfiguration = ({
       }).unwrap();
       setMessageTemplatePreview(preview);
     } catch (error) {
-      const message = (error as any)?.data?.error?.code || 'Unable to preview message template.';
+      const message = getSettingsErrorMessage(error, 'Unable to preview message template.');
       shikshaMitraToast.error({ message });
     }
   };
@@ -1667,7 +1691,7 @@ const AdmissionsCrmConfiguration = ({
       });
       handleCloseTemplateDialog();
     } catch (error) {
-      const message = (error as any)?.data?.error?.code || 'Unable to save form template.';
+      const message = getSettingsErrorMessage(error, 'Unable to save form template.');
       shikshaMitraToast.error({ message });
     }
   };
@@ -1680,7 +1704,7 @@ const AdmissionsCrmConfiguration = ({
       }).unwrap();
       shikshaMitraToast.success({ message: 'Form template status updated.' });
     } catch (error) {
-      const message = (error as any)?.data?.error?.code || 'Unable to update form template.';
+      const message = getSettingsErrorMessage(error, 'Unable to update form template.');
       shikshaMitraToast.error({ message });
     }
   };
@@ -1724,7 +1748,7 @@ const AdmissionsCrmConfiguration = ({
       shikshaMitraToast.success({ message: 'Message template created.' });
       handleCloseMessageDialog();
     } catch (error) {
-      const message = (error as any)?.data?.error?.code || 'Unable to create message template.';
+      const message = getSettingsErrorMessage(error, 'Unable to create message template.');
       shikshaMitraToast.error({ message });
     }
   };
@@ -1747,8 +1771,7 @@ const AdmissionsCrmConfiguration = ({
       }).unwrap();
       shikshaMitraToast.success({ message: 'Message template status updated.' });
     } catch (error) {
-      const message =
-        (error as any)?.data?.error?.code || 'Unable to update message template status.';
+      const message = getSettingsErrorMessage(error, 'Unable to update message template status.');
       shikshaMitraToast.error({ message });
     }
   };
@@ -1926,7 +1949,7 @@ const AdmissionsCrmConfiguration = ({
       }).unwrap();
       shikshaMitraToast.success({ message: 'Communication provider saved.' });
     } catch (error) {
-      const message = (error as any)?.data?.error?.code || 'Unable to save communication provider.';
+      const message = getSettingsErrorMessage(error, 'Unable to save communication provider.');
       shikshaMitraToast.error({ message });
     }
   };
@@ -1961,10 +1984,6 @@ const AdmissionsCrmConfiguration = ({
     <Box sx={{ display: 'grid', gap: 1.5 }}>
       {isFetching && <LinearProgress />}
 
-      <AdmissionsPlaybookConfiguration academicYearId={academicYearId} />
-      <AdmissionsRegistrationConfiguration academicYearId={academicYearId} />
-      <AdmissionsDocumentConfiguration academicYearId={academicYearId} />
-
       {!academicYearId && (
         <Paper variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
           <Typography variant="body2" color="text.secondary">
@@ -1980,1744 +1999,578 @@ const AdmissionsCrmConfiguration = ({
           gap: 1.5,
         }}
       >
-        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-          <Stack spacing={1.25}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} justifyContent="space-between">
-              <Box>
-                <Typography variant="subtitle1">Admission Cycle</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  School defaults can be applied to the current form or saved from it.
-                </Typography>
-              </Box>
-              <Stack direction="row" gap={1} flexWrap="wrap">
-                <LoadingButton
-                  size="small"
-                  variant="outlined"
-                  loading={isSchoolDefaultCycleFetching}
-                  disabled={!schoolDefaultCycle || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onClick={handleApplySchoolDefaultCycle}
-                >
-                  Apply Default
-                </LoadingButton>
-                <LoadingButton
-                  size="small"
-                  variant="outlined"
-                  loading={isUpdatingSchoolDefaultCycle}
-                  disabled={isUpdatingCycle}
-                  onClick={handleSaveSchoolDefaultCycle}
-                >
-                  Save As Default
-                </LoadingButton>
+        {focusSection === 'journey' && (
+          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+            <Stack spacing={1.25}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} justifyContent="space-between">
+                <Box>
+                  <Typography variant="subtitle1">Admission Cycle</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    School defaults can be applied to the current form or saved from it.
+                  </Typography>
+                </Box>
+                <Stack direction="row" gap={1} flexWrap="wrap">
+                  <LoadingButton
+                    size="small"
+                    variant="outlined"
+                    loading={isSchoolDefaultCycleFetching}
+                    disabled={
+                      !schoolDefaultCycle || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                    }
+                    onClick={handleApplySchoolDefaultCycle}
+                  >
+                    Apply Default
+                  </LoadingButton>
+                  <LoadingButton
+                    size="small"
+                    variant="outlined"
+                    loading={isUpdatingSchoolDefaultCycle}
+                    disabled={isUpdatingCycle}
+                    onClick={handleSaveSchoolDefaultCycle}
+                  >
+                    Save As Default
+                  </LoadingButton>
+                </Stack>
               </Stack>
-            </Stack>
-            <Divider />
-            <TextField
-              size="small"
-              label="Cycle name"
-              value={cycleForm.cycleName}
-              disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-              onChange={(event) => handleCycleChange('cycleName', event.target.value)}
-            />
-            <Typography variant="subtitle2">SLA working calendar</Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+              <Divider />
               <TextField
-                fullWidth
                 size="small"
-                label="Time zone"
-                value={cycleForm.slaPolicy.timeZoneId}
-                onChange={(event) =>
-                  setCycleForm((current) => ({
-                    ...current,
-                    slaPolicy: { ...current.slaPolicy, timeZoneId: event.target.value },
-                  }))
-                }
+                label="Cycle name"
+                value={cycleForm.cycleName}
+                disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                onChange={(event) => handleCycleChange('cycleName', event.target.value)}
               />
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Working day starts"
-                inputProps={{ min: 0, max: 23 }}
-                value={cycleForm.slaPolicy.workingDayStartHour}
-                onChange={(event) =>
-                  setCycleForm((current) => ({
-                    ...current,
-                    slaPolicy: {
-                      ...current.slaPolicy,
-                      workingDayStartHour: Number(event.target.value),
-                    },
-                  }))
-                }
-              />
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Working day ends"
-                inputProps={{ min: 1, max: 24 }}
-                value={cycleForm.slaPolicy.workingDayEndHour}
-                onChange={(event) =>
-                  setCycleForm((current) => ({
-                    ...current,
-                    slaPolicy: {
-                      ...current.slaPolicy,
-                      workingDayEndHour: Number(event.target.value),
-                    },
-                  }))
-                }
-              />
-            </Stack>
-            <Stack direction="row" gap={0.5} flexWrap="wrap">
-              {slaWorkingDayOptions.map((day) => (
-                <FormControlLabel
-                  key={day.value}
-                  label={day.label}
-                  control={
-                    <Checkbox
-                      size="small"
-                      checked={cycleForm.slaPolicy.workingDays.includes(day.value)}
-                      onChange={(event) =>
-                        setCycleForm((current) => ({
-                          ...current,
-                          slaPolicy: {
-                            ...current.slaPolicy,
-                            workingDays: event.target.checked
-                              ? [...current.slaPolicy.workingDays, day.value]
-                              : current.slaPolicy.workingDays.filter(
-                                  (value) => value !== day.value
-                                ),
-                          },
-                        }))
-                      }
-                    />
+              <Typography variant="subtitle2">SLA working calendar</Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Time zone"
+                  value={cycleForm.slaPolicy.timeZoneId}
+                  onChange={(event) =>
+                    setCycleForm((current) => ({
+                      ...current,
+                      slaPolicy: { ...current.slaPolicy, timeZoneId: event.target.value },
+                    }))
                   }
                 />
-              ))}
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Holidays"
-                helperText="Comma-separated dates in YYYY-MM-DD format"
-                value={cycleForm.slaPolicy.holidays.join(', ')}
-                onChange={(event) =>
-                  setCycleForm((current) => ({
-                    ...current,
-                    slaPolicy: {
-                      ...current.slaPolicy,
-                      holidays: event.target.value
-                        .split(',')
-                        .map((value) => value.trim())
-                        .filter(Boolean),
-                    },
-                  }))
-                }
-              />
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Escalate after additional hours"
-                inputProps={{ min: 0, max: 720 }}
-                value={cycleForm.slaPolicy.escalationAfterHours}
-                onChange={(event) =>
-                  setCycleForm((current) => ({
-                    ...current,
-                    slaPolicy: {
-                      ...current.slaPolicy,
-                      escalationAfterHours: Number(event.target.value),
-                    },
-                  }))
-                }
-              />
-              <FormControl fullWidth size="small">
-                <InputLabel>Escalation owner</InputLabel>
-                <Select
-                  label="Escalation owner"
-                  value={cycleForm.slaPolicy.escalationOwnerUserId || ''}
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Working day starts"
+                  inputProps={{ min: 0, max: 23 }}
+                  value={cycleForm.slaPolicy.workingDayStartHour}
                   onChange={(event) =>
                     setCycleForm((current) => ({
                       ...current,
                       slaPolicy: {
                         ...current.slaPolicy,
-                        escalationOwnerUserId: event.target.value || null,
+                        workingDayStartHour: Number(event.target.value),
                       },
                     }))
                   }
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Working day ends"
+                  inputProps={{ min: 1, max: 24 }}
+                  value={cycleForm.slaPolicy.workingDayEndHour}
+                  onChange={(event) =>
+                    setCycleForm((current) => ({
+                      ...current,
+                      slaPolicy: {
+                        ...current.slaPolicy,
+                        workingDayEndHour: Number(event.target.value),
+                      },
+                    }))
+                  }
+                />
+              </Stack>
+              <Stack direction="row" gap={0.5} flexWrap="wrap">
+                {slaWorkingDayOptions.map((day) => (
+                  <FormControlLabel
+                    key={day.value}
+                    label={day.label}
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={cycleForm.slaPolicy.workingDays.includes(day.value)}
+                        onChange={(event) =>
+                          setCycleForm((current) => ({
+                            ...current,
+                            slaPolicy: {
+                              ...current.slaPolicy,
+                              workingDays: event.target.checked
+                                ? [...current.slaPolicy.workingDays, day.value]
+                                : current.slaPolicy.workingDays.filter(
+                                    (value) => value !== day.value
+                                  ),
+                            },
+                          }))
+                        }
+                      />
+                    }
+                  />
+                ))}
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Holidays"
+                  helperText="Comma-separated dates in YYYY-MM-DD format"
+                  value={cycleForm.slaPolicy.holidays.join(', ')}
+                  onChange={(event) =>
+                    setCycleForm((current) => ({
+                      ...current,
+                      slaPolicy: {
+                        ...current.slaPolicy,
+                        holidays: event.target.value
+                          .split(',')
+                          .map((value) => value.trim())
+                          .filter(Boolean),
+                      },
+                    }))
+                  }
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Escalate after additional hours"
+                  inputProps={{ min: 0, max: 720 }}
+                  value={cycleForm.slaPolicy.escalationAfterHours}
+                  onChange={(event) =>
+                    setCycleForm((current) => ({
+                      ...current,
+                      slaPolicy: {
+                        ...current.slaPolicy,
+                        escalationAfterHours: Number(event.target.value),
+                      },
+                    }))
+                  }
+                />
+                <FormControl fullWidth size="small">
+                  <InputLabel>Escalation owner</InputLabel>
+                  <Select
+                    label="Escalation owner"
+                    inputProps={{ 'aria-label': 'Escalation owner' }}
+                    value={cycleForm.slaPolicy.escalationOwnerUserId || ''}
+                    onChange={(event) =>
+                      setCycleForm((current) => ({
+                        ...current,
+                        slaPolicy: {
+                          ...current.slaPolicy,
+                          escalationOwnerUserId: event.target.value || null,
+                        },
+                      }))
+                    }
+                  >
+                    <MenuItem value="">Lead owner</MenuItem>
+                    {ownerOptions.map((owner) => (
+                      <MenuItem key={owner.id} value={owner.id}>
+                        {getCrmUserOptionLabel(owner)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Lead SLA hours"
+                  value={cycleForm.defaultLeadSlaHours}
+                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                  onChange={(event) =>
+                    handleCycleChange('defaultLeadSlaHours', Number(event.target.value))
+                  }
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Passing %"
+                  value={cycleForm.defaultExamPassingPercentage}
+                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                  onChange={(event) =>
+                    handleCycleChange('defaultExamPassingPercentage', Number(event.target.value))
+                  }
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Activation cancellation window (days)"
+                  inputProps={{ min: 0, max: 90 }}
+                  value={cycleForm.activationCancellationWindowDays}
+                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                  onChange={(event) =>
+                    handleCycleChange(
+                      'activationCancellationWindowDays',
+                      Number(event.target.value)
+                    )
+                  }
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Stale after days"
+                  value={cycleForm.staleAfterDays}
+                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                  onChange={(event) =>
+                    handleCycleChange('staleAfterDays', Number(event.target.value))
+                  }
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Archive after days"
+                  value={cycleForm.archiveAfterDays}
+                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                  onChange={(event) =>
+                    handleCycleChange('archiveAfterDays', Number(event.target.value))
+                  }
+                />
+              </Stack>
+              <FormControl fullWidth size="small">
+                <InputLabel>Merit ranking</InputLabel>
+                <Select
+                  label="Merit ranking"
+                  inputProps={{ 'aria-label': 'Merit ranking' }}
+                  value={cycleForm.meritRankingMode}
+                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                  onChange={(event) =>
+                    handleCycleChange(
+                      'meritRankingMode',
+                      Number(event.target.value) as AdmissionCrmMeritRankingMode
+                    )
+                  }
                 >
-                  <MenuItem value="">Lead owner</MenuItem>
-                  {ownerOptions.map((owner) => (
-                    <MenuItem key={owner.id} value={owner.id}>
-                      {getCrmUserOptionLabel(owner)}
+                  {Object.entries(meritModeLabel).map(([value, label]) => (
+                    <MenuItem key={value} value={Number(value)}>
+                      {label}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Lead SLA hours"
-                value={cycleForm.defaultLeadSlaHours}
-                disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                onChange={(event) =>
-                  handleCycleChange('defaultLeadSlaHours', Number(event.target.value))
-                }
-              />
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Passing %"
-                value={cycleForm.defaultExamPassingPercentage}
-                disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                onChange={(event) =>
-                  handleCycleChange('defaultExamPassingPercentage', Number(event.target.value))
-                }
-              />
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Activation cancellation window (days)"
-                inputProps={{ min: 0, max: 90 }}
-                value={cycleForm.activationCancellationWindowDays}
-                disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                onChange={(event) =>
-                  handleCycleChange('activationCancellationWindowDays', Number(event.target.value))
-                }
-              />
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Stale after days"
-                value={cycleForm.staleAfterDays}
-                disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                onChange={(event) =>
-                  handleCycleChange('staleAfterDays', Number(event.target.value))
-                }
-              />
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Archive after days"
-                value={cycleForm.archiveAfterDays}
-                disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                onChange={(event) =>
-                  handleCycleChange('archiveAfterDays', Number(event.target.value))
-                }
-              />
-            </Stack>
-            <FormControl fullWidth size="small">
-              <InputLabel>Merit ranking</InputLabel>
-              <Select
-                label="Merit ranking"
-                value={cycleForm.meritRankingMode}
-                disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                onChange={(event) =>
-                  handleCycleChange(
-                    'meritRankingMode',
-                    Number(event.target.value) as AdmissionCrmMeritRankingMode
-                  )
-                }
-              >
-                {Object.entries(meritModeLabel).map(([value, label]) => (
-                  <MenuItem key={value} value={Number(value)}>
-                    {label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={cycleForm.isActive}
-                    disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                    onChange={(event) => handleCycleChange('isActive', event.target.checked)}
-                  />
-                }
-                label="Active"
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={cycleForm.registrationFormRequiredBeforeExam}
-                    disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                    onChange={(event) =>
-                      handleCycleChange('registrationFormRequiredBeforeExam', event.target.checked)
-                    }
-                  />
-                }
-                label="Registration before exam"
-              />
-            </Stack>
-            <Stack spacing={0.5}>
-              <Typography variant="subtitle2">Exam readiness</Typography>
-              <Stack direction="row" gap={0.5} flexWrap="wrap">
-                {readinessOptions.map((option) => (
-                  <FormControlLabel
-                    key={option.value}
-                    sx={{ mr: 1 }}
-                    control={
-                      <Checkbox
-                        size="small"
-                        checked={(cycleForm.examReadinessFields & option.value) === option.value}
-                        disabled={
-                          !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                        }
-                        onChange={() => handleCycleReadinessToggle(option.value)}
-                      />
-                    }
-                    label={option.label}
-                  />
-                ))}
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={cycleForm.isActive}
+                      disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                      onChange={(event) => handleCycleChange('isActive', event.target.checked)}
+                    />
+                  }
+                  label="Active"
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={cycleForm.registrationFormRequiredBeforeExam}
+                      disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                      onChange={(event) =>
+                        handleCycleChange(
+                          'registrationFormRequiredBeforeExam',
+                          event.target.checked
+                        )
+                      }
+                    />
+                  }
+                  label="Registration before exam"
+                />
               </Stack>
-            </Stack>
-            <Stack spacing={0.75}>
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                justifyContent="space-between"
-                gap={1}
-                alignItems={{ sm: 'center' }}
-              >
-                <Box>
-                  <Typography variant="subtitle2">Applicant checklist</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Show required and optional items on the secure status link.
-                  </Typography>
-                </Box>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onClick={handleAddApplicantChecklistItem}
+              <Stack spacing={0.5}>
+                <Typography variant="subtitle2">Exam readiness</Typography>
+                <Stack direction="row" gap={0.5} flexWrap="wrap">
+                  {readinessOptions.map((option) => (
+                    <FormControlLabel
+                      key={option.value}
+                      sx={{ mr: 1 }}
+                      control={
+                        <Checkbox
+                          size="small"
+                          checked={(cycleForm.examReadinessFields & option.value) === option.value}
+                          disabled={
+                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                          }
+                          onChange={() => handleCycleReadinessToggle(option.value)}
+                        />
+                      }
+                      label={option.label}
+                    />
+                  ))}
+                </Stack>
+              </Stack>
+              <Stack spacing={0.75}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  gap={1}
+                  alignItems={{ sm: 'center' }}
                 >
-                  Add Item
-                </Button>
-              </Stack>
-              <Box sx={{ display: 'grid', gap: 1 }}>
-                {cycleForm.applicantChecklist.map((item, index) => (
-                  <Box
-                    key={`${item.key}-${index}`}
-                    sx={{
-                      border: 1,
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      p: 1,
-                      display: 'grid',
-                      gap: 1,
-                    }}
-                  >
-                    <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Label"
-                        value={item.label}
-                        disabled={
-                          !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                        }
-                        onChange={(event) =>
-                          handleApplicantChecklistChange(index, 'label', event.target.value)
-                        }
-                      />
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Key"
-                        value={item.key}
-                        disabled={
-                          !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                        }
-                        onChange={(event) =>
-                          handleApplicantChecklistChange(index, 'key', event.target.value)
-                        }
-                      />
-                    </Stack>
-                    <Stack
-                      direction={{ xs: 'column', md: 'row' }}
-                      gap={1}
-                      alignItems={{ md: 'center' }}
-                    >
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Details"
-                        value={item.details ?? ''}
-                        disabled={
-                          !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                        }
-                        onChange={(event) =>
-                          handleApplicantChecklistChange(index, 'details', event.target.value)
-                        }
-                      />
-                      <TextField
-                        size="small"
-                        type="number"
-                        label="Order"
-                        value={item.displayOrder}
-                        disabled={
-                          !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                        }
-                        onChange={(event) =>
-                          handleApplicantChecklistChange(
-                            index,
-                            'displayOrder',
-                            Number(event.target.value)
-                          )
-                        }
-                      />
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={item.isRequired}
-                            disabled={
-                              !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                            }
-                            onChange={(event) =>
-                              handleApplicantChecklistChange(
-                                index,
-                                'isRequired',
-                                event.target.checked
-                              )
-                            }
-                          />
-                        }
-                        label="Required"
-                      />
-                      <Button
-                        size="small"
-                        color="error"
-                        disabled={
-                          !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                        }
-                        onClick={() => handleRemoveApplicantChecklistItem(index)}
-                      >
-                        Remove
-                      </Button>
-                    </Stack>
+                  <Box>
+                    <Typography variant="subtitle2">Applicant checklist</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Show required and optional items on the secure status link.
+                    </Typography>
                   </Box>
-                ))}
-                {!cycleForm.applicantChecklist.length && (
-                  <Typography variant="body2" color="text.secondary">
-                    No applicant checklist items configured
-                  </Typography>
-                )}
-              </Box>
-            </Stack>
-            <LoadingButton
-              size="small"
-              variant="contained"
-              loading={isUpdatingCycle}
-              disabled={!academicYearId || isUpdatingSchoolDefaultCycle}
-              onClick={handleSaveCycle}
-              sx={{ alignSelf: 'flex-start' }}
-            >
-              Save Cycle
-            </LoadingButton>
-          </Stack>
-        </Paper>
-
-        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-          <Stack spacing={1.25}>
-            <Box>
-              <Typography variant="subtitle1">Inquiry Channels</Typography>
-              <Typography variant="caption" color="text.secondary">
-                Enable intake channels and set cycle defaults for source, owner, form, and
-                acknowledgement.
-              </Typography>
-            </Box>
-            <Divider />
-            <Box sx={{ display: 'grid', gap: 1 }}>
-              {channelSettings.map((setting) => {
-                const templatesForChannel = formTemplates.filter(
-                  (template) => template.channel === setting.channel
-                );
-
-                return (
-                  <Box
-                    key={setting.channel}
-                    sx={{
-                      border: 1,
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      p: 1,
-                      display: 'grid',
-                      gap: 1,
-                    }}
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                    onClick={handleAddApplicantChecklistItem}
                   >
-                    <Stack
-                      direction={{ xs: 'column', md: 'row' }}
-                      gap={1}
-                      alignItems={{ md: 'center' }}
-                      justifyContent="space-between"
+                    Add Item
+                  </Button>
+                </Stack>
+                <Box sx={{ display: 'grid', gap: 1 }}>
+                  {cycleForm.applicantChecklist.map((item, index) => (
+                    <Box
+                      key={`${item.key}-${index}`}
+                      sx={{
+                        border: 1,
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        p: 1,
+                        display: 'grid',
+                        gap: 1,
+                      }}
                     >
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={setting.isEnabled}
+                      <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Label"
+                          value={item.label}
+                          disabled={
+                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                          }
+                          onChange={(event) =>
+                            handleApplicantChecklistChange(index, 'label', event.target.value)
+                          }
+                        />
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Key"
+                          value={item.key}
+                          disabled={
+                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                          }
+                          onChange={(event) =>
+                            handleApplicantChecklistChange(index, 'key', event.target.value)
+                          }
+                        />
+                      </Stack>
+                      <Stack
+                        direction={{ xs: 'column', md: 'row' }}
+                        gap={1}
+                        alignItems={{ md: 'center' }}
+                      >
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Details"
+                          value={item.details ?? ''}
+                          disabled={
+                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                          }
+                          onChange={(event) =>
+                            handleApplicantChecklistChange(index, 'details', event.target.value)
+                          }
+                        />
+                        <TextField
+                          size="small"
+                          type="number"
+                          label="Order"
+                          value={item.displayOrder}
+                          disabled={
+                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                          }
+                          onChange={(event) =>
+                            handleApplicantChecklistChange(
+                              index,
+                              'displayOrder',
+                              Number(event.target.value)
+                            )
+                          }
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={item.isRequired}
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onChange={(event) =>
+                                handleApplicantChecklistChange(
+                                  index,
+                                  'isRequired',
+                                  event.target.checked
+                                )
+                              }
+                            />
+                          }
+                          label="Required"
+                        />
+                        <Button
+                          size="small"
+                          color="error"
+                          disabled={
+                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                          }
+                          onClick={() => handleRemoveApplicantChecklistItem(index)}
+                        >
+                          Remove
+                        </Button>
+                      </Stack>
+                    </Box>
+                  ))}
+                  {!cycleForm.applicantChecklist.length && (
+                    <Typography variant="body2" color="text.secondary">
+                      No applicant checklist items configured
+                    </Typography>
+                  )}
+                </Box>
+              </Stack>
+              <LoadingButton
+                size="small"
+                variant="contained"
+                loading={isUpdatingCycle}
+                disabled={!academicYearId || isUpdatingSchoolDefaultCycle}
+                onClick={handleSaveCycle}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Save Cycle
+              </LoadingButton>
+            </Stack>
+          </Paper>
+        )}
+
+        {focusSection === 'capture' && (
+          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+            <Stack spacing={1.25}>
+              <Box>
+                <Typography variant="subtitle1">Inquiry Channels</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Enable intake channels and set cycle defaults for source, owner, form, and
+                  acknowledgement.
+                </Typography>
+              </Box>
+              <Divider />
+              <Box sx={{ display: 'grid', gap: 1 }}>
+                {channelSettings.map((setting) => {
+                  const templatesForChannel = formTemplates.filter(
+                    (template) => template.channel === setting.channel
+                  );
+
+                  return (
+                    <Box
+                      key={setting.channel}
+                      sx={{
+                        border: 1,
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        p: 1,
+                        display: 'grid',
+                        gap: 1,
+                      }}
+                    >
+                      <Stack
+                        direction={{ xs: 'column', md: 'row' }}
+                        gap={1}
+                        alignItems={{ md: 'center' }}
+                        justifyContent="space-between"
+                      >
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={setting.isEnabled}
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onChange={(event) =>
+                                handleChannelSettingChange(
+                                  setting.channel,
+                                  'isEnabled',
+                                  event.target.checked
+                                )
+                              }
+                            />
+                          }
+                          label={getAdmissionCrmChannelLabel(setting.channel)}
+                        />
+                        <TextField
+                          size="small"
+                          type="number"
+                          label="Display order"
+                          value={setting.displayOrder}
+                          disabled={
+                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                          }
+                          onChange={(event) =>
+                            handleChannelSettingChange(
+                              setting.channel,
+                              'displayOrder',
+                              Number(event.target.value)
+                            )
+                          }
+                          sx={{ width: { xs: '100%', md: 140 } }}
+                        />
+                      </Stack>
+                      <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Default Inquiry Source</InputLabel>
+                          <Select
+                            label="Default Inquiry Source"
+                            value={setting.defaultInquirySourceId ?? ''}
                             disabled={
                               !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
                             }
                             onChange={(event) =>
                               handleChannelSettingChange(
                                 setting.channel,
-                                'isEnabled',
-                                event.target.checked
+                                'defaultInquirySourceId',
+                                event.target.value || null
                               )
                             }
-                          />
-                        }
-                        label={getAdmissionCrmChannelLabel(setting.channel)}
-                      />
-                      <TextField
-                        size="small"
-                        type="number"
-                        label="Display order"
-                        value={setting.displayOrder}
-                        disabled={
-                          !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                        }
-                        onChange={(event) =>
-                          handleChannelSettingChange(
-                            setting.channel,
-                            'displayOrder',
-                            Number(event.target.value)
-                          )
-                        }
-                        sx={{ width: { xs: '100%', md: 140 } }}
-                      />
-                    </Stack>
-                    <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Default Inquiry Source</InputLabel>
-                        <Select
-                          label="Default Inquiry Source"
-                          value={setting.defaultInquirySourceId ?? ''}
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onChange={(event) =>
-                            handleChannelSettingChange(
-                              setting.channel,
-                              'defaultInquirySourceId',
-                              event.target.value || null
-                            )
-                          }
-                        >
-                          <MenuItem value="">No default source</MenuItem>
-                          {inquirySourceOptions.map((source) => (
-                            <MenuItem key={source.id} value={source.id}>
-                              {source.displayName || source.preferenceName}
-                              {source.isActive === false ? ' (Inactive)' : ''}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Default owner</InputLabel>
-                        <Select
-                          label="Default owner"
-                          value={setting.defaultOwnerUserId ?? ''}
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onChange={(event) =>
-                            handleChannelSettingChange(
-                              setting.channel,
-                              'defaultOwnerUserId',
-                              event.target.value || null
-                            )
-                          }
-                        >
-                          <MenuItem value="">No default owner</MenuItem>
-                          {ownerOptions.map((owner) => (
-                            <MenuItem key={owner.id} value={owner.id}>
-                              {getCrmUserOptionLabel(owner)}
-                              {owner.isActive === false ? ' (Inactive)' : ''}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Stack>
-                    <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Default form template</InputLabel>
-                        <Select
-                          label="Default form template"
-                          value={setting.defaultFormTemplateId ?? ''}
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onChange={(event) =>
-                            handleChannelSettingChange(
-                              setting.channel,
-                              'defaultFormTemplateId',
-                              event.target.value || null
-                            )
-                          }
-                        >
-                          <MenuItem value="">No default form</MenuItem>
-                          {templatesForChannel.map((template) => (
-                            <MenuItem key={template.id} value={template.id}>
-                              {template.templateName}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      <FormControl fullWidth size="small">
-                        <InputLabel>Acknowledgement template</InputLabel>
-                        <Select
-                          label="Acknowledgement template"
-                          value={setting.defaultAcknowledgementTemplateId ?? ''}
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onChange={(event) =>
-                            handleChannelSettingChange(
-                              setting.channel,
-                              'defaultAcknowledgementTemplateId',
-                              event.target.value || null
-                            )
-                          }
-                        >
-                          <MenuItem value="">No acknowledgement template</MenuItem>
-                          {approvedMessageTemplates.map((template) => (
-                            <MenuItem key={template.id} value={template.id}>
-                              {template.templateName}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Stack>
-                  </Box>
-                );
-              })}
-            </Box>
-            <LoadingButton
-              size="small"
-              variant="contained"
-              loading={isUpdatingCycle}
-              disabled={!academicYearId || isUpdatingSchoolDefaultCycle}
-              onClick={handleSaveCycle}
-              sx={{ alignSelf: 'flex-start' }}
-            >
-              Save Channels
-            </LoadingButton>
-          </Stack>
-        </Paper>
-
-        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-          <Stack spacing={1.25}>
-            <Typography variant="subtitle1">Pipeline Stages</Typography>
-            <Divider />
-            <Box sx={{ display: 'grid', gap: 1 }}>
-              {stages.map((stage) => {
-                const stageForm = stageForms[stage.id] ?? buildPipelineStageFormFromStage(stage);
-                const stageColor =
-                  stageForm.colorHex && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(stageForm.colorHex)
-                    ? stageForm.colorHex
-                    : 'transparent';
-
-                return (
-                  <Box
-                    key={stage.id}
-                    sx={{
-                      border: 1,
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      p: 1,
-                      display: 'grid',
-                      gap: 1,
-                    }}
-                  >
-                    <Stack
-                      direction="row"
-                      justifyContent="space-between"
-                      gap={1}
-                      alignItems="center"
-                    >
-                      <Stack direction="row" gap={1} alignItems="center">
-                        <Box
-                          sx={{
-                            width: 18,
-                            height: 18,
-                            borderRadius: 0.5,
-                            border: 1,
-                            borderColor: 'divider',
-                            bgcolor: stageColor,
-                            flexShrink: 0,
-                          }}
-                        />
-                        <Chip
-                          size="small"
-                          label={stage.isSystem ? 'System' : 'Custom'}
-                          variant="outlined"
-                        />
-                      </Stack>
-                      <Chip
-                        size="small"
-                        label={stageForm.isEnabled ? 'Enabled' : 'Disabled'}
-                        color={stageForm.isEnabled ? 'primary' : 'default'}
-                      />
-                    </Stack>
-                    <Box
-                      sx={{
-                        display: 'grid',
-                        gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr' },
-                        gap: 1,
-                      }}
-                    >
-                      <TextField
-                        size="small"
-                        label="Stage name"
-                        value={stageForm.stageName}
-                        disabled={isUpdatingPipelineStage}
-                        onChange={(event) =>
-                          handleStageChange(stage.id, 'stageName', event.target.value)
-                        }
-                      />
-                      <TextField
-                        size="small"
-                        type="number"
-                        label="Order"
-                        value={stageForm.displayOrder}
-                        disabled={isUpdatingPipelineStage}
-                        onChange={(event) =>
-                          handleStageChange(stage.id, 'displayOrder', Number(event.target.value))
-                        }
-                      />
-                      <TextField
-                        size="small"
-                        label="Color"
-                        placeholder="#1976D2"
-                        value={stageForm.colorHex}
-                        disabled={isUpdatingPipelineStage}
-                        inputProps={{ maxLength: 16 }}
-                        onChange={(event) =>
-                          handleStageChange(stage.id, 'colorHex', event.target.value)
-                        }
-                      />
-                    </Box>
-                    <Box
-                      sx={{
-                        display: 'grid',
-                        gridTemplateColumns: { xs: '1fr', md: '1fr 2fr' },
-                        gap: 1,
-                      }}
-                    >
-                      <TextField
-                        size="small"
-                        type="number"
-                        label="SLA hours"
-                        value={stageForm.slaTargetHours}
-                        disabled={isUpdatingPipelineStage}
-                        onChange={(event) =>
-                          handleStageChange(stage.id, 'slaTargetHours', event.target.value)
-                        }
-                      />
-                      <TextField
-                        size="small"
-                        label="Owner responsibility"
-                        value={stageForm.ownerResponsibility}
-                        disabled={isUpdatingPipelineStage}
-                        inputProps={{ maxLength: 500 }}
-                        onChange={(event) =>
-                          handleStageChange(stage.id, 'ownerResponsibility', event.target.value)
-                        }
-                      />
-                    </Box>
-                    <FormControl size="small" disabled={isUpdatingPipelineStage}>
-                      <InputLabel id={`allowed-next-stages-${stage.id}`}>
-                        Allowed next stages
-                      </InputLabel>
-                      <Select
-                        multiple
-                        displayEmpty
-                        labelId={`allowed-next-stages-${stage.id}`}
-                        label="Allowed next stages"
-                        value={stageForm.allowedNextStages}
-                        renderValue={(selected) =>
-                          selected.length
-                            ? selected
-                                .map((value) =>
-                                  getAdmissionCrmStageLabel(value as AdmissionInquiryStage)
-                                )
-                                .join(', ')
-                            : 'None'
-                        }
-                        onChange={(event) => {
-                          const { value } = event.target;
-                          const selectedValues = Array.isArray(value)
-                            ? value.map(Number)
-                            : String(value).split(',').filter(Boolean).map(Number);
-                          handleStageChange(
-                            stage.id,
-                            'allowedNextStages',
-                            selectedValues as AdmissionInquiryStage[]
-                          );
-                        }}
-                      >
-                        {pipelineStageOptions
-                          .filter((option) => option !== stage.systemStage)
-                          .map((option) => (
-                            <MenuItem key={option} value={option}>
-                              <Checkbox checked={stageForm.allowedNextStages.includes(option)} />
-                              {getAdmissionCrmStageLabel(option)}
-                            </MenuItem>
-                          ))}
-                      </Select>
-                    </FormControl>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} alignItems="center">
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={stageForm.isEnabled}
-                            disabled={isUpdatingPipelineStage}
-                            onChange={(event) =>
-                              handleStageChange(stage.id, 'isEnabled', event.target.checked)
-                            }
-                          />
-                        }
-                        label="Enabled"
-                      />
-                      <LoadingButton
-                        size="small"
-                        variant="outlined"
-                        loading={isUpdatingPipelineStage}
-                        onClick={() => handleSaveStage(stage.id)}
-                      >
-                        Save
-                      </LoadingButton>
-                    </Stack>
-                  </Box>
-                );
-              })}
-              {!stages.length && (
-                <Typography variant="body2" color="text.secondary">
-                  No stages configured
-                </Typography>
-              )}
-            </Box>
-          </Stack>
-        </Paper>
-      </Box>
-
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack spacing={1.25}>
-          <Typography variant="subtitle1">Lead Scoring</Typography>
-          <Divider />
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(6, minmax(0, 1fr))' },
-              gap: 1,
-            }}
-          >
-            {scoringRuleFields.map((option) => (
-              <TextField
-                key={option.field}
-                size="small"
-                type="number"
-                label={option.label}
-                value={cycleForm.leadScoringRules[option.field]}
-                disabled={!academicYearId || isUpdatingCycle}
-                onChange={(event) =>
-                  handleScoringRuleChange(option.field, Number(event.target.value))
-                }
-              />
-            ))}
-          </Box>
-          <LoadingButton
-            size="small"
-            variant="contained"
-            loading={isUpdatingCycle}
-            disabled={!academicYearId}
-            onClick={handleSaveCycle}
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            Save Scoring
-          </LoadingButton>
-        </Stack>
-      </Paper>
-
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack spacing={1.25}>
-          <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-            <Typography variant="subtitle1">Lead Routing</Typography>
-            <Button size="small" variant="outlined" onClick={handleAddRoutingRule}>
-              Add Rule
-            </Button>
-          </Stack>
-          <Divider />
-          <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={cycleForm.leadRoutingSettings.isEnabled}
-                  disabled={!academicYearId || isUpdatingCycle}
-                  onChange={(event) =>
-                    handleRoutingSettingsChange('isEnabled', event.target.checked)
-                  }
-                />
-              }
-              label="Enabled"
-            />
-            <FormControl fullWidth size="small">
-              <InputLabel>Default owner</InputLabel>
-              <Select
-                label="Default owner"
-                value={cycleForm.leadRoutingSettings.defaultOwnerUserId ?? ''}
-                disabled={!academicYearId || isUpdatingCycle}
-                onChange={(event) =>
-                  handleRoutingSettingsChange('defaultOwnerUserId', event.target.value || null)
-                }
-              >
-                <MenuItem value="">No default owner</MenuItem>
-                {ownerOptions.map((owner) => (
-                  <MenuItem key={owner.id} value={owner.id}>
-                    {getCrmUserOptionLabel(owner)}
-                    {owner.isActive === false ? ' (Inactive)' : ''}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
-          <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Routing strategy</InputLabel>
-              <Select
-                label="Routing strategy"
-                value={cycleForm.leadRoutingSettings.routingStrategy}
-                disabled={!academicYearId || isUpdatingCycle}
-                onChange={(event) =>
-                  handleRoutingSettingsChange(
-                    'routingStrategy',
-                    Number(event.target.value) as AdmissionCrmLeadRoutingStrategy
-                  )
-                }
-              >
-                {Object.entries(routingStrategyLabel).map(([value, label]) => (
-                  <MenuItem key={value} value={Number(value)}>
-                    {label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth size="small">
-              <InputLabel>Owner pool</InputLabel>
-              <Select
-                multiple
-                label="Owner pool"
-                value={cycleForm.leadRoutingSettings.ownerPoolUserIds ?? []}
-                disabled={!academicYearId || isUpdatingCycle}
-                renderValue={(selected) =>
-                  (selected as string[]).map((id) => getCrmUserLabel(ownerOptions, id)).join(', ')
-                }
-                onChange={(event) => {
-                  const { value } = event.target;
-                  handleRoutingSettingsChange(
-                    'ownerPoolUserIds',
-                    typeof value === 'string' ? value.split(',').filter(Boolean) : value
-                  );
-                }}
-              >
-                {ownerOptions.map((owner) => (
-                  <MenuItem key={owner.id} value={owner.id}>
-                    <Checkbox
-                      checked={(cycleForm.leadRoutingSettings.ownerPoolUserIds ?? []).includes(
-                        owner.id
-                      )}
-                    />
-                    {getCrmUserOptionLabel(owner)}
-                    {owner.isActive === false ? ' (Inactive)' : ''}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
-          <Box sx={{ display: 'grid', gap: 1 }}>
-            {cycleForm.leadRoutingSettings.rules.map((rule, index) => (
-              <Box
-                key={`${rule.ruleName}-${index}`}
-                sx={{
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  p: 1,
-                  display: 'grid',
-                  gap: 1,
-                }}
-              >
-                <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Rule name"
-                    value={rule.ruleName}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleRoutingRuleChange(index, 'ruleName', event.target.value)
-                    }
-                  />
-                  <TextField
-                    size="small"
-                    type="number"
-                    label="Priority"
-                    value={rule.priority}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleRoutingRuleChange(index, 'priority', Number(event.target.value))
-                    }
-                  />
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={rule.isEnabled}
-                        disabled={!academicYearId || isUpdatingCycle}
-                        onChange={(event) =>
-                          handleRoutingRuleChange(index, 'isEnabled', event.target.checked)
-                        }
-                      />
-                    }
-                    label="Enabled"
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Channel</InputLabel>
-                    <Select
-                      label="Channel"
-                      value={rule.channel ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleRoutingRuleChange(
-                          index,
-                          'channel',
-                          String(event.target.value) === ''
-                            ? null
-                            : (Number(event.target.value) as AdmissionInquiryChannel)
-                        )
-                      }
-                    >
-                      <MenuItem value="">Any channel</MenuItem>
-                      {inquiryChannelOptions.map((channel) => (
-                        <MenuItem key={channel} value={channel}>
-                          {getAdmissionCrmChannelLabel(channel)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Owner</InputLabel>
-                    <Select
-                      label="Owner"
-                      value={rule.ownerUserId ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleRoutingRuleChange(index, 'ownerUserId', event.target.value || null)
-                      }
-                    >
-                      <MenuItem value="">No owner</MenuItem>
-                      {ownerOptions.map((owner) => (
-                        <MenuItem key={owner.id} value={owner.id}>
-                          {getCrmUserOptionLabel(owner)}
-                          {owner.isActive === false ? ' (Inactive)' : ''}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Inquiry Source</InputLabel>
-                    <Select
-                      label="Inquiry Source"
-                      value={rule.inquirySourceId ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleRoutingRuleChange(
-                          index,
-                          'inquirySourceId',
-                          event.target.value || null
-                        )
-                      }
-                    >
-                      <MenuItem value="">Any source</MenuItem>
-                      {inquirySourceOptions.map((source) => (
-                        <MenuItem key={source.id} value={source.id}>
-                          {source.displayName || source.preferenceName}
-                          {source.isActive === false ? ' (Inactive)' : ''}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Target standard ID"
-                    value={rule.targetStandardId ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleRoutingRuleChange(index, 'targetStandardId', event.target.value)
-                    }
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Campaign contains"
-                    value={rule.campaignContains ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleRoutingRuleChange(index, 'campaignContains', event.target.value)
-                    }
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Class contains"
-                    value={rule.desiredClassContains ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleRoutingRuleChange(index, 'desiredClassContains', event.target.value)
-                    }
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Branch contains"
-                    value={rule.campusBranchContains ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleRoutingRuleChange(index, 'campusBranchContains', event.target.value)
-                    }
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Language contains"
-                    value={rule.preferredLanguageContains ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleRoutingRuleChange(
-                        index,
-                        'preferredLanguageContains',
-                        event.target.value
-                      )
-                    }
-                  />
-                  <Button
-                    size="small"
-                    color="error"
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onClick={() => handleRemoveRoutingRule(index)}
-                  >
-                    Remove
-                  </Button>
-                </Stack>
-              </Box>
-            ))}
-            {!cycleForm.leadRoutingSettings.rules.length && (
-              <Typography variant="body2" color="text.secondary">
-                No routing rules configured
-              </Typography>
-            )}
-          </Box>
-          <LoadingButton
-            size="small"
-            variant="contained"
-            loading={isUpdatingCycle}
-            disabled={!academicYearId}
-            onClick={handleSaveCycle}
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            Save Routing
-          </LoadingButton>
-        </Stack>
-      </Paper>
-
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack spacing={1.25}>
-          <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-            <Typography variant="subtitle1">Journey Automation</Typography>
-            <Button size="small" variant="outlined" onClick={handleAddJourneyRule}>
-              Add Rule
-            </Button>
-          </Stack>
-          <Divider />
-          <Box sx={{ display: 'grid', gap: 1 }}>
-            {cycleForm.journeyRules.map((rule, index) => (
-              <Box
-                key={`${rule.ruleName}-${index}`}
-                sx={{
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  p: 1,
-                  display: 'grid',
-                  gap: 1,
-                }}
-              >
-                <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Rule name"
-                    value={rule.ruleName}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleJourneyRuleChange(index, 'ruleName', event.target.value)
-                    }
-                  />
-                  <TextField
-                    size="small"
-                    type="number"
-                    label="Priority"
-                    value={rule.priority}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleJourneyRuleChange(index, 'priority', Number(event.target.value))
-                    }
-                  />
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={rule.isEnabled}
-                        disabled={!academicYearId || isUpdatingCycle}
-                        onChange={(event) =>
-                          handleJourneyRuleChange(index, 'isEnabled', event.target.checked)
-                        }
-                      />
-                    }
-                    label="Enabled"
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Trigger</InputLabel>
-                    <Select
-                      label="Trigger"
-                      value={rule.trigger}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleJourneyRuleChange(
-                          index,
-                          'trigger',
-                          Number(event.target.value) as AdmissionCrmJourneyTrigger
-                        )
-                      }
-                    >
-                      {Object.entries(journeyTriggerLabel).map(([value, label]) => (
-                        <MenuItem key={value} value={Number(value)}>
-                          {label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  {rule.trigger === AdmissionCrmJourneyTrigger.StageReached && (
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Pipeline stage</InputLabel>
-                      <Select
-                        label="Pipeline stage"
-                        value={rule.stage ?? ''}
-                        disabled={!academicYearId || isUpdatingCycle}
-                        onChange={(event) =>
-                          handleJourneyRuleChange(
-                            index,
-                            'stage',
-                            String(event.target.value) === ''
-                              ? null
-                              : (Number(event.target.value) as AdmissionInquiryStage)
-                          )
-                        }
-                      >
-                        <MenuItem value="">Select stage</MenuItem>
-                        {stages.map((stage) => (
-                          <MenuItem key={stage.id} value={stage.systemStage}>
-                            {stage.stageName || getAdmissionCrmStageLabel(stage.systemStage)}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  )}
-                  <Button
-                    size="small"
-                    color="error"
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onClick={() => handleRemoveJourneyRule(index)}
-                    sx={{ alignSelf: { md: 'center' } }}
-                  >
-                    Remove
-                  </Button>
-                </Stack>
-                <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Channel condition</InputLabel>
-                    <Select
-                      label="Channel condition"
-                      value={rule.channel ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleJourneyRuleChange(
-                          index,
-                          'channel',
-                          String(event.target.value) === ''
-                            ? null
-                            : (Number(event.target.value) as AdmissionInquiryChannel)
-                        )
-                      }
-                    >
-                      <MenuItem value="">Any channel</MenuItem>
-                      {inquiryChannelOptions.map((channel) => (
-                        <MenuItem key={channel} value={channel}>
-                          {getAdmissionCrmChannelLabel(channel)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Inquiry Source condition</InputLabel>
-                    <Select
-                      label="Inquiry Source condition"
-                      value={rule.inquirySourceId ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleJourneyRuleChange(
-                          index,
-                          'inquirySourceId',
-                          event.target.value || null
-                        )
-                      }
-                    >
-                      <MenuItem value="">Any source</MenuItem>
-                      {inquirySourceOptions.map((source) => (
-                        <MenuItem key={source.id} value={source.id}>
-                          {source.displayName || source.preferenceName}
-                          {source.isActive === false ? ' (Inactive)' : ''}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Current stage condition</InputLabel>
-                    <Select
-                      label="Current stage condition"
-                      value={rule.leadStage ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleJourneyRuleChange(
-                          index,
-                          'leadStage',
-                          String(event.target.value) === ''
-                            ? null
-                            : (Number(event.target.value) as AdmissionInquiryStage)
-                        )
-                      }
-                    >
-                      <MenuItem value="">Any current stage</MenuItem>
-                      {stages.map((stage) => (
-                        <MenuItem key={stage.id} value={stage.systemStage}>
-                          {stage.stageName || getAdmissionCrmStageLabel(stage.systemStage)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Owner condition</InputLabel>
-                    <Select
-                      label="Owner condition"
-                      value={rule.ownerUserId ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleJourneyRuleChange(index, 'ownerUserId', event.target.value || null)
-                      }
-                    >
-                      <MenuItem value="">Any owner</MenuItem>
-                      {ownerOptions.map((owner) => (
-                        <MenuItem key={owner.id} value={owner.id}>
-                          {getCrmUserOptionLabel(owner)}
-                          {owner.isActive === false ? ' (Inactive)' : ''}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Stack>
-                <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Campaign contains"
-                    value={rule.campaignContains ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleJourneyRuleChange(index, 'campaignContains', event.target.value)
-                    }
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    label="Min lead score"
-                    value={rule.minimumLeadScore ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleJourneyRuleChange(
-                        index,
-                        'minimumLeadScore',
-                        event.target.value === '' ? null : Number(event.target.value)
-                      )
-                    }
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    label="Max lead score"
-                    value={rule.maximumLeadScore ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleJourneyRuleChange(
-                        index,
-                        'maximumLeadScore',
-                        event.target.value === '' ? null : Number(event.target.value)
-                      )
-                    }
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    label="Idle days"
-                    value={rule.daysSinceLastActivity ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleJourneyRuleChange(
-                        index,
-                        'daysSinceLastActivity',
-                        event.target.value === '' ? null : Number(event.target.value)
-                      )
-                    }
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    label="Lead age days"
-                    value={rule.daysSinceCreation ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleJourneyRuleChange(
-                        index,
-                        'daysSinceCreation',
-                        event.target.value === '' ? null : Number(event.target.value)
-                      )
-                    }
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Priority condition</InputLabel>
-                    <Select
-                      label="Priority condition"
-                      value={rule.leadPriority ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleJourneyRuleChange(
-                          index,
-                          'leadPriority',
-                          String(event.target.value) === ''
-                            ? null
-                            : (Number(event.target.value) as AdmissionCrmLeadPriority)
-                        )
-                      }
-                    >
-                      <MenuItem value="">Any priority</MenuItem>
-                      {leadPriorityOptions.map((priority) => (
-                        <MenuItem key={priority} value={priority}>
-                          {leadPriorityLabel[priority]}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Target standard ID"
-                    value={rule.targetStandardId ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleJourneyRuleChange(index, 'targetStandardId', event.target.value)
-                    }
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Desired class contains"
-                    value={rule.desiredClassContains ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleJourneyRuleChange(index, 'desiredClassContains', event.target.value)
-                    }
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Branch contains"
-                    value={rule.campusBranchContains ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleJourneyRuleChange(index, 'campusBranchContains', event.target.value)
-                    }
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Language contains"
-                    value={rule.preferredLanguageContains ?? ''}
-                    disabled={!academicYearId || isUpdatingCycle}
-                    onChange={(event) =>
-                      handleJourneyRuleChange(
-                        index,
-                        'preferredLanguageContains',
-                        event.target.value
-                      )
-                    }
-                  />
-                </Stack>
-                <Stack
-                  direction={{ xs: 'column', md: 'row' }}
-                  gap={1}
-                  alignItems={{ md: 'center' }}
-                >
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={rule.createTask}
-                        disabled={!academicYearId || isUpdatingCycle}
-                        onChange={(event) =>
-                          handleJourneyRuleChange(index, 'createTask', event.target.checked)
-                        }
-                      />
-                    }
-                    label="Create task"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={rule.sendMessage}
-                        disabled={!academicYearId || isUpdatingCycle}
-                        onChange={(event) =>
-                          handleJourneyRuleChange(index, 'sendMessage', event.target.checked)
-                        }
-                      />
-                    }
-                    label="Send message"
-                  />
-                </Stack>
-                {rule.createTask && (
-                  <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Task title"
-                      value={rule.taskTitle ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleJourneyRuleChange(index, 'taskTitle', event.target.value)
-                      }
-                    />
-                    <TextField
-                      size="small"
-                      type="number"
-                      label="Due offset hours"
-                      value={rule.taskDueOffsetHours}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleJourneyRuleChange(
-                          index,
-                          'taskDueOffsetHours',
-                          Number(event.target.value)
-                        )
-                      }
-                    />
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Task notes"
-                      value={rule.taskNotes ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleJourneyRuleChange(index, 'taskNotes', event.target.value)
-                      }
-                    />
-                  </Stack>
-                )}
-                {rule.sendMessage && (
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Message template</InputLabel>
-                    <Select
-                      label="Message template"
-                      value={rule.messageTemplateId ?? ''}
-                      disabled={!academicYearId || isUpdatingCycle}
-                      onChange={(event) =>
-                        handleJourneyRuleChange(
-                          index,
-                          'messageTemplateId',
-                          String(event.target.value) || null
-                        )
-                      }
-                    >
-                      <MenuItem value="">Select approved template</MenuItem>
-                      {approvedMessageTemplates.map((template) => (
-                        <MenuItem key={template.id} value={template.id}>
-                          {template.templateName} - {messageChannelLabel[template.channel]}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                )}
-              </Box>
-            ))}
-            {!cycleForm.journeyRules.length && (
-              <Typography variant="body2" color="text.secondary">
-                No journey rules configured
-              </Typography>
-            )}
-          </Box>
-          <LoadingButton
-            size="small"
-            variant="contained"
-            loading={isUpdatingCycle}
-            disabled={!academicYearId}
-            onClick={handleSaveCycle}
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            Save Journeys
-          </LoadingButton>
-        </Stack>
-      </Paper>
-
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack spacing={1.25}>
-          <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-            <Typography variant="subtitle1">Form Templates</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {templates?.totalCount || 0} templates
-            </Typography>
-          </Stack>
-          <Divider />
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
-              gap: 1,
-            }}
-          >
-            {(templates?.items || []).map((template) => (
-              <Paper key={template.id} variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-                <Stack spacing={0.75}>
-                  <Stack direction="row" justifyContent="space-between" gap={1}>
-                    <Typography variant="subtitle2" sx={{ wordBreak: 'break-word' }}>
-                      {template.templateName}
-                    </Typography>
-                    <Chip
-                      size="small"
-                      label={template.isActive ? 'Active' : 'Inactive'}
-                      color={template.isActive ? 'success' : 'default'}
-                    />
-                  </Stack>
-                  <Typography variant="caption" color="text.secondary">
-                    {getAdmissionCrmChannelLabel(template.channel)}
-                    {template.isPublic ? ' - Public' : ' - Internal'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {template.fields.length} fields
-                  </Typography>
-                  <Stack direction="row" gap={0.75} flexWrap="wrap">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      disabled={isCreatingTemplate || isUpdatingTemplate}
-                      onClick={() => handleOpenEditTemplate(template)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      disabled={isUpdatingTemplateStatus}
-                      onClick={() => handleToggleTemplateStatus(template.id, template.isActive)}
-                    >
-                      {template.isActive ? 'Deactivate' : 'Activate'}
-                    </Button>
-                    {template.isPublic && (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<ContentCopy />}
-                        disabled={!template.isActive || !tenantId}
-                        onClick={() => handleCopyPublicFormLink(template)}
-                      >
-                        Copy Link
-                      </Button>
-                    )}
-                  </Stack>
-                  {template.isPublic && (
-                    <Stack
-                      direction={{ xs: 'column', md: 'row' }}
-                      gap={0.75}
-                      alignItems={{ xs: 'stretch', md: 'center' }}
-                    >
-                      <TextField
-                        size="small"
-                        label="Campaign name"
-                        value={campaignLinkNames[template.id] || ''}
-                        disabled={!template.isActive || !tenantId}
-                        onChange={(event) =>
-                          handleCampaignLinkNameChange(template.id, event.target.value)
-                        }
-                        sx={{ flex: 1, minWidth: 0 }}
-                      />
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<ContentCopy />}
-                        disabled={
-                          !template.isActive || !tenantId || !campaignLinkNames[template.id]?.trim()
-                        }
-                        onClick={() => handleCopyCampaignFormLink(template)}
-                        sx={{ whiteSpace: 'nowrap' }}
-                      >
-                        Copy Campaign Link
-                      </Button>
-                    </Stack>
-                  )}
-                  {template.isPublic &&
-                    template.channel === AdmissionInquiryChannel.StaffSharedLink && (
-                      <Stack
-                        direction={{ xs: 'column', md: 'row' }}
-                        gap={0.75}
-                        alignItems={{ xs: 'stretch', md: 'center' }}
-                      >
-                        <FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
-                          <InputLabel>Staff owner</InputLabel>
+                          >
+                            <MenuItem value="">No default source</MenuItem>
+                            {inquirySourceOptions.map((source) => (
+                              <MenuItem key={source.id} value={source.id}>
+                                {source.displayName || source.preferenceName}
+                                {source.isActive === false ? ' (Inactive)' : ''}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Default owner</InputLabel>
                           <Select
-                            label="Staff owner"
-                            value={staffLinkOwnerIds[template.id] || ''}
-                            disabled={!template.isActive || !tenantId}
+                            label="Default owner"
+                            value={setting.defaultOwnerUserId ?? ''}
+                            disabled={
+                              !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                            }
                             onChange={(event) =>
-                              handleStaffLinkOwnerChange(template.id, event.target.value)
+                              handleChannelSettingChange(
+                                setting.channel,
+                                'defaultOwnerUserId',
+                                event.target.value || null
+                              )
                             }
                           >
-                            <MenuItem value="">Select owner</MenuItem>
+                            <MenuItem value="">No default owner</MenuItem>
                             {ownerOptions.map((owner) => (
                               <MenuItem key={owner.id} value={owner.id}>
                                 {getCrmUserOptionLabel(owner)}
@@ -3726,6 +2579,1163 @@ const AdmissionsCrmConfiguration = ({
                             ))}
                           </Select>
                         </FormControl>
+                      </Stack>
+                      <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Default form template</InputLabel>
+                          <Select
+                            label="Default form template"
+                            value={setting.defaultFormTemplateId ?? ''}
+                            disabled={
+                              !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                            }
+                            onChange={(event) =>
+                              handleChannelSettingChange(
+                                setting.channel,
+                                'defaultFormTemplateId',
+                                event.target.value || null
+                              )
+                            }
+                          >
+                            <MenuItem value="">No default form</MenuItem>
+                            {templatesForChannel.map((template) => (
+                              <MenuItem key={template.id} value={template.id}>
+                                {template.templateName}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Acknowledgement template</InputLabel>
+                          <Select
+                            label="Acknowledgement template"
+                            value={setting.defaultAcknowledgementTemplateId ?? ''}
+                            disabled={
+                              !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                            }
+                            onChange={(event) =>
+                              handleChannelSettingChange(
+                                setting.channel,
+                                'defaultAcknowledgementTemplateId',
+                                event.target.value || null
+                              )
+                            }
+                          >
+                            <MenuItem value="">No acknowledgement template</MenuItem>
+                            {approvedMessageTemplates.map((template) => (
+                              <MenuItem key={template.id} value={template.id}>
+                                {template.templateName}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Stack>
+                    </Box>
+                  );
+                })}
+              </Box>
+              <LoadingButton
+                size="small"
+                variant="contained"
+                loading={isUpdatingCycle}
+                disabled={!academicYearId || isUpdatingSchoolDefaultCycle}
+                onClick={handleSaveCycle}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Save Channels
+              </LoadingButton>
+            </Stack>
+          </Paper>
+        )}
+
+        {focusSection === 'journey' && (
+          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+            <Stack spacing={1.25}>
+              <Typography variant="subtitle1">Pipeline Stages</Typography>
+              <Divider />
+              <Box sx={{ display: 'grid', gap: 1 }}>
+                {stages.map((stage) => {
+                  const stageForm = stageForms[stage.id] ?? buildPipelineStageFormFromStage(stage);
+                  const stageColor =
+                    stageForm.colorHex && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(stageForm.colorHex)
+                      ? stageForm.colorHex
+                      : 'transparent';
+
+                  return (
+                    <Box
+                      key={stage.id}
+                      sx={{
+                        border: 1,
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        p: 1,
+                        display: 'grid',
+                        gap: 1,
+                      }}
+                    >
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        gap={1}
+                        alignItems="center"
+                      >
+                        <Stack direction="row" gap={1} alignItems="center">
+                          <Box
+                            sx={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: 0.5,
+                              border: 1,
+                              borderColor: 'divider',
+                              bgcolor: stageColor,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <Chip
+                            size="small"
+                            label={stage.isSystem ? 'System' : 'Custom'}
+                            variant="outlined"
+                          />
+                        </Stack>
+                        <Chip
+                          size="small"
+                          label={stageForm.isEnabled ? 'Enabled' : 'Disabled'}
+                          color={stageForm.isEnabled ? 'primary' : 'default'}
+                          sx={
+                            stageForm.isEnabled
+                              ? { bgcolor: 'primary.darker', color: 'common.white' }
+                              : undefined
+                          }
+                        />
+                      </Stack>
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr' },
+                          gap: 1,
+                        }}
+                      >
+                        <TextField
+                          size="small"
+                          label="Stage name"
+                          value={stageForm.stageName}
+                          disabled={isUpdatingPipelineStage}
+                          onChange={(event) =>
+                            handleStageChange(stage.id, 'stageName', event.target.value)
+                          }
+                        />
+                        <TextField
+                          size="small"
+                          type="number"
+                          label="Order"
+                          value={stageForm.displayOrder}
+                          disabled={isUpdatingPipelineStage}
+                          onChange={(event) =>
+                            handleStageChange(stage.id, 'displayOrder', Number(event.target.value))
+                          }
+                        />
+                        <TextField
+                          size="small"
+                          label="Color"
+                          placeholder="#1976D2"
+                          value={stageForm.colorHex}
+                          disabled={isUpdatingPipelineStage}
+                          inputProps={{ maxLength: 16 }}
+                          onChange={(event) =>
+                            handleStageChange(stage.id, 'colorHex', event.target.value)
+                          }
+                        />
+                      </Box>
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: { xs: '1fr', md: '1fr 2fr' },
+                          gap: 1,
+                        }}
+                      >
+                        <TextField
+                          size="small"
+                          type="number"
+                          label="SLA hours"
+                          value={stageForm.slaTargetHours}
+                          disabled={isUpdatingPipelineStage}
+                          onChange={(event) =>
+                            handleStageChange(stage.id, 'slaTargetHours', event.target.value)
+                          }
+                        />
+                        <TextField
+                          size="small"
+                          label="Owner responsibility"
+                          value={stageForm.ownerResponsibility}
+                          disabled={isUpdatingPipelineStage}
+                          inputProps={{ maxLength: 500 }}
+                          onChange={(event) =>
+                            handleStageChange(stage.id, 'ownerResponsibility', event.target.value)
+                          }
+                        />
+                      </Box>
+                      <FormControl size="small" disabled={isUpdatingPipelineStage}>
+                        <InputLabel id={`allowed-next-stages-${stage.id}`}>
+                          Allowed next stages
+                        </InputLabel>
+                        <Select
+                          multiple
+                          displayEmpty
+                          labelId={`allowed-next-stages-${stage.id}`}
+                          label="Allowed next stages"
+                          SelectDisplayProps={{
+                            'aria-label': `Allowed next stages for ${stageForm.stageName}`,
+                          }}
+                          value={stageForm.allowedNextStages}
+                          renderValue={(selected) =>
+                            selected.length
+                              ? selected
+                                  .map((value) =>
+                                    getAdmissionCrmStageLabel(value as AdmissionInquiryStage)
+                                  )
+                                  .join(', ')
+                              : 'None'
+                          }
+                          onChange={(event) => {
+                            const { value } = event.target;
+                            const selectedValues = Array.isArray(value)
+                              ? value.map(Number)
+                              : String(value).split(',').filter(Boolean).map(Number);
+                            handleStageChange(
+                              stage.id,
+                              'allowedNextStages',
+                              selectedValues as AdmissionInquiryStage[]
+                            );
+                          }}
+                        >
+                          {pipelineStageOptions
+                            .filter((option) => option !== stage.systemStage)
+                            .map((option) => (
+                              <MenuItem key={option} value={option}>
+                                <Checkbox checked={stageForm.allowedNextStages.includes(option)} />
+                                {getAdmissionCrmStageLabel(option)}
+                              </MenuItem>
+                            ))}
+                        </Select>
+                      </FormControl>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} alignItems="center">
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={stageForm.isEnabled}
+                              disabled={isUpdatingPipelineStage}
+                              onChange={(event) =>
+                                handleStageChange(stage.id, 'isEnabled', event.target.checked)
+                              }
+                            />
+                          }
+                          label="Enabled"
+                        />
+                        <LoadingButton
+                          size="small"
+                          variant="outlined"
+                          loading={isUpdatingPipelineStage}
+                          onClick={() => handleSaveStage(stage.id)}
+                        >
+                          Save
+                        </LoadingButton>
+                      </Stack>
+                    </Box>
+                  );
+                })}
+                {!stages.length && (
+                  <Typography variant="body2" color="text.secondary">
+                    No stages configured
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+          </Paper>
+        )}
+      </Box>
+
+      {focusSection === 'routing' && (
+        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+          <Stack spacing={1.25}>
+            <Typography variant="subtitle1">Lead Scoring</Typography>
+            <Divider />
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(6, minmax(0, 1fr))' },
+                gap: 1,
+              }}
+            >
+              {scoringRuleFields.map((option) => (
+                <TextField
+                  key={option.field}
+                  size="small"
+                  type="number"
+                  label={option.label}
+                  value={cycleForm.leadScoringRules[option.field]}
+                  disabled={!academicYearId || isUpdatingCycle}
+                  onChange={(event) =>
+                    handleScoringRuleChange(option.field, Number(event.target.value))
+                  }
+                />
+              ))}
+            </Box>
+            <LoadingButton
+              size="small"
+              variant="contained"
+              loading={isUpdatingCycle}
+              disabled={!academicYearId}
+              onClick={handleSaveCycle}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Save Scoring
+            </LoadingButton>
+          </Stack>
+        </Paper>
+      )}
+
+      {focusSection === 'routing' && (
+        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+          <Stack spacing={1.25}>
+            <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
+              <Typography variant="subtitle1">Lead Routing</Typography>
+              <Button size="small" variant="outlined" onClick={handleAddRoutingRule}>
+                Add Rule
+              </Button>
+            </Stack>
+            <Divider />
+            <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={cycleForm.leadRoutingSettings.isEnabled}
+                    disabled={!academicYearId || isUpdatingCycle}
+                    onChange={(event) =>
+                      handleRoutingSettingsChange('isEnabled', event.target.checked)
+                    }
+                  />
+                }
+                label="Enabled"
+              />
+              <FormControl fullWidth size="small">
+                <InputLabel>Default owner</InputLabel>
+                <Select
+                  label="Default owner"
+                  value={cycleForm.leadRoutingSettings.defaultOwnerUserId ?? ''}
+                  disabled={!academicYearId || isUpdatingCycle}
+                  onChange={(event) =>
+                    handleRoutingSettingsChange('defaultOwnerUserId', event.target.value || null)
+                  }
+                >
+                  <MenuItem value="">No default owner</MenuItem>
+                  {ownerOptions.map((owner) => (
+                    <MenuItem key={owner.id} value={owner.id}>
+                      {getCrmUserOptionLabel(owner)}
+                      {owner.isActive === false ? ' (Inactive)' : ''}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+            <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Routing strategy</InputLabel>
+                <Select
+                  label="Routing strategy"
+                  value={cycleForm.leadRoutingSettings.routingStrategy}
+                  disabled={!academicYearId || isUpdatingCycle}
+                  onChange={(event) =>
+                    handleRoutingSettingsChange(
+                      'routingStrategy',
+                      Number(event.target.value) as AdmissionCrmLeadRoutingStrategy
+                    )
+                  }
+                >
+                  {Object.entries(routingStrategyLabel).map(([value, label]) => (
+                    <MenuItem key={value} value={Number(value)}>
+                      {label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth size="small">
+                <InputLabel>Owner pool</InputLabel>
+                <Select
+                  multiple
+                  label="Owner pool"
+                  value={cycleForm.leadRoutingSettings.ownerPoolUserIds ?? []}
+                  disabled={!academicYearId || isUpdatingCycle}
+                  renderValue={(selected) =>
+                    (selected as string[]).map((id) => getCrmUserLabel(ownerOptions, id)).join(', ')
+                  }
+                  onChange={(event) => {
+                    const { value } = event.target;
+                    handleRoutingSettingsChange(
+                      'ownerPoolUserIds',
+                      typeof value === 'string' ? value.split(',').filter(Boolean) : value
+                    );
+                  }}
+                >
+                  {ownerOptions.map((owner) => (
+                    <MenuItem key={owner.id} value={owner.id}>
+                      <Checkbox
+                        checked={(cycleForm.leadRoutingSettings.ownerPoolUserIds ?? []).includes(
+                          owner.id
+                        )}
+                      />
+                      {getCrmUserOptionLabel(owner)}
+                      {owner.isActive === false ? ' (Inactive)' : ''}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+            <Box sx={{ display: 'grid', gap: 1 }}>
+              {cycleForm.leadRoutingSettings.rules.map((rule, index) => (
+                <Box
+                  key={`${rule.ruleName}-${index}`}
+                  sx={{
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    p: 1,
+                    display: 'grid',
+                    gap: 1,
+                  }}
+                >
+                  <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Rule name"
+                      value={rule.ruleName}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleRoutingRuleChange(index, 'ruleName', event.target.value)
+                      }
+                    />
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="Priority"
+                      value={rule.priority}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleRoutingRuleChange(index, 'priority', Number(event.target.value))
+                      }
+                    />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={rule.isEnabled}
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onChange={(event) =>
+                            handleRoutingRuleChange(index, 'isEnabled', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Enabled"
+                    />
+                  </Stack>
+                  <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Channel</InputLabel>
+                      <Select
+                        label="Channel"
+                        value={rule.channel ?? ''}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleRoutingRuleChange(
+                            index,
+                            'channel',
+                            String(event.target.value) === ''
+                              ? null
+                              : (Number(event.target.value) as AdmissionInquiryChannel)
+                          )
+                        }
+                      >
+                        <MenuItem value="">Any channel</MenuItem>
+                        {inquiryChannelOptions.map((channel) => (
+                          <MenuItem key={channel} value={channel}>
+                            {getAdmissionCrmChannelLabel(channel)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Owner</InputLabel>
+                      <Select
+                        label="Owner"
+                        value={rule.ownerUserId ?? ''}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleRoutingRuleChange(index, 'ownerUserId', event.target.value || null)
+                        }
+                      >
+                        <MenuItem value="">No owner</MenuItem>
+                        {ownerOptions.map((owner) => (
+                          <MenuItem key={owner.id} value={owner.id}>
+                            {getCrmUserOptionLabel(owner)}
+                            {owner.isActive === false ? ' (Inactive)' : ''}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Inquiry Source</InputLabel>
+                      <Select
+                        label="Inquiry Source"
+                        value={rule.inquirySourceId ?? ''}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleRoutingRuleChange(
+                            index,
+                            'inquirySourceId',
+                            event.target.value || null
+                          )
+                        }
+                      >
+                        <MenuItem value="">Any source</MenuItem>
+                        {inquirySourceOptions.map((source) => (
+                          <MenuItem key={source.id} value={source.id}>
+                            {source.displayName || source.preferenceName}
+                            {source.isActive === false ? ' (Inactive)' : ''}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Target standard ID"
+                      value={rule.targetStandardId ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleRoutingRuleChange(index, 'targetStandardId', event.target.value)
+                      }
+                    />
+                  </Stack>
+                  <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Campaign contains"
+                      value={rule.campaignContains ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleRoutingRuleChange(index, 'campaignContains', event.target.value)
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Class contains"
+                      value={rule.desiredClassContains ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleRoutingRuleChange(index, 'desiredClassContains', event.target.value)
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Branch contains"
+                      value={rule.campusBranchContains ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleRoutingRuleChange(index, 'campusBranchContains', event.target.value)
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Language contains"
+                      value={rule.preferredLanguageContains ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleRoutingRuleChange(
+                          index,
+                          'preferredLanguageContains',
+                          event.target.value
+                        )
+                      }
+                    />
+                    <Button
+                      size="small"
+                      color="error"
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onClick={() => handleRemoveRoutingRule(index)}
+                    >
+                      Remove
+                    </Button>
+                  </Stack>
+                </Box>
+              ))}
+              {!cycleForm.leadRoutingSettings.rules.length && (
+                <Typography variant="body2" color="text.secondary">
+                  No routing rules configured
+                </Typography>
+              )}
+            </Box>
+            <LoadingButton
+              size="small"
+              variant="contained"
+              loading={isUpdatingCycle}
+              disabled={!academicYearId}
+              onClick={handleSaveCycle}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Save Routing
+            </LoadingButton>
+          </Stack>
+        </Paper>
+      )}
+
+      {focusSection === 'automation' && (
+        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+          <Stack spacing={1.25}>
+            <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
+              <Typography variant="subtitle1">Journey Automation</Typography>
+              <Button size="small" variant="outlined" onClick={handleAddJourneyRule}>
+                Add Rule
+              </Button>
+            </Stack>
+            <Divider />
+            <Box sx={{ display: 'grid', gap: 1 }}>
+              {cycleForm.journeyRules.map((rule, index) => (
+                <Box
+                  key={`${rule.ruleName}-${index}`}
+                  sx={{
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    p: 1,
+                    display: 'grid',
+                    gap: 1,
+                  }}
+                >
+                  <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Rule name"
+                      value={rule.ruleName}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleJourneyRuleChange(index, 'ruleName', event.target.value)
+                      }
+                    />
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="Priority"
+                      value={rule.priority}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleJourneyRuleChange(index, 'priority', Number(event.target.value))
+                      }
+                    />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={rule.isEnabled}
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onChange={(event) =>
+                            handleJourneyRuleChange(index, 'isEnabled', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Enabled"
+                    />
+                  </Stack>
+                  <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Trigger</InputLabel>
+                      <Select
+                        label="Trigger"
+                        value={rule.trigger}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleJourneyRuleChange(
+                            index,
+                            'trigger',
+                            Number(event.target.value) as AdmissionCrmJourneyTrigger
+                          )
+                        }
+                      >
+                        {Object.entries(journeyTriggerLabel).map(([value, label]) => (
+                          <MenuItem key={value} value={Number(value)}>
+                            {label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    {rule.trigger === AdmissionCrmJourneyTrigger.StageReached && (
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Pipeline stage</InputLabel>
+                        <Select
+                          label="Pipeline stage"
+                          value={rule.stage ?? ''}
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onChange={(event) =>
+                            handleJourneyRuleChange(
+                              index,
+                              'stage',
+                              String(event.target.value) === ''
+                                ? null
+                                : (Number(event.target.value) as AdmissionInquiryStage)
+                            )
+                          }
+                        >
+                          <MenuItem value="">Select stage</MenuItem>
+                          {stages.map((stage) => (
+                            <MenuItem key={stage.id} value={stage.systemStage}>
+                              {stage.stageName || getAdmissionCrmStageLabel(stage.systemStage)}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )}
+                    <Button
+                      size="small"
+                      color="error"
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onClick={() => handleRemoveJourneyRule(index)}
+                      sx={{ alignSelf: { md: 'center' } }}
+                    >
+                      Remove
+                    </Button>
+                  </Stack>
+                  <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Channel condition</InputLabel>
+                      <Select
+                        label="Channel condition"
+                        value={rule.channel ?? ''}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleJourneyRuleChange(
+                            index,
+                            'channel',
+                            String(event.target.value) === ''
+                              ? null
+                              : (Number(event.target.value) as AdmissionInquiryChannel)
+                          )
+                        }
+                      >
+                        <MenuItem value="">Any channel</MenuItem>
+                        {inquiryChannelOptions.map((channel) => (
+                          <MenuItem key={channel} value={channel}>
+                            {getAdmissionCrmChannelLabel(channel)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Inquiry Source condition</InputLabel>
+                      <Select
+                        label="Inquiry Source condition"
+                        value={rule.inquirySourceId ?? ''}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleJourneyRuleChange(
+                            index,
+                            'inquirySourceId',
+                            event.target.value || null
+                          )
+                        }
+                      >
+                        <MenuItem value="">Any source</MenuItem>
+                        {inquirySourceOptions.map((source) => (
+                          <MenuItem key={source.id} value={source.id}>
+                            {source.displayName || source.preferenceName}
+                            {source.isActive === false ? ' (Inactive)' : ''}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Current stage condition</InputLabel>
+                      <Select
+                        label="Current stage condition"
+                        value={rule.leadStage ?? ''}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleJourneyRuleChange(
+                            index,
+                            'leadStage',
+                            String(event.target.value) === ''
+                              ? null
+                              : (Number(event.target.value) as AdmissionInquiryStage)
+                          )
+                        }
+                      >
+                        <MenuItem value="">Any current stage</MenuItem>
+                        {stages.map((stage) => (
+                          <MenuItem key={stage.id} value={stage.systemStage}>
+                            {stage.stageName || getAdmissionCrmStageLabel(stage.systemStage)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Owner condition</InputLabel>
+                      <Select
+                        label="Owner condition"
+                        value={rule.ownerUserId ?? ''}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleJourneyRuleChange(index, 'ownerUserId', event.target.value || null)
+                        }
+                      >
+                        <MenuItem value="">Any owner</MenuItem>
+                        {ownerOptions.map((owner) => (
+                          <MenuItem key={owner.id} value={owner.id}>
+                            {getCrmUserOptionLabel(owner)}
+                            {owner.isActive === false ? ' (Inactive)' : ''}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Stack>
+                  <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Campaign contains"
+                      value={rule.campaignContains ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleJourneyRuleChange(index, 'campaignContains', event.target.value)
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Min lead score"
+                      value={rule.minimumLeadScore ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleJourneyRuleChange(
+                          index,
+                          'minimumLeadScore',
+                          event.target.value === '' ? null : Number(event.target.value)
+                        )
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Max lead score"
+                      value={rule.maximumLeadScore ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleJourneyRuleChange(
+                          index,
+                          'maximumLeadScore',
+                          event.target.value === '' ? null : Number(event.target.value)
+                        )
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Idle days"
+                      value={rule.daysSinceLastActivity ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleJourneyRuleChange(
+                          index,
+                          'daysSinceLastActivity',
+                          event.target.value === '' ? null : Number(event.target.value)
+                        )
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Lead age days"
+                      value={rule.daysSinceCreation ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleJourneyRuleChange(
+                          index,
+                          'daysSinceCreation',
+                          event.target.value === '' ? null : Number(event.target.value)
+                        )
+                      }
+                    />
+                  </Stack>
+                  <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Priority condition</InputLabel>
+                      <Select
+                        label="Priority condition"
+                        value={rule.leadPriority ?? ''}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleJourneyRuleChange(
+                            index,
+                            'leadPriority',
+                            String(event.target.value) === ''
+                              ? null
+                              : (Number(event.target.value) as AdmissionCrmLeadPriority)
+                          )
+                        }
+                      >
+                        <MenuItem value="">Any priority</MenuItem>
+                        {leadPriorityOptions.map((priority) => (
+                          <MenuItem key={priority} value={priority}>
+                            {leadPriorityLabel[priority]}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Target standard ID"
+                      value={rule.targetStandardId ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleJourneyRuleChange(index, 'targetStandardId', event.target.value)
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Desired class contains"
+                      value={rule.desiredClassContains ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleJourneyRuleChange(index, 'desiredClassContains', event.target.value)
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Branch contains"
+                      value={rule.campusBranchContains ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleJourneyRuleChange(index, 'campusBranchContains', event.target.value)
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Language contains"
+                      value={rule.preferredLanguageContains ?? ''}
+                      disabled={!academicYearId || isUpdatingCycle}
+                      onChange={(event) =>
+                        handleJourneyRuleChange(
+                          index,
+                          'preferredLanguageContains',
+                          event.target.value
+                        )
+                      }
+                    />
+                  </Stack>
+                  <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    gap={1}
+                    alignItems={{ md: 'center' }}
+                  >
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={rule.createTask}
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onChange={(event) =>
+                            handleJourneyRuleChange(index, 'createTask', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Create task"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={rule.sendMessage}
+                          disabled={!academicYearId || isUpdatingCycle}
+                          onChange={(event) =>
+                            handleJourneyRuleChange(index, 'sendMessage', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Send message"
+                    />
+                  </Stack>
+                  {rule.createTask && (
+                    <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Task title"
+                        value={rule.taskTitle ?? ''}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleJourneyRuleChange(index, 'taskTitle', event.target.value)
+                        }
+                      />
+                      <TextField
+                        size="small"
+                        type="number"
+                        label="Due offset hours"
+                        value={rule.taskDueOffsetHours}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleJourneyRuleChange(
+                            index,
+                            'taskDueOffsetHours',
+                            Number(event.target.value)
+                          )
+                        }
+                      />
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Task notes"
+                        value={rule.taskNotes ?? ''}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleJourneyRuleChange(index, 'taskNotes', event.target.value)
+                        }
+                      />
+                    </Stack>
+                  )}
+                  {rule.sendMessage && (
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Message template</InputLabel>
+                      <Select
+                        label="Message template"
+                        value={rule.messageTemplateId ?? ''}
+                        disabled={!academicYearId || isUpdatingCycle}
+                        onChange={(event) =>
+                          handleJourneyRuleChange(
+                            index,
+                            'messageTemplateId',
+                            String(event.target.value) || null
+                          )
+                        }
+                      >
+                        <MenuItem value="">Select approved template</MenuItem>
+                        {approvedMessageTemplates.map((template) => (
+                          <MenuItem key={template.id} value={template.id}>
+                            {template.templateName} - {messageChannelLabel[template.channel]}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                </Box>
+              ))}
+              {!cycleForm.journeyRules.length && (
+                <Typography variant="body2" color="text.secondary">
+                  No journey rules configured
+                </Typography>
+              )}
+            </Box>
+            <LoadingButton
+              size="small"
+              variant="contained"
+              loading={isUpdatingCycle}
+              disabled={!academicYearId}
+              onClick={handleSaveCycle}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Save Journeys
+            </LoadingButton>
+          </Stack>
+        </Paper>
+      )}
+
+      {focusSection === 'capture' && (
+        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+          <Stack spacing={1.25}>
+            <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
+              <Typography variant="subtitle1">Form Templates</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {templates?.totalCount || 0} templates
+              </Typography>
+            </Stack>
+            <Divider />
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                gap: 1,
+              }}
+            >
+              {(templates?.items || []).map((template) => (
+                <Paper key={template.id} variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+                  <Stack spacing={0.75}>
+                    <Stack direction="row" justifyContent="space-between" gap={1}>
+                      <Typography variant="subtitle2" sx={{ wordBreak: 'break-word' }}>
+                        {template.templateName}
+                      </Typography>
+                      <Chip
+                        size="small"
+                        label={template.isActive ? 'Active' : 'Inactive'}
+                        color={template.isActive ? 'success' : 'default'}
+                      />
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary">
+                      {getAdmissionCrmChannelLabel(template.channel)}
+                      {template.isPublic ? ' - Public' : ' - Internal'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {template.fields.length} fields
+                    </Typography>
+                    <Stack direction="row" gap={0.75} flexWrap="wrap">
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={isCreatingTemplate || isUpdatingTemplate}
+                        onClick={() => handleOpenEditTemplate(template)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={isUpdatingTemplateStatus}
+                        onClick={() => handleToggleTemplateStatus(template.id, template.isActive)}
+                      >
+                        {template.isActive ? 'Deactivate' : 'Activate'}
+                      </Button>
+                      {template.isPublic && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<ContentCopy />}
+                          disabled={!template.isActive || !tenantId}
+                          onClick={() => handleCopyPublicFormLink(template)}
+                        >
+                          Copy Link
+                        </Button>
+                      )}
+                    </Stack>
+                    {template.isPublic && (
+                      <Stack
+                        direction={{ xs: 'column', md: 'row' }}
+                        gap={0.75}
+                        alignItems={{ xs: 'stretch', md: 'center' }}
+                      >
+                        <TextField
+                          size="small"
+                          label="Campaign name"
+                          value={campaignLinkNames[template.id] || ''}
+                          disabled={!template.isActive || !tenantId}
+                          onChange={(event) =>
+                            handleCampaignLinkNameChange(template.id, event.target.value)
+                          }
+                          sx={{ flex: 1, minWidth: 0 }}
+                        />
                         <Button
                           size="small"
                           variant="outlined"
@@ -3733,504 +3743,551 @@ const AdmissionsCrmConfiguration = ({
                           disabled={
                             !template.isActive ||
                             !tenantId ||
-                            !staffLinkOwnerIds[template.id]?.trim()
+                            !campaignLinkNames[template.id]?.trim()
                           }
-                          onClick={() => handleCopyStaffSharedFormLink(template)}
+                          onClick={() => handleCopyCampaignFormLink(template)}
                           sx={{ whiteSpace: 'nowrap' }}
                         >
-                          Copy Staff Link
+                          Copy Campaign Link
                         </Button>
                       </Stack>
                     )}
-                </Stack>
-              </Paper>
-            ))}
-            {!templates?.items?.length && (
-              <Typography variant="body2" color="text.secondary">
-                No form templates configured
-              </Typography>
-            )}
-          </Box>
-        </Stack>
-      </Paper>
-
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack spacing={1.25}>
-          <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-            <Box>
-              <Typography variant="subtitle1">Message Templates</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {messageTemplates?.totalCount || 0} templates
-              </Typography>
+                    {template.isPublic &&
+                      template.channel === AdmissionInquiryChannel.StaffSharedLink && (
+                        <Stack
+                          direction={{ xs: 'column', md: 'row' }}
+                          gap={0.75}
+                          alignItems={{ xs: 'stretch', md: 'center' }}
+                        >
+                          <FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
+                            <InputLabel>Staff owner</InputLabel>
+                            <Select
+                              label="Staff owner"
+                              value={staffLinkOwnerIds[template.id] || ''}
+                              disabled={!template.isActive || !tenantId}
+                              onChange={(event) =>
+                                handleStaffLinkOwnerChange(template.id, event.target.value)
+                              }
+                            >
+                              <MenuItem value="">Select owner</MenuItem>
+                              {ownerOptions.map((owner) => (
+                                <MenuItem key={owner.id} value={owner.id}>
+                                  {getCrmUserOptionLabel(owner)}
+                                  {owner.isActive === false ? ' (Inactive)' : ''}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<ContentCopy />}
+                            disabled={
+                              !template.isActive ||
+                              !tenantId ||
+                              !staffLinkOwnerIds[template.id]?.trim()
+                            }
+                            onClick={() => handleCopyStaffSharedFormLink(template)}
+                            sx={{ whiteSpace: 'nowrap' }}
+                          >
+                            Copy Staff Link
+                          </Button>
+                        </Stack>
+                      )}
+                  </Stack>
+                </Paper>
+              ))}
+              {!templates?.items?.length && (
+                <Typography variant="body2" color="text.secondary">
+                  No form templates configured
+                </Typography>
+              )}
             </Box>
-            <Button size="small" variant="outlined" onClick={() => setMessageDialogOpen(true)}>
-              New Template
-            </Button>
           </Stack>
-          <Divider />
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
-              gap: 1,
-            }}
-          >
-            {(messageTemplates?.items || []).map((template) => (
-              <Paper key={template.id} variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-                <Stack spacing={0.75}>
-                  <Stack direction="row" justifyContent="space-between" gap={1}>
-                    <Typography variant="subtitle2" sx={{ wordBreak: 'break-word' }}>
-                      {template.templateName}
-                    </Typography>
-                    <Chip
-                      size="small"
-                      label={messageStatusLabel[template.status]}
-                      color={
-                        template.status === AdmissionCrmMessageTemplateStatus.Approved
-                          ? 'success'
-                          : template.status === AdmissionCrmMessageTemplateStatus.Retired
-                            ? 'default'
-                            : 'warning'
-                      }
-                    />
-                  </Stack>
-                  <Typography variant="caption" color="text.secondary">
-                    {messageChannelLabel[template.channel]} - {template.purpose}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" noWrap>
-                    {template.body}
-                  </Typography>
-                  <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
-                    <Chip
-                      size="small"
-                      label={template.isActive ? 'Active' : 'Inactive'}
-                      variant="outlined"
-                    />
-                    <Button
-                      size="small"
-                      startIcon={<Visibility />}
-                      disabled={isPreviewingMessageTemplate}
-                      onClick={() => handleOpenMessageTemplatePreview(template)}
-                    >
-                      Preview
-                    </Button>
-                    <Button
-                      size="small"
-                      disabled={isUpdatingMessageTemplateStatus}
-                      onClick={() =>
-                        handleToggleMessageTemplateApproval(
-                          template.id,
-                          template.status,
-                          template.isActive
-                        )
-                      }
-                    >
-                      {template.status === AdmissionCrmMessageTemplateStatus.Approved
-                        ? 'Retire'
-                        : 'Approve'}
-                    </Button>
-                  </Stack>
-                </Stack>
-              </Paper>
-            ))}
-            {!messageTemplates?.items?.length && (
-              <Typography variant="body2" color="text.secondary">
-                No message templates configured
-              </Typography>
-            )}
-          </Box>
-        </Stack>
-      </Paper>
+        </Paper>
+      )}
 
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack spacing={1.25}>
-          <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-            <Typography variant="subtitle1">Communication Providers</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {communicationProviders?.totalCount || 0} channels
-            </Typography>
-          </Stack>
-          <Divider />
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
-              gap: 1,
-            }}
-          >
-            {(communicationProviders?.items || []).map((provider) => {
-              const providerForm = providerForms[provider.channel] || defaultProviderForm;
-              const providerAdapter = getAdmissionCrmProviderAdapter(providerForm.settingsJson);
-              const providerPayloadMode = getAdmissionCrmProviderPayloadMode(
-                providerForm.settingsJson
-              );
-              const providerHeaders = Object.entries(
-                getAdmissionCrmProviderKeyValueSettings(providerForm.settingsJson, 'headers')
-              );
-              const providerParameters = Object.entries(
-                getAdmissionCrmProviderKeyValueSettings(providerForm.settingsJson, 'parameters')
-              );
-              const providerCallbackUrl = buildAdmissionCrmProviderDeliveryCallbackUrl({
-                apiOrigin: process.env.NEXT_PUBLIC_API_URL,
-                tenantId,
-                academicYearId,
-                channel: provider.channel,
-              });
-
-              return (
-                <Paper key={provider.id} variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-                  <Stack spacing={1}>
-                    <Stack
-                      direction="row"
-                      justifyContent="space-between"
-                      gap={1}
-                      alignItems="center"
-                    >
-                      <Typography variant="subtitle2">
-                        {messageChannelLabel[provider.channel]}
+      {focusSection === 'communications' && (
+        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+          <Stack spacing={1.25}>
+            <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
+              <Box>
+                <Typography variant="subtitle1">Message Templates</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {messageTemplates?.totalCount || 0} templates
+                </Typography>
+              </Box>
+              <Button size="small" variant="outlined" onClick={() => setMessageDialogOpen(true)}>
+                New Template
+              </Button>
+            </Stack>
+            <Divider />
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                gap: 1,
+              }}
+            >
+              {(messageTemplates?.items || []).map((template) => (
+                <Paper key={template.id} variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+                  <Stack spacing={0.75}>
+                    <Stack direction="row" justifyContent="space-between" gap={1}>
+                      <Typography variant="subtitle2" sx={{ wordBreak: 'break-word' }}>
+                        {template.templateName}
                       </Typography>
                       <Chip
                         size="small"
-                        label={provider.status}
-                        color={provider.isEnabled ? 'success' : 'default'}
+                        label={messageStatusLabel[template.status]}
+                        color={
+                          template.status === AdmissionCrmMessageTemplateStatus.Approved
+                            ? 'success'
+                            : template.status === AdmissionCrmMessageTemplateStatus.Retired
+                              ? 'default'
+                              : 'warning'
+                        }
                       />
                     </Stack>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={providerForm.isEnabled}
-                          onChange={(event) =>
-                            handleProviderChange(
-                              provider.channel,
-                              'isEnabled',
-                              event.target.checked
-                            )
-                          }
-                        />
-                      }
-                      label="Enabled"
-                    />
-                    <TextField
-                      size="small"
-                      label="Provider"
-                      value={providerForm.providerName}
-                      onChange={(event) =>
-                        handleProviderChange(provider.channel, 'providerName', event.target.value)
-                      }
-                    />
-                    <TextField
-                      size="small"
-                      label="Sender"
-                      value={providerForm.senderId}
-                      onChange={(event) =>
-                        handleProviderChange(provider.channel, 'senderId', event.target.value)
-                      }
-                    />
-                    <FormControl size="small">
-                      <InputLabel>Adapter</InputLabel>
-                      <Select
-                        label="Adapter"
-                        value={providerAdapter}
-                        onChange={(event) =>
-                          handleProviderAdapterChange(provider.channel, event.target.value)
-                        }
-                      >
-                        {providerAdapterOptions.map((option) => (
-                          <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    <FormControl size="small" disabled={providerAdapter === 'manual'}>
-                      <InputLabel>Payload</InputLabel>
-                      <Select
-                        label="Payload"
-                        value={providerPayloadMode}
-                        onChange={(event) =>
-                          handleProviderPayloadModeChange(provider.channel, event.target.value)
-                        }
-                      >
-                        <MenuItem value="default">Default</MenuItem>
-                        <MenuItem value="envelope">Envelope</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <TextField
-                      size="small"
-                      label="Webhook URL"
-                      value={providerForm.webhookUrl}
-                      onChange={(event) =>
-                        handleProviderChange(provider.channel, 'webhookUrl', event.target.value)
-                      }
-                    />
-                    {providerAdapter !== 'manual' && (
-                      <Stack spacing={1}>
-                        <Typography variant="caption" color="text.secondary">
-                          Request headers
-                        </Typography>
-                        {providerHeaders.map(([key, value]) => (
-                          <Stack key={key} direction="row" spacing={0.75} alignItems="center">
-                            <TextField
-                              size="small"
-                              label="Header"
-                              value={key}
-                              onChange={(event) =>
-                                handleProviderKeyValueChange(
-                                  provider.channel,
-                                  'headers',
-                                  key,
-                                  event.target.value,
-                                  value
-                                )
-                              }
-                            />
-                            <TextField
-                              size="small"
-                              label="Value"
-                              value={value}
-                              type={
-                                key.toLowerCase().includes('authorization') ? 'password' : 'text'
-                              }
-                              onChange={(event) =>
-                                handleProviderKeyValueChange(
-                                  provider.channel,
-                                  'headers',
-                                  key,
-                                  key,
-                                  event.target.value
-                                )
-                              }
-                              fullWidth
-                            />
-                            <IconButton
-                              size="small"
-                              aria-label={`Remove ${key} header`}
-                              onClick={() =>
-                                handleProviderKeyValueChange(
-                                  provider.channel,
-                                  'headers',
-                                  key,
-                                  '',
-                                  ''
-                                )
-                              }
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Stack>
-                        ))}
-                        <Button
-                          size="small"
-                          startIcon={<Add />}
-                          onClick={() =>
-                            handleProviderKeyValueChange(
-                              provider.channel,
-                              'headers',
-                              '',
-                              `Header-${providerHeaders.length + 1}`,
-                              ''
-                            )
-                          }
-                        >
-                          Add header
-                        </Button>
-                        <Typography variant="caption" color="text.secondary">
-                          Payload parameters
-                        </Typography>
-                        {providerParameters.map(([key, value]) => (
-                          <Stack key={key} direction="row" spacing={0.75} alignItems="center">
-                            <TextField
-                              size="small"
-                              label="Parameter"
-                              value={key}
-                              onChange={(event) =>
-                                handleProviderKeyValueChange(
-                                  provider.channel,
-                                  'parameters',
-                                  key,
-                                  event.target.value,
-                                  value
-                                )
-                              }
-                            />
-                            <TextField
-                              size="small"
-                              label="Value"
-                              value={value}
-                              onChange={(event) =>
-                                handleProviderKeyValueChange(
-                                  provider.channel,
-                                  'parameters',
-                                  key,
-                                  key,
-                                  event.target.value
-                                )
-                              }
-                              fullWidth
-                            />
-                            <IconButton
-                              size="small"
-                              aria-label={`Remove ${key} parameter`}
-                              onClick={() =>
-                                handleProviderKeyValueChange(
-                                  provider.channel,
-                                  'parameters',
-                                  key,
-                                  '',
-                                  ''
-                                )
-                              }
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Stack>
-                        ))}
-                        <Button
-                          size="small"
-                          startIcon={<Add />}
-                          onClick={() =>
-                            handleProviderKeyValueChange(
-                              provider.channel,
-                              'parameters',
-                              '',
-                              `parameter${providerParameters.length + 1}`,
-                              ''
-                            )
-                          }
-                        >
-                          Add parameter
-                        </Button>
-                      </Stack>
-                    )}
-                    <TextField
-                      size="small"
-                      label="Response message ID path"
-                      value={getAdmissionCrmProviderResponseMessageIdPath(
-                        providerForm.settingsJson
-                      )}
-                      disabled={providerAdapter === 'manual'}
-                      onChange={(event) =>
-                        handleProviderResponseMessageIdPathChange(
-                          provider.channel,
-                          event.target.value
-                        )
-                      }
-                    />
-                    <TextField
-                      size="small"
-                      label="Callback secret"
-                      value={getAdmissionCrmProviderCallbackSecret(providerForm.settingsJson)}
-                      onChange={(event) =>
-                        handleProviderCallbackSecretChange(provider.channel, event.target.value)
-                      }
-                    />
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <TextField
+                    <Typography variant="caption" color="text.secondary">
+                      {messageChannelLabel[template.channel]} - {template.purpose}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      {template.body}
+                    </Typography>
+                    <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+                      <Chip
                         size="small"
-                        label="Provider callback URL"
-                        value={providerCallbackUrl || ''}
-                        fullWidth
-                        InputProps={{ readOnly: true }}
+                        label={template.isActive ? 'Active' : 'Inactive'}
+                        variant="outlined"
                       />
                       <Button
                         size="small"
-                        variant="outlined"
-                        startIcon={<ContentCopy />}
-                        disabled={!providerCallbackUrl}
-                        onClick={() => handleCopyProviderCallbackUrl(provider.channel)}
+                        startIcon={<Visibility />}
+                        disabled={isPreviewingMessageTemplate}
+                        onClick={() => handleOpenMessageTemplatePreview(template)}
                       >
-                        Copy
+                        Preview
+                      </Button>
+                      <Button
+                        size="small"
+                        disabled={isUpdatingMessageTemplateStatus}
+                        onClick={() =>
+                          handleToggleMessageTemplateApproval(
+                            template.id,
+                            template.status,
+                            template.isActive
+                          )
+                        }
+                      >
+                        {template.status === AdmissionCrmMessageTemplateStatus.Approved
+                          ? 'Retire'
+                          : 'Approve'}
                       </Button>
                     </Stack>
-                    <Box
-                      sx={{
-                        display: 'grid',
-                        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-                        gap: 1,
-                      }}
-                    >
-                      <TextField
-                        size="small"
-                        label="Callback status path"
-                        value={getAdmissionCrmProviderCallbackMappingPath(
-                          providerForm.settingsJson,
-                          'statusPath'
-                        )}
-                        onChange={(event) =>
-                          handleProviderCallbackMappingPathChange(
-                            provider.channel,
-                            'statusPath',
-                            event.target.value
-                          )
-                        }
-                      />
-                      <TextField
-                        size="small"
-                        label="Callback detail path"
-                        value={getAdmissionCrmProviderCallbackMappingPath(
-                          providerForm.settingsJson,
-                          'statusDetailsPath'
-                        )}
-                        onChange={(event) =>
-                          handleProviderCallbackMappingPathChange(
-                            provider.channel,
-                            'statusDetailsPath',
-                            event.target.value
-                          )
-                        }
-                      />
-                      <TextField
-                        size="small"
-                        label="Callback message ID path"
-                        value={getAdmissionCrmProviderCallbackMappingPath(
-                          providerForm.settingsJson,
-                          'providerMessageIdPath'
-                        )}
-                        onChange={(event) =>
-                          handleProviderCallbackMappingPathChange(
-                            provider.channel,
-                            'providerMessageIdPath',
-                            event.target.value
-                          )
-                        }
-                      />
-                      <TextField
-                        size="small"
-                        label="Callback secret path"
-                        value={getAdmissionCrmProviderCallbackMappingPath(
-                          providerForm.settingsJson,
-                          'callbackSecretPath'
-                        )}
-                        onChange={(event) =>
-                          handleProviderCallbackMappingPathChange(
-                            provider.channel,
-                            'callbackSecretPath',
-                            event.target.value
-                          )
-                        }
-                      />
-                    </Box>
-                    <LoadingButton
-                      size="small"
-                      variant="outlined"
-                      loading={isUpdatingCommunicationProvider}
-                      disabled={!academicYearId}
-                      onClick={() => handleSaveCommunicationProvider(provider.channel)}
-                    >
-                      Save Provider
-                    </LoadingButton>
                   </Stack>
                 </Paper>
-              );
-            })}
-            {!communicationProviders?.items?.length && (
-              <Typography variant="body2" color="text.secondary">
-                No communication providers configured
+              ))}
+              {!messageTemplates?.items?.length && (
+                <Typography variant="body2" color="text.secondary">
+                  No message templates configured
+                </Typography>
+              )}
+            </Box>
+          </Stack>
+        </Paper>
+      )}
+
+      {focusSection === 'communications' && (
+        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+          <Stack spacing={1.25}>
+            <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
+              <Typography variant="subtitle1">Communication Providers</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {communicationProviders?.totalCount || 0} channels
               </Typography>
-            )}
-          </Box>
-        </Stack>
-      </Paper>
+            </Stack>
+            <Divider />
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
+                gap: 1,
+              }}
+            >
+              {(communicationProviders?.items || []).map((provider) => {
+                const providerForm = providerForms[provider.channel] || defaultProviderForm;
+                const providerAdapter = getAdmissionCrmProviderAdapter(providerForm.settingsJson);
+                const providerPayloadMode = getAdmissionCrmProviderPayloadMode(
+                  providerForm.settingsJson
+                );
+                const providerHeaders = Object.entries(
+                  getAdmissionCrmProviderKeyValueSettings(providerForm.settingsJson, 'headers')
+                );
+                const providerParameters = Object.entries(
+                  getAdmissionCrmProviderKeyValueSettings(providerForm.settingsJson, 'parameters')
+                );
+                const providerCallbackUrl = buildAdmissionCrmProviderDeliveryCallbackUrl({
+                  apiOrigin: process.env.NEXT_PUBLIC_API_URL,
+                  tenantId,
+                  academicYearId,
+                  channel: provider.channel,
+                });
+
+                return (
+                  <Paper key={provider.id} variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+                    <Stack spacing={1}>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        gap={1}
+                        alignItems="center"
+                      >
+                        <Typography variant="subtitle2">
+                          {messageChannelLabel[provider.channel]}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={provider.status}
+                          color={provider.isEnabled ? 'success' : 'default'}
+                        />
+                      </Stack>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={providerForm.isEnabled}
+                            onChange={(event) =>
+                              handleProviderChange(
+                                provider.channel,
+                                'isEnabled',
+                                event.target.checked
+                              )
+                            }
+                          />
+                        }
+                        label="Enabled"
+                      />
+                      <TextField
+                        size="small"
+                        label="Provider"
+                        value={providerForm.providerName}
+                        onChange={(event) =>
+                          handleProviderChange(provider.channel, 'providerName', event.target.value)
+                        }
+                      />
+                      <TextField
+                        size="small"
+                        label="Sender"
+                        value={providerForm.senderId}
+                        onChange={(event) =>
+                          handleProviderChange(provider.channel, 'senderId', event.target.value)
+                        }
+                      />
+                      <FormControl size="small">
+                        <InputLabel>Adapter</InputLabel>
+                        <Select
+                          label="Adapter"
+                          value={providerAdapter}
+                          onChange={(event) =>
+                            handleProviderAdapterChange(provider.channel, event.target.value)
+                          }
+                        >
+                          {providerAdapterOptions.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                              {option.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <FormControl size="small" disabled={providerAdapter === 'manual'}>
+                        <InputLabel>Payload</InputLabel>
+                        <Select
+                          label="Payload"
+                          value={providerPayloadMode}
+                          onChange={(event) =>
+                            handleProviderPayloadModeChange(provider.channel, event.target.value)
+                          }
+                        >
+                          <MenuItem value="default">Default</MenuItem>
+                          <MenuItem value="envelope">Envelope</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        size="small"
+                        label="Webhook URL"
+                        value={providerForm.webhookUrl}
+                        onChange={(event) =>
+                          handleProviderChange(provider.channel, 'webhookUrl', event.target.value)
+                        }
+                      />
+                      {providerAdapter !== 'manual' && (
+                        <Stack spacing={1}>
+                          <Typography variant="caption" color="text.secondary">
+                            Request headers
+                          </Typography>
+                          {providerHeaders.map(([key, value]) => (
+                            <Stack key={key} direction="row" spacing={0.75} alignItems="center">
+                              <TextField
+                                size="small"
+                                label="Header"
+                                value={key}
+                                onChange={(event) =>
+                                  handleProviderKeyValueChange(
+                                    provider.channel,
+                                    'headers',
+                                    key,
+                                    event.target.value,
+                                    value
+                                  )
+                                }
+                              />
+                              <TextField
+                                size="small"
+                                label="Value"
+                                value={value}
+                                type={
+                                  key.toLowerCase().includes('authorization') ? 'password' : 'text'
+                                }
+                                onChange={(event) =>
+                                  handleProviderKeyValueChange(
+                                    provider.channel,
+                                    'headers',
+                                    key,
+                                    key,
+                                    event.target.value
+                                  )
+                                }
+                                fullWidth
+                              />
+                              <IconButton
+                                size="small"
+                                aria-label={`Remove ${key} header`}
+                                onClick={() =>
+                                  handleProviderKeyValueChange(
+                                    provider.channel,
+                                    'headers',
+                                    key,
+                                    '',
+                                    ''
+                                  )
+                                }
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Stack>
+                          ))}
+                          <Button
+                            size="small"
+                            startIcon={<Add />}
+                            onClick={() =>
+                              handleProviderKeyValueChange(
+                                provider.channel,
+                                'headers',
+                                '',
+                                `Header-${providerHeaders.length + 1}`,
+                                ''
+                              )
+                            }
+                          >
+                            Add header
+                          </Button>
+                          <Typography variant="caption" color="text.secondary">
+                            Payload parameters
+                          </Typography>
+                          {providerParameters.map(([key, value]) => (
+                            <Stack key={key} direction="row" spacing={0.75} alignItems="center">
+                              <TextField
+                                size="small"
+                                label="Parameter"
+                                value={key}
+                                onChange={(event) =>
+                                  handleProviderKeyValueChange(
+                                    provider.channel,
+                                    'parameters',
+                                    key,
+                                    event.target.value,
+                                    value
+                                  )
+                                }
+                              />
+                              <TextField
+                                size="small"
+                                label="Value"
+                                value={value}
+                                onChange={(event) =>
+                                  handleProviderKeyValueChange(
+                                    provider.channel,
+                                    'parameters',
+                                    key,
+                                    key,
+                                    event.target.value
+                                  )
+                                }
+                                fullWidth
+                              />
+                              <IconButton
+                                size="small"
+                                aria-label={`Remove ${key} parameter`}
+                                onClick={() =>
+                                  handleProviderKeyValueChange(
+                                    provider.channel,
+                                    'parameters',
+                                    key,
+                                    '',
+                                    ''
+                                  )
+                                }
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Stack>
+                          ))}
+                          <Button
+                            size="small"
+                            startIcon={<Add />}
+                            onClick={() =>
+                              handleProviderKeyValueChange(
+                                provider.channel,
+                                'parameters',
+                                '',
+                                `parameter${providerParameters.length + 1}`,
+                                ''
+                              )
+                            }
+                          >
+                            Add parameter
+                          </Button>
+                        </Stack>
+                      )}
+                      <TextField
+                        size="small"
+                        label="Response message ID path"
+                        value={getAdmissionCrmProviderResponseMessageIdPath(
+                          providerForm.settingsJson
+                        )}
+                        disabled={providerAdapter === 'manual'}
+                        onChange={(event) =>
+                          handleProviderResponseMessageIdPathChange(
+                            provider.channel,
+                            event.target.value
+                          )
+                        }
+                      />
+                      <TextField
+                        size="small"
+                        label="Callback secret"
+                        value={getAdmissionCrmProviderCallbackSecret(providerForm.settingsJson)}
+                        onChange={(event) =>
+                          handleProviderCallbackSecretChange(provider.channel, event.target.value)
+                        }
+                      />
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                        <TextField
+                          size="small"
+                          label="Provider callback URL"
+                          value={providerCallbackUrl || ''}
+                          fullWidth
+                          InputProps={{ readOnly: true }}
+                        />
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<ContentCopy />}
+                          disabled={!providerCallbackUrl}
+                          onClick={() => handleCopyProviderCallbackUrl(provider.channel)}
+                        >
+                          Copy
+                        </Button>
+                      </Stack>
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                          gap: 1,
+                        }}
+                      >
+                        <TextField
+                          size="small"
+                          label="Callback status path"
+                          value={getAdmissionCrmProviderCallbackMappingPath(
+                            providerForm.settingsJson,
+                            'statusPath'
+                          )}
+                          onChange={(event) =>
+                            handleProviderCallbackMappingPathChange(
+                              provider.channel,
+                              'statusPath',
+                              event.target.value
+                            )
+                          }
+                        />
+                        <TextField
+                          size="small"
+                          label="Callback detail path"
+                          value={getAdmissionCrmProviderCallbackMappingPath(
+                            providerForm.settingsJson,
+                            'statusDetailsPath'
+                          )}
+                          onChange={(event) =>
+                            handleProviderCallbackMappingPathChange(
+                              provider.channel,
+                              'statusDetailsPath',
+                              event.target.value
+                            )
+                          }
+                        />
+                        <TextField
+                          size="small"
+                          label="Callback message ID path"
+                          value={getAdmissionCrmProviderCallbackMappingPath(
+                            providerForm.settingsJson,
+                            'providerMessageIdPath'
+                          )}
+                          onChange={(event) =>
+                            handleProviderCallbackMappingPathChange(
+                              provider.channel,
+                              'providerMessageIdPath',
+                              event.target.value
+                            )
+                          }
+                        />
+                        <TextField
+                          size="small"
+                          label="Callback secret path"
+                          value={getAdmissionCrmProviderCallbackMappingPath(
+                            providerForm.settingsJson,
+                            'callbackSecretPath'
+                          )}
+                          onChange={(event) =>
+                            handleProviderCallbackMappingPathChange(
+                              provider.channel,
+                              'callbackSecretPath',
+                              event.target.value
+                            )
+                          }
+                        />
+                      </Box>
+                      <LoadingButton
+                        size="small"
+                        variant="outlined"
+                        loading={isUpdatingCommunicationProvider}
+                        disabled={!academicYearId}
+                        onClick={() => handleSaveCommunicationProvider(provider.channel)}
+                      >
+                        Save Provider
+                      </LoadingButton>
+                    </Stack>
+                  </Paper>
+                );
+              })}
+              {!communicationProviders?.items?.length && (
+                <Typography variant="body2" color="text.secondary">
+                  No communication providers configured
+                </Typography>
+              )}
+            </Box>
+          </Stack>
+        </Paper>
+      )}
 
       <Dialog
         open={admissionsCrmConfigurationDialog.value}

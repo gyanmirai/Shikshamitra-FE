@@ -7,10 +7,10 @@ import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { RouterLink } from 'src/routes/components';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { FormSlider } from 'src/components/form-slider';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Tab, Box, Paper, Stack, Button, Typography } from '@mui/material';
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import ShiftManagement from './shift-management';
 

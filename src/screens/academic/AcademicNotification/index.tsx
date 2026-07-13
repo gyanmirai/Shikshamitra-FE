@@ -4,10 +4,10 @@ import { Box, Tab, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { FormSlider } from 'src/components/form-slider';
 import { Iconify } from 'src/components/iconify/iconify';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import TimetableNotificationManagement from './Components/TimetableNotificationManagement';
 import CurriculumNotificationManagement from './Components/CurriculumNotificationManagement';

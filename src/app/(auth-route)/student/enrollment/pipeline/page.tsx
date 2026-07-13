@@ -1,5 +1,5 @@
-import StudentAdmissionsCrmScreen from 'src/screens/student/enrollment/admissions-crm';
+import { AdmissionsPipelineWorkspace } from 'src/screens/student/enrollment/admissions-crm/workspace-pages';
 
-const AdmissionsPipelinePage = () => <StudentAdmissionsCrmScreen workspace="pipeline" />;
+const AdmissionsPipelinePage = () => <AdmissionsPipelineWorkspace />;
 
 export default AdmissionsPipelinePage;

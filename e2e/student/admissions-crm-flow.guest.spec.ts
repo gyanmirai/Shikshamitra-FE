@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, no-await-in-loop */
 import type { AddressInfo } from 'node:net';
 
+import AxeBuilder from '@axe-core/playwright';
 import { type Server, createServer } from 'node:http';
 import { test, expect, type Page, type Locator } from '@playwright/test';
 
@@ -10,6 +11,12 @@ const password = () => process.env.E2E_PASSWORD || 'Temp@123';
 const principalEmail = () => process.env.E2E_PRINCIPAL_EMAIL || 'principal-gseb@ddvs.com';
 const restrictedCrmEmail = () => process.env.E2E_STUDENT_CRM_DENIED_EMAIL;
 const restrictedCrmPassword = () => process.env.E2E_STUDENT_CRM_DENIED_PASSWORD || password();
+const receptionistEmail = () =>
+  process.env.E2E_STUDENT_CRM_RECEPTIONIST_EMAIL || 'admissions-reception@ddvs.com';
+const counselorEmail = () =>
+  process.env.E2E_STUDENT_CRM_COUNSELOR_EMAIL || 'admissions-counselor@ddvs.com';
+const approverEmail = () =>
+  process.env.E2E_STUDENT_CRM_APPROVER_EMAIL || 'admissions-approver@ddvs.com';
 let otpWebhookServer: Server;
 let otpWebhookUrl = '';
 let capturedOtp = '';
@@ -445,6 +452,97 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page.getByRole('button', { name: /Quick Inquiry/i })).not.toBeVisible({
       timeout: 10_000,
     });
+  });
+
+  // These generated tests must be registered synchronously at declaration time.
+  // eslint-disable-next-line no-restricted-syntax
+  for (const persona of [
+    {
+      label: 'receptionist',
+      email: receptionistEmail,
+      granted: ['Add', 'AssignOwner', 'IssueRegistrationForm'],
+      denied: ['ScheduleExam', 'ManageOffers', 'ApproveActivation'],
+    },
+    {
+      label: 'counselor',
+      email: counselorEmail,
+      granted: ['ScheduleExam', 'ChangeExamResult', 'ReviewDocuments'],
+      denied: ['OverrideExamResult', 'ManageOffers', 'ApproveActivation'],
+    },
+    {
+      label: 'approver',
+      email: approverEmail,
+      granted: ['ManageOffers', 'ApproveOffers', 'ApproveActivation', 'OverrideExamResult'],
+      denied: ['Add', 'ManageConfiguration'],
+    },
+  ]) {
+    test(`${persona.label} receives the intended CRM permission boundary`, async ({ page }) => {
+      await login(page, persona.email(), password());
+      const configuration = await getApplicationConfiguration(page);
+      const grantedPolicies = configuration?.auth?.grantedPolicies ?? {};
+      const permission = (name: string) => `Students.Enrollment.AdmissionsCrm.${name}`;
+
+      persona.granted.forEach((name) => expect(grantedPolicies[permission(name)]).toBe(true));
+      persona.denied.forEach((name) => expect(grantedPolicies[permission(name)]).not.toBe(true));
+    });
+  }
+
+  test('Enrollment workspaces have no serious or critical automated accessibility violations', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    await login(page);
+
+    // The same authenticated page is intentionally validated one route at a time.
+    // eslint-disable-next-line no-restricted-syntax
+    for (const route of [
+      '/student/enrollment/pipeline',
+      '/student/enrollment/exams',
+      '/student/enrollment/registrations',
+      '/student/enrollment/offers-seats',
+      '/student/enrollment/activation',
+      '/student/enrollment/operations',
+      '/student/enrollment/analytics',
+      '/student/enrollment/settings',
+    ]) {
+      await page.goto(route, { waitUntil: 'networkidle', timeout: 60_000 });
+      const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+      const releaseBlockingViolations = results.violations.filter((violation) =>
+        ['serious', 'critical'].includes(violation.impact || '')
+      );
+      expect(releaseBlockingViolations, route).toEqual([]);
+    }
+  });
+
+  test('Enrollment pipeline remains usable at release viewports', async ({ page }) => {
+    test.setTimeout(180_000);
+    await login(page);
+
+    // Viewport changes and navigations must remain serial on the same authenticated page.
+    // eslint-disable-next-line no-restricted-syntax
+    for (const viewport of [
+      { width: 1440, height: 900 },
+      { width: 1280, height: 720 },
+      { width: 768, height: 1024 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/student/enrollment/pipeline', {
+        waitUntil: 'networkidle',
+        timeout: 60_000,
+      });
+      await expect(page.getByRole('heading', { name: 'Admissions Pipeline' })).toBeVisible();
+
+      const widths = await page.evaluate(() => ({
+        viewport: window.innerWidth,
+        document: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth,
+      }));
+      expect(
+        Math.max(widths.document, widths.body),
+        `${viewport.width}x${viewport.height} document overflow`
+      ).toBeLessThanOrEqual(widths.viewport + 1);
+    }
   });
 
   test('principal can create quick inquiry, review duplicate warning, and open CRM workspace', async ({

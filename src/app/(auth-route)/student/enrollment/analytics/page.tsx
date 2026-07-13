@@ -1,12 +1,5 @@
-import StudentAdmissionsCrmScreen from 'src/screens/student/enrollment/admissions-crm';
+import { AdmissionsAnalyticsWorkspace } from 'src/screens/student/enrollment/admissions-crm/workspace-pages';
 
-const AdmissionsAnalyticsPage = () => (
-  <StudentAdmissionsCrmScreen
-    heading="Enrollment Analytics"
-    initialView="list"
-    fixedView
-    workspace="analytics"
-  />
-);
+const AdmissionsAnalyticsPage = () => <AdmissionsAnalyticsWorkspace />;
 
 export default AdmissionsAnalyticsPage;

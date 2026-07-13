@@ -80,6 +80,7 @@ import {
   DialogContent,
   DialogActions,
   LinearProgress,
+  TablePagination,
   FormControlLabel,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -151,6 +152,7 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { RteAllotmentImport } from './rte-allotment-import';
+import { PipelineStageColumn } from './pipeline-stage-column';
 import { AdmissionsDataQuality } from './admissions-data-quality';
 import { ApplicantPolicyReadiness } from './applicant-policy-readiness';
 import { ApplicantRouteOperations } from './applicant-route-operations';
@@ -167,7 +169,6 @@ import {
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
   admissionCrmEligibilityLabels,
-  buildAdmissionCrmBoardColumns,
   canRetryAdmissionCrmDeliveryLog,
   getAdmissionCrmMessageChannelLabel,
   getAdmissionCrmDeliveryLogStatusLabel,
@@ -207,6 +208,32 @@ type DeliveryLogStatusFilter =
   | 'Failed';
 
 type OptOutStatusFilter = 'all' | 'active' | 'cleared';
+
+type PersistedWorkspaceFilters = {
+  searchText?: string;
+  stageFilter?: AdmissionInquiryStage | 'all';
+  channelFilter?: AdmissionInquiryChannel | 'all';
+  campaignFilter?: string;
+  ownerFilter?: string;
+  classFilter?: string;
+  scoreBandFilter?: ScoreBandFilter;
+  priorityFilter?: PriorityFilter;
+  operationsQueueType?: AdmissionCrmOperationsQueueType;
+  operationsSearch?: string;
+  operationsOwnerUserId?: string;
+  operationsAssignedToUserId?: string;
+  operationsUrgentOnly?: boolean;
+  operationsMinimumAgeDays?: string;
+};
+
+const readWorkspaceFilters = (workspace: EnrollmentWorkspace): PersistedWorkspaceFilters => {
+  if (typeof window === 'undefined') return {};
+  try {
+    return JSON.parse(sessionStorage.getItem(`student-enrollment:${workspace}:filters`) || '{}');
+  } catch {
+    return {};
+  }
+};
 
 type BulkAction = 'owner' | 'task' | 'stage' | 'archive' | 'message';
 
@@ -480,9 +507,6 @@ const getManualStageOptionsForLead = (
   );
 };
 
-const getConfiguredStageColor = (colorHex?: string | null) =>
-  colorHex && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(colorHex) ? colorHex : null;
-
 const buildExamActionForm = (exam: AdmissionCrmEntranceExamDto): ExamActionForm => ({
   attendanceStatus: exam.attendanceStatus,
   totalMarks: exam.totalMarks == null ? '' : String(exam.totalMarks),
@@ -567,7 +591,8 @@ const getBulkActionTitle = (action: BulkAction | null) => {
 
 const getApiErrorMessage = (error: unknown, fallback: string) => {
   const data = (error as any)?.data;
-  return data?.error?.code || data?.error?.message || data?.message || fallback;
+  const message = data?.error?.message || data?.message;
+  return typeof message === 'string' && message.trim() ? message : fallback;
 };
 
 const StudentAdmissionsCrmScreen = ({
@@ -579,24 +604,46 @@ const StudentAdmissionsCrmScreen = ({
 }: StudentAdmissionsCrmScreenProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const academicYearId = currentYear?.id as string | undefined;
+  const [persistedFilters] = useState(() => readWorkspaceFilters(workspace));
   const [view, setView] = useState<WorkspaceView>(initialView);
+  const [leadPage, setLeadPage] = useState(0);
+  const [examPage, setExamPage] = useState(0);
+  const [operationsPage, setOperationsPage] = useState(0);
+  const [staffSearch, setStaffSearch] = useState('');
+  const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
   const [operationsQueueType, setOperationsQueueType] = useState<AdmissionCrmOperationsQueueType>(
-    initialOperationsQueueType
+    persistedFilters.operationsQueueType ?? initialOperationsQueueType
   );
-  const [operationsSearch, setOperationsSearch] = useState('');
-  const [operationsOwnerUserId, setOperationsOwnerUserId] = useState('');
-  const [operationsAssignedToUserId, setOperationsAssignedToUserId] = useState('');
-  const [operationsUrgentOnly, setOperationsUrgentOnly] = useState(false);
-  const [operationsMinimumAgeDays, setOperationsMinimumAgeDays] = useState('');
+  const [operationsSearch, setOperationsSearch] = useState(persistedFilters.operationsSearch ?? '');
+  const [operationsOwnerUserId, setOperationsOwnerUserId] = useState(
+    persistedFilters.operationsOwnerUserId ?? ''
+  );
+  const [operationsAssignedToUserId, setOperationsAssignedToUserId] = useState(
+    persistedFilters.operationsAssignedToUserId ?? ''
+  );
+  const [operationsUrgentOnly, setOperationsUrgentOnly] = useState(
+    persistedFilters.operationsUrgentOnly ?? false
+  );
+  const [operationsMinimumAgeDays, setOperationsMinimumAgeDays] = useState(
+    persistedFilters.operationsMinimumAgeDays ?? ''
+  );
   const [operationsSavedViewName, setOperationsSavedViewName] = useState('');
-  const [searchText, setSearchText] = useState('');
-  const [stageFilter, setStageFilter] = useState<AdmissionInquiryStage | 'all'>('all');
-  const [channelFilter, setChannelFilter] = useState<AdmissionInquiryChannel | 'all'>('all');
-  const [campaignFilter, setCampaignFilter] = useState('all');
-  const [ownerFilter, setOwnerFilter] = useState('all');
-  const [classFilter, setClassFilter] = useState('all');
-  const [scoreBandFilter, setScoreBandFilter] = useState<ScoreBandFilter>('all');
-  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
+  const [searchText, setSearchText] = useState(persistedFilters.searchText ?? '');
+  const [stageFilter, setStageFilter] = useState<AdmissionInquiryStage | 'all'>(
+    persistedFilters.stageFilter ?? 'all'
+  );
+  const [channelFilter, setChannelFilter] = useState<AdmissionInquiryChannel | 'all'>(
+    persistedFilters.channelFilter ?? 'all'
+  );
+  const [campaignFilter, setCampaignFilter] = useState(persistedFilters.campaignFilter ?? 'all');
+  const [ownerFilter, setOwnerFilter] = useState(persistedFilters.ownerFilter ?? 'all');
+  const [classFilter, setClassFilter] = useState(persistedFilters.classFilter ?? 'all');
+  const [scoreBandFilter, setScoreBandFilter] = useState<ScoreBandFilter>(
+    persistedFilters.scoreBandFilter ?? 'all'
+  );
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>(
+    persistedFilters.priorityFilter ?? 'all'
+  );
   const [deliveryLogChannelFilter, setDeliveryLogChannelFilter] = useState<
     AdmissionCrmMessageChannel | 'all'
   >('all');
@@ -677,8 +724,10 @@ const StudentAdmissionsCrmScreen = ({
   } = useGetAdmissionCrmLeadsQuery(
     {
       academicYearId: academicYearId || '',
-      maxResultCount: 200,
+      skipCount: leadPage * 50,
+      maxResultCount: 50,
       sorting: 'LastActivityTime DESC',
+      ...(searchText.trim() ? { filterText: searchText.trim() } : {}),
       ...(stageFilter === 'all' ? {} : { stage: stageFilter }),
       ...(channelFilter === 'all' ? {} : { channel: channelFilter }),
       ...(campaignFilter === 'all' ? {} : { campaignName: campaignFilter }),
@@ -687,7 +736,7 @@ const StudentAdmissionsCrmScreen = ({
         : { ownerUserId: ownerFilter }),
       ...(priorityFilter === 'all' ? {} : { priority: priorityFilter }),
     },
-    { skip: !academicYearId }
+    { skip: !academicYearId || workspace !== 'pipeline' }
   );
   const {
     data: stagesData,
@@ -696,11 +745,11 @@ const StudentAdmissionsCrmScreen = ({
     refetch: refetchStages,
   } = useGetAdmissionCrmPipelineStagesQuery(
     { academicYearId: academicYearId || '' },
-    { skip: !academicYearId }
+    { skip: !academicYearId || workspace !== 'pipeline' }
   );
   const { data: examsData, isFetching: isExamsFetching } = useGetAdmissionCrmEntranceExamsQuery(
-    { academicYearId: academicYearId || '', maxResultCount: 200 },
-    { skip: !academicYearId || !['pipeline', 'exams', 'analytics'].includes(workspace) }
+    { academicYearId: academicYearId || '', skipCount: examPage * 50, maxResultCount: 50 },
+    { skip: !academicYearId || !['pipeline', 'exams'].includes(workspace) }
   );
   const { data: analyticsSummary, isFetching: isAnalyticsFetching } =
     useGetAdmissionCrmAnalyticsSummaryQuery(
@@ -738,6 +787,8 @@ const StudentAdmissionsCrmScreen = ({
         assignedToUserId: operationsAssignedToUserId.trim() || undefined,
         urgentOnly: operationsUrgentOnly || undefined,
         minimumAgeDays: operationsMinimumAgeDays ? Number(operationsMinimumAgeDays) : undefined,
+        skipCount: operationsPage * 50,
+        maxResultCount: 50,
       },
       { skip: !academicYearId || view !== 'operations' }
     );
@@ -749,7 +800,17 @@ const StudentAdmissionsCrmScreen = ({
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId || !['pipeline', 'exams'].includes(workspace) }
   );
-  const { data: crmStaff = [] } = useGetAdmissionCrmStaffQuery({ maxResultCount: 100 });
+  const { data: crmStaff = [], isFetching: isStaffFetching } = useGetAdmissionCrmStaffQuery(
+    {
+      filter: debouncedStaffSearch || undefined,
+      ids:
+        [operationsOwnerUserId, operationsAssignedToUserId, ownerUserIdText, bulkOwnerUserIdText]
+          .filter(Boolean)
+          .join(',') || undefined,
+      maxResultCount: 25,
+    },
+    { skip: !academicYearId || ['exams', 'analytics'].includes(workspace) }
+  );
   const { data: tasksData, isFetching: isTasksFetching } = useGetAdmissionCrmTasksQuery(
     { leadId: operationsLead?.id || '', maxResultCount: 50 },
     { skip: !operationsLead }
@@ -861,6 +922,58 @@ const StudentAdmissionsCrmScreen = ({
     useClearAdmissionCrmCommunicationOptOutMutation();
 
   const leads = useMemo(() => leadsData?.items || [], [leadsData?.items]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedStaffSearch(staffSearch.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [staffSearch]);
+  useEffect(() => {
+    const filters: PersistedWorkspaceFilters = {
+      searchText,
+      stageFilter,
+      channelFilter,
+      campaignFilter,
+      ownerFilter,
+      classFilter,
+      scoreBandFilter,
+      priorityFilter,
+      operationsQueueType,
+      operationsSearch,
+      operationsOwnerUserId,
+      operationsAssignedToUserId,
+      operationsUrgentOnly,
+      operationsMinimumAgeDays,
+    };
+    sessionStorage.setItem(`student-enrollment:${workspace}:filters`, JSON.stringify(filters));
+  }, [
+    campaignFilter,
+    channelFilter,
+    classFilter,
+    operationsAssignedToUserId,
+    operationsMinimumAgeDays,
+    operationsOwnerUserId,
+    operationsQueueType,
+    operationsSearch,
+    operationsUrgentOnly,
+    ownerFilter,
+    priorityFilter,
+    scoreBandFilter,
+    searchText,
+    stageFilter,
+    workspace,
+  ]);
+  useEffect(() => {
+    setLeadPage(0);
+  }, [campaignFilter, channelFilter, ownerFilter, priorityFilter, searchText, stageFilter]);
+  useEffect(() => {
+    setOperationsPage(0);
+  }, [
+    operationsAssignedToUserId,
+    operationsMinimumAgeDays,
+    operationsOwnerUserId,
+    operationsQueueType,
+    operationsSearch,
+    operationsUrgentOnly,
+  ]);
   const exams = useMemo(() => examsData?.items || [], [examsData?.items]);
   const timelineEvents = timelineData?.items || [];
   const stages = useMemo(() => stagesData ?? [], [stagesData]);
@@ -967,10 +1080,6 @@ const StudentAdmissionsCrmScreen = ({
   const kpis = useMemo(
     () => getAdmissionCrmKpis(filteredLeads, filteredExams),
     [filteredExams, filteredLeads]
-  );
-  const boardColumns = useMemo(
-    () => buildAdmissionCrmBoardColumns(stages, filteredLeads),
-    [filteredLeads, stages]
   );
   const isBusy =
     isLeadsLoading || isLeadsFetching || isStagesFetching || isExamsFetching || isAnalyticsFetching;
@@ -1727,7 +1836,7 @@ const StudentAdmissionsCrmScreen = ({
     assignedToUserId: operationsAssignedToUserId.trim() || undefined,
     urgentOnly: operationsUrgentOnly || undefined,
     minimumAgeDays: operationsMinimumAgeDays ? Number(operationsMinimumAgeDays) : undefined,
-    maxResultCount: 200,
+    maxResultCount: 50,
   });
 
   const handleSaveOperationsView = async () => {
@@ -2283,21 +2392,21 @@ const StudentAdmissionsCrmScreen = ({
         heading={heading}
         links={[
           { name: 'Student', href: '/student/dashboard' },
-          { name: 'Student Enrollment', href: '/student/enrollment/dashboard' },
+          { name: 'Student Enrollment', href: '/student/enrollment/pipeline' },
           { name: heading },
         ]}
         action={
           <Stack direction="row" gap={1} flexWrap="wrap">
-            <Button
-              variant="outlined"
-              startIcon={<Refresh />}
-              onClick={() => refetchLeads()}
-              disabled={!academicYearId || isLeadsFetching}
-            >
-              Refresh
-            </Button>
             {workspace === 'pipeline' && (
               <>
+                <Button
+                  variant="outlined"
+                  startIcon={<Refresh />}
+                  onClick={() => refetchLeads()}
+                  disabled={!academicYearId || isLeadsFetching}
+                >
+                  Refresh
+                </Button>
                 <LoadingButton
                   variant="outlined"
                   startIcon={<AssignmentTurnedIn />}
@@ -3604,55 +3713,46 @@ const StudentAdmissionsCrmScreen = ({
             pb: 1,
           }}
         >
-          {boardColumns.map((column) => {
-            const configuredStageColor = getConfiguredStageColor(column.stage.colorHex);
-
-            return (
-              <Paper
-                key={column.stage.id}
-                variant="outlined"
-                sx={{
-                  p: 1.25,
-                  borderRadius: 1,
-                  width: { xs: '100%', lg: 300 },
-                  minWidth: { xs: 0, lg: 300 },
-                  flex: { lg: '0 0 300px' },
-                  bgcolor: 'background.neutral',
-                  borderTop: configuredStageColor ? `3px solid ${configuredStageColor}` : undefined,
+          {stages
+            .filter((stage) => stageFilter === 'all' || stage.systemStage === stageFilter)
+            .map((stage) => (
+              <PipelineStageColumn
+                key={stage.id}
+                academicYearId={academicYearId || ''}
+                stage={stage}
+                query={{
+                  ...(searchText.trim() ? { filterText: searchText.trim() } : {}),
+                  ...(channelFilter === 'all' ? {} : { channel: channelFilter }),
+                  ...(campaignFilter === 'all' ? {} : { campaignName: campaignFilter }),
+                  ...(ownerFilter === 'all' || ownerFilter === 'unassigned'
+                    ? {}
+                    : { ownerUserId: ownerFilter }),
+                  ...(priorityFilter === 'all' ? {} : { priority: priorityFilter }),
                 }}
-              >
-                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
-                  <Chip
-                    size="small"
-                    color={
-                      configuredStageColor
-                        ? undefined
-                        : admissionCrmStageColors[column.stage.systemStage]
-                    }
-                    variant={configuredStageColor ? 'outlined' : 'filled'}
-                    sx={
-                      configuredStageColor
-                        ? { borderColor: configuredStageColor, color: configuredStageColor }
-                        : undefined
-                    }
-                    label={column.stage.stageName}
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    {column.leads.length}
-                  </Typography>
-                </Stack>
-                <Stack spacing={1}>
-                  {column.leads.length ? (
-                    column.leads.map(renderLeadCard)
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      No leads
-                    </Typography>
-                  )}
-                </Stack>
-              </Paper>
-            );
-          })}
+                resetKey={[
+                  searchText,
+                  channelFilter,
+                  campaignFilter,
+                  ownerFilter,
+                  classFilter,
+                  scoreBandFilter,
+                  priorityFilter,
+                ].join('|')}
+                clientFilter={(lead) => {
+                  const leadClass = lead.desiredClassName || lead.targetStandardId || '';
+                  const matchesClass = classFilter === 'all' || leadClass === classFilter;
+                  const matchesUnassignedOwner = ownerFilter !== 'unassigned' || !lead.ownerUserId;
+                  const matchesScore =
+                    scoreBandFilter === 'all' ||
+                    ((scoreBandRange.minimumLeadScore == null ||
+                      lead.leadScore >= scoreBandRange.minimumLeadScore) &&
+                      (scoreBandRange.maximumLeadScore == null ||
+                        lead.leadScore <= scoreBandRange.maximumLeadScore));
+                  return matchesClass && matchesUnassignedOwner && matchesScore;
+                }}
+                renderLead={renderLeadCard}
+              />
+            ))}
         </Box>
       )}
 
@@ -3718,8 +3818,8 @@ const StudentAdmissionsCrmScreen = ({
             </Paper>
           )}
 
-          <Paper variant="outlined" sx={{ borderRadius: 1, overflow: 'hidden' }}>
-            <Table size="small">
+          <Paper variant="outlined" sx={{ borderRadius: 1, overflowX: 'auto' }}>
+            <Table size="small" sx={{ minWidth: 920 }}>
               <TableHead>
                 <TableRow>
                   <TableCell padding="checkbox">
@@ -3844,18 +3944,20 @@ const StudentAdmissionsCrmScreen = ({
                 )}
               </TableBody>
             </Table>
+            <TablePagination
+              component="div"
+              count={leadsData?.totalCount ?? 0}
+              page={leadPage}
+              onPageChange={(_, page) => setLeadPage(page)}
+              rowsPerPage={50}
+              rowsPerPageOptions={[50]}
+            />
           </Paper>
         </Stack>
       )}
 
       {view === 'operations' && (
         <Stack spacing={1}>
-          {workspace === 'operations' && (
-            <>
-              <RteAllotmentImport academicYearId={academicYearId || ''} />
-              <AdmissionsDataQuality academicYearId={academicYearId || ''} />
-            </>
-          )}
           <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
             {(isOperationsSummaryFetching || isOperationsQueueFetching) && <LinearProgress />}
             <Box
@@ -3876,7 +3978,16 @@ const StudentAdmissionsCrmScreen = ({
                   color={queue.urgentCount > 0 ? 'warning' : 'inherit'}
                   variant={operationsQueueType === queue.queueType ? 'contained' : 'outlined'}
                   onClick={() => setOperationsQueueType(queue.queueType)}
-                  sx={{ minHeight: 44, justifyContent: 'space-between', textAlign: 'left' }}
+                  sx={{
+                    minHeight: 44,
+                    justifyContent: 'space-between',
+                    textAlign: 'left',
+                    ...(queue.urgentCount > 0 &&
+                      operationsQueueType !== queue.queueType && {
+                        color: 'warning.darker',
+                        borderColor: 'warning.darker',
+                      }),
+                  }}
                 >
                   <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {queue.label}
@@ -3904,6 +4015,9 @@ const StudentAdmissionsCrmScreen = ({
                 <Autocomplete
                   size="small"
                   options={crmStaff}
+                  loading={isStaffFetching}
+                  filterOptions={(options) => options}
+                  onInputChange={(_, value, reason) => reason === 'input' && setStaffSearch(value)}
                   value={crmStaff.find((staff) => staff.id === operationsOwnerUserId) ?? null}
                   onChange={(_, staff) => setOperationsOwnerUserId(staff?.id ?? '')}
                   getOptionLabel={(staff) =>
@@ -3916,6 +4030,9 @@ const StudentAdmissionsCrmScreen = ({
                 <Autocomplete
                   size="small"
                   options={crmStaff}
+                  loading={isStaffFetching}
+                  filterOptions={(options) => options}
+                  onInputChange={(_, value, reason) => reason === 'input' && setStaffSearch(value)}
                   value={crmStaff.find((staff) => staff.id === operationsAssignedToUserId) ?? null}
                   onChange={(_, staff) => setOperationsAssignedToUserId(staff?.id ?? '')}
                   getOptionLabel={(staff) =>
@@ -3991,8 +4108,8 @@ const StudentAdmissionsCrmScreen = ({
             </Stack>
           </Paper>
 
-          <Paper variant="outlined" sx={{ borderRadius: 1, overflow: 'hidden' }}>
-            <Table size="small">
+          <Paper variant="outlined" sx={{ borderRadius: 1, overflowX: 'auto' }}>
+            <Table size="small" sx={{ minWidth: 720 }}>
               <TableHead>
                 <TableRow>
                   <TableCell>Applicant</TableCell>
@@ -4063,14 +4180,28 @@ const StudentAdmissionsCrmScreen = ({
                 ) : null}
               </TableBody>
             </Table>
+            <TablePagination
+              component="div"
+              count={operationsQueue?.totalCount ?? 0}
+              page={operationsPage}
+              onPageChange={(_, page) => setOperationsPage(page)}
+              rowsPerPage={50}
+              rowsPerPageOptions={[50]}
+            />
           </Paper>
+          {workspace === 'operations' && (
+            <>
+              <RteAllotmentImport academicYearId={academicYearId || ''} />
+              <AdmissionsDataQuality academicYearId={academicYearId || ''} />
+            </>
+          )}
         </Stack>
       )}
 
       {view === 'exams' && (
-        <Paper variant="outlined" sx={{ borderRadius: 1, overflow: 'hidden' }}>
+        <Paper variant="outlined" sx={{ borderRadius: 1, overflowX: 'auto' }}>
           {isExamsFetching && <LinearProgress />}
-          <Table size="small">
+          <Table size="small" sx={{ minWidth: 900 }}>
             <TableHead>
               <TableRow>
                 <TableCell>Applicant</TableCell>
@@ -4147,6 +4278,14 @@ const StudentAdmissionsCrmScreen = ({
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            component="div"
+            count={examsData?.totalCount ?? 0}
+            page={examPage}
+            onPageChange={(_, page) => setExamPage(page)}
+            rowsPerPage={50}
+            rowsPerPageOptions={[50]}
+          />
         </Paper>
       )}
 
@@ -4640,6 +4779,11 @@ const StudentAdmissionsCrmScreen = ({
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25} alignItems="flex-start">
                   <Autocomplete
                     options={crmStaff}
+                    loading={isStaffFetching}
+                    filterOptions={(options) => options}
+                    onInputChange={(_, value, reason) =>
+                      reason === 'input' && setStaffSearch(value)
+                    }
                     value={crmStaff.find((staff) => staff.id === ownerUserIdText) ?? null}
                     onChange={(_, staff) => setOwnerUserIdText(staff?.id ?? '')}
                     getOptionLabel={(staff) =>

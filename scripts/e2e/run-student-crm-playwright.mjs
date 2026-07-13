@@ -102,6 +102,9 @@ const defaults = {
   E2E_PRINCIPAL_EMAIL: 'principal-gseb@ddvs.com',
   E2E_PASSWORD: 'Temp@123',
   E2E_STUDENT_CRM_DENIED_EMAIL: 'student-crm-denied@ddvs.com',
+  E2E_STUDENT_CRM_RECEPTIONIST_EMAIL: 'admissions-reception@ddvs.com',
+  E2E_STUDENT_CRM_COUNSELOR_EMAIL: 'admissions-counselor@ddvs.com',
+  E2E_STUDENT_CRM_APPROVER_EMAIL: 'admissions-approver@ddvs.com',
 };
 
 const resolvedCredentials = {
@@ -153,6 +156,15 @@ const childEnv = {
   E2E_STUDENT_CRM_DENIED_EMAIL:
     readEnv('E2E_STUDENT_CRM_DENIED_EMAIL') ||
     (useDefaultCredentials ? defaults.E2E_STUDENT_CRM_DENIED_EMAIL : ''),
+  E2E_STUDENT_CRM_RECEPTIONIST_EMAIL:
+    readEnv('E2E_STUDENT_CRM_RECEPTIONIST_EMAIL') ||
+    (useDefaultCredentials ? defaults.E2E_STUDENT_CRM_RECEPTIONIST_EMAIL : ''),
+  E2E_STUDENT_CRM_COUNSELOR_EMAIL:
+    readEnv('E2E_STUDENT_CRM_COUNSELOR_EMAIL') ||
+    (useDefaultCredentials ? defaults.E2E_STUDENT_CRM_COUNSELOR_EMAIL : ''),
+  E2E_STUDENT_CRM_APPROVER_EMAIL:
+    readEnv('E2E_STUDENT_CRM_APPROVER_EMAIL') ||
+    (useDefaultCredentials ? defaults.E2E_STUDENT_CRM_APPROVER_EMAIL : ''),
 };
 
 const playwrightArgs = [
