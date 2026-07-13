@@ -304,7 +304,7 @@ async function openExamRowInWorkspace(
 }
 
 async function openLeadCardInWorkspace(page: Page, leadName: string): Promise<Locator> {
-  const response = await page.goto('/student/enrollment/pipeline', {
+  const response = await page.goto('/student/enrollment/pipeline?view=board', {
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
   });
@@ -559,10 +559,8 @@ test.describe('Student admissions CRM E2E', () => {
     expect(page.url()).not.toContain('Parent');
     expect(page.url()).not.toContain('9999999999');
 
-    const workspaceNavigation = page.getByRole('navigation', {
-      name: 'Student enrollment workspaces',
-    });
-    await workspaceNavigation.getByRole('link', { name: 'Exams', exact: true }).click();
+    await page.getByRole('link', { name: 'Entrance Exams' }).click();
+    await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/exams/?\\?cycle=${academicYearId}`)
     );
@@ -801,7 +799,8 @@ test.describe('Student admissions CRM E2E', () => {
 
     const persistedExamRow = await openExamRowInWorkspace(page, lead.firstName, slotName);
     await expect(persistedExamRow).toContainText('82/100');
-    await persistedExamRow.getByRole('button', { name: /Handoff/i }).click();
+    await persistedExamRow.getByRole('button', { name: 'More actions' }).click();
+    await page.getByRole('menuitem', { name: 'Eligibility Handoff' }).click();
     const handoffDialog = page.getByRole('dialog', { name: /Eligibility Handoff/i });
     await expect(handoffDialog).toBeVisible({ timeout: 15_000 });
     await expect(handoffDialog).toContainText('Eligible for admission handoff');

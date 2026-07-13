@@ -15,6 +15,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import EventRounded from '@mui/icons-material/EventRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import ViewColumnRounded from '@mui/icons-material/ViewColumnRounded';
 import ReceiptLongRounded from '@mui/icons-material/ReceiptLongRounded';
 import FormatListBulletedRounded from '@mui/icons-material/FormatListBulletedRounded';
@@ -33,6 +34,7 @@ import {
   Divider,
   Checkbox,
   MenuItem,
+  MenuList,
   TableRow,
   TextField,
   TableBody,
@@ -47,6 +49,7 @@ import {
   DialogContent,
   DialogActions,
   LinearProgress,
+  TableContainer,
   TablePagination,
   FormControlLabel,
   ToggleButtonGroup,
@@ -73,6 +76,11 @@ import { PipelineStageColumn } from './pipeline-stage-column';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
+import {
+  enrollmentTableSx,
+  enrollmentActionCellSx,
+  enrollmentActionHeaderSx,
+} from './enrollment-table-styles';
 import {
   getAdmissionCrmLeadName,
   admissionCrmStageColors,
@@ -550,14 +558,20 @@ export function PipelineWorkspace() {
 
       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
         <Stack spacing={1.25}>
-          <Stack direction={{ xs: 'column', xl: 'row' }} gap={1.25} alignItems={{ xl: 'center' }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+              gap: 1,
+              alignItems: 'center',
+            }}
+          >
             <TextField
               size="small"
               label="Search applicants"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               autoComplete="off"
-              sx={{ minWidth: { xl: 240 } }}
             />
             <TextField
               select
@@ -570,7 +584,6 @@ export function PipelineWorkspace() {
                   page: 1,
                 })
               }
-              sx={{ minWidth: 180 }}
             >
               <MenuItem value="">All stages</MenuItem>
               {stages.map((stageItem) => (
@@ -590,7 +603,6 @@ export function PipelineWorkspace() {
                   page: 1,
                 })
               }
-              sx={{ minWidth: 190 }}
             >
               <MenuItem value="">All channels</MenuItem>
               {channels.map((channel) => (
@@ -609,7 +621,6 @@ export function PipelineWorkspace() {
               getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               renderInput={(params) => <TextField {...params} label="Owner" />}
-              sx={{ minWidth: 230 }}
             />
             <TextField
               select
@@ -622,7 +633,6 @@ export function PipelineWorkspace() {
                   page: 1,
                 })
               }
-              sx={{ minWidth: 160 }}
             >
               <MenuItem value="">All priorities</MenuItem>
               {priorities.map((priority) => (
@@ -631,10 +641,12 @@ export function PipelineWorkspace() {
                 </MenuItem>
               ))}
             </TextField>
+          </Box>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
             <ToggleButtonGroup
               exclusive
               size="small"
-              value={state.view || 'board'}
+              value={state.view || 'list'}
               onChange={(_, value) => value && updateState({ view: value, page: 1 }, 'push')}
               aria-label="Pipeline view"
             >
@@ -706,7 +718,7 @@ export function PipelineWorkspace() {
         </Alert>
       )}
 
-      {(state.view || 'board') === 'board' && !stagesQuery.isError && (
+      {state.view === 'board' && !stagesQuery.isError && (
         <Stack
           direction={{ xs: 'column', lg: 'row' }}
           spacing={1.25}
@@ -735,7 +747,7 @@ export function PipelineWorkspace() {
         </Stack>
       )}
 
-      {(state.view || 'board') === 'list' && (
+      {(state.view || 'list') === 'list' && (
         <Paper variant="outlined" sx={{ borderRadius: 1, overflow: 'hidden' }}>
           {leadsQuery.isFetching && <LinearProgress aria-label="Loading inquiry leads" />}
           {leadsQuery.isError ? (
@@ -752,104 +764,135 @@ export function PipelineWorkspace() {
             </Alert>
           ) : (
             <Box sx={{ overflowX: 'auto' }}>
-              <Table size="small" sx={{ minWidth: 980 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={
-                          leads.length > 0 && leads.every((lead) => selectedLeadSet.has(lead.id))
-                        }
-                        indeterminate={
-                          selectedLeadIds.length > 0 &&
-                          !leads.every((lead) => selectedLeadSet.has(lead.id))
-                        }
-                        onChange={(_, checked) =>
-                          setSelectedLeadIds(checked ? leads.map((lead) => lead.id) : [])
-                        }
-                        inputProps={{ 'aria-label': 'Select visible inquiry leads' }}
-                      />
-                    </TableCell>
-                    <TableCell>Applicant</TableCell>
-                    <TableCell>Stage</TableCell>
-                    <TableCell>Intent</TableCell>
-                    <TableCell>Owner</TableCell>
-                    <TableCell>Score</TableCell>
-                    <TableCell>Last Activity</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {leads.map((lead) => (
-                    <TableRow key={lead.id} hover>
+              <TableContainer>
+                <Table stickyHeader size="small" sx={enrollmentTableSx}>
+                  <TableHead>
+                    <TableRow>
                       <TableCell padding="checkbox">
                         <Checkbox
-                          checked={selectedLeadSet.has(lead.id)}
-                          onChange={() =>
-                            setSelectedLeadIds((current) =>
-                              current.includes(lead.id)
-                                ? current.filter((id) => id !== lead.id)
-                                : [...current, lead.id]
-                            )
+                          checked={
+                            leads.length > 0 && leads.every((lead) => selectedLeadSet.has(lead.id))
                           }
-                          inputProps={{ 'aria-label': `Select ${getAdmissionCrmLeadName(lead)}` }}
+                          indeterminate={
+                            selectedLeadIds.length > 0 &&
+                            !leads.every((lead) => selectedLeadSet.has(lead.id))
+                          }
+                          onChange={(_, checked) =>
+                            setSelectedLeadIds(checked ? leads.map((lead) => lead.id) : [])
+                          }
+                          inputProps={{ 'aria-label': 'Select visible inquiry leads' }}
                         />
                       </TableCell>
-                      <TableCell>
-                        <Typography variant="subtitle2">{getAdmissionCrmLeadName(lead)}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {lead.primaryContactNo || lead.email || 'No contact'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          size="small"
-                          label={getAdmissionCrmStageLabel(lead.stage)}
-                          color={admissionCrmStageColors[lead.stage]}
-                        />
-                      </TableCell>
-                      <TableCell>{lead.desiredClassName || lead.admissionIntent}</TableCell>
-                      <TableCell>{ownerName(lead)}</TableCell>
-                      <TableCell>{lead.leadScore}</TableCell>
-                      <TableCell>{dayjs(lead.lastActivityTime).format('DD MMM, HH:mm')}</TableCell>
-                      <TableCell align="right">
-                        <Stack direction="row" justifyContent="flex-end" gap={0.5}>
-                          {can(actionPermissions.scheduleExam) && isExamReady(lead) && (
-                            <Button size="small" onClick={() => setScheduleLead(lead)}>
-                              Exam
-                            </Button>
-                          )}
-                          {can(actionPermissions.issueRegistrationForm) &&
-                            !lead.registrationFormNumber && (
-                              <Button size="small" onClick={() => setRegistrationLead(lead)}>
-                                Issue Form
-                              </Button>
-                            )}
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => openApplicant(lead.id)}
-                          >
-                            Manage
-                          </Button>
-                        </Stack>
+                      <TableCell>Applicant</TableCell>
+                      <TableCell>Stage</TableCell>
+                      <TableCell>Intent</TableCell>
+                      <TableCell>Owner</TableCell>
+                      <TableCell>Score</TableCell>
+                      <TableCell>Last Activity</TableCell>
+                      <TableCell align="right" sx={enrollmentActionHeaderSx}>
+                        Actions
                       </TableCell>
                     </TableRow>
-                  ))}
-                  {!leadsQuery.isFetching && !leads.length && (
-                    <TableRow>
-                      <TableCell colSpan={8}>
-                        <Box sx={{ py: 5, textAlign: 'center' }}>
-                          <Typography variant="subtitle2">No matching inquiries</Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Change the filters or create a new inquiry.
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {leads.map((lead) => {
+                      const canSchedule = can(actionPermissions.scheduleExam) && isExamReady(lead);
+                      const canIssueForm =
+                        can(actionPermissions.issueRegistrationForm) &&
+                        !lead.registrationFormNumber;
+
+                      return (
+                        <TableRow key={lead.id} hover>
+                          <TableCell padding="checkbox">
+                            <Checkbox
+                              checked={selectedLeadSet.has(lead.id)}
+                              onChange={() =>
+                                setSelectedLeadIds((current) =>
+                                  current.includes(lead.id)
+                                    ? current.filter((id) => id !== lead.id)
+                                    : [...current, lead.id]
+                                )
+                              }
+                              inputProps={{
+                                'aria-label': `Select ${getAdmissionCrmLeadName(lead)}`,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="subtitle2">
+                              {getAdmissionCrmLeadName(lead)}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {lead.primaryContactNo || lead.email || 'No contact'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              size="small"
+                              label={getAdmissionCrmStageLabel(lead.stage)}
+                              color={admissionCrmStageColors[lead.stage]}
+                            />
+                          </TableCell>
+                          <TableCell>{lead.desiredClassName || lead.admissionIntent}</TableCell>
+                          <TableCell>{ownerName(lead)}</TableCell>
+                          <TableCell>{lead.leadScore}</TableCell>
+                          <TableCell>
+                            {dayjs(lead.lastActivityTime).format('DD MMM, HH:mm')}
+                          </TableCell>
+                          <TableCell align="right" sx={enrollmentActionCellSx}>
+                            <ThreeDotsActions
+                              showViewIcon
+                              viewLabel="Open Applicant"
+                              handleViewClick={() => openApplicant(lead.id)}
+                              showThreeDots={canSchedule || canIssueForm}
+                              actions={({ popover }) => (
+                                <MenuList>
+                                  {canSchedule && (
+                                    <MenuItem
+                                      onClick={() => {
+                                        popover.onClose();
+                                        setScheduleLead(lead);
+                                      }}
+                                    >
+                                      <EventRounded fontSize="small" />
+                                      Schedule Exam
+                                    </MenuItem>
+                                  )}
+                                  {canIssueForm && (
+                                    <MenuItem
+                                      onClick={() => {
+                                        popover.onClose();
+                                        setRegistrationLead(lead);
+                                        setRegistrationFormNumber('');
+                                        setRegistrationFormAmount('250');
+                                      }}
+                                    >
+                                      <ReceiptLongRounded fontSize="small" />
+                                      Issue Registration Form
+                                    </MenuItem>
+                                  )}
+                                </MenuList>
+                              )}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {!leadsQuery.isFetching && !leads.length && (
+                      <TableRow>
+                        <TableCell colSpan={8}>
+                          <Box sx={{ py: 5, textAlign: 'center' }}>
+                            <Typography variant="subtitle2">No matching inquiries</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Change the filters or create a new inquiry.
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </Box>
           )}
           <TablePagination

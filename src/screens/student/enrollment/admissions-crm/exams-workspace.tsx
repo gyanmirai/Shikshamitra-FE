@@ -1,11 +1,14 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
 import type { AdmissionCrmEntranceExamDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import {
   Box,
   Chip,
@@ -18,6 +21,7 @@ import {
   Switch,
   Divider,
   MenuItem,
+  MenuList,
   TableRow,
   TextField,
   TableBody,
@@ -28,6 +32,7 @@ import {
   DialogContent,
   DialogActions,
   LinearProgress,
+  TableContainer,
   TablePagination,
   FormControlLabel,
 } from '@mui/material';
@@ -46,6 +51,11 @@ import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { admissionCrmEligibilityLabels } from './admissions-crm-utils';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
+import {
+  enrollmentTableSx,
+  enrollmentActionCellSx,
+  enrollmentActionHeaderSx,
+} from './enrollment-table-styles';
 
 const pageSize = 50;
 const attendanceLabels: Record<AdmissionCrmExamAttendanceStatus, string> = {
@@ -59,6 +69,35 @@ const resultLabels: Record<EntranceExamStatusEnum, string> = {
   [EntranceExamStatusEnum.Fail]: 'Fail',
   [EntranceExamStatusEnum.Absent]: 'Absent',
 };
+const attendanceColors: Record<AdmissionCrmExamAttendanceStatus, LabelColor> = {
+  [AdmissionCrmExamAttendanceStatus.NotMarked]: 'default',
+  [AdmissionCrmExamAttendanceStatus.Present]: 'success',
+  [AdmissionCrmExamAttendanceStatus.Absent]: 'error',
+};
+const resultColors: Record<EntranceExamStatusEnum, LabelColor> = {
+  [EntranceExamStatusEnum.Pending]: 'default',
+  [EntranceExamStatusEnum.Pass]: 'success',
+  [EntranceExamStatusEnum.Fail]: 'error',
+  [EntranceExamStatusEnum.Absent]: 'warning',
+};
+const eligibilityColors: Record<AdmissionCrmEligibilityDecision, LabelColor> = {
+  [AdmissionCrmEligibilityDecision.Pending]: 'default',
+  [AdmissionCrmEligibilityDecision.Eligible]: 'success',
+  [AdmissionCrmEligibilityDecision.Waitlisted]: 'warning',
+  [AdmissionCrmEligibilityDecision.Rejected]: 'error',
+};
+const dateTimeFormatter = new Intl.DateTimeFormat('en-IN', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+const dateFormatter = new Intl.DateTimeFormat('en-IN', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+});
 
 export function ExamsWorkspace() {
   const { academicYearId, state, updateState, openApplicant, closeApplicant } =
@@ -225,8 +264,8 @@ export function ExamsWorkspace() {
             Entrance exams are unavailable.
           </Alert>
         ) : (
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: 980 }}>
+          <TableContainer>
+            <Table stickyHeader size="small" sx={enrollmentTableSx}>
               <TableHead>
                 <TableRow>
                   <TableCell>Applicant</TableCell>
@@ -235,7 +274,9 @@ export function ExamsWorkspace() {
                   <TableCell>Result</TableCell>
                   <TableCell>Marks</TableCell>
                   <TableCell>Eligibility</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell align="right" sx={enrollmentActionHeaderSx}>
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -248,35 +289,20 @@ export function ExamsWorkspace() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {dayjs(exam.examStartTime).format('DD MMM YYYY, HH:mm')}
+                      {dateTimeFormatter.format(new Date(exam.examStartTime))}
                       <Typography variant="caption" color="text.primary" display="block">
                         Room {exam.examRoomNo}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={attendanceLabels[exam.attendanceStatus]}
-                        sx={{ color: 'text.primary', borderColor: 'text.primary' }}
-                      />
+                      <Label color={attendanceColors[exam.attendanceStatus]}>
+                        {attendanceLabels[exam.attendanceStatus]}
+                      </Label>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        size="small"
-                        label={resultLabels[exam.examStatus]}
-                        variant="outlined"
-                        sx={{
-                          color: 'text.primary',
-                          borderColor:
-                            exam.examStatus === EntranceExamStatusEnum.Pass
-                              ? 'success.dark'
-                              : exam.examStatus === EntranceExamStatusEnum.Fail
-                                ? 'error.dark'
-                                : 'text.primary',
-                          bgcolor: 'background.paper',
-                        }}
-                      />
+                      <Label color={resultColors[exam.examStatus]}>
+                        {resultLabels[exam.examStatus]}
+                      </Label>
                     </TableCell>
                     <TableCell>
                       {exam.obtainedMarks != null && exam.totalMarks != null
@@ -284,29 +310,32 @@ export function ExamsWorkspace() {
                         : '—'}
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={admissionCrmEligibilityLabels[exam.eligibilityDecision]}
-                        sx={{ color: 'text.primary', borderColor: 'text.primary' }}
-                      />
+                      <Label color={eligibilityColors[exam.eligibilityDecision]}>
+                        {admissionCrmEligibilityLabels[exam.eligibilityDecision]}
+                      </Label>
                     </TableCell>
-                    <TableCell align="right">
-                      <Stack direction="row" justifyContent="flex-end" gap={0.5}>
-                        <Button size="small" onClick={() => openApplicant(exam.leadId)}>
-                          Applicant
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => setSelectedExam(exam)}
-                        >
-                          Manage
-                        </Button>
-                        <Button size="small" onClick={() => setHandoffExamId(exam.id)}>
-                          Handoff
-                        </Button>
-                      </Stack>
+                    <TableCell align="right" sx={enrollmentActionCellSx}>
+                      <ThreeDotsActions
+                        showViewIcon
+                        viewLabel="Open Applicant"
+                        handleViewClick={() => openApplicant(exam.leadId)}
+                        showEditIcon
+                        editLabel="Manage Exam"
+                        handleEditClick={() => setSelectedExam(exam)}
+                        actions={({ popover }) => (
+                          <MenuList>
+                            <MenuItem
+                              onClick={() => {
+                                popover.onClose();
+                                setHandoffExamId(exam.id);
+                              }}
+                            >
+                              <Iconify icon="mdi:account-arrow-right-outline" />
+                              Eligibility Handoff
+                            </MenuItem>
+                          </MenuList>
+                        )}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -324,7 +353,7 @@ export function ExamsWorkspace() {
                 )}
               </TableBody>
             </Table>
-          </Box>
+          </TableContainer>
         )}
         <TablePagination
           component="div"
@@ -348,7 +377,7 @@ export function ExamsWorkspace() {
             {selectedExam && (
               <Alert severity="info">
                 {selectedExam.applicantName} ·{' '}
-                {dayjs(selectedExam.examStartTime).format('DD MMM YYYY, HH:mm')}
+                {dateTimeFormatter.format(new Date(selectedExam.examStartTime))}
               </Alert>
             )}
             <Box>
@@ -559,7 +588,7 @@ export function ExamsWorkspace() {
                     </Typography>
                     {handoffQuery.data.dateOfBirth && (
                       <Typography variant="body2" color="text.secondary">
-                        DOB: {dayjs(handoffQuery.data.dateOfBirth).format('DD MMM YYYY')}
+                        DOB: {dateFormatter.format(new Date(handoffQuery.data.dateOfBirth))}
                       </Typography>
                     )}
                     <Divider />

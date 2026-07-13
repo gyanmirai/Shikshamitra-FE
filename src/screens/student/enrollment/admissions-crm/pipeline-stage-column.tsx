@@ -6,9 +6,18 @@ import type {
   AdmissionCrmPipelineStageDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useMemo, useState, useEffect } from 'react';
-import { Chip, Alert, Paper, Stack, Button, Typography, LinearProgress } from '@mui/material';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { useGetAdmissionCrmLeadsQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import {
+  Chip,
+  Alert,
+  Paper,
+  Stack,
+  Button,
+  Skeleton,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 
 const PAGE_SIZE = 25;
 
@@ -29,8 +38,10 @@ export function PipelineStageColumn({
   renderLead,
   clientFilter,
 }: Props) {
+  const columnRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(0);
   const [loadedLeads, setLoadedLeads] = useState<AdmissionCrmLeadDto[]>([]);
+  const [shouldLoad, setShouldLoad] = useState(false);
   const { data, isFetching, isError, refetch } = useGetAdmissionCrmLeadsQuery(
     {
       academicYearId,
@@ -40,8 +51,28 @@ export function PipelineStageColumn({
       maxResultCount: PAGE_SIZE,
       sorting: 'LastActivityTime DESC',
     },
-    { skip: !academicYearId }
+    { skip: !academicYearId || !shouldLoad }
   );
+
+  useEffect(() => {
+    const element = columnRef.current;
+    if (!element || shouldLoad) return undefined;
+    if (!('IntersectionObserver' in window)) {
+      setShouldLoad(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setShouldLoad(true);
+        observer.disconnect();
+      },
+      { rootMargin: '320px', threshold: 0.01 }
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [shouldLoad]);
 
   useEffect(() => {
     setPage(0);
@@ -64,6 +95,7 @@ export function PipelineStageColumn({
 
   return (
     <Paper
+      ref={columnRef}
       variant="outlined"
       sx={{
         p: 1.25,
@@ -85,11 +117,17 @@ export function PipelineStageColumn({
           }
         />
         <Typography variant="caption" color="text.secondary">
-          {data?.totalCount ?? 0}
+          {shouldLoad ? (data?.totalCount ?? 0) : '…'}
         </Typography>
       </Stack>
+      {!shouldLoad && (
+        <Stack spacing={1} aria-label={`${stage.stageName} loads when visible`}>
+          <Skeleton variant="rounded" height={112} />
+          <Skeleton variant="rounded" height={112} />
+        </Stack>
+      )}
       {isFetching && page === 0 && <LinearProgress sx={{ mb: 1 }} />}
-      {isError ? (
+      {shouldLoad && isError ? (
         <Alert
           severity="error"
           action={
@@ -100,7 +138,7 @@ export function PipelineStageColumn({
         >
           Stage unavailable
         </Alert>
-      ) : (
+      ) : shouldLoad ? (
         <Stack spacing={1}>
           {visibleLeads.length
             ? visibleLeads.map(renderLead)
@@ -119,7 +157,7 @@ export function PipelineStageColumn({
             </Button>
           )}
         </Stack>
-      )}
+      ) : null}
     </Paper>
   );
 }

@@ -82,6 +82,8 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(operations).toContain('setDebouncedStaffSearch');
     expect(board).toContain('const PAGE_SIZE = 25');
     expect(board).toContain('Load more');
+    expect(board).toContain('IntersectionObserver');
+    expect(board).toContain('!academicYearId || !shouldLoad');
   });
 
   it('keeps free-text applicant searches out of URL state', () => {
@@ -98,18 +100,38 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(state).not.toContain("set('email'");
   });
 
-  it('uses an accessible mobile workspace menu and no horizontal mobile route strip', () => {
+  it('uses the global vertical menu without rendering duplicate workspace navigation', () => {
     const shell = read('src', 'screens', 'student', 'enrollment', 'enrollment-shell.tsx');
-    expect(shell).toContain('Open Enrollment workspace menu');
-    expect(shell).toContain('anchor="bottom"');
-    expect(shell).toContain("display: { xs: 'none', md: 'flex' }");
+    expect(shell).not.toContain('Student enrollment workspaces');
+    expect(shell).not.toContain('enrollmentRoutes');
+    expect(shell).not.toContain('RouterLink');
+    expect(shell).not.toContain('<Drawer');
   });
 
-  it('preserves the selected admission cycle across workspace navigation', () => {
-    const shell = read('src', 'screens', 'student', 'enrollment', 'enrollment-shell.tsx');
-    expect(shell).toContain("searchParams.get('cycle')");
-    expect(shell).toContain('routeHref(href)');
-    expect(shell).not.toContain("searchParams.get('search')");
+  it('resolves the admission cycle from URL state or the global academic-year selection', () => {
+    const context = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'enrollment-workspace-context.tsx'
+    );
+    expect(context).toContain("current.get('cycle') || (currentYear?.id as string | undefined)");
+    expect(context).not.toContain("searchParams.get('search')");
+  });
+
+  it('uses the shared project table-action pattern for operational Enrollment tables', () => {
+    const sources = [
+      'pipeline-workspace.tsx',
+      'exams-workspace.tsx',
+      'operations-queue-workspace.tsx',
+    ]
+      .map((file) => read('src', 'screens', 'student', 'enrollment', 'admissions-crm', file))
+      .join('\n');
+    expect(sources.match(/ThreeDotsActions/g)?.length).toBe(6);
+    expect(sources).toContain('enrollmentActionHeaderSx');
+    expect(sources).toContain('enrollmentActionCellSx');
   });
 
   it('does not expose raw staff identifiers or editable provider JSON in ordinary UI', () => {

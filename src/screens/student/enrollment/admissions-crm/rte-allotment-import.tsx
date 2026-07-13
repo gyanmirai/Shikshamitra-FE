@@ -18,6 +18,7 @@ import {
   TableHead,
   TextField,
   Typography,
+  TableContainer,
 } from '@mui/material';
 import {
   AdmissionCrmRouteDefinitionStatus,
@@ -27,6 +28,8 @@ import {
   usePreviewAdmissionCrmRteAllotmentsMutation,
   type AdmissionCrmRteAllotmentImportResultDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { enrollmentTableSx } from './enrollment-table-styles';
 
 type Props = {
   academicYearId: string;
@@ -268,24 +271,31 @@ export function RteAllotmentImport({ academicYearId }: Props) {
             <Alert severity={result.failed > 0 ? 'warning' : 'success'}>
               {result.succeeded} succeeded, {result.failed} failed.
             </Alert>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Applicant reference</TableCell>
-                  <TableCell>Allotment</TableCell>
-                  <TableCell>Outcome</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {result.items.map((item, index) => (
-                  <TableRow key={`${item.applicantReference || item.leadId || 'row'}-${index}`}>
-                    <TableCell>{item.applicantReference || item.leadId || '-'}</TableCell>
-                    <TableCell>{item.allotmentNumber || '-'}</TableCell>
-                    <TableCell>{item.success ? 'Imported' : item.errorCode || 'Failed'}</TableCell>
+            <TableContainer>
+              <Table stickyHeader size="small" sx={[enrollmentTableSx, { minWidth: 640 }]}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Applicant reference</TableCell>
+                    <TableCell>Allotment</TableCell>
+                    <TableCell>Outcome</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {result.items.map((item, index) => (
+                    <TableRow
+                      key={`${item.applicantReference || item.leadId || 'row'}-${index}`}
+                      hover
+                    >
+                      <TableCell>{item.applicantReference || item.leadId || '-'}</TableCell>
+                      <TableCell>{item.allotmentNumber || '-'}</TableCell>
+                      <TableCell>
+                        {item.success ? 'Imported' : item.errorCode || 'Failed'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Stack>
         ) : null}
       </Stack>
