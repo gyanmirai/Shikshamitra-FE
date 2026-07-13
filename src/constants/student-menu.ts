@@ -17,6 +17,18 @@ export const studentPaths = {
     operations: '/student/enrollment/operations',
     analytics: '/student/enrollment/analytics',
     settings: '/student/enrollment/settings',
+    settingsSections: {
+      journey: '/student/enrollment/settings/journey',
+      inquiryCapture: '/student/enrollment/settings/inquiry-capture',
+      routingScoring: '/student/enrollment/settings/routing-scoring',
+      entranceExams: '/student/enrollment/settings/entrance-exams',
+      registrationDocuments: '/student/enrollment/settings/registration-documents',
+      offersSeats: '/student/enrollment/settings/offers-seats',
+      activation: '/student/enrollment/settings/activation',
+      governance: '/student/enrollment/settings/governance',
+      communications: '/student/enrollment/settings/communications',
+      automation: '/student/enrollment/settings/automation',
+    },
   },
   records: {
     root: '',

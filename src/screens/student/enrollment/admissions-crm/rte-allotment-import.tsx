@@ -1,8 +1,8 @@
 'use client';
 
-import { LoadingButton } from '@mui/lab';
 import { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { FactCheck, CheckCircle, CloudUpload } from '@mui/icons-material';
 import {
   Chip,

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { Download, Visibility, Description } from '@mui/icons-material';
 import { Chip, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
 import {
@@ -162,7 +162,7 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
           </LoadingButton>
         </Stack>
         {historyQuery.isFetching ? (
-          <Typography variant="caption">Loading issue history...</Typography>
+          <Typography variant="caption">{'Loading issue history\u2026'}</Typography>
         ) : null}
         {historyQuery.isError ? (
           <Alert severity="warning">Document history is temporarily unavailable.</Alert>

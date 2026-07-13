@@ -3,7 +3,7 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-07-11
+updated_on: 2026-07-12
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -54,6 +54,7 @@ If the preflight exits with `fetch failed`, start or point the runner at a reach
 The full CRM runner refuses remote Gyanmirai API hosts unless `--allow-stage-mutation` is passed.
 The companion registration scenario starts a local webhook receiver inside the Playwright worker so the real OTP flow can be tested without exposing or bypassing OTP secrets.
 The companion registration scenario covers partial save, submission, document rejection and replacement, original confirmation, readiness confirmation, and admission handoff.
+The suite also covers receptionist, counselor, approver, restricted, and anonymous permission boundaries, serious and critical WCAG checks, release viewports, URL-state history, invalid query cleanup, and PII exclusion from workspace URLs.
 Use `--allow-stage-mutation` only for an approved disposable seeded tenant because the CRM spec creates inquiry leads, registration forms, exam schedules, results, and eligibility records.
 Set explicit `E2E_TENANT`, `E2E_PRINCIPAL_EMAIL`, and `E2E_PASSWORD` for normal runs.
 Use `--use-default-credentials` only for the seeded local/DDVS environment already expected by the CRM spec.
@@ -68,7 +69,7 @@ Add or update tests when a change affects these areas.
 | Active route or menu status                  | Menu permission test                             |
 | Client endpoint shape                        | Student API contract test                        |
 | Admissions CRM board, filters, bulk actions, bulk messaging, opt-out controls, opt-out register, dynamic form template contracts, inquiry channel defaults, condition-aware journey settings, pipeline stage metadata settings, configured board stage colors, configured stage-transition enforcement, stage-specific SLA automation, applicant DOB capture, applicant-profile duplicate-preview payloads, duplicate confidence and matched-field evidence, conversion and first-response SLA analytics KPIs, registration-form issue, delivery-log provider ID review and search, message template preview, stage movement, notes, owner, priority, applicant checklist progress, task, score, automation runs, automation failures, exam states, eligibility handoff missing-field review, browser-driven exam entry, protected role denial, public campaign and staff-shared owner tracking, and public status OTP states | Admissions CRM utility, settings, client contract, public status tests, and gated Playwright CRM flow |
-| Inquiry Source, CRM owner selectors, CRM public link behavior, and CRM provider settings JSON helpers | Enrollment setting utility or wiring test, including CRM channel default source selectors, owner selectors, unknown historical ID preservation, public inquiry, campaign, or staff-shared link builders, provider callback URL builders, provider response message ID path updates, callback secret, and callback mapping path updates |
+| Inquiry Source, CRM owner selectors, CRM public link behavior, and structured CRM provider settings helpers | Enrollment setting utility or wiring test, including CRM channel default source selectors, owner selectors, unknown historical ID preservation, public inquiry, campaign, or staff-shared link builders, provider callback URL builders, provider response message ID path updates, callback secret, and callback mapping path updates |
 | Roll number or GR number behavior            | Management projection test                       |
 | Attendance save or lock behavior             | Attendance screen or query test                  |
 | Role visibility                              | Playwright role access test                      |

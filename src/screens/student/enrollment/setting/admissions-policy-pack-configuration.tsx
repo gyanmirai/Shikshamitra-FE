@@ -7,9 +7,9 @@ import type {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { Add, Send, Gavel, Delete, Publish, Approval, LibraryAdd } from '@mui/icons-material';
 import {
   Box,

@@ -4,9 +4,9 @@ import type { RootState } from 'src/redux/store';
 import type { AdmissionCrmFeeComponentDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { Add, Send, Delete, Publish, Approval } from '@mui/icons-material';
 import {
   Box,

@@ -1,9 +1,9 @@
 'use client';
 
-import { LoadingButton } from '@mui/lab';
 import { useState, useEffect } from 'react';
 import { EventAvailable } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { Box, Alert, Stack, Divider, MenuItem, TextField, Typography } from '@mui/material';
 
 import { readPublicAdmissionStatusProblem } from './public-status-utils';

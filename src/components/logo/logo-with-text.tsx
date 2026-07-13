@@ -37,6 +37,7 @@ export const LogoWithText = forwardRef<HTMLDivElement, LogoWithTextProps>(
           <Box
             ref={ref}
             className={logoClasses.root.concat(className ? ` ${className}` : '')}
+            role="img"
             aria-label="logo"
             sx={{
               flexShrink: 0,

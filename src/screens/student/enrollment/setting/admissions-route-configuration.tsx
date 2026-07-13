@@ -3,10 +3,10 @@
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Add, Send, Publish } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { Box, Chip, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
 import {
   AdmissionCrmRouteType,

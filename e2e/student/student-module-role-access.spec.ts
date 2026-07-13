@@ -27,7 +27,6 @@ const studentUiSmokePaths = [
   '/student/profile',
   '/student/upload-student-photo',
   '/student/upload-student-documents',
-  '/student/enrollment/dashboard',
   '/student/enrollment/pipeline',
   '/student/enrollment/exams',
   '/student/enrollment/registrations',

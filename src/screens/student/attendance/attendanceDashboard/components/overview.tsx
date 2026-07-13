@@ -1,9 +1,9 @@
 import type { JSX } from 'react';
-import type { ICardItem } from 'src/screens/student/enrollment/entrollment-interface';
+import type { ICardItem } from 'src/types/dashboard';
 
 import React, { useState } from 'react';
 import CustomizableView from 'src/components/customizable-view';
-import { StudentEnrollmentCard } from 'src/screens/student/enrollment/dashboard/overview';
+import { StudentEnrollmentCard } from 'src/components/dashboard/summary-card';
 
 const Overview = () => {
   const [cards, setCards] = useState<ICardItem[]>([

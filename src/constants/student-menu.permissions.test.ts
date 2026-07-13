@@ -62,9 +62,15 @@ describe('student permission groups', () => {
       expect(source, workspacePath).not.toMatch(/^['"]use client['"]/);
     });
 
-    const settingsSource = readSource(
+    const settingsRedirectSource = readSource(
       'src/app/(auth-route)/student/enrollment/settings/page.tsx'
     ).trimStart();
-    expect(settingsSource).toMatch(/^['"]use client['"]/);
+    expect(settingsRedirectSource).not.toMatch(/^['"]use client['"]/);
+    expect(settingsRedirectSource).toContain('redirect(');
+
+    const settingsLayoutSource = readSource(
+      'src/app/(auth-route)/student/enrollment/settings/layout.tsx'
+    );
+    expect(settingsLayoutSource).toContain('StudentPermissionGuard');
   });
 });

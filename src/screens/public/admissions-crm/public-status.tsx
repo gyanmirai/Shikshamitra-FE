@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import {
   AdmissionCrmRouteType,
   AdmissionCrmActivationStatus,
@@ -24,11 +24,17 @@ import {
   LinearProgress,
 } from '@mui/material';
 
+import { PublicAdmissionsShell } from './public-admissions-shell';
 import PublicOffer, { type PublicAdmissionOffer } from './public-offer';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import PublicDocuments, { type PublicDocumentChecklist } from './public-documents';
 import PublicExamScheduling, { type PublicExamSnapshot } from './public-exam-scheduling';
 import PublicRegistration, { type PublicRegistrationApplication } from './public-registration';
+
+const dateTimeFormatter = new Intl.DateTimeFormat('en-IN', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
 
 type OtpChallenge = {
   maskedDestination: string;
@@ -214,7 +220,10 @@ export default function PublicAdmissionStatusScreen({
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
+    <PublicAdmissionsShell
+      title="Admission Status"
+      description="Verify your contact to review schedules, forms, documents, offers, and next actions."
+    >
       <Paper
         variant="outlined"
         sx={{ p: { xs: 2, md: 3 }, width: '100%', maxWidth: 680, borderRadius: 1 }}
@@ -233,10 +242,6 @@ export default function PublicAdmissionStatusScreen({
               <MenuItem value="hi">हिन्दी</MenuItem>
             </Select>
           </FormControl>
-          <Box>
-            <Typography variant="h5">Admission Status</Typography>
-          </Box>
-
           {isIssuing && <LinearProgress />}
 
           {!challenge && !status && (
@@ -259,6 +264,9 @@ export default function PublicAdmissionStatusScreen({
                 value={otpCode}
                 onChange={(event) => setOtpCode(event.target.value)}
                 disabled={isOtpLocked}
+                name="one-time-code"
+                autoComplete="one-time-code"
+                inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                 fullWidth
               />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -284,7 +292,7 @@ export default function PublicAdmissionStatusScreen({
                 <Chip color="primary" label={status.stageName} />
               </Stack>
               <Typography variant="body2" color="text.secondary">
-                Last activity: {new Date(status.lastActivityTime).toLocaleString()}
+                Last activity: {dateTimeFormatter.format(new Date(status.lastActivityTime))}
               </Typography>
               <Alert severity="info">{status.nextStep}</Alert>
               <Divider />
@@ -367,7 +375,7 @@ export default function PublicAdmissionStatusScreen({
                           )}
                         </Box>
                         <Typography variant="caption" color="text.secondary">
-                          {new Date(item.occurredAt).toLocaleString()}
+                          {dateTimeFormatter.format(new Date(item.occurredAt))}
                         </Typography>
                       </Stack>
                     ))}
@@ -384,7 +392,7 @@ export default function PublicAdmissionStatusScreen({
                     </Typography>
                     {status.exam.examStartTime && (
                       <Typography variant="body2" color="text.secondary">
-                        {new Date(status.exam.examStartTime).toLocaleString()}
+                        {dateTimeFormatter.format(new Date(status.exam.examStartTime))}
                       </Typography>
                     )}
                     {status.exam.obtainedMarks !== null &&
@@ -434,7 +442,7 @@ export default function PublicAdmissionStatusScreen({
                         <Typography variant="subtitle2">Admission quotation</Typography>
                         <Typography variant="caption" color="text.secondary">
                           {status.financialStatus.quotationNumber} - valid until{' '}
-                          {new Date(status.financialStatus.validUntil).toLocaleString()}
+                          {dateTimeFormatter.format(new Date(status.financialStatus.validUntil))}
                         </Typography>
                       </Box>
                       <Chip
@@ -562,7 +570,7 @@ export default function PublicAdmissionStatusScreen({
                     <Typography variant="body2">
                       Reference {status.activation.activationReference}
                       {status.activation.firstDayReadyAt
-                        ? ` - completed ${new Date(status.activation.firstDayReadyAt).toLocaleString()}`
+                        ? ` - completed ${dateTimeFormatter.format(new Date(status.activation.firstDayReadyAt))}`
                         : ''}
                     </Typography>
                   </Alert>
@@ -594,6 +602,6 @@ export default function PublicAdmissionStatusScreen({
           )}
         </Stack>
       </Paper>
-    </Box>
+    </PublicAdmissionsShell>
   );
 }

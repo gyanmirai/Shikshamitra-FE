@@ -27,7 +27,7 @@ Use this table for visible Student navigation.
 | Activation               | `/student/enrollment/activation`       | `Students.Enrollment.AdmissionsCrm.ViewActivation`            |
 | Operations               | `/student/enrollment/operations`       | `Students.Enrollment.AdmissionsCrm.View`                      |
 | Analytics                | `/student/enrollment/analytics`        | `Students.Enrollment.AdmissionsCrm.Analytics`                 |
-| Admissions CRM Settings  | `/student/enrollment/settings`         | `Students.Enrollment.AdmissionsCrm.ManageConfiguration`       |
+| Admissions CRM Settings  | `/student/enrollment/settings/journey` | `Students.Enrollment.AdmissionsCrm.ManageConfiguration`       |
 | Student Management       | `/student/management`                                        | `Students.Records.StudentManagement`                                 |
 | Student List             | `/student/profile`                                           | `Students.Records.StudentList`                                       |
 | Student I-Card           | `/student/student-i-card`                                    | `Students.Records.StudentICard`                                      |
@@ -47,9 +47,6 @@ These routes or folders exist but should not be treated as active menu navigatio
 | Surface                                          | Status                                             |
 | ------------------------------------------------ | -------------------------------------------------- |
 | `/student/overview`                              | Page folder exists outside the active Student menu |
-| `/student/enrollment/dashboard`                  | Page folder exists outside the active Student menu |
-| `/student/enrollment/enroll`                     | Page folder exists outside the active Student menu |
-| `/student/enrollment/enrollment-status-tracking` | Page folder exists outside the active Student menu |
 | `/student/management/bulk-data-update`           | Page folder exists outside the active Student menu |
 | Registration Form Amount and Form Number Series  | Commented in `src/constants/student-menu.ts`       |
 
@@ -62,6 +59,11 @@ They are used by generated or shared admissions CRM links.
 | --- | --- |
 | Public inquiry form | `/student/admissions/inquiry/{tenantId}/{templateId}` |
 | Applicant status | `/student/admissions/status/{tenantId}/{token}` |
+
+## Admissions settings routes
+
+`/student/enrollment/settings` remains a supported entry point and redirects to Journey while preserving the selected admission cycle.
+Dedicated settings URLs are available for Journey, Inquiry Capture, Routing and Scoring, Entrance Exams, Registration and Documents, Offers and Seats, Activation, Governance, Communications, and Automation.
 
 ## Permission rule
 

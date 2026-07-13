@@ -3,10 +3,10 @@
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Add, Send, Publish } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import {
   Box,
   Chip,
@@ -295,7 +295,7 @@ export default function AdmissionsNumberSeriesConfiguration() {
                 color={governance.data.gapSequences.length ? 'warning' : 'success'}
                 label={
                   governance.data.gapSequences.length
-                    ? `Gaps: ${governance.data.gapSequences.join(', ')}${governance.data.gapReportTruncated ? ' ...' : ''}`
+                    ? `Gaps: ${governance.data.gapSequences.join(', ')}${governance.data.gapReportTruncated ? ' \u2026' : ''}`
                     : 'No sequence gaps'
                 }
               />

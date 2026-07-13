@@ -1,41 +1,12 @@
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
-import React from 'react';
 import { Card, CardHeader } from '@mui/material';
 import { fNumber } from 'src/utils/format-number';
 import { alpha, useTheme } from '@mui/material/styles';
 import { Chart, useChart } from 'src/components/chart';
 
-import { AnalyticsCurrentVisits } from './organization-status';
-
-const BoardEnrollmentStatus = () => {
-  const theme = useTheme();
-  return (
-    <Card sx={{ height: '100%' }}>
-      <AnalyticsCurrentVisits
-        title="Entrance Exam Status"
-        chart={{
-          series: [
-            { label: 'Passed', value: 35 },
-            { label: 'Failed', value: 25 },
-            { label: 'Awaiting Result', value: 15 },
-          ],
-          colors: [
-            theme.palette.success.main,
-            theme.palette.warning.main,
-            theme.palette.error.main,
-          ],
-        }}
-        sx={{ boxShadow: 'none' }}
-      />
-    </Card>
-  );
-};
-
-export default BoardEnrollmentStatus;
-
-type Props2 = CardProps & {
+type Props = CardProps & {
   title?: string;
   subheader?: string;
   chart: {
@@ -46,16 +17,10 @@ type Props2 = CardProps & {
   };
 };
 
-export function AnalyticsConversionRates({ title, subheader, chart, ...other }: Props2) {
+export function AnalyticsConversionRates({ title, subheader, chart, ...other }: Props) {
   const theme = useTheme();
-
-  const chartColors = chart.colors ?? [
-    theme.palette.primary.dark,
-    alpha(theme.palette.primary.dark, 0.24),
-  ];
-
   const chartOptions = useChart({
-    colors: chartColors,
+    colors: chart.colors ?? [theme.palette.primary.dark, alpha(theme.palette.primary.dark, 0.24)],
     stroke: { width: 2, colors: ['transparent'] },
     tooltip: {
       shared: true,
@@ -80,7 +45,6 @@ export function AnalyticsConversionRates({ title, subheader, chart, ...other }: 
   return (
     <Card {...other}>
       <CardHeader title={title} subheader={subheader} />
-
       <Chart
         type="bar"
         series={chart.series}

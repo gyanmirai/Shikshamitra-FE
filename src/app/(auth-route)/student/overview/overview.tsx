@@ -1,10 +1,10 @@
 import type { JSX } from 'react';
-import type { ICardItem } from 'src/screens/student/enrollment/entrollment-interface';
+import type { ICardItem } from 'src/types/dashboard';
 
 import { fNumber } from 'src/utils/format-number';
 import React, { useState, useEffect } from 'react';
 import CustomizableView from 'src/components/customizable-view';
-import { StudentEnrollmentCard } from 'src/screens/student/enrollment/dashboard/overview';
+import { StudentEnrollmentCard } from 'src/components/dashboard/summary-card';
 
 const OverviewCard = ({ summary = {} }: { summary?: any }) => {
   const totalStudents = summary.totalStudents || 0;
