@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
+import type { IInquiryData } from 'src/types/student-enrollment';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
@@ -13,6 +14,7 @@ import calculateAge from 'src/utils/calculate-age';
 import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { FormSlider } from 'src/components/form-slider';
 import { Label, LabelColor } from 'src/components/label';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { GenderType, GenderOptions } from 'src/enums/gender';
@@ -23,8 +25,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import { useGetStudentByIdQuery, useGetStudentsByDivisionQuery } from 'src/redux/student';
+import FeeStructureAssignmentForm from 'src/screens/finance/FeeStructureAssign/Components/StudentFeeStructureAssignmentForm';
 import {
   Box,
   Tab,
@@ -53,9 +55,6 @@ import StudentDashboard from './studentDashboard';
 import StudentTransportProfile from './transport';
 import { StudentInformation } from './information';
 import ChangeStudentStatusForm from './change-status-form';
-import FeeStructureAssignmentForm from '../enrollment/admission/FeeStructureAssignmentForm';
-
-import type { IInquiryData } from '../enrollment/Inquiry/type';
 
 export interface StudentTabsComponentType {
   tabs?: UseTabsReturn;

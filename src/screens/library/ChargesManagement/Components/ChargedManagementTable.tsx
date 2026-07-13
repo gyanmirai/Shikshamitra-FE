@@ -4,12 +4,12 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { FormSlider } from 'src/components/form-slider';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Tab, Tabs, MenuItem, MenuList } from '@mui/material';
 import { LibraryChargeStatusType } from 'src/enums/library_charges_type';
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import type { ILibraryChargeData } from './type';
 

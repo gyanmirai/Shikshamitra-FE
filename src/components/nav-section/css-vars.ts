@@ -19,7 +19,7 @@ function colorVars(theme: Theme, variant?: 'vertical' | 'mini' | 'horizontal') {
     '--nav-item-hover-bg': palette.action.hover,
     '--nav-item-caption-color': palette.text.disabled,
     // root
-    '--nav-item-root-active-color': palette.primary.main,
+    '--nav-item-root-active-color': palette.primary.darker,
     '--nav-item-root-active-color-on-dark': palette.primary.light,
     '--nav-item-root-active-bg': varAlpha(palette.primary.mainChannel, 0.2),
     '--nav-item-root-active-hover-bg': varAlpha(palette.primary.mainChannel, 0.15),

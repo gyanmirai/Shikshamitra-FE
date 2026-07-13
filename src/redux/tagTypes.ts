@@ -230,11 +230,6 @@ export const employeeType = {
   hrReports: 'HR-Reports',
 } as const;
 
-// ===== Enrollment Report API (reducerPath: EnrollmentReportApi) =====
-export const enrollmentReportType = {
-  enrollmentReportApi: 'Enrollment-Report-Api',
-} as const;
-
 // ===== Student Report API (reducerPath: studentReportApi) =====
 export const studentReportType = {
   studentReport: 'Student-Report',
@@ -244,11 +239,6 @@ export const studentReportType = {
 // ===== Entrance Exam API (reducerPath: EntranceExamApi) =====
 export const entranceExamType = {
   entranceExam: 'Entrance-Exam',
-} as const;
-
-// ===== Entrance Exam Slot API (reducerPath: EntranceExamSlotApi) =====
-export const entranceExamSlotType = {
-  entranceExamSlot: 'Entrance-Exam-Slot',
 } as const;
 
 // ===== Event Holiday API (reducerPath: EventHolidayApi) =====
@@ -310,11 +300,6 @@ export const financeModuleType = {
 export const budgetsCategoryType = {
   budgetCategory: 'Budget-Category',
   budgetSubCategory: 'Budget-Sub-Category',
-} as const;
-
-// ===== Follow Up API (reducerPath: FollowUpApi) =====
-export const followUpType = {
-  followUp: 'Follow-Up',
 } as const;
 
 // ===== Income API (reducerPath: IncomeApi) =====
@@ -520,11 +505,6 @@ export const studentChangeClassType = {
   studentChangeClass: 'studentChangeClass',
 } as const;
 
-// ===== Student Document Type API (reducerPath: StudentDocumentTypeApi) =====
-export const studentDocumentType = {
-  studentDocumentType: 'Student-Document-Type',
-} as const;
-
 // ===== Student GR Number API (reducerPath: studentGrNumberApi) =====
 export const studentGrNumberType = {
   studentGrNumber: 'studentGrNumber',
@@ -533,11 +513,6 @@ export const studentGrNumberType = {
 // ===== Student Group API (reducerPath: studentGroupApi) =====
 export const studentGroupType = {
   studentGroup: 'studentGroup',
-} as const;
-
-// ===== Student Inquiry API (reducerPath: StudentInquiryApi) =====
-export const studentInquiryType = {
-  studentInquiry: 'Student-Inquiry',
 } as const;
 
 // ===== Student Admissions CRM API (reducerPath: StudentAdmissionsCrmApi) =====
@@ -571,11 +546,6 @@ export const studentReceiptType = {
 export const studentRegistrationType = {
   studentRegistration: 'Student-Registration',
   studentDocument: 'Student-Document',
-} as const;
-
-// ===== Student Registration Form API (reducerPath: StudentRegistrationFormApi) =====
-export const studentRegistrationFormType = {
-  studentRegistrationForm: 'Student-Registration-Form',
 } as const;
 
 // ===== Student Roll Number API (reducerPath: studentRollNumberApi) =====
@@ -678,10 +648,8 @@ export const allTagTypes = {
   ...dashboardType,
   ...earningComponentType,
   ...employeeType,
-  ...enrollmentReportType,
   ...studentReportType,
   ...entranceExamType,
-  ...entranceExamSlotType,
   ...eventHolidayType,
   ...expenseType,
   ...feeConcessionType,
@@ -689,7 +657,6 @@ export const allTagTypes = {
   ...feeTermsType,
   ...financeModuleType,
   ...budgetsCategoryType,
-  ...followUpType,
   ...incomeType,
   ...incomeDetailsType,
   ...inquiryPreferenceType,
@@ -724,17 +691,14 @@ export const allTagTypes = {
   ...studentAttendanceType,
   ...studentCertificateType,
   ...studentChangeClassType,
-  ...studentDocumentType,
   ...studentGrNumberType,
   ...studentGroupType,
-  ...studentInquiryType,
   ...studentAdmissionsCrmType,
   academicExam: academicType.exam,
   ...studentInvoiceType,
   ...studentLeaveType,
   ...studentReceiptType,
   ...studentRegistrationType,
-  ...studentRegistrationFormType,
   ...studentRollNumberType,
   ...studentTakeAttendanceType,
   ...bulkStudentType,

@@ -23,6 +23,9 @@ function styleColors(ownerState: LinearProgressProps, styles: (val: ColorType) =
 }
 
 const MuiLinearProgress: Components<Theme>['MuiLinearProgress'] = {
+  defaultProps: {
+    'aria-label': 'Loading',
+  },
   /** **************************************
    * STYLE
    *************************************** */

@@ -6,9 +6,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Add as AddIcon } from '@mui/icons-material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Box, Tab, Paper, Button } from '@mui/material';
+import { FormSlider } from 'src/components/form-slider';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import AttendanceType from './attendance-type';
 // import AttendanceRule from './attendance-rule'; // Uncomment if needed
@@ -83,7 +83,7 @@ const HrAttendanceSettingScreen = () => {
         heading="Setting"
         description="Define leave types like Sick or Casual under Leave Type"
         links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Student', href: '/student/dashboard' },
           { name: 'Attendance', href: '/student/attendance/dashboard/' },
           { name: 'Setting' },
         ]}

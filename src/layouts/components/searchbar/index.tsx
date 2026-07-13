@@ -166,7 +166,7 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
       }}
       {...other}
     >
-      <IconButton disableRipple>
+      <IconButton aria-label="Open module search" disableRipple>
         {/* https://icon-sets.iconify.design/eva/search-fill/ */}
         <SvgIcon sx={{ width: 20, height: 20 }}>
           <path

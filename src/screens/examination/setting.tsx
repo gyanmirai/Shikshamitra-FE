@@ -7,11 +7,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { FormSlider } from 'src/components/form-slider';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import GradeScaling from './settings/gradeScaleManagement/gradeScaling';
-import { FormSlider } from '../student/enrollment/register/register-form';
 import ExamTypeSettings from './settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeSetting';
 
 import type { TabComponentType } from '../hr/leave-request';

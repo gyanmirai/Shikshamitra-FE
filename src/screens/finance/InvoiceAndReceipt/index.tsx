@@ -6,9 +6,9 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { FormSlider } from 'src/components/form-slider';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import ReceiptManagement from './Components/ReceiptManagement';
 

@@ -2,6 +2,7 @@
 
 import type { Division } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
+import type { IInquiryData } from 'src/types/student-enrollment';
 
 import { LoadingButton } from '@mui/lab';
 import { Save } from '@mui/icons-material';
@@ -31,7 +32,6 @@ import {
 } from '@mui/material';
 
 import type { TableDivisionDropDownProps } from './type';
-import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 // Fixed width for Division column to prevent layout shifts
 const DIVISION_COLUMN_WIDTH = 180;

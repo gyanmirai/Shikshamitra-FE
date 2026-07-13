@@ -36,13 +36,13 @@ import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
 import { useSensor, DndContext, useSensors, closestCenter, PointerSensor } from '@dnd-kit/core';
-import FeeStructureAssignmentForm from 'src/screens/student/enrollment/admission/FeeStructureAssignmentForm';
 import {
   arrayMove,
   useSortable,
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import FeeStructureAssignmentForm from 'src/screens/finance/FeeStructureAssign/Components/StudentFeeStructureAssignmentForm';
 import {
   useCollectFeeMutation,
   useGetCollectFormQuery,

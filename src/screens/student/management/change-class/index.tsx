@@ -1,6 +1,7 @@
 'use client';
 
 import type { Standards } from 'src/types/school';
+import type { IInquiryData } from 'src/types/student-enrollment';
 
 import { Box } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
@@ -18,7 +19,6 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 import { useChangeStudentClassMutation } from 'src/redux/student/student-change-class/student-change-class-api';
 
 import type { ITableClassDropDownProps } from './type';
-import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 const ChangeClassScreen = ({
   tableData: studentData,

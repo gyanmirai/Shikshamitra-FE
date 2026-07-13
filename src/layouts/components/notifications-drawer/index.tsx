@@ -98,13 +98,21 @@ export function NotificationsDrawer({
 
       {!!totalUnRead && (
         <Tooltip title="Mark all as read">
-          <IconButton color="primary" onClick={handleMarkAllAsRead}>
+          <IconButton
+            aria-label="Mark all notifications as read"
+            color="primary"
+            onClick={handleMarkAllAsRead}
+          >
             <Iconify icon="eva:done-all-fill" />
           </IconButton>
         </Tooltip>
       )}
 
-      <IconButton onClick={drawer.onFalse} sx={{ display: { xs: 'inline-flex', sm: 'none' } }}>
+      <IconButton
+        aria-label="Close notifications"
+        onClick={drawer.onFalse}
+        sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+      >
         <Iconify icon="mingcute:close-line" />
       </IconButton>
 
@@ -155,6 +163,7 @@ export function NotificationsDrawer({
   return (
     <>
       <IconButton
+        aria-label="Open notifications"
         component={motion.button}
         whileTap="tap"
         whileHover="hover"

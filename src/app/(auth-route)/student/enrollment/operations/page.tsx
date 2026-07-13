@@ -1,12 +1,5 @@
-import StudentAdmissionsCrmScreen from 'src/screens/student/enrollment/admissions-crm';
+import { AdmissionsOperationsWorkspace } from 'src/screens/student/enrollment/admissions-crm/workspace-pages';
 
-const AdmissionsOperationsPage = () => (
-  <StudentAdmissionsCrmScreen
-    heading="Admissions Operations"
-    initialView="operations"
-    fixedView
-    workspace="operations"
-  />
-);
+const AdmissionsOperationsPage = () => <AdmissionsOperationsWorkspace />;
 
 export default AdmissionsOperationsPage;

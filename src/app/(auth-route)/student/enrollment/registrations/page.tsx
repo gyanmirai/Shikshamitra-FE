@@ -1,14 +1,5 @@
-import StudentAdmissionsCrmScreen from 'src/screens/student/enrollment/admissions-crm';
-import { AdmissionCrmOperationsQueueType } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import { AdmissionsRegistrationsWorkspace } from 'src/screens/student/enrollment/admissions-crm/workspace-pages';
 
-const AdmissionsRegistrationsPage = () => (
-  <StudentAdmissionsCrmScreen
-    heading="Registrations and Documents"
-    initialView="operations"
-    initialOperationsQueueType={AdmissionCrmOperationsQueueType.IncompleteRegistration}
-    fixedView
-    workspace="registrations"
-  />
-);
+const AdmissionsRegistrationsPage = () => <AdmissionsRegistrationsWorkspace />;
 
 export default AdmissionsRegistrationsPage;

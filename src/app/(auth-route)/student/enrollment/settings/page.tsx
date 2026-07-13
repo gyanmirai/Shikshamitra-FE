@@ -1,16 +1,13 @@
 'use client';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-import AdmissionsCrmConfiguration from 'src/screens/student/enrollment/setting/admissions-crm-configuration';
+import { studentPermissions } from 'src/constants/student-menu';
+import StudentPermissionGuard from 'src/components/student-permission-guard';
+import AdmissionsSettingsWorkspace from 'src/screens/student/enrollment/setting/admissions-settings-workspace';
 
-const AdmissionsSettingsPage = () => {
-  const admissionsCrmConfigurationDialog = useBoolean();
-
-  return (
-    <AdmissionsCrmConfiguration
-      admissionsCrmConfigurationDialog={admissionsCrmConfigurationDialog}
-    />
-  );
-};
+const AdmissionsSettingsPage = () => (
+  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.settings}>
+    <AdmissionsSettingsWorkspace />
+  </StudentPermissionGuard>
+);
 
 export default AdmissionsSettingsPage;
