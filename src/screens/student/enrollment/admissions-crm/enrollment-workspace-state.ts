@@ -122,7 +122,7 @@ export const getPersonaWorkspaceDefaults = (
     if (persona === 'receptionist')
       return { view: 'list', stage: AdmissionInquiryStage.NewInquiry };
     if (persona === 'counselor') return { view: 'board', owner: 'me' };
-    return { view: 'board' };
+    return { view: 'list' };
   }
 
   if (workspace === 'registrations') {

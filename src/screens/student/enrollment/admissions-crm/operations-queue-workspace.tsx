@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import BookmarkAddOutlined from '@mui/icons-material/BookmarkAddOutlined';
 import DeleteOutlineRounded from '@mui/icons-material/DeleteOutlineRounded';
 import {
@@ -30,6 +31,7 @@ import {
   Typography,
   Autocomplete,
   LinearProgress,
+  TableContainer,
   TablePagination,
   FormControlLabel,
 } from '@mui/material';
@@ -47,6 +49,11 @@ import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
 import { IntegrationCapabilitiesPanel } from './integration-capabilities-panel';
+import {
+  enrollmentTableSx,
+  enrollmentActionCellSx,
+  enrollmentActionHeaderSx,
+} from './enrollment-table-styles';
 
 import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
 
@@ -398,8 +405,8 @@ export function OperationsQueueWorkspace({
             This operations queue is unavailable.
           </Alert>
         ) : (
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: 920 }}>
+          <TableContainer>
+            <Table stickyHeader size="small" sx={enrollmentTableSx}>
               <TableHead>
                 <TableRow>
                   <TableCell>Applicant</TableCell>
@@ -407,7 +414,9 @@ export function OperationsQueueWorkspace({
                   <TableCell>Status</TableCell>
                   <TableCell>Age</TableCell>
                   <TableCell>Due</TableCell>
-                  <TableCell align="right">Open</TableCell>
+                  <TableCell align="right" sx={enrollmentActionHeaderSx}>
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -446,14 +455,13 @@ export function OperationsQueueWorkspace({
                     <TableCell>
                       {item.dueAt ? dateFormatter.format(new Date(item.dueAt)) : '—'}
                     </TableCell>
-                    <TableCell align="right">
-                      <Button
-                        size="small"
-                        onClick={() => openApplicant(item.leadId)}
-                        sx={{ color: 'primary.darker' }}
-                      >
-                        Review
-                      </Button>
+                    <TableCell align="right" sx={enrollmentActionCellSx}>
+                      <ThreeDotsActions
+                        showViewIcon
+                        viewLabel="Review Applicant"
+                        handleViewClick={() => openApplicant(item.leadId)}
+                        showThreeDots={false}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -471,7 +479,7 @@ export function OperationsQueueWorkspace({
                 )}
               </TableBody>
             </Table>
-          </Box>
+          </TableContainer>
         )}
         <TablePagination
           component="div"

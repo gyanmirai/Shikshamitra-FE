@@ -71,6 +71,9 @@ describe('Enrollment workspace URL state', () => {
       view: 'board',
       owner: 'me',
     });
+    expect(getPersonaWorkspaceDefaults('pipeline', 'administrator')).toEqual({
+      view: 'list',
+    });
     expect(getPersonaWorkspaceDefaults('offers', 'approver')).toEqual({
       queue: AdmissionCrmOperationsQueueType.FinalApproval,
     });

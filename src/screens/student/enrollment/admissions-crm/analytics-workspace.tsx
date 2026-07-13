@@ -18,8 +18,10 @@ import {
   TableHead,
   Typography,
   LinearProgress,
+  TableContainer,
 } from '@mui/material';
 
+import { enrollmentTableSx } from './enrollment-table-styles';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { getAdmissionCrmStageLabel, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
@@ -142,8 +144,8 @@ export function AnalyticsWorkspace() {
               <Box sx={{ px: 1.5, py: 1.25 }}>
                 <Typography variant="subtitle2">Stage Funnel</Typography>
               </Box>
-              <Box sx={{ overflowX: 'auto' }}>
-                <Table size="small" sx={{ minWidth: 520 }}>
+              <TableContainer>
+                <Table stickyHeader size="small" sx={[enrollmentTableSx, { minWidth: 520 }]}>
                   <TableHead>
                     <TableRow>
                       <TableCell>Stage</TableCell>
@@ -153,7 +155,7 @@ export function AnalyticsWorkspace() {
                   </TableHead>
                   <TableBody>
                     {analytics.stageFunnel.map((item) => (
-                      <TableRow key={item.stage}>
+                      <TableRow key={item.stage} hover>
                         <TableCell>{getAdmissionCrmStageLabel(item.stage)}</TableCell>
                         <TableCell align="right">
                           {integerFormatter.format(item.leadCount)}
@@ -163,15 +165,15 @@ export function AnalyticsWorkspace() {
                     ))}
                   </TableBody>
                 </Table>
-              </Box>
+              </TableContainer>
             </Paper>
 
             <Paper variant="outlined" sx={{ borderRadius: 1, overflow: 'hidden' }}>
               <Box sx={{ px: 1.5, py: 1.25 }}>
                 <Typography variant="subtitle2">Channel Performance</Typography>
               </Box>
-              <Box sx={{ overflowX: 'auto' }}>
-                <Table size="small" sx={{ minWidth: 520 }}>
+              <TableContainer>
+                <Table stickyHeader size="small" sx={[enrollmentTableSx, { minWidth: 520 }]}>
                   <TableHead>
                     <TableRow>
                       <TableCell>Channel</TableCell>
@@ -182,7 +184,7 @@ export function AnalyticsWorkspace() {
                   </TableHead>
                   <TableBody>
                     {analytics.channelPerformance.map((item) => (
-                      <TableRow key={item.channel}>
+                      <TableRow key={item.channel} hover>
                         <TableCell>{getAdmissionCrmChannelLabel(item.channel)}</TableCell>
                         <TableCell align="right">
                           {integerFormatter.format(item.leadCount)}
@@ -197,7 +199,7 @@ export function AnalyticsWorkspace() {
                     ))}
                   </TableBody>
                 </Table>
-              </Box>
+              </TableContainer>
             </Paper>
           </Box>
 
