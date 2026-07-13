@@ -1,8 +1,5 @@
 import type { JSX } from 'react';
-import type {
-  ICardItem,
-  IStudentEnrollmentCardProps,
-} from 'src/screens/student/enrollment/entrollment-interface';
+import type { ICardItem, IStudentEnrollmentCardProps } from 'src/types/dashboard';
 
 import Link from 'next/link';
 import { useState } from 'react';

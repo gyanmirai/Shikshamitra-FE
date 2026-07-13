@@ -2,10 +2,10 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { LoadingButton } from '@mui/lab';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { Send, Cancel, Publish, Download, PlayArrow } from '@mui/icons-material';
 import {
   Chip,

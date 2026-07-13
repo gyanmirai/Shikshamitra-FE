@@ -2,36 +2,79 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { it, expect, describe } from 'vitest';
 
-const read = (file: string) => fs.readFileSync(path.join(process.cwd(), file), 'utf8');
+const read = (...segments: string[]) =>
+  fs.readFileSync(path.join(process.cwd(), ...segments), 'utf8');
 
-describe('Enrollment settings workspace contract', () => {
-  it('defines every release settings section and loads only the selected surface', () => {
-    const source = read('src/screens/student/enrollment/setting/admissions-settings-workspace.tsx');
+describe('Enrollment settings route contracts', () => {
+  const sections = [
+    'journey',
+    'inquiry-capture',
+    'routing-scoring',
+    'entrance-exams',
+    'registration-documents',
+    'offers-seats',
+    'activation',
+    'governance',
+    'communications',
+    'automation',
+  ];
 
-    [
-      'Journey',
-      'Inquiry Capture',
-      'Routing & Scoring',
-      'Entrance Exams',
-      'Registration & Documents',
-      'Offers & Seats',
-      'Activation',
-      'Governance',
-      'Communications',
-      'Automation',
-    ].forEach((label) => expect(source).toContain(`label: '${label}'`));
-    expect(source).toContain('dynamic(');
-    expect(source).toContain('focusSection={');
+  it.each(sections)('provides a dedicated %s settings route', (section) => {
+    expect(
+      fs.existsSync(
+        path.join(
+          process.cwd(),
+          'src',
+          'app',
+          '(auth-route)',
+          'student',
+          'enrollment',
+          'settings',
+          section,
+          'page.tsx'
+        )
+      )
+    ).toBe(true);
   });
 
-  it('protects dirty cycle settings from accidental navigation', () => {
-    const workspace = read(
-      'src/screens/student/enrollment/setting/admissions-settings-workspace.tsx'
+  it('keeps the root settings URL and redirects it to Journey', () => {
+    const source = read(
+      'src',
+      'app',
+      '(auth-route)',
+      'student',
+      'enrollment',
+      'settings',
+      'page.tsx'
     );
-    const core = read('src/screens/student/enrollment/setting/admissions-crm-configuration.tsx');
+    expect(source).toContain('redirect(');
+    expect(source).toContain('settingsSections.journey');
+  });
 
-    expect(workspace).toContain("addEventListener('beforeunload'");
-    expect(workspace).toContain('Discard unsaved enrollment setting changes?');
-    expect(core).toContain("new CustomEvent('admissions-settings-dirty'");
+  it('protects dirty settings with a consistent dialog and browser exit guard', () => {
+    const shell = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'enrollment-settings-shell.tsx'
+    );
+    expect(shell).toContain("addEventListener('beforeunload'");
+    expect(shell).toContain('Discard Unsaved Changes?');
+    expect(shell).not.toContain('window.confirm');
+  });
+
+  it('preserves the selected admission cycle across settings categories', () => {
+    const shell = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'enrollment-settings-shell.tsx'
+    );
+    expect(shell).toContain("searchParams.get('cycle')");
+    expect(shell).toContain('sectionHref(href)');
   });
 });

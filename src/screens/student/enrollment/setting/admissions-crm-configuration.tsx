@@ -19,10 +19,10 @@ import type {
   AdmissionCrmMessageTemplatePreviewDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { Add, Delete, Visibility, ContentCopy } from '@mui/icons-material';
 import {
   Box,
@@ -104,9 +104,16 @@ import {
   updateAdmissionCrmProviderResponseMessageIdPath,
 } from './admissions-crm-configuration-utils';
 
+export type AdmissionsCrmConfigurationFocusSection =
+  | 'journey'
+  | 'capture'
+  | 'routing'
+  | 'communications'
+  | 'automation';
+
 type AdmissionsCrmConfigurationProps = {
   admissionsCrmConfigurationDialog: UseBooleanReturn;
-  focusSection?: 'journey' | 'capture' | 'routing' | 'communications' | 'automation';
+  focusSection?: AdmissionsCrmConfigurationFocusSection;
 };
 
 const getSettingsErrorMessage = (error: unknown, fallback: string) => {

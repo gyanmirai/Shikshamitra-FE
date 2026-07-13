@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { Close, CheckCircle } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import {
   AdmissionCrmSeatOfferType,
   AdmissionCrmSeatOfferStatus,

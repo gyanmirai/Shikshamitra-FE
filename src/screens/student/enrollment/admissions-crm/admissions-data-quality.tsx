@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { DoneAll, Refresh, FactCheck } from '@mui/icons-material';
 import { Box, Chip, Alert, Paper, Stack, Divider, TextField, Typography } from '@mui/material';
 import {

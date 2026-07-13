@@ -19,7 +19,7 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(source).toContain(workspaceComponent);
   });
 
-  it('keeps explicit workspace and permission boundaries in the shared route entry file', () => {
+  it('uses route-owned workspace components instead of a shared mode-driven screen', () => {
     const source = read(
       'src',
       'screens',
@@ -28,41 +28,98 @@ describe('Student Enrollment workspace route contracts', () => {
       'admissions-crm',
       'workspace-pages.tsx'
     );
-
     [
-      'pipeline',
-      'exams',
-      'registrations',
-      'offers',
-      'activation',
-      'operations',
-      'analytics',
-    ].forEach((workspace) => expect(source).toContain(`workspace="${workspace}"`));
-    expect(source).toContain('StudentPermissionGuard');
+      'PipelineWorkspace',
+      'ExamsWorkspace',
+      'OperationsQueueWorkspace',
+      'AnalyticsWorkspace',
+    ].forEach((workspace) => expect(source).toContain(workspace));
+    expect(source).not.toContain('StudentAdmissionsCrmScreen');
+    expect(
+      fs.existsSync(
+        path.join(
+          process.cwd(),
+          'src',
+          'screens',
+          'student',
+          'enrollment',
+          'admissions-crm',
+          'index.tsx'
+        )
+      )
+    ).toBe(false);
   });
 
-  it('keeps Enrollment settings on a client boundary', () => {
-    const source = read(
-      'src',
-      'app',
-      '(auth-route)',
-      'student',
-      'enrollment',
-      'settings',
-      'page.tsx'
-    );
-    expect(source.trimStart().startsWith("'use client';")).toBe(true);
-  });
-
-  it('does not expose raw staff IDs or provider JSON in ordinary Enrollment UI', () => {
-    const workspace = read(
+  it('keeps bounded server pagination and debounced staff search in owning workspaces', () => {
+    const pipeline = read(
       'src',
       'screens',
       'student',
       'enrollment',
       'admissions-crm',
-      'index.tsx'
+      'pipeline-workspace.tsx'
     );
+    const operations = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'operations-queue-workspace.tsx'
+    );
+    const board = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'pipeline-stage-column.tsx'
+    );
+
+    expect(pipeline).toContain('const pageSize = 50');
+    expect(operations).toContain('const pageSize = 50');
+    expect(pipeline).toContain('setDebouncedStaffSearch');
+    expect(operations).toContain('setDebouncedStaffSearch');
+    expect(board).toContain('const PAGE_SIZE = 25');
+    expect(board).toContain('Load more');
+  });
+
+  it('keeps free-text applicant searches out of URL state', () => {
+    const state = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'enrollment-workspace-state.ts'
+    );
+    expect(state).not.toContain("set('search'");
+    expect(state).not.toContain("set('phone'");
+    expect(state).not.toContain("set('email'");
+  });
+
+  it('uses an accessible mobile workspace menu and no horizontal mobile route strip', () => {
+    const shell = read('src', 'screens', 'student', 'enrollment', 'enrollment-shell.tsx');
+    expect(shell).toContain('Open Enrollment workspace menu');
+    expect(shell).toContain('anchor="bottom"');
+    expect(shell).toContain("display: { xs: 'none', md: 'flex' }");
+  });
+
+  it('preserves the selected admission cycle across workspace navigation', () => {
+    const shell = read('src', 'screens', 'student', 'enrollment', 'enrollment-shell.tsx');
+    expect(shell).toContain("searchParams.get('cycle')");
+    expect(shell).toContain('routeHref(href)');
+    expect(shell).not.toContain("searchParams.get('search')");
+  });
+
+  it('does not expose raw staff identifiers or editable provider JSON in ordinary UI', () => {
+    const workspaceSources = [
+      'pipeline-workspace.tsx',
+      'operations-queue-workspace.tsx',
+      'applicant-workspace-drawer.tsx',
+    ]
+      .map((file) => read('src', 'screens', 'student', 'enrollment', 'admissions-crm', file))
+      .join('\n');
     const settings = read(
       'src',
       'screens',
@@ -72,35 +129,9 @@ describe('Student Enrollment workspace route contracts', () => {
       'admissions-crm-configuration.tsx'
     );
 
-    expect(workspace).not.toContain('Owner user ID');
-    expect(workspace).not.toContain('Assigned to user ID');
+    expect(workspaceSources).not.toContain('Owner user ID');
+    expect(workspaceSources).not.toContain('Assigned to user ID');
     expect(settings).not.toContain('label="Settings JSON"');
-  });
-
-  it('uses bounded server pagination and debounced staff search', () => {
-    const workspace = read(
-      'src',
-      'screens',
-      'student',
-      'enrollment',
-      'admissions-crm',
-      'index.tsx'
-    );
-    const boardColumn = read(
-      'src',
-      'screens',
-      'student',
-      'enrollment',
-      'admissions-crm',
-      'pipeline-stage-column.tsx'
-    );
-
-    expect(workspace).toContain('maxResultCount: 50');
-    expect(workspace).toContain('setDebouncedStaffSearch');
-    expect(workspace).toContain('maxResultCount: 25');
-    expect(boardColumn).toContain('const PAGE_SIZE = 25');
-    expect(boardColumn).toContain('Load more');
-    expect(workspace).not.toContain('maxResultCount: 200');
   });
 
   it('keeps removed legacy Enrollment routes and clients absent', () => {

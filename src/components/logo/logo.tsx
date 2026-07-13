@@ -84,6 +84,7 @@ export const Logo = forwardRef<HTMLDivElement, LogoProps>(
             width={width}
             height={height}
             className={logoClasses.root.concat(className ? ` ${className}` : '')}
+            role="img"
             aria-label="logo"
             sx={{
               flexShrink: 0,

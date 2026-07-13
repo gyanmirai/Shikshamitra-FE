@@ -1,8 +1,8 @@
 'use client';
 
-import { LoadingButton } from '@mui/lab';
 import { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { Add, Link, Badge, Gavel, Shield, CheckCircle } from '@mui/icons-material';
 import {
   Box,

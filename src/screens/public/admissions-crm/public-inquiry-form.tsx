@@ -1,8 +1,8 @@
 'use client';
 
-import { LoadingButton } from '@mui/lab';
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import {
   AdmissionCrmFormFieldType,
   type AdmissionCrmFormFieldDto,
@@ -24,6 +24,8 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+
+import { PublicAdmissionsShell } from './public-admissions-shell';
 
 type PublicAdmissionInquiryForm = {
   tenantId: string;
@@ -158,6 +160,7 @@ export default function PublicAdmissionInquiryFormScreen({
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [language, setLanguage] = useState<ApplicantLanguage>('en');
   const text = uiText[language];
@@ -200,7 +203,7 @@ export default function PublicAdmissionInquiryFormScreen({
     return () => {
       isMounted = false;
     };
-  }, [language, templateId, tenantId, text.unavailable]);
+  }, [language, reloadKey, templateId, tenantId, text.unavailable]);
 
   const orderedFields = useMemo(
     () => [...(form?.fields || [])].sort((a, b) => a.displayOrder - b.displayOrder),
@@ -311,6 +314,7 @@ export default function PublicAdmissionInquiryFormScreen({
             labelId={`${field.key}-label`}
             label={renderFieldLabel(field)}
             value={typeof value === 'string' ? value : ''}
+            inputProps={{ name: field.key }}
             onChange={(event) => setFieldValue(field.key, event.target.value)}
           >
             {(field.options || []).map((option, index) => (
@@ -333,6 +337,7 @@ export default function PublicAdmissionInquiryFormScreen({
             labelId={`${field.key}-label`}
             label={renderFieldLabel(field)}
             value={Array.isArray(value) ? value : []}
+            inputProps={{ name: field.key }}
             onChange={(event) =>
               setFieldValue(
                 field.key,
@@ -359,6 +364,7 @@ export default function PublicAdmissionInquiryFormScreen({
           <FormControlLabel
             control={
               <Checkbox
+                name={field.key}
                 checked={Boolean(value)}
                 onChange={(event) => setFieldValue(field.key, event.target.checked)}
               />
@@ -379,6 +385,7 @@ export default function PublicAdmissionInquiryFormScreen({
         key={field.key}
         fullWidth
         required={field.required}
+        name={field.key}
         label={field.label}
         placeholder={field.placeholder || undefined}
         helperText={field.helperText || undefined}
@@ -396,6 +403,19 @@ export default function PublicAdmissionInquiryFormScreen({
         }
         multiline={field.fieldType === AdmissionCrmFormFieldType.TextArea}
         minRows={field.fieldType === AdmissionCrmFormFieldType.TextArea ? 3 : undefined}
+        autoComplete={
+          field.fieldType === AdmissionCrmFormFieldType.Email
+            ? 'email'
+            : field.fieldType === AdmissionCrmFormFieldType.Phone
+              ? 'tel'
+              : 'off'
+        }
+        spellCheck={field.fieldType === AdmissionCrmFormFieldType.Email ? false : undefined}
+        inputProps={
+          field.fieldType === AdmissionCrmFormFieldType.Number
+            ? { inputMode: 'numeric' }
+            : undefined
+        }
         InputLabelProps={
           field.fieldType === AdmissionCrmFormFieldType.Date ? { shrink: true } : undefined
         }
@@ -406,45 +426,67 @@ export default function PublicAdmissionInquiryFormScreen({
 
   if (isLoading) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
+      <PublicAdmissionsShell title="Start Your Admission Inquiry">
         <Paper variant="outlined" sx={{ p: 3, width: '100%', maxWidth: 720, borderRadius: 1 }}>
           <Stack spacing={2}>
             <Typography variant="h6">{text.loading}</Typography>
             <LinearProgress />
           </Stack>
         </Paper>
-      </Box>
+      </PublicAdmissionsShell>
     );
   }
 
   if (loadError || !form) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
+      <PublicAdmissionsShell title="Admission Inquiry Unavailable">
         <Paper variant="outlined" sx={{ p: 3, width: '100%', maxWidth: 720, borderRadius: 1 }}>
-          <Alert severity="error">{loadError || text.unavailable}</Alert>
+          <Alert
+            severity="error"
+            role="alert"
+            action={
+              <Button color="inherit" size="small" onClick={() => setReloadKey((key) => key + 1)}>
+                Retry
+              </Button>
+            }
+          >
+            {loadError || text.unavailable}
+          </Alert>
         </Paper>
-      </Box>
+      </PublicAdmissionsShell>
     );
   }
 
   if (result) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
+      <PublicAdmissionsShell title="Inquiry Received">
         <Paper variant="outlined" sx={{ p: 3, width: '100%', maxWidth: 720, borderRadius: 1 }}>
           <Stack spacing={2}>
-            <Alert severity="success">{result.acknowledgementMessage}</Alert>
+            <Alert severity="success" role="status">
+              {result.acknowledgementMessage}
+            </Alert>
             <Button variant="contained" href={result.statusPath}>
               {text.status}
             </Button>
           </Stack>
         </Paper>
-      </Box>
+      </PublicAdmissionsShell>
     );
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
+    <PublicAdmissionsShell
+      title={form.templateName}
+      description={
+        form.description || 'Share the available details and the admission team will follow up.'
+      }
+    >
       <Paper
+        component="form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleSubmit();
+        }}
         variant="outlined"
         sx={{ p: { xs: 2, md: 3 }, width: '100%', maxWidth: 760, borderRadius: 1 }}
       >
@@ -462,14 +504,6 @@ export default function PublicAdmissionInquiryFormScreen({
               <MenuItem value="hi">हिन्दी</MenuItem>
             </Select>
           </FormControl>
-          <Box>
-            <Typography variant="h5">{form.templateName}</Typography>
-            {form.description && (
-              <Typography variant="body2" color="text.secondary">
-                {form.description}
-              </Typography>
-            )}
-          </Box>
           <Stack spacing={1.5}>
             {fieldSections.map((section, index) => (
               <Stack key={`${section.name}-${index}`} spacing={1.25}>
@@ -487,6 +521,7 @@ export default function PublicAdmissionInquiryFormScreen({
                     key={preference}
                     control={
                       <Checkbox
+                        name={`communication-${preference.toLowerCase()}`}
                         checked={communicationPreferences.includes(preference)}
                         onChange={(event) => togglePreference(preference, event.target.checked)}
                       />
@@ -500,6 +535,7 @@ export default function PublicAdmissionInquiryFormScreen({
           <FormControlLabel
             control={
               <Checkbox
+                name="admission-consent"
                 checked={consentAccepted}
                 onChange={(event) => setConsentAccepted(event.target.checked)}
               />
@@ -509,11 +545,11 @@ export default function PublicAdmissionInquiryFormScreen({
           <Typography variant="caption" color="text.secondary">
             {text.privacy}: {form.privacyNoticeUrl}
           </Typography>
-          <LoadingButton variant="contained" loading={isSubmitting} onClick={handleSubmit}>
+          <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
             {text.submit}
           </LoadingButton>
         </Stack>
       </Paper>
-    </Box>
+    </PublicAdmissionsShell>
   );
 }

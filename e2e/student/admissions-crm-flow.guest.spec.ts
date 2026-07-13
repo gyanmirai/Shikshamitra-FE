@@ -286,16 +286,15 @@ async function openExamRowInWorkspace(
   applicantName: string,
   slotName: string
 ): Promise<Locator> {
-  const response = await page.goto('/student/enrollment/pipeline', {
+  const response = await page.goto('/student/enrollment/exams', {
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
   });
-  expect(response?.status(), 'GET /student/enrollment/pipeline').toBeLessThan(400);
+  expect(response?.status(), 'GET /student/enrollment/exams').toBeLessThan(400);
   await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 15_000 });
-  await expect(page.getByRole('heading', { name: /Admissions (CRM|Pipeline)/i })).toBeVisible({
+  await expect(page.getByRole('heading', { name: 'Entrance Exams' })).toBeVisible({
     timeout: 30_000,
   });
-  await page.getByRole('button', { name: /^Exams$/i }).click();
 
   const examRow = page.getByRole('row', {
     name: new RegExp(`${escapeRegExp(applicantName)}.*${escapeRegExp(slotName)}`, 'i'),
@@ -543,6 +542,50 @@ test.describe('Student admissions CRM E2E', () => {
         `${viewport.width}x${viewport.height} document overflow`
       ).toBeLessThanOrEqual(widths.viewport + 1);
     }
+  });
+
+  test('workspace URLs preserve operational state without exposing applicant search text', async ({
+    page,
+  }) => {
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+
+    await page.goto(
+      `/student/enrollment/pipeline?cycle=${academicYearId}&view=list&stage=0&page=2`,
+      { waitUntil: 'networkidle', timeout: 60_000 }
+    );
+    await page.getByLabel('Search applicants').fill('Parent phone 9999999999');
+    await expect(page).toHaveURL(new RegExp(`cycle=${academicYearId}`));
+    expect(page.url()).not.toContain('Parent');
+    expect(page.url()).not.toContain('9999999999');
+
+    const workspaceNavigation = page.getByRole('navigation', {
+      name: 'Student enrollment workspaces',
+    });
+    await workspaceNavigation.getByRole('link', { name: 'Exams', exact: true }).click();
+    await expect(page).toHaveURL(
+      new RegExp(`/student/enrollment/exams/?\\?cycle=${academicYearId}`)
+    );
+
+    await page.goBack({ waitUntil: 'networkidle' });
+    await expect(page).toHaveURL(/view=list/);
+    await expect(page).toHaveURL(/stage=0/);
+    await expect(page).toHaveURL(/page=2/);
+
+    await page.goto(`/student/enrollment/settings?cycle=${academicYearId}`, {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
+    await expect(page).toHaveURL(
+      new RegExp(`/student/enrollment/settings/journey/?\\?cycle=${academicYearId}`)
+    );
+
+    await page.goto('/student/enrollment/pipeline?stage=999&page=-2', {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
+    await expect(page).not.toHaveURL(/stage=999/);
+    await expect(page).not.toHaveURL(/page=-2/);
   });
 
   test('principal can create quick inquiry, review duplicate warning, and open CRM workspace', async ({
@@ -1111,7 +1154,8 @@ test.describe('Student admissions CRM E2E', () => {
 
       const leadCard = await openLeadCardInWorkspace(page, lead.firstName);
       await leadCard.getByRole('button', { name: 'Manage' }).click();
-      const operationsDialog = page.getByRole('dialog', { name: 'Applicant Operations' });
+      const operationsDialog = page.getByRole('dialog', { name: 'Applicant Workspace' });
+      await operationsDialog.getByRole('tab', { name: 'Registration' }).click();
       await expect(operationsDialog).toContainText(registration.formNumber);
       await operationsDialog.getByRole('button', { name: 'Verify Registration' }).click();
       await expect(operationsDialog.getByText('Verified', { exact: true })).toBeVisible({
@@ -1140,11 +1184,14 @@ test.describe('Student admissions CRM E2E', () => {
       );
       await expectOk(replacementResponse, 'upload replacement document');
 
-      await operationsDialog.getByRole('button', { name: 'Close' }).click({ force: true });
+      await operationsDialog
+        .getByRole('button', { name: 'Close applicant workspace' })
+        .click({ force: true });
       await page.reload({ waitUntil: 'domcontentloaded' });
       const refreshedLeadCard = await openLeadCardInWorkspace(page, lead.firstName);
       await refreshedLeadCard.getByRole('button', { name: 'Manage' }).click();
-      const refreshedDialog = page.getByRole('dialog', { name: 'Applicant Operations' });
+      const refreshedDialog = page.getByRole('dialog', { name: 'Applicant Workspace' });
+      await refreshedDialog.getByRole('tab', { name: 'Registration' }).click();
       await refreshedDialog.getByRole('button', { name: 'Verify', exact: true }).click();
       await expect(refreshedDialog.getByRole('button', { name: 'Original Seen' })).toBeVisible({
         timeout: 20_000,

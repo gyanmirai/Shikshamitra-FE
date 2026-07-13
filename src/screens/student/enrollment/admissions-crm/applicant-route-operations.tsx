@@ -3,8 +3,8 @@
 import type { AdmissionCrmRouteImpactPreviewDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { Gavel, Route, Preview, FactCheck, ReportProblem } from '@mui/icons-material';
 import { Chip, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
 import {

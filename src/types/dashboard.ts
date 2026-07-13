@@ -1,22 +1,24 @@
 import type { LabelColor } from 'src/components/label';
 
-interface ILabel {
+export type DashboardLabel = {
   name: string;
   color: LabelColor;
-}
+};
 
-export interface IStudentEnrollmentCardProps {
+export type DashboardSummaryCardProps = {
   icon: string;
   title: string;
   count: number | string;
   color: string;
   bgColor: string;
   href?: string;
-  labels?: ILabel[];
+  labels?: DashboardLabel[];
   index?: number;
-}
+};
 
-export interface ICardItem {
+export type IStudentEnrollmentCardProps = DashboardSummaryCardProps;
+
+export type ICardItem = {
   id: string;
   icon: string;
   title: string;
@@ -24,6 +26,6 @@ export interface ICardItem {
   color: string;
   bgColor: string;
   href: string;
-  labels: ILabel[];
+  labels: DashboardLabel[];
   width: number;
-}
+};

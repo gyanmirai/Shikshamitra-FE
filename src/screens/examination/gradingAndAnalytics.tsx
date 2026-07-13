@@ -9,10 +9,9 @@ import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { TopPerformer } from 'src/components/dashboard/top-performer';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
-
-import { TopPerformer } from '../student/enrollment/entrance-exam/dashboard';
 
 import type { TabComponentType } from '../hr/leave-request';
 

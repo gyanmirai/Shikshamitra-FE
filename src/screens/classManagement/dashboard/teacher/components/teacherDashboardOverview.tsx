@@ -1,4 +1,4 @@
-import type { ICardItem } from 'src/screens/student/enrollment/entrollment-interface';
+import type { ICardItem } from 'src/types/dashboard';
 
 import { useState } from 'react';
 import { Grid } from '@mui/material';

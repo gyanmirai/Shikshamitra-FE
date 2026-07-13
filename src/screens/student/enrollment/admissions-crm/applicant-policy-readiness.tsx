@@ -1,9 +1,9 @@
 'use client';
 
-import { LoadingButton } from '@mui/lab';
 import { useMemo, useState } from 'react';
 import { Gavel, FactCheck } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { Chip, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
 import {
   AdmissionCrmPolicyExceptionStatus,

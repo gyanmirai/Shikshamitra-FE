@@ -115,7 +115,7 @@ export function PipelineStageColumn({
               onClick={() => setPage((current) => current + 1)}
               disabled={isFetching}
             >
-              {isFetching ? 'Loading...' : 'Load more'}
+              {isFetching ? 'Loading\u2026' : 'Load more'}
             </Button>
           )}
         </Stack>
