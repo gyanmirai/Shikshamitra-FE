@@ -41,6 +41,7 @@ export function AccountButton({ open, photoURL, displayName, sx, ...other }: Acc
   return (
     <IconButton
       id="onboarding-user-profile"
+      aria-label={`Account menu for ${displayName || 'current user'}`}
       component={motion.button}
       whileTap="tap"
       whileHover="hover"

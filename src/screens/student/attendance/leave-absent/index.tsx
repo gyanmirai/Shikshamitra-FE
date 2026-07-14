@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { IInquiryData } from 'src/types/student-enrollment';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { Division, Standards, Organization } from 'src/types/school';
 
@@ -69,7 +70,6 @@ import {
 import { AttendanceTypeForm } from '../setting/attendance-type';
 
 import type { IFormValues } from './type';
-import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 const LeaveAndAbsentScreen = () => {
   // State to control the dialog visibility

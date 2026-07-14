@@ -25,10 +25,10 @@ import { ComponentBlock } from '../component-block';
 import { useTableData } from './hooks/useTableData';
 import { TableHeader } from './components/TableHeader';
 import { FilterChips } from './components/FilterChips';
-import { useTableConfig } from './hooks/useTableConfig';
 import { TableToolbar } from './components/TableToolbar';
 import { useStickyColumns } from './hooks/useStickyColumns';
 import { ColumnFilterMenu } from './components/ColumnFilterMenu';
+import { useTableConfig, reconcileColumnVisibility } from './hooks/useTableConfig';
 
 import type { IColumnFilterAnchor, ICustomizableTableProps } from './types';
 
@@ -57,6 +57,12 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   rowProps = () => ({}),
   tableId,
   defaultSearchTerm = '',
+  defaultRowsPerPage = 10,
+  page: controlledPage,
+  rowsPerPage: controlledRowsPerPage,
+  searchTerm: controlledSearchTerm,
+  filters: controlledFilters,
+  rowsPerPageOptions: configuredRowsPerPageOptions,
   showCheckbox = false,
   onSendNotification = () => {},
   searchFieldProps = {},
@@ -79,9 +85,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     [canUseColumnFilters, columns]
   );
 
-  const { tableConfig, handleChangeParams, handleSort } = useTableConfig({
+  const { tableConfig, setTableConfig, handleChangeParams, handleSort } = useTableConfig({
     columns: memoizedColumns,
     defaultSearchTerm,
+    defaultRowsPerPage,
   });
 
   const { page, rowsPerPage, searchTerm, filters, sorts, columnVisibility, dense } = tableConfig;
@@ -96,6 +103,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   });
 
   const rowsPerPageOptions = useMemo(() => {
+    if (configuredRowsPerPageOptions) {
+      return configuredRowsPerPageOptions;
+    }
+
     const baseOptions = [10, 25, 100];
     const rowCount = serverSidePagination ? totalCount || 0 : filteredData.length;
 
@@ -110,7 +121,37 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     }
 
     return [...baseOptions, { value: rowCount, label: 'All' }];
-  }, [filteredData.length, maxServerRowsPerPage, serverSidePagination, totalCount]);
+  }, [
+    configuredRowsPerPageOptions,
+    filteredData.length,
+    maxServerRowsPerPage,
+    serverSidePagination,
+    totalCount,
+  ]);
+
+  useEffect(() => {
+    if (controlledPage !== undefined && controlledPage !== page) {
+      handleChangeParams({ page: controlledPage });
+    }
+  }, [controlledPage, handleChangeParams, page]);
+
+  useEffect(() => {
+    if (controlledRowsPerPage !== undefined && controlledRowsPerPage !== rowsPerPage) {
+      handleChangeParams({ rowsPerPage: controlledRowsPerPage });
+    }
+  }, [controlledRowsPerPage, handleChangeParams, rowsPerPage]);
+
+  useEffect(() => {
+    if (controlledSearchTerm !== undefined && controlledSearchTerm !== searchTerm) {
+      handleChangeParams({ searchTerm: controlledSearchTerm, page: 0 });
+    }
+  }, [controlledSearchTerm, handleChangeParams, searchTerm]);
+
+  useEffect(() => {
+    if (controlledFilters && JSON.stringify(controlledFilters) !== JSON.stringify(filters)) {
+      handleChangeParams({ filters: controlledFilters, page: 0 });
+    }
+  }, [controlledFilters, filters, handleChangeParams]);
 
   const [headerRefs, setHeaderRefs] = useState<number[]>([]);
   const [tableRef, setTableRef] = useState<number>(0);
@@ -118,7 +159,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   // For empty content width
   const fullScreenDialog = useBoolean();
 
-  const { stickyMap, getStickyStyle } = useStickyColumns({
+  const { getStickyStyle } = useStickyColumns({
     columns: memoizedColumns,
     columnVisibility,
     headerRefs,
@@ -126,12 +167,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     isLoading,
     tableUniqId,
   });
-
-  // Changes whenever search/filter/sort/page changes → triggers row re-animation
-  const animationKey = useMemo(
-    () => `${searchTerm}||${JSON.stringify(filters)}||${JSON.stringify(sorts)}||${page}`,
-    [searchTerm, filters, sorts, page]
-  );
 
   useEffect(() => {
     const tableElement = document.getElementById(tableUniqId);
@@ -228,8 +263,22 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   }, [handleChangeParams, onServerFilter]);
 
   const handleApplyColumnFilter = useCallback(
-    (columnId: string, filterType: string, value: any, valueType: string, label?: ReactNode) => {
-      const newFilter = { column: columnId, type: filterType, value, valueType, label };
+    (
+      columnId: string,
+      filterType: string,
+      value: any,
+      valueType: string,
+      label?: ReactNode,
+      displayValue?: ReactNode
+    ) => {
+      const newFilter = {
+        column: columnId,
+        type: filterType,
+        value,
+        valueType,
+        label,
+        displayValue,
+      };
       const nextFilters = [...filters, newFilter];
       handleChangeParams({ filters: nextFilters, page: 0 });
       onServerFilter?.(nextFilters);
@@ -239,13 +288,17 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   );
 
   useEffect(() => {
-    handleChangeParams({
-      columnVisibility: memoizedColumns.reduce(
-        (acc, column) => ({ ...acc, [column.id]: !column.defaultHidden }),
-        {}
-      ),
+    setTableConfig((current) => {
+      const nextColumnVisibility = reconcileColumnVisibility(
+        memoizedColumns,
+        current.columnVisibility
+      );
+
+      return _.isEqual(nextColumnVisibility, current.columnVisibility)
+        ? current
+        : { ...current, columnVisibility: nextColumnVisibility };
     });
-  }, [memoizedColumns, handleChangeParams]);
+  }, [memoizedColumns, setTableConfig]);
 
   const theme = useTheme();
 
@@ -301,7 +354,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   (typeof col.label === 'string' &&
                     (col.label.toLowerCase() === 'action' ||
                       col.label.toLowerCase() === 'actions'));
-                return isVisible && !isActionCol;
+                return isVisible && !isActionCol && !col.excludeFromExport;
               });
 
               const title = typeof tableTitle === 'string' ? tableTitle : 'Table_Export';
@@ -484,7 +537,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   }}
                   headerRefs={headerRefs}
                   setHeaderRef={setHeaderRefs}
-                  stickyMap={stickyMap}
                   getStickyStyle={getStickyStyle}
                   tableUniqId={tableUniqId}
                 />
@@ -502,7 +554,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   noDataText={noDataText}
                   tableRef={tableRef}
                   rowsPerPage={rowsPerPage}
-                  animationKey={animationKey}
                 />
               </Table>
             </TableContainer>
@@ -584,7 +635,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       sorts,
       handleSort,
       headerRefs,
-      stickyMap,
       getStickyStyle,
       isLoading,
       paginatedData,
@@ -608,7 +658,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       tableTitle,
       tableId,
       sortedData,
-      animationKey,
     ]
   );
 

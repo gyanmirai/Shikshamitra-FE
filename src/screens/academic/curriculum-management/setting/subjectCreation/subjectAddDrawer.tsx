@@ -12,6 +12,7 @@ import {
   Drawer,
   Button,
   Divider,
+  MenuItem,
   TextField,
   IconButton,
   Typography,
@@ -167,6 +168,98 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 sx={{ mb: 1.5 }}
               />
 
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                  gap: 1.25,
+                  mb: 1.5,
+                }}
+              >
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Display Name"
+                  value={row.displayName}
+                  disabled={isSaving}
+                  onChange={(e) => updateRow(row.tempId, 'displayName', e.target.value)}
+                  inputProps={{ maxLength: 50 }}
+                />
+                <TextField
+                  select
+                  size="small"
+                  fullWidth
+                  label="Category"
+                  value={row.category}
+                  disabled={isSaving}
+                  onChange={(e) => updateRow(row.tempId, 'category', e.target.value)}
+                >
+                  {subjectCategories.map((category) => (
+                    <MenuItem key={category} value={category}>
+                      {category}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' },
+                  gap: 1.25,
+                  mb: 1.5,
+                }}
+              >
+                <TextField
+                  select
+                  size="small"
+                  fullWidth
+                  label="Icon"
+                  value={row.icon}
+                  disabled={isSaving}
+                  onChange={(e) => updateRow(row.tempId, 'icon', e.target.value)}
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {subjectIcons.map((icon) => (
+                    <MenuItem key={icon.value} value={icon.value}>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Iconify icon={icon.icon} width={16} height={16} />
+                        {icon.label}
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  size="small"
+                  fullWidth
+                  label="Status"
+                  value={row.status}
+                  disabled={isSaving}
+                  onChange={(e) => updateRow(row.tempId, 'status', e.target.value)}
+                >
+                  {['Active', 'Inactive', 'Archived'].map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  size="small"
+                  fullWidth
+                  type="number"
+                  label="Sort Order"
+                  value={row.sortOrder}
+                  disabled={isSaving}
+                  inputProps={{ min: 0 }}
+                  onChange={(e) => updateRow(row.tempId, 'sortOrder', e.target.value)}
+                />
+              </Box>
+
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                Class-wise codes, teachers, exam rules, and elective grouping are configured later.
+              </Typography>
+
               <Box>
                 <Typography
                   variant="caption"
@@ -249,3 +342,22 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
 };
 
 export default SubjectAddDrawer;
+
+const subjectCategories = [
+  'General',
+  'Language',
+  'Scholastic',
+  'Co-Scholastic',
+  'Activity',
+  'Practical',
+];
+
+const subjectIcons = [
+  { value: 'book', label: 'Book', icon: 'lucide:book-open' },
+  { value: 'calculator', label: 'Calculator', icon: 'lucide:calculator' },
+  { value: 'flask', label: 'Flask', icon: 'lucide:flask-conical' },
+  { value: 'monitor', label: 'Monitor', icon: 'lucide:monitor' },
+  { value: 'music', label: 'Music', icon: 'lucide:music' },
+  { value: 'trophy', label: 'Trophy', icon: 'lucide:trophy' },
+  { value: 'palette', label: 'Palette', icon: 'lucide:palette' },
+];

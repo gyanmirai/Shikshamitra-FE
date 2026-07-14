@@ -34,8 +34,67 @@ import AcademicDashboardExams from '../dashboard/components/AcademicDashboardExa
 import SubjectPassFailChart from '../AcademicDashboard/Components/SubjectPassFailChart';
 import ChapterCompletionChart from '../AcademicDashboard/Components/ChapterCompletionChart';
 import TeacherPerformanceComparisonChart from '../AcademicDashboard/Components/TeacherPerformanceComparisonChart';
+import { AcademicActionQueue } from '../components/command-center/AcademicActionQueue';
+import { AcademicCommandHeader } from '../components/command-center/AcademicCommandHeader';
+import { AcademicHealthScoreCard } from '../components/command-center/AcademicHealthScoreCard';
+import { AcademicModuleHealthGrid } from '../components/command-center/AcademicModuleHealthGrid';
+
+import type {
+  AcademicActionItem,
+  AcademicModuleHealthItem,
+} from '../components/command-center/types';
 
 const formatCount = (value?: number | null) => new Intl.NumberFormat('en-IN').format(value || 0);
+
+const toPrincipalActions = (data: PrincipalAcademicDashboardData): AcademicActionItem[] =>
+  data.insights.map((insight, index) => ({
+    id: `principal-insight-${index}`,
+    title: insight.title,
+    summary: insight.summary,
+    severity: insight.severity,
+    source: insight.source,
+    actionLabel: insight.actionLabel,
+    actionHref: insight.actionHref,
+  }));
+
+const toPrincipalModuleHealth = (data: PrincipalAcademicDashboardData): AcademicModuleHealthItem[] => [
+  {
+    id: 'school-performance',
+    module: 'School Performance',
+    status: `${data.schoolAverageGrade} average grade`,
+    progress: data.schoolPerformanceIndex,
+    tone: data.schoolPerformanceIndex >= 80 ? 'success' : 'warning',
+    icon: 'mdi:chart-line',
+    href: academicPaths.examination.reports,
+  },
+  {
+    id: 'syllabus',
+    module: 'Syllabus Coverage',
+    status: `${data.syllabusProgress}% complete`,
+    progress: data.syllabusProgress,
+    tone: data.syllabusProgress >= 80 ? 'success' : 'warning',
+    icon: 'mdi:book-open-page-variant-outline',
+    href: academicPaths.curriculum.chaptersManagement,
+  },
+  {
+    id: 'assessment',
+    module: 'Assessment Readiness',
+    status: `${data.readinessRate}% ready`,
+    progress: data.readinessRate,
+    tone: data.readinessRate >= 85 ? 'success' : 'warning',
+    icon: 'mdi:file-document-check-outline',
+    href: academicPaths.examination.recordMarks,
+  },
+  {
+    id: 'attendance',
+    module: 'Attendance Health',
+    status: data.averageAttendance,
+    progress: Number.parseFloat(data.averageAttendance) || 0,
+    tone: Number.parseFloat(data.averageAttendance) >= 90 ? 'success' : 'warning',
+    icon: 'mdi:calendar-check-outline',
+    href: academicPaths.studentAcademic360,
+  },
+];
 
 type TopSummaryTone = 'primary' | 'success' | 'info' | 'warning' | 'error' | 'secondary';
 
@@ -783,54 +842,53 @@ const AcademicPrincipalDashboardScreen = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pb: 2 }}>
-      {/* Header Layout */}
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        alignItems={{ xs: 'stretch', md: 'flex-start' }}
-        justifyContent="space-between"
-        spacing={1.25}
-      >
-        <Box>
-          <Typography variant="h4">Principal Dashboard</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Macro-level academic oversight overview
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" justifyContent="flex-end">
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={handleRefresh}
-            disabled={isRefreshing || isFetching}
-            startIcon={<Iconify icon="solar:refresh-linear" />}
-            sx={{ minHeight: 34 }}
-          >
-            {isRefreshing ? 'Refreshing' : 'Refresh'}
-          </Button>
-          <Button
-            component={Link}
-            href={academicPaths.curriculum.chaptersManagement}
-            variant="outlined"
-            size="small"
-            startIcon={<Iconify icon="solar:book-open-linear" />}
-            sx={{ minHeight: 34 }}
-          >
-            Curriculum
-          </Button>
-          <Button
-            component={Link}
-            href={academicPaths.timetable.management}
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon="solar:calendar-linear" />}
-            sx={{ minHeight: 34 }}
-          >
-            Timetables
-          </Button>
-        </Stack>
-      </Stack>
+      <AcademicCommandHeader
+        eyebrow="Principal View"
+        title="School Academic Command Center"
+        description="Track school quality, weak areas, student risk and academic readiness before issues become visible late."
+        lastUpdatedLabel="Macro academic overview"
+        isBusy={isRefreshing || isFetching}
+        onRefresh={handleRefresh}
+        actions={[
+          { label: 'Student 360', href: academicPaths.studentAcademic360, icon: 'mdi:account-school-outline' },
+          { label: 'Curriculum', href: academicPaths.curriculum.chaptersManagement, icon: 'solar:book-open-linear' },
+          {
+            label: 'Timetables',
+            href: academicPaths.timetable.management,
+            icon: 'solar:calendar-linear',
+            variant: 'contained',
+          },
+        ]}
+      />
 
       {isRefreshing || isFetching ? <LinearProgress /> : null}
+
+      <Grid container spacing={1.5} alignItems="stretch">
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <AcademicHealthScoreCard
+            title="School Academic Health"
+            score={Math.round((data.schoolPerformanceIndex + data.syllabusProgress + data.readinessRate) / 3)}
+            status={data.readinessRate >= 85 && data.syllabusProgress >= 80 ? 'Healthy' : 'Needs Attention'}
+            description="Combines performance index, syllabus progress and assessment readiness."
+            factors={[
+              { label: 'Performance', value: `${data.schoolPerformanceIndex}`, tone: 'success' },
+              { label: 'Attendance', value: data.averageAttendance, tone: 'info' },
+              { label: 'Syllabus', value: `${data.syllabusProgress}%`, tone: 'warning' },
+              { label: 'Readiness', value: `${data.readinessRate}%`, tone: 'success' },
+            ]}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <AcademicActionQueue
+            title="Leadership Attention Queue"
+            subtitle="School-level academic signals requiring follow-up"
+            items={toPrincipalActions(data)}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <AcademicModuleHealthGrid items={toPrincipalModuleHealth(data)} />
+        </Grid>
+      </Grid>
 
       {/* Snapshot Cards */}
       <Grid container spacing={1.5}>

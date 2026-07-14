@@ -22,9 +22,12 @@ const PhoneInput = ({ value, onChange, error, label, helperText, ...props }: Pho
 
     // Get country code length (e.g., 91 for India)
     const countryCode = info.countryCallingCode; // or dynamically extract based on country
-    const nationalNumber = digitsOnly.startsWith(countryCode as string)
+    const rawNational = digitsOnly.startsWith(countryCode as string)
       ? digitsOnly.slice((countryCode as string).length)
       : digitsOnly;
+
+    // Strip a leading 0 that browser autofill may prepend (e.g. "0XXXXXXXXXX")
+    const nationalNumber = rawNational.startsWith('0') ? rawNational.slice(1) : rawNational;
 
     if (nationalNumber.length <= 10) {
       onChange(newPhone, info);

@@ -1,5 +1,8 @@
 import { cloneElement } from 'react';
 import { RouterLink } from 'src/routes/components';
+import { useSearchParams } from 'src/routes/hooks';
+
+import { preservePathQueryParams } from './path-utils';
 
 import type { NavItemProps } from './types';
 
@@ -23,6 +26,7 @@ export type UseNavItemProps = {
   hasChild?: NavItemProps['hasChild'];
   externalLink?: NavItemProps['externalLink'];
   enabledRootRedirect?: NavItemProps['enabledRootRedirect'];
+  preserveQueryParams?: NavItemProps['preserveQueryParams'];
 };
 
 export function useNavItem({
@@ -34,18 +38,24 @@ export function useNavItem({
   hasChild,
   externalLink,
   enabledRootRedirect,
+  preserveQueryParams,
 }: UseNavItemProps): UseNavItemReturn {
+  const searchParams = useSearchParams();
   const rootItem = depth === 1;
 
   const subItem = !rootItem;
 
   const subDeepItem = Number(depth) > 2;
 
+  const resolvedPath = externalLink
+    ? path
+    : preservePathQueryParams(path, preserveQueryParams, searchParams);
+
   const linkProps = externalLink
-    ? { href: path, target: '_blank', rel: 'noopener' }
+    ? { href: resolvedPath, target: '_blank', rel: 'noopener' }
     : {
         component: RouterLink,
-        href: path,
+        href: resolvedPath,
       };
 
   const baseProps = hasChild && !enabledRootRedirect ? { component: 'div' } : linkProps;

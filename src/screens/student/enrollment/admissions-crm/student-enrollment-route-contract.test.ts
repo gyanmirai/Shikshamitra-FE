@@ -1,0 +1,201 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { it, expect, describe } from 'vitest';
+
+const read = (...segments: string[]) =>
+  fs.readFileSync(path.join(process.cwd(), ...segments), 'utf8');
+
+describe('Student Enrollment workspace route contracts', () => {
+  it.each([
+    ['pipeline', 'AdmissionsPipelineWorkspace'],
+    ['exams', 'AdmissionsExamsWorkspace'],
+    ['registrations', 'AdmissionsRegistrationsWorkspace'],
+    ['offers-seats', 'AdmissionsOffersWorkspace'],
+    ['activation', 'AdmissionsActivationWorkspace'],
+    ['operations', 'AdmissionsOperationsWorkspace'],
+    ['analytics', 'AdmissionsAnalyticsWorkspace'],
+  ])('binds %s to its route-specific workspace', (route, workspaceComponent) => {
+    const source = read('src', 'app', '(auth-route)', 'student', 'enrollment', route, 'page.tsx');
+    expect(source).toContain(workspaceComponent);
+  });
+
+  it('uses route-owned workspace components instead of a shared mode-driven screen', () => {
+    const source = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'workspace-pages.tsx'
+    );
+    [
+      'PipelineWorkspace',
+      'ExamsWorkspace',
+      'OperationsQueueWorkspace',
+      'AnalyticsWorkspace',
+    ].forEach((workspace) => expect(source).toContain(workspace));
+    expect(source).not.toContain('StudentAdmissionsCrmScreen');
+    expect(
+      fs.existsSync(
+        path.join(
+          process.cwd(),
+          'src',
+          'screens',
+          'student',
+          'enrollment',
+          'admissions-crm',
+          'index.tsx'
+        )
+      )
+    ).toBe(false);
+  });
+
+  it('keeps bounded server pagination and debounced staff search in owning workspaces', () => {
+    const pipeline = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'pipeline-workspace.tsx'
+    );
+    const operations = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'operations-queue-workspace.tsx'
+    );
+    const board = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'pipeline-stage-column.tsx'
+    );
+
+    expect(pipeline).toContain('const pageSize = 50');
+    expect(operations).toContain('const pageSize = 50');
+    expect(pipeline).toContain('setDebouncedStaffSearch');
+    expect(operations).toContain('setDebouncedStaffSearch');
+    expect(board).toContain('const PAGE_SIZE = 25');
+    expect(board).toContain('Load more');
+    expect(board).toContain('IntersectionObserver');
+    expect(board).toContain('!academicYearId || !shouldLoad');
+  });
+
+  it('keeps free-text applicant searches out of URL state', () => {
+    const state = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'enrollment-workspace-state.ts'
+    );
+    expect(state).not.toContain("set('search'");
+    expect(state).not.toContain("set('phone'");
+    expect(state).not.toContain("set('email'");
+  });
+
+  it('uses the global vertical menu without rendering duplicate workspace navigation', () => {
+    const shell = read('src', 'screens', 'student', 'enrollment', 'enrollment-shell.tsx');
+    expect(shell).not.toContain('Student enrollment workspaces');
+    expect(shell).not.toContain('enrollmentRoutes');
+    expect(shell).not.toContain('RouterLink');
+    expect(shell).not.toContain('<Drawer');
+  });
+
+  it('resolves the admission cycle from URL state or the global academic-year selection', () => {
+    const context = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'enrollment-workspace-context.tsx'
+    );
+    expect(context).toContain("current.get('cycle') || (currentYear?.id as string | undefined)");
+    expect(context).not.toContain("searchParams.get('search')");
+  });
+
+  it('uses the shared project table and action patterns throughout Enrollment', () => {
+    const tableFiles = [
+      'pipeline-workspace.tsx',
+      'exams-workspace.tsx',
+      'operations-queue-workspace.tsx',
+      'analytics-workspace.tsx',
+      'rte-allotment-import.tsx',
+    ];
+    const sources = tableFiles.map((file) =>
+      read('src', 'screens', 'student', 'enrollment', 'admissions-crm', file)
+    );
+
+    sources.forEach((source) => {
+      expect(source).toContain('CustomizableTable');
+      expect(source).not.toContain('<Table');
+      expect(source).not.toContain('enrollment-table-styles');
+    });
+    expect(sources.join('\n')).toContain('ThreeDotsActions');
+    expect(
+      fs.existsSync(
+        path.join(
+          process.cwd(),
+          'src',
+          'screens',
+          'student',
+          'enrollment',
+          'admissions-crm',
+          'enrollment-table-styles.ts'
+        )
+      )
+    ).toBe(false);
+  });
+
+  it('does not expose raw staff identifiers or editable provider JSON in ordinary UI', () => {
+    const workspaceSources = [
+      'pipeline-workspace.tsx',
+      'operations-queue-workspace.tsx',
+      'applicant-workspace-drawer.tsx',
+    ]
+      .map((file) => read('src', 'screens', 'student', 'enrollment', 'admissions-crm', file))
+      .join('\n');
+    const settings = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-crm-configuration.tsx'
+    );
+
+    expect(workspaceSources).not.toContain('Owner user ID');
+    expect(workspaceSources).not.toContain('Assigned to user ID');
+    expect(settings).not.toContain('label="Settings JSON"');
+  });
+
+  it('keeps removed legacy Enrollment routes and clients absent', () => {
+    const removedPaths = [
+      ['src', 'app', '(auth-route)', 'student', 'enrollment', 'follow-up', 'page.tsx'],
+      ['src', 'app', '(auth-route)', 'student', 'enrollment', 'enroll', 'page.tsx'],
+      [
+        'src',
+        'app',
+        '(auth-route)',
+        'student',
+        'enrollment',
+        'enrollment-status-tracking',
+        'page.tsx',
+      ],
+      ['src', 'redux', 'student', 'follow-up', 'follow-up-api.ts'],
+      ['src', 'redux', 'student', 'registration-form', 'registration-form-api.ts'],
+      ['src', 'redux', 'student', 'inquiry', 'inquiry-api.ts'],
+    ];
+
+    removedPaths.forEach((segments) => {
+      expect(fs.existsSync(path.join(process.cwd(), ...segments)), segments.join('/')).toBe(false);
+    });
+  });
+});

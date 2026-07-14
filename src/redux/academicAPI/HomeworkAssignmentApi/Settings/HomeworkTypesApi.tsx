@@ -30,7 +30,16 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
         data,
         academicMediumId,
       }: {
-        data: { homeworkTypeName: string };
+        data: {
+          homeworkTypeName: string;
+          description?: string;
+          defaultSubmissionType?: number;
+          defaultMarks?: number;
+          defaultDueDays?: number;
+          evaluationRequired?: boolean;
+          defaultEvaluationMethod?: number;
+          status?: number;
+        };
         academicMediumId: string;
       }) => ({
         url: `/homework-type`,
@@ -47,14 +56,37 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
         homeworkTypeId,
         homeworkTypeName,
         academicMediumId,
+        description,
+        defaultSubmissionType,
+        defaultMarks,
+        defaultDueDays,
+        evaluationRequired,
+        defaultEvaluationMethod,
+        status,
       }: {
         homeworkTypeId: string;
         homeworkTypeName: string;
         academicMediumId: string;
+        description?: string;
+        defaultSubmissionType?: number;
+        defaultMarks?: number;
+        defaultDueDays?: number;
+        evaluationRequired?: boolean;
+        defaultEvaluationMethod?: number;
+        status?: number;
       }) => ({
         url: `/homework-type/${homeworkTypeId}`,
         method: 'PUT',
-        data: { homeworkTypeName },
+        data: {
+          homeworkTypeName,
+          description,
+          defaultSubmissionType,
+          defaultMarks,
+          defaultDueDays,
+          evaluationRequired,
+          defaultEvaluationMethod,
+          status,
+        },
         params: { academicMediumId },
       }),
       invalidatesTags: [academicType.homeworkType],

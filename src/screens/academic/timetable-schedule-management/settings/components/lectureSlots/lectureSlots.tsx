@@ -15,8 +15,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { normalizeTimetableStatus } from 'src/utils/timetable-capacity';
 import { Box, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import { useGetLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
+import { TimetableStatusChip } from 'src/components/timetable-status-chip/TimetableStatusChip';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import ViewCreateSlots from './ViewCreateSlots';
 import AssignSlots from './assignSlotsComponent';
@@ -53,7 +56,53 @@ const LectureSlots = () => {
     options: { skip: !medium?.id },
   });
 
-  const tableData = lectureSlotsData?.items ?? [];
+  const tableData = useMemo(() => lectureSlotsData?.items ?? [], [lectureSlotsData]);
+
+  const summaryCards = useMemo(() => {
+    const total = tableData.length;
+    const configured = tableData.filter(
+      (item: any) => normalizeTimetableStatus(item.status) !== 'PendingSlotSetup'
+    ).length;
+    const ready = tableData.filter(
+      (item: any) => normalizeTimetableStatus(item.status) === 'Balanced'
+    ).length;
+    const capacityIssues = tableData.filter(
+      (item: any) => normalizeTimetableStatus(item.status) === 'OverCapacity'
+    ).length;
+
+    return [
+      {
+        label: 'Total Classes',
+        value: total,
+        icon: 'mdi:google-classroom',
+        color: 'primary' as const,
+      },
+      {
+        label: 'Configured Slots',
+        value: configured,
+        icon: 'mdi:check-circle-outline',
+        color: 'info' as const,
+      },
+      {
+        label: 'Pending Slots',
+        value: total - configured,
+        icon: 'mdi:clock-alert-outline',
+        color: 'warning' as const,
+      },
+      {
+        label: 'Ready for Timetable',
+        value: ready,
+        icon: 'mdi:calendar-check-outline',
+        color: 'success' as const,
+      },
+      {
+        label: 'Capacity Issues',
+        value: capacityIssues,
+        icon: 'mdi:alert-circle-outline',
+        color: 'error' as const,
+      },
+    ];
+  }, [tableData]);
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
@@ -98,7 +147,39 @@ const LectureSlots = () => {
 
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'standardName', label: 'Class', filterType: 'number', align: 'left' },
+      { id: 'standardName', label: 'Class', filterType: 'number', align: 'left', sticky: true },
+      {
+        id: 'activeDaysCount',
+        label: 'Active Days',
+        minWidth: 100,
+        filterType: 'number',
+        align: 'left',
+        render: (value) => (value == null ? '—' : `${value} day${value === 1 ? '' : 's'}`),
+      },
+      {
+        id: 'teachingSlotsPerDay',
+        label: 'Teaching Slots/Day',
+        minWidth: 130,
+        filterType: 'number',
+        align: 'left',
+        render: (value) => (value == null ? '—' : value),
+      },
+      {
+        id: 'weeklyTeachingCapacity',
+        label: 'Weekly Teaching Capacity',
+        minWidth: 150,
+        filterType: 'number',
+        align: 'left',
+        render: (value) => (value == null ? '—' : `${value}/week`),
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        minWidth: 150,
+        isSort: false,
+        align: 'left',
+        render: (value) => (value ? <TimetableStatusChip status={value} /> : '—'),
+      },
       {
         id: 'slotConfigurations',
         label: 'Slot Configuration',
@@ -285,35 +366,38 @@ const LectureSlots = () => {
           />
         </Card>
       ) : (
-        <CustomizableTable
-          tableId="time-schedule-management-setting-table"
-          noDataText={
-            <>
-              Lecture Slots Data Not Found{' '}
-              {canAdd && (
-                <Box
-                  onClick={() => {
-                    addLectureSlotDialog.onTrue();
-                  }}
-                  color="primary.main"
-                  fontWeight={600}
-                  sx={{
-                    '&:hover': {
-                      cursor: 'pointer',
-                      color: 'primary.main',
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  Create Slots
-                </Box>
-              )}
-            </>
-          }
-          columns={columns}
-          data={tableData}
-          isLoading={isLectureSlotsLoading}
-        />
+        <>
+          <TimetableSettingsSummaryCards cards={summaryCards} />
+          <CustomizableTable
+            tableId="lecture-slots-setting-table"
+            noDataText={
+              <>
+                Lecture slots not configured{' '}
+                {canAdd && (
+                  <Box
+                    onClick={() => {
+                      addLectureSlotDialog.onTrue();
+                    }}
+                    color="primary.main"
+                    fontWeight={600}
+                    sx={{
+                      '&:hover': {
+                        cursor: 'pointer',
+                        color: 'primary.main',
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    Create Slots
+                  </Box>
+                )}
+              </>
+            }
+            columns={columns}
+            data={tableData}
+            isLoading={isLectureSlotsLoading}
+          />
+        </>
       )}
     </Box>
   );

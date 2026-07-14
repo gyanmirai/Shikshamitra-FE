@@ -19,7 +19,7 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Card, Stack, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useDeleteChapterMutation,
@@ -31,7 +31,9 @@ import { subjectTempData } from '../subjectsData';
 import ChapterTable from './components/chapterTable';
 import ChapterDocuments from './components/chapterDocuments';
 import BulkChapterForm from './components/bulkChapterForm/BulkChapterForm';
+import CreateQuestionDialog from '../../../examination/question-bank/components/CreateQuestionDialog';
 import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
+import ChapterQuestionsDialog from '../../../examination/question-bank/components/ChapterQuestionsDialog';
 
 import type { IChapter, SubjectOption } from './type';
 
@@ -74,6 +76,9 @@ const Subjects = () => {
   >([]);
   const [selectedChapter, setSelectedChapter] = useState<IChapter | null>(null);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [createQuestionChapter, setCreateQuestionChapter] = useState<IChapter | null>(null);
+  const [viewQuestionsChapter, setViewQuestionsChapter] = useState<IChapter | null>(null);
+
   useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -175,6 +180,8 @@ const Subjects = () => {
       bulkChapterDialog.onFalse();
     }
   };
+
+  const filteredChapters = (subjectId ? chapterResponse || [] : []) as IChapter[];
 
   useEffect(() => {
     const allClasses =
@@ -376,21 +383,36 @@ const Subjects = () => {
                 />
               </Box>
               {canAdd && (
-                <Button
-                  size="small"
-                  startIcon={<Iconify icon="mdi:layers-plus" width={18} />}
-                  variant="contained"
-                  onClick={() => {
-                    bulkChapterDialog.onTrue();
-                  }}
-                  disabled={!classes || !subject}
-                  sx={{ px: '32px' }}
-                >
-                  Add Chapters
-                </Button>
+                <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="flex-end">
+                  <Button
+                    size="small"
+                    startIcon={<Iconify icon="mdi:cloud-upload-outline" width={18} />}
+                    variant="outlined"
+                    onClick={() => {
+                      bulkChapterDialog.onTrue();
+                    }}
+                    disabled={!classes || !subject}
+                  >
+                    Bulk Add
+                  </Button>
+                  <Button
+                    size="small"
+                    startIcon={<Iconify icon="mdi:plus" width={18} />}
+                    variant="contained"
+                    onClick={() => {
+                      setSelectedChapter(null);
+                      setIsEditMode(false);
+                      addChapterDialog.onTrue();
+                    }}
+                    disabled={!classes || !subject}
+                  >
+                    Add Chapter
+                  </Button>
+                </Stack>
               )}
             </Box>
           </Card>
+
           {/* Table component for displaying chapter data */}
           <ChapterTable
             canAdd={canAdd}
@@ -403,13 +425,15 @@ const Subjects = () => {
             isLoading={isChapterLoading || isChapterFetching}
             setEditData={setSelectedChapter}
             addChapterDialog={addChapterDialog}
-            data={subjectId ? chapterResponse || [] : []}
+            data={filteredChapters}
             actions={actions}
             handleEyeClick={handleEyeClick}
             onViewDocuments={(chapter) => {
               setSelectedChapter(chapter as IChapter);
               viewDocumentDialog.onTrue();
             }}
+            onCreateQuestion={(chapter) => setCreateQuestionChapter(chapter)}
+            onViewQuestions={(chapter) => setViewQuestionsChapter(chapter)}
             subjectId={subjectId}
             standardId={classId}
           />
@@ -479,6 +503,26 @@ const Subjects = () => {
       >
         <ChapterDocuments chapter={selectedChapter} />
       </CustomDialog>
+
+      {/* Create Question Dialog */}
+      <CreateQuestionDialog
+        open={Boolean(createQuestionChapter)}
+        onClose={() => setCreateQuestionChapter(null)}
+        initialStandardId={createQuestionChapter?.standardId || ''}
+        initialSubjectId={createQuestionChapter?.subjectId || ''}
+        initialChapterId={createQuestionChapter?.id || ''}
+        chapterName={createQuestionChapter?.chapterName}
+      />
+
+      {/* View Chapter Questions Dialog */}
+      <ChapterQuestionsDialog
+        open={Boolean(viewQuestionsChapter)}
+        onClose={() => setViewQuestionsChapter(null)}
+        chapterId={viewQuestionsChapter?.id || ''}
+        subjectId={viewQuestionsChapter?.subjectId}
+        standardId={viewQuestionsChapter?.standardId}
+        chapterName={viewQuestionsChapter?.chapterName}
+      />
     </Box>
   );
 };

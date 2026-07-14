@@ -11,6 +11,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useAddSubjectMutation,
   useUpdateSubjectMutation,
+  useCheckSubjectDuplicateMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import { getSubjectInitialValues } from '../initialValues';
@@ -30,6 +31,10 @@ export const useSubjectForm = ({ onClose, editData }: Omit<ISubjectFormProps, 'o
     type: 'mutation',
     currentQueryAndMutation: useUpdateSubjectMutation,
   });
+  const [checkDuplicate, { isLoading: isDuplicateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCheckSubjectDuplicateMutation,
+  });
 
   const initialValues = useMemo(() => getSubjectInitialValues(editData), [editData]);
 
@@ -38,15 +43,46 @@ export const useSubjectForm = ({ onClose, editData }: Omit<ISubjectFormProps, 'o
     validationSchema: subjectValidationSchema,
     onSubmit: async (values) => {
       try {
+        const duplicateResult = await checkDuplicate({
+          academicMediumId: (currentMedium as Medium).id,
+          body: {
+            name: values.subjectName.trim(),
+            excludeSubjectId: editData?.id,
+          },
+        }).unwrap();
+
+        if (duplicateResult?.hasExactDuplicate) {
+          shikshaMitraToast.error({
+            message: `${values.subjectName.trim()} already exists. Please use the existing subject.`,
+          });
+          return;
+        }
+
+        if (duplicateResult?.hasSimilarDuplicate) {
+          const matchName = duplicateResult.matches?.[0]?.name || 'another subject';
+          const shouldContinue = window.confirm(
+            `Possible duplicate found: ${matchName}. Do you want to create anyway?`
+          );
+          if (!shouldContinue) return;
+        }
+
+        const body = {
+          name: values.subjectName.trim(),
+          displayName: values.displayName.trim() || null,
+          category: values.category,
+          color: values.subjectColor,
+          icon: values.icon || null,
+          description: values.description.trim() || null,
+          status: statusToNumber(values.status),
+          sortOrder: values.sortOrder === '' ? null : Number(values.sortOrder),
+          educationMediumId: (currentMedium as Medium).id,
+        };
+
         if (editData) {
           const payload = {
             academicMediumId: (currentMedium as Medium).id,
             id: (editData as ISubject).id,
-            body: {
-              name: values.subjectName,
-              color: values.subjectColor,
-              educationMediumId: (currentMedium as Medium).id,
-            },
+            body,
           };
           await updateSubject(payload).unwrap();
           shikshaMitraToast.success({
@@ -55,11 +91,7 @@ export const useSubjectForm = ({ onClose, editData }: Omit<ISubjectFormProps, 'o
         } else {
           const payload = {
             academicMediumId: (currentMedium as Medium).id,
-            body: {
-              name: values.subjectName,
-              color: values.subjectColor,
-              educationMediumId: (currentMedium as Medium).id,
-            },
+            body,
           };
           await addSubject(payload).unwrap();
           shikshaMitraToast.success({
@@ -75,6 +107,12 @@ export const useSubjectForm = ({ onClose, editData }: Omit<ISubjectFormProps, 'o
 
   return {
     formik,
-    isSaveLoading: isUpdateLoading || isAddLoading,
+    isSaveLoading: isUpdateLoading || isAddLoading || isDuplicateLoading,
   };
+};
+
+const statusToNumber = (status: string) => {
+  if (status === 'Inactive') return 1;
+  if (status === 'Archived') return 2;
+  return 0;
 };

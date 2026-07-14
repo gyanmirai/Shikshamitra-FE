@@ -25,7 +25,7 @@ const nextConfig = {
 
   reactStrictMode: false,
 
-  distDir: 'build',
+  distDir: process.env.NEXT_DIST_DIR || 'build',
 
   output: isStaticExport === 'true' ? 'export' : 'standalone',
 

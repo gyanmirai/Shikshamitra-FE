@@ -30,7 +30,8 @@ interface ColumnFilterMenuProps {
     filterType: string,
     value: any,
     valueType: string,
-    label?: ReactNode
+    label?: ReactNode,
+    displayValue?: ReactNode
   ) => void;
 }
 
@@ -141,7 +142,11 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
       filterTypeValue,
       value,
       anchorEl.column.filterType as string,
-      anchorEl.column.label
+      anchorEl.column.label,
+      anchorEl.column.filterType === 'enum'
+        ? anchorEl.column.enumOptions?.find((option) => String(option.value) === String(value))
+            ?.label
+        : undefined
     );
     formik.setFieldValue('filterValue', null);
     formik.setFieldValue('filterType', '');
@@ -198,7 +203,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
           >
             <InputLabel>{anchorEl.column.label} *</InputLabel>
             <Select
-              value={formik.values.filterValue}
+              value={formik.values.filterValue ?? ''}
               onChange={(e) => formik.setFieldValue('filterValue', e.target.value)}
               label={`${anchorEl.column.label} *`}
             >

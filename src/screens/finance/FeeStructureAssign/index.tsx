@@ -7,9 +7,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import FeeStructureAssignmentForm from 'src/screens/student/enrollment/admission/FeeStructureAssignmentForm';
 
 import FeeStructureAssignTable from './Components/FeeStructureAssignTable';
+import FeeStructureAssignmentForm from './Components/StudentFeeStructureAssignmentForm';
 import BulkFeeStructureAssignmentForm from './Components/BulkFeeStructureAssignmentForm';
 
 import type { IFeeStructureData } from './Components/type';

@@ -263,26 +263,26 @@ const ManualAttendanceScreen = () => {
   // -------------------------------------------------------------------------
   // Save handler
   // -------------------------------------------------------------------------
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
     if (isOutsideAcademicYear && academicYearStart && academicYearEnd) {
       shikshaMitraToast.error({
         message: `Attendance can only be marked between ${academicYearStart.format('DD-MM-YYYY')} and ${academicYearEnd.format('DD-MM-YYYY')}.`,
       });
-      return;
+      return false;
     }
 
     if (isFutureDate) {
       shikshaMitraToast.error({
         message: 'Future date attendance cannot be saved.',
       });
-      return;
+      return false;
     }
 
     if (isHoliday) {
       shikshaMitraToast.error({
         message: holidayReason || 'Attendance cannot be marked on a holiday.',
       });
-      return;
+      return false;
     }
 
     try {
@@ -299,7 +299,7 @@ const ManualAttendanceScreen = () => {
             ? 'Shift start and end time are required for Present or Half Day time-based attendance. Please fix the employee shift or enter both times.'
             : 'In-Time and Out-Time are required for Present or Half Day time-based attendance. Please enter both times.',
         });
-        return;
+        return false;
       }
 
       const entries = buildManualAttendanceSaveEntries(dirtyRows);
@@ -307,7 +307,7 @@ const ManualAttendanceScreen = () => {
         const refreshed = await refetchDayAttendance().unwrap();
         syncRowsFromDayResponse(refreshed);
         shikshaMitraToast.info({ message: 'No attendance changes to save.' });
-        return;
+        return true;
       }
 
       const payload = {
@@ -321,9 +321,11 @@ const ManualAttendanceScreen = () => {
       shikshaMitraToast.success({
         message: `Attendance updated successfully for ${date?.format('DD-MM-YYYY')}`,
       });
+      return true;
     } catch (error) {
       console.error('Error updating attendance:', error);
       shikshaMitraToast.error({ message: 'Failed to update attendance.' });
+      return false;
     }
   };
 
@@ -340,6 +342,12 @@ const ManualAttendanceScreen = () => {
       if (isLocked) {
         await unlockDayAttendance(payload).unwrap();
       } else {
+        if (isDirty) {
+          const saved = await handleSave();
+          if (!saved) {
+            return;
+          }
+        }
         await lockDayAttendance(payload).unwrap();
       }
       shikshaMitraToast.success({

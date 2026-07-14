@@ -37,7 +37,7 @@ export const FilterChips = ({ filters, onRemoveFilter, onClearAll }: FilterChips
                 typeof filter.value === 'object' &&
                 filter.value !== null
                   ? `${(filter.value as any).min} - ${(filter.value as any).max}`
-                  : (filter.value as any)}
+                  : (filter.displayValue ?? (filter.value as any))}
               </Box>
             </Box>
           }

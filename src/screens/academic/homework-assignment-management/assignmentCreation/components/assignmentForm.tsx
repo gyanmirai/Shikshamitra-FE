@@ -211,6 +211,28 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
   }, [allClass, classes]);
 
+  const {
+    data: assignmentTypeData,
+    isLoading: isAssignmentTypeLoading,
+    isFetching: isAssignmentTypeFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignmentTypesQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+    options: { skip: !(medium as Medium)?.id },
+  });
+
+  const activeAssignmentTypes = useMemo(() => {
+    const list = (assignmentTypeData?.data || []).filter((t: any) => t.status === 0);
+    if (editData?.assignmentTypeId) {
+      const editType = (assignmentTypeData?.data || []).find((t: any) => t.id === editData.assignmentTypeId);
+      if (editType && editType.status === 1) {
+        list.push(editType);
+      }
+    }
+    return list;
+  }, [assignmentTypeData?.data, editData?.assignmentTypeId]);
+
   const assignmentInitialValues = useMemo(
     () => getAssignmentInitialValues(assignmentByIdData?.data || editData, classes),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,6 +245,37 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     validationSchema: assignmentValidationSchema(currentYear),
     onSubmit: async (values) => {
       try {
+        // Check if user is overriding selected template defaults
+        const selectedType = activeAssignmentTypes.find((t: any) => t.id === values.assignmentTypeId);
+        if (selectedType) {
+          let hasOverride = false;
+          if (selectedType.defaultSubmissionType !== undefined && selectedType.defaultSubmissionType !== null && selectedType.defaultSubmissionType !== values.submissionType) {
+            hasOverride = true;
+          }
+
+          if (selectedType.defaultMarks !== undefined && selectedType.defaultMarks !== null && Number(selectedType.defaultMarks) !== Number(values.totalMarks)) {
+            hasOverride = true;
+          }
+
+          if (selectedType.defaultDueDays !== undefined && selectedType.defaultDueDays !== null) {
+            const hasDueDaysDiff = values.divisions.some((d: any) => {
+              if (!d.publishDate || !d.dueDate) return false;
+              const diff = dayjs(d.dueDate).diff(dayjs(d.publishDate), 'day');
+              return diff !== selectedType.defaultDueDays;
+            });
+            if (hasDueDaysDiff) {
+              hasOverride = true;
+            }
+          }
+
+          if (hasOverride) {
+            const confirmOverride = window.confirm(
+              'Warning: You have modified marks, submission settings, or due days from the default assignment type template. Are you sure you want to override these settings?'
+            );
+            if (!confirmOverride) return;
+          }
+        }
+
         const formData = new FormData();
         formData.append('StandardId', values.classId);
         formData.append('SubjectId', values.subjectId);
@@ -272,16 +325,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     setAllDivision(allClass.find((org: any) => org?.id === activeClassId)?.divisions || []);
   }, [allClass, formik.values.classId]);
 
-  const {
-    data: assignmentTypeData,
-    isLoading: isAssignmentTypeLoading,
-    isFetching: isAssignmentTypeFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAssignmentTypesQuery,
-    params: { academicMediumId: (medium as Medium)?.id },
-    options: { skip: !(medium as Medium)?.id },
-  });
+
 
   const {
     data: subjectOptionsData,
@@ -465,18 +509,24 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       onChange={(val) => {
                         const selectedDivs = val as string[];
                         const existingDivs = formik.values.divisions || [];
+                        const selectedType = activeAssignmentTypes.find(
+                          (t: any) => t.id === formik.values.assignmentTypeId
+                        );
+                        const defaultDueDays = selectedType?.defaultDueDays;
+
                         const newDivisions = selectedDivs.map((divId) => {
                           const selectedDivData = allDivision.find((d) => d.id === divId);
                           const existing = existingDivs.find(
                             (d: { divisionId: string }) => d.divisionId === divId
                           );
+                          const publishDate = dayjs();
                           return (
                             existing || {
                               divisionId: divId,
                               divisionName: selectedDivData?.name || '',
                               createdAt: dayjs(),
-                              publishDate: null,
-                              dueDate: null,
+                              publishDate: publishDate,
+                              dueDate: defaultDueDays !== undefined && defaultDueDays !== null ? publishDate.add(defaultDueDays, 'day') : null,
                             }
                           );
                         });
@@ -589,12 +639,33 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   >
                     <CustomSelect
                       label="Assignment Type *"
-                      options={assignmentTypeData?.data || []}
+                      options={activeAssignmentTypes}
                       labelKey="assignmentTypeName"
                       valueKey="id"
                       isLoading={isAssignmentTypeLoading || isAssignmentTypeFetching}
                       value={formik.values.assignmentTypeId || ''}
-                      onChange={(val) => formik.setFieldValue('assignmentTypeId', val)}
+                      onChange={(val) => {
+                        formik.setFieldValue('assignmentTypeId', val);
+                        const selectedType = activeAssignmentTypes.find((t: any) => t.id === val);
+                        if (selectedType) {
+                          if (selectedType.defaultSubmissionType !== undefined && selectedType.defaultSubmissionType !== null) {
+                            formik.setFieldValue('submissionType', selectedType.defaultSubmissionType);
+                          }
+                          if (selectedType.defaultMarks !== undefined && selectedType.defaultMarks !== null) {
+                            formik.setFieldValue('totalMarks', selectedType.defaultMarks);
+                          }
+                          if (selectedType.defaultDueDays !== undefined && selectedType.defaultDueDays !== null) {
+                            const newDivisions = formik.values.divisions.map((d: any) => {
+                              const pubDate = d.publishDate ? dayjs(d.publishDate) : dayjs();
+                              return {
+                                ...d,
+                                dueDate: pubDate.add(selectedType.defaultDueDays, 'day'),
+                              };
+                            });
+                            formik.setFieldValue('divisions', newDivisions);
+                          }
+                        }
+                      }}
                       formControlProps={{ fullWidth: true }}
                       error={!!(formik.touched.assignmentTypeId && formik.errors.assignmentTypeId)}
                       helperText={
@@ -754,6 +825,19 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                                       value={div.publishDate ? dayjs(div.publishDate) : null}
                                       onChange={(val) => {
                                         formik.setFieldValue(`divisions[${idx}].publishDate`, val);
+                                        const selectedType = activeAssignmentTypes.find(
+                                          (t: any) => t.id === formik.values.assignmentTypeId
+                                        );
+                                        if (
+                                          val &&
+                                          selectedType?.defaultDueDays !== undefined &&
+                                          selectedType.defaultDueDays !== null
+                                        ) {
+                                          formik.setFieldValue(
+                                            `divisions[${idx}].dueDate`,
+                                            dayjs(val).add(selectedType.defaultDueDays, 'day')
+                                          );
+                                        }
                                         formik.validateField(`divisions[${idx}].publishDate`);
                                       }}
                                       ampm={false}
@@ -850,8 +934,9 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                         { value: 0, label: 'Online Text' },
                         { value: 1, label: 'File Upload' },
                         { value: 2, label: 'In-Person' },
+                        { value: 3, label: 'No Submission Required' },
                       ].map((item) => (
-                        <Grid size={{ xs: 12, md: 4 }} key={item.value}>
+                        <Grid size={{ xs: 12, md: 3 }} key={item.value}>
                           <SubmissionTypeCard
                             value={item.value}
                             label={item.label}

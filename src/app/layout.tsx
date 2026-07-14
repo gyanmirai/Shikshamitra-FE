@@ -1,7 +1,7 @@
 import 'src/global.css';
 // ----------------------------------------------------------------------
 
-import type { Viewport } from 'next';
+import type { Metadata, Viewport } from 'next';
 
 import { CONFIG } from 'src/config-global';
 import { primary } from 'src/theme/core/palette';
@@ -24,6 +24,13 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: primary.main,
+};
+
+export const metadata: Metadata = {
+  title: {
+    default: CONFIG.site.name,
+    template: `%s | ${CONFIG.site.name}`,
+  },
 };
 
 type Props = { children: React.ReactNode };

@@ -1,6 +1,19 @@
 import * as Yup from 'yup';
 
 export const subjectValidationSchema = Yup.object({
-  subjectName: Yup.string().required('Subject Name is required'),
+  subjectName: Yup.string()
+    .trim()
+    .min(2, 'Subject name must be at least 2 characters')
+    .max(100, 'Subject name cannot exceed 100 characters')
+    .required('Subject Name is required'),
+  displayName: Yup.string().trim().max(50, 'Display name cannot exceed 50 characters'),
+  category: Yup.string().trim().required('Subject category is required'),
   subjectColor: Yup.string().required('Subject color is required'),
+  icon: Yup.string().trim().max(50, 'Icon cannot exceed 50 characters'),
+  description: Yup.string().trim().max(500, 'Description cannot exceed 500 characters'),
+  status: Yup.string().oneOf(['Active', 'Inactive', 'Archived']).required('Status is required'),
+  sortOrder: Yup.number()
+    .transform((value, originalValue) => (originalValue === '' ? undefined : value))
+    .min(0, 'Sort order cannot be negative')
+    .nullable(),
 });

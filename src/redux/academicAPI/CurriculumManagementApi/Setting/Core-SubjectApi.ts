@@ -6,9 +6,10 @@ export const subjectsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all subjects under academic medium
     getCoreSubjectsByMedium: builder.query({
-      query: ({ academicMediumId }) => ({
+      query: ({ academicMediumId, searchTerm }) => ({
         url: `/academic-mediums/${academicMediumId}/subjects`,
         method: 'GET',
+        params: { searchTerm },
       }),
       providesTags: [academicType.subject],
     }),
@@ -26,6 +27,15 @@ export const subjectsApi = academicApi.injectEndpoints({
     addSubject: builder.mutation({
       query: ({ academicMediumId, body }) => ({
         url: `/academic-mediums/${academicMediumId}/subjects`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.subject],
+    }),
+
+    bulkAddSubjects: builder.mutation({
+      query: ({ academicMediumId, body }) => ({
+        url: `/academic-mediums/${academicMediumId}/subjects/bulk`,
         method: 'POST',
         body,
       }),
@@ -50,6 +60,47 @@ export const subjectsApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.subject],
     }),
+
+    archiveSubject: builder.mutation({
+      query: ({ academicMediumId, id, body }) => ({
+        url: `/academic-mediums/${academicMediumId}/subjects/${id}/archive`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.subject],
+    }),
+
+    restoreSubject: builder.mutation({
+      query: ({ academicMediumId, id }) => ({
+        url: `/academic-mediums/${academicMediumId}/subjects/${id}/restore`,
+        method: 'POST',
+      }),
+      invalidatesTags: [academicType.subject],
+    }),
+
+    checkSubjectDuplicate: builder.mutation({
+      query: ({ academicMediumId, body }) => ({
+        url: `/academic-mediums/${academicMediumId}/subjects/check-duplicate`,
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    getSubjectUsage: builder.query({
+      query: ({ academicMediumId, id }) => ({
+        url: `/academic-mediums/${academicMediumId}/subjects/${id}/usage`,
+        method: 'GET',
+      }),
+      providesTags: [academicType.subject],
+    }),
+
+    getSubjectAuditLogs: builder.query({
+      query: ({ academicMediumId, id }) => ({
+        url: `/academic-mediums/${academicMediumId}/subjects/${id}/audit-logs`,
+        method: 'GET',
+      }),
+      providesTags: [academicType.subject],
+    }),
   }),
   overrideExisting: false,
 });
@@ -59,6 +110,12 @@ export const {
   useGetCoreSubjectsByMediumQuery,
   useGetSubjectByIdQuery,
   useAddSubjectMutation,
+  useBulkAddSubjectsMutation,
   useUpdateSubjectMutation,
   useDeleteSubjectMutation,
+  useArchiveSubjectMutation,
+  useRestoreSubjectMutation,
+  useCheckSubjectDuplicateMutation,
+  useGetSubjectUsageQuery,
+  useGetSubjectAuditLogsQuery,
 } = subjectsApi;

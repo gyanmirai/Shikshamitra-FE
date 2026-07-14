@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, Grid, Typography } from '@mui/material';
-import { AnalyticsConversionRates } from 'src/screens/student/enrollment/dashboard';
+import { AnalyticsConversionRates } from 'src/components/dashboard/analytics-conversion-rates';
 
 const DashboardProgressVisualization = () => (
   <Grid size={12} mt={2}>

@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IInquiryData } from 'src/types/student-enrollment';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
@@ -19,8 +20,6 @@ import ChangeDivisionScreen from './change-division';
 import BulkStudentAddScreen from './bulk-student-add';
 import RollNoGenerationScreen from './roll-generation';
 import PendingAssignmentScreen from './pending-assignment';
-
-import type { IInquiryData } from '../enrollment/Inquiry/type';
 
 // Stable component references defined OUTSIDE the component to prevent
 // new function identities on every render (which causes remount + re-fetch loops)

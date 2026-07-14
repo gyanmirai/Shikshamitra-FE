@@ -1,3 +1,5 @@
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { useState, useEffect, useCallback } from 'react';
 
 import type { IData, IColumn } from '../types';
@@ -19,6 +21,8 @@ export const useStickyColumns = ({
   isLoading,
   tableUniqId,
 }: UseStickyColumnsProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [stickyMap, setStickyMap] = useState<{
     left: Record<string, number>;
     right: Record<string, number>;
@@ -37,8 +41,12 @@ export const useStickyColumns = ({
           const half = Math.ceil(totalVisibleColumns.length / 2);
 
           totalVisibleColumns.forEach((col, idx) => {
-            if (col.sticky) {
-              if (idx < half) {
+            if (col.sticky && (!isMobile || col.stickyOnMobile !== false)) {
+              if (col.stickyPosition === 'left') {
+                leftSticky.push({ col, idx });
+              } else if (col.stickyPosition === 'right') {
+                rightSticky.push({ col, idx });
+              } else if (idx < half) {
                 leftSticky.push({ col, idx });
               } else {
                 rightSticky.push({ col, idx });
@@ -75,7 +83,7 @@ export const useStickyColumns = ({
         });
       });
     }, 100);
-  }, [columnVisibility, columns, headerRefs, paginatedData, isLoading, tableUniqId]);
+  }, [columnVisibility, columns, headerRefs, paginatedData, isLoading, isMobile, tableUniqId]);
 
   /**
    * Memoization Justification:
@@ -84,9 +92,11 @@ export const useStickyColumns = ({
    */
   const getStickyStyle = useCallback(
     (col: IColumn, isHeader: boolean = false): React.CSSProperties => {
+      const isSticky = col.sticky && (!isMobile || col.stickyOnMobile !== false);
       const base: React.CSSProperties = {
-        position: col.sticky ? 'sticky' : 'static',
-        zIndex: col.sticky ? (isHeader ? 999 : 11) : 1, // Ensure sticky columns are above normal ones
+        position: isSticky ? 'sticky' : 'static',
+        zIndex: isSticky ? (isHeader ? 999 : 11) : 1,
+        ...(!isHeader && !isSticky ? { backgroundColor: 'transparent', boxShadow: 'none' } : {}),
       };
 
       const colId = col.id as string;
@@ -99,7 +109,7 @@ export const useStickyColumns = ({
 
       return base;
     },
-    [stickyMap]
+    [isMobile, stickyMap]
   );
 
   return { stickyMap, getStickyStyle };

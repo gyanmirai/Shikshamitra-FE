@@ -25,6 +25,10 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
+  useAddChapterMutation,
+  useUpdateChapterMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import {
   Box,
   Grid,
   Chip,
@@ -32,18 +36,28 @@ import {
   Stack,
   Button,
   Divider,
+  MenuItem,
+  Checkbox,
+  Collapse,
   TextField,
   Typography,
   DialogActions,
   InputAdornment,
+  FormControlLabel,
 } from '@mui/material';
-import {
-  useAddChapterMutation,
-  useUpdateChapterMutation,
-} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import { getChapterInitialValues } from './initialValues';
 import { getChapterValidationSchema } from './validationSchema';
+import {
+  bloomOptions,
+  difficultyOptions,
+  visibilityOptions,
+  reviewStatusOptions,
+  mappingStatusOptions,
+  publishStatusOptions,
+  resourceStatusOptions,
+  coverageStatusOptions,
+} from './syllabusPlanningData';
 
 import type { IChapterFormValues, IAddNewChapterProps } from './type';
 
@@ -69,6 +83,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [localFileNames, setLocalFileNames] = useState<Record<string, string>>({});
   const previewDialog = useBoolean();
+  const additionalFields = useBoolean(false);
   const [addChapter, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddChapterMutation,
@@ -80,6 +95,57 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   const [uploadCurriculumFile] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
+
+  const numberOrNull = (value: number | string) => (value === '' ? null : Number(value));
+  const numberOrZero = (value: number | string) => (value === '' ? 0 : Number(value));
+
+  const buildPlanningPayload = (values: IChapterFormValues) => ({
+    unitName: values.unitName,
+    termName: values.termName,
+    topic: values.topic,
+    estimatedTeachingDays: numberOrNull(values.estimatedTeachingDays),
+    estimatedPeriods: numberOrNull(values.estimatedPeriods),
+    revisionDays: numberOrNull(values.revisionDays),
+    bufferDays: numberOrNull(values.bufferDays),
+    difficultyLevel: values.difficultyLevel,
+    bloomLevel: values.bloomLevel,
+    tags: values.tags,
+    learningOutcomes: values.learningOutcomes,
+    skillsCovered: values.skillsCovered,
+    prerequisites: values.prerequisites,
+    teachingMethods: values.teachingMethods,
+    classActivities: values.classActivities,
+    completionCriteria: values.completionCriteria,
+    teacherNotes: values.teacherNotes,
+    studentSummary: values.studentSummary,
+    parentSummary: values.parentSummary,
+    referenceLinks: values.referenceLinks,
+    worksheets: values.worksheets,
+    audioVideoMaterials: values.audioVideoMaterials,
+    boardDocuments: values.boardDocuments,
+    assessmentMethod: values.assessmentMethod,
+    questionTypes: values.questionTypes,
+    marksWeightage: numberOrNull(values.marksWeightage),
+    bloomCoverage: values.bloomCoverage,
+    difficultyDistribution: values.difficultyDistribution,
+    visibility: values.visibility,
+    publishStatus: values.publishStatus,
+    reviewStatus: values.reviewStatus,
+    notifyOnPublish: values.notifyOnPublish,
+    progressPercentage: numberOrZero(values.progressPercentage),
+    coverageStatus: values.coverageStatus,
+    lessonPlanStatus: values.lessonPlanStatus,
+    homeworkStatus: values.homeworkStatus,
+    assessmentStatus: values.assessmentStatus,
+    resourceStatus: values.resourceStatus,
+    questionCount: numberOrZero(values.questionCount),
+    healthScore: numberOrZero(values.healthScore),
+    isAiGenerated: values.isAiGenerated,
+    copiedFromPreviousYear: values.copiedFromPreviousYear,
+    templateSource: values.templateSource,
+    dependencyChapterIds: values.dependencyChapterIds,
+    versionLabel: values.versionLabel,
   });
 
   const getFileNameFromUrl = (file: string | File): string => {
@@ -104,6 +170,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
 
   const formik = useFormik<IChapterFormValues>({
     initialValues: getChapterInitialValues(initialValues),
+    enableReinitialize: true,
     validationSchema: getChapterValidationSchema(currentYear, existingChapters, initialValues?.id),
     onSubmit: async (values) => {
       try {
@@ -124,6 +191,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           false
         );
         const formattedEndDate = dateConvertor(values?.endDate?.format(dateFormat) || '', false);
+        const planningPayload = buildPlanningPayload(values);
 
         if (initialValues) {
           const updatePayload = {
@@ -134,6 +202,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
             endDate: formattedEndDate,
             description: values.description,
             documents,
+            ...planningPayload,
           };
 
           await updateChapter({
@@ -146,20 +215,16 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           });
         } else {
           const postPayload = {
-            assignedSubjectId: subjectId,
-            chapters: [
-              {
-                chapterNo: values.chapterNo,
-                chapterName: values.chapterName.trim(),
-                startDate: formattedStartDate,
-                endDate: formattedEndDate,
-                description: values.description,
-                documents,
-              },
-            ],
+            chapterNo: values.chapterNo,
+            chapterName: values.chapterName.trim(),
+            startDate: formattedStartDate,
+            endDate: formattedEndDate,
+            description: values.description,
+            documents,
+            ...planningPayload,
           };
 
-          await addChapter({ standardId: classId, subjectId, body: postPayload }).unwrap();
+          await addChapter({ standardId: classId, subjectId, body: [postPayload] }).unwrap();
 
           shikshaMitraToast.success({
             message: `Chapter ${values.chapterNo} added successfully`,
@@ -176,8 +241,11 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   });
 
   const handleDropzoneChange = async (droppedFiles: any[]) => {
-    const newFiles = droppedFiles.filter((f): f is File => typeof f !== 'string');
-    const existingFiles = droppedFiles.filter((f) => typeof f === 'string');
+    const newFiles = droppedFiles.filter((f): f is File => f instanceof File);
+    const existingFiles = droppedFiles
+      .filter((f) => !(f instanceof File))
+      .map((f) => (typeof f === 'string' ? f : f.url || f.filePath || ''))
+      .filter(Boolean);
 
     if (newFiles.length === 0) {
       formik.setFieldValue('documents', existingFiles);
@@ -429,33 +497,300 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 '&:hover': { boxShadow: 4 },
               }}
             >
-              <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                <Iconify icon="mdi:text-box-outline" width={18} sx={{ color: 'primary.main' }} />
-                <Typography variant="subtitle2" fontWeight={700}>
-                  Content
-                </Typography>
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ cursor: 'pointer', userSelect: 'none' }}
+                onClick={additionalFields.onToggle}
+              >
+                <Stack direction="row" alignItems="center" gap={1}>
+                  <Iconify icon="mdi:text-box-outline" width={18} sx={{ color: 'primary.main' }} />
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Content (Additional Fields)
+                  </Typography>
+                </Stack>
+                <Iconify
+                  icon={additionalFields.value ? 'mdi:chevron-up' : 'mdi:chevron-down'}
+                  width={20}
+                  sx={{ color: 'text.secondary' }}
+                />
               </Stack>
-              <Divider sx={{ mb: 2 }} />
 
-              <Editor
-                value={formik.values.description}
-                onChange={(value) => {
-                  formik.setFieldValue('description', value);
-                }}
-                placeholder="Describe what this chapter covers, key topics and learning outcomes…"
-                sx={{
-                  border: `1px solid ${theme.vars.palette.grey[500]}`,
-                  borderRadius: 1,
-                  '&:hover': { borderColor: theme.vars.palette.text.primary },
-                  ...(!!formik.errors.description && {
-                    borderColor: theme.palette.error.main,
-                  }),
-                  '&:focus-within': {
-                    borderColor: theme.vars.palette.text.primary,
-                    borderWidth: 2,
-                  },
-                }}
-              />
+              <Collapse in={additionalFields.value}>
+                <Divider sx={{ my: 2 }} />
+
+                <Grid container spacing={3} sx={{ mb: 3 }}>
+                  {[
+                    { name: 'unitName', label: 'Unit', placeholder: 'Unit 1' },
+                    { name: 'termName', label: 'Term', placeholder: 'Term 1' },
+                    { name: 'topic', label: 'Topic', placeholder: 'Core topic or theme' },
+                    { name: 'tags', label: 'Tags', placeholder: 'algebra, equations' },
+                  ].map((field) => (
+                    <Grid key={field.name} size={{ xs: 12, md: 6 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        name={field.name}
+                        label={field.label}
+                        placeholder={field.placeholder}
+                        value={(formik.values as any)[field.name]}
+                        onChange={formik.handleChange}
+                      />
+                    </Grid>
+                  ))}
+                  {[
+                    { name: 'estimatedTeachingDays', label: 'Teaching Days' },
+                    { name: 'estimatedPeriods', label: 'Estimated Periods' },
+                    { name: 'revisionDays', label: 'Revision Days' },
+                    { name: 'bufferDays', label: 'Buffer Days' },
+                  ].map((field) => (
+                    <Grid key={field.name} size={{ xs: 12, md: 3 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        name={field.name}
+                        label={field.label}
+                        value={(formik.values as any)[field.name]}
+                        onChange={formik.handleChange}
+                      />
+                    </Grid>
+                  ))}
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                      select
+                      fullWidth
+                      size="small"
+                      name="difficultyLevel"
+                      label="Difficulty"
+                      value={formik.values.difficultyLevel}
+                      onChange={formik.handleChange}
+                    >
+                      {difficultyOptions.map((option) => (
+                        <MenuItem key={option} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                      select
+                      fullWidth
+                      size="small"
+                      name="bloomLevel"
+                      label="Bloom Level"
+                      value={formik.values.bloomLevel}
+                      onChange={formik.handleChange}
+                    >
+                      {bloomOptions.map((option) => (
+                        <MenuItem key={option} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+                  {[
+                    ['learningOutcomes', 'Learning Outcomes'],
+                    ['skillsCovered', 'Skills Covered'],
+                    ['prerequisites', 'Prerequisites'],
+                    ['teachingMethods', 'Teaching Methods'],
+                    ['classActivities', 'Class Activities'],
+                    ['completionCriteria', 'Completion Criteria'],
+                  ].map(([name, label]) => (
+                    <Grid key={name} size={{ xs: 12, md: 6 }}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        size="small"
+                        name={name}
+                        label={label}
+                        value={(formik.values as any)[name]}
+                        onChange={formik.handleChange}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+
+                <Editor
+                  value={formik.values.description}
+                  onChange={(value) => {
+                    formik.setFieldValue('description', value);
+                  }}
+                  placeholder="Describe what this chapter covers, key topics and learning outcomes…"
+                  sx={{
+                    border: `1px solid ${theme.vars.palette.grey[500]}`,
+                    borderRadius: 1,
+                    '&:hover': { borderColor: theme.vars.palette.text.primary },
+                    ...(!!formik.errors.description && {
+                      borderColor: theme.palette.error.main,
+                    }),
+                    '&:focus-within': {
+                      borderColor: theme.vars.palette.text.primary,
+                      borderWidth: 2,
+                    },
+                  }}
+                />
+                <Grid container spacing={3} sx={{ mt: 3 }}>
+                  {[
+                    ['teacherNotes', 'Teacher Notes'],
+                    ['studentSummary', 'Student Summary'],
+                    ['parentSummary', 'Parent Summary'],
+                  ].map(([name, label]) => (
+                    <Grid key={name} size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={3}
+                        size="small"
+                        name={name}
+                        label={label}
+                        value={(formik.values as any)[name]}
+                        onChange={formik.handleChange}
+                      />
+                    </Grid>
+                  ))}
+                  {[
+                    ['referenceLinks', 'Reference Links'],
+                    ['worksheets', 'Worksheets'],
+                    ['audioVideoMaterials', 'Audio/Video Materials'],
+                    ['boardDocuments', 'Board Documents'],
+                  ].map(([name, label]) => (
+                    <Grid key={name} size={{ xs: 12, md: 6 }}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        size="small"
+                        name={name}
+                        label={label}
+                        value={(formik.values as any)[name]}
+                        onChange={formik.handleChange}
+                      />
+                    </Grid>
+                  ))}
+                  {[
+                    ['assessmentMethod', 'Assessment Method'],
+                    ['questionTypes', 'Question Types'],
+                    ['bloomCoverage', 'Bloom Coverage'],
+                    ['difficultyDistribution', 'Difficulty Distribution'],
+                  ].map(([name, label]) => (
+                    <Grid key={name} size={{ xs: 12, md: 6 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        name={name}
+                        label={label}
+                        value={(formik.values as any)[name]}
+                        onChange={formik.handleChange}
+                      />
+                    </Grid>
+                  ))}
+                  {[
+                    ['marksWeightage', 'Marks Weightage'],
+                    ['questionCount', 'Question Count'],
+                    ['progressPercentage', 'Progress %'],
+                    ['healthScore', 'Health Score'],
+                  ].map(([name, label]) => (
+                    <Grid key={name} size={{ xs: 12, md: 3 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        name={name}
+                        label={label}
+                        value={(formik.values as any)[name]}
+                        onChange={formik.handleChange}
+                      />
+                    </Grid>
+                  ))}
+                  {[
+                    ['reviewStatus', 'Review Status', reviewStatusOptions],
+                    ['visibility', 'Visibility', visibilityOptions],
+                    ['coverageStatus', 'Coverage Status', coverageStatusOptions],
+                    ['resourceStatus', 'Resource Status', resourceStatusOptions],
+                    ['lessonPlanStatus', 'Lesson Plan', mappingStatusOptions],
+                    ['homeworkStatus', 'Homework', mappingStatusOptions],
+                    ['assessmentStatus', 'Assessment Status', mappingStatusOptions],
+                  ].map(([name, label, options]) => (
+                    <Grid key={name as string} size={{ xs: 12, md: 3 }}>
+                      <TextField
+                        select
+                        fullWidth
+                        size="small"
+                        name={name as string}
+                        label={label as string}
+                        value={(formik.values as any)[name as string]}
+                        onChange={formik.handleChange}
+                      >
+                        {(options as string[]).map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                  ))}
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="templateSource"
+                      label="Template Source"
+                      value={formik.values.templateSource}
+                      onChange={formik.handleChange}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 3 }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="versionLabel"
+                      label="Version"
+                      value={formik.values.versionLabel}
+                      onChange={formik.handleChange}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 3 }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="dependencyChapterIds"
+                      label="Dependencies"
+                      value={formik.values.dependencyChapterIds}
+                      onChange={formik.handleChange}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <Stack direction="row" gap={3} flexWrap="wrap">
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formik.values.isAiGenerated}
+                            onChange={(e) =>
+                              formik.setFieldValue('isAiGenerated', e.target.checked)
+                            }
+                          />
+                        }
+                        label="AI generated"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formik.values.copiedFromPreviousYear}
+                            onChange={(e) =>
+                              formik.setFieldValue('copiedFromPreviousYear', e.target.checked)
+                            }
+                          />
+                        }
+                        label="Copied from previous year"
+                      />
+                    </Stack>
+                  </Grid>
+                </Grid>
+              </Collapse>
             </Paper>
 
             {/* ── Section 3 : Attachments ──────────────────────────── */}
@@ -490,7 +825,16 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       : file?.url || file?.filePath || (typeof file === 'string' ? file : '');
                   setPreviewDoc(url);
                 }}
-                value={formik.values.documents as any[]}
+                value={formik.values.documents?.map((doc: any) => {
+                  if (typeof doc === 'string') {
+                    return {
+                      url: doc,
+                      name: getFileNameFromUrl(doc),
+                      size: undefined,
+                    };
+                  }
+                  return doc;
+                })}
                 primaryText="Drag & drop files here, or click to browse"
               />
             </Paper>
@@ -507,6 +851,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
             }}
           >
             <Button
+              type="button"
               variant="outlined"
               size="small"
               color="inherit"
@@ -524,7 +869,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
             <Button
               startIcon={
                 <Iconify
-                  icon={initialValues ? GlobalIcons.edit : GlobalIcons.submit}
+                  icon={initialValues ? 'mdi:update' : GlobalIcons.submit}
                   width={initialValues ? 16 : 20}
                   height={initialValues ? 16 : 20}
                 />
@@ -539,7 +884,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 '&:hover': { boxShadow: 4 },
               }}
             >
-              {initialValues ? 'Update Chapter' : 'Save Chapter'}
+              {initialValues ? 'Update' : 'Add Chapter'}
             </Button>
           </DialogActions>
 

@@ -13,13 +13,13 @@ import {
   useGetStudentCommunicationDetailsQuery,
 } from 'src/redux/student/registration/registration-api';
 
-import { familyFields } from '../../screens/student/enrollment/register/register-fields';
-import { generalFormFields } from '../../screens/student/enrollment/register/GeneralFormFields';
-import { medicalFields } from '../../screens/student/enrollment/register/render-medical-details';
-import { bankDetailsFields } from '../../screens/student/enrollment/register/render-bank-details';
-import { communicationFields } from '../../screens/student/enrollment/register/render-communication';
-import { previousSchoolFields } from '../../screens/student/enrollment/register/render-previous-details';
-import { additionalDetailsFields } from '../../screens/student/enrollment/register/render-additional-details';
+import { familyFields } from './form-fields/register-fields';
+import { generalFormFields } from './form-fields/GeneralFormFields';
+import { medicalFields } from './form-fields/render-medical-details';
+import { bankDetailsFields } from './form-fields/render-bank-details';
+import { communicationFields } from './form-fields/render-communication';
+import { previousSchoolFields } from './form-fields/render-previous-details';
+import { additionalDetailsFields } from './form-fields/render-additional-details';
 import {
   bankDetailsInitialValues,
   familyFieldsInitialValues,
@@ -28,9 +28,9 @@ import {
   additionalDetailsInitialValues,
   CommunicationFieldsInitialValues,
   previousSchoolFieldsInitialValues,
-} from '../../screens/student/enrollment/register/initialvalues';
+} from './form-fields/initialvalues';
 
-import type { FieldsType } from '../../screens/student/enrollment/register/type';
+import type { FieldsType } from './form-fields/type';
 
 export const fields = [
   generalFormFields,

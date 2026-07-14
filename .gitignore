@@ -13,7 +13,9 @@ node_modules
 # testing
 coverage/
 playwright-report/
+.playwright-cli/
 test-results/
+test-results-*/
 output/
 playwright/.auth/
 artifacts/
@@ -21,13 +23,18 @@ artifacts/
 # production
 .next
 .agent/
-.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/shikshamitra-module-docs/
+!.agents/skills/shikshamitra-module-docs/**
 .claude/
 .swc
 _static
 out
 dist
 build
+build-*/
 
 # environment variables
 # .env

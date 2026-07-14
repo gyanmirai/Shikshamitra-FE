@@ -1,16 +1,13 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -19,11 +16,16 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetHomeworkSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
+import { HomeworkSubmissionStatusOptions } from 'src/enums/homework-submission-status';
 import {
-  HomeworkSubmissionStatus,
-  HomeworkSubmissionStatusColor,
-  HomeworkSubmissionStatusOptions,
-} from 'src/enums/homework-submission-status';
+  FeedbackStatusChip,
+  EvaluationFilterBar,
+  EvaluationStatusChip,
+  EvaluationActionButton,
+  filterEvaluationRows,
+  getEvaluationSummary,
+  EvaluationSummaryCards,
+} from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
 
 import AssignGrade from '../component/assignGradeForm';
 import AssignMarksForText from '../component/assignMarksForText';
@@ -39,6 +41,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 }) => {
   // Local state for selected students
   const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
+  const [activeFilter, setActiveFilter] = useState('all');
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
 
@@ -83,6 +86,31 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     [homeworkSubmissions?.data]
   );
 
+  const filteredData = React.useMemo(
+    () => filterEvaluationRows(normalizedData, activeFilter),
+    [activeFilter, normalizedData]
+  );
+
+  const summary = React.useMemo(
+    () => getEvaluationSummary(normalizedData, homeworkSubmissions?.summary),
+    [homeworkSubmissions?.summary, normalizedData]
+  );
+
+  const selectedIndex = React.useMemo(
+    () => filteredData.findIndex((row: any) => row.studentId === selectedStudent?.studentId),
+    [filteredData, selectedStudent?.studentId]
+  );
+
+  const moveStudent = React.useCallback(
+    (direction: 1 | -1) => {
+      const nextRow = filteredData[selectedIndex + direction];
+      if (nextRow) {
+        setSelectedStudent(nextRow as TStudentGrade);
+      }
+    },
+    [filteredData, selectedIndex]
+  );
+
   /**
    * Handles closing the view submission dialog and resetting the selected student
    */
@@ -118,8 +146,18 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     }
   };
 
+  const openStudent = React.useCallback((row: any) => {
+    setSelectedStudent(row as TStudentGrade);
+    viewSubmissionDialog.onTrue();
+  }, [viewSubmissionDialog]);
+
   return (
     <>
+      <Stack spacing={1.5}>
+        <EvaluationSummaryCards summary={summary} />
+        <EvaluationFilterBar value={activeFilter} onChange={setActiveFilter} />
+      </Stack>
+      <Box sx={{ mt: 1.5 }}>
       <CustomizableTable
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents?.length > 0}
@@ -314,103 +352,43 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           //   },
           // },
           {
-            id: 'status',
-            label: 'Status',
-            minWidth: 80,
-            sticky: true,
+            id: 'submissionStatusLabel',
+            label: 'Submission Status',
+            minWidth: 150,
             filterType: 'enum',
             enumOptions: HomeworkSubmissionStatusOptions,
             align: 'left',
-            render(value, row) {
-              if (value === undefined || value === null)
-                return <Typography variant="body2">-</Typography>;
-              const color = (HomeworkSubmissionStatusColor[value as HomeworkSubmissionStatus] ||
-                'default') as LabelColor;
-              const label = HomeworkSubmissionStatus[value] || `Unknown (${value})`;
-              return <Label color={color}>{label}</Label>;
+            render(_value, row) {
+              return <EvaluationStatusChip row={row} />;
+            },
+          },
+          {
+            id: 'evaluationStatus',
+            label: 'Evaluation Status',
+            minWidth: 150,
+            sticky: true,
+            align: 'left',
+            render(_value, row) {
+              return <FeedbackStatusChip row={row} />;
             },
           },
           {
             id: 'actions',
-            label: 'Action',
-            minWidth: 170,
+            label: 'Actions',
+            minWidth: 90,
             isSort: false,
             isFilter: false,
-            align: 'left',
+            align: 'center',
             sticky: true,
             render(value, row) {
-              if (!canAdd) return null;
-
-              if (row.status === HomeworkSubmissionStatus.Pending) {
-                return (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    sx={{ minWidth: '100px' }}
-                    startIcon={
-                      <Iconify icon="mdi:bell-outline" sx={{ height: '16px', width: '16px' }} />
-                    }
-                    onClick={() => {}}
-                  >
-                    Send Reminder
-                  </Button>
-                );
-              }
-
-              if (
-                [
-                  HomeworkSubmissionStatus.Submitted,
-                  HomeworkSubmissionStatus.NeedsReview,
-                  HomeworkSubmissionStatus.Late,
-                ].includes(row.status)
-              ) {
-                return (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    sx={{ minWidth: '100px' }}
-                    startIcon={
-                      <Iconify
-                        icon="mdi:clipboard-check-outline"
-                        sx={{ height: '16px', width: '16px' }}
-                      />
-                    }
-                    onClick={() => {
-                      setSelectedStudent(row as TStudentGrade);
-                      viewSubmissionDialog.onTrue();
-                    }}
-                  >
-                    Give Feedback
-                  </Button>
-                );
-              }
-
-              if (row.status === HomeworkSubmissionStatus.Reviewed) {
-                return (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    sx={{ minWidth: '100px' }}
-                    startIcon={
-                      <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
-                    }
-                    onClick={() => {
-                      setSelectedStudent(row as TStudentGrade);
-                      viewSubmissionDialog.onTrue();
-                    }}
-                  >
-                    Edit Feedback
-                  </Button>
-                );
-              }
-
-              return null;
+              return <EvaluationActionButton row={row} canAdd={canAdd} onOpen={openStudent} />;
             },
           },
         ]}
         isLoading={isSubmissionsLoading || isFetching}
-        data={normalizedData}
+        data={filteredData}
       />
+      </Box>
 
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
@@ -457,6 +435,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             }}
             isEdit
             homeworkId={selectedHomework?.id}
+            hasPrevious={selectedIndex > 0}
+            hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}
+            onPrevious={() => moveStudent(-1)}
+            onNext={() => moveStudent(1)}
           />
         ) : (
           <AssignMarksForText
@@ -464,6 +446,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             onClose={handleClose}
             isEdit
             homeworkId={selectedHomework?.id}
+            hasPrevious={selectedIndex > 0}
+            hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}
+            onPrevious={() => moveStudent(-1)}
+            onNext={() => moveStudent(1)}
           />
         )}
       </CustomDialog>

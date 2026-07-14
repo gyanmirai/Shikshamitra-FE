@@ -1,8 +1,17 @@
 export interface IExamType {
-  id: number;
+  id: string;
   examType: string;
-  description: string;
-  status: string;
+  description?: string;
+  category?: string;
+  status: number | string;
+  defaultTotalMarks?: number | string;
+  defaultWeightage?: number | string;
+  includedInResult: boolean;
+  marksEntryRequired: boolean;
+  gradeScaleRequired: boolean;
+  allowPracticalOral: boolean;
+  defaultGradeScaleId?: string | null;
+  usageCount?: number;
 }
 
 export interface IExamTypeFormProps {

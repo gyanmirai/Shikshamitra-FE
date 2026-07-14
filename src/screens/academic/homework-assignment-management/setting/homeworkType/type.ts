@@ -1,6 +1,14 @@
 export interface IHomeworkType {
   id?: string;
   homeworkTypeName: string;
+  description?: string;
+  defaultSubmissionType?: number;
+  defaultMarks?: number;
+  defaultDueDays?: number;
+  evaluationRequired?: boolean;
+  defaultEvaluationMethod?: number;
+  status?: number;
+  usageCount?: number;
 }
 
 export interface IHomeworkTypeFormProps {

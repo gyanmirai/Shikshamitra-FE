@@ -3,8 +3,8 @@
 import React, { useMemo } from 'react';
 import { Box, Grid } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { AnalyticsCurrentVisits } from 'src/components/dashboard/analytics-current-visits';
 import { useGetCommunicationDashboardQuery } from 'src/redux/communication/communicationApi';
-import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
 import {
   channelLabel,
   communicationChannelOptions,

@@ -14,6 +14,7 @@ export function NavToggleButton({ isNavMini, sx, ...other }: NavToggleButtonProp
   return (
     <IconButton
       size="small"
+      aria-label={isNavMini ? 'Expand primary navigation' : 'Collapse primary navigation'}
       sx={{
         p: 0.5,
         top: 24,

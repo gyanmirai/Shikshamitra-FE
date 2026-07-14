@@ -4,9 +4,9 @@ import { Tab, Box, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { FormSlider } from 'src/components/form-slider';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import HomeworkMarksAndFeedback from './homeworkMarksFeedback';
 import AssignmentMarksAndFeedback from './assignmentMarksFeedback';

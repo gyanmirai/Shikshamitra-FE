@@ -51,7 +51,7 @@ const StudentAttendanceDashboardScreen = () => {
           <CustomBreadcrumbs
             heading="Dashboard"
             links={[
-              { name: 'Student', href: '/student/enrollment/dashboard/' },
+              { name: 'Student', href: '/student/dashboard' },
               { name: 'Attendance', href: '/student/attendance/dashboard/' },
               { name: 'Dashboard' },
             ]}

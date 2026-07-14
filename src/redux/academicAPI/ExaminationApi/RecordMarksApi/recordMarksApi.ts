@@ -75,6 +75,55 @@ export const recordMarksApi = academicApi.injectEndpoints({
       invalidatesTags: [academicType.recordMarks],
     }),
 
+    // Bulk Save – save/update student marks in bulk
+    bulkSaveMarks: builder.mutation({
+      query: ({ examId, body }) => ({
+        url: `/academics/exams/${examId}/marks/bulk-save`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.recordMarks],
+    }),
+
+    // Validate Marks – returns blockers and warnings
+    validateMarks: builder.mutation({
+      query: ({ examId, divisionId, subjectId }) => ({
+        url: `/academics/exams/${examId}/marks/validate`,
+        method: 'POST',
+        params: { divisionId, subjectId },
+      }),
+    }),
+
+    // Request Changes – transition to ChangesRequested state with reviewer note
+    requestChanges: builder.mutation({
+      query: ({ examId, body }) => ({
+        url: `/academics/exams/${examId}/marks/request-changes`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.recordMarks],
+    }),
+
+    // Unlock Marks – unlock published marks back to Draft with reason
+    unlockMarks: builder.mutation({
+      query: ({ examId, body }) => ({
+        url: `/academics/exams/${examId}/marks/unlock`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [academicType.recordMarks],
+    }),
+
+    // Get Audit Logs – history of updates
+    getAuditLogs: builder.query({
+      query: ({ examId, subjectId, divisionId }) => ({
+        url: `/academics/exams/${examId}/marks/audit`,
+        method: 'GET',
+        params: { subjectId, divisionId },
+      }),
+      providesTags: [academicType.recordMarks],
+    }),
+
     // Update student exam attendance status
     updateStudentAttendance: builder.mutation({
       query: ({ examId, studentId, subjectId, attendanceStatus }) => ({
@@ -109,4 +158,9 @@ export const {
   usePublishAndLockMarksMutation,
   useUpdateStudentAttendanceMutation,
   useGetExamMarksSummaryQuery,
+  useBulkSaveMarksMutation,
+  useValidateMarksMutation,
+  useRequestChangesMutation,
+  useUnlockMarksMutation,
+  useGetAuditLogsQuery,
 } = recordMarksApi;

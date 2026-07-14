@@ -2,11 +2,14 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
-import { useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
+import { useMemo, useCallback } from 'react';
+import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Chip, Stack, Tooltip, IconButton, Typography, LinearProgress, MenuList, MenuItem } from '@mui/material';
+
+import { statusColor, getCoverageStatus, getChapterProgress } from '../syllabusPlanningData';
 
 import type { IChapter, IChapterTableProps } from '../type';
 
@@ -19,6 +22,8 @@ const ChapterTable = ({
   actions,
   handleEyeClick,
   onViewDocuments,
+  onCreateQuestion,
+  onViewQuestions,
   subjectId,
   standardId,
   canAdd = true,
@@ -35,6 +40,21 @@ const ChapterTable = ({
         chapterEndTime: chapter.chapterEndTime
           ? dayjs(chapter.chapterEndTime).format('DD-MM-YYYY')
           : '',
+        unitTerm: [chapter.unitName, chapter.termName].filter(Boolean).join(' / ') || '-',
+        plannedLoad: `${chapter.estimatedTeachingDays || '-'} days / ${
+          chapter.estimatedPeriods || '-'
+        } periods`,
+        outcomes: chapter.learningOutcomes || chapter.skillsCovered || '-',
+        resources: chapter.documents?.length
+          ? `${chapter.documents.length} file(s)`
+          : chapter.resourceStatus || 'Missing',
+        lessonPlanStatus: chapter.lessonPlanStatus || 'Not Linked',
+        homeworkStatus: chapter.homeworkStatus || 'Not Mapped',
+        questionCount: chapter.questionCount || 0,
+        assessmentStatus: chapter.assessmentStatus || 'Not Mapped',
+        progressPercentage: getChapterProgress(chapter),
+        coverageStatus: getCoverageStatus(chapter),
+        publishStatus: chapter.publishStatus || 'Draft',
         // Keep original HTML for tooltip display
         descriptionHtml: chapter.description || '',
         // Strip HTML for export and table display
@@ -42,6 +62,78 @@ const ChapterTable = ({
       })) || [],
     [data]
   );
+
+  const tableActions = useCallback(
+    ({ popover, row }: { popover: any; row: IChapter }) => (
+      <MenuList disablePadding dense>
+        {canView && (
+          <MenuItem
+            onClick={() => {
+              onViewDocuments(row);
+              popover.onClose();
+            }}
+          >
+            <Iconify icon="carbon:view-filled" sx={{ mr: 1, width: 18, height: 18 }} />
+            View Documents
+          </MenuItem>
+        )}
+        {canAdd && (
+          <MenuItem
+            onClick={() => {
+              setEditData(row);
+              addChapterDialog.onTrue();
+              popover.onClose();
+            }}
+          >
+            <Iconify icon="solar:pen-bold" sx={{ mr: 1, width: 18, height: 18 }} />
+            Edit Chapter
+          </MenuItem>
+        )}
+        <MenuItem
+          onClick={() => {
+            onCreateQuestion?.(row);
+            popover.onClose();
+          }}
+        >
+          <Iconify icon="mingcute:question-line" sx={{ mr: 1, width: 18, height: 18 }} />
+          Create Question
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            onViewQuestions?.(row);
+            popover.onClose();
+          }}
+        >
+          <Iconify icon="mingcute:list-check-line" sx={{ mr: 1, width: 18, height: 18 }} />
+          View Questions
+        </MenuItem>
+        {canDelete && (
+          <MenuItem
+            onClick={() => {
+              onDelete(row);
+              popover.onClose();
+            }}
+            sx={{ color: 'error.main' }}
+          >
+            <Iconify icon="solar:trash-bin-trash-bold" sx={{ mr: 1, width: 18, height: 18 }} />
+            Delete Chapter
+          </MenuItem>
+        )}
+      </MenuList>
+    ),
+    [
+      addChapterDialog,
+      canAdd,
+      canDelete,
+      canView,
+      onCreateQuestion,
+      onDelete,
+      onViewDocuments,
+      onViewQuestions,
+      setEditData,
+    ]
+  );
+
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -59,6 +151,12 @@ const ChapterTable = ({
         filterType: 'string',
       },
       {
+        id: 'unitTerm',
+        label: 'Unit / Term',
+        align: 'left',
+        filterType: 'string',
+      },
+      {
         id: 'chapterStartTime',
         label: 'Start Date',
         align: 'left',
@@ -70,6 +168,108 @@ const ChapterTable = ({
         align: 'left',
         filterType: 'date',
       },
+      {
+        id: 'plannedLoad',
+        label: 'Teaching Load',
+        align: 'left',
+        filterType: 'string',
+      },
+      {
+        id: 'outcomes',
+        label: 'Outcomes / Skills',
+        align: 'left',
+        minWidth: 220,
+        filterType: 'string',
+        render: (value) => (
+          <Typography variant="inherit" noWrap sx={{ maxWidth: 220 }}>
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'resources',
+        label: 'Resources',
+        align: 'left',
+        filterType: 'string',
+        render: (value, row) => (
+          <Chip
+            size="small"
+            variant="soft"
+            color={statusColor(row.resourceStatus || String(value)) as any}
+            label={value}
+          />
+        ),
+      },
+      {
+        id: 'lessonPlanStatus',
+        label: 'Lesson Plan',
+        align: 'left',
+        filterType: 'string',
+        render: (value) => (
+          <Chip
+            size="small"
+            variant="soft"
+            color={statusColor(String(value)) as any}
+            label={value}
+          />
+        ),
+      },
+      {
+        id: 'homeworkStatus',
+        label: 'Homework',
+        align: 'left',
+        filterType: 'string',
+        render: (value) => (
+          <Chip
+            size="small"
+            variant="soft"
+            color={statusColor(String(value)) as any}
+            label={value}
+          />
+        ),
+      },
+      {
+        id: 'questionCount',
+        label: 'Questions',
+        align: 'left',
+        filterType: 'number',
+      },
+      {
+        id: 'assessmentStatus',
+        label: 'Assessment',
+        align: 'left',
+        filterType: 'string',
+        render: (value) => (
+          <Chip
+            size="small"
+            variant="soft"
+            color={statusColor(String(value)) as any}
+            label={value}
+          />
+        ),
+      },
+      {
+        id: 'progressPercentage',
+        label: 'Progress',
+        align: 'left',
+        minWidth: 160,
+        filterType: 'number',
+        render: (value, row) => (
+          <Stack spacing={0.5} sx={{ minWidth: 140 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography variant="caption">{value}%</Typography>
+              <Chip
+                size="small"
+                variant="soft"
+                color={statusColor(row.coverageStatus) as any}
+                label={row.coverageStatus}
+              />
+            </Stack>
+            <LinearProgress variant="determinate" value={Number(value) || 0} />
+          </Stack>
+        ),
+      },
+
       {
         id: 'description',
         label: 'Description',
@@ -130,33 +330,27 @@ const ChapterTable = ({
       {
         id: 'actions',
         label: 'Actions',
-        minWidth: 90,
+        minWidth: 80,
+        width: 80,
         isSort: false,
         isFilter: false,
         align: 'left',
         sticky: true,
         render(value, row) {
+          const chapter = row as IChapter;
           return (
             <ThreeDotsActions
-              showThreeDots={false}
+              showThreeDots={true}
               placement="right-top"
-              showEditIcon={canAdd}
-              showDeleteIcon={canDelete}
-              showViewIcon={canView}
-              handleViewClick={() => {
-                onViewDocuments(row as IChapter);
-              }}
-              handleEditClick={() => {
-                setEditData(row as IChapter);
-                addChapterDialog.onTrue();
-              }}
-              handleDeleteClick={() => onDelete(row as IChapter)}
+              actions={(prop) => tableActions({ ...prop, row: chapter })}
             />
           );
         },
       },
     ],
-    [addChapterDialog, canAdd, canDelete, canView, onDelete, onViewDocuments, setEditData]
+    [
+      tableActions,
+    ]
   );
   return (
     <CustomizableTable

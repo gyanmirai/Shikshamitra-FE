@@ -4,9 +4,13 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useMemo } from 'react';
 import { Box, Chip } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { TimetableStatusChip } from 'src/components/timetable-status-chip/TimetableStatusChip';
 
 import type { ISubjectFormValues } from '../type';
+
+const MAX_VISIBLE_SUBJECT_CHIPS = 2;
 
 interface UseWeeklyLectureColumnsArgs {
   onView: (row: ISubjectFormValues) => void;
@@ -32,10 +36,39 @@ export function useWeeklyLectureColumns({
       { id: 'standardName', label: 'Class', filterType: 'number', align: 'left' },
       {
         id: 'totalLectures',
-        label: 'Total Lectures',
+        label: 'Required Weekly Lectures',
         minWidth: 150,
         filterType: 'number',
         align: 'left',
+      },
+      {
+        id: 'availableTeachingCapacity',
+        label: 'Available Teaching Capacity',
+        minWidth: 150,
+        filterType: 'number',
+        align: 'left',
+        render: (value) => (value == null ? '—' : `${value}/week`),
+      },
+      {
+        id: 'difference',
+        label: 'Difference',
+        minWidth: 110,
+        filterType: 'number',
+        align: 'left',
+        render: (value) => {
+          if (value == null) return '—';
+          const diff = Number(value);
+          if (diff === 0) return '0';
+          return diff > 0 ? `+${diff} free` : `${diff} over`;
+        },
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        minWidth: 150,
+        isSort: false,
+        align: 'left',
+        render: (value) => (value ? <TimetableStatusChip status={value} /> : '—'),
       },
       {
         id: 'newSubject',
@@ -43,19 +76,50 @@ export function useWeeklyLectureColumns({
         isSort: false,
         align: 'left',
         isFilter: false,
+        minWidth: 220,
         render: (_value, row) => {
           const subjects = (row as ISubjectFormValues).subjects ?? [];
+          const visible = subjects.slice(0, MAX_VISIBLE_SUBJECT_CHIPS);
+          const overflow = subjects.slice(MAX_VISIBLE_SUBJECT_CHIPS);
           return (
-            <Box display="flex" flexWrap="wrap" gap={0.75} alignItems="center">
-              {subjects.map((subject, idx) => (
+            <Box
+              display="flex"
+              flexWrap="wrap"
+              gap={0.75}
+              alignItems="center"
+              sx={{ maxHeight: 56, overflow: 'hidden' }}
+            >
+              {visible.map((subject, idx) => (
                 <Chip
                   key={subject.id ?? idx}
-                  label={`${subject.electiveGroupName || subject.subjectName} (${subject.weeklyLectures})`}
+                  label={`${subject.electiveGroupName || subject.subjectName} · ${subject.weeklyLectures}/wk`}
                   size="small"
                   variant="outlined"
                   sx={{ fontWeight: 500 }}
                 />
               ))}
+              {overflow.length > 0 && (
+                <CustomTooltip
+                  title={
+                    <Box display="flex" flexDirection="column" gap={0.5} p={0.5}>
+                      {overflow.map((subject, idx) => (
+                        <span key={subject.id ?? idx}>
+                          {subject.electiveGroupName || subject.subjectName} ·{' '}
+                          {subject.weeklyLectures}/wk
+                        </span>
+                      ))}
+                    </Box>
+                  }
+                >
+                  <Chip
+                    label={`+${overflow.length} more`}
+                    size="small"
+                    variant="soft"
+                    color="primary"
+                    sx={{ fontWeight: 600, cursor: 'pointer' }}
+                  />
+                </CustomTooltip>
+              )}
             </Box>
           );
         },

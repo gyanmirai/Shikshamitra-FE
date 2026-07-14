@@ -11,7 +11,7 @@ const MuiFormLabel: Components<Theme>['MuiFormLabel'] = {
   styleOverrides: {
     root: ({ theme }) => ({
       ...theme.typography.body2,
-      color: theme.vars.palette.text.disabled,
+      color: theme.vars.palette.text.secondary,
       [`&.${inputLabelClasses.shrink}`]: {
         ...theme.typography.body1,
         fontWeight: 600,
@@ -39,7 +39,9 @@ const MuiFormHelperText: Components<Theme>['MuiFormHelperText'] = {
   /** **************************************
    * STYLE
    *************************************** */
-  styleOverrides: { root: ({ theme }) => ({ marginTop: theme.spacing(1) }) },
+  styleOverrides: {
+    root: ({ theme }) => ({ marginTop: theme.spacing(0.2), marginLeft: theme.spacing(0.2) }),
+  },
 };
 
 // ----------------------------------------------------------------------

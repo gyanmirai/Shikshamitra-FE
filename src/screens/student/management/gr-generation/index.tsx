@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IInquiryData } from 'src/types/student-enrollment';
 
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
@@ -12,9 +13,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Save, Refresh, ChecklistOutlined } from '@mui/icons-material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -33,8 +34,6 @@ import {
   useUpdateStudentGrNumberMutation,
   useLazyGetStudentForGrNumberQuery,
 } from 'src/redux/student/studentGrNumber/student-gr-number-api';
-
-import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 const GrNoGenerationScreen = ({ division }: { division: string }) => {
   // State to track if manual GR number generation is enabled

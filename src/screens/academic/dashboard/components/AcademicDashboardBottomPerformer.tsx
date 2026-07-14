@@ -1,5 +1,5 @@
 import React from 'react';
-import { TopPerformer } from 'src/screens/student/enrollment/entrance-exam/dashboard';
+import { TopPerformer } from 'src/components/dashboard/top-performer';
 
 const AcademicDashboardBottomPerformer = () => (
   <TopPerformer

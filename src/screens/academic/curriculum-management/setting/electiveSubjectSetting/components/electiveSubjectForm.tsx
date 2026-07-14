@@ -10,7 +10,16 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Button,
+  Divider,
+  MenuItem,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
 import { useElectiveSubjectForm } from '../hooks/useElectiveSubjectForm';
 
@@ -29,7 +38,10 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={3}>
+        <Grid container spacing={2.5}>
+          <Grid size={{ xs: 12 }}>
+            <Typography variant="subtitle2">Basic Details</Typography>
+          </Grid>
           <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(formik.touched.name && formik.errors.name)}>
               <TextField
@@ -59,23 +71,23 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
           </Grid>
 
           <Grid size={{ xs: 12 }}>
-            <ResponsiveMultiSelect
-              label="Select Subjects *"
-              options={subjectData || []}
-              isLoading={isSubjectLoading}
-              value={formik.values.subjectIds}
-              getOptionLabel={(opt: any) => opt?.name}
-              getOptionValue={(opt: any) => opt?.id}
-              onChange={(selected: string[]) => {
-                formik.setFieldValue('subjectIds', selected);
-              }}
-              error={!!(formik.touched.subjectIds && formik.errors.subjectIds)}
-              helperText={
-                Array.isArray(formik.errors.subjectIds)
-                  ? formik.errors.subjectIds.join(', ')
-                  : (formik.touched.subjectIds && formik.errors.subjectIds) || undefined
-              }
-            />
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Group Type *"
+              name="groupType"
+              value={formik.values.groupType}
+              onChange={formik.handleChange}
+              error={formik.touched.groupType && Boolean(formik.errors.groupType)}
+              helperText={formik.touched.groupType && formik.errors.groupType}
+            >
+              {groupTypeOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </TextField>
           </Grid>
 
           <Grid size={{ xs: 12 }}>
@@ -112,6 +124,88 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
               />
             </ShakingTextField>
           </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
+              size="small"
+              label="Description"
+              name="description"
+              value={formik.values.description}
+              onChange={formik.handleChange}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <Divider />
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <Typography variant="subtitle2">Subject Selection</Typography>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <ResponsiveMultiSelect
+              label="Select Subjects *"
+              options={subjectData || []}
+              isLoading={isSubjectLoading}
+              value={formik.values.subjectIds}
+              getOptionLabel={(opt: any) => opt?.name}
+              getOptionValue={(opt: any) => opt?.id}
+              onChange={(selected: string[]) => {
+                formik.setFieldValue('subjectIds', selected);
+              }}
+              error={!!(formik.touched.subjectIds && formik.errors.subjectIds)}
+              helperText={
+                Array.isArray(formik.errors.subjectIds)
+                  ? formik.errors.subjectIds.join(', ')
+                  : (formik.touched.subjectIds && formik.errors.subjectIds) || undefined
+              }
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <Divider />
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <Typography variant="subtitle2">Settings</Typography>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Status"
+              name="status"
+              value={formik.values.status}
+              onChange={formik.handleChange}
+            >
+              {['Active', 'Inactive', 'Archived'].map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              type="number"
+              label="Sort Order"
+              name="sortOrder"
+              value={formik.values.sortOrder}
+              onChange={formik.handleChange}
+              error={formik.touched.sortOrder && Boolean(formik.errors.sortOrder)}
+              helperText={formik.touched.sortOrder && formik.errors.sortOrder}
+              inputProps={{ min: 0 }}
+            />
+          </Grid>
         </Grid>
       </DialogScrollContent>
 
@@ -138,7 +232,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
           onClick={(e: any) => formik.handleSubmit(e)}
           type="submit"
         >
-          {editData ? 'Update' : 'Submit'}
+          {editData ? 'Update Group' : 'Save Group'}
         </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
@@ -146,3 +240,13 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
 };
 
 export default SettingElectiveSubjectForm;
+
+const groupTypeOptions = [
+  'Language',
+  'Skill Subject',
+  'Optional Subject',
+  'Vocational Subject',
+  'Activity Subject',
+  'Stream Elective',
+  'Custom',
+];

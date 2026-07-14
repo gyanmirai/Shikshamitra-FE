@@ -43,6 +43,17 @@ import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'inpu
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
+import {
   Box,
   Card,
   Chip,
@@ -74,20 +85,10 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
 
 import { buildOnboardingAcademicPermissionScopeRows } from './employeeOnboardingAcademicPermission';
 import {
+  getValidNextStatuses,
   EmployeeApplicationStatus,
   EMPLOYEE_APPLICATION_STATUSES,
   canFinalizeEmployeeApplication,
@@ -727,6 +728,7 @@ function EmployeeOnboardingDetailView({
 
   const normalizedStatus = normalizeEmployeeApplicationStatus(application.status);
   const canUpdateStatus = normalizedStatus !== EmployeeApplicationStatus.Finalized;
+  const hasStatusChanged = status !== normalizedStatus;
   const submittedPersonal = application.personalInfo;
   const { familyInfo } = application;
   const { additionalInfo } = application;
@@ -757,6 +759,16 @@ function EmployeeOnboardingDetailView({
       .join(', ') || '-';
 
   const handleStatusUpdate = async (nextStatus = status) => {
+    const isForwardOrTerminal =
+      nextStatus === EmployeeApplicationStatus.Rejected ||
+      nextStatus === EmployeeApplicationStatus.Withdrawn ||
+      nextStatus >= normalizedStatus;
+
+    if (!isForwardOrTerminal) {
+      shikshaMitraToast.error({ message: 'Cannot move to a previous workflow status' });
+      return;
+    }
+
     try {
       await updateStatus({ id: application.id, body: { status: nextStatus, reason } }).unwrap();
       shikshaMitraToast.success({ message: 'Status updated' });
@@ -1060,6 +1072,7 @@ function EmployeeOnboardingDetailView({
                     disabled={!application.hasResume}
                     onClick={() => handleDownload('resume')}
                     startIcon={<Iconify icon="mdi:file-document-outline" />}
+                    endIcon={application.hasResume ? <Iconify icon="mdi:download" /> : undefined}
                     fullWidth
                     sx={{
                       justifyContent: 'flex-start',
@@ -1075,6 +1088,7 @@ function EmployeeOnboardingDetailView({
                     disabled={!application.hasPhoto}
                     onClick={() => handleDownload('photo')}
                     startIcon={<Iconify icon="mdi:image-outline" />}
+                    endIcon={application.hasPhoto ? <Iconify icon="mdi:download" /> : undefined}
                     fullWidth
                     sx={{
                       justifyContent: 'flex-start',
@@ -1098,9 +1112,7 @@ function EmployeeOnboardingDetailView({
                         setStatus(Number(event.target.value) as EmployeeApplicationStatus)
                       }
                     >
-                      {EMPLOYEE_APPLICATION_STATUSES.filter(
-                        (item) => item !== EmployeeApplicationStatus.Finalized
-                      ).map((item) => (
+                      {getValidNextStatuses(normalizedStatus).map((item) => (
                         <MenuItem key={item} value={item}>
                           {getEmployeeApplicationStatusLabel(item)}
                         </MenuItem>
@@ -1120,7 +1132,7 @@ function EmployeeOnboardingDetailView({
                       size="small"
                       variant="contained"
                       onClick={() => handleStatusUpdate()}
-                      disabled={statusLoading || !canUpdateStatus}
+                      disabled={statusLoading || !canUpdateStatus || !hasStatusChanged}
                       sx={{ flex: 1 }}
                       startIcon={<Iconify icon="mdi:check-circle-outline" />}
                     >
@@ -2919,7 +2931,7 @@ export default function EmployeeOnboardingScreen() {
           return (
             <Box
               data-testid="employee-onboarding-row-details"
-              sx={{ display: 'flex', justifyContent: 'flex-end' }}
+              sx={{ display: 'flex', justifyContent: 'flex-start' }}
             >
               <ThreeDotsActions
                 showViewIcon

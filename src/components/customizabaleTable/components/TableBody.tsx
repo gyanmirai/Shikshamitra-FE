@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import React from 'react';
-import { keyframes } from '@emotion/react';
 import { useTheme } from '@mui/material/styles';
 import { ExpandLess as ExpandLessIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import {
@@ -18,17 +17,6 @@ import { getColumnSizeSx } from '../utils/columnSizing';
 
 import type { IData, IColumn } from '../types';
 
-const fadeSlideIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
 interface TableBodyProps {
   isLoading: boolean;
   data: IData[];
@@ -43,7 +31,6 @@ interface TableBodyProps {
   noDataText?: React.ReactNode;
   tableRef: any;
   rowsPerPage?: number;
-  animationKey: string;
 }
 
 export const TableBody = ({
@@ -60,7 +47,6 @@ export const TableBody = ({
   noDataText = 'No data available',
   tableRef,
   rowsPerPage = 10,
-  animationKey,
 }: TableBodyProps) => {
   const theme = useTheme();
 
@@ -69,7 +55,7 @@ export const TableBody = ({
 
     return (
       <MuiTableBody>
-        {[...Array(rowsPerPage)].map((_row, rowIndex) => (
+        {[...Array(Math.min(rowsPerPage, 10))].map((_row, rowIndex) => (
           <TableRow key={rowIndex}>
             {hasExpandColumn && (
               <TableCell>
@@ -118,9 +104,9 @@ export const TableBody = ({
   }
 
   return (
-    <MuiTableBody key={animationKey}>
+    <MuiTableBody>
       {data.map((row, index) => (
-        <React.Fragment key={index}>
+        <React.Fragment key={row.id ?? index}>
           <TableRow
             hover
             tabIndex={-1}
@@ -128,14 +114,18 @@ export const TableBody = ({
             onClick={() => onRowClick(row, index)}
             {...rowProps(row, index)}
             sx={{
-              animation: `${fadeSlideIn} 0.45s ease both`,
-              animationDelay: `${Math.min(index * 60, 500)}ms`,
               ...rowProps(row, index)?.sx,
             }}
           >
             {columns.some((column) => column.children) && (
               <TableCell>
-                <IconButton size="small" onClick={() => onExpandRow(index)}>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onExpandRow(index);
+                  }}
+                >
                   {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </IconButton>
               </TableCell>
@@ -154,13 +144,9 @@ export const TableBody = ({
                       color: 'text.primary',
                       borderBottom: `1px dashed ${theme.vars.palette.divider}`,
                       position: column.sticky ? 'sticky' : 'static',
-                      // @ts-ignore
-                      left: column.sticky ? getStickyStyle(column).left : 'auto',
-                      right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
                       zIndex: column.sticky ? 10 : 2,
                       backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                       boxShadow: column.sticky ? '0px 0 4px rgba(0,0,0,0.08)' : 'none',
-                      animation: `${fadeSlideIn} 0.4s ease both`,
                       ...getColumnSizeSx(column),
                       ...getStickyStyle(column),
                       ...column.cellSx,

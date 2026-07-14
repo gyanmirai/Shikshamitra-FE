@@ -30,7 +30,16 @@ export const assignmentTypesApi = academicApi.injectEndpoints({
         data,
       }: {
         academicMediumId: string;
-        data: { assignmentTypeName: string };
+        data: {
+          assignmentTypeName: string;
+          description?: string;
+          defaultSubmissionType?: number;
+          defaultMarks?: number;
+          defaultDueDays?: number;
+          evaluationRequired?: boolean;
+          defaultEvaluationMethod?: number;
+          status?: number;
+        };
       }) => ({
         url: `/assignment-type`,
         method: 'POST',
@@ -49,7 +58,16 @@ export const assignmentTypesApi = academicApi.injectEndpoints({
       }: {
         assignmentTypeId: string;
         academicMediumId: string;
-        data: { assignmentTypeName: string };
+        data: {
+          assignmentTypeName: string;
+          description?: string;
+          defaultSubmissionType?: number;
+          defaultMarks?: number;
+          defaultDueDays?: number;
+          evaluationRequired?: boolean;
+          defaultEvaluationMethod?: number;
+          status?: number;
+        };
       }) => ({
         url: `/assignment-type/${assignmentTypeId}`,
         method: 'PUT',

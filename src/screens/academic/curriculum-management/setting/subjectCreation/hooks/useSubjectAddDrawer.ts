@@ -8,7 +8,7 @@ import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
-  useAddSubjectMutation,
+  useBulkAddSubjectsMutation,
   useGetCoreSubjectsByMediumQuery,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
@@ -28,13 +28,22 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
     options: { skip: !(currentMedium as Medium)?.id },
   });
 
-  const [addSubject, { isLoading: isSaving }] = useQueryAndMutation({
+  const [bulkAddSubjects, { isLoading: isSaving }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddSubjectMutation,
+    currentQueryAndMutation: useBulkAddSubjectsMutation,
   });
 
   const [rows, setRows] = useState<IPendingRow[]>([
-    { tempId: `temp-${Date.now()}`, name: '', color: '' },
+    {
+      tempId: `temp-${Date.now()}`,
+      name: '',
+      displayName: '',
+      category: 'General',
+      color: '',
+      icon: '',
+      status: 'Active',
+      sortOrder: '',
+    },
   ]);
   const [showErrors, setShowErrors] = useState(false);
 
@@ -51,18 +60,43 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
   const addRow = useCallback(() => {
     setRows((prev) => [
       ...prev,
-      { tempId: `temp-${Date.now()}-${Math.random()}`, name: '', color: '' },
+      {
+        tempId: `temp-${Date.now()}-${Math.random()}`,
+        name: '',
+        displayName: '',
+        category: 'General',
+        color: '',
+        icon: '',
+        status: 'Active',
+        sortOrder: '',
+      },
     ]);
   }, []);
 
-  const updateRow = useCallback((tempId: string, field: 'name' | 'color', value: string) => {
-    setRows((prev) => prev.map((r) => (r.tempId === tempId ? { ...r, [field]: value } : r)));
-  }, []);
+  const updateRow = useCallback(
+    (tempId: string, field: keyof Omit<IPendingRow, 'tempId'>, value: string) => {
+      setRows((prev) => prev.map((r) => (r.tempId === tempId ? { ...r, [field]: value } : r)));
+    },
+    []
+  );
 
   const removeRow = useCallback((tempId: string) => {
     setRows((prev) => {
       const next = prev.filter((r) => r.tempId !== tempId);
-      return next.length === 0 ? [{ tempId: `temp-${Date.now()}`, name: '', color: '' }] : next;
+      return next.length === 0
+        ? [
+            {
+              tempId: `temp-${Date.now()}`,
+              name: '',
+              displayName: '',
+              category: 'General',
+              color: '',
+              icon: '',
+              status: 'Active',
+              sortOrder: '',
+            },
+          ]
+        : next;
     });
   }, []);
 
@@ -82,7 +116,18 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
   const resetAndClose = useCallback(() => {
     onClose();
     setTimeout(() => {
-      setRows([{ tempId: `temp-${Date.now()}`, name: '', color: '' }]);
+      setRows([
+        {
+          tempId: `temp-${Date.now()}`,
+          name: '',
+          displayName: '',
+          category: 'General',
+          color: '',
+          icon: '',
+          status: 'Active',
+          sortOrder: '',
+        },
+      ]);
       setShowErrors(false);
     }, 300);
   }, [onClose]);
@@ -98,18 +143,21 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
     }
     setShowErrors(false);
     try {
-      await Promise.all(
-        rows.map((row) =>
-          (addSubject as any)({
-            academicMediumId: (currentMedium as Medium).id,
-            body: {
-              name: row.name.trim(),
-              color: row.color,
-              educationMediumId: (currentMedium as Medium).id,
-            },
-          }).unwrap()
-        )
-      );
+      await bulkAddSubjects({
+        academicMediumId: (currentMedium as Medium).id,
+        body: {
+          subjects: rows.map((row) => ({
+            name: row.name.trim(),
+            displayName: row.displayName.trim() || null,
+            category: row.category,
+            color: row.color,
+            icon: row.icon || null,
+            status: statusToNumber(row.status),
+            sortOrder: row.sortOrder === '' ? null : Number(row.sortOrder),
+            educationMediumId: (currentMedium as Medium).id,
+          })),
+        },
+      }).unwrap();
       shikshaMitraToast.success({
         message:
           rows.length === 1
@@ -133,4 +181,10 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
     resetAndClose,
     handleSave,
   };
+};
+
+const statusToNumber = (status: string) => {
+  if (status === 'Inactive') return 1;
+  if (status === 'Archived') return 2;
+  return 0;
 };

@@ -1,7 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatCurrency } from 'src/utils/cureencyFormater';
@@ -457,6 +457,11 @@ export const RenderComponents = ({
 const RenderPayrollFields = (props: any) => {
   const { formik, isMainForm } = props;
   const { values, handleChange } = formik;
+  const hasHydratedRef = useRef(false);
+  useEffect(() => {
+    hasHydratedRef.current = false;
+  }, [values.employeeId]);
+
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const isEditable = useBoolean(isMainForm);
   const policyEffectiveFallbackDate = values.dateOfJoining
@@ -592,16 +597,12 @@ const RenderPayrollFields = (props: any) => {
       return;
     }
 
-    const isEmployeeOverride =
-      policyPreview?.policySource === 'employee' || policyPreview?.matchedTargetType === 'employee';
-
-    if (isEmployeeOverride || !values.policyOverrideEnabled) {
+    if (!hasHydratedRef.current) {
       const hydrated = hydrateEmployeePolicyOverrideFromPreview(policyPreview, policyEffectiveDate);
       Object.entries(hydrated).forEach(([key, value]) => {
-        if (formik.values[key] !== value) {
-          formik.setFieldValue(key, value, false);
-        }
+        formik.setFieldValue(key, value, false);
       });
+      hasHydratedRef.current = true;
     }
   }, [
     formik,
@@ -1028,7 +1029,7 @@ const RenderPayrollFields = (props: any) => {
         </Grid>
         <Grid
           size={{ xs: 12, sm: 4 }}
-          sx={{ pb: formik.touched.ifscCode && formik.errors.ifscCode ? 1.5 : 0 }}
+          sx={{ pb: formik.touched.ifscCode && formik.errors.ifscCode ? 5 : 0 }}
         >
           <ShakingTextField error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}>
             <TextField

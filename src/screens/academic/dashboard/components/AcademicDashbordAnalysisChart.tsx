@@ -9,7 +9,7 @@
 import React from 'react';
 import { Card } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
+import { AnalyticsCurrentVisits } from 'src/components/dashboard/analytics-current-visits';
 
 type AnalysisChartProps = {
   chartData?: {

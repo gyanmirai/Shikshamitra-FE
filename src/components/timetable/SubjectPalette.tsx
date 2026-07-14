@@ -22,6 +22,8 @@ import {
   Typography,
   LinearProgress,
   InputAdornment,
+  Tabs,
+  Tab,
 } from '@mui/material';
 
 import { ItemTypes } from './types';
@@ -175,6 +177,7 @@ interface PaletteProps {
   selectedClass: string;
   selectedDivision: string;
   subjects: Subject[];
+  conflicts?: string[];
 }
 
 const SubjectPalette: React.FC<PaletteProps> = ({
@@ -182,9 +185,11 @@ const SubjectPalette: React.FC<PaletteProps> = ({
   selectedClass,
   selectedDivision,
   subjects,
+  conflicts = [],
 }) => {
   const weeklyLecturesDialog = useBoolean();
   const [searchQuery, setSearchQuery] = useState('');
+  const [tabIndex, setTabIndex] = useState(0);
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const standardId = React.useMemo(() => {
@@ -267,147 +272,241 @@ const SubjectPalette: React.FC<PaletteProps> = ({
         >
           {/* Panel Header */}
           <Box sx={{ p: 2, pb: 1, flexShrink: 0 }}>
-            <Box
+            <Tabs
+              value={tabIndex}
+              onChange={(e, val) => setTabIndex(val)}
+              variant="fullWidth"
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                mb: 0.5,
-              }}
-            >
-              <Typography variant="subtitle1" fontWeight={700} sx={{ letterSpacing: '-0.01em' }}>
-                Subjects
-              </Typography>
-              <CustomTooltip
-                title="Drag subjects onto time slots to schedule them"
-                placement="left"
-                arrow
-              >
-                <Iconify
-                  icon="lucide:info"
-                  sx={{ cursor: 'pointer', color: 'text.disabled', width: 16, height: 16 }}
-                />
-              </CustomTooltip>
-            </Box>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: 'block', mb: 1.25 }}
-            >
-              Drag to schedule ·{' '}
-              {
-                subjects.filter(
-                  (s) =>
-                    // 0-lecture subjects count as complete — there is nothing left to schedule
-                    (s.totalLectures ?? 0) === 0 ||
-                    ((placedCounts[s.subjectId] ?? 0) >= (s.totalLectures ?? 0) &&
-                      (s.totalLectures ?? 0) > 0)
-                ).length
-              }
-              /{subjects.length} complete
-            </Typography>
-
-            {/* Search */}
-            <TextField
-              size="small"
-              placeholder="Search subjects..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              fullWidth
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ fontSize: 16, color: 'text.disabled' }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                mb: 1,
-                '& .MuiOutlinedInput-root': {
-                  fontSize: '0.8rem',
-                  borderRadius: 1.5,
+                mb: 1.5,
+                minHeight: 32,
+                height: 32,
+                '& .MuiTab-root': {
+                  minHeight: 32,
+                  height: 32,
+                  py: 0.5,
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
                 },
               }}
-            />
-
-            {/* Stats Row */}
-            {(() => {
-              // Exclude zero-lecture subjects from the calculation entirely — they have
-              // no slots to fill and any accidental placements must not inflate the ratio.
-              const schedulableSubjects = subjects.filter((s) => (s.totalLectures ?? 0) > 0);
-              const totalPlaced = schedulableSubjects.reduce(
-                (sum, s) => sum + Math.min(placedCounts[s.subjectId] ?? 0, s.totalLectures ?? 0),
-                0
-              );
-              const totalRequired = schedulableSubjects.reduce(
-                (sum, s) => sum + (s.totalLectures ?? 0),
-                0
-              );
-              const pct = totalRequired > 0 ? Math.round((totalPlaced / totalRequired) * 100) : 0;
-              return (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  <Box sx={{ flex: 1 }}>
-                    <LinearProgress
-                      variant="determinate"
-                      value={pct}
-                      sx={{
-                        height: 6,
-                        borderRadius: 3,
-                        bgcolor: 'action.hover',
-                        '& .MuiLinearProgress-bar': {
-                          borderRadius: 3,
-                          bgcolor: pct === 100 ? 'success.main' : 'primary.main',
-                        },
-                      }}
-                    />
+            >
+              <Tab label="Subjects" />
+              <Tab
+                label={
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    Issues
+                    {conflicts.length > 0 && (
+                      <Chip
+                        label={conflicts.length}
+                        size="small"
+                        color="error"
+                        sx={{
+                          height: 16,
+                          minWidth: 16,
+                          fontSize: '0.6rem',
+                          fontWeight: 700,
+                          '& .MuiChip-label': { px: 0.5 },
+                        }}
+                      />
+                    )}
                   </Box>
-                  <Typography
-                    variant="caption"
-                    fontWeight={700}
-                    color={pct === 100 ? 'success.main' : 'text.secondary'}
-                    sx={{ whiteSpace: 'nowrap', minWidth: 36 }}
-                  >
-                    {pct}%
+                }
+              />
+            </Tabs>
+
+            {tabIndex === 0 && (
+              <>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    mb: 0.5,
+                  }}
+                >
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ letterSpacing: '-0.01em' }}>
+                    Subjects
                   </Typography>
+                  <CustomTooltip
+                    title="Drag subjects onto time slots to schedule them"
+                    placement="left"
+                    arrow
+                  >
+                    <Iconify
+                      icon="lucide:info"
+                      sx={{ cursor: 'pointer', color: 'text.disabled', width: 16, height: 16 }}
+                    />
+                  </CustomTooltip>
                 </Box>
-              );
-            })()}
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: 'block', mb: 1.25 }}
+                >
+                  Drag to schedule ·{' '}
+                  {
+                    subjects.filter(
+                      (s) =>
+                        (s.totalLectures ?? 0) === 0 ||
+                        ((placedCounts[s.subjectId] ?? 0) >= (s.totalLectures ?? 0) &&
+                          (s.totalLectures ?? 0) > 0)
+                    ).length
+                  }
+                  /{subjects.length} complete
+                </Typography>
+
+                {/* Search */}
+                <TextField
+                  size="small"
+                  placeholder="Search subjects..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  fullWidth
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search sx={{ fontSize: 16, color: 'text.disabled' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    mb: 1,
+                    '& .MuiOutlinedInput-root': {
+                      fontSize: '0.8rem',
+                      borderRadius: 1.5,
+                    },
+                  }}
+                />
+
+                {/* Stats Row */}
+                {(() => {
+                  const schedulableSubjects = subjects.filter((s) => (s.totalLectures ?? 0) > 0);
+                  const totalPlaced = schedulableSubjects.reduce(
+                    (sum, s) => sum + Math.min(placedCounts[s.subjectId] ?? 0, s.totalLectures ?? 0),
+                    0
+                  );
+                  const totalRequired = schedulableSubjects.reduce(
+                    (sum, s) => sum + (s.totalLectures ?? 0),
+                    0
+                  );
+                  const pct = totalRequired > 0 ? Math.round((totalPlaced / totalRequired) * 100) : 0;
+                  return (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <Box sx={{ flex: 1 }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={pct}
+                          sx={{
+                            height: 6,
+                            borderRadius: 3,
+                            bgcolor: 'action.hover',
+                            '& .MuiLinearProgress-bar': {
+                              borderRadius: 3,
+                              bgcolor: pct === 100 ? 'success.main' : 'primary.main',
+                            },
+                          }}
+                        />
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        fontWeight={700}
+                        color={pct === 100 ? 'success.main' : 'text.secondary'}
+                        sx={{ whiteSpace: 'nowrap', minWidth: 36 }}
+                      >
+                        {pct}%
+                      </Typography>
+                    </Box>
+                  );
+                })()}
+              </>
+            )}
           </Box>
 
           <Divider sx={{ flexShrink: 0 }} />
 
-          {/* Subject List — flex: 1 + minHeight: 0 ensures the Scrollbar fills only
-              the remaining card height and never bleeds outside the card boundary */}
-          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-            <Scrollbar
-              sx={{
-                height: '100%',
-                '& .simplebar-content-wrapper': { height: '100%' },
-                '& .simplebar-track': { zIndex: 1 },
-              }}
-            >
-              <List sx={{ px: 1.5, py: 1 }}>
-                {subjects
-                  .filter((s) => s.name?.toLowerCase().includes(searchQuery.toLowerCase()))
-                  .map((sub) => (
-                    <SubjectCard
-                      key={sub.subjectId}
-                      subject={sub}
-                      placedCount={placedCounts[sub.subjectId] || 0}
-                      totalSubjects={sub.totalSubjects || 0}
-                    />
+          {/* Subject List Tab */}
+          {tabIndex === 0 && (
+            <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+              <Scrollbar
+                sx={{
+                  height: '100%',
+                  '& .simplebar-content-wrapper': { height: '100%' },
+                  '& .simplebar-track': { zIndex: 1 },
+                }}
+              >
+                <List sx={{ px: 1.5, py: 1 }}>
+                  {subjects
+                    .filter((s) => s.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map((sub) => (
+                      <SubjectCard
+                        key={sub.subjectId}
+                        subject={sub}
+                        placedCount={placedCounts[sub.subjectId] || 0}
+                        totalSubjects={sub.totalSubjects || 0}
+                      />
+                    ))}
+                  {subjects.filter((s) => s.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .length === 0 && (
+                    <Box sx={{ textAlign: 'center', py: 3 }}>
+                      <Typography variant="body2" color="text.disabled">
+                        No subjects match
+                      </Typography>
+                    </Box>
+                  )}
+                </List>
+              </Scrollbar>
+            </Box>
+          )}
+
+          {/* Issues List Tab */}
+          {tabIndex === 1 && (
+            <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+              <Scrollbar
+                sx={{
+                  height: '100%',
+                  '& .simplebar-content-wrapper': { height: '100%' },
+                  '& .simplebar-track': { zIndex: 1 },
+                }}
+              >
+                <List sx={{ px: 1.5, py: 1 }}>
+                  {conflicts.map((err, idx) => (
+                    <ListItem
+                      key={idx}
+                      disableGutters
+                      sx={{
+                        p: 1.25,
+                        mb: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'error.light',
+                        bgcolor: (theme) => alpha(theme.palette.error.main, 0.04),
+                      }}
+                    >
+                      <Box display="flex" gap={1} alignItems="flex-start" width="100%">
+                        <Iconify icon="mdi:alert-circle" color="error.main" sx={{ mt: 0.25, flexShrink: 0 }} />
+                        <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+                          {err}
+                        </Typography>
+                      </Box>
+                    </ListItem>
                   ))}
-                {subjects.filter((s) => s.name?.toLowerCase().includes(searchQuery.toLowerCase()))
-                  .length === 0 && (
-                  <Box sx={{ textAlign: 'center', py: 3 }}>
-                    <Typography variant="body2" color="text.disabled">
-                      No subjects match
-                    </Typography>
-                  </Box>
-                )}
-              </List>
-            </Scrollbar>
-          </Box>
+                  {conflicts.length === 0 && (
+                    <Box sx={{ textAlign: 'center', py: 4, px: 2 }}>
+                      <Iconify icon="mdi:check-circle" color="success.main" width={36} height={36} sx={{ mb: 1 }} />
+                      <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                        No Issues Found
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        All configured rules and mappings are valid.
+                      </Typography>
+                    </Box>
+                  )}
+                </List>
+              </Scrollbar>
+            </Box>
+          )}
         </Box>
       ) : (
         <Box

@@ -1,3 +1,15 @@
+// ===== Academic Calendar API (reducerPath: academicApi) =====
+export const academicCalendarType = {
+  calendar: 'AcademicCalendar',
+  calendarDay: 'AcademicCalendarDay',
+  workingHour: 'AcademicCalendarWorkingHour',
+  checkDate: 'AcademicCalendarCheckDate',
+  impactLog: 'AcademicCalendarImpactLog',
+  auditLog: 'AcademicCalendarAuditLog',
+  settings: 'AcademicCalendarSettings',
+  emergencyClosure: 'AcademicCalendarEmergencyClosure',
+} as const;
+
 // ===== Academic API (reducerPath: academicApi) =====
 export const academicType = {
   subject: 'Subject',
@@ -26,9 +38,26 @@ export const academicType = {
   weeklyLectureSlot: 'WeeklyLectureSlot',
   lectureSlot: 'LectureSlot',
   timetableManagement: 'TimetableManagement',
+  substitutionManagement: 'SubstitutionManagement',
   academicReport: 'AcademicReport',
   academicReportExport: 'AcademicReportExport',
   examResult: 'ExamResult',
+  academic360: 'Academic360',
+  questionBank: 'QuestionBank',
+  questionPaper: 'QuestionPaper',
+  // Lesson Plan / Teacher Diary
+  lessonPlan: 'LessonPlan',
+  teacherDiary: 'TeacherDiary',
+  diaryEvidence: 'DiaryEvidence',
+  lessonPlanReview: 'LessonPlanReview',
+  missedLesson: 'MissedLesson',
+  lessonResource: 'LessonResource',
+  lessonPlanSettings: 'LessonPlanSettings',
+  lessonPlanAuditLog: 'LessonPlanAuditLog',
+  aiLessonSuggestion: 'AiLessonSuggestion',
+  lessonPlanReport: 'LessonPlanReport',
+  teachingExecutionHealth: 'TeachingExecutionHealth',
+  coverageTracker: 'CoverageTracker',
 } as const;
 
 // ===== Quiz Management API (reducerPath: quizManagementApi) =====
@@ -168,6 +197,11 @@ export const documentType = {
   document: 'Document',
 } as const;
 
+// ===== Main Dashboard API (reducerPath: api) =====
+export const dashboardType = {
+  summary: 'DashboardSummary',
+} as const;
+
 // ===== Earning Component API (reducerPath: earningComponentApi) =====
 export const earningComponentType = {
   earningComponent: 'EarningComponent',
@@ -197,11 +231,6 @@ export const employeeType = {
   hrReports: 'HR-Reports',
 } as const;
 
-// ===== Enrollment Report API (reducerPath: EnrollmentReportApi) =====
-export const enrollmentReportType = {
-  enrollmentReportApi: 'Enrollment-Report-Api',
-} as const;
-
 // ===== Student Report API (reducerPath: studentReportApi) =====
 export const studentReportType = {
   studentReport: 'Student-Report',
@@ -211,11 +240,6 @@ export const studentReportType = {
 // ===== Entrance Exam API (reducerPath: EntranceExamApi) =====
 export const entranceExamType = {
   entranceExam: 'Entrance-Exam',
-} as const;
-
-// ===== Entrance Exam Slot API (reducerPath: EntranceExamSlotApi) =====
-export const entranceExamSlotType = {
-  entranceExamSlot: 'Entrance-Exam-Slot',
 } as const;
 
 // ===== Event Holiday API (reducerPath: EventHolidayApi) =====
@@ -281,11 +305,6 @@ export const financeModuleType = {
 export const budgetsCategoryType = {
   budgetCategory: 'Budget-Category',
   budgetSubCategory: 'Budget-Sub-Category',
-} as const;
-
-// ===== Follow Up API (reducerPath: FollowUpApi) =====
-export const followUpType = {
-  followUp: 'Follow-Up',
 } as const;
 
 // ===== Income API (reducerPath: IncomeApi) =====
@@ -496,11 +515,6 @@ export const studentChangeClassType = {
   studentChangeClass: 'studentChangeClass',
 } as const;
 
-// ===== Student Document Type API (reducerPath: StudentDocumentTypeApi) =====
-export const studentDocumentType = {
-  studentDocumentType: 'Student-Document-Type',
-} as const;
-
 // ===== Student GR Number API (reducerPath: studentGrNumberApi) =====
 export const studentGrNumberType = {
   studentGrNumber: 'studentGrNumber',
@@ -511,9 +525,16 @@ export const studentGroupType = {
   studentGroup: 'studentGroup',
 } as const;
 
-// ===== Student Inquiry API (reducerPath: StudentInquiryApi) =====
-export const studentInquiryType = {
-  studentInquiry: 'Student-Inquiry',
+// ===== Student Admissions CRM API (reducerPath: StudentAdmissionsCrmApi) =====
+export const studentAdmissionsCrmType = {
+  lead: 'Student-Admissions-Crm-Lead',
+  configuration: 'Student-Admissions-Crm-Configuration',
+  task: 'Student-Admissions-Crm-Task',
+  timeline: 'Student-Admissions-Crm-Timeline',
+  exam: 'Student-Admissions-Crm-Exam',
+  analytics: 'Student-Admissions-Crm-Analytics',
+  publicForm: 'Student-Admissions-Crm-Public-Form',
+  communication: 'Student-Admissions-Crm-Communication',
 } as const;
 
 // ===== Student Invoice API (reducerPath: StudentInvoiceApi) =====
@@ -535,11 +556,6 @@ export const studentReceiptType = {
 export const studentRegistrationType = {
   studentRegistration: 'Student-Registration',
   studentDocument: 'Student-Document',
-} as const;
-
-// ===== Student Registration Form API (reducerPath: StudentRegistrationFormApi) =====
-export const studentRegistrationFormType = {
-  studentRegistrationForm: 'Student-Registration-Form',
 } as const;
 
 // ===== Student Roll Number API (reducerPath: studentRollNumberApi) =====
@@ -617,6 +633,7 @@ export const yearType = {
 } as const;
 
 export const allTagTypes = {
+  ...academicCalendarType,
   ...academicType,
   ...quizManagementType,
   ...homeworkType,
@@ -638,12 +655,11 @@ export const allTagTypes = {
   ...coreSubjectType,
   ...divisionType,
   ...documentType,
+  ...dashboardType,
   ...earningComponentType,
   ...employeeType,
-  ...enrollmentReportType,
   ...studentReportType,
   ...entranceExamType,
-  ...entranceExamSlotType,
   ...eventHolidayType,
   ...expenseType,
   ...feeConcessionType,
@@ -651,7 +667,6 @@ export const allTagTypes = {
   ...feeTermsType,
   ...financeModuleType,
   ...budgetsCategoryType,
-  ...followUpType,
   ...incomeType,
   ...incomeDetailsType,
   ...inquiryPreferenceType,
@@ -687,15 +702,14 @@ export const allTagTypes = {
   ...studentAttendanceType,
   ...studentCertificateType,
   ...studentChangeClassType,
-  ...studentDocumentType,
   ...studentGrNumberType,
   ...studentGroupType,
-  ...studentInquiryType,
+  ...studentAdmissionsCrmType,
+  academicExam: academicType.exam,
   ...studentInvoiceType,
   ...studentLeaveType,
   ...studentReceiptType,
   ...studentRegistrationType,
-  ...studentRegistrationFormType,
   ...studentRollNumberType,
   ...studentTakeAttendanceType,
   ...bulkStudentType,
