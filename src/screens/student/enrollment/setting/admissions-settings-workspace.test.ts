@@ -95,7 +95,8 @@ describe('Enrollment settings route contracts', () => {
 
     expect(shell).not.toContain('Enrollment settings categories');
     expect(shell).not.toContain('<Drawer');
-    expect(menu).toContain("title: 'Journey & Cycles'");
+    expect(menu).toContain("title: 'Admission Journey'");
+    expect(menu).toContain("title: 'Exam & Eligibility'");
     expect(menu).toContain('studentPaths.enrollment.settingsSections.automation');
     expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(17);
   });
@@ -121,6 +122,9 @@ describe('Enrollment settings route contracts', () => {
     expect(state).toContain("searchParams.get('panel')");
     expect(state).toContain("set('panel', state.settingsPanel)");
     expect(settingsPage).toContain('EnrollmentSettingsPanelTabs');
+    expect(settingsPage).toContain('EnrollmentSettingsSetupSteps');
+    expect(settingsPage).toContain('<Stepper');
+    expect(settingsPage).toContain('<StepButton');
     expect(settingsPage).toContain('component={RouterLink}');
     expect(settingsPage).toContain('href={getPanelHref(option.value)}');
   });
@@ -171,7 +175,34 @@ describe('Enrollment settings route contracts', () => {
     expect(`${playbooks}${registrations}${documents}`).not.toContain('onEditMouseDown');
     expect(playbooks).toContain("label: 'Scope'");
     expect(registrations).toContain("label: 'Registration Fee'");
-    expect(registrations).toContain("label: 'Issue Trigger'");
+    expect(registrations).toContain("label: 'Issue Method'");
+  });
+
+  it('explains operational handoffs and progressively discloses applicant stage editing', () => {
+    const guidance = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admission-journey-guidance.tsx'
+    );
+    const configuration = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-crm-configuration.tsx'
+    );
+
+    expect(guidance).toContain('Applicant handoff map');
+    expect(guidance).toContain('Automatic stage');
+    expect(guidance).toContain('Ready to Invite');
+    expect(configuration).toContain('Applicant Stages');
+    expect(configuration).toContain('<Accordion');
+    expect(configuration).toContain('Staff can move applicants to');
+    expect(configuration).not.toContain('Pipeline Stages');
   });
 
   it('protects every exposed draft editor and uses staff selectors for delegation', () => {

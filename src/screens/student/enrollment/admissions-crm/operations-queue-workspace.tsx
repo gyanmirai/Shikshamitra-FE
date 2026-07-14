@@ -48,6 +48,7 @@ import {
   enrollmentActionsColumn,
   EnrollmentTableEmptyState,
   EnrollmentWorkspaceErrorState,
+  EnrollmentWorkspaceFilterPanel,
 } from './workspace-table-patterns';
 
 import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
@@ -86,6 +87,7 @@ const queueLabels: Record<AdmissionCrmOperationsQueueType, string> = {
   [AdmissionCrmOperationsQueueType.UnassignedExam]: 'Unassigned Exams',
   [AdmissionCrmOperationsQueueType.CapacityConflict]: 'Capacity Conflicts',
   [AdmissionCrmOperationsQueueType.NoShow]: 'Exam No-shows',
+  [AdmissionCrmOperationsQueueType.RegistrationInvitationPending]: 'Ready to Invite',
   [AdmissionCrmOperationsQueueType.ExpiringRegistrationLink]: 'Expiring Links',
   [AdmissionCrmOperationsQueueType.IncompleteRegistration]: 'Incomplete Registrations',
   [AdmissionCrmOperationsQueueType.RejectedDocument]: 'Rejected Documents',
@@ -104,6 +106,36 @@ const queueLabels: Record<AdmissionCrmOperationsQueueType, string> = {
   [AdmissionCrmOperationsQueueType.CancellationReview]: 'Cancellation Review',
   [AdmissionCrmOperationsQueueType.RouteAppealReview]: 'Route Appeals',
   [AdmissionCrmOperationsQueueType.ServiceHandoffException]: 'Service Handoff Exceptions',
+};
+
+const queueDescriptions: Partial<Record<AdmissionCrmOperationsQueueType, string>> = {
+  [AdmissionCrmOperationsQueueType.UnassignedExam]:
+    'Exam-ready applicants who still need a slot assignment.',
+  [AdmissionCrmOperationsQueueType.CapacityConflict]:
+    'Exam assignments that exceed the configured slot capacity.',
+  [AdmissionCrmOperationsQueueType.NoShow]: 'Absent applicants and overdue attendance decisions.',
+  [AdmissionCrmOperationsQueueType.RegistrationInvitationPending]:
+    'Eligible applicants who can now be issued a registration form.',
+  [AdmissionCrmOperationsQueueType.ExpiringRegistrationLink]:
+    'Registration links approaching their expiry date.',
+  [AdmissionCrmOperationsQueueType.IncompleteRegistration]:
+    'Issued forms that families have not yet completed.',
+  [AdmissionCrmOperationsQueueType.RejectedDocument]:
+    'Documents returned to families for correction or replacement.',
+  [AdmissionCrmOperationsQueueType.DocumentVerificationBacklog]:
+    'Uploaded documents awaiting staff review.',
+  [AdmissionCrmOperationsQueueType.AdmissionReady]:
+    'Verified registrations with all blocking requirements resolved.',
+  [AdmissionCrmOperationsQueueType.FinalApproval]:
+    'Admission-ready applicants awaiting the final decision.',
+  [AdmissionCrmOperationsQueueType.PolicyException]:
+    'Applicants with a policy exception requiring review.',
+  [AdmissionCrmOperationsQueueType.PaymentCondition]:
+    'Offer or activation work waiting on a manually recorded payment condition.',
+  [AdmissionCrmOperationsQueueType.GovernmentAllotmentReconciliation]:
+    'Imported RTE allotments that require reconciliation.',
+  [AdmissionCrmOperationsQueueType.ActivationRepair]:
+    'Partially completed activations that can be retried safely.',
 };
 
 const allQueues = Object.values(AdmissionCrmOperationsQueueType).filter(
@@ -183,7 +215,7 @@ export function OperationsQueueWorkspace({
         const summary = summaryQuery.data?.queues.find((item) => item.queueType === queueType);
         return {
           queueType,
-          label: summary?.label || queueLabels[queueType],
+          label: queueLabels[queueType],
           count: summary?.count || 0,
           urgentCount: summary?.urgentCount || 0,
         };
@@ -279,7 +311,11 @@ export function OperationsQueueWorkspace({
             <ThreeDotsActions
               placement="right-top"
               showViewIcon
-              viewLabel="Review Applicant"
+              viewLabel={
+                selectedQueue === AdmissionCrmOperationsQueueType.RegistrationInvitationPending
+                  ? 'Issue Registration'
+                  : 'Review Applicant'
+              }
               handleViewClick={() => openApplicant(item.leadId)}
               showThreeDots={false}
             />
@@ -287,7 +323,7 @@ export function OperationsQueueWorkspace({
         },
       },
     ],
-    [openApplicant]
+    [openApplicant, selectedQueue]
   );
 
   const applySavedView = (savedView: AdmissionCrmOperationsSavedViewDto) => {
@@ -343,145 +379,170 @@ export function OperationsQueueWorkspace({
     <Stack spacing={1.5}>
       <EnrollmentWorkspaceHeader title={title} description={description} />
 
-      <Paper variant="outlined" sx={{ p: 1, borderRadius: 1, overflowX: 'auto' }}>
-        <Stack direction="row" gap={0.75} sx={{ minWidth: 'max-content' }}>
+      <EnrollmentWorkspaceFilterPanel
+        columns={{ xs: 1, sm: 2, lg: 5 }}
+        clearDisabled={!state.owner && !state.assignee && !state.minimumAgeDays && !state.urgent}
+        onClear={() =>
+          updateState(
+            {
+              owner: undefined,
+              assignee: undefined,
+              minimumAgeDays: undefined,
+              urgent: undefined,
+              page: 1,
+            },
+            'push'
+          )
+        }
+        actions={
+          <Stack spacing={1} sx={{ width: '100%' }}>
+            <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
+              <TextField
+                select
+                size="small"
+                label="Saved view"
+                value=""
+                onChange={(event) => {
+                  const view = savedViewsQuery.data?.find((item) => item.id === event.target.value);
+                  if (view) applySavedView(view);
+                }}
+                sx={{ minWidth: 220 }}
+              >
+                {(savedViewsQuery.data || [])
+                  .filter((view) => allowedQueues.includes(view.queueType))
+                  .map((view) => (
+                    <MenuItem key={view.id} value={view.id}>
+                      {view.name}
+                    </MenuItem>
+                  ))}
+              </TextField>
+              <TextField
+                size="small"
+                label="New view name"
+                value={savedViewName}
+                onChange={(event) => setSavedViewName(event.target.value)}
+                autoComplete="off"
+                sx={{ minWidth: 220 }}
+              />
+              <LoadingButton
+                size="small"
+                variant="outlined"
+                startIcon={<BookmarkAddOutlined />}
+                loading={createSavedViewState.isLoading}
+                disabled={!savedViewName.trim()}
+                onClick={handleSaveView}
+                sx={{ color: 'primary.darker', borderColor: 'primary.darker' }}
+              >
+                Save View
+              </LoadingButton>
+            </Stack>
+            {(savedViewsQuery.data || []).some((view) => allowedQueues.includes(view.queueType)) ? (
+              <Stack direction="row" gap={0.75} flexWrap="wrap">
+                {(savedViewsQuery.data || [])
+                  .filter((view) => allowedQueues.includes(view.queueType))
+                  .map((view) => (
+                    <Chip
+                      key={view.id}
+                      label={view.name}
+                      onClick={() => applySavedView(view)}
+                      onDelete={async () => {
+                        try {
+                          await deleteSavedView({ viewId: view.id }).unwrap();
+                          shikshaMitraToast.success({ message: 'Saved view deleted.' });
+                        } catch {
+                          shikshaMitraToast.error({
+                            message: 'The saved view could not be deleted.',
+                          });
+                        }
+                      }}
+                      deleteIcon={<DeleteOutlineRounded />}
+                      disabled={deleteSavedViewState.isLoading}
+                    />
+                  ))}
+              </Stack>
+            ) : null}
+          </Stack>
+        }
+      >
+        <TextField
+          select
+          size="small"
+          label="Work queue"
+          value={selectedQueue}
+          helperText={queueDescriptions[selectedQueue] || 'Applicants requiring staff action.'}
+          onChange={(event) =>
+            updateState(
+              { queue: Number(event.target.value) as AdmissionCrmOperationsQueueType, page: 1 },
+              'push'
+            )
+          }
+        >
           {queueCounts.map((queue) => (
-            <Button
-              key={queue.queueType}
-              size="small"
-              variant={selectedQueue === queue.queueType ? 'contained' : 'outlined'}
-              onClick={() => updateState({ queue: queue.queueType, page: 1 }, 'push')}
-              sx={
-                selectedQueue === queue.queueType
-                  ? {
-                      bgcolor: 'primary.darker',
-                      color: 'common.white',
-                      '&:hover': { bgcolor: 'primary.dark' },
-                    }
-                  : {
-                      color: 'text.primary',
-                      borderColor: queue.urgentCount > 0 ? 'warning.darker' : 'divider',
-                    }
-              }
-            >
-              {queue.label} ({queue.count})
-            </Button>
+            <MenuItem key={queue.queueType} value={queue.queueType}>
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                gap={1}
+                sx={{ width: '100%' }}
+              >
+                <span>{queue.label}</span>
+                <Stack direction="row" gap={0.5} alignItems="center">
+                  <Chip size="small" variant="outlined" label={queue.count} />
+                  {queue.urgentCount > 0 ? (
+                    <Chip size="small" color="warning" label={`${queue.urgentCount} urgent`} />
+                  ) : null}
+                </Stack>
+              </Stack>
+            </MenuItem>
           ))}
-        </Stack>
-      </Paper>
-
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack spacing={1.25}>
-          <Stack direction={{ xs: 'column', lg: 'row' }} gap={1.25} alignItems={{ lg: 'center' }}>
-            <Autocomplete
-              size="small"
-              options={staffQuery.data || []}
-              value={owner}
-              inputValue={staffSearch}
-              onInputChange={(_, value) => setStaffSearch(value)}
-              onChange={(_, value) => updateState({ owner: value?.id, page: 1 })}
-              getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              renderInput={(params) => <TextField {...params} label="Lead owner" />}
-              sx={{ minWidth: { lg: 240 } }}
+        </TextField>
+        <Autocomplete
+          size="small"
+          options={staffQuery.data || []}
+          value={owner}
+          inputValue={staffSearch}
+          onInputChange={(_, value) => setStaffSearch(value)}
+          onChange={(_, value) => updateState({ owner: value?.id, page: 1 })}
+          getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          renderInput={(params) => <TextField {...params} label="Lead owner" />}
+          sx={{ minWidth: { lg: 240 } }}
+        />
+        <Autocomplete
+          size="small"
+          options={staffQuery.data || []}
+          value={assignee}
+          onChange={(_, value) => updateState({ assignee: value?.id, page: 1 })}
+          getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          renderInput={(params) => <TextField {...params} label="Assigned staff" />}
+          sx={{ minWidth: { lg: 240 } }}
+        />
+        <TextField
+          size="small"
+          type="number"
+          label="Minimum age (days)"
+          value={state.minimumAgeDays || ''}
+          onChange={(event) =>
+            updateState({
+              minimumAgeDays: event.target.value ? Number(event.target.value) : undefined,
+              page: 1,
+            })
+          }
+          inputProps={{ min: 1, max: 3650 }}
+          sx={{ width: { lg: 170 } }}
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={Boolean(state.urgent)}
+              onChange={(_, checked) => updateState({ urgent: checked || undefined, page: 1 })}
             />
-            <Autocomplete
-              size="small"
-              options={staffQuery.data || []}
-              value={assignee}
-              onChange={(_, value) => updateState({ assignee: value?.id, page: 1 })}
-              getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              renderInput={(params) => <TextField {...params} label="Assigned staff" />}
-              sx={{ minWidth: { lg: 240 } }}
-            />
-            <TextField
-              size="small"
-              type="number"
-              label="Minimum age (days)"
-              value={state.minimumAgeDays || ''}
-              onChange={(event) =>
-                updateState({
-                  minimumAgeDays: event.target.value ? Number(event.target.value) : undefined,
-                  page: 1,
-                })
-              }
-              inputProps={{ min: 1, max: 3650 }}
-              sx={{ width: { lg: 170 } }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(state.urgent)}
-                  onChange={(_, checked) => updateState({ urgent: checked || undefined, page: 1 })}
-                />
-              }
-              label="Urgent only"
-            />
-          </Stack>
-
-          <Divider />
-          <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
-            <TextField
-              select
-              size="small"
-              label="Saved view"
-              value=""
-              onChange={(event) => {
-                const view = savedViewsQuery.data?.find((item) => item.id === event.target.value);
-                if (view) applySavedView(view);
-              }}
-              sx={{ minWidth: 220 }}
-            >
-              {(savedViewsQuery.data || [])
-                .filter((view) => allowedQueues.includes(view.queueType))
-                .map((view) => (
-                  <MenuItem key={view.id} value={view.id}>
-                    {view.name}
-                  </MenuItem>
-                ))}
-            </TextField>
-            <TextField
-              size="small"
-              label="New view name"
-              value={savedViewName}
-              onChange={(event) => setSavedViewName(event.target.value)}
-              autoComplete="off"
-              sx={{ minWidth: 220 }}
-            />
-            <LoadingButton
-              size="small"
-              variant="outlined"
-              startIcon={<BookmarkAddOutlined />}
-              loading={createSavedViewState.isLoading}
-              disabled={!savedViewName.trim()}
-              onClick={handleSaveView}
-              sx={{ color: 'primary.darker', borderColor: 'primary.darker' }}
-            >
-              Save View
-            </LoadingButton>
-            {(savedViewsQuery.data || [])
-              .filter((view) => allowedQueues.includes(view.queueType))
-              .map((view) => (
-                <Chip
-                  key={view.id}
-                  label={view.name}
-                  onClick={() => applySavedView(view)}
-                  onDelete={async () => {
-                    try {
-                      await deleteSavedView({ viewId: view.id }).unwrap();
-                      shikshaMitraToast.success({ message: 'Saved view deleted.' });
-                    } catch {
-                      shikshaMitraToast.error({ message: 'The saved view could not be deleted.' });
-                    }
-                  }}
-                  deleteIcon={<DeleteOutlineRounded />}
-                  disabled={deleteSavedViewState.isLoading}
-                />
-              ))}
-          </Stack>
-        </Stack>
-      </Paper>
+          }
+          label="Urgent only"
+        />
+      </EnrollmentWorkspaceFilterPanel>
 
       {queueQuery.isError ? (
         <EnrollmentWorkspaceErrorState

@@ -156,7 +156,7 @@ export const getPersonaWorkspaceDefaults = (
   }
 
   if (workspace === 'registrations') {
-    return { queue: AdmissionCrmOperationsQueueType.IncompleteRegistration };
+    return { queue: AdmissionCrmOperationsQueueType.RegistrationInvitationPending };
   }
   if (workspace === 'offers') {
     return { queue: AdmissionCrmOperationsQueueType.FinalApproval };

@@ -93,7 +93,9 @@ export function EnrollmentWorkspaceFilterPanel({
 export function EnrollmentTableEmptyState({ title, description }: EmptyStateProps) {
   return (
     <Stack spacing={0.5} alignItems="center" sx={{ py: 1 }}>
-      <Typography variant="subtitle2">{title}</Typography>
+      <Typography variant="subtitle2" color="text.primary">
+        {title}
+      </Typography>
       <Typography variant="body2" color="text.secondary" textAlign="center">
         {description}
       </Typography>

@@ -160,6 +160,7 @@ export enum AdmissionCrmOperationsQueueType {
   CancellationReview = 18,
   RouteAppealReview = 19,
   ServiceHandoffException = 20,
+  RegistrationInvitationPending = 21,
 }
 
 export enum AdmissionCrmAutomationRunType {

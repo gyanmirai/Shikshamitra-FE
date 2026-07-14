@@ -42,8 +42,8 @@ export const AdmissionsRegistrationsWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.registrations}>
     <OperationsQueueWorkspace
       title="Registrations & Documents"
-      description="Resolve registration, correction, document, and admission-readiness work."
-      defaultQueue={AdmissionCrmOperationsQueueType.IncompleteRegistration}
+      description="Invite eligible applicants, complete registrations, verify documents, and confirm readiness."
+      defaultQueue={AdmissionCrmOperationsQueueType.RegistrationInvitationPending}
       allowedQueues={registrationQueues}
       applicantTab="registration"
     />

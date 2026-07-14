@@ -52,6 +52,8 @@ import {
   EnrollmentWorkspaceErrorState,
 } from './workspace-table-patterns';
 
+import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
+
 const pageSize = 50;
 const attendanceLabels: Record<AdmissionCrmExamAttendanceStatus, string> = {
   [AdmissionCrmExamAttendanceStatus.NotMarked]: 'Not Marked',
@@ -106,6 +108,7 @@ export function ExamsWorkspace() {
   const page = Math.max(0, state.page - 1);
   const [selectedExam, setSelectedExam] = useState<AdmissionCrmEntranceExamDto | null>(null);
   const [handoffExamId, setHandoffExamId] = useState('');
+  const [applicantTab, setApplicantTab] = useState<ApplicantDrawerTab>('overview');
   const [attendance, setAttendance] = useState(AdmissionCrmExamAttendanceStatus.NotMarked);
   const [totalMarks, setTotalMarks] = useState('100');
   const [passingMarks, setPassingMarks] = useState('40');
@@ -331,7 +334,10 @@ export function ExamsWorkspace() {
               placement="right-top"
               showViewIcon
               viewLabel="Open Applicant"
-              handleViewClick={() => openApplicant(exam.leadId)}
+              handleViewClick={() => {
+                setApplicantTab('overview');
+                openApplicant(exam.leadId);
+              }}
               showEditIcon
               editLabel="Manage Exam"
               handleEditClick={() => setSelectedExam(exam)}
@@ -351,6 +357,18 @@ export function ExamsWorkspace() {
                     <Iconify icon="mdi:account-arrow-right-outline" />
                     Eligibility Handoff
                   </MenuItem>
+                  {exam.eligibilityDecision === AdmissionCrmEligibilityDecision.Eligible ? (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        setApplicantTab('registration');
+                        openApplicant(exam.leadId);
+                      }}
+                    >
+                      <Iconify icon="mdi:file-document-edit-outline" />
+                      Open Registration
+                    </MenuItem>
+                  ) : null}
                 </MenuList>
               )}
             />
@@ -671,6 +689,18 @@ export function ExamsWorkspace() {
           </Stack>
         </DialogContent>
         <DialogActions>
+          {handoffQuery.data?.eligibilityDecision === AdmissionCrmEligibilityDecision.Eligible ? (
+            <Button
+              variant="contained"
+              onClick={() => {
+                setApplicantTab('registration');
+                openApplicant(handoffQuery.data!.leadId);
+                setHandoffExamId('');
+              }}
+            >
+              Continue to Registration
+            </Button>
+          ) : null}
           <Button onClick={() => setHandoffExamId('')}>Close</Button>
         </DialogActions>
       </Dialog>
@@ -678,7 +708,7 @@ export function ExamsWorkspace() {
       <ApplicantWorkspaceDrawer
         leadId={state.applicant}
         academicYearId={academicYearId}
-        initialTab="overview"
+        initialTab={applicantTab}
         onClose={closeApplicant}
       />
     </Stack>

@@ -1,6 +1,7 @@
 import { AdmissionCrmOperationsQueueType } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 export const registrationQueues = [
+  AdmissionCrmOperationsQueueType.RegistrationInvitationPending,
   AdmissionCrmOperationsQueueType.ExpiringRegistrationLink,
   AdmissionCrmOperationsQueueType.IncompleteRegistration,
   AdmissionCrmOperationsQueueType.RejectedDocument,

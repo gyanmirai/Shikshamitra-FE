@@ -1225,6 +1225,10 @@ describe('admissions CRM API contracts', () => {
     expect(AdmissionCrmAutomationRunStatus.CompletedWithFailures).toBe(1);
   });
 
+  it('keeps the manual registration handoff queue aligned with the backend contract', () => {
+    expect(AdmissionCrmOperationsQueueType.RegistrationInvitationPending).toBe(21);
+  });
+
   it('tracks automation run and failure analytics in the summary contract', () => {
     const analytics: Pick<
       AdmissionCrmAnalyticsSummaryDto,

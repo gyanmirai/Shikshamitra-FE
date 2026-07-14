@@ -96,5 +96,8 @@ describe('Enrollment workspace URL state', () => {
     expect(getPersonaWorkspaceDefaults('offers', 'approver')).toEqual({
       queue: AdmissionCrmOperationsQueueType.FinalApproval,
     });
+    expect(getPersonaWorkspaceDefaults('registrations', 'counselor')).toEqual({
+      queue: AdmissionCrmOperationsQueueType.RegistrationInvitationPending,
+    });
   });
 });

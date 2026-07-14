@@ -681,32 +681,32 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/journey/?\\?cycle=${academicYearId}`)
     );
-    await expect(page.getByRole('heading', { name: 'Journey & Cycles' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Admission Journey' })).toBeVisible();
     await expect(page.getByText('Enrollment settings categories')).toHaveCount(0);
 
     const cycleName = page.getByRole('textbox', { name: 'Cycle name' });
     await expect(cycleName).not.toHaveValue('');
     const originalCycleName = await cycleName.inputValue();
     await cycleName.fill(`${originalCycleName} unsaved`);
-    await page.getByRole('tab', { name: 'Pipeline Stages' }).click();
+    await page.getByRole('link', { name: /Applicant Stages/ }).click();
     await expect(page.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
     await page.getByRole('button', { name: 'Discard & Continue' }).click();
     await expect(page).toHaveURL(/panel=pipeline/);
-    await page.getByRole('tab', { name: 'Cycle & Readiness' }).click();
+    await page.getByRole('link', { name: /Admission Cycle/ }).click();
     await expect(page.getByRole('textbox', { name: 'Cycle name' })).toHaveValue(originalCycleName);
 
-    const inquiryCaptureLink = page.getByRole('link', { name: 'Inquiry Capture' });
+    const inquiryCaptureLink = page.getByRole('link', { name: 'Inquiry Forms & Sources' });
     await expect(inquiryCaptureLink).toHaveAttribute('href', new RegExp(`cycle=${academicYearId}`));
     await inquiryCaptureLink.click();
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/inquiry-capture/?\\?cycle=${academicYearId}`)
     );
 
-    await page.getByRole('tab', { name: 'Form Templates' }).click();
+    await page.getByRole('link', { name: /^Inquiry Forms Build and/ }).click();
     await expect(page).toHaveURL(/panel=forms/);
     await expect(page.getByRole('heading', { name: 'Form Templates' })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Entrance Exams' }).last().click();
+    await page.getByRole('link', { name: 'Exam & Eligibility' }).last().click();
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/entrance-exams/?\\?cycle=${academicYearId}`)
     );
