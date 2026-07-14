@@ -1,5 +1,6 @@
 'use client';
 
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmPlaybookDto,
   AdmissionCrmSeatPlanDto,
@@ -14,9 +15,10 @@ import type {
 import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Add,
-  Edit,
   Archive,
   Publish,
   ContentCopy,
@@ -28,6 +30,7 @@ import {
   Tab,
   Chip,
   Tabs,
+  Step,
   Stack,
   Paper,
   Switch,
@@ -35,8 +38,11 @@ import {
   Dialog,
   Button,
   Divider,
+  Stepper,
   MenuItem,
+  MenuList,
   TextField,
+  StepLabel,
   Typography,
   IconButton,
   InputLabel,
@@ -209,6 +215,8 @@ const errorMessage = (error: unknown) => {
   return 'The playbook action failed.';
 };
 
+const editorSteps = ['General', 'Stages', 'Rounds & Seats', 'Exams', 'Slots & Rules'] as const;
+
 const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorTab, setEditorTab] = useState(0);
@@ -313,9 +321,155 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
 
   const readOnly =
     editing?.status !== undefined && editing.status !== AdmissionCrmPlaybookStatus.Draft;
+  const columns: IColumn[] = [
+    {
+      id: 'name',
+      label: 'Playbook',
+      minWidth: 220,
+      render: (value, row) => (
+        <Stack spacing={0.25}>
+          <Typography variant="body2" fontWeight={600}>
+            {value}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Version {(row as AdmissionCrmPlaybookDto).version}
+          </Typography>
+        </Stack>
+      ),
+    },
+    {
+      id: 'registrationPath',
+      label: 'Registration Path',
+      minWidth: 160,
+      filterType: 'enum',
+      enumOptions: Object.entries(registrationPathLabel).map(([value, label]) => ({
+        value: Number(value),
+        label,
+      })),
+      render: (value) => registrationPathLabel[value as AdmissionCrmRegistrationPath],
+    },
+    {
+      id: 'rounds',
+      label: 'Rounds',
+      width: 90,
+      align: 'right',
+      isFilter: false,
+      render: (value) => value.length,
+    },
+    {
+      id: 'seatPlans',
+      label: 'Seat Plans',
+      width: 105,
+      align: 'right',
+      isFilter: false,
+      render: (value) => value.length,
+    },
+    {
+      id: 'examDefinitions',
+      label: 'Exams',
+      width: 90,
+      align: 'right',
+      isFilter: false,
+      render: (value) => value.length,
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      width: 115,
+      filterType: 'enum',
+      enumOptions: Object.entries(statusLabel).map(([value, label]) => ({
+        value: Number(value),
+        label,
+      })),
+      render: (value) => (
+        <Chip
+          size="small"
+          label={statusLabel[value as AdmissionCrmPlaybookStatus]}
+          color={
+            value === AdmissionCrmPlaybookStatus.Published
+              ? 'success'
+              : value === AdmissionCrmPlaybookStatus.Draft
+                ? 'warning'
+                : 'default'
+          }
+        />
+      ),
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      width: 88,
+      isSort: false,
+      isFilter: false,
+      sticky: true,
+      stickyPosition: 'right',
+      render: (_value, row) => {
+        const playbook = row as AdmissionCrmPlaybookDto;
+        return (
+          <ThreeDotsActions
+            placement="right-top"
+            showEditIcon
+            editLabel="Open Playbook"
+            handleEditClick={() => openEditor(playbook)}
+            onEditMouseDown={() => openEditor(playbook)}
+            actions={({ popover }) => (
+              <MenuList>
+                {playbook.status === AdmissionCrmPlaybookStatus.Draft ? (
+                  <MenuItem
+                    disabled={isLifecycleBusy}
+                    onClick={() => {
+                      popover.onClose();
+                      runLifecycle('publish', playbook);
+                    }}
+                  >
+                    <Publish fontSize="small" />
+                    Publish
+                  </MenuItem>
+                ) : (
+                  <MenuItem
+                    disabled={isLifecycleBusy}
+                    onClick={() => {
+                      popover.onClose();
+                      runLifecycle('version', playbook);
+                    }}
+                  >
+                    <ContentCopy fontSize="small" />
+                    Create New Version
+                  </MenuItem>
+                )}
+                {playbook.status === AdmissionCrmPlaybookStatus.Published ? (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      setOperationsPlaybook(playbook);
+                    }}
+                  >
+                    <EventAvailable fontSize="small" />
+                    Open Slot Operations
+                  </MenuItem>
+                ) : null}
+                {playbook.status === AdmissionCrmPlaybookStatus.Published ? (
+                  <MenuItem
+                    disabled={isLifecycleBusy}
+                    onClick={() => {
+                      popover.onClose();
+                      runLifecycle('retire', playbook);
+                    }}
+                  >
+                    <Archive fontSize="small" />
+                    Retire
+                  </MenuItem>
+                ) : null}
+              </MenuList>
+            )}
+          />
+        );
+      },
+    },
+  ];
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+    <Box>
       <Stack spacing={1.25}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
           <Box>
@@ -335,115 +489,16 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
           </Button>
         </Stack>
         {isFetching ? <LinearProgress /> : <Divider />}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
-            gap: 1,
-          }}
-        >
-          {(data?.items || []).map((playbook) => (
-            <Paper key={playbook.id} variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
-              <Stack spacing={0.75}>
-                <Stack direction="row" justifyContent="space-between" gap={1} alignItems="start">
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="subtitle2" sx={{ wordBreak: 'break-word' }}>
-                      {playbook.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Version {playbook.version} -{' '}
-                      {registrationPathLabel[playbook.registrationPath]}
-                    </Typography>
-                  </Box>
-                  <Chip
-                    size="small"
-                    label={statusLabel[playbook.status]}
-                    color={
-                      playbook.status === AdmissionCrmPlaybookStatus.Published
-                        ? 'success'
-                        : playbook.status === AdmissionCrmPlaybookStatus.Draft
-                          ? 'warning'
-                          : 'default'
-                    }
-                  />
-                </Stack>
-                <Stack direction="row" gap={0.5} flexWrap="wrap">
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`${playbook.rounds.length} rounds`}
-                  />
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`${playbook.seatPlans.length} seat plans`}
-                  />
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`${playbook.examDefinitions.length} exams`}
-                  />
-                  {playbook.isFallback ? <Chip size="small" label="Fallback" /> : null}
-                </Stack>
-                <Stack direction="row" gap={0.5} justifyContent="flex-end">
-                  <IconButton
-                    size="small"
-                    aria-label="Open playbook"
-                    onClick={() => openEditor(playbook)}
-                  >
-                    <Edit fontSize="small" />
-                  </IconButton>
-                  {playbook.status === AdmissionCrmPlaybookStatus.Draft ? (
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      aria-label="Publish playbook"
-                      disabled={isLifecycleBusy}
-                      onClick={() => runLifecycle('publish', playbook)}
-                    >
-                      <Publish fontSize="small" />
-                    </IconButton>
-                  ) : null}
-                  {playbook.status !== AdmissionCrmPlaybookStatus.Draft ? (
-                    <IconButton
-                      size="small"
-                      aria-label="Create new playbook version"
-                      disabled={isLifecycleBusy}
-                      onClick={() => runLifecycle('version', playbook)}
-                    >
-                      <ContentCopy fontSize="small" />
-                    </IconButton>
-                  ) : null}
-                  {playbook.status === AdmissionCrmPlaybookStatus.Published ? (
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      aria-label="Open playbook operations"
-                      onClick={() => setOperationsPlaybook(playbook)}
-                    >
-                      <EventAvailable fontSize="small" />
-                    </IconButton>
-                  ) : null}
-                  {playbook.status === AdmissionCrmPlaybookStatus.Published ? (
-                    <IconButton
-                      size="small"
-                      aria-label="Retire playbook"
-                      disabled={isLifecycleBusy}
-                      onClick={() => runLifecycle('retire', playbook)}
-                    >
-                      <Archive fontSize="small" />
-                    </IconButton>
-                  ) : null}
-                </Stack>
-              </Stack>
-            </Paper>
-          ))}
-          {!data?.items?.length ? (
-            <Typography variant="body2" color="text.secondary">
-              No admissions playbooks configured
-            </Typography>
-          ) : null}
-        </Box>
+        <CustomizableTable
+          tableId="student-enrollment-admissions-playbooks"
+          tableTitle="Admissions Playbooks"
+          columns={columns}
+          data={data?.items || []}
+          isLoading={isFetching}
+          defaultRowsPerPage={10}
+          noDataText="No admissions playbooks configured. Create one to define the admission journey."
+          tableContainerProps={{ sx: { minHeight: 320 } }}
+        />
       </Stack>
 
       <Dialog open={editorOpen} onClose={() => setEditorOpen(false)} fullWidth maxWidth="lg">
@@ -451,21 +506,34 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
           {editing ? `${editing.name} - Version ${editing.version}` : 'New Admissions Playbook'}
         </DialogTitle>
         <DialogContent dividers sx={{ p: 0 }}>
-          <Tabs
-            value={editorTab}
-            onChange={(_event, value: number) => setEditorTab(value)}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ px: 2, borderBottom: 1, borderColor: 'divider' }}
-          >
-            <Tab label="General" />
-            <Tab label={`Stages (${form.stages.length})`} />
-            <Tab label={`Rounds & Seats (${form.rounds.length}/${form.seatPlans.length})`} />
-            <Tab label={`Exams (${form.examDefinitions.length})`} />
-            <Tab
-              label={`Slots & Rules (${form.slotTemplates.length}/${form.assignmentRules.length})`}
-            />
-          </Tabs>
+          {editing ? (
+            <Tabs
+              value={editorTab}
+              onChange={(_event, value: number) => setEditorTab(value)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{ px: 2, borderBottom: 1, borderColor: 'divider' }}
+              aria-label="Playbook editor sections"
+            >
+              <Tab label="General" />
+              <Tab label={`Stages (${form.stages.length})`} />
+              <Tab label={`Rounds & Seats (${form.rounds.length}/${form.seatPlans.length})`} />
+              <Tab label={`Exams (${form.examDefinitions.length})`} />
+              <Tab
+                label={`Slots & Rules (${form.slotTemplates.length}/${form.assignmentRules.length})`}
+              />
+            </Tabs>
+          ) : (
+            <Box sx={{ overflowX: 'auto', borderBottom: 1, borderColor: 'divider' }}>
+              <Stepper activeStep={editorTab} sx={{ px: 2, py: 1.5, minWidth: 720 }}>
+                {editorSteps.map((label) => (
+                  <Step key={label}>
+                    <StepLabel>{label}</StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+            </Box>
+          )}
           <Box sx={{ p: 2 }}>
             {editorTab === 0 ? (
               <Stack spacing={1.5}>
@@ -1540,7 +1608,15 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditorOpen(false)}>Close</Button>
-          {!readOnly ? (
+          {!editing && editorTab > 0 ? (
+            <Button onClick={() => setEditorTab((current) => current - 1)}>Back</Button>
+          ) : null}
+          {!editing && editorTab < editorSteps.length - 1 ? (
+            <Button variant="contained" onClick={() => setEditorTab((current) => current + 1)}>
+              Next
+            </Button>
+          ) : null}
+          {!readOnly && (Boolean(editing) || editorTab === editorSteps.length - 1) ? (
             <LoadingButton variant="contained" loading={isSaving} onClick={handleSave}>
               Save Draft
             </LoadingButton>
@@ -1555,7 +1631,7 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
           onClose={() => setOperationsPlaybook(null)}
         />
       ) : null}
-    </Paper>
+    </Box>
   );
 };
 

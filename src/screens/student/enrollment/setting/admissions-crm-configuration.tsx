@@ -104,6 +104,8 @@ import {
   updateAdmissionCrmProviderResponseMessageIdPath,
 } from './admissions-crm-configuration-utils';
 
+import type { EnrollmentSettingsPanel } from '../admissions-crm/enrollment-workspace-state';
+
 export type AdmissionsCrmConfigurationFocusSection =
   | 'journey'
   | 'capture'
@@ -112,9 +114,13 @@ export type AdmissionsCrmConfigurationFocusSection =
   | 'automation';
 
 type AdmissionsCrmConfigurationProps = {
+  academicYearId?: string;
   admissionsCrmConfigurationDialog: UseBooleanReturn;
   focusSection?: AdmissionsCrmConfigurationFocusSection;
+  focusPanel?: EnrollmentSettingsPanel;
 };
+
+const emptyPipelineStages: AdmissionCrmPipelineStageDto[] = [];
 
 const getSettingsErrorMessage = (error: unknown, fallback: string) => {
   const message = (error as any)?.data?.error?.message || (error as any)?.data?.message;
@@ -619,12 +625,12 @@ const buildCycleFormFromConfiguration = (
 });
 
 const AdmissionsCrmConfiguration = ({
+  academicYearId,
   admissionsCrmConfigurationDialog,
   focusSection = 'journey',
+  focusPanel,
 }: AdmissionsCrmConfigurationProps) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { user } = useSelector((state: RootState) => state.auth);
-  const academicYearId = currentYear?.id as string | undefined;
   const tenantId =
     user?.tenantid || user?.tenantId || user?.profile?.tenantid || user?.profile?.tenantId;
   const [cycleForm, setCycleForm] = useState<CycleForm>(defaultCycleForm);
@@ -649,10 +655,11 @@ const AdmissionsCrmConfiguration = ({
   );
   const { data: schoolDefaultCycle, isFetching: isSchoolDefaultCycleFetching } =
     useGetAdmissionCrmSchoolDefaultCycleConfigurationQuery();
-  const { data: stages = [], isFetching: isStagesFetching } = useGetAdmissionCrmPipelineStagesQuery(
+  const { data: stageData, isFetching: isStagesFetching } = useGetAdmissionCrmPipelineStagesQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId || !['journey', 'automation'].includes(focusSection) }
   );
+  const stages = stageData ?? emptyPipelineStages;
   const { data: templates, isFetching: isTemplatesFetching } = useGetAdmissionCrmFormTemplatesQuery(
     { academicYearId: academicYearId || '', maxResultCount: 100 },
     { skip: !academicYearId || focusSection !== 'capture' }
@@ -2002,11 +2009,11 @@ const AdmissionsCrmConfiguration = ({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
+          gridTemplateColumns: 'minmax(0, 1fr)',
           gap: 1.5,
         }}
       >
-        {focusSection === 'journey' && (
+        {focusSection === 'journey' && (!focusPanel || focusPanel === 'cycle') && (
           <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
             <Stack spacing={1.25}>
               <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} justifyContent="space-between">
@@ -2464,7 +2471,7 @@ const AdmissionsCrmConfiguration = ({
           </Paper>
         )}
 
-        {focusSection === 'capture' && (
+        {focusSection === 'capture' && (!focusPanel || focusPanel === 'capture') && (
           <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
             <Stack spacing={1.25}>
               <Box>
@@ -2655,7 +2662,7 @@ const AdmissionsCrmConfiguration = ({
           </Paper>
         )}
 
-        {focusSection === 'journey' && (
+        {focusSection === 'journey' && (!focusPanel || focusPanel === 'pipeline') && (
           <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
             <Stack spacing={1.25}>
               <Typography variant="subtitle1">Pipeline Stages</Typography>
@@ -2861,7 +2868,7 @@ const AdmissionsCrmConfiguration = ({
         )}
       </Box>
 
-      {focusSection === 'routing' && (
+      {focusSection === 'routing' && (!focusPanel || focusPanel === 'scoring') && (
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Typography variant="subtitle1">Lead Scoring</Typography>
@@ -2901,7 +2908,7 @@ const AdmissionsCrmConfiguration = ({
         </Paper>
       )}
 
-      {focusSection === 'routing' && (
+      {focusSection === 'routing' && (!focusPanel || focusPanel === 'routing') && (
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
@@ -3661,7 +3668,7 @@ const AdmissionsCrmConfiguration = ({
         </Paper>
       )}
 
-      {focusSection === 'capture' && (
+      {focusSection === 'capture' && (!focusPanel || focusPanel === 'forms') && (
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
@@ -3814,7 +3821,7 @@ const AdmissionsCrmConfiguration = ({
         </Paper>
       )}
 
-      {focusSection === 'communications' && (
+      {focusSection === 'communications' && (!focusPanel || focusPanel === 'templates') && (
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
@@ -3904,7 +3911,7 @@ const AdmissionsCrmConfiguration = ({
         </Paper>
       )}
 
-      {focusSection === 'communications' && (
+      {focusSection === 'communications' && (!focusPanel || focusPanel === 'providers') && (
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">

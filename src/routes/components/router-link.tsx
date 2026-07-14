@@ -13,6 +13,7 @@ const RouterLink = (props: any) => {
   delete linkProps.enabledRootRedirect;
   delete linkProps.externalLink;
   delete linkProps.hasChild;
+  delete linkProps.preserveQueryParams;
 
   return <Link {...linkProps} />;
 };

@@ -586,6 +586,47 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page).not.toHaveURL(/page=-2/);
   });
 
+  test('Enrollment settings use domain navigation and URL-backed task panels', async ({ page }) => {
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+
+    await page.goto(`/student/enrollment/settings?cycle=${academicYearId}`, {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
+    await expect(page).toHaveURL(
+      new RegExp(`/student/enrollment/settings/journey/?\\?cycle=${academicYearId}`)
+    );
+    await expect(page.getByRole('heading', { name: 'Journey & Cycles' })).toBeVisible();
+    await expect(page.getByText('Enrollment settings categories')).toHaveCount(0);
+
+    const inquiryCaptureLink = page.getByRole('link', { name: 'Inquiry Capture' });
+    await expect(inquiryCaptureLink).toHaveAttribute('href', new RegExp(`cycle=${academicYearId}`));
+    await inquiryCaptureLink.click();
+    await expect(page).toHaveURL(
+      new RegExp(`/student/enrollment/settings/inquiry-capture/?\\?cycle=${academicYearId}`)
+    );
+
+    await page.getByRole('tab', { name: 'Form Templates' }).click();
+    await expect(page).toHaveURL(/panel=forms/);
+    await expect(page.getByRole('heading', { name: 'Form Templates' })).toBeVisible();
+
+    await page.getByRole('link', { name: 'Entrance Exams' }).last().click();
+    await expect(page).toHaveURL(
+      new RegExp(`/student/enrollment/settings/entrance-exams/?\\?cycle=${academicYearId}`)
+    );
+    await expect(page.getByRole('table', { name: 'customizable table' })).toBeVisible();
+    await expect(page.getByPlaceholder('Search...')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Columns' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Export' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'New Playbook' }).click();
+    await expect(page.getByRole('dialog', { name: 'New Admissions Playbook' })).toBeVisible();
+    await expect(page.getByText('General', { exact: true })).toBeVisible();
+    await expect(page.getByText('Slots & Rules', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeVisible();
+  });
+
   test('principal can create quick inquiry, review duplicate warning, and open CRM workspace', async ({
     page,
   }) => {

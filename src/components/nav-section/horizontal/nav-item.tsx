@@ -32,6 +32,7 @@ export const NavItem = forwardRef<HTMLButtonElement, NavItemProps>(
       slotProps,
       externalLink,
       enabledRootRedirect,
+      preserveQueryParams,
       ...other
     },
     ref
@@ -45,6 +46,7 @@ export const NavItem = forwardRef<HTMLButtonElement, NavItemProps>(
       hasChild,
       externalLink,
       enabledRootRedirect,
+      preserveQueryParams,
     });
 
     return (
