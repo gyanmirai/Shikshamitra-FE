@@ -116,7 +116,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
           defaultMarks: values.defaultMarks !== '' ? Number(values.defaultMarks) : undefined,
           defaultDueDays: values.defaultDueDays !== '' ? Number(values.defaultDueDays) : undefined,
           evaluationRequired: !!values.evaluationRequired,
-          defaultEvaluationMethod: values.evaluationRequired && values.defaultEvaluationMethod !== '' ? Number(values.defaultEvaluationMethod) : undefined,
+          defaultEvaluationMethod: values.evaluationRequired && values.defaultEvaluationMethod !== '' ? Number(values.defaultEvaluationMethod) : null,
           status: Number(values.status),
         };
 

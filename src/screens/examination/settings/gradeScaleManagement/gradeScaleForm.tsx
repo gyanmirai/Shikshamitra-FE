@@ -2,8 +2,8 @@ import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 import type { FormikErrors, FormikTouched } from 'formik';
 
-import React, { useState } from 'react';
 import { useFormik } from 'formik';
+import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
@@ -16,23 +16,23 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
-  Tabs,
-  Tab,
-  Box,
-  Grid,
-  Button,
-  TextField,
-  IconButton,
-  DialogActions,
-  FormControlLabel,
-  Switch,
-  Typography,
-  Divider,
-} from '@mui/material';
-import {
   useAddGradeScalingMutation,
   useUpdateGradeScalingMutation,
 } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
+import {
+  Tab,
+  Box,
+  Tabs,
+  Grid,
+  Button,
+  Switch,
+  Divider,
+  TextField,
+  IconButton,
+  Typography,
+  DialogActions,
+  FormControlLabel,
+} from '@mui/material';
 
 import { getInitialValues } from './initialValues';
 import { validationSchema } from './validationSchema';
@@ -63,13 +63,41 @@ const TEMPLATES = [
     totalMarks: 100,
     passMarks: 33,
     gradingScale: [
-      { minMarks: 91, maxMarks: 100, grade: 'A+', gradePoint: 10, remark: 'Excellent', resultStatus: 0 },
-      { minMarks: 81, maxMarks: 90, grade: 'A', gradePoint: 9, remark: 'Very Good', resultStatus: 0 },
+      {
+        minMarks: 91,
+        maxMarks: 100,
+        grade: 'A+',
+        gradePoint: 10,
+        remark: 'Excellent',
+        resultStatus: 0,
+      },
+      {
+        minMarks: 81,
+        maxMarks: 90,
+        grade: 'A',
+        gradePoint: 9,
+        remark: 'Very Good',
+        resultStatus: 0,
+      },
       { minMarks: 71, maxMarks: 80, grade: 'B+', gradePoint: 8, remark: 'Good', resultStatus: 0 },
-      { minMarks: 61, maxMarks: 70, grade: 'B', gradePoint: 7, remark: 'Satisfactory', resultStatus: 0 },
+      {
+        minMarks: 61,
+        maxMarks: 70,
+        grade: 'B',
+        gradePoint: 7,
+        remark: 'Satisfactory',
+        resultStatus: 0,
+      },
       { minMarks: 51, maxMarks: 60, grade: 'C+', gradePoint: 6, remark: 'Fair', resultStatus: 0 },
       { minMarks: 41, maxMarks: 50, grade: 'C', gradePoint: 5, remark: 'Average', resultStatus: 0 },
-      { minMarks: 33, maxMarks: 40, grade: 'D', gradePoint: 4, remark: 'Needs Improvement', resultStatus: 0 },
+      {
+        minMarks: 33,
+        maxMarks: 40,
+        grade: 'D',
+        gradePoint: 4,
+        remark: 'Needs Improvement',
+        resultStatus: 0,
+      },
       { minMarks: 0, maxMarks: 32, grade: 'F', gradePoint: 0, remark: 'Fail', resultStatus: 1 },
     ],
   },
@@ -78,13 +106,41 @@ const TEMPLATES = [
     totalMarks: 50,
     passMarks: 17,
     gradingScale: [
-      { minMarks: 46, maxMarks: 50, grade: 'A+', gradePoint: 10, remark: 'Excellent', resultStatus: 0 },
-      { minMarks: 41, maxMarks: 45, grade: 'A', gradePoint: 9, remark: 'Very Good', resultStatus: 0 },
+      {
+        minMarks: 46,
+        maxMarks: 50,
+        grade: 'A+',
+        gradePoint: 10,
+        remark: 'Excellent',
+        resultStatus: 0,
+      },
+      {
+        minMarks: 41,
+        maxMarks: 45,
+        grade: 'A',
+        gradePoint: 9,
+        remark: 'Very Good',
+        resultStatus: 0,
+      },
       { minMarks: 36, maxMarks: 40, grade: 'B+', gradePoint: 8, remark: 'Good', resultStatus: 0 },
-      { minMarks: 31, maxMarks: 35, grade: 'B', gradePoint: 7, remark: 'Satisfactory', resultStatus: 0 },
+      {
+        minMarks: 31,
+        maxMarks: 35,
+        grade: 'B',
+        gradePoint: 7,
+        remark: 'Satisfactory',
+        resultStatus: 0,
+      },
       { minMarks: 26, maxMarks: 30, grade: 'C+', gradePoint: 6, remark: 'Fair', resultStatus: 0 },
       { minMarks: 21, maxMarks: 25, grade: 'C', gradePoint: 5, remark: 'Average', resultStatus: 0 },
-      { minMarks: 17, maxMarks: 20, grade: 'D', gradePoint: 4, remark: 'Needs Improvement', resultStatus: 0 },
+      {
+        minMarks: 17,
+        maxMarks: 20,
+        grade: 'D',
+        gradePoint: 4,
+        remark: 'Needs Improvement',
+        resultStatus: 0,
+      },
       { minMarks: 0, maxMarks: 16, grade: 'F', gradePoint: 0, remark: 'Fail', resultStatus: 1 },
     ],
   },
@@ -93,8 +149,22 @@ const TEMPLATES = [
     totalMarks: 100,
     passMarks: 33,
     gradingScale: [
-      { minMarks: 33, maxMarks: 100, grade: 'Pass', gradePoint: 10, remark: 'Passed', resultStatus: 0 },
-      { minMarks: 0, maxMarks: 32, grade: 'Fail', gradePoint: 0, remark: 'Failed', resultStatus: 1 },
+      {
+        minMarks: 33,
+        maxMarks: 100,
+        grade: 'Pass',
+        gradePoint: 10,
+        remark: 'Passed',
+        resultStatus: 0,
+      },
+      {
+        minMarks: 0,
+        maxMarks: 32,
+        grade: 'Fail',
+        gradePoint: 0,
+        remark: 'Failed',
+        resultStatus: 1,
+      },
     ],
   },
 ];
@@ -172,7 +242,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
     formik.setFieldValue('gradingScale', updatedGradingScale);
   };
 
-  const applyTemplate = (template: typeof TEMPLATES[0]) => {
+  const applyTemplate = (template: (typeof TEMPLATES)[0]) => {
     formik.setFieldValue('totalMarks', template.totalMarks);
     formik.setFieldValue('passMarks', template.passMarks);
     formik.setFieldValue('gradingScale', template.gradingScale);
@@ -209,7 +279,13 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
               {/* Template Section */}
               {!data && !viewOnly && (
                 <Grid size={{ xs: 12 }}>
-                  <Box p={2} border="1px dashed" borderColor="primary.main" borderRadius={1} bgcolor="background.neutral">
+                  <Box
+                    p={2}
+                    border="1px dashed"
+                    borderColor="primary.main"
+                    borderRadius={1}
+                    bgcolor="background.neutral"
+                  >
                     <Typography variant="subtitle2" gutterBottom color="primary.main">
                       Quick Start Templates
                     </Typography>
@@ -240,7 +316,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                     value={formik.values.name}
                     onChange={formik.handleChange}
                     error={formik.touched.name && Boolean(formik.errors.name)}
-                    helperText={formik.touched.name && formik.errors.name}
+                    helperText={formik.touched.name ? (formik.errors.name as string) : ''}
                   />
                 </ShakingTextField>
               </Grid>
@@ -262,7 +338,9 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                     onChange={formik.handleChange}
                     onWheel={(e) => (e.target as HTMLElement).blur()}
                     error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
-                    helperText={formik.touched.totalMarks && formik.errors.totalMarks}
+                    helperText={
+                      formik.touched.totalMarks ? (formik.errors.totalMarks as string) : ''
+                    }
                   />
                 </ShakingTextField>
               </Grid>
@@ -284,13 +362,15 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                     onChange={formik.handleChange}
                     onWheel={(e) => (e.target as HTMLElement).blur()}
                     error={formik.touched.passMarks && Boolean(formik.errors.passMarks)}
-                    helperText={formik.touched.passMarks && formik.errors.passMarks}
+                    helperText={formik.touched.passMarks ? (formik.errors.passMarks as string) : ''}
                   />
                 </ShakingTextField>
               </Grid>
 
               <Grid size={{ xs: 12 }}>
-                <ShakingTextField error={!!(formik.touched.description && formik.errors.description)}>
+                <ShakingTextField
+                  error={!!(formik.touched.description && formik.errors.description)}
+                >
                   <TextField
                     fullWidth
                     multiline
@@ -302,7 +382,9 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                     value={formik.values.description}
                     onChange={formik.handleChange}
                     error={formik.touched.description && Boolean(formik.errors.description)}
-                    helperText={formik.touched.description && formik.errors.description}
+                    helperText={
+                      formik.touched.description ? (formik.errors.description as string) : ''
+                    }
                   />
                 </ShakingTextField>
               </Grid>
@@ -318,7 +400,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                   value={formik.values.status}
                   onChange={(val) => formik.setFieldValue('status', val)}
                   error={formik.touched.status && Boolean(formik.errors.status)}
-                  helperText={formik.touched.status && formik.errors.status}
+                  helperText={formik.touched.status ? (formik.errors.status as string) : ''}
                 />
               </Grid>
 
@@ -355,8 +437,19 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                   )}
                 </Box>
                 {typeof formik.errors.gradingScale === 'string' && (
-                  <Box color="error.main" mb={2} p={1} border="1px solid" borderColor="error.light" borderRadius={1} bgcolor="error.lighter">
-                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box
+                    color="error.main"
+                    mb={2}
+                    p={1}
+                    border="1px solid"
+                    borderColor="error.light"
+                    borderRadius={1}
+                    bgcolor="error.lighter"
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                    >
                       <Iconify icon="solar:danger-bold" width={16} />
                       {formik.errors.gradingScale}
                     </Typography>
@@ -366,7 +459,14 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
 
               <Grid size={{ xs: 12 }}>
                 {formik.values.gradingScale?.map((scale: IGradingScale, index: number) => (
-                  <Grid container spacing={2} key={index} mb={2.5} alignItems="center" sx={{ borderBottom: '1px solid', borderColor: 'divider', pb: 2 }}>
+                  <Grid
+                    container
+                    spacing={2}
+                    key={index}
+                    mb={2.5}
+                    alignItems="center"
+                    sx={{ borderBottom: '1px solid', borderColor: 'divider', pb: 2 }}
+                  >
                     <Grid size={{ xs: 12, md: 2 }}>
                       <ShakingTextField
                         error={
@@ -394,15 +494,19 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                           onWheel={(e) => (e.target as HTMLElement).blur()}
                           error={
                             !!(
-                              (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                                ?.minMarks &&
+                              (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[
+                                index
+                              ]?.minMarks &&
                               (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
                                 ?.minMarks
                             )
                           }
                           helperText={
-                            (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]?.minMarks
-                              ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]?.minMarks
+                            (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
+                              ?.minMarks
+                              ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[
+                                  index
+                                ]?.minMarks
                               : undefined
                           }
                           FormHelperTextProps={HELPER_TEXT_PROPS}
@@ -437,15 +541,19 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                           onWheel={(e) => (e.target as HTMLElement).blur()}
                           error={
                             !!(
-                              (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                                ?.maxMarks &&
+                              (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[
+                                index
+                              ]?.maxMarks &&
                               (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
                                 ?.maxMarks
                             )
                           }
                           helperText={
-                            (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]?.maxMarks
-                              ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]?.maxMarks
+                            (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
+                              ?.maxMarks
+                              ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[
+                                  index
+                                ]?.maxMarks
                               : undefined
                           }
                           FormHelperTextProps={HELPER_TEXT_PROPS}
@@ -474,15 +582,19 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                           onChange={formik.handleChange}
                           error={
                             !!(
-                              (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                                ?.grade &&
+                              (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[
+                                index
+                              ]?.grade &&
                               (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
                                 ?.grade
                             )
                           }
                           helperText={
-                            (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]?.grade
-                              ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]?.grade
+                            (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
+                              ?.grade
+                              ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[
+                                  index
+                                ]?.grade
                               : undefined
                           }
                           FormHelperTextProps={HELPER_TEXT_PROPS}
@@ -512,15 +624,19 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                           onChange={formik.handleChange}
                           error={
                             !!(
-                              (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                                ?.gradePoint &&
+                              (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[
+                                index
+                              ]?.gradePoint &&
                               (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
                                 ?.gradePoint
                             )
                           }
                           helperText={
-                            (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]?.gradePoint
-                              ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]?.gradePoint
+                            (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
+                              ?.gradePoint
+                              ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[
+                                  index
+                                ]?.gradePoint
                               : undefined
                           }
                           FormHelperTextProps={HELPER_TEXT_PROPS}
@@ -549,15 +665,19 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                           onChange={formik.handleChange}
                           error={
                             !!(
-                              (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
-                                ?.remark &&
+                              (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[
+                                index
+                              ]?.remark &&
                               (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]
                                 ?.remark
                             )
                           }
                           helperText={
-                            (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]?.remark
-                              ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[index]?.remark
+                            (formik.touched.gradingScale as FormikTouched<IGradingScale>[])?.[index]
+                              ?.remark
+                              ? (formik.errors.gradingScale as FormikErrors<IGradingScale>[])?.[
+                                  index
+                                ]?.remark
                               : undefined
                           }
                           FormHelperTextProps={HELPER_TEXT_PROPS}
@@ -574,7 +694,9 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                         size="small"
                         disabled={viewOnly}
                         value={formik.values.gradingScale[index].resultStatus}
-                        onChange={(val) => formik.setFieldValue(`gradingScale.${index}.resultStatus`, val)}
+                        onChange={(val) =>
+                          formik.setFieldValue(`gradingScale.${index}.resultStatus`, val)
+                        }
                       />
                     </Grid>
 
@@ -588,7 +710,10 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                           }}
                           sx={{ color: 'error.main', width: '30px', height: '30px' }}
                         >
-                          <Iconify icon={GlobalIcons.delete} sx={{ width: '18px', height: '18px' }} />
+                          <Iconify
+                            icon={GlobalIcons.delete}
+                            sx={{ width: '18px', height: '18px' }}
+                          />
                         </IconButton>
                       </Grid>
                     )}
@@ -605,7 +730,8 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                   Grade Scaling Simulator
                 </Typography>
                 <Typography variant="body2" color="text.secondary" paragraph>
-                  Verify your grade scaling by entering sample student marks to see how the system calculates grades.
+                  Verify your grade scaling by entering sample student marks to see how the system
+                  calculates grades.
                 </Typography>
                 <TextField
                   fullWidth
@@ -620,7 +746,13 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                 <Divider sx={{ mb: 3 }} />
 
                 {matchedRange ? (
-                  <Box p={3} bgcolor="success.lighter" border="1px solid" borderColor="success.light" borderRadius={1}>
+                  <Box
+                    p={3}
+                    bgcolor="success.lighter"
+                    border="1px solid"
+                    borderColor="success.light"
+                    borderRadius={1}
+                  >
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 6, sm: 3 }}>
                         <Typography variant="caption" color="text.secondary" display="block">
@@ -643,7 +775,11 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                           Result Status
                         </Typography>
                         <Typography variant="h5" color="success.darker" sx={{ mt: 0.5 }}>
-                          {matchedRange.resultStatus === 0 ? 'Pass' : matchedRange.resultStatus === 1 ? 'Fail' : 'Optional'}
+                          {matchedRange.resultStatus === 0
+                            ? 'Pass'
+                            : matchedRange.resultStatus === 1
+                              ? 'Fail'
+                              : 'Optional'}
                         </Typography>
                       </Grid>
                       <Grid size={{ xs: 6, sm: 3 }}>
@@ -657,7 +793,14 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                     </Grid>
                   </Box>
                 ) : (
-                  <Box p={3} bgcolor="background.neutral" border="1px dashed" borderColor="divider" borderRadius={1} textAlign="center">
+                  <Box
+                    p={3}
+                    bgcolor="background.neutral"
+                    border="1px dashed"
+                    borderColor="divider"
+                    borderRadius={1}
+                    textAlign="center"
+                  >
                     <Typography color="text.secondary">
                       {simMarks === ''
                         ? 'Enter sample marks above to test the calculator.'

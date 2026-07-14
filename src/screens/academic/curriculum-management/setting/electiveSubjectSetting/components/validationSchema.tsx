@@ -19,6 +19,7 @@ export const electiveSubjectValidationSchema = (existingNames: Set<string>, edit
     color: Yup.string().required('Elective Group Color is required'),
     sortOrder: Yup.number()
       .transform((value, originalValue) => (originalValue === '' ? undefined : value))
-      .min(0, 'Sort order cannot be negative')
+      .min(1, 'Sort order must be at least 1')
+      .max(999999, 'Sort order cannot exceed 999999')
       .nullable(),
   });

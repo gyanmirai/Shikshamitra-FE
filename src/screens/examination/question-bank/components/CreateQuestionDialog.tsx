@@ -83,6 +83,15 @@ const questionValidationSchema = Yup.object({
     .min(0.5, 'Minimum 0.5')
     .max(100, 'Maximum 100'),
   difficultyLevel: Yup.number().required(),
+  options: Yup.array().when('questionType', {
+    is: (type: number) => [1, 2, 3].includes(type),
+    then: (schema) =>
+      schema.test(
+        'has-correct-option',
+        'Mark at least one option as the correct answer',
+        (opts: any) => Array.isArray(opts) && opts.some((o: any) => o.isCorrect)
+      ),
+  }),
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -472,6 +481,11 @@ function QuestionFormFields({
                   >
                     Add Option
                   </Button>
+                )}
+                {formik.submitCount > 0 && typeof formik.errors.options === 'string' && (
+                  <Typography variant="caption" color="error.main">
+                    {formik.errors.options}
+                  </Typography>
                 )}
               </Stack>
             </Grid>

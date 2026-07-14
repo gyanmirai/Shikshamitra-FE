@@ -215,7 +215,7 @@ const RoomAllocationReview = ({
                                   {divisionData.roomIds.map((roomId: string) => (
                                     <Chip
                                       key={roomId}
-                                      label={roomLabelById.get(roomId) ?? roomId}
+                                      label={String(roomLabelById.get(roomId) ?? roomId)}
                                       size="small"
                                       variant="outlined"
                                       icon={<MeetingRoom style={{ fontSize: '1rem' }} />}

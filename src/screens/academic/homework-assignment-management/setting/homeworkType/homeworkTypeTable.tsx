@@ -68,7 +68,7 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
             );
           }
           const method = row.defaultEvaluationMethod;
-          if (method === undefined || method === null || method === '') return 'Required';
+          if (method === undefined || method === null || (method as any) === '') return '-';
           return EVALUATION_METHOD_MAP[method] || 'Unknown';
         },
       },

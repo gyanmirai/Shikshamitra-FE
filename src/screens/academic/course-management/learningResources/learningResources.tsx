@@ -9,9 +9,18 @@ import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import {
+  type LearningResourceDto,
+  useGetLearningResourcesQuery,
+  useAddLearningResourceMutation,
+  useUpdateLearningResourceMutation,
+  usePublishLearningResourceMutation,
+  useArchiveLearningResourceMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/LearningResourcesApi/learning-resources-api';
 
 import HierarchyTree from './components/treeStrcutre';
 import CreateNewResource from './components/addResourceForm';
@@ -26,6 +35,11 @@ const LearningResources = (props: TabComponentType) => {
   const dispatch = useDispatch();
   const deleteDialog = useBoolean();
   const editResourceDialog = useBoolean();
+  const { data: resources = [], isFetching } = useGetLearningResourcesQuery();
+  const [addLearningResource, { isLoading: isAdding }] = useAddLearningResourceMutation();
+  const [updateLearningResource, { isLoading: isUpdating }] = useUpdateLearningResourceMutation();
+  const [publishLearningResource] = usePublishLearningResourceMutation();
+  const [archiveLearningResource] = useArchiveLearningResourceMutation();
 
   // Function to close the dialog and reset form state
   const handleClose = (_e: unknown, isSubmit?: boolean) => {
@@ -96,7 +110,22 @@ const LearningResources = (props: TabComponentType) => {
         }}
       >
         <CreateNewResource
-          onSave={() => {}}
+          isSaving={isAdding || isUpdating}
+          onSave={async (values) => {
+            try {
+              const body = toResourcePayload(values);
+              if (selectedEntry?.id) {
+                await updateLearningResource({ id: selectedEntry.id, body }).unwrap();
+                shikshaMitraToast.success({ message: 'Learning resource updated successfully.' });
+              } else {
+                await addLearningResource(body).unwrap();
+                shikshaMitraToast.success({ message: 'Learning resource created successfully.' });
+              }
+              handleClose(null, true);
+            } catch (error) {
+              console.error('Failed to save learning resource', error);
+            }
+          }}
           onClose={handleClose}
           data={selectedEntry}
           isEdit={isEdit}
@@ -104,9 +133,31 @@ const LearningResources = (props: TabComponentType) => {
       </CustomDialog>
 
       <HierarchyTree
-        onEdit={(doc) => {
-          setSelectedEntry(doc as unknown as IResourceData);
+        resources={resources}
+        isLoading={isFetching}
+        onEdit={(resource: LearningResourceDto) => {
+          setSelectedEntry(toFormResource(resource));
+          setIsEdit(true);
           editResourceDialog.onTrue();
+        }}
+        onPublish={async (resource) => {
+          try {
+            await publishLearningResource({ id: resource.id }).unwrap();
+            shikshaMitraToast.success({ message: 'Learning resource published successfully.' });
+          } catch (error) {
+            console.error('Failed to publish learning resource', error);
+          }
+        }}
+        onArchive={async (resource) => {
+          try {
+            await archiveLearningResource({
+              id: resource.id,
+              body: { reason: 'Archived from learning resource screen' },
+            }).unwrap();
+            shikshaMitraToast.success({ message: 'Learning resource archived successfully.' });
+          } catch (error) {
+            console.error('Failed to archive learning resource', error);
+          }
         }}
       />
 
@@ -120,7 +171,19 @@ const LearningResources = (props: TabComponentType) => {
         }}
       >
         <CreateNewResource
-          onSave={() => {}}
+          isSaving={isAdding || isUpdating}
+          onSave={async (values) => {
+            try {
+              const body = toResourcePayload(values);
+              if (selectedEntry?.id) {
+                await updateLearningResource({ id: selectedEntry.id, body }).unwrap();
+                shikshaMitraToast.success({ message: 'Learning resource updated successfully.' });
+              }
+              handleClose(null, true);
+            } catch (error) {
+              console.error('Failed to update learning resource', error);
+            }
+          }}
           onClose={handleClose}
           data={selectedEntry}
           isEdit={isEdit}
@@ -146,3 +209,33 @@ const LearningResources = (props: TabComponentType) => {
 };
 
 export default LearningResources;
+
+const toFormResource = (resource: LearningResourceDto): IResourceData => ({
+  id: resource.id,
+  resourceTitle: resource.resourceTitle,
+  chapter: resource.chapterId,
+  className: resource.standardId,
+  subject: resource.subjectId,
+  dateUploaded: resource.submittedAt || resource.publishedAt || '',
+  document: resource.fileName,
+});
+
+const toResourcePayload = (values: IResourceData) => {
+  const file = values.document instanceof File ? values.document : null;
+  const fileName = file?.name || String(values.document || values.resourceTitle);
+  const contentType = file?.type || 'application/pdf';
+
+  return {
+    standardId: values.className,
+    subjectId: values.subject,
+    chapterId: values.chapter || '',
+    resourceTitle: values.resourceTitle,
+    topic: values.resourceTitle,
+    resourceType: contentType.includes('video') ? 'Video' : 'Document',
+    blobName: fileName,
+    fileName,
+    contentType,
+    size: file?.size || 1,
+    visibility: 1,
+  };
+};

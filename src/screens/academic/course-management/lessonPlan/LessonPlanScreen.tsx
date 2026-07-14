@@ -65,9 +65,7 @@ import {
   chapterOptions,
   subjectOptions,
   divisionOptions,
-  initialLessonPlans,
   initialHealthScore,
-  initialDiaryEntries,
 } from './lessonPlanData';
 
 import type { DiaryFormState } from './components/SubmitDiaryModal';
@@ -285,22 +283,22 @@ const LessonPlanScreen = () => {
   const isSavingDiary = isCreatingDiary || isUpdatingDiary;
 
   const lessonPlans = useMemo<LessonPlanRow[]>(() => {
-    if (!lessonPlanList) return initialLessonPlans;
+    if (!lessonPlanList) return [];
     return (
       (lessonPlanList as any).items?.map((p: any) => ({
         id: p.id,
         academicYear: p.academicYear || '2026-27',
-        teacherName: p.teacherName || 'Rohit Mehta',
+        teacherName: p.teacherName || '',
         teacherId: p.teacherId,
         standardId: p.standardId,
         classId: p.standardId,
-        className: p.standardName || '7',
+        className: p.standardName || '',
         divisionId: p.divisionId,
-        divisionName: p.divisionName || 'A',
+        divisionName: p.divisionName || '',
         subjectId: p.subjectId,
-        subjectName: p.subjectName || 'Mathematics',
+        subjectName: p.subjectName || '',
         chapterId: p.chapterId,
-        chapterName: p.chapterName || 'Fractions',
+        chapterName: p.chapterName || '',
         plannedDate: p.plannedDate ? dayjs(p.plannedDate).format('YYYY-MM-DD') : todayIso,
         periodId: p.timetableSlotId || 'Manual',
         period: (() => {
@@ -341,7 +339,7 @@ const LessonPlanScreen = () => {
   }, [lessonPlanList]);
 
   const diaryEntries = useMemo<TeacherDiaryRow[]>(() => {
-    if (!teacherDiaryList) return initialDiaryEntries;
+    if (!teacherDiaryList) return [];
     return (
       (teacherDiaryList as any).items?.map((d: any) => {
         const diaryStatus = toDiaryStatus(d.diaryStatus ?? d.status);
@@ -738,10 +736,10 @@ const LessonPlanScreen = () => {
 
         const planDetailsPayload = {
           chapterId: form.chapterId,
-          topic: form.topic,
-          learningObjective: form.learningObjective,
+          topic: form.topic.trim(),
+          learningObjective: form.learningObjective.trim(),
           teachingMethod: form.teachingMethod,
-          resourcesRequired: form.resourcesRequired,
+          resourcesRequired: form.resourcesRequired.trim(),
           plannedCompletionPercentage: form.plannedCompletionPercentage,
         };
 
@@ -1288,13 +1286,13 @@ const LessonPlanScreen = () => {
               id: plan.id || plan.Id,
               academicYear: plan.academicYear || '2026-27',
               teacherId: plan.teacherId || '',
-              teacherName: plan.teacherName || 'Rohit Mehta',
+              teacherName: plan.teacherName || '',
               classId: plan.standardId || '',
-              className: plan.standardName || '7',
+              className: plan.standardName || '',
               divisionId: plan.divisionId || '',
-              divisionName: plan.divisionName || 'A',
+              divisionName: plan.divisionName || '',
               subjectId: plan.subjectId || '',
-              subjectName: plan.subjectName || 'Mathematics',
+              subjectName: plan.subjectName || '',
               chapterId: plan.chapterId || '',
               chapterName: plan.chapterName || '',
               plannedDate: plan.plannedDate || todayIso,
@@ -1374,6 +1372,7 @@ const LessonPlanScreen = () => {
           lessonPlans={lessonPlans}
           diaryEntries={diaryEntries}
           canReviewSubmissions={canReviewSubmissions}
+          currentTeacherId={currentTeacherOption?.value}
           onApprove={handleApprove}
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}

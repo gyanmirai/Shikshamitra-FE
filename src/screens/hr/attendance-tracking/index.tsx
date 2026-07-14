@@ -16,13 +16,13 @@ import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useEffect } from 'react';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { isRegisterMissingPunch } from 'src/screens/hr/attendance-tracking/status-mapper';
@@ -361,15 +361,12 @@ const AttendanceTrackingScreen = () => {
 
   const rows = useMemo(() => (data?.items || []) as GroupedAttendanceRegisterRow[], [data?.items]);
   const allDayRows = useMemo(() => rows.flatMap((row) => row.days || []), [rows]);
-  const getDayIdentifier = useCallback((day: AttendanceRegisterRow) =>
-    day.attendanceId || `${day.employeeId}_${day.attendanceDate}`,
+  const getDayIdentifier = useCallback(
+    (day: AttendanceRegisterRow) => day.attendanceId || `${day.employeeId}_${day.attendanceDate}`,
     []
   );
 
-  const selectableDayRows = useMemo(
-    () => allDayRows.filter((row) => row.canEdit),
-    [allDayRows]
-  );
+  const selectableDayRows = useMemo(() => allDayRows.filter((row) => row.canEdit), [allDayRows]);
   const selectedRows = useMemo(
     () => allDayRows.filter((row) => selectedIds.includes(getDayIdentifier(row))),
     [allDayRows, selectedIds, getDayIdentifier]
@@ -529,9 +526,7 @@ const AttendanceTrackingScreen = () => {
   };
 
   const getEditableDayIds = (group: GroupedAttendanceRegisterRow) =>
-    (group.days || [])
-      .filter((day) => day.canEdit)
-      .map((day) => getDayIdentifier(day));
+    (group.days || []).filter((day) => day.canEdit).map((day) => getDayIdentifier(day));
 
   const isGroupSelected = (group: GroupedAttendanceRegisterRow) => {
     const editableIds = getEditableDayIds(group);
@@ -574,9 +569,12 @@ const AttendanceTrackingScreen = () => {
         <Checkbox
           size="small"
           disabled={!row.canEdit}
-          checked={Boolean(selectedIds.includes(getDayIdentifier(row)))}
+          checked={Boolean(selectedIds.includes(getDayIdentifier(row as AttendanceRegisterRow)))}
           onChange={(event) => {
-            toggleDaySelection(getDayIdentifier(row), event.target.checked);
+            toggleDaySelection(
+              getDayIdentifier(row as AttendanceRegisterRow),
+              event.target.checked
+            );
           }}
         />
       ),
@@ -1067,8 +1065,8 @@ const AttendanceTrackingScreen = () => {
           </Typography>
           {isBulk && (
             <Typography variant="body2" color="text.secondary">
-              {editableSelectedIds.length + editableSelectedEmployeeDates.length} editable selected, {blockedSelectedCount} locked
-              selected.
+              {editableSelectedIds.length + editableSelectedEmployeeDates.length} editable selected,{' '}
+              {blockedSelectedCount} locked selected.
             </Typography>
           )}
           <ShakingTextField error={false}>

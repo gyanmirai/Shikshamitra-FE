@@ -81,6 +81,7 @@ const SubmissionTypeCard = ({
     sx={{
       cursor: 'pointer',
       p: 2,
+      height: '100%',
       borderRadius: 2,
       border: (theme) =>
         `1px solid ${selected ? theme.palette.primary.main : theme.palette.grey[300]}`,
@@ -1019,14 +1020,14 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     error={!!(formik.touched.submissionType && formik.errors.submissionType)}
                     fullWidth
                   >
-                    <Grid container spacing={2}>
+                    <Grid container spacing={2} alignItems="stretch">
                       {[
                         { value: 0, label: 'Online Text' },
                         { value: 1, label: 'File Upload' },
                         { value: 2, label: 'In-Person' },
                         { value: 3, label: 'No Submission Required' },
                       ].map((item) => (
-                        <Grid size={{ xs: 12, md: 3 }} key={item.value}>
+                        <Grid size={{ xs: 12, md: 3 }} key={item.value} sx={{ display: 'flex' }}>
                           <SubmissionTypeCard
                             value={item.value}
                             label={item.label}

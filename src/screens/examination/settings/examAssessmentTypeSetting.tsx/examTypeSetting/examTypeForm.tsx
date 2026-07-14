@@ -6,14 +6,15 @@ import React, { useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
-import { alpha, useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import {
   Box,
   Grid,
@@ -29,7 +30,6 @@ import {
   useAddExaminationTypeMutation,
   useUpdateExaminationTypeMutation,
 } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
-import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 
 import { getExamTypeInitialValues } from '../initialValues';
 import { examTypeValidationSchema } from '../validationSchema';
@@ -77,6 +77,44 @@ const TOGGLE_OPTIONS = [
     description: 'Allow bifurcated marks entry',
   },
 ] as const;
+
+const SectionHeader = ({
+  icon,
+  title,
+  caption,
+  iconBg,
+}: {
+  icon: string;
+  title: string;
+  caption: string;
+  iconBg: string;
+}) => (
+  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+    <Box
+      sx={{
+        width: 34,
+        height: 34,
+        flexShrink: 0,
+        borderRadius: 1.5,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: iconBg,
+        color: 'primary.main',
+      }}
+    >
+      <Iconify icon={icon} width={18} height={18} />
+    </Box>
+    <Box>
+      <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.3 }}>
+        {title}
+      </Typography>
+      <Typography variant="caption" color="text.secondary">
+        {caption}
+      </Typography>
+    </Box>
+  </Stack>
+);
 
 const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
   onClose,
@@ -140,7 +178,8 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
           description: values.description,
           category: values.category || null,
           status: Number(values.status),
-          defaultTotalMarks: values.defaultTotalMarks !== '' ? Number(values.defaultTotalMarks) : null,
+          defaultTotalMarks:
+            values.defaultTotalMarks !== '' ? Number(values.defaultTotalMarks) : null,
           defaultWeightage: values.defaultWeightage !== '' ? Number(values.defaultWeightage) : null,
           includedInResult: values.includedInResult,
           marksEntryRequired: values.marksEntryRequired,
@@ -180,34 +219,6 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
     '& .MuiOutlinedInput-root': { borderRadius: 1.5 },
   };
 
-  const SectionHeader = ({ icon, title, caption }: { icon: string; title: string; caption: string }) => (
-    <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
-      <Box
-        sx={{
-          width: 34,
-          height: 34,
-          flexShrink: 0,
-          borderRadius: 1.5,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: alpha(theme.palette.primary.main, 0.1),
-          color: 'primary.main',
-        }}
-      >
-        <Iconify icon={icon} width={18} height={18} />
-      </Box>
-      <Box>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.3 }}>
-          {title}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {caption}
-        </Typography>
-      </Box>
-    </Stack>
-  );
-
   const sectionCardSx = {
     p: 2.5,
     borderRadius: 2,
@@ -226,6 +237,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 icon="solar:notes-bold-duotone"
                 title="Basic Information"
                 caption="Name, category and current status"
+                iconBg={alpha(theme.palette.primary.main, 0.1)}
               />
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -264,7 +276,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                     value={formik.values.category}
                     onChange={(val) => formik.setFieldValue('category', val)}
                     error={formik.touched.category && Boolean(formik.errors.category)}
-                    helperText={formik.touched.category && formik.errors.category}
+                    helperText={formik.touched.category ? (formik.errors.category as string) : ''}
                   />
                 </Grid>
 
@@ -279,12 +291,14 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                     value={formik.values.status}
                     onChange={(val) => formik.setFieldValue('status', val)}
                     error={formik.touched.status && Boolean(formik.errors.status)}
-                    helperText={formik.touched.status && formik.errors.status}
+                    helperText={formik.touched.status ? (formik.errors.status as string) : ''}
                   />
                 </Grid>
 
                 <Grid size={12}>
-                  <ShakingTextField error={!!(formik.touched.description && formik.errors.description)}>
+                  <ShakingTextField
+                    error={!!(formik.touched.description && formik.errors.description)}
+                  >
                     <TextField
                       fullWidth
                       label="Description"
@@ -309,6 +323,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 icon="solar:ruler-cross-pen-bold-duotone"
                 title="Default Rules & Parameters"
                 caption="Defaults applied when this exam type is used"
+                iconBg={alpha(theme.palette.primary.main, 0.1)}
               />
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -324,8 +339,12 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                       sx={fieldSx}
                       value={formik.values.defaultTotalMarks}
                       onChange={formik.handleChange}
-                      error={formik.touched.defaultTotalMarks && Boolean(formik.errors.defaultTotalMarks)}
-                      helperText={formik.touched.defaultTotalMarks && formik.errors.defaultTotalMarks}
+                      error={
+                        formik.touched.defaultTotalMarks && Boolean(formik.errors.defaultTotalMarks)
+                      }
+                      helperText={
+                        formik.touched.defaultTotalMarks && formik.errors.defaultTotalMarks
+                      }
                     />
                   </ShakingTextField>
                 </Grid>
@@ -343,7 +362,9 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                       sx={fieldSx}
                       value={formik.values.defaultWeightage}
                       onChange={formik.handleChange}
-                      error={formik.touched.defaultWeightage && Boolean(formik.errors.defaultWeightage)}
+                      error={
+                        formik.touched.defaultWeightage && Boolean(formik.errors.defaultWeightage)
+                      }
                       helperText={formik.touched.defaultWeightage && formik.errors.defaultWeightage}
                     />
                   </ShakingTextField>
@@ -359,8 +380,15 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                     sx={fieldSx}
                     value={formik.values.defaultGradeScaleId}
                     onChange={(val) => formik.setFieldValue('defaultGradeScaleId', val)}
-                    error={formik.touched.defaultGradeScaleId && Boolean(formik.errors.defaultGradeScaleId)}
-                    helperText={formik.touched.defaultGradeScaleId && formik.errors.defaultGradeScaleId}
+                    error={
+                      formik.touched.defaultGradeScaleId &&
+                      Boolean(formik.errors.defaultGradeScaleId)
+                    }
+                    helperText={
+                      formik.touched.defaultGradeScaleId
+                        ? (formik.errors.defaultGradeScaleId as string)
+                        : ''
+                    }
                   />
                 </Grid>
               </Grid>
@@ -372,6 +400,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 icon="solar:shield-check-bold-duotone"
                 title="System Rules & Behavior"
                 caption="Toggle how this exam type behaves"
+                iconBg={alpha(theme.palette.primary.main, 0.1)}
               />
               <Grid container spacing={1.5}>
                 {TOGGLE_OPTIONS.map((toggle) => {
@@ -389,14 +418,24 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                           borderRadius: 1.5,
                           cursor: 'pointer',
                           border: `1px solid ${checked ? alpha(theme.palette.primary.main, 0.5) : theme.palette.divider}`,
-                          bgcolor: checked ? alpha(theme.palette.primary.main, 0.06) : 'background.paper',
-                          transition: theme.transitions.create(['background-color', 'border-color']),
+                          bgcolor: checked
+                            ? alpha(theme.palette.primary.main, 0.06)
+                            : 'background.paper',
+                          transition: theme.transitions.create([
+                            'background-color',
+                            'border-color',
+                          ]),
                           '&:hover': {
                             borderColor: alpha(theme.palette.primary.main, 0.5),
                           },
                         }}
                       >
-                        <Stack direction="row" alignItems="center" spacing={1.25} sx={{ minWidth: 0 }}>
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={1.25}
+                          sx={{ minWidth: 0 }}
+                        >
                           <Box
                             sx={{
                               width: 30,
@@ -418,7 +457,12 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                             <Typography variant="body2" fontWeight={600} noWrap>
                               {toggle.label}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary" noWrap component="div">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              noWrap
+                              component="div"
+                            >
                               {toggle.description}
                             </Typography>
                           </Box>
