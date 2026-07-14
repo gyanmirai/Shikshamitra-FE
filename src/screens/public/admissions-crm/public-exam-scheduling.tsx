@@ -6,7 +6,10 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import { Box, Alert, Stack, Divider, MenuItem, TextField, Typography } from '@mui/material';
 
+import { publicAdmissionsActionCopy } from './public-admissions-copy';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
+
+import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
 export type PublicExamSnapshot = {
   scheduled: boolean;
@@ -40,6 +43,7 @@ type Props = {
   accessSessionToken: string;
   currentExam?: PublicExamSnapshot | null;
   onScheduled: (exam: PublicExamSnapshot) => void;
+  language?: PublicAdmissionsLanguage;
 };
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL}/api`;
@@ -50,7 +54,9 @@ export default function PublicExamScheduling({
   accessSessionToken,
   currentExam,
   onScheduled,
+  language = 'en',
 }: Props) {
+  const copy = publicAdmissionsActionCopy[language];
   const [slots, setSlots] = useState<PublicExamSlot[]>([]);
   const [enabled, setEnabled] = useState(false);
   const [selectedSlotId, setSelectedSlotId] = useState('');
@@ -153,11 +159,9 @@ export default function PublicExamScheduling({
     <Stack spacing={1.25}>
       <Divider />
       <Box>
-        <Typography variant="subtitle1">Choose Entrance Exam Slot</Typography>
+        <Typography variant="subtitle1">{copy.examTitle}</Typography>
         <Typography variant="caption" color="text.secondary">
-          {currentExam?.scheduled
-            ? 'Select another available slot to reschedule.'
-            : 'Select an available slot for the entrance exam.'}
+          {currentExam?.scheduled ? copy.rescheduleHint : copy.scheduleHint}
         </Typography>
       </Box>
       {slots.length ? (
@@ -165,7 +169,7 @@ export default function PublicExamScheduling({
           <TextField
             select
             size="small"
-            label="Available slot"
+            label={copy.availableSlot}
             value={selectedSlotId}
             onChange={(event) => setSelectedSlotId(event.target.value)}
             sx={{ flex: 1, minWidth: 0 }}
@@ -184,11 +188,11 @@ export default function PublicExamScheduling({
             startIcon={<EventAvailable />}
             onClick={schedule}
           >
-            {currentExam?.scheduled ? 'Reschedule' : 'Schedule'}
+            {currentExam?.scheduled ? copy.reschedule : copy.schedule}
           </LoadingButton>
         </Stack>
       ) : (
-        <Alert severity="info">No self-service exam slots are currently available.</Alert>
+        <Alert severity="info">{copy.noSlots}</Alert>
       )}
     </Stack>
   );

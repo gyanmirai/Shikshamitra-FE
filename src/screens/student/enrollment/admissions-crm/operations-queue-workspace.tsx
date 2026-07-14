@@ -44,6 +44,11 @@ import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
 import { IntegrationCapabilitiesPanel } from './integration-capabilities-panel';
+import {
+  enrollmentActionsColumn,
+  EnrollmentTableEmptyState,
+  EnrollmentWorkspaceErrorState,
+} from './workspace-table-patterns';
 
 import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
 
@@ -71,10 +76,10 @@ const dateFormatter = new Intl.DateTimeFormat('en-IN', {
 });
 
 const formatQueueDate = (value: unknown) => {
-  if (!value) return '—';
+  if (!value) return '-';
 
   const date = new Date(value as string | number | Date);
-  return Number.isNaN(date.getTime()) ? '—' : dateFormatter.format(date);
+  return Number.isNaN(date.getTime()) ? '-' : dateFormatter.format(date);
 };
 
 const queueLabels: Record<AdmissionCrmOperationsQueueType, string> = {
@@ -265,15 +270,9 @@ export function OperationsQueueWorkspace({
       {
         id: 'actions',
         label: 'Actions',
-        width: 80,
-        minWidth: 72,
-        sticky: true,
-        stickyPosition: 'right',
-        stickyOnMobile: false,
+        ...enrollmentActionsColumn,
         isSort: false,
         isFilter: false,
-        headerSx: { px: 1.5 },
-        cellSx: { px: 1.5 },
         render: (_value, row) => {
           const item = row as AdmissionCrmOperationsQueueItemDto;
           return (
@@ -485,16 +484,10 @@ export function OperationsQueueWorkspace({
       </Paper>
 
       {queueQuery.isError ? (
-        <Alert
-          severity="error"
-          action={
-            <Button color="inherit" size="small" onClick={() => queueQuery.refetch()}>
-              Retry
-            </Button>
-          }
-        >
-          This operations queue is unavailable.
-        </Alert>
+        <EnrollmentWorkspaceErrorState
+          message="This operations queue is unavailable."
+          onRetry={() => queueQuery.refetch()}
+        />
       ) : (
         <CustomizableTable
           tableId={`student-enrollment-operations-${selectedQueue}`}
@@ -508,7 +501,10 @@ export function OperationsQueueWorkspace({
           serverSideFilter
           searchTerm={search}
           defaultSearchTerm={search}
-          searchFieldProps={{ placeholder: 'Search this queue...' }}
+          searchFieldProps={{
+            placeholder: 'Search this queue...',
+            inputProps: { 'aria-label': 'Search this admissions queue' },
+          }}
           totalCount={queueQuery.data?.totalCount || 0}
           page={page}
           rowsPerPage={pageSize}
@@ -517,12 +513,10 @@ export function OperationsQueueWorkspace({
           onServerSearch={setSearch}
           onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
           noDataText={
-            <Stack spacing={0.5} alignItems="center">
-              <Typography variant="subtitle2">Queue cleared</Typography>
-              <Typography variant="body2" color="text.secondary">
-                No applicants currently need action in this queue.
-              </Typography>
-            </Stack>
+            <EnrollmentTableEmptyState
+              title="Queue cleared"
+              description="No applicants currently need action in this queue."
+            />
           }
           rowProps={(row) => ({
             'data-testid': 'student-enrollment-operations-row',

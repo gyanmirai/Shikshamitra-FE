@@ -24,12 +24,16 @@ import {
   LinearProgress,
 } from '@mui/material';
 
+import { publicAdmissionsCopy } from './public-admissions-copy';
 import { PublicAdmissionsShell } from './public-admissions-shell';
 import PublicOffer, { type PublicAdmissionOffer } from './public-offer';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
+import { getAccessibleStatusChipProps } from './public-admissions-styles';
 import PublicDocuments, { type PublicDocumentChecklist } from './public-documents';
 import PublicExamScheduling, { type PublicExamSnapshot } from './public-exam-scheduling';
 import PublicRegistration, { type PublicRegistrationApplication } from './public-registration';
+
+import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
 const dateTimeFormatter = new Intl.DateTimeFormat('en-IN', {
   dateStyle: 'medium',
@@ -141,7 +145,8 @@ export default function PublicAdmissionStatusScreen({
   const [isIssuing, setIsIssuing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [otpFeedback, setOtpFeedback] = useState<OtpFeedback | null>(null);
-  const [language, setLanguage] = useState<'en' | 'gu' | 'hi'>('en');
+  const [language, setLanguage] = useState<PublicAdmissionsLanguage>('en');
+  const copy = publicAdmissionsCopy[language];
   const isOtpLocked = otpFeedback?.code === 'AdmissionCrm:StatusOtpLocked';
 
   const issueOtp = async () => {
@@ -221,8 +226,9 @@ export default function PublicAdmissionStatusScreen({
 
   return (
     <PublicAdmissionsShell
-      title="Admission Status"
-      description="Verify your contact to review schedules, forms, documents, offers, and next actions."
+      title={copy.statusTitle}
+      description={copy.statusDescription}
+      language={language}
     >
       <Paper
         variant="outlined"
@@ -230,12 +236,12 @@ export default function PublicAdmissionStatusScreen({
       >
         <Stack spacing={2}>
           <FormControl size="small" sx={{ alignSelf: 'flex-end', minWidth: 140 }}>
-            <InputLabel id="admission-status-language">Language</InputLabel>
+            <InputLabel id="admission-status-language">{copy.language}</InputLabel>
             <Select
               labelId="admission-status-language"
-              label="Language"
+              label={copy.language}
               value={language}
-              onChange={(event) => setLanguage(event.target.value as 'en' | 'gu' | 'hi')}
+              onChange={(event) => setLanguage(event.target.value as PublicAdmissionsLanguage)}
             >
               <MenuItem value="en">English</MenuItem>
               <MenuItem value="gu">ગુજરાતી</MenuItem>
@@ -246,7 +252,7 @@ export default function PublicAdmissionStatusScreen({
 
           {!challenge && !status && (
             <LoadingButton variant="contained" loading={isIssuing} onClick={issueOtp}>
-              Send OTP
+              {copy.sendOtp}
             </LoadingButton>
           )}
 
@@ -257,10 +263,10 @@ export default function PublicAdmissionStatusScreen({
               </Alert>
               {otpFeedback && <Alert severity={otpFeedback.severity}>{otpFeedback.message}</Alert>}
               <Typography variant="body2" color="text.secondary">
-                Destination: {challenge.maskedDestination}
+                {copy.destination}: {challenge.maskedDestination}
               </Typography>
               <TextField
-                label="OTP code"
+                label={copy.otpCode}
                 value={otpCode}
                 onChange={(event) => setOtpCode(event.target.value)}
                 disabled={isOtpLocked}
@@ -276,10 +282,10 @@ export default function PublicAdmissionStatusScreen({
                   disabled={isOtpLocked || isIssuing}
                   onClick={verifyOtp}
                 >
-                  Verify
+                  {copy.verify}
                 </LoadingButton>
                 <LoadingButton variant="outlined" loading={isIssuing} onClick={issueOtp}>
-                  Resend OTP
+                  {copy.resendOtp}
                 </LoadingButton>
               </Stack>
             </Stack>
@@ -289,7 +295,7 @@ export default function PublicAdmissionStatusScreen({
             <Stack spacing={1.5}>
               <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
                 <Typography variant="subtitle1">{status.displayName}</Typography>
-                <Chip color="primary" label={status.stageName} />
+                <Chip {...getAccessibleStatusChipProps('primary')} label={status.stageName} />
               </Stack>
               <Typography variant="body2" color="text.secondary">
                 Last activity: {dateTimeFormatter.format(new Date(status.lastActivityTime))}
@@ -317,7 +323,9 @@ export default function PublicAdmissionStatusScreen({
                     <Chip
                       size="small"
                       label={item.status}
-                      color={item.status === 'Completed' ? 'success' : 'default'}
+                      {...getAccessibleStatusChipProps(
+                        item.status === 'Completed' ? 'success' : 'default'
+                      )}
                     />
                   </Stack>
                 ))}
@@ -346,7 +354,7 @@ export default function PublicAdmissionStatusScreen({
                         <Chip
                           size="small"
                           label={item.status}
-                          color={getApplicantChecklistColor(item)}
+                          {...getAccessibleStatusChipProps(getApplicantChecklistColor(item))}
                         />
                       </Stack>
                     ))}
@@ -423,6 +431,7 @@ export default function PublicAdmissionStatusScreen({
                   token={token}
                   accessSessionToken={status.accessSessionToken}
                   application={status.registration}
+                  language={language}
                   onUpdated={(registration) =>
                     setStatus((current) => (current ? { ...current, registration } : current))
                   }
@@ -447,7 +456,9 @@ export default function PublicAdmissionStatusScreen({
                       </Box>
                       <Chip
                         size="small"
-                        color={status.financialStatus.isGateSatisfied ? 'success' : 'warning'}
+                        {...getAccessibleStatusChipProps(
+                          status.financialStatus.isGateSatisfied ? 'success' : 'warning'
+                        )}
                         label={
                           status.financialStatus.isGateSatisfied
                             ? 'Condition satisfied'
@@ -486,17 +497,19 @@ export default function PublicAdmissionStatusScreen({
                       />
                       <Chip
                         size="small"
-                        color="primary"
+                        {...getAccessibleStatusChipProps('primary')}
                         label={`Payable: ${status.financialStatus.currency} ${status.financialStatus.netAmount.toFixed(2)}`}
                       />
                       <Chip
                         size="small"
-                        color="success"
+                        {...getAccessibleStatusChipProps('success')}
                         label={`Confirmed: ${status.financialStatus.currency} ${status.financialStatus.confirmedAmount.toFixed(2)}`}
                       />
                       <Chip
                         size="small"
-                        color={status.financialStatus.outstandingAmount ? 'warning' : 'default'}
+                        {...getAccessibleStatusChipProps(
+                          status.financialStatus.outstandingAmount ? 'warning' : 'default'
+                        )}
                         label={`Outstanding: ${status.financialStatus.currency} ${status.financialStatus.outstandingAmount.toFixed(2)}`}
                       />
                     </Stack>
@@ -514,6 +527,7 @@ export default function PublicAdmissionStatusScreen({
                   token={token}
                   accessSessionToken={status.accessSessionToken}
                   offer={status.offer}
+                  language={language}
                   onUpdated={(offer) =>
                     setStatus((current) => (current ? { ...current, offer } : current))
                   }
@@ -531,17 +545,17 @@ export default function PublicAdmissionStatusScreen({
                       />
                       <Chip
                         size="small"
-                        color={
+                        {...getAccessibleStatusChipProps(
                           status.admissionRoute.eligibilityStatus ===
                             AdmissionCrmRouteEligibilityStatus.Eligible ||
-                          status.admissionRoute.eligibilityStatus ===
-                            AdmissionCrmRouteEligibilityStatus.ExceptionApproved
+                            status.admissionRoute.eligibilityStatus ===
+                              AdmissionCrmRouteEligibilityStatus.ExceptionApproved
                             ? 'success'
                             : status.admissionRoute.eligibilityStatus ===
                                 AdmissionCrmRouteEligibilityStatus.Ineligible
                               ? 'error'
                               : 'warning'
-                        }
+                        )}
                         label={
                           AdmissionCrmRouteEligibilityStatus[
                             status.admissionRoute.eligibilityStatus
@@ -582,6 +596,7 @@ export default function PublicAdmissionStatusScreen({
                   token={token}
                   accessSessionToken={status.accessSessionToken}
                   currentExam={status.exam}
+                  language={language}
                   onScheduled={(exam) =>
                     setStatus((current) => (current ? { ...current, exam } : current))
                   }
@@ -593,6 +608,7 @@ export default function PublicAdmissionStatusScreen({
                   token={token}
                   accessSessionToken={status.accessSessionToken}
                   checklist={status.documents}
+                  language={language}
                   onUpdated={(documents) =>
                     setStatus((current) => (current ? { ...current, documents } : current))
                   }

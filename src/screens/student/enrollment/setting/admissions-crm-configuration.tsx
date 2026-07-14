@@ -107,6 +107,13 @@ import {
 } from './admissions-crm-configuration-utils';
 
 import type { EnrollmentSettingsPanel } from '../admissions-crm/enrollment-workspace-state';
+import type {
+  AdmissionCrmCycleForm as CycleForm,
+  AdmissionCrmTemplateForm as TemplateForm,
+  AdmissionCrmPipelineStageForm as PipelineStageForm,
+  AdmissionCrmMessageTemplateForm as MessageTemplateForm,
+  AdmissionCrmCommunicationProviderForm as CommunicationProviderForm,
+} from './admissions-crm-configuration-model';
 
 export type AdmissionsCrmConfigurationFocusSection =
   | 'journey'
@@ -129,76 +136,6 @@ const emptyCommunicationProviders: AdmissionCrmCommunicationProviderDto[] = [];
 const getSettingsErrorMessage = (error: unknown, fallback: string) => {
   const message = (error as any)?.data?.error?.message || (error as any)?.data?.message;
   return typeof message === 'string' && message.trim() ? message : fallback;
-};
-
-type TemplateForm = {
-  templateName: string;
-  description: string;
-  channel: AdmissionInquiryChannel;
-  isPublic: boolean;
-  isActive: boolean;
-  consentText: string;
-  privacyNoticeUrl: string;
-  fields: AdmissionCrmFormFieldDto[];
-  localizations: Record<
-    'gu' | 'hi',
-    { templateName: string; description: string; consentText: string }
-  >;
-};
-
-type MessageTemplateForm = {
-  templateName: string;
-  channel: AdmissionCrmMessageChannel;
-  purpose: string;
-  subject: string;
-  body: string;
-  variables: string;
-};
-
-type CommunicationProviderForm = {
-  isEnabled: boolean;
-  providerName: string;
-  senderId: string;
-  settingsJson: string;
-  webhookUrl: string;
-};
-
-type CycleForm = {
-  cycleName: string;
-  isActive: boolean;
-  registrationFormRequiredBeforeExam: boolean;
-  staleAfterDays: number;
-  archiveAfterDays: number;
-  defaultLeadSlaHours: number;
-  slaPolicy: {
-    timeZoneId: string;
-    workingDays: number[];
-    workingDayStartHour: number;
-    workingDayEndHour: number;
-    holidays: string[];
-    escalationAfterHours: number;
-    escalationOwnerUserId?: string | null;
-  };
-  activationCancellationWindowDays: number;
-  defaultExamPassingPercentage: number;
-  meritRankingMode: AdmissionCrmMeritRankingMode;
-  examReadinessFields: AdmissionCrmExamReadinessField;
-  leadScoringRules: AdmissionCrmLeadScoringRulesDto;
-  leadRoutingSettings: AdmissionCrmLeadRoutingSettingsDto;
-  journeyRules: AdmissionCrmJourneyRuleDto[];
-  applicantChecklist: AdmissionCrmApplicantChecklistItemDto[];
-  channelSettings: AdmissionCrmChannelSettingDto[];
-  notes: string;
-};
-
-type PipelineStageForm = {
-  stageName: string;
-  displayOrder: number;
-  isEnabled: boolean;
-  colorHex: string;
-  slaTargetHours: string;
-  ownerResponsibility: string;
-  allowedNextStages: AdmissionInquiryStage[];
 };
 
 const pipelineStageOptions = [
@@ -2205,7 +2142,9 @@ const AdmissionsCrmConfiguration = ({
             <Stack spacing={1.25}>
               <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} justifyContent="space-between">
                 <Box>
-                  <Typography variant="subtitle1">Admission Cycle</Typography>
+                  <Typography component="h2" variant="subtitle1">
+                    Admission Cycle
+                  </Typography>
                   <Typography variant="caption" color="text.secondary">
                     School defaults can be applied to the current form or saved from it.
                   </Typography>
@@ -2662,7 +2601,9 @@ const AdmissionsCrmConfiguration = ({
           <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
             <Stack spacing={1.25}>
               <Box>
-                <Typography variant="subtitle1">Inquiry Channels</Typography>
+                <Typography component="h2" variant="subtitle1">
+                  Inquiry Channels
+                </Typography>
                 <Typography variant="caption" color="text.secondary">
                   Enable intake channels and set cycle defaults for source, owner, form, and
                   acknowledgement.
@@ -2674,6 +2615,7 @@ const AdmissionsCrmConfiguration = ({
                   const templatesForChannel = formTemplates.filter(
                     (template) => template.channel === setting.channel
                   );
+                  const channelFieldId = `inquiry-channel-${setting.channel}`;
 
                   return (
                     <Box
@@ -2731,8 +2673,12 @@ const AdmissionsCrmConfiguration = ({
                       </Stack>
                       <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
                         <FormControl fullWidth size="small">
-                          <InputLabel>Default Inquiry Source</InputLabel>
+                          <InputLabel id={`${channelFieldId}-source-label`}>
+                            Default Inquiry Source
+                          </InputLabel>
                           <Select
+                            id={`${channelFieldId}-source`}
+                            labelId={`${channelFieldId}-source-label`}
                             label="Default Inquiry Source"
                             value={setting.defaultInquirySourceId ?? ''}
                             disabled={
@@ -2756,8 +2702,12 @@ const AdmissionsCrmConfiguration = ({
                           </Select>
                         </FormControl>
                         <FormControl fullWidth size="small">
-                          <InputLabel>Default owner</InputLabel>
+                          <InputLabel id={`${channelFieldId}-owner-label`}>
+                            Default owner
+                          </InputLabel>
                           <Select
+                            id={`${channelFieldId}-owner`}
+                            labelId={`${channelFieldId}-owner-label`}
                             label="Default owner"
                             value={setting.defaultOwnerUserId ?? ''}
                             disabled={
@@ -2783,8 +2733,12 @@ const AdmissionsCrmConfiguration = ({
                       </Stack>
                       <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
                         <FormControl fullWidth size="small">
-                          <InputLabel>Default form template</InputLabel>
+                          <InputLabel id={`${channelFieldId}-form-label`}>
+                            Default form template
+                          </InputLabel>
                           <Select
+                            id={`${channelFieldId}-form`}
+                            labelId={`${channelFieldId}-form-label`}
                             label="Default form template"
                             value={setting.defaultFormTemplateId ?? ''}
                             disabled={
@@ -2807,8 +2761,12 @@ const AdmissionsCrmConfiguration = ({
                           </Select>
                         </FormControl>
                         <FormControl fullWidth size="small">
-                          <InputLabel>Acknowledgement template</InputLabel>
+                          <InputLabel id={`${channelFieldId}-acknowledgement-label`}>
+                            Acknowledgement template
+                          </InputLabel>
                           <Select
+                            id={`${channelFieldId}-acknowledgement`}
+                            labelId={`${channelFieldId}-acknowledgement-label`}
                             label="Acknowledgement template"
                             value={setting.defaultAcknowledgementTemplateId ?? ''}
                             disabled={
@@ -2852,7 +2810,9 @@ const AdmissionsCrmConfiguration = ({
         {focusSection === 'journey' && (!focusPanel || focusPanel === 'pipeline') && (
           <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
             <Stack spacing={1.25}>
-              <Typography variant="subtitle1">Pipeline Stages</Typography>
+              <Typography component="h2" variant="subtitle1">
+                Pipeline Stages
+              </Typography>
               <Divider />
               <Box sx={{ display: 'grid', gap: 1 }}>
                 {stages.map((stage) => {
@@ -3058,7 +3018,9 @@ const AdmissionsCrmConfiguration = ({
       {focusSection === 'routing' && (!focusPanel || focusPanel === 'scoring') && (
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
-            <Typography variant="subtitle1">Lead Scoring</Typography>
+            <Typography component="h2" variant="subtitle1">
+              Lead Scoring
+            </Typography>
             <Divider />
             <Box
               sx={{
@@ -3099,7 +3061,9 @@ const AdmissionsCrmConfiguration = ({
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-              <Typography variant="subtitle1">Lead Routing</Typography>
+              <Typography component="h2" variant="subtitle1">
+                Lead Routing
+              </Typography>
               <Button size="small" variant="outlined" onClick={handleAddRoutingRule}>
                 Add Rule
               </Button>
@@ -3396,7 +3360,9 @@ const AdmissionsCrmConfiguration = ({
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-              <Typography variant="subtitle1">Journey Automation</Typography>
+              <Typography component="h2" variant="subtitle1">
+                Journey Automation
+              </Typography>
               <Button size="small" variant="outlined" onClick={handleAddJourneyRule}>
                 Add Rule
               </Button>
@@ -3859,7 +3825,9 @@ const AdmissionsCrmConfiguration = ({
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-              <Typography variant="subtitle1">Form Templates</Typography>
+              <Typography component="h2" variant="subtitle1">
+                Form Templates
+              </Typography>
               <Typography variant="caption" color="text.secondary">
                 {templates?.totalCount || 0} templates
               </Typography>
@@ -4013,7 +3981,9 @@ const AdmissionsCrmConfiguration = ({
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
               <Box>
-                <Typography variant="subtitle1">Message Templates</Typography>
+                <Typography component="h2" variant="subtitle1">
+                  Message Templates
+                </Typography>
                 <Typography variant="caption" color="text.secondary">
                   {messageTemplates?.totalCount || 0} templates
                 </Typography>
@@ -4102,7 +4072,9 @@ const AdmissionsCrmConfiguration = ({
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-              <Typography variant="subtitle1">Communication Providers</Typography>
+              <Typography component="h2" variant="subtitle1">
+                Communication Providers
+              </Typography>
               <Typography variant="caption" color="text.secondary">
                 {communicationProviders?.totalCount || 0} channels
               </Typography>

@@ -21,7 +21,11 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { publicAdmissionsActionCopy } from './public-admissions-copy';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
+import { getAccessibleStatusChipProps } from './public-admissions-styles';
+
+import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
 export type PublicAdmissionOffer = {
   offerId: string;
@@ -45,13 +49,16 @@ export default function PublicOffer({
   accessSessionToken,
   offer,
   onUpdated,
+  language = 'en',
 }: {
   tenantId: string;
   token: string;
   accessSessionToken: string;
   offer: PublicAdmissionOffer;
   onUpdated: (offer: PublicAdmissionOffer) => void;
+  language?: PublicAdmissionsLanguage;
 }) {
+  const copy = publicAdmissionsActionCopy[language];
   const [reason, setReason] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [action, setAction] = useState<'accept' | 'decline' | null>(null);
@@ -108,8 +115,8 @@ export default function PublicOffer({
           <Box>
             <Typography variant="subtitle1">
               {offer.offerType === AdmissionCrmSeatOfferType.Final
-                ? 'Admission Offer'
-                : 'Provisional Offer'}
+                ? copy.admissionOffer
+                : copy.provisionalOffer}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {offer.offerNumber}
@@ -117,18 +124,18 @@ export default function PublicOffer({
           </Box>
           <Chip
             size="small"
-            color={
+            {...getAccessibleStatusChipProps(
               offer.status === AdmissionCrmSeatOfferStatus.Accepted
                 ? 'success'
                 : isOpen
                   ? 'warning'
                   : 'default'
-            }
+            )}
             label={AdmissionCrmSeatOfferStatus[offer.status]}
           />
         </Stack>
         <Typography variant="body2" color="text.secondary">
-          Respond by {new Date(offer.validUntil).toLocaleString()}.
+          {copy.respondBy} {new Date(offer.validUntil).toLocaleString()}.
         </Typography>
         <Divider />
         {Object.entries(offer.terms).map(([key, value]) => (
@@ -148,11 +155,11 @@ export default function PublicOffer({
                   onChange={(event) => setTermsAccepted(event.target.checked)}
                 />
               }
-              label="I have reviewed and accept the offer terms shown above."
+              label={copy.acceptTerms}
             />
             <TextField
               size="small"
-              label="Reason for declining"
+              label={copy.declineReason}
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               multiline
@@ -167,7 +174,7 @@ export default function PublicOffer({
                 disabled={action === 'decline' || !termsAccepted}
                 onClick={() => respond(true)}
               >
-                Accept Offer
+                {copy.acceptOffer}
               </LoadingButton>
               <LoadingButton
                 variant="outlined"
@@ -177,7 +184,7 @@ export default function PublicOffer({
                 disabled={action === 'accept' || !reason.trim()}
                 onClick={() => respond(false)}
               >
-                Decline Offer
+                {copy.declineOffer}
               </LoadingButton>
             </Stack>
           </>
@@ -186,9 +193,9 @@ export default function PublicOffer({
             severity={offer.status === AdmissionCrmSeatOfferStatus.Accepted ? 'success' : 'info'}
           >
             {offer.status === AdmissionCrmSeatOfferStatus.Accepted
-              ? 'Your acceptance has been recorded.'
+              ? copy.accepted
               : offer.responseReason ||
-                `Offer status: ${AdmissionCrmSeatOfferStatus[offer.status]}.`}
+                `${copy.offerStatus}: ${AdmissionCrmSeatOfferStatus[offer.status]}.`}
           </Alert>
         )}
       </Stack>

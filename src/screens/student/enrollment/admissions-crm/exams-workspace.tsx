@@ -46,6 +46,11 @@ import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { admissionCrmEligibilityLabels } from './admissions-crm-utils';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
+import {
+  enrollmentActionsColumn,
+  EnrollmentTableEmptyState,
+  EnrollmentWorkspaceErrorState,
+} from './workspace-table-patterns';
 
 const pageSize = 50;
 const attendanceLabels: Record<AdmissionCrmExamAttendanceStatus, string> = {
@@ -290,7 +295,7 @@ export function ExamsWorkspace() {
         isFilter: false,
         render: (value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
-          return value != null && exam.totalMarks != null ? `${value}/${exam.totalMarks}` : '—';
+          return value != null && exam.totalMarks != null ? `${value}/${exam.totalMarks}` : '-';
         },
       },
       {
@@ -316,15 +321,9 @@ export function ExamsWorkspace() {
       {
         id: 'actions',
         label: 'Actions',
-        width: 88,
-        minWidth: 88,
-        sticky: true,
-        stickyPosition: 'right',
-        stickyOnMobile: false,
+        ...enrollmentActionsColumn,
         isSort: false,
         isFilter: false,
-        headerSx: { px: 1.5 },
-        cellSx: { px: 1.5 },
         render: (_value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
           return (
@@ -374,16 +373,10 @@ export function ExamsWorkspace() {
       />
 
       {examsQuery.isError ? (
-        <Alert
-          severity="error"
-          action={
-            <Button size="small" color="inherit" onClick={() => examsQuery.refetch()}>
-              Retry
-            </Button>
-          }
-        >
-          Entrance exams are unavailable.
-        </Alert>
+        <EnrollmentWorkspaceErrorState
+          message="Entrance exams are unavailable."
+          onRetry={() => examsQuery.refetch()}
+        />
       ) : (
         <CustomizableTable
           tableId="student-enrollment-entrance-exams"
@@ -414,12 +407,10 @@ export function ExamsWorkspace() {
             )
           }
           noDataText={
-            <Stack spacing={0.5} alignItems="center">
-              <Typography variant="subtitle2">No matching exams</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Change the column filters or schedule an exam from Pipeline.
-              </Typography>
-            </Stack>
+            <EnrollmentTableEmptyState
+              title="No matching exams"
+              description="Change the column filters or schedule an exam from Pipeline."
+            />
           }
           rowProps={(row) => ({
             'data-testid': 'student-enrollment-exam-row',

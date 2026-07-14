@@ -139,6 +139,7 @@ describe('Student Enrollment workspace route contracts', () => {
       expect(source).not.toContain('enrollment-table-styles');
     });
     expect(sources.join('\n')).toContain('ThreeDotsActions');
+    expect(sources.join('\n')).toContain('enrollmentActionsColumn');
     expect(
       fs.existsSync(
         path.join(
@@ -152,6 +153,31 @@ describe('Student Enrollment workspace route contracts', () => {
         )
       )
     ).toBe(false);
+  });
+
+  it('keeps shared table sort indicators decorative instead of unnamed buttons', () => {
+    const tableHeader = read(
+      'src',
+      'components',
+      'customizabaleTable',
+      'components',
+      'TableHeader.tsx'
+    );
+
+    expect(tableHeader).not.toContain('<IconButton');
+    expect(tableHeader).toContain('aria-hidden="true"');
+  });
+
+  it('keeps the simulated scale contract paginated instead of materializing 25,000 leads', () => {
+    const fixture = read('e2e', 'student', 'fixtures', 'admission-crm-scale.ts');
+    const browserFlow = read('e2e', 'student', 'admissions-crm-flow.guest.spec.ts');
+
+    expect(fixture).toContain('admissionCrmScaleTotal = 25_000');
+    expect(fixture).toContain('length: maxResultCount');
+    expect(fixture).not.toContain('length: admissionCrmScaleTotal');
+    expect(browserFlow).toContain('toHaveCount(50)');
+    expect(browserFlow).toContain("has('stage') ? 25 : 50");
+    expect(browserFlow).toContain('toBeLessThanOrEqual(25)');
   });
 
   it('does not expose raw staff identifiers or editable provider JSON in ordinary UI', () => {
