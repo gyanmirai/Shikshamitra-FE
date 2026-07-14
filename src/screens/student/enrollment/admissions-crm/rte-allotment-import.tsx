@@ -1,25 +1,13 @@
 'use client';
 
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
 import { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { FactCheck, CheckCircle, CloudUpload } from '@mui/icons-material';
-import {
-  Chip,
-  Alert,
-  Paper,
-  Stack,
-  Table,
-  Button,
-  MenuItem,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  TextField,
-  Typography,
-  TableContainer,
-} from '@mui/material';
+import { Chip, Alert, Paper, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import {
   AdmissionCrmRouteDefinitionStatus,
   useGetAdmissionCrmRouteDefinitionsQuery,
@@ -28,8 +16,6 @@ import {
   usePreviewAdmissionCrmRteAllotmentsMutation,
   type AdmissionCrmRteAllotmentImportResultDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
-
-import { enrollmentTableSx } from './enrollment-table-styles';
 
 type Props = {
   academicYearId: string;
@@ -146,6 +132,41 @@ export function RteAllotmentImport({ academicYearId }: Props) {
           (route.code.toLowerCase().includes('rte') || route.name.toLowerCase().includes('rte'))
       ),
     [routesQuery.data]
+  );
+  const resultColumns = useMemo<IColumn[]>(
+    () => [
+      {
+        id: 'applicantReference',
+        label: 'Applicant reference',
+        minWidth: 200,
+        isSort: false,
+        isFilter: false,
+        render: (value, row) => value || row.leadId || '-',
+      },
+      {
+        id: 'allotmentNumber',
+        label: 'Allotment',
+        minWidth: 160,
+        isSort: false,
+        isFilter: false,
+        render: (value) => value || '-',
+      },
+      {
+        id: 'success',
+        label: 'Outcome',
+        minWidth: 180,
+        isSort: false,
+        isFilter: false,
+        render: (value, row) => (
+          <Chip
+            size="small"
+            color={value ? 'success' : 'error'}
+            label={value ? 'Imported' : row.errorCode || 'Failed'}
+          />
+        ),
+      },
+    ],
+    []
   );
 
   const loadFile = async (file?: File) => {
@@ -271,31 +292,17 @@ export function RteAllotmentImport({ academicYearId }: Props) {
             <Alert severity={result.failed > 0 ? 'warning' : 'success'}>
               {result.succeeded} succeeded, {result.failed} failed.
             </Alert>
-            <TableContainer>
-              <Table stickyHeader size="small" sx={[enrollmentTableSx, { minWidth: 640 }]}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Applicant reference</TableCell>
-                    <TableCell>Allotment</TableCell>
-                    <TableCell>Outcome</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {result.items.map((item, index) => (
-                    <TableRow
-                      key={`${item.applicantReference || item.leadId || 'row'}-${index}`}
-                      hover
-                    >
-                      <TableCell>{item.applicantReference || item.leadId || '-'}</TableCell>
-                      <TableCell>{item.allotmentNumber || '-'}</TableCell>
-                      <TableCell>
-                        {item.success ? 'Imported' : item.errorCode || 'Failed'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <CustomizableTable
+              tableId="student-enrollment-rte-import-results"
+              tableTitle="RTE Allotment Import Results"
+              columns={resultColumns}
+              data={result.items}
+              isSearch={false}
+              isFilter={false}
+              isPagination={false}
+              isShowedDense={false}
+              tableContainerProps={{ sx: { minHeight: 220 } }}
+            />
           </Stack>
         ) : null}
       </Stack>

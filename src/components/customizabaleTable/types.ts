@@ -1,7 +1,13 @@
 import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
 import type { Theme, SxProps } from '@mui/material/styles';
-import type { BoxProps, TableRowProps, TextFieldProps, TableContainerProps } from '@mui/material';
+import type {
+  BoxProps,
+  TableRowProps,
+  TextFieldProps,
+  TableContainerProps,
+  TablePaginationProps,
+} from '@mui/material';
 
 // Add this interface to your existing interfaces
 export interface IColumnFilterAnchor {
@@ -27,16 +33,22 @@ export interface IColumn {
   isSort?: boolean;
   sticky?: boolean;
   stickyPosition?: 'left' | 'right';
+  stickyOnMobile?: boolean;
   isDateFilter?: boolean;
   isDateRangeFilter?: boolean;
   enumOptions?: { label: string; value: any }[];
   defaultHidden?: boolean;
+  excludeFromExport?: boolean;
   originalId?: string;
 }
 
 export interface IData {
   [key: string]: any;
 }
+
+export type CustomizableTableRowProps = TableRowProps & {
+  [key: `data-${string}`]: string | number | boolean | undefined;
+};
 
 export interface ICustomizableTableProps {
   tableContainerProps?: TableContainerProps;
@@ -64,9 +76,15 @@ export interface ICustomizableTableProps {
   isSearch?: boolean;
   isScrollbar?: boolean;
   isShowedDense?: boolean;
-  rowProps?: (row: IData, index: number) => TableRowProps;
+  rowProps?: (row: IData, index: number) => CustomizableTableRowProps;
   tableId: string;
   defaultSearchTerm?: string;
+  defaultRowsPerPage?: number;
+  page?: number;
+  rowsPerPage?: number;
+  searchTerm?: string;
+  filters?: IParams['filters'];
+  rowsPerPageOptions?: TablePaginationProps['rowsPerPageOptions'];
   showCheckbox?: boolean;
   onSendNotification?: (data: any) => void;
   searchFieldProps?: TextFieldProps;
@@ -88,6 +106,7 @@ export type IParams = {
     value: any;
     valueType: string;
     label?: ReactNode;
+    displayValue?: ReactNode;
   }>;
   sorts: Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>;
   dateFilter: null | Dayjs;

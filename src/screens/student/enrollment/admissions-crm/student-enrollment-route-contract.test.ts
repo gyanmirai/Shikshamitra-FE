@@ -121,17 +121,37 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(context).not.toContain("searchParams.get('search')");
   });
 
-  it('uses the shared project table-action pattern for operational Enrollment tables', () => {
-    const sources = [
+  it('uses the shared project table and action patterns throughout Enrollment', () => {
+    const tableFiles = [
       'pipeline-workspace.tsx',
       'exams-workspace.tsx',
       'operations-queue-workspace.tsx',
-    ]
-      .map((file) => read('src', 'screens', 'student', 'enrollment', 'admissions-crm', file))
-      .join('\n');
-    expect(sources.match(/ThreeDotsActions/g)?.length).toBe(6);
-    expect(sources).toContain('enrollmentActionHeaderSx');
-    expect(sources).toContain('enrollmentActionCellSx');
+      'analytics-workspace.tsx',
+      'rte-allotment-import.tsx',
+    ];
+    const sources = tableFiles.map((file) =>
+      read('src', 'screens', 'student', 'enrollment', 'admissions-crm', file)
+    );
+
+    sources.forEach((source) => {
+      expect(source).toContain('CustomizableTable');
+      expect(source).not.toContain('<Table');
+      expect(source).not.toContain('enrollment-table-styles');
+    });
+    expect(sources.join('\n')).toContain('ThreeDotsActions');
+    expect(
+      fs.existsSync(
+        path.join(
+          process.cwd(),
+          'src',
+          'screens',
+          'student',
+          'enrollment',
+          'admissions-crm',
+          'enrollment-table-styles.ts'
+        )
+      )
+    ).toBe(false);
   });
 
   it('does not expose raw staff identifiers or editable provider JSON in ordinary UI', () => {

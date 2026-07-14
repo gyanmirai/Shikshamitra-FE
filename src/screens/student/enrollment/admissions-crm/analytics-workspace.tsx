@@ -1,7 +1,10 @@
 'use client';
 
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { useGetAdmissionCrmAnalyticsSummaryQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
 import {
   Box,
@@ -9,19 +12,12 @@ import {
   Alert,
   Stack,
   Paper,
-  Table,
   Button,
-  TableRow,
   TextField,
-  TableBody,
-  TableCell,
-  TableHead,
   Typography,
   LinearProgress,
-  TableContainer,
 } from '@mui/material';
 
-import { enrollmentTableSx } from './enrollment-table-styles';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { getAdmissionCrmStageLabel, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
@@ -29,6 +25,71 @@ import { getAdmissionCrmStageLabel, getAdmissionCrmChannelLabel } from './admiss
 const integerFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const decimalFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
 const formatPercent = (value: number) => `${decimalFormatter.format(value)}%`;
+const stageFunnelColumns: IColumn[] = [
+  {
+    id: 'stage',
+    label: 'Stage',
+    minWidth: 180,
+    isSort: false,
+    isFilter: false,
+    render: (value) => getAdmissionCrmStageLabel(value),
+  },
+  {
+    id: 'leadCount',
+    label: 'Leads',
+    minWidth: 100,
+    align: 'right',
+    isSort: false,
+    isFilter: false,
+    render: (value) => integerFormatter.format(value),
+  },
+  {
+    id: 'shareOfLeads',
+    label: 'Share of leads',
+    minWidth: 140,
+    align: 'right',
+    isSort: false,
+    isFilter: false,
+    render: (value) => formatPercent(value),
+  },
+];
+const channelPerformanceColumns: IColumn[] = [
+  {
+    id: 'channel',
+    label: 'Channel',
+    minWidth: 180,
+    isSort: false,
+    isFilter: false,
+    render: (value) => getAdmissionCrmChannelLabel(value),
+  },
+  {
+    id: 'leadCount',
+    label: 'Leads',
+    minWidth: 90,
+    align: 'right',
+    isSort: false,
+    isFilter: false,
+    render: (value) => integerFormatter.format(value),
+  },
+  {
+    id: 'examRate',
+    label: 'Exam rate',
+    minWidth: 120,
+    align: 'right',
+    isSort: false,
+    isFilter: false,
+    render: (value) => formatPercent(value),
+  },
+  {
+    id: 'eligibilityRate',
+    label: 'Eligibility rate',
+    minWidth: 140,
+    align: 'right',
+    isSort: false,
+    isFilter: false,
+    render: (value) => formatPercent(value),
+  },
+];
 
 export function AnalyticsWorkspace() {
   const { academicYearId, state, updateState } = useEnrollmentWorkspace();
@@ -140,67 +201,38 @@ export function AnalyticsWorkspace() {
           <Box
             sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', xl: '1fr 1fr' }, gap: 1.5 }}
           >
-            <Paper variant="outlined" sx={{ borderRadius: 1, overflow: 'hidden' }}>
-              <Box sx={{ px: 1.5, py: 1.25 }}>
-                <Typography variant="subtitle2">Stage Funnel</Typography>
-              </Box>
-              <TableContainer>
-                <Table stickyHeader size="small" sx={[enrollmentTableSx, { minWidth: 520 }]}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Stage</TableCell>
-                      <TableCell align="right">Leads</TableCell>
-                      <TableCell align="right">Share of leads</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {analytics.stageFunnel.map((item) => (
-                      <TableRow key={item.stage} hover>
-                        <TableCell>{getAdmissionCrmStageLabel(item.stage)}</TableCell>
-                        <TableCell align="right">
-                          {integerFormatter.format(item.leadCount)}
-                        </TableCell>
-                        <TableCell align="right">{formatPercent(item.shareOfLeads)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
+            <Stack spacing={1}>
+              <Typography variant="subtitle2">Stage Funnel</Typography>
+              <CustomizableTable
+                tableId="student-enrollment-stage-funnel"
+                tableTitle="Stage Funnel"
+                columns={stageFunnelColumns}
+                data={analytics.stageFunnel}
+                isSearch={false}
+                isFilter={false}
+                isPagination={false}
+                isShowedDense={false}
+                tableContainerProps={{ sx: { minHeight: 280 } }}
+              />
+            </Stack>
 
-            <Paper variant="outlined" sx={{ borderRadius: 1, overflow: 'hidden' }}>
-              <Box sx={{ px: 1.5, py: 1.25 }}>
-                <Typography variant="subtitle2">Channel Performance</Typography>
-              </Box>
-              <TableContainer>
-                <Table stickyHeader size="small" sx={[enrollmentTableSx, { minWidth: 520 }]}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Channel</TableCell>
-                      <TableCell align="right">Leads</TableCell>
-                      <TableCell align="right">Exam rate</TableCell>
-                      <TableCell align="right">Eligibility rate</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {analytics.channelPerformance.map((item) => (
-                      <TableRow key={item.channel} hover>
-                        <TableCell>{getAdmissionCrmChannelLabel(item.channel)}</TableCell>
-                        <TableCell align="right">
-                          {integerFormatter.format(item.leadCount)}
-                        </TableCell>
-                        <TableCell align="right">
-                          {formatPercent(
-                            item.leadCount ? (item.examScheduledCount / item.leadCount) * 100 : 0
-                          )}
-                        </TableCell>
-                        <TableCell align="right">{formatPercent(item.eligibilityRate)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
+            <Stack spacing={1}>
+              <Typography variant="subtitle2">Channel Performance</Typography>
+              <CustomizableTable
+                tableId="student-enrollment-channel-performance"
+                tableTitle="Channel Performance"
+                columns={channelPerformanceColumns}
+                data={analytics.channelPerformance.map((item) => ({
+                  ...item,
+                  examRate: item.leadCount ? (item.examScheduledCount / item.leadCount) * 100 : 0,
+                }))}
+                isSearch={false}
+                isFilter={false}
+                isPagination={false}
+                isShowedDense={false}
+                tableContainerProps={{ sx: { minHeight: 280 } }}
+              />
+            </Stack>
           </Box>
 
           <Box

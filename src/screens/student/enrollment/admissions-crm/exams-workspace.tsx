@@ -1,39 +1,34 @@
 'use client';
 
 import type { LabelColor } from 'src/components/label';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { AdmissionCrmEntranceExamDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Chip,
   Alert,
   Stack,
   Paper,
-  Table,
   Button,
   Dialog,
   Switch,
   Divider,
   MenuItem,
   MenuList,
-  TableRow,
   TextField,
-  TableBody,
-  TableCell,
-  TableHead,
   Typography,
   DialogTitle,
   DialogContent,
   DialogActions,
   LinearProgress,
-  TableContainer,
-  TablePagination,
   FormControlLabel,
 } from '@mui/material';
 import {
@@ -51,11 +46,6 @@ import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { admissionCrmEligibilityLabels } from './admissions-crm-utils';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
-import {
-  enrollmentTableSx,
-  enrollmentActionCellSx,
-  enrollmentActionHeaderSx,
-} from './enrollment-table-styles';
 
 const pageSize = 50;
 const attendanceLabels: Record<AdmissionCrmExamAttendanceStatus, string> = {
@@ -98,6 +88,12 @@ const dateFormatter = new Intl.DateTimeFormat('en-IN', {
   month: 'short',
   year: 'numeric',
 });
+const accessibleStatusSx = { color: 'text.primary' } as const;
+
+const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  return filter ? Number(filter.value) : undefined;
+};
 
 export function ExamsWorkspace() {
   const { academicYearId, state, updateState, openApplicant, closeApplicant } =
@@ -160,6 +156,212 @@ export function ExamsWorkspace() {
     }
   };
 
+  const tableFilters = useMemo<IParams['filters']>(
+    () => [
+      ...(state.attendance == null
+        ? []
+        : [
+            {
+              column: 'attendanceStatus',
+              type: 'equals',
+              value: state.attendance,
+              valueType: 'enum',
+              label: 'Attendance',
+              displayValue: attendanceLabels[state.attendance as AdmissionCrmExamAttendanceStatus],
+            },
+          ]),
+      ...(state.examStatus == null
+        ? []
+        : [
+            {
+              column: 'examStatus',
+              type: 'equals',
+              value: state.examStatus,
+              valueType: 'enum',
+              label: 'Result',
+              displayValue: resultLabels[state.examStatus as EntranceExamStatusEnum],
+            },
+          ]),
+      ...(state.eligibility == null
+        ? []
+        : [
+            {
+              column: 'eligibilityDecision',
+              type: 'equals',
+              value: state.eligibility,
+              valueType: 'enum',
+              label: 'Eligibility',
+              displayValue:
+                admissionCrmEligibilityLabels[state.eligibility as AdmissionCrmEligibilityDecision],
+            },
+          ]),
+    ],
+    [state.attendance, state.eligibility, state.examStatus]
+  );
+
+  const columns = useMemo<IColumn[]>(
+    () => [
+      {
+        id: 'applicantName',
+        label: 'Applicant',
+        width: 190,
+        minWidth: 180,
+        sticky: true,
+        stickyPosition: 'left',
+        stickyOnMobile: false,
+        isSort: false,
+        isFilter: false,
+        render: (value, row) => {
+          const exam = row as AdmissionCrmEntranceExamDto;
+          return (
+            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle2" noWrap>
+                {value}
+              </Typography>
+              <Typography variant="caption" color="text.primary" noWrap>
+                {exam.slotNameSnapshot || 'Exam slot'}
+              </Typography>
+            </Stack>
+          );
+        },
+      },
+      {
+        id: 'examStartTime',
+        label: 'Schedule',
+        width: 165,
+        minWidth: 160,
+        isSort: false,
+        isFilter: false,
+        render: (value, row) => {
+          const exam = row as AdmissionCrmEntranceExamDto;
+          return (
+            <Stack spacing={0.25}>
+              <Typography variant="body2">{dateTimeFormatter.format(new Date(value))}</Typography>
+              <Typography variant="caption" color="text.primary">
+                Room {exam.examRoomNo}
+              </Typography>
+            </Stack>
+          );
+        },
+      },
+      {
+        id: 'attendanceStatus',
+        label: 'Attendance',
+        width: 130,
+        minWidth: 125,
+        filterType: 'enum',
+        enumOptions: Object.entries(attendanceLabels).map(([value, label]) => ({
+          value: Number(value),
+          label,
+        })),
+        isSort: false,
+        render: (value) => (
+          <Label
+            color={attendanceColors[value as AdmissionCrmExamAttendanceStatus]}
+            sx={accessibleStatusSx}
+          >
+            {attendanceLabels[value as AdmissionCrmExamAttendanceStatus]}
+          </Label>
+        ),
+      },
+      {
+        id: 'examStatus',
+        label: 'Result',
+        width: 100,
+        minWidth: 95,
+        filterType: 'enum',
+        enumOptions: Object.entries(resultLabels).map(([value, label]) => ({
+          value: Number(value),
+          label,
+        })),
+        isSort: false,
+        render: (value) => (
+          <Label color={resultColors[value as EntranceExamStatusEnum]} sx={accessibleStatusSx}>
+            {resultLabels[value as EntranceExamStatusEnum]}
+          </Label>
+        ),
+      },
+      {
+        id: 'obtainedMarks',
+        label: 'Marks',
+        width: 80,
+        minWidth: 75,
+        isSort: false,
+        isFilter: false,
+        render: (value, row) => {
+          const exam = row as AdmissionCrmEntranceExamDto;
+          return value != null && exam.totalMarks != null ? `${value}/${exam.totalMarks}` : '—';
+        },
+      },
+      {
+        id: 'eligibilityDecision',
+        label: 'Eligibility',
+        width: 120,
+        minWidth: 115,
+        filterType: 'enum',
+        enumOptions: Object.entries(admissionCrmEligibilityLabels).map(([value, label]) => ({
+          value: Number(value),
+          label,
+        })),
+        isSort: false,
+        render: (value) => (
+          <Label
+            color={eligibilityColors[value as AdmissionCrmEligibilityDecision]}
+            sx={accessibleStatusSx}
+          >
+            {admissionCrmEligibilityLabels[value as AdmissionCrmEligibilityDecision]}
+          </Label>
+        ),
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        width: 88,
+        minWidth: 88,
+        sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
+        isSort: false,
+        isFilter: false,
+        headerSx: { px: 1.5 },
+        cellSx: { px: 1.5 },
+        render: (_value, row) => {
+          const exam = row as AdmissionCrmEntranceExamDto;
+          return (
+            <ThreeDotsActions
+              placement="right-top"
+              showViewIcon
+              viewLabel="Open Applicant"
+              handleViewClick={() => openApplicant(exam.leadId)}
+              showEditIcon
+              editLabel="Manage Exam"
+              handleEditClick={() => setSelectedExam(exam)}
+              onEditMouseDown={() => setSelectedExam(exam)}
+              actions={({ popover }) => (
+                <MenuList>
+                  <MenuItem
+                    onMouseDown={() => {
+                      popover.onClose();
+                      setHandoffExamId(exam.id);
+                    }}
+                    onClick={() => {
+                      popover.onClose();
+                      setHandoffExamId(exam.id);
+                    }}
+                  >
+                    <Iconify icon="mdi:account-arrow-right-outline" />
+                    Eligibility Handoff
+                  </MenuItem>
+                </MenuList>
+              )}
+            />
+          );
+        },
+      },
+    ],
+    [openApplicant]
+  );
+
   if (!academicYearId) {
     return <Alert severity="info">Select an academic year to open Entrance Exams.</Alert>;
   }
@@ -171,199 +373,61 @@ export function ExamsWorkspace() {
         description="Process attendance, results, merit, and eligibility decisions from one queue."
       />
 
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} gap={1.25}>
-          <TextField
-            select
-            size="small"
-            label="Attendance"
-            value={state.attendance ?? ''}
-            onChange={(event) =>
-              updateState({
-                attendance: event.target.value === '' ? undefined : Number(event.target.value),
-                page: 1,
-              })
-            }
-            sx={{ minWidth: 190 }}
-          >
-            <MenuItem value="">All attendance</MenuItem>
-            {Object.entries(attendanceLabels).map(([value, label]) => (
-              <MenuItem key={value} value={Number(value)}>
-                {label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Result"
-            value={state.examStatus ?? ''}
-            onChange={(event) =>
-              updateState({
-                examStatus: event.target.value === '' ? undefined : Number(event.target.value),
-                page: 1,
-              })
-            }
-            sx={{ minWidth: 180 }}
-          >
-            <MenuItem value="">All results</MenuItem>
-            {Object.entries(resultLabels).map(([value, label]) => (
-              <MenuItem key={value} value={Number(value)}>
-                {label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Eligibility"
-            value={state.eligibility ?? ''}
-            onChange={(event) =>
-              updateState({
-                eligibility: event.target.value === '' ? undefined : Number(event.target.value),
-                page: 1,
-              })
-            }
-            sx={{ minWidth: 190 }}
-          >
-            <MenuItem value="">All decisions</MenuItem>
-            {Object.entries(admissionCrmEligibilityLabels).map(([value, label]) => (
-              <MenuItem key={value} value={Number(value)}>
-                {label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <Button
-            size="small"
-            onClick={() =>
-              updateState({
-                attendance: undefined,
-                examStatus: undefined,
-                eligibility: undefined,
-                page: 1,
-              })
-            }
-          >
-            Clear Filters
-          </Button>
-        </Stack>
-      </Paper>
-
-      <Paper variant="outlined" sx={{ borderRadius: 1, overflow: 'hidden' }}>
-        {examsQuery.isFetching && <LinearProgress aria-label="Loading entrance exams" />}
-        {examsQuery.isError ? (
-          <Alert
-            severity="error"
-            action={
-              <Button size="small" color="inherit" onClick={() => examsQuery.refetch()}>
-                Retry
-              </Button>
-            }
-            sx={{ m: 1.5 }}
-          >
-            Entrance exams are unavailable.
-          </Alert>
-        ) : (
-          <TableContainer>
-            <Table stickyHeader size="small" sx={enrollmentTableSx}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Applicant</TableCell>
-                  <TableCell>Schedule</TableCell>
-                  <TableCell>Attendance</TableCell>
-                  <TableCell>Result</TableCell>
-                  <TableCell>Marks</TableCell>
-                  <TableCell>Eligibility</TableCell>
-                  <TableCell align="right" sx={enrollmentActionHeaderSx}>
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {(examsQuery.data?.items || []).map((exam) => (
-                  <TableRow key={exam.id} hover>
-                    <TableCell>
-                      <Typography variant="subtitle2">{exam.applicantName}</Typography>
-                      <Typography variant="caption" color="text.primary">
-                        {exam.slotNameSnapshot || 'Exam slot'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      {dateTimeFormatter.format(new Date(exam.examStartTime))}
-                      <Typography variant="caption" color="text.primary" display="block">
-                        Room {exam.examRoomNo}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Label color={attendanceColors[exam.attendanceStatus]}>
-                        {attendanceLabels[exam.attendanceStatus]}
-                      </Label>
-                    </TableCell>
-                    <TableCell>
-                      <Label color={resultColors[exam.examStatus]}>
-                        {resultLabels[exam.examStatus]}
-                      </Label>
-                    </TableCell>
-                    <TableCell>
-                      {exam.obtainedMarks != null && exam.totalMarks != null
-                        ? `${exam.obtainedMarks}/${exam.totalMarks}`
-                        : '—'}
-                    </TableCell>
-                    <TableCell>
-                      <Label color={eligibilityColors[exam.eligibilityDecision]}>
-                        {admissionCrmEligibilityLabels[exam.eligibilityDecision]}
-                      </Label>
-                    </TableCell>
-                    <TableCell align="right" sx={enrollmentActionCellSx}>
-                      <ThreeDotsActions
-                        showViewIcon
-                        viewLabel="Open Applicant"
-                        handleViewClick={() => openApplicant(exam.leadId)}
-                        showEditIcon
-                        editLabel="Manage Exam"
-                        handleEditClick={() => setSelectedExam(exam)}
-                        actions={({ popover }) => (
-                          <MenuList>
-                            <MenuItem
-                              onClick={() => {
-                                popover.onClose();
-                                setHandoffExamId(exam.id);
-                              }}
-                            >
-                              <Iconify icon="mdi:account-arrow-right-outline" />
-                              Eligibility Handoff
-                            </MenuItem>
-                          </MenuList>
-                        )}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!examsQuery.isFetching && !examsQuery.data?.items.length && (
-                  <TableRow>
-                    <TableCell colSpan={7}>
-                      <Box sx={{ py: 5, textAlign: 'center' }}>
-                        <Typography variant="subtitle2">No matching exams</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Change the filters or schedule an exam from the Pipeline workspace.
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-        <TablePagination
-          component="div"
-          count={examsQuery.data?.totalCount || 0}
+      {examsQuery.isError ? (
+        <Alert
+          severity="error"
+          action={
+            <Button size="small" color="inherit" onClick={() => examsQuery.refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Entrance exams are unavailable.
+        </Alert>
+      ) : (
+        <CustomizableTable
+          tableId="student-enrollment-entrance-exams"
+          tableTitle="Entrance Exams"
+          columns={columns}
+          data={examsQuery.data?.items || []}
+          isLoading={examsQuery.isLoading}
+          isSearch={false}
+          serverSide
+          serverSidePagination
+          serverSideFilter
+          filters={tableFilters}
+          totalCount={examsQuery.data?.totalCount || 0}
           page={page}
-          onPageChange={(_, nextPage) => updateState({ page: nextPage + 1 }, 'push')}
           rowsPerPage={pageSize}
+          defaultRowsPerPage={pageSize}
           rowsPerPageOptions={[pageSize]}
+          onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
+          onServerFilter={(filters) =>
+            updateState(
+              {
+                attendance: getLatestEnumFilter(filters, 'attendanceStatus'),
+                examStatus: getLatestEnumFilter(filters, 'examStatus'),
+                eligibility: getLatestEnumFilter(filters, 'eligibilityDecision'),
+                page: 1,
+              },
+              'push'
+            )
+          }
+          noDataText={
+            <Stack spacing={0.5} alignItems="center">
+              <Typography variant="subtitle2">No matching exams</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Change the column filters or schedule an exam from Pipeline.
+              </Typography>
+            </Stack>
+          }
+          rowProps={(row) => ({
+            'data-testid': 'student-enrollment-exam-row',
+            'data-exam-id': row.id,
+          })}
+          tableContainerProps={{ sx: { minHeight: 360 } }}
         />
-      </Paper>
+      )}
 
       <Dialog
         open={Boolean(selectedExam)}

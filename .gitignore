@@ -13,6 +13,7 @@ node_modules
 # testing
 coverage/
 playwright-report/
+.playwright-cli/
 test-results/
 test-results-*/
 output/

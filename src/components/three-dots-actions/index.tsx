@@ -15,6 +15,7 @@ interface IThreeDotesActionsType {
   onClosePopover?: () => void;
   handleViewClick?: (e: any) => void;
   handleEditClick?: (e: any) => void;
+  onEditMouseDown?: React.MouseEventHandler<HTMLButtonElement>;
   handleDeleteClick?: (e: any) => void;
   showViewIcon?: boolean;
   showEditIcon?: boolean;
@@ -67,6 +68,7 @@ const ThreeDotsActions = ({
   disableViewIcon = false,
   handleViewClick = () => {},
   handleEditClick = () => {},
+  onEditMouseDown,
   handleDeleteClick = () => {},
   ...props
 }: Omit<IconButtonOwnProps, 'onClick'> & IThreeDotesActionsType) => {
@@ -98,6 +100,10 @@ const ThreeDotsActions = ({
             <IconButton
               aria-label={editLabel}
               data-testid="table-action-edit"
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                onEditMouseDown?.(e);
+              }}
               onClick={(e) => {
                 e.stopPropagation();
                 handleEditClick(e);

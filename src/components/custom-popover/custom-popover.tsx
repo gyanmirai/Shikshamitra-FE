@@ -1,6 +1,5 @@
 import type { PaperProps } from '@mui/material/Paper';
 
-import { useMemo, useState } from 'react';
 import Popover from '@mui/material/Popover';
 import { listClasses } from '@mui/material/List';
 import { menuItemClasses } from '@mui/material/MenuItem';
@@ -28,19 +27,10 @@ export function CustomPopover({
 
   const { paperStyles, anchorOrigin, transformOrigin } = calculateAnchorOrigin(arrowPlacement);
 
-  const [anchor, setAnchor] = useState<any>(null);
-
-  useMemo(() => {
-    setTimeout(() => {
-      setAnchor(anchorEl);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, anchorEl]);
-
   return (
     <Popover
       open={!!open}
-      anchorEl={anchor}
+      anchorEl={anchorEl}
       onClose={onClose}
       anchorOrigin={anchorOrigin}
       transformOrigin={transformOrigin}
