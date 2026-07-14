@@ -370,11 +370,13 @@ const ReviewQueueTab = ({
                           </Typography>
                           {row.progressGap !== '-' && (
                             <Typography variant="caption" display="block">
-                              Gap: {Number(row.progressGap) > 0 ? '+' : ''}{row.progressGap}%
+                              Gap: {Number(row.progressGap) > 0 ? '+' : ''}
+                              {row.progressGap}%
                             </Typography>
                           )}
                           <Typography variant="caption" display="block">
-                            Evidence: {row.evidenceCount > 0 ? `${row.evidenceCount} file(s)` : 'Missing'}
+                            Evidence:{' '}
+                            {row.evidenceCount > 0 ? `${row.evidenceCount} file(s)` : 'Missing'}
                           </Typography>
                         </Box>
                       }
@@ -569,15 +571,19 @@ const ReviewQueueTab = ({
                     isSort: false,
                     sticky: true,
                     stickyPosition: 'right' as const,
-                    render: (_: any, row: ReviewRow) =>
-                      canReviewRow(row) ? (
+                    render: (_: any, row: any) => {
+                      const reviewRow = row as ReviewRow;
+                      return canReviewRow(reviewRow) ? (
                         <Stack direction="row" spacing={0.5} justifyContent="center">
                           <Button
                             size="small"
                             variant="contained"
                             color="success"
                             onClick={() =>
-                              openReview({ type: row.targetType, id: row.id }, 'approve')
+                              openReview(
+                                { type: reviewRow.targetType, id: reviewRow.id },
+                                'approve'
+                              )
                             }
                           >
                             Approve
@@ -587,7 +593,10 @@ const ReviewQueueTab = ({
                             variant="outlined"
                             color="warning"
                             onClick={() =>
-                              openReview({ type: row.targetType, id: row.id }, 'changes')
+                              openReview(
+                                { type: reviewRow.targetType, id: reviewRow.id },
+                                'changes'
+                              )
                             }
                           >
                             Changes
@@ -597,7 +606,7 @@ const ReviewQueueTab = ({
                             variant="outlined"
                             color="error"
                             onClick={() =>
-                              openReview({ type: row.targetType, id: row.id }, 'reject')
+                              openReview({ type: reviewRow.targetType, id: reviewRow.id }, 'reject')
                             }
                           >
                             Reject
@@ -605,7 +614,8 @@ const ReviewQueueTab = ({
                         </Stack>
                       ) : (
                         <Chip label="Own submission" size="small" color="info" variant="soft" />
-                      ),
+                      );
+                    },
                   },
                 ]
               : []),

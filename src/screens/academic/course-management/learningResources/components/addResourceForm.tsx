@@ -14,6 +14,9 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
+import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { validationSchema } from '../validationSchema';
 import { getLearningResourceInitialData } from './getLearningResourceInitialData';
@@ -25,6 +28,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
   onClose,
   onSave,
   isEdit,
+  isSaving,
 }) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -38,13 +42,12 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
   const formik = useFormik<IResourceData>({
     initialValues: getLearningResourceInitialData(isEdit, data),
     validationSchema,
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       const updatedValues = {
         ...values,
         dateUploaded: isEdit ? values.dateUploaded : new Date().toLocaleDateString(), // Only update if not in edit mode
       };
-      onSave(updatedValues);
-      onClose(null, true);
+      await onSave(updatedValues);
     },
   });
 
@@ -55,6 +58,37 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
   const handleRemoveAllFiles = (setFieldValue: (field: string, value: string) => void) => {
     setFieldValue('document', '');
   };
+
+  const { data: chapterOptionsData, isFetching: isChapterFetching } = useGetChaptersByStandardQuery(
+    { standardId: formik.values.className, subjectId: formik.values.subject },
+    { skip: !formik.values.className || !formik.values.subject }
+  );
+
+  const { data: subjectOptionsData, isFetching: isSubjectFetching } = useGetSubjectAssignmentsQuery(
+    { standardId: formik.values.className },
+    { skip: !formik.values.className }
+  );
+
+  const subjectOptions =
+    subjectOptionsData?.data?.items
+      ?.flatMap((item: any) => {
+        if (item.status === SubjectAssignmentStatus.Draft) return [];
+        return (item.subjects || []).map((subject: any) => ({
+          id: subject.subjectId || subject.id,
+          name: subject.subjectName || subject.subject?.name || 'Subject',
+        }));
+      })
+      .filter((subject: any) => subject.id) || [];
+
+  const chapterOptions = (
+    chapterOptionsData?.items ||
+    chapterOptionsData?.data?.items ||
+    chapterOptionsData ||
+    []
+  ).map((chapter: any) => ({
+    id: chapter.id,
+    name: chapter.chapterName || chapter.name || chapter.title || 'Chapter',
+  }));
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -69,10 +103,14 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                   <CustomSelect
                     options={allClass}
                     value={formik.values.className}
-                    onChange={(val) => formik.setFieldValue('className', val as string)}
+                    onChange={(val) => {
+                      formik.setFieldValue('className', val as string);
+                      formik.setFieldValue('subject', '');
+                      formik.setFieldValue('chapter', '');
+                    }}
                     label="Class *"
                     labelKey="name"
-                    valueKey="name"
+                    valueKey="id"
                     formControlProps={{ sx: { minWidth: 270, width: '100%' } }}
                     error={!!(formik.touched.className && formik.errors.className) || false}
                     helperText={(formik.touched.className && formik.errors.className) || ''}
@@ -86,14 +124,17 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 >
                   <CustomSelect
                     label="Subject *"
-                    options={[
-                      { value: 'Math', label: 'Math' },
-                      { value: 'English', label: 'English' },
-                      { value: 'Science', label: 'Science' },
-                    ]}
+                    options={subjectOptions}
                     name="subject"
                     value={formik.values.subject}
-                    onChange={(val) => formik.setFieldValue('subject', val as string)}
+                    onChange={(val) => {
+                      formik.setFieldValue('subject', val as string);
+                      formik.setFieldValue('chapter', '');
+                    }}
+                    isLoading={isSubjectFetching}
+                    disabled={!formik.values.className}
+                    labelKey="name"
+                    valueKey="id"
                     formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
                     error={!!(formik.touched.subject && formik.errors.subject) || false}
                     helperText={(formik.touched.subject && formik.errors.subject) || ''}
@@ -107,17 +148,14 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 >
                   <CustomSelect
                     label="Chapter"
-                    options={[
-                      { value: 'chapter1', label: 'Chapter 1' },
-                      { value: 'chapter2', label: 'Chapter 2' },
-                      { value: 'chapter3', label: 'Chapter 3' },
-                      { value: 'chapter4', label: 'Chapter 4' },
-                      { value: 'chapter5', label: 'Chapter 5' },
-                    ]}
+                    options={chapterOptions}
                     disabled={!formik.values.subject}
                     name="chapter"
                     value={formik.values.chapter || ''}
                     onChange={(val) => formik.setFieldValue('chapter', val as string)}
+                    isLoading={isChapterFetching}
+                    labelKey="name"
+                    valueKey="id"
                     formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
                     error={!!(formik.touched.chapter && formik.errors.chapter) || false}
                     helperText={(formik.touched.chapter && formik.errors.chapter) || ''}
@@ -176,6 +214,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
               type="submit"
               variant="contained"
               startIcon={<Iconify icon={data ? GlobalIcons.edit : GlobalIcons.submit} />}
+              disabled={isSaving}
               onClick={() => {
                 formik.handleSubmit();
               }}

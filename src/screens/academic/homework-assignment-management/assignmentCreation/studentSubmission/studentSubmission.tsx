@@ -14,16 +14,17 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import { useGetAssignmentSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 import { AssignmentSubmissionStatusOptions } from 'src/enums/assignment-submission-status';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
+import { useGetAssignmentSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 import {
   FeedbackStatusChip,
   EvaluationFilterBar,
   EvaluationStatusChip,
-  EvaluationActionButton,
   filterEvaluationRows,
   getEvaluationSummary,
+  EvaluationActionButton,
   EvaluationSummaryCards,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
 
@@ -181,209 +182,209 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         <EvaluationFilterBar value={activeFilter} onChange={setActiveFilter} />
       </Stack>
       <Box sx={{ mt: 1.5 }}>
-      <CustomizableTable
-        onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudents?.length > 0}
-        tableId="student-submissions"
-        noDataText="No Submission Data Found"
-        columns={[
-          // {
-          //   id: 'checkBox',
-          //   align: 'center',
-          //   minWidth: '60px',
-          //   isSort: false,
-          //   sticky: true,
-          //   isFilter: false,
-          //   label: '',
-          //   renderColumn() {
-          //     return (
-          //       <Checkbox
-          //         checked={
-          //           studentData?.length > 0 && selectedStudents?.length === studentData?.length
-          //         }
-          //         indeterminate={
-          //           selectedStudents?.length > 0 && selectedStudents?.length < studentData?.length
-          //         }
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents(studentData || []);
-          //           } else {
-          //             setSelectedStudents([]);
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          //   render(value, row) {
-          //     const isChecked = selectedStudents?.some((i: any) => i.id === row.id) || false;
+        <CustomizableTable
+          onSendNotification={handlerSendNotification}
+          showCheckbox={selectedStudents?.length > 0}
+          tableId="student-submissions"
+          noDataText="No Submission Data Found"
+          columns={[
+            // {
+            //   id: 'checkBox',
+            //   align: 'center',
+            //   minWidth: '60px',
+            //   isSort: false,
+            //   sticky: true,
+            //   isFilter: false,
+            //   label: '',
+            //   renderColumn() {
+            //     return (
+            //       <Checkbox
+            //         checked={
+            //           studentData?.length > 0 && selectedStudents?.length === studentData?.length
+            //         }
+            //         indeterminate={
+            //           selectedStudents?.length > 0 && selectedStudents?.length < studentData?.length
+            //         }
+            //         onChange={(e) => {
+            //           if (e.target.checked) {
+            //             setSelectedStudents(studentData || []);
+            //           } else {
+            //             setSelectedStudents([]);
+            //           }
+            //         }}
+            //       />
+            //     );
+            //   },
+            //   render(value, row) {
+            //     const isChecked = selectedStudents?.some((i: any) => i.id === row.id) || false;
 
-          //     return (
-          //       <Checkbox
-          //         checked={isChecked}
-          //         onChange={(e) => {
-          //           e.stopPropagation();
+            //     return (
+            //       <Checkbox
+            //         checked={isChecked}
+            //         onChange={(e) => {
+            //           e.stopPropagation();
 
-          //           if (e.target.checked) {
-          //             setSelectedStudents([...selectedStudents, row]);
-          //           } else {
-          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
-          {
-            id: 'studentName',
-            label: 'Student Name/GR No.',
-            align: 'left',
-            sticky: true,
-            minWidth: 190,
-            render: (value, row) => (
-              <Box>
-                <Typography variant="body2" fontWeight={500}>
-                  {value}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  ({row.grNumber})
-                </Typography>
-              </Box>
-            ),
-          },
-          {
-            id: 'rollNumber',
-            label: 'Roll No.',
-            align: 'left',
-            minWidth: 90,
-            filterType: 'number',
-          },
-          {
-            id: 'submissionType',
-            label: 'Type',
-            align: 'left',
-            minWidth: 100,
-          },
-          {
-            id: 'submissionDate',
-            label: 'Submission Date',
-            align: 'left',
-            minWidth: 160,
-            filterType: 'date',
-          },
-          {
-            id: 'dueDate',
-            label: 'Due Date',
-            align: 'left',
-            minWidth: 140,
-            filterType: 'date',
-          },
-          {
-            id: 'totalMarks',
-            label: 'Total Marks',
-            align: 'left',
-            minWidth: 130,
-            filterType: 'number',
-          },
-          {
-            id: 'marks',
-            label: 'Obtained Marks',
-            filterType: 'number',
-            minWidth: 150,
-            align: 'left',
-            render: (value, row) =>
-              value ? (
-                <Typography variant="caption" fontSize="13px">
-                  {value}
-                </Typography>
-              ) : (
-                <Typography variant="caption">-</Typography>
-              ),
-          },
-          {
-            id: 'feedback',
-            label: 'Feedback',
-            minWidth: 180,
-            align: 'left',
-            render: (value, row) => {
-              const text = value && value !== '-' ? value : null;
-              return (
-                <Box
-                  onClick={() => {
-                    setSelectedStudent({
-                      ...(row as TStudentGrade),
-                      totalMarks: resolveTotalMarks(row),
-                    });
-                    viewSubmissionDialog.onTrue();
-                  }}
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover': {
-                      backgroundColor: 'action.hover',
-                      borderRadius: 1,
-                    },
-                    p: 0.5,
-                  }}
-                >
-                  <CustomTooltip title={text || 'Click to add feedback'} arrow>
-                    <Typography
-                      variant="caption"
-                      fontSize="13px"
-                      noWrap
-                      sx={{
-                        maxWidth: 150,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        display: 'block',
-                        color: text ? 'text.primary' : 'text.secondary',
-                        fontStyle: text ? 'normal' : 'italic',
-                      }}
-                    >
-                      {text || 'Add feedback'}
-                    </Typography>
-                  </CustomTooltip>
+            //           if (e.target.checked) {
+            //             setSelectedStudents([...selectedStudents, row]);
+            //           } else {
+            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+            //           }
+            //         }}
+            //       />
+            //     );
+            //   },
+            // },
+            {
+              id: 'studentName',
+              label: 'Student Name/GR No.',
+              align: 'left',
+              sticky: true,
+              minWidth: 190,
+              render: (value, row) => (
+                <Box>
+                  <Typography variant="body2" fontWeight={500}>
+                    {value}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    ({row.grNumber})
+                  </Typography>
                 </Box>
-              );
+              ),
             },
-          },
-          {
-            id: 'submissionStatusLabel',
-            label: 'Submission Status',
-            filterType: 'enum',
-            enumOptions: AssignmentSubmissionStatusOptions,
-            align: 'left',
-            minWidth: 150,
+            {
+              id: 'rollNumber',
+              label: 'Roll No.',
+              align: 'left',
+              minWidth: 90,
+              filterType: 'number',
+            },
+            {
+              id: 'submissionType',
+              label: 'Type',
+              align: 'left',
+              minWidth: 100,
+            },
+            {
+              id: 'submissionDate',
+              label: 'Submission Date',
+              align: 'left',
+              minWidth: 160,
+              filterType: 'date',
+            },
+            {
+              id: 'dueDate',
+              label: 'Due Date',
+              align: 'left',
+              minWidth: 140,
+              filterType: 'date',
+            },
+            {
+              id: 'totalMarks',
+              label: 'Total Marks',
+              align: 'left',
+              minWidth: 130,
+              filterType: 'number',
+            },
+            {
+              id: 'marks',
+              label: 'Obtained Marks',
+              filterType: 'number',
+              minWidth: 150,
+              align: 'left',
+              render: (value, row) =>
+                value ? (
+                  <Typography variant="caption" fontSize="13px">
+                    {value}
+                  </Typography>
+                ) : (
+                  <Typography variant="caption">-</Typography>
+                ),
+            },
+            {
+              id: 'feedback',
+              label: 'Feedback',
+              minWidth: 180,
+              align: 'left',
+              render: (value, row) => {
+                const text = value && value !== '-' ? value : null;
+                return (
+                  <Box
+                    onClick={() => {
+                      setSelectedStudent({
+                        ...(row as TStudentGrade),
+                        totalMarks: resolveTotalMarks(row),
+                      });
+                      viewSubmissionDialog.onTrue();
+                    }}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                        borderRadius: 1,
+                      },
+                      p: 0.5,
+                    }}
+                  >
+                    <CustomTooltip title={text || 'Click to add feedback'} arrow>
+                      <Typography
+                        variant="caption"
+                        fontSize="13px"
+                        noWrap
+                        sx={{
+                          maxWidth: 150,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          display: 'block',
+                          color: text ? 'text.primary' : 'text.secondary',
+                          fontStyle: text ? 'normal' : 'italic',
+                        }}
+                      >
+                        {text || 'Add feedback'}
+                      </Typography>
+                    </CustomTooltip>
+                  </Box>
+                );
+              },
+            },
+            {
+              id: 'submissionStatusLabel',
+              label: 'Submission Status',
+              filterType: 'enum',
+              enumOptions: AssignmentSubmissionStatusOptions,
+              align: 'left',
+              minWidth: 150,
 
-            render(_value, row) {
-              return <EvaluationStatusChip row={row} />;
+              render(_value, row) {
+                return <EvaluationStatusChip row={row} />;
+              },
             },
-          },
-          {
-            id: 'evaluationStatus',
-            label: 'Evaluation Status',
-            sticky: true,
-            align: 'left',
-            minWidth: 150,
-            render(_value, row) {
-              return <FeedbackStatusChip row={row} />;
+            {
+              id: 'evaluationStatus',
+              label: 'Evaluation Status',
+              sticky: true,
+              align: 'left',
+              minWidth: 150,
+              render(_value, row) {
+                return <FeedbackStatusChip row={row} />;
+              },
             },
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            isSort: false,
-            isFilter: false,
-            align: 'center',
-            minWidth: 90,
-            sticky: true,
-            render(value, row) {
-              return <EvaluationActionButton row={row} canAdd={canAdd} onOpen={openStudent} />;
+            {
+              id: 'actions',
+              label: 'Actions',
+              isSort: false,
+              isFilter: false,
+              align: 'center',
+              minWidth: 90,
+              sticky: true,
+              render(value, row) {
+                return <EvaluationActionButton row={row} canAdd={canAdd} onOpen={openStudent} />;
+              },
             },
-          },
-        ]}
-        isLoading={isSubmissionsLoading || isFetching}
-        data={filteredData}
-      />
+          ]}
+          isLoading={isSubmissionsLoading || isFetching}
+          data={filteredData}
+        />
       </Box>
 
       {sendInstantNotificationDialogValue.value && (
@@ -424,6 +425,18 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         maxWidth="sm"
         hasForm={false}
       >
+        {selectedStudent && selectedClass && selectedSubject && selectedAssignment?.id && (
+          <Box sx={{ p: 2, pb: 0 }}>
+            <RubricEvaluationPanel
+              mode="assignment"
+              standardId={selectedClass}
+              subjectId={selectedSubject}
+              taskId={selectedAssignment.id}
+              taskTitle={selectedAssignment.title}
+              studentRow={selectedStudent}
+            />
+          </Box>
+        )}
         <AssignGrade
           data={selectedStudent}
           onClose={handleClose}

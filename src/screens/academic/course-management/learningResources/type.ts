@@ -10,10 +10,11 @@ export interface IResourceData {
 
 // Interface for props used in CreateLearningResources component
 export interface ICreateLearningResourcesProps {
-  onSave: (values: IResourceData) => void;
+  onSave: (values: IResourceData) => void | Promise<void>;
   onClose: (e: any, isSubmit: boolean) => void;
   data: IResourceData | null;
   isEdit: boolean;
+  isSaving?: boolean;
 }
 
 // Interface defining the props for the LearningResourceCard component
