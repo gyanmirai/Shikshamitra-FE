@@ -27,6 +27,20 @@ export type EnrollmentPersona =
 
 export type PipelineView = 'board' | 'list';
 export type ScoreBandFilter = 'all' | 'hot' | 'warm' | 'needsAttention';
+export type EnrollmentSettingsPanel =
+  | 'cycle'
+  | 'pipeline'
+  | 'capture'
+  | 'forms'
+  | 'scoring'
+  | 'routing'
+  | 'registration'
+  | 'documents'
+  | 'routes'
+  | 'policy-packs'
+  | 'compliance'
+  | 'templates'
+  | 'providers';
 
 export type EnrollmentWorkspaceState = {
   cycle?: string;
@@ -49,6 +63,7 @@ export type EnrollmentWorkspaceState = {
   eligibility?: AdmissionCrmEligibilityDecision;
   from?: string;
   to?: string;
+  settingsPanel?: EnrollmentSettingsPanel;
 };
 
 export type EnrollmentWorkspaceStatePatch = Partial<
@@ -85,6 +100,21 @@ const eligibilityDecisions = enumValues<AdmissionCrmEligibilityDecision>(
   AdmissionCrmEligibilityDecision
 );
 const scoreBands = new Set<ScoreBandFilter>(['all', 'hot', 'warm', 'needsAttention']);
+const settingsPanels = new Set<EnrollmentSettingsPanel>([
+  'cycle',
+  'pipeline',
+  'capture',
+  'forms',
+  'scoring',
+  'routing',
+  'registration',
+  'documents',
+  'routes',
+  'policy-packs',
+  'compliance',
+  'templates',
+  'providers',
+]);
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
 const parseEnum = <T extends number>(value: string | null, values: Set<T>) => {
@@ -148,6 +178,7 @@ export const parseEnrollmentWorkspaceState = (
   const scoreValue = searchParams.get('score') as ScoreBandFilter | null;
   const fromValue = searchParams.get('from');
   const toValue = searchParams.get('to');
+  const settingsPanelValue = searchParams.get('panel') as EnrollmentSettingsPanel | null;
 
   return {
     ...defaults,
@@ -176,6 +207,10 @@ export const parseEnrollmentWorkspaceState = (
       parseEnum(searchParams.get('eligibility'), eligibilityDecisions) ?? defaults.eligibility,
     from: fromValue && datePattern.test(fromValue) ? fromValue : defaults.from,
     to: toValue && datePattern.test(toValue) ? toValue : defaults.to,
+    settingsPanel:
+      settingsPanelValue && settingsPanels.has(settingsPanelValue)
+        ? settingsPanelValue
+        : defaults.settingsPanel,
   };
 };
 
@@ -205,7 +240,17 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
   set('eligibility', state.eligibility);
   set('from', state.from);
   set('to', state.to);
+  set('panel', state.settingsPanel);
   return params;
+};
+
+export const areSearchParamsEquivalent = (left: URLSearchParams, right: URLSearchParams) => {
+  const normalize = (params: URLSearchParams) =>
+    Array.from(params.entries()).sort(([leftKey, leftValue], [rightKey, rightValue]) =>
+      leftKey === rightKey ? leftValue.localeCompare(rightValue) : leftKey.localeCompare(rightKey)
+    );
+
+  return JSON.stringify(normalize(left)) === JSON.stringify(normalize(right));
 };
 
 export const migrateLegacyWorkspaceFilters = (

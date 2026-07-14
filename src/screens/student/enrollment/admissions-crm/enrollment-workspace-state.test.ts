@@ -6,6 +6,7 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import {
+  areSearchParamsEquivalent,
   getPersonaWorkspaceDefaults,
   parseEnrollmentWorkspaceState,
   migrateLegacyWorkspaceFilters,
@@ -13,10 +14,25 @@ import {
 } from './enrollment-workspace-state';
 
 describe('Enrollment workspace URL state', () => {
+  it('treats query ordering as equivalent to avoid redundant route replacement', () => {
+    expect(
+      areSearchParamsEquivalent(
+        new URLSearchParams('cycle=cycle-1&page=2&view=list&stage=0'),
+        new URLSearchParams('cycle=cycle-1&view=list&stage=0&page=2')
+      )
+    ).toBe(true);
+    expect(
+      areSearchParamsEquivalent(
+        new URLSearchParams('cycle=cycle-1&page=2'),
+        new URLSearchParams('cycle=cycle-1&page=3')
+      )
+    ).toBe(false);
+  });
+
   it('round trips non-sensitive workspace state', () => {
     const state = parseEnrollmentWorkspaceState(
       new URLSearchParams(
-        'cycle=cycle-1&view=list&page=3&stage=2&channel=1&owner=staff-1&urgent=1&applicant=lead-1'
+        'cycle=cycle-1&view=list&page=3&stage=2&channel=1&owner=staff-1&urgent=1&applicant=lead-1&panel=forms'
       )
     );
 
@@ -29,18 +45,21 @@ describe('Enrollment workspace URL state', () => {
       owner: 'staff-1',
       urgent: true,
       applicant: 'lead-1',
+      settingsPanel: 'forms',
     });
     expect(serializeEnrollmentWorkspaceState(state).get('page')).toBe('3');
+    expect(serializeEnrollmentWorkspaceState(state).get('panel')).toBe('forms');
   });
 
   it('rejects invalid enum, date, and pagination values', () => {
     const state = parseEnrollmentWorkspaceState(
-      new URLSearchParams('stage=999&queue=999&page=-2&from=12-07-2026')
+      new URLSearchParams('stage=999&queue=999&page=-2&from=12-07-2026&panel=unknown')
     );
     expect(state.stage).toBeUndefined();
     expect(state.queue).toBeUndefined();
     expect(state.page).toBe(1);
     expect(state.from).toBeUndefined();
+    expect(state.settingsPanel).toBeUndefined();
   });
 
   it('migrates non-sensitive legacy filters and excludes free-text search', () => {

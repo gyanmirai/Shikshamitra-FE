@@ -8,6 +8,15 @@ interface UseTableConfigProps {
   defaultSearchTerm?: string;
 }
 
+export const reconcileColumnVisibility = (columns: IColumn[], current: Record<string, boolean>) =>
+  columns.reduce<Record<string, boolean>>(
+    (acc, column) => ({
+      ...acc,
+      [column.id]: current[column.id] ?? !column.defaultHidden,
+    }),
+    {}
+  );
+
 export const useTableConfig = ({
   columns,
   defaultRowsPerPage = 10,

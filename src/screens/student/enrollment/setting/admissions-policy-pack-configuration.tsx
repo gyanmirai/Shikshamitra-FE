@@ -1,13 +1,11 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
 import type {
   AdmissionCrmPolicyRuleDto,
   AdmissionCrmPolicySourceDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import { Add, Send, Gavel, Delete, Publish, Approval, LibraryAdd } from '@mui/icons-material';
@@ -40,6 +38,9 @@ import {
   useInstallAdmissionCrmOfficialPolicyBaselinesMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
+import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
+
 const today = () => new Date().toISOString().slice(0, 10);
 const nextYear = () => {
   const value = new Date();
@@ -68,6 +69,18 @@ const newRule = (): AdmissionCrmPolicyRuleDto => ({
   sourceUrl: '',
 });
 
+const createPolicyPackDefaults = () => ({
+  code: '',
+  name: '',
+  jurisdiction: 'Gujarat',
+  board: 'CBSE',
+  effectiveFrom: today(),
+  effectiveUntil: nextYear(),
+  reviewDueAt: nextYear(),
+  sources: [newSource()],
+  rules: [newRule()],
+});
+
 const statusLabel: Record<AdmissionCrmPolicyPackStatus, string> = {
   [AdmissionCrmPolicyPackStatus.Draft]: 'Draft',
   [AdmissionCrmPolicyPackStatus.ReviewPending]: 'Review pending',
@@ -86,18 +99,17 @@ const readError = (error: unknown) => {
 };
 
 export default function AdmissionsPolicyPackConfiguration() {
-  const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id) as
-    | string
-    | undefined;
-  const [code, setCode] = useState('');
-  const [name, setName] = useState('');
-  const [jurisdiction, setJurisdiction] = useState('Gujarat');
-  const [board, setBoard] = useState('CBSE');
-  const [effectiveFrom, setEffectiveFrom] = useState(today);
-  const [effectiveUntil, setEffectiveUntil] = useState(nextYear);
-  const [reviewDueAt, setReviewDueAt] = useState(nextYear);
-  const [sources, setSources] = useState<AdmissionCrmPolicySourceDto[]>([newSource()]);
-  const [rules, setRules] = useState<AdmissionCrmPolicyRuleDto[]>([newRule()]);
+  const { academicYearId } = useEnrollmentWorkspace();
+  const [defaults] = useState(createPolicyPackDefaults);
+  const [code, setCode] = useState(defaults.code);
+  const [name, setName] = useState(defaults.name);
+  const [jurisdiction, setJurisdiction] = useState(defaults.jurisdiction);
+  const [board, setBoard] = useState(defaults.board);
+  const [effectiveFrom, setEffectiveFrom] = useState(defaults.effectiveFrom);
+  const [effectiveUntil, setEffectiveUntil] = useState(defaults.effectiveUntil);
+  const [reviewDueAt, setReviewDueAt] = useState(defaults.reviewDueAt);
+  const [sources, setSources] = useState<AdmissionCrmPolicySourceDto[]>(defaults.sources);
+  const [rules, setRules] = useState<AdmissionCrmPolicyRuleDto[]>(defaults.rules);
 
   const packs = useGetAdmissionCrmPolicyPacksQuery({ maxResultCount: 200 });
   const adoptions = useGetAdmissionCrmPolicyAdoptionsQuery(
@@ -112,12 +124,44 @@ export default function AdmissionsPolicyPackConfiguration() {
   const [installBaselines, installBaselineState] =
     useInstallAdmissionCrmOfficialPolicyBaselinesMutation();
 
+  const resetEditor = () => {
+    setCode(defaults.code);
+    setName(defaults.name);
+    setJurisdiction(defaults.jurisdiction);
+    setBoard(defaults.board);
+    setEffectiveFrom(defaults.effectiveFrom);
+    setEffectiveUntil(defaults.effectiveUntil);
+    setReviewDueAt(defaults.reviewDueAt);
+    setSources(defaults.sources.map((source) => ({ ...source })));
+    setRules(defaults.rules.map((rule) => ({ ...rule })));
+  };
+  const isEditorDirty =
+    JSON.stringify({
+      code,
+      name,
+      jurisdiction,
+      board,
+      effectiveFrom,
+      effectiveUntil,
+      reviewDueAt,
+      sources,
+      rules,
+    }) !== JSON.stringify(defaults);
+
+  useEnrollmentSettingsDirtyState({
+    source: 'policy-pack-editor',
+    dirty: isEditorDirty,
+    onDiscard: resetEditor,
+  });
+
   const run = async (action: () => Promise<unknown>, message: string) => {
     try {
       await action();
       shikshaMitraToast.success({ message });
+      return true;
     } catch (error) {
       shikshaMitraToast.error({ message: readError(error) });
+      return false;
     }
   };
 
@@ -130,7 +174,7 @@ export default function AdmissionsPolicyPackConfiguration() {
       items.map((item, current) => (current === index ? { ...item, ...values } : item))
     );
 
-  const save = () => {
+  const save = async () => {
     if (
       !code.trim() ||
       !name.trim() ||
@@ -142,7 +186,7 @@ export default function AdmissionsPolicyPackConfiguration() {
       });
       return;
     }
-    run(
+    const created = await run(
       () =>
         createPack({
           code: code.trim().toUpperCase(),
@@ -157,7 +201,30 @@ export default function AdmissionsPolicyPackConfiguration() {
         }).unwrap(),
       'Policy pack draft created.'
     );
+    if (created) resetEditor();
   };
+
+  if (packs.isError || adoptions.isError) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <LoadingButton
+            size="small"
+            color="inherit"
+            onClick={() => {
+              packs.refetch();
+              if (academicYearId) adoptions.refetch();
+            }}
+          >
+            Retry
+          </LoadingButton>
+        }
+      >
+        Policy versions could not be loaded.
+      </Alert>
+    );
+  }
 
   return (
     <Stack spacing={1.25}>
@@ -477,7 +544,7 @@ export default function AdmissionsPolicyPackConfiguration() {
             <Chip size="small" label={`${packs.data?.totalCount || 0} version(s)`} />
           </Stack>
           {(packs.isFetching || adoptions.isFetching) && <LinearProgress />}
-          {!packs.data?.items.length && (
+          {!packs.isFetching && !packs.data?.items.length && (
             <Alert severity="info">No policy packs are configured.</Alert>
           )}
           {(packs.data?.items || []).map((pack) => {

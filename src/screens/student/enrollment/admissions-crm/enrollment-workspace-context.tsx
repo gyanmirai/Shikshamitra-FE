@@ -10,6 +10,7 @@ import { useMemo, useEffect, useContext, useCallback, createContext } from 'reac
 
 import {
   getWorkspaceFromPathname,
+  areSearchParamsEquivalent,
   getPersonaWorkspaceDefaults,
   parseEnrollmentWorkspaceState,
   migrateLegacyWorkspaceFilters,
@@ -110,10 +111,10 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
     if (!cycle && !Object.keys(legacy).length) return;
 
     const next = { ...defaults, ...legacy, ...state, cycle, page: state.page || 1 };
-    const canonical = serializeEnrollmentWorkspaceState(
-      next as EnrollmentWorkspaceState
-    ).toString();
-    if (canonical !== current.toString()) navigate(next as EnrollmentWorkspaceState, 'replace');
+    const canonical = serializeEnrollmentWorkspaceState(next as EnrollmentWorkspaceState);
+    if (!areSearchParamsEquivalent(canonical, current)) {
+      navigate(next as EnrollmentWorkspaceState, 'replace');
+    }
   }, [currentYear?.id, defaults, navigate, searchParams, state, workspace]);
 
   const value = useMemo<EnrollmentWorkspaceContextValue>(

@@ -4,6 +4,8 @@ import {
   createRegistrationTemplate,
   validateRegistrationTemplate,
   normalizeRegistrationTemplate,
+  validateRegistrationTemplateStep,
+  findRegistrationTemplateValidationIssue,
 } from './admissions-registration-configuration-utils';
 
 describe('admissions registration configuration', () => {
@@ -12,6 +14,16 @@ describe('admissions registration configuration', () => {
     expect(template.sections).toHaveLength(1);
     expect(template.sections[0].fields).toHaveLength(1);
     expect(template.allowPartialSave).toBe(true);
+  });
+
+  it('validates the current guided-editor step before advancing', () => {
+    const template = createRegistrationTemplate();
+    expect(validateRegistrationTemplateStep(template, 0)).toContain('Template name is required.');
+    expect(findRegistrationTemplateValidationIssue(template)?.step).toBe(0);
+
+    template.name = 'Primary registration';
+    expect(validateRegistrationTemplateStep(template, 0)).toEqual([]);
+    expect(findRegistrationTemplateValidationIssue(template)?.step).toBe(1);
   });
 
   it('rejects duplicate field keys and broken conditions', () => {

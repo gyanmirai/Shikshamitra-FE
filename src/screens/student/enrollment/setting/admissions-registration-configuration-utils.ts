@@ -49,14 +49,21 @@ export const createRegistrationTemplate = (): AdmissionCrmRegistrationTemplateUp
   notes: null,
 });
 
-export const validateRegistrationTemplate = (
-  value: AdmissionCrmRegistrationTemplateUpsertDto
+export type RegistrationTemplateEditorStep = 0 | 1;
+
+export const validateRegistrationTemplateStep = (
+  value: AdmissionCrmRegistrationTemplateUpsertDto,
+  step: RegistrationTemplateEditorStep
 ): string[] => {
   const errors: string[] = [];
-  if (!value.name.trim()) errors.push('Template name is required.');
-  if (value.linkExpiryDays < 1 || value.linkExpiryDays > 365) {
-    errors.push('Link expiry must be between 1 and 365 days.');
+  if (step === 0) {
+    if (!value.name.trim()) errors.push('Template name is required.');
+    if (value.linkExpiryDays < 1 || value.linkExpiryDays > 365) {
+      errors.push('Link expiry must be between 1 and 365 days.');
+    }
+    return errors;
   }
+
   if (!value.sections.length) errors.push('At least one section is required.');
   const sectionKeys = new Set<string>();
   const fieldKeys = new Set<string>();
@@ -92,6 +99,25 @@ export const validateRegistrationTemplate = (
       }
     });
   return errors;
+};
+
+export const validateRegistrationTemplate = (
+  value: AdmissionCrmRegistrationTemplateUpsertDto
+): string[] => {
+  const ruleErrors = validateRegistrationTemplateStep(value, 0);
+  const structureErrors = validateRegistrationTemplateStep(value, 1);
+  return [...ruleErrors, ...structureErrors];
+};
+
+export const findRegistrationTemplateValidationIssue = (
+  value: AdmissionCrmRegistrationTemplateUpsertDto
+) => {
+  const steps: RegistrationTemplateEditorStep[] = [0, 1];
+  return steps
+    .map((step) => ({ step, message: validateRegistrationTemplateStep(value, step)[0] }))
+    .find((issue): issue is { step: RegistrationTemplateEditorStep; message: string } =>
+      Boolean(issue.message)
+    );
 };
 
 export const normalizeRegistrationTemplate = (

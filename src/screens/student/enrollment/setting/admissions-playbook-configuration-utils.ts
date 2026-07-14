@@ -140,37 +140,64 @@ export const prepareAdmissionPlaybookPayload = (
   notes: form.notes?.trim() || null,
 });
 
-export const validateAdmissionPlaybook = (form: AdmissionCrmPlaybookUpsertDto): string[] => {
+export type AdmissionPlaybookEditorStep = 0 | 1 | 2 | 3 | 4;
+
+export const validateAdmissionPlaybookStep = (
+  form: AdmissionCrmPlaybookUpsertDto,
+  step: AdmissionPlaybookEditorStep
+): string[] => {
   const errors: string[] = [];
-  if (!form.name.trim()) errors.push('Playbook name is required.');
-  if (!form.stages.length) errors.push('At least one stage is required.');
 
-  const scopeValues = Object.values(form.applicability).filter((value) => value?.trim());
-  if (form.isFallback && scopeValues.length) {
-    errors.push('A fallback playbook cannot have applicability filters.');
-  }
-  if (!form.isFallback && !scopeValues.length) {
-    errors.push('Add at least one applicability filter or mark the playbook as fallback.');
-  }
-
-  const stageCodes = form.stages.map((stage) => stage.code.trim().toLowerCase());
-  if (new Set(stageCodes).size !== stageCodes.length) errors.push('Stage codes must be unique.');
-
-  form.examDefinitions.forEach((exam) => {
-    const weight = exam.components.reduce(
-      (total, component) => total + Number(component.weightPercentage || 0),
-      0
-    );
-    if (exam.components.length && weight !== 100) {
-      errors.push(`${exam.name || exam.code || 'Exam'} component weights must total 100%.`);
+  if (step === 0) {
+    if (!form.name.trim()) errors.push('Playbook name is required.');
+    const scopeValues = Object.values(form.applicability).filter((value) => value?.trim());
+    if (form.isFallback && scopeValues.length) {
+      errors.push('A fallback playbook cannot have applicability filters.');
     }
-  });
-
-  form.slotTemplates.forEach((slot) => {
-    if (slot.reportingTime > slot.startTime || slot.startTime >= slot.endTime) {
-      errors.push(`${slot.name || slot.code || 'Slot'} has an invalid time sequence.`);
+    if (!form.isFallback && !scopeValues.length) {
+      errors.push('Add at least one applicability filter or mark the playbook as fallback.');
     }
-  });
+  }
+
+  if (step === 1) {
+    if (!form.stages.length) errors.push('At least one stage is required.');
+    const stageCodes = form.stages.map((stage) => stage.code.trim().toLowerCase());
+    if (new Set(stageCodes).size !== stageCodes.length) errors.push('Stage codes must be unique.');
+  }
+
+  if (step === 3) {
+    form.examDefinitions.forEach((exam) => {
+      const weight = exam.components.reduce(
+        (total, component) => total + Number(component.weightPercentage || 0),
+        0
+      );
+      if (exam.components.length && weight !== 100) {
+        errors.push(`${exam.name || exam.code || 'Exam'} component weights must total 100%.`);
+      }
+    });
+  }
+
+  if (step === 4) {
+    form.slotTemplates.forEach((slot) => {
+      if (slot.reportingTime > slot.startTime || slot.startTime >= slot.endTime) {
+        errors.push(`${slot.name || slot.code || 'Slot'} has an invalid time sequence.`);
+      }
+    });
+  }
 
   return errors;
 };
+
+export const findAdmissionPlaybookValidationIssue = (form: AdmissionCrmPlaybookUpsertDto) => {
+  const steps: AdmissionPlaybookEditorStep[] = [0, 1, 2, 3, 4];
+  return steps
+    .map((step) => ({ step, message: validateAdmissionPlaybookStep(form, step)[0] }))
+    .find((issue): issue is { step: AdmissionPlaybookEditorStep; message: string } =>
+      Boolean(issue.message)
+    );
+};
+
+export const validateAdmissionPlaybook = (form: AdmissionCrmPlaybookUpsertDto): string[] =>
+  ([0, 1, 2, 3, 4] as AdmissionPlaybookEditorStep[]).flatMap((step) =>
+    validateAdmissionPlaybookStep(form, step)
+  );

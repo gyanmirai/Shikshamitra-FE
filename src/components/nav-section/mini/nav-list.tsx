@@ -76,6 +76,7 @@ export function NavList({
       open={data.children && openMenu}
       externalLink={isExternalLink(data?.path || '')}
       enabledRootRedirect={enabledRootRedirect}
+      preserveQueryParams={data.preserveQueryParams}
       // styles
       slotProps={depth === 1 ? slotProps?.rootItem : slotProps?.subItem}
       // actions

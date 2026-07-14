@@ -1,9 +1,6 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Add, Send, Publish } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
@@ -29,6 +26,9 @@ import {
   useGetAdmissionCrmIdentifierGovernanceQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
+import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
+
 const today = () => new Date().toISOString().slice(0, 10);
 const nextYear = () => {
   const d = new Date();
@@ -38,20 +38,31 @@ const nextYear = () => {
 const iso = (value: string) => new Date(`${value}T00:00:00Z`).toISOString();
 const labels = ['Draft', 'Approval pending', 'Published', 'Retired'];
 
+const numberSeriesDefaults = {
+  code: 'GR-MAIN',
+  name: 'General Register Number',
+  prefix: 'GR-',
+  suffix: '',
+  padding: '6',
+  startingSequence: '1',
+  maximumSequence: '',
+  effectiveFrom: today(),
+  effectiveUntil: nextYear(),
+  placementKey: '',
+};
+
 export default function AdmissionsNumberSeriesConfiguration() {
-  const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id) as
-    | string
-    | undefined;
-  const [code, setCode] = useState('GR-MAIN');
-  const [name, setName] = useState('General Register Number');
-  const [prefix, setPrefix] = useState('GR-');
-  const [suffix, setSuffix] = useState('');
-  const [padding, setPadding] = useState('6');
-  const [startingSequence, setStartingSequence] = useState('1');
-  const [maximumSequence, setMaximumSequence] = useState('');
-  const [effectiveFrom, setEffectiveFrom] = useState(today);
-  const [effectiveUntil, setEffectiveUntil] = useState(nextYear);
-  const [placementKey, setPlacementKey] = useState('');
+  const { academicYearId } = useEnrollmentWorkspace();
+  const [code, setCode] = useState(numberSeriesDefaults.code);
+  const [name, setName] = useState(numberSeriesDefaults.name);
+  const [prefix, setPrefix] = useState(numberSeriesDefaults.prefix);
+  const [suffix, setSuffix] = useState(numberSeriesDefaults.suffix);
+  const [padding, setPadding] = useState(numberSeriesDefaults.padding);
+  const [startingSequence, setStartingSequence] = useState(numberSeriesDefaults.startingSequence);
+  const [maximumSequence, setMaximumSequence] = useState(numberSeriesDefaults.maximumSequence);
+  const [effectiveFrom, setEffectiveFrom] = useState(numberSeriesDefaults.effectiveFrom);
+  const [effectiveUntil, setEffectiveUntil] = useState(numberSeriesDefaults.effectiveUntil);
+  const [placementKey, setPlacementKey] = useState(numberSeriesDefaults.placementKey);
   const [auditSeriesId, setAuditSeriesId] = useState('');
   const series = useGetAdmissionCrmNumberSeriesQuery(
     { academicYearId: academicYearId || '' },
@@ -72,21 +83,54 @@ export default function AdmissionsNumberSeriesConfiguration() {
     (x) => `${x.educationBoardId}:${x.academicMediumId}:${x.standardId}` === placementKey
   );
 
+  const resetEditor = () => {
+    setCode(numberSeriesDefaults.code);
+    setName(numberSeriesDefaults.name);
+    setPrefix(numberSeriesDefaults.prefix);
+    setSuffix(numberSeriesDefaults.suffix);
+    setPadding(numberSeriesDefaults.padding);
+    setStartingSequence(numberSeriesDefaults.startingSequence);
+    setMaximumSequence(numberSeriesDefaults.maximumSequence);
+    setEffectiveFrom(numberSeriesDefaults.effectiveFrom);
+    setEffectiveUntil(numberSeriesDefaults.effectiveUntil);
+    setPlacementKey(numberSeriesDefaults.placementKey);
+  };
+
+  const isEditorDirty =
+    code !== numberSeriesDefaults.code ||
+    name !== numberSeriesDefaults.name ||
+    prefix !== numberSeriesDefaults.prefix ||
+    suffix !== numberSeriesDefaults.suffix ||
+    padding !== numberSeriesDefaults.padding ||
+    startingSequence !== numberSeriesDefaults.startingSequence ||
+    maximumSequence !== numberSeriesDefaults.maximumSequence ||
+    effectiveFrom !== numberSeriesDefaults.effectiveFrom ||
+    effectiveUntil !== numberSeriesDefaults.effectiveUntil ||
+    placementKey !== numberSeriesDefaults.placementKey;
+
+  useEnrollmentSettingsDirtyState({
+    source: 'number-series-editor',
+    dirty: isEditorDirty,
+    onDiscard: resetEditor,
+  });
+
   const run = async (action: () => Promise<unknown>, message: string) => {
     try {
       await action();
       shikshaMitraToast.success({ message });
+      return true;
     } catch (error) {
       const data =
         typeof error === 'object' && error && 'data' in error
           ? (error as { data?: { errorCode?: string } }).data
           : undefined;
       shikshaMitraToast.error({ message: data?.errorCode || 'Number series action failed.' });
+      return false;
     }
   };
-  const save = () => {
+  const save = async () => {
     if (!academicYearId || !code.trim() || !name.trim()) return;
-    run(
+    const created = await run(
       () =>
         create({
           academicYearId,
@@ -108,6 +152,7 @@ export default function AdmissionsNumberSeriesConfiguration() {
         }).unwrap(),
       'Number series draft created.'
     );
+    if (created) resetEditor();
   };
 
   const scopeOptions = Array.from(
@@ -118,6 +163,29 @@ export default function AdmissionsNumberSeriesConfiguration() {
       ])
     ).entries()
   );
+
+  if (series.isError || placements.isError) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <LoadingButton
+            size="small"
+            color="inherit"
+            onClick={() => {
+              series.refetch();
+              placements.refetch();
+            }}
+          >
+            Retry
+          </LoadingButton>
+        }
+      >
+        Number series configuration could not be loaded.
+      </Alert>
+    );
+  }
+
   return (
     <Stack spacing={1.25}>
       <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
@@ -222,7 +290,7 @@ export default function AdmissionsNumberSeriesConfiguration() {
         <Stack spacing={1}>
           <Typography variant="subtitle2">Series register</Typography>
           {series.isFetching && <LinearProgress />}
-          {!series.data?.length && (
+          {!series.isFetching && !series.data?.length && (
             <Alert severity="info">No activation number series are configured.</Alert>
           )}
           {(series.data || []).map((item) => (
@@ -284,6 +352,18 @@ export default function AdmissionsNumberSeriesConfiguration() {
             </Stack>
           ))}
           {governance.isFetching && <LinearProgress />}
+          {governance.isError && (
+            <Alert
+              severity="error"
+              action={
+                <LoadingButton size="small" color="inherit" onClick={() => governance.refetch()}>
+                  Retry
+                </LoadingButton>
+              }
+            >
+              Identifier audit details could not be loaded.
+            </Alert>
+          )}
           {governance.data && (
             <Stack direction="row" gap={0.75} flexWrap="wrap">
               <Chip size="small" label={`Allocated ${governance.data.allocatedCount}`} />
