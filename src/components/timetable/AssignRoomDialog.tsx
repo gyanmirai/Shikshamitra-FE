@@ -2,6 +2,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import React, { useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
+import { useGetRoomAvailabilityQuery } from 'src/redux/academicAPI/timetableApi/roomAvailabilityApi';
 import {
   Box,
   Button,
@@ -101,6 +102,60 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
     type: 'query',
     currentQueryAndMutation: useGetRoomsQuery,
   });
+
+  const currentSlot = open ? slots[open.day]?.[open.slotIndex] : null;
+
+  const queryDate = React.useMemo(() => {
+    if (!open) return '';
+    const dayOfWeek = open.day;
+    const dayIndexMap: Record<string, number> = {
+      SUNDAY: 0,
+      MONDAY: 1,
+      TUESDAY: 2,
+      WEDNESDAY: 3,
+      THURSDAY: 4,
+      FRIDAY: 5,
+      SATURDAY: 6,
+    };
+    const targetDayIndex = dayIndexMap[dayOfWeek.toUpperCase()] ?? 1;
+    const result = new Date();
+    const currentDayIndex = result.getDay();
+    const distance = targetDayIndex - currentDayIndex;
+    result.setDate(result.getDate() + distance);
+
+    const year = result.getFullYear();
+    const month = String(result.getMonth() + 1).padStart(2, '0');
+    const dStr = String(result.getDate()).padStart(2, '0');
+    return `${year}-${month}-${dStr}`;
+  }, [open]);
+
+  const queryParams = React.useMemo(() => {
+    if (!open || !currentSlot) return null;
+
+    const formatTime = (t: string) => {
+      if (!t) return undefined;
+      const parts = t.split(':');
+      if (parts.length === 2) return `${t}:00`;
+      return t;
+    };
+
+    return {
+      date: queryDate,
+      startTime: formatTime(currentSlot.startTime),
+      endTime: formatTime(currentSlot.endTime),
+      includeOccupied: true,
+    };
+  }, [open, currentSlot, queryDate]);
+
+  const { data: availableRoomsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomAvailabilityQuery,
+    params: queryParams,
+    options: {
+      skip: !queryParams,
+    },
+  });
+
   const [selectedIds, setSelectedIds] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [applyToAllSlots, setApplyToAllSlots] = useState<Record<string, boolean>>({});
@@ -121,7 +176,25 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
     }
   }
 
-  const roomList: any[] = rooms?.items ?? [];
+  const roomList: any[] = React.useMemo(() => {
+    if (availableRoomsData && availableRoomsData.length > 0) {
+      return availableRoomsData.map((r: any) => ({
+        id: r.roomId,
+        roomName: r.roomName,
+        buildingName: r.buildingName,
+        floorName: r.floorName,
+        status: r.status,
+      }));
+    }
+    return (rooms?.items ?? []).map((r: any) => ({
+      id: r.id,
+      roomName: r.roomName,
+      buildingName: r.buildingName,
+      floorName: r.floorName,
+      status: 'available',
+    }));
+  }, [availableRoomsData, rooms]);
+
   const splitSubjects = open ? splitPipeSubjects(open.subjects) : [];
 
   const handleChange = useCallback((subjectId: string, value: any) => {
@@ -209,7 +282,16 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
                 <Autocomplete
                   fullWidth
                   size="small"
-                  options={roomList}
+                  options={roomList.filter((room) => {
+                    const otherSelectedRoomIds = Object.entries(selectedIds)
+                      .filter(([subjectId]) => subjectId !== sub.subjectId)
+                      .map(([, roomId]) => roomId)
+                      .filter(Boolean);
+                    if (otherSelectedRoomIds.includes(room.id)) {
+                      return false;
+                    }
+                    return room.status === 'available' || selectedIds[sub.subjectId] === room.id;
+                  })}
                   getOptionLabel={(option: any) =>
                     `${option.buildingName} - ${option.floorName} - ${option?.roomName}` || ''
                   }

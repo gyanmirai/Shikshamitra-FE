@@ -204,7 +204,8 @@ const AutoFilledField = ({ label, value }: { label: string; value: string }) => 
   />
 );
 
-const normalizeText = (value?: string | null) => value?.trim().toLowerCase() || '';
+const normalizeText = (value?: string | null) =>
+  value?.trim().toLowerCase().split(/\s+/).filter(Boolean).join(' ') || '';
 
 const hasDuplicateLessonTopic = (form: LessonFormState, lessonPlans: LessonPlanRow[]) => {
   const topic = normalizeText(form.topic);
@@ -667,7 +668,11 @@ const AddLessonPlanModal = ({
                 value={form.chapterName}
                 onChange={(v) => handleChapterChange(v as string)}
                 error={showValidation && (!form.chapterId || !form.chapterName)}
-                helperText={showValidation && (!form.chapterId || !form.chapterName) ? 'Chapter is required' : ''}
+                helperText={
+                  showValidation && (!form.chapterId || !form.chapterName)
+                    ? 'Chapter is required'
+                    : ''
+                }
               />
 
               <TextField

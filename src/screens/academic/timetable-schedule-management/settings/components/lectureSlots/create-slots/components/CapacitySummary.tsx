@@ -64,7 +64,7 @@ export default function CapacitySummary({ slotConfigurations }: CapacitySummaryP
     >
       <Grid container spacing={1.5}>
         {items.map((item) => (
-          <Grid key={item.label} size={{ xs: 6, sm: 12 / items.length }}>
+          <Grid key={item.label} size={{ xs: 6, sm: 12 / items.length }} sx={{ textAlign: 'center' }}>
             <Typography
               variant="h6"
               fontWeight={700}

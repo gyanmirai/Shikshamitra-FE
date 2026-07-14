@@ -99,6 +99,18 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           const nameError = nameEmpty ? 'Subject name is required' : dupError;
           const colorError = showErrors && !row.color;
 
+          let sortOrderError = null;
+          if (showErrors && row.sortOrder !== '') {
+            const num = Number(row.sortOrder);
+            if (Number.isNaN(num) || !Number.isInteger(num)) {
+              sortOrderError = 'Must be an integer';
+            } else if (num < 1) {
+              sortOrderError = 'Must be at least 1';
+            } else if (num > 999999) {
+              sortOrderError = 'Max 999999';
+            }
+          }
+
           return (
             <Box
               key={row.tempId}
@@ -106,7 +118,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 p: 2,
                 borderRadius: 1.5,
                 border: '1px solid',
-                borderColor: nameError || colorError ? 'error.light' : 'divider',
+                borderColor: nameError || colorError || sortOrderError ? 'error.light' : 'divider',
                 bgcolor: 'background.paper',
                 transition: 'border-color 0.2s',
               }}
@@ -251,7 +263,9 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                   label="Sort Order"
                   value={row.sortOrder}
                   disabled={isSaving}
-                  inputProps={{ min: 0 }}
+                  inputProps={{ min: 1, max: 999999 }}
+                  error={Boolean(sortOrderError)}
+                  helperText={sortOrderError || ' '}
                   onChange={(e) => updateRow(row.tempId, 'sortOrder', e.target.value)}
                 />
               </Box>

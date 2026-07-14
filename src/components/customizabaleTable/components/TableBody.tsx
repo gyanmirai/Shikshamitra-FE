@@ -137,7 +137,7 @@ export const TableBody = ({
                     key={column.id}
                     align={column.align}
                     sx={{
-                      alignItems: 'center',
+                      verticalAlign: 'middle',
                       // fontSize: '14px',
                       py: dense ? 1.5 : 2,
                       px: 2,

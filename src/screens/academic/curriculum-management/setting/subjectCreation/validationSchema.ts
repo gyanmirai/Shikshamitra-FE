@@ -14,6 +14,7 @@ export const subjectValidationSchema = Yup.object({
   status: Yup.string().oneOf(['Active', 'Inactive', 'Archived']).required('Status is required'),
   sortOrder: Yup.number()
     .transform((value, originalValue) => (originalValue === '' ? undefined : value))
-    .min(0, 'Sort order cannot be negative')
+    .min(1, 'Sort order must be at least 1')
+    .max(999999, 'Sort order cannot exceed 999999')
     .nullable(),
 });

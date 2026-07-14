@@ -172,10 +172,24 @@ export function EvaluationActionButton({
 }) {
   if (!canAdd) return null;
 
+  // In-person homework has no digital submission event, so its rows stay
+  // stuck at status 0 ("Not Submitted") forever. Teachers still need to be
+  // able to record marks/feedback for these directly from this list.
+  const isInPerson =
+    Number(row?.submissionType) === 2 ||
+    String(row?.submissionType || '').toLowerCase().includes('in person') ||
+    String(row?.homeworkType || '').toLowerCase().includes('in person');
+
   const status = Number(row?.status);
   const isReviewed = status === 4;
-  const isNotSubmitted = status === 0;
-  const title = isNotSubmitted ? 'Send Reminder' : isReviewed ? 'Edit Feedback' : 'Evaluate';
+  const isNotSubmitted = status === 0 && !isInPerson;
+  const title = isNotSubmitted
+    ? 'Send Reminder'
+    : isReviewed
+      ? 'Edit Feedback'
+      : isInPerson && status === 0
+        ? 'Add Marks & Feedback'
+        : 'Evaluate';
   const icon = isNotSubmitted
     ? 'mdi:bell-outline'
     : isReviewed

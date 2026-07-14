@@ -9,7 +9,8 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { Box, Paper, Stack, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -148,32 +149,52 @@ const HomeworkTypeCreation = () => {
       />
 
       {/* Summary Cards */}
-      <Box display="grid" gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' }} gap={2} mb={3}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(2, minmax(0, 1fr))',
+            sm: 'repeat(3, minmax(0, 1fr))',
+            md: 'repeat(5, minmax(0, 1fr))',
+          },
+          gap: 1,
+          mb: 3,
+        }}
+      >
         {[
-          { label: 'Total Types', value: totalTypes, color: 'primary.main' },
+          { label: 'Total Types', value: totalTypes, color: 'text.primary' },
           { label: 'Active Types', value: activeTypes, color: 'success.main' },
           { label: 'Inactive Types', value: inactiveTypes, color: 'error.main' },
           { label: 'Most Used Type', value: mostUsedType, color: 'warning.main' },
           { label: 'Unused Types', value: unusedTypes, color: 'text.secondary' },
-        ].map((card, idx) => (
-          <Box
-            key={idx}
+        ].map((card) => (
+          <Paper
+            key={card.label}
+            variant="outlined"
             sx={{
-              p: 2,
+              p: 1.25,
               borderRadius: 1,
-              bgcolor: 'background.neutral',
-              border: '1px solid',
-              borderColor: 'divider',
-              textAlign: 'center',
+              bgcolor: (theme) => alpha(theme.palette.background.paper, 0.9),
             }}
           >
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {card.label}
-            </Typography>
-            <Typography variant="h5" color={card.color} sx={{ fontWeight: 'bold', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-              {card.value}
-            </Typography>
-          </Box>
+            <Stack spacing={0.5}>
+              <Typography variant="caption" color="text.secondary">
+                {card.label}
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{
+                  color: card.color,
+                  lineHeight: 1.1,
+                  textOverflow: 'ellipsis',
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {card.value}
+              </Typography>
+            </Stack>
+          </Paper>
         ))}
       </Box>
 

@@ -133,9 +133,21 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
   }, [onClose]);
 
   const handleSave = async () => {
-    const hasError = rows.some(
-      (r) => !r.name.trim() || !r.color || !!getDuplicateError(r.name, r.tempId)
-    );
+    const hasError = rows.some((r) => {
+      const nameEmpty = !r.name.trim();
+      const dupError = r.name.trim() ? getDuplicateError(r.name, r.tempId) : null;
+      const colorError = !r.color;
+
+      let sortOrderError = false;
+      if (r.sortOrder !== '') {
+        const num = Number(r.sortOrder);
+        if (Number.isNaN(num) || !Number.isInteger(num) || num < 1 || num > 999999) {
+          sortOrderError = true;
+        }
+      }
+
+      return nameEmpty || dupError || colorError || sortOrderError;
+    });
     if (hasError) {
       setShowErrors(true);
       shikshaMitraToast.error({ message: 'Please fix all errors before saving.' });

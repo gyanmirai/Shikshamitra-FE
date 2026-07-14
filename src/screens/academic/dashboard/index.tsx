@@ -55,12 +55,31 @@ type TopSummaryTone = 'primary' | 'success' | 'info' | 'warning' | 'error' | 'se
 
 const formatCount = (value?: number | null) => new Intl.NumberFormat('en-IN').format(value || 0);
 
+const toActionSeverity = (severity?: string): AcademicActionItem['severity'] => {
+  if (severity === 'critical') {
+    return 'critical';
+  }
+  if (severity === 'warning') {
+    return 'warning';
+  }
+  return 'info';
+};
+
 const toTeacherActions = (data: TeacherAcademicDashboardData): AcademicActionItem[] => [
+  ...(data.actionCenterItems || []).map((item) => ({
+    id: `academic-action-${item.id}`,
+    title: item.title,
+    summary: `${formatCount(item.count)} pending - ${item.summary}`,
+    severity: toActionSeverity(item.severity),
+    source: item.source,
+    actionLabel: item.actionLabel,
+    actionHref: item.actionHref,
+  })),
   ...data.insights.map((insight, index) => ({
     id: `teacher-insight-${index}`,
     title: insight.title,
     summary: insight.summary,
-    severity: insight.severity,
+    severity: toActionSeverity(insight.severity),
     source: insight.source,
     actionLabel: insight.actionLabel,
     actionHref: insight.actionHref,
@@ -69,7 +88,12 @@ const toTeacherActions = (data: TeacherAcademicDashboardData): AcademicActionIte
     id: `task-${task.id}`,
     title: task.title,
     summary: `${formatCount(task.count)} item${task.count === 1 ? '' : 's'} pending`,
-    severity: task.priority === 'high' ? ('critical' as const) : task.priority === 'medium' ? ('warning' as const) : ('info' as const),
+    severity:
+      task.priority === 'high'
+        ? ('critical' as const)
+        : task.priority === 'medium'
+          ? ('warning' as const)
+          : ('info' as const),
     source: 'teacher-workbench',
     actionLabel: task.action,
     actionHref: task.path,
@@ -81,7 +105,9 @@ const toTeacherModuleHealth = (data: TeacherAcademicDashboardData): AcademicModu
     id: 'lectures',
     module: 'Today Lectures',
     status: `${data.lecturesDone}/${data.todaysLecturesCount} completed`,
-    progress: data.todaysLecturesCount ? Math.round((data.lecturesDone / data.todaysLecturesCount) * 100) : 0,
+    progress: data.todaysLecturesCount
+      ? Math.round((data.lecturesDone / data.todaysLecturesCount) * 100)
+      : 0,
     tone: data.pendingAttendanceClasses > 0 ? 'warning' : 'success',
     icon: 'mdi:calendar-clock-outline',
     href: academicPaths.timetable.management,
@@ -113,6 +139,23 @@ const toTeacherModuleHealth = (data: TeacherAcademicDashboardData): AcademicModu
     icon: 'mdi:account-alert-outline',
     href: academicPaths.studentAcademic360,
   },
+  ...(data.readinessItems || []).slice(0, 4).map((item) => ({
+    id: `readiness-${item.key}`,
+    module: item.title,
+    status:
+      item.missingCount > 0
+        ? `${formatCount(item.missingCount)} missing`
+        : `${formatCount(item.completedCount)} ready`,
+    progress: item.totalCount ? Math.round((item.completedCount / item.totalCount) * 100) : 0,
+    tone:
+      item.severity === 'critical'
+        ? ('error' as const)
+        : item.severity === 'warning'
+          ? ('warning' as const)
+          : ('success' as const),
+    icon: 'mdi:clipboard-check-outline',
+    href: item.actionHref,
+  })),
 ];
 
 const getToneMain = (theme: any, tone: TopSummaryTone) => {
@@ -1203,8 +1246,16 @@ const AcademicTeacherDashboardScreen = () => {
         isBusy={isRefreshing || isFetching}
         onRefresh={handleRefresh}
         actions={[
-          { label: 'Student 360', href: academicPaths.studentAcademic360, icon: 'mdi:account-school-outline' },
-          { label: 'Add Homework', href: academicPaths.homework.learningTasks, icon: 'solar:notebook-linear' },
+          {
+            label: 'Student 360',
+            href: academicPaths.studentAcademic360,
+            icon: 'mdi:account-school-outline',
+          },
+          {
+            label: 'Add Homework',
+            href: academicPaths.homework.learningTasks,
+            icon: 'solar:notebook-linear',
+          },
           {
             label: 'Record Marks',
             href: academicPaths.examination.recordMarks,
@@ -1220,12 +1271,25 @@ const AcademicTeacherDashboardScreen = () => {
         <Grid size={{ xs: 12, lg: 4 }}>
           <AcademicHealthScoreCard
             title="My Academic Health"
-            score={Math.round((data.attendanceRate + data.evaluationsRate + Math.max(0, 100 - data.studentsAttentionCount * 5)) / 3)}
-            status={data.studentsAttentionCount > 0 || data.pendingEvaluations > 0 ? 'Needs Attention' : 'Healthy'}
+            score={Math.round(
+              (data.attendanceRate +
+                data.evaluationsRate +
+                Math.max(0, 100 - data.studentsAttentionCount * 5)) /
+                3
+            )}
+            status={
+              data.studentsAttentionCount > 0 || data.pendingEvaluations > 0
+                ? 'Needs Attention'
+                : 'Healthy'
+            }
             description="Combines attendance completion, evaluation progress and student attention workload."
             factors={[
               { label: 'Attendance', value: `${data.attendanceRate}%`, tone: 'success' },
-              { label: 'Lectures', value: `${data.lecturesDone}/${data.todaysLecturesCount}`, tone: 'info' },
+              {
+                label: 'Lectures',
+                value: `${data.lecturesDone}/${data.todaysLecturesCount}`,
+                tone: 'info',
+              },
               { label: 'Evaluation', value: `${data.evaluationsRate}%`, tone: 'warning' },
               { label: 'Students', value: `${data.studentsAttentionCount} alerts`, tone: 'error' },
             ]}

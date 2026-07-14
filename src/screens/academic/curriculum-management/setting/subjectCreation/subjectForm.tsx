@@ -230,7 +230,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
               onChange={formik.handleChange}
               error={formik.touched.sortOrder && Boolean(formik.errors.sortOrder)}
               helperText={formik.touched.sortOrder && formik.errors.sortOrder}
-              inputProps={{ min: 0 }}
+              inputProps={{ min: 1, max: 999999 }}
             />
           </Grid>
 
