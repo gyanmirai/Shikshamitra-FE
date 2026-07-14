@@ -6,6 +6,7 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import {
+  areSearchParamsEquivalent,
   getPersonaWorkspaceDefaults,
   parseEnrollmentWorkspaceState,
   migrateLegacyWorkspaceFilters,
@@ -13,6 +14,21 @@ import {
 } from './enrollment-workspace-state';
 
 describe('Enrollment workspace URL state', () => {
+  it('treats query ordering as equivalent to avoid redundant route replacement', () => {
+    expect(
+      areSearchParamsEquivalent(
+        new URLSearchParams('cycle=cycle-1&page=2&view=list&stage=0'),
+        new URLSearchParams('cycle=cycle-1&view=list&stage=0&page=2')
+      )
+    ).toBe(true);
+    expect(
+      areSearchParamsEquivalent(
+        new URLSearchParams('cycle=cycle-1&page=2'),
+        new URLSearchParams('cycle=cycle-1&page=3')
+      )
+    ).toBe(false);
+  });
+
   it('round trips non-sensitive workspace state', () => {
     const state = parseEnrollmentWorkspaceState(
       new URLSearchParams(

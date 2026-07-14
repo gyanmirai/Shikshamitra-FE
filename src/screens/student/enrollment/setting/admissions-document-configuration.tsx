@@ -7,7 +7,7 @@ import type {
   AdmissionCrmDocumentChecklistTemplateUpsertDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -16,6 +16,7 @@ import { Add, Archive, Publish, ContentCopy, DeleteOutline } from '@mui/icons-ma
 import {
   Box,
   Chip,
+  Alert,
   Stack,
   Switch,
   Dialog,
@@ -43,6 +44,7 @@ import {
   useCreateAdmissionCrmDocumentChecklistTemplateVersionMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import {
   createDocumentRequirement,
   createDocumentChecklistTemplate,
@@ -125,158 +127,179 @@ export default function AdmissionsDocumentConfiguration({ academicYearId }: Prop
     }
   };
 
-  const lifecycle = async (
-    action: 'publish' | 'version' | 'retire',
-    template: AdmissionCrmDocumentChecklistTemplateDto
-  ) => {
-    try {
-      if (action === 'publish') await publishTemplate({ templateId: template.id }).unwrap();
-      if (action === 'retire') await retireTemplate({ templateId: template.id }).unwrap();
-      if (action === 'version') {
-        const draft = await newVersion({ templateId: template.id }).unwrap();
-        setEditing(draft);
-        setForm(toForm(draft));
-        setOpen(true);
+  const lifecycle = useCallback(
+    async (
+      action: 'publish' | 'version' | 'retire',
+      template: AdmissionCrmDocumentChecklistTemplateDto
+    ) => {
+      try {
+        if (action === 'publish') await publishTemplate({ templateId: template.id }).unwrap();
+        if (action === 'retire') await retireTemplate({ templateId: template.id }).unwrap();
+        if (action === 'version') {
+          const draft = await newVersion({ templateId: template.id }).unwrap();
+          setEditing(draft);
+          setForm(toForm(draft));
+          setOpen(true);
+        }
+      } catch (error) {
+        shikshaMitraToast.error({ message: 'Unable to change checklist lifecycle.' });
       }
-    } catch (error) {
-      shikshaMitraToast.error({ message: 'Unable to change checklist lifecycle.' });
-    }
-  };
-  const openTemplate = (template: AdmissionCrmDocumentChecklistTemplateDto) => {
+    },
+    [newVersion, publishTemplate, retireTemplate]
+  );
+  const openTemplate = useCallback((template: AdmissionCrmDocumentChecklistTemplateDto) => {
     setEditing(template);
     setForm(toForm(template));
     setOpen(true);
-  };
+  }, []);
   const lifecycleBusy = publishState.isLoading || retireState.isLoading || versionState.isLoading;
-  const columns: IColumn[] = [
-    {
-      id: 'name',
-      label: 'Checklist',
-      minWidth: 220,
-      render: (value, row) => (
-        <Stack spacing={0.25}>
-          <Typography variant="body2" fontWeight={600}>
-            {value}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Version {(row as AdmissionCrmDocumentChecklistTemplateDto).version}
-          </Typography>
-        </Stack>
-      ),
+  const editorBaseline = useMemo(
+    () => (editing ? toForm(editing) : createDocumentChecklistTemplate()),
+    [editing]
+  );
+  const editorDirty = open && !readOnly && JSON.stringify(form) !== JSON.stringify(editorBaseline);
+
+  useEnrollmentSettingsDirtyState({
+    source: 'admissions-document-checklist-editor',
+    dirty: editorDirty,
+    onDiscard: () => {
+      setOpen(false);
+      setEditing(null);
+      setForm(createDocumentChecklistTemplate());
     },
-    {
-      id: 'requirements',
-      label: 'Requirements',
-      width: 125,
-      align: 'right',
-      isFilter: false,
-      render: (value) => value.length,
-    },
-    {
-      id: 'blockingCount',
-      label: 'Blocking',
-      width: 100,
-      align: 'right',
-      filterType: 'number',
-    },
-    {
-      id: 'originalCount',
-      label: 'Originals',
-      width: 100,
-      align: 'right',
-      filterType: 'number',
-    },
-    {
-      id: 'readinessApprovalCount',
-      label: 'Approvals',
-      width: 105,
-      align: 'right',
-      filterType: 'number',
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      width: 115,
-      filterType: 'enum',
-      enumOptions: Object.entries(statusLabel).map(([value, label]) => ({
-        value: Number(value),
-        label,
-      })),
-      render: (value) => (
-        <Chip
-          size="small"
-          label={statusLabel[value as AdmissionCrmDocumentChecklistTemplateStatus]}
-          color={
-            value === AdmissionCrmDocumentChecklistTemplateStatus.Published
-              ? 'success'
-              : value === AdmissionCrmDocumentChecklistTemplateStatus.Draft
-                ? 'warning'
-                : 'default'
-          }
-        />
-      ),
-    },
-    {
-      id: 'actions',
-      label: 'Actions',
-      width: 88,
-      isSort: false,
-      isFilter: false,
-      sticky: true,
-      stickyPosition: 'right',
-      render: (_value, row) => {
-        const template = row as AdmissionCrmDocumentChecklistTemplateDto;
-        return (
-          <ThreeDotsActions
-            placement="right-top"
-            showEditIcon
-            editLabel="Open Document Checklist"
-            handleEditClick={() => openTemplate(template)}
-            onEditMouseDown={() => openTemplate(template)}
-            actions={({ popover }) => (
-              <MenuList>
-                {template.status === AdmissionCrmDocumentChecklistTemplateStatus.Draft ? (
-                  <MenuItem
-                    disabled={lifecycleBusy}
-                    onClick={() => {
-                      popover.onClose();
-                      lifecycle('publish', template);
-                    }}
-                  >
-                    <Publish fontSize="small" />
-                    Publish
-                  </MenuItem>
-                ) : (
-                  <MenuItem
-                    disabled={lifecycleBusy}
-                    onClick={() => {
-                      popover.onClose();
-                      lifecycle('version', template);
-                    }}
-                  >
-                    <ContentCopy fontSize="small" />
-                    Create New Version
-                  </MenuItem>
-                )}
-                {template.status === AdmissionCrmDocumentChecklistTemplateStatus.Published ? (
-                  <MenuItem
-                    disabled={lifecycleBusy}
-                    onClick={() => {
-                      popover.onClose();
-                      lifecycle('retire', template);
-                    }}
-                  >
-                    <Archive fontSize="small" />
-                    Retire
-                  </MenuItem>
-                ) : null}
-              </MenuList>
-            )}
-          />
-        );
+  });
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'name',
+        label: 'Checklist',
+        minWidth: 220,
+        render: (value, row) => (
+          <Stack spacing={0.25}>
+            <Typography variant="body2" fontWeight={600}>
+              {value}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Version {(row as AdmissionCrmDocumentChecklistTemplateDto).version}
+            </Typography>
+          </Stack>
+        ),
       },
-    },
-  ];
+      {
+        id: 'requirements',
+        label: 'Requirements',
+        width: 125,
+        align: 'right',
+        isFilter: false,
+        render: (value) => value.length,
+      },
+      {
+        id: 'blockingCount',
+        label: 'Blocking',
+        width: 100,
+        align: 'right',
+        filterType: 'number',
+      },
+      {
+        id: 'originalCount',
+        label: 'Originals',
+        width: 100,
+        align: 'right',
+        filterType: 'number',
+      },
+      {
+        id: 'readinessApprovalCount',
+        label: 'Approvals',
+        width: 105,
+        align: 'right',
+        filterType: 'number',
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        width: 115,
+        filterType: 'enum',
+        enumOptions: Object.entries(statusLabel).map(([value, label]) => ({
+          value: Number(value),
+          label,
+        })),
+        render: (value) => (
+          <Chip
+            size="small"
+            label={statusLabel[value as AdmissionCrmDocumentChecklistTemplateStatus]}
+            color={
+              value === AdmissionCrmDocumentChecklistTemplateStatus.Published
+                ? 'success'
+                : value === AdmissionCrmDocumentChecklistTemplateStatus.Draft
+                  ? 'warning'
+                  : 'default'
+            }
+          />
+        ),
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        width: 88,
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        stickyPosition: 'right',
+        render: (_value, row) => {
+          const template = row as AdmissionCrmDocumentChecklistTemplateDto;
+          return (
+            <ThreeDotsActions
+              placement="right-top"
+              showEditIcon
+              editLabel="Open Document Checklist"
+              handleEditClick={() => openTemplate(template)}
+              actions={({ popover }) => (
+                <MenuList>
+                  {template.status === AdmissionCrmDocumentChecklistTemplateStatus.Draft ? (
+                    <MenuItem
+                      disabled={lifecycleBusy}
+                      onClick={() => {
+                        popover.onClose();
+                        lifecycle('publish', template);
+                      }}
+                    >
+                      <Publish fontSize="small" />
+                      Publish
+                    </MenuItem>
+                  ) : (
+                    <MenuItem
+                      disabled={lifecycleBusy}
+                      onClick={() => {
+                        popover.onClose();
+                        lifecycle('version', template);
+                      }}
+                    >
+                      <ContentCopy fontSize="small" />
+                      Create New Version
+                    </MenuItem>
+                  )}
+                  {template.status === AdmissionCrmDocumentChecklistTemplateStatus.Published ? (
+                    <MenuItem
+                      disabled={lifecycleBusy}
+                      onClick={() => {
+                        popover.onClose();
+                        lifecycle('retire', template);
+                      }}
+                    >
+                      <Archive fontSize="small" />
+                      Retire
+                    </MenuItem>
+                  ) : null}
+                </MenuList>
+              )}
+            />
+          );
+        },
+      },
+    ],
+    [lifecycle, lifecycleBusy, openTemplate]
+  );
 
   return (
     <Box>
@@ -303,6 +326,18 @@ export default function AdmissionsDocumentConfiguration({ academicYearId }: Prop
           </Button>
         </Stack>
         {query.isFetching ? <LinearProgress /> : <Divider />}
+        {query.isError ? (
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={() => query.refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Document checklists could not be loaded.
+          </Alert>
+        ) : null}
         <CustomizableTable
           tableId="student-enrollment-document-checklists"
           tableTitle="Document Checklists"

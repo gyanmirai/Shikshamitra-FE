@@ -2,8 +2,9 @@
 
 import type { ReactNode } from 'react';
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useRef, useState, useEffect } from 'react';
+import { isPlainPrimaryNavigationClick } from 'src/components/nav-section/path-utils';
 import {
   Button,
   Dialog,
@@ -13,14 +14,25 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import {
+  enrollmentSettingsDirtyEvent,
+  enrollmentSettingsDiscardEvent,
+  updateEnrollmentSettingsDirtySources,
+} from './enrollment-settings-dirty-state';
+
+import type { EnrollmentSettingsDirtyEventDetail } from './enrollment-settings-dirty-state';
+
 export function EnrollmentSettingsShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [isDirty, setIsDirty] = useState(false);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const dirtySources = useRef(new Set<string>());
 
   useEffect(() => {
     const handleDirtyState = (event: Event) => {
-      setIsDirty(Boolean((event as CustomEvent<{ dirty?: boolean }>).detail?.dirty));
+      const { detail } = event as CustomEvent<EnrollmentSettingsDirtyEventDetail>;
+      if (!detail?.source) return;
+      setIsDirty(updateEnrollmentSettingsDirtySources(dirtySources.current, detail));
     };
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (!isDirty) return;
@@ -28,25 +40,17 @@ export function EnrollmentSettingsShell({ children }: { children: ReactNode }) {
       event.returnValue = '';
     };
 
-    window.addEventListener('admissions-settings-dirty', handleDirtyState);
+    window.addEventListener(enrollmentSettingsDirtyEvent, handleDirtyState);
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
-      window.removeEventListener('admissions-settings-dirty', handleDirtyState);
+      window.removeEventListener(enrollmentSettingsDirtyEvent, handleDirtyState);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [isDirty]);
 
   useEffect(() => {
     const handleNavigation = (event: MouseEvent) => {
-      if (
-        !isDirty ||
-        event.defaultPrevented ||
-        event.button !== 0 ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.shiftKey ||
-        event.altKey
-      ) {
+      if (!isDirty || event.defaultPrevented || !isPlainPrimaryNavigationClick(event)) {
         return;
       }
 
@@ -73,8 +77,9 @@ export function EnrollmentSettingsShell({ children }: { children: ReactNode }) {
 
   const discardAndContinue = () => {
     if (!pendingHref) return;
+    dirtySources.current.clear();
     setIsDirty(false);
-    window.dispatchEvent(new CustomEvent('admissions-settings-discard'));
+    window.dispatchEvent(new CustomEvent(enrollmentSettingsDiscardEvent));
     router.push(pendingHref);
     setPendingHref(null);
   };

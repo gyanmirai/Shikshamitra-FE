@@ -66,6 +66,22 @@ describe('Enrollment settings route contracts', () => {
     expect(shell).not.toContain('window.confirm');
   });
 
+  it('uses URL-backed admission-cycle context in every cycle-scoped settings surface', () => {
+    const cycleScopedFiles = [
+      'admissions-seat-pool-configuration.tsx',
+      'admissions-number-series-configuration.tsx',
+      'admissions-route-configuration.tsx',
+      'admissions-policy-pack-configuration.tsx',
+      'admissions-governance-configuration.tsx',
+    ];
+
+    cycleScopedFiles.forEach((file) => {
+      const source = read('src', 'screens', 'student', 'enrollment', 'setting', file);
+      expect(source).toContain('useEnrollmentWorkspace()');
+      expect(source).not.toContain('globalState.currentYear');
+    });
+  });
+
   it('uses the domain sidebar as the only settings category navigation', () => {
     const shell = read(
       'src',
@@ -81,7 +97,7 @@ describe('Enrollment settings route contracts', () => {
     expect(shell).not.toContain('<Drawer');
     expect(menu).toContain("title: 'Journey & Cycles'");
     expect(menu).toContain('studentPaths.enrollment.settingsSections.automation');
-    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(10);
+    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(17);
   });
 
   it('uses URL-backed panels to progressively disclose dense settings', () => {
@@ -124,5 +140,70 @@ describe('Enrollment settings route contracts', () => {
     );
     expect(configuration).toContain('const stages = stageData ?? emptyPipelineStages');
     expect(configuration).not.toContain('data: stages = []');
+  });
+
+  it('uses one edit event per project-table action and retains operational summary columns', () => {
+    const playbooks = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-playbook-configuration.tsx'
+    );
+    const registrations = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-registration-configuration.tsx'
+    );
+    const documents = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-document-configuration.tsx'
+    );
+
+    expect(`${playbooks}${registrations}${documents}`).not.toContain('onEditMouseDown');
+    expect(playbooks).toContain("label: 'Scope'");
+    expect(registrations).toContain("label: 'Registration Fee'");
+    expect(registrations).toContain("label: 'Issue Trigger'");
+  });
+
+  it('protects every exposed draft editor and uses staff selectors for delegation', () => {
+    const protectedEditors = [
+      'admissions-crm-configuration.tsx',
+      'admissions-playbook-configuration.tsx',
+      'admissions-registration-configuration.tsx',
+      'admissions-document-configuration.tsx',
+      'admissions-seat-pool-configuration.tsx',
+      'admissions-number-series-configuration.tsx',
+      'admissions-route-configuration.tsx',
+      'admissions-policy-pack-configuration.tsx',
+      'admissions-governance-configuration.tsx',
+    ];
+
+    protectedEditors.forEach((file) => {
+      const source = read('src', 'screens', 'student', 'enrollment', 'setting', file);
+      expect(source).toContain('useEnrollmentSettingsDirtyState({');
+    });
+
+    const governance = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-governance-configuration.tsx'
+    );
+    expect(governance).toContain('useGetAdmissionCrmStaffQuery');
+    expect(governance).toContain('label="Delegating staff"');
+    expect(governance).toContain('label="Delegate staff"');
+    expect(governance).not.toContain('label="Delegator user ID"');
+    expect(governance).not.toContain('label="Delegate user ID"');
   });
 });

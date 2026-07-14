@@ -244,6 +244,15 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
   return params;
 };
 
+export const areSearchParamsEquivalent = (left: URLSearchParams, right: URLSearchParams) => {
+  const normalize = (params: URLSearchParams) =>
+    Array.from(params.entries()).sort(([leftKey, leftValue], [rightKey, rightValue]) =>
+      leftKey === rightKey ? leftValue.localeCompare(rightValue) : leftKey.localeCompare(rightKey)
+    );
+
+  return JSON.stringify(normalize(left)) === JSON.stringify(normalize(right));
+};
+
 export const migrateLegacyWorkspaceFilters = (
   serialized: string | null
 ): Partial<EnrollmentWorkspaceState> => {

@@ -9,7 +9,7 @@ import type {
   AdmissionCrmRegistrationTemplateUpsertDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -29,6 +29,7 @@ import {
   Chip,
   Tabs,
   Step,
+  Alert,
   Stack,
   Switch,
   Dialog,
@@ -62,12 +63,14 @@ import {
   useCreateAdmissionCrmRegistrationTemplateVersionMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import {
   createRegistrationField,
   createRegistrationSection,
   createRegistrationTemplate,
-  validateRegistrationTemplate,
   normalizeRegistrationTemplate,
+  validateRegistrationTemplateStep,
+  findRegistrationTemplateValidationIssue,
 } from './admissions-registration-configuration-utils';
 
 type Props = { academicYearId?: string };
@@ -164,11 +167,11 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
 
   const templatesQuery = useGetAdmissionCrmRegistrationTemplatesQuery(
     { academicYearId: academicYearId || '', maxResultCount: 100 },
-    { skip: !academicYearId }
+    { skip: !academicYearId || tab !== 0 }
   );
   const seriesQuery = useGetAdmissionCrmFormNumberSeriesQuery(
     { academicYearId: academicYearId || '' },
-    { skip: !academicYearId }
+    { skip: !academicYearId || tab !== 1 }
   );
   const [createTemplate, createTemplateState] = useCreateAdmissionCrmRegistrationTemplateMutation();
   const [updateTemplate, updateTemplateState] = useUpdateAdmissionCrmRegistrationTemplateMutation();
@@ -186,18 +189,19 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
     setTemplateOpen(true);
   };
 
-  const openTemplate = (template: AdmissionCrmRegistrationTemplateDto) => {
+  const openTemplate = useCallback((template: AdmissionCrmRegistrationTemplateDto) => {
     setEditingTemplate(template);
     setTemplateForm(toTemplateForm(template));
     setTemplateStep(0);
     setTemplateOpen(true);
-  };
+  }, []);
 
   const saveTemplate = async () => {
     if (!academicYearId) return;
-    const errors = validateRegistrationTemplate(templateForm);
-    if (errors.length) {
-      shikshaMitraToast.error({ message: errors[0] });
+    const issue = findRegistrationTemplateValidationIssue(templateForm);
+    if (issue) {
+      setTemplateStep(issue.step);
+      shikshaMitraToast.error({ message: issue.message });
       return;
     }
     const body = normalizeRegistrationTemplate(templateForm);
@@ -215,21 +219,24 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
     }
   };
 
-  const runTemplateLifecycle = async (
-    action: 'publish' | 'retire' | 'version',
-    template: AdmissionCrmRegistrationTemplateDto
-  ) => {
-    try {
-      if (action === 'publish') await publishTemplate({ templateId: template.id }).unwrap();
-      if (action === 'retire') await retireTemplate({ templateId: template.id }).unwrap();
-      if (action === 'version') {
-        const draft = await createTemplateVersion({ templateId: template.id }).unwrap();
-        openTemplate(draft);
+  const runTemplateLifecycle = useCallback(
+    async (
+      action: 'publish' | 'retire' | 'version',
+      template: AdmissionCrmRegistrationTemplateDto
+    ) => {
+      try {
+        if (action === 'publish') await publishTemplate({ templateId: template.id }).unwrap();
+        if (action === 'retire') await retireTemplate({ templateId: template.id }).unwrap();
+        if (action === 'version') {
+          const draft = await createTemplateVersion({ templateId: template.id }).unwrap();
+          openTemplate(draft);
+        }
+      } catch (error) {
+        shikshaMitraToast.error({ message: messageFromError(error) });
       }
-    } catch (error) {
-      shikshaMitraToast.error({ message: messageFromError(error) });
-    }
-  };
+    },
+    [createTemplateVersion, openTemplate, publishTemplate, retireTemplate]
+  );
 
   const updateField = (
     sectionIndex: number,
@@ -279,133 +286,198 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
     editingTemplate?.status !== undefined &&
     editingTemplate.status !== AdmissionCrmRegistrationTemplateStatus.Draft;
   const lifecycleBusy = publishState.isLoading || retireState.isLoading || versionState.isLoading;
-  const templateColumns: IColumn[] = [
-    {
-      id: 'name',
-      label: 'Template',
-      minWidth: 220,
-      render: (value, row) => (
-        <Stack spacing={0.25}>
-          <Typography variant="body2" fontWeight={600}>
-            {value}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Version {(row as AdmissionCrmRegistrationTemplateDto).version}
-          </Typography>
-        </Stack>
-      ),
+  const templateBaseline = useMemo(
+    () => (editingTemplate ? toTemplateForm(editingTemplate) : createRegistrationTemplate()),
+    [editingTemplate]
+  );
+  const seriesBaseline = useMemo(
+    () => (editingSeries ? toSeriesForm(editingSeries) : blankSeries()),
+    [editingSeries]
+  );
+  const templateDirty =
+    templateOpen &&
+    !templateReadOnly &&
+    JSON.stringify(templateForm) !== JSON.stringify(templateBaseline);
+  const seriesDirty = seriesOpen && JSON.stringify(seriesForm) !== JSON.stringify(seriesBaseline);
+
+  useEnrollmentSettingsDirtyState({
+    source: 'admissions-registration-editor',
+    dirty: templateDirty || seriesDirty,
+    onDiscard: () => {
+      setTemplateOpen(false);
+      setEditingTemplate(null);
+      setTemplateForm(createRegistrationTemplate());
+      setTemplateStep(0);
+      setSeriesOpen(false);
+      setEditingSeries(null);
+      setSeriesForm(blankSeries());
     },
-    {
-      id: 'sections',
-      label: 'Sections',
-      width: 100,
-      align: 'right',
-      isFilter: false,
-      render: (value) => value.length,
-    },
-    {
-      id: 'linkExpiryDays',
-      label: 'Link Expiry',
-      width: 120,
-      align: 'right',
-      filterType: 'number',
-      render: (value) => `${value} days`,
-    },
-    {
-      id: 'allowPartialSave',
-      label: 'Partial Save',
-      width: 120,
-      filterType: 'enum',
-      enumOptions: [
-        { value: true, label: 'Allowed' },
-        { value: false, label: 'Not allowed' },
-      ],
-      render: (value) => (value ? 'Allowed' : 'Not allowed'),
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      width: 115,
-      filterType: 'enum',
-      enumOptions: Object.entries(statusLabel).map(([value, label]) => ({
-        value: Number(value),
-        label,
-      })),
-      render: (value) => (
-        <Chip
-          size="small"
-          label={statusLabel[value as AdmissionCrmRegistrationTemplateStatus]}
-          color={
-            value === AdmissionCrmRegistrationTemplateStatus.Published
-              ? 'success'
-              : value === AdmissionCrmRegistrationTemplateStatus.Draft
-                ? 'warning'
-                : 'default'
-          }
-        />
-      ),
-    },
-    {
-      id: 'actions',
-      label: 'Actions',
-      width: 88,
-      isSort: false,
-      isFilter: false,
-      sticky: true,
-      stickyPosition: 'right',
-      render: (_value, row) => {
-        const template = row as AdmissionCrmRegistrationTemplateDto;
-        return (
-          <ThreeDotsActions
-            placement="right-top"
-            showEditIcon
-            editLabel="Open Registration Template"
-            handleEditClick={() => openTemplate(template)}
-            onEditMouseDown={() => openTemplate(template)}
-            actions={({ popover }) => (
-              <MenuList>
-                {template.status === AdmissionCrmRegistrationTemplateStatus.Draft ? (
-                  <MenuItem
-                    disabled={lifecycleBusy}
-                    onClick={() => {
-                      popover.onClose();
-                      runTemplateLifecycle('publish', template);
-                    }}
-                  >
-                    <Publish fontSize="small" />
-                    Publish
-                  </MenuItem>
-                ) : (
-                  <MenuItem
-                    disabled={lifecycleBusy}
-                    onClick={() => {
-                      popover.onClose();
-                      runTemplateLifecycle('version', template);
-                    }}
-                  >
-                    <ContentCopy fontSize="small" />
-                    Create New Version
-                  </MenuItem>
-                )}
-                {template.status === AdmissionCrmRegistrationTemplateStatus.Published ? (
-                  <MenuItem
-                    disabled={lifecycleBusy}
-                    onClick={() => {
-                      popover.onClose();
-                      runTemplateLifecycle('retire', template);
-                    }}
-                  >
-                    <Archive fontSize="small" />
-                    Retire
-                  </MenuItem>
-                ) : null}
-              </MenuList>
-            )}
-          />
-        );
+  });
+
+  const handleNextTemplateStep = () => {
+    const [message] = validateRegistrationTemplateStep(templateForm, 0);
+    if (message) {
+      shikshaMitraToast.error({ message });
+      return;
+    }
+    setTemplateStep(1);
+  };
+
+  const templateColumns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'name',
+        label: 'Template',
+        minWidth: 220,
+        render: (value, row) => (
+          <Stack spacing={0.25}>
+            <Typography variant="body2" fontWeight={600}>
+              {value}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Version {(row as AdmissionCrmRegistrationTemplateDto).version}
+            </Typography>
+          </Stack>
+        ),
       },
-    },
-  ];
+      {
+        id: 'sections',
+        label: 'Sections',
+        width: 100,
+        align: 'right',
+        isFilter: false,
+        render: (value) => value.length,
+      },
+      {
+        id: 'linkExpiryDays',
+        label: 'Link Expiry',
+        width: 120,
+        align: 'right',
+        filterType: 'number',
+        render: (value) => `${value} days`,
+      },
+      {
+        id: 'allowPartialSave',
+        label: 'Partial Save',
+        width: 120,
+        filterType: 'enum',
+        enumOptions: [
+          { value: true, label: 'Allowed' },
+          { value: false, label: 'Not allowed' },
+        ],
+        render: (value) => (value ? 'Allowed' : 'Not allowed'),
+      },
+      {
+        id: 'feeRequired',
+        label: 'Registration Fee',
+        width: 140,
+        filterType: 'enum',
+        enumOptions: [
+          { value: true, label: 'Required' },
+          { value: false, label: 'Not required' },
+        ],
+        render: (value, row) =>
+          value ? `${(row as AdmissionCrmRegistrationTemplateDto).feeAmount}` : 'Not required',
+      },
+      {
+        id: 'autoIssueAtStage',
+        label: 'Issue Trigger',
+        minWidth: 145,
+        filterType: 'enum',
+        enumOptions: [
+          { value: null, label: 'Manual' },
+          { value: AdmissionInquiryStage.ExamReady, label: 'Exam ready' },
+          { value: AdmissionInquiryStage.ExamCompleted, label: 'Exam completed' },
+          { value: AdmissionInquiryStage.Eligible, label: 'Eligible' },
+        ],
+        render: (value) =>
+          value === null || value === undefined ? 'Manual' : AdmissionInquiryStage[value],
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        width: 115,
+        filterType: 'enum',
+        enumOptions: Object.entries(statusLabel).map(([value, label]) => ({
+          value: Number(value),
+          label,
+        })),
+        render: (value) => (
+          <Chip
+            size="small"
+            label={statusLabel[value as AdmissionCrmRegistrationTemplateStatus]}
+            color={
+              value === AdmissionCrmRegistrationTemplateStatus.Published
+                ? 'success'
+                : value === AdmissionCrmRegistrationTemplateStatus.Draft
+                  ? 'warning'
+                  : 'default'
+            }
+          />
+        ),
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        width: 88,
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        stickyPosition: 'right',
+        render: (_value, row) => {
+          const template = row as AdmissionCrmRegistrationTemplateDto;
+          return (
+            <ThreeDotsActions
+              placement="right-top"
+              showEditIcon
+              editLabel="Open Registration Template"
+              handleEditClick={() => openTemplate(template)}
+              actions={({ popover }) => (
+                <MenuList>
+                  {template.status === AdmissionCrmRegistrationTemplateStatus.Draft ? (
+                    <MenuItem
+                      disabled={lifecycleBusy}
+                      onClick={() => {
+                        popover.onClose();
+                        runTemplateLifecycle('publish', template);
+                      }}
+                    >
+                      <Publish fontSize="small" />
+                      Publish
+                    </MenuItem>
+                  ) : (
+                    <MenuItem
+                      disabled={lifecycleBusy}
+                      onClick={() => {
+                        popover.onClose();
+                        runTemplateLifecycle('version', template);
+                      }}
+                    >
+                      <ContentCopy fontSize="small" />
+                      Create New Version
+                    </MenuItem>
+                  )}
+                  {template.status === AdmissionCrmRegistrationTemplateStatus.Published ? (
+                    <MenuItem
+                      disabled={lifecycleBusy}
+                      onClick={() => {
+                        popover.onClose();
+                        runTemplateLifecycle('retire', template);
+                      }}
+                    >
+                      <Archive fontSize="small" />
+                      Retire
+                    </MenuItem>
+                  ) : null}
+                </MenuList>
+              )}
+            />
+          );
+        },
+      },
+    ],
+    [lifecycleBusy, openTemplate, runTemplateLifecycle]
+  );
 
   return (
     <Box>
@@ -421,7 +493,27 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
           <Tab label="Number Series" />
         </Tabs>
 
-        {tab === 0 ? (
+        {(tab === 0 && templatesQuery.isError) || (tab === 1 && seriesQuery.isError) ? (
+          <Alert
+            severity="error"
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  if (tab === 0) templatesQuery.refetch();
+                  else seriesQuery.refetch();
+                }}
+              >
+                Retry
+              </Button>
+            }
+          >
+            Registration configuration could not be loaded.
+          </Alert>
+        ) : null}
+
+        {tab === 0 && !templatesQuery.isError ? (
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="flex-end">
               <Button
@@ -448,7 +540,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
           </Stack>
         ) : null}
 
-        {tab === 1 ? (
+        {tab === 1 && !seriesQuery.isError ? (
           <Stack spacing={1.25}>
             <Stack direction="row" justifyContent="flex-end">
               <Button
@@ -914,7 +1006,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
             <Button onClick={() => setTemplateStep(0)}>Back</Button>
           ) : null}
           {!editingTemplate && templateStep === 0 ? (
-            <Button variant="contained" onClick={() => setTemplateStep(1)}>
+            <Button variant="contained" onClick={handleNextTemplateStep}>
               Next
             </Button>
           ) : null}

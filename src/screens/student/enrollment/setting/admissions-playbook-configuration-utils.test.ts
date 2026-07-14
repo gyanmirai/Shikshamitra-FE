@@ -2,8 +2,10 @@ import { it, expect, describe } from 'vitest';
 
 import {
   validateAdmissionPlaybook,
+  validateAdmissionPlaybookStep,
   createDefaultAdmissionPlaybook,
   prepareAdmissionPlaybookPayload,
+  findAdmissionPlaybookValidationIssue,
 } from './admissions-playbook-configuration-utils';
 
 describe('admissions playbook configuration utilities', () => {
@@ -17,6 +19,20 @@ describe('admissions playbook configuration utilities', () => {
       'ADMISSION_READY',
     ]);
     expect(playbook.stages[0].allowedNextStageCodes).toEqual(['EXAM_SCHEDULED']);
+  });
+
+  it('keeps the guided editor on the first invalid step', () => {
+    const playbook = createDefaultAdmissionPlaybook();
+    expect(validateAdmissionPlaybookStep(playbook, 0)).toContain('Playbook name is required.');
+    expect(findAdmissionPlaybookValidationIssue(playbook)).toEqual({
+      step: 0,
+      message: 'Playbook name is required.',
+    });
+
+    playbook.name = 'Primary intake';
+    playbook.isFallback = true;
+    playbook.stages[1].code = playbook.stages[0].code;
+    expect(findAdmissionPlaybookValidationIssue(playbook)?.step).toBe(1);
   });
 
   it('normalizes applicability, codes, notes, and API time values', () => {

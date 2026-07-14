@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { RouterLink } from 'src/routes/components';
 import { Box, Tab, Tabs, Stack, Typography } from '@mui/material';
+import { isPlainPrimaryNavigationClick } from 'src/components/nav-section/path-utils';
 
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import { serializeEnrollmentWorkspaceState } from '../admissions-crm/enrollment-workspace-state';
@@ -75,6 +76,7 @@ export function EnrollmentSettingsPanelTabs({ label, value, options }: SettingsP
             value={option.value}
             label={option.label}
             onClick={(event) => {
+              if (!isPlainPrimaryNavigationClick(event)) return;
               event.preventDefault();
               updateState({ settingsPanel: option.value, page: 1 }, 'push');
             }}

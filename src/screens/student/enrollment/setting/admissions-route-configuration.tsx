@@ -1,9 +1,6 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Add, Send, Publish } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
@@ -17,6 +14,9 @@ import {
   usePublishAdmissionCrmRouteDefinitionMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
+import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
+
 const today = () => new Date().toISOString().slice(0, 10);
 const nextYear = () => {
   const d = new Date();
@@ -28,17 +28,25 @@ const routeNames = Object.entries(AdmissionCrmRouteType).filter(([key]) =>
   Number.isNaN(Number(key))
 ) as Array<[string, number]>;
 
+const routeDefaults = {
+  code: '',
+  name: '',
+  routeType: AdmissionCrmRouteType.Fresh,
+  evidence: '',
+  seatPoolCode: '',
+  feePolicyCode: '',
+  priority: '0',
+};
+
 export default function AdmissionsRouteConfiguration() {
-  const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id) as
-    | string
-    | undefined;
-  const [code, setCode] = useState('');
-  const [name, setName] = useState('');
-  const [routeType, setRouteType] = useState(AdmissionCrmRouteType.Fresh);
-  const [evidence, setEvidence] = useState('');
-  const [seatPoolCode, setSeatPoolCode] = useState('');
-  const [feePolicyCode, setFeePolicyCode] = useState('');
-  const [priority, setPriority] = useState('0');
+  const { academicYearId } = useEnrollmentWorkspace();
+  const [code, setCode] = useState(routeDefaults.code);
+  const [name, setName] = useState(routeDefaults.name);
+  const [routeType, setRouteType] = useState(routeDefaults.routeType);
+  const [evidence, setEvidence] = useState(routeDefaults.evidence);
+  const [seatPoolCode, setSeatPoolCode] = useState(routeDefaults.seatPoolCode);
+  const [feePolicyCode, setFeePolicyCode] = useState(routeDefaults.feePolicyCode);
+  const [priority, setPriority] = useState(routeDefaults.priority);
   const definitions = useGetAdmissionCrmRouteDefinitionsQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
@@ -46,23 +54,47 @@ export default function AdmissionsRouteConfiguration() {
   const [create, createState] = useCreateAdmissionCrmRouteDefinitionMutation();
   const [submit, submitState] = useSubmitAdmissionCrmRouteDefinitionMutation();
   const [publish, publishState] = usePublishAdmissionCrmRouteDefinitionMutation();
+  const resetEditor = () => {
+    setCode(routeDefaults.code);
+    setName(routeDefaults.name);
+    setRouteType(routeDefaults.routeType);
+    setEvidence(routeDefaults.evidence);
+    setSeatPoolCode(routeDefaults.seatPoolCode);
+    setFeePolicyCode(routeDefaults.feePolicyCode);
+    setPriority(routeDefaults.priority);
+  };
+  const isEditorDirty =
+    code !== routeDefaults.code ||
+    name !== routeDefaults.name ||
+    routeType !== routeDefaults.routeType ||
+    evidence !== routeDefaults.evidence ||
+    seatPoolCode !== routeDefaults.seatPoolCode ||
+    feePolicyCode !== routeDefaults.feePolicyCode ||
+    priority !== routeDefaults.priority;
+
+  useEnrollmentSettingsDirtyState({
+    source: 'admission-route-editor',
+    dirty: isEditorDirty,
+    onDiscard: resetEditor,
+  });
+
   const run = async (fn: () => Promise<unknown>, message: string) => {
     try {
       await fn();
       shikshaMitraToast.success({ message });
+      return true;
     } catch (error) {
       const data =
         typeof error === 'object' && error && 'data' in error
           ? (error as { data?: { errorCode?: string } }).data
           : undefined;
       shikshaMitraToast.error({ message: data?.errorCode || 'Route action failed.' });
+      return false;
     }
   };
-  const save = () =>
-    academicYearId &&
-    code.trim() &&
-    name.trim() &&
-    run(
+  const save = async () => {
+    if (!academicYearId || !code.trim() || !name.trim()) return;
+    const created = await run(
       () =>
         create({
           academicYearId,
@@ -90,6 +122,24 @@ export default function AdmissionsRouteConfiguration() {
         }).unwrap(),
       'Admission route draft created.'
     );
+    if (created) resetEditor();
+  };
+
+  if (definitions.isError) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <LoadingButton size="small" color="inherit" onClick={() => definitions.refetch()}>
+            Retry
+          </LoadingButton>
+        }
+      >
+        Admission routes could not be loaded.
+      </Alert>
+    );
+  }
+
   return (
     <Stack spacing={1.25}>
       <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
@@ -101,9 +151,20 @@ export default function AdmissionsRouteConfiguration() {
               bypassing shared gates.
             </Typography>
           </Box>
-          <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'minmax(0, 1fr)',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                lg: 'repeat(4, minmax(0, 1fr))',
+              },
+              gap: 1,
+            }}
+          >
             <TextField
               size="small"
+              fullWidth
               label="Route code"
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -114,14 +175,15 @@ export default function AdmissionsRouteConfiguration() {
               label="Route name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              sx={{ gridColumn: { lg: 'span 2' } }}
             />
             <TextField
               size="small"
+              fullWidth
               select
               label="Route type"
               value={routeType}
               onChange={(e) => setRouteType(Number(e.target.value) as AdmissionCrmRouteType)}
-              sx={{ minWidth: 190 }}
             >
               {routeNames.map(([label, value]) => (
                 <MenuItem key={label} value={value}>
@@ -135,27 +197,31 @@ export default function AdmissionsRouteConfiguration() {
               label="Evidence codes (comma-separated)"
               value={evidence}
               onChange={(e) => setEvidence(e.target.value)}
+              sx={{ gridColumn: { lg: 'span 2' } }}
             />
             <TextField
               size="small"
+              fullWidth
               label="Seat pool code"
               value={seatPoolCode}
               onChange={(e) => setSeatPoolCode(e.target.value)}
             />
             <TextField
               size="small"
+              fullWidth
               label="Fee policy code"
               value={feePolicyCode}
               onChange={(e) => setFeePolicyCode(e.target.value)}
             />
             <TextField
               size="small"
+              fullWidth
               type="number"
               label="Priority weight"
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
             />
-          </Stack>
+          </Box>
           <LoadingButton
             variant="contained"
             startIcon={<Add />}
@@ -170,7 +236,7 @@ export default function AdmissionsRouteConfiguration() {
       <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
         <Stack spacing={1}>
           <Typography variant="subtitle2">Published route catalogue</Typography>
-          {!definitions.data?.length && (
+          {!definitions.isFetching && !definitions.data?.length && (
             <Alert severity="info">No admission routes configured.</Alert>
           )}
           {(definitions.data || []).map((item) => (

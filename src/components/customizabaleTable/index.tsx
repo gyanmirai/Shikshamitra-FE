@@ -25,10 +25,10 @@ import { ComponentBlock } from '../component-block';
 import { useTableData } from './hooks/useTableData';
 import { TableHeader } from './components/TableHeader';
 import { FilterChips } from './components/FilterChips';
-import { useTableConfig } from './hooks/useTableConfig';
 import { TableToolbar } from './components/TableToolbar';
 import { useStickyColumns } from './hooks/useStickyColumns';
 import { ColumnFilterMenu } from './components/ColumnFilterMenu';
+import { useTableConfig, reconcileColumnVisibility } from './hooks/useTableConfig';
 
 import type { IColumnFilterAnchor, ICustomizableTableProps } from './types';
 
@@ -85,7 +85,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     [canUseColumnFilters, columns]
   );
 
-  const { tableConfig, handleChangeParams, handleSort } = useTableConfig({
+  const { tableConfig, setTableConfig, handleChangeParams, handleSort } = useTableConfig({
     columns: memoizedColumns,
     defaultSearchTerm,
     defaultRowsPerPage,
@@ -288,13 +288,17 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   );
 
   useEffect(() => {
-    handleChangeParams({
-      columnVisibility: memoizedColumns.reduce(
-        (acc, column) => ({ ...acc, [column.id]: !column.defaultHidden }),
-        {}
-      ),
+    setTableConfig((current) => {
+      const nextColumnVisibility = reconcileColumnVisibility(
+        memoizedColumns,
+        current.columnVisibility
+      );
+
+      return _.isEqual(nextColumnVisibility, current.columnVisibility)
+        ? current
+        : { ...current, columnVisibility: nextColumnVisibility };
     });
-  }, [memoizedColumns, handleChangeParams]);
+  }, [memoizedColumns, setTableConfig]);
 
   const theme = useTheme();
 

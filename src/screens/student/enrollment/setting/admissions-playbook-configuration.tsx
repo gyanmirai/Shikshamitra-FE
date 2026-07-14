@@ -12,7 +12,7 @@ import type {
   AdmissionCrmSlotAssignmentRuleDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -31,6 +31,7 @@ import {
   Chip,
   Tabs,
   Step,
+  Alert,
   Stack,
   Paper,
   Switch,
@@ -68,10 +69,12 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { AdmissionsPlaybookOperations } from './admissions-playbook-operations';
+import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import {
-  validateAdmissionPlaybook,
+  validateAdmissionPlaybookStep,
   createDefaultAdmissionPlaybook,
   prepareAdmissionPlaybookPayload,
+  findAdmissionPlaybookValidationIssue,
 } from './admissions-playbook-configuration-utils';
 
 type Props = {
@@ -228,10 +231,11 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
     createDefaultAdmissionPlaybook()
   );
 
-  const { data, isFetching } = useGetAdmissionCrmPlaybooksQuery(
+  const playbooksQuery = useGetAdmissionCrmPlaybooksQuery(
     { academicYearId: academicYearId || '', maxResultCount: 100 },
     { skip: !academicYearId }
   );
+  const { data, isFetching } = playbooksQuery;
   const [createPlaybook, createState] = useCreateAdmissionCrmPlaybookMutation();
   const [updatePlaybook, updateState] = useUpdateAdmissionCrmPlaybookMutation();
   const [publishPlaybook, publishState] = usePublishAdmissionCrmPlaybookMutation();
@@ -247,18 +251,19 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
     setEditorOpen(true);
   };
 
-  const openEditor = (playbook: AdmissionCrmPlaybookDto) => {
+  const openEditor = useCallback((playbook: AdmissionCrmPlaybookDto) => {
     setEditing(playbook);
     setForm(toPlaybookForm(playbook));
     setEditorTab(0);
     setEditorOpen(true);
-  };
+  }, []);
 
   const handleSave = async () => {
     if (!academicYearId) return;
-    const errors = validateAdmissionPlaybook(form);
-    if (errors.length) {
-      shikshaMitraToast.error({ message: errors[0] });
+    const issue = findAdmissionPlaybookValidationIssue(form);
+    if (issue) {
+      setEditorTab(issue.step);
+      shikshaMitraToast.error({ message: issue.message });
       return;
     }
 
@@ -276,26 +281,26 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
     }
   };
 
-  const runLifecycle = async (
-    action: 'publish' | 'retire' | 'version',
-    playbook: AdmissionCrmPlaybookDto
-  ) => {
-    try {
-      if (action === 'publish') await publishPlaybook({ playbookId: playbook.id }).unwrap();
-      if (action === 'retire') await retirePlaybook({ playbookId: playbook.id }).unwrap();
-      if (action === 'version') {
-        const draft = await createVersion({ playbookId: playbook.id }).unwrap();
-        openEditor(draft);
+  const runLifecycle = useCallback(
+    async (action: 'publish' | 'retire' | 'version', playbook: AdmissionCrmPlaybookDto) => {
+      try {
+        if (action === 'publish') await publishPlaybook({ playbookId: playbook.id }).unwrap();
+        if (action === 'retire') await retirePlaybook({ playbookId: playbook.id }).unwrap();
+        if (action === 'version') {
+          const draft = await createVersion({ playbookId: playbook.id }).unwrap();
+          openEditor(draft);
+        }
+        if (action !== 'version') {
+          shikshaMitraToast.success({
+            message: action === 'publish' ? 'Playbook published.' : 'Playbook retired.',
+          });
+        }
+      } catch (error) {
+        shikshaMitraToast.error({ message: errorMessage(error) });
       }
-      if (action !== 'version') {
-        shikshaMitraToast.success({
-          message: action === 'publish' ? 'Playbook published.' : 'Playbook retired.',
-        });
-      }
-    } catch (error) {
-      shikshaMitraToast.error({ message: errorMessage(error) });
-    }
-  };
+    },
+    [createVersion, openEditor, publishPlaybook, retirePlaybook]
+  );
 
   const updateStage = (index: number, patch: Partial<AdmissionCrmPlaybookStageDto>) =>
     setForm((current) => ({ ...current, stages: updateAt(current.stages, index, patch) }));
@@ -321,152 +326,192 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
 
   const readOnly =
     editing?.status !== undefined && editing.status !== AdmissionCrmPlaybookStatus.Draft;
-  const columns: IColumn[] = [
-    {
-      id: 'name',
-      label: 'Playbook',
-      minWidth: 220,
-      render: (value, row) => (
-        <Stack spacing={0.25}>
-          <Typography variant="body2" fontWeight={600}>
-            {value}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Version {(row as AdmissionCrmPlaybookDto).version}
-          </Typography>
-        </Stack>
-      ),
+  const editorBaseline = useMemo(
+    () => (editing ? toPlaybookForm(editing) : createDefaultAdmissionPlaybook()),
+    [editing]
+  );
+  const editorDirty =
+    editorOpen && !readOnly && JSON.stringify(form) !== JSON.stringify(editorBaseline);
+
+  useEnrollmentSettingsDirtyState({
+    source: 'admissions-playbook-editor',
+    dirty: editorDirty,
+    onDiscard: () => {
+      setEditorOpen(false);
+      setEditing(null);
+      setForm(createDefaultAdmissionPlaybook());
+      setEditorTab(0);
     },
-    {
-      id: 'registrationPath',
-      label: 'Registration Path',
-      minWidth: 160,
-      filterType: 'enum',
-      enumOptions: Object.entries(registrationPathLabel).map(([value, label]) => ({
-        value: Number(value),
-        label,
-      })),
-      render: (value) => registrationPathLabel[value as AdmissionCrmRegistrationPath],
-    },
-    {
-      id: 'rounds',
-      label: 'Rounds',
-      width: 90,
-      align: 'right',
-      isFilter: false,
-      render: (value) => value.length,
-    },
-    {
-      id: 'seatPlans',
-      label: 'Seat Plans',
-      width: 105,
-      align: 'right',
-      isFilter: false,
-      render: (value) => value.length,
-    },
-    {
-      id: 'examDefinitions',
-      label: 'Exams',
-      width: 90,
-      align: 'right',
-      isFilter: false,
-      render: (value) => value.length,
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      width: 115,
-      filterType: 'enum',
-      enumOptions: Object.entries(statusLabel).map(([value, label]) => ({
-        value: Number(value),
-        label,
-      })),
-      render: (value) => (
-        <Chip
-          size="small"
-          label={statusLabel[value as AdmissionCrmPlaybookStatus]}
-          color={
-            value === AdmissionCrmPlaybookStatus.Published
-              ? 'success'
-              : value === AdmissionCrmPlaybookStatus.Draft
-                ? 'warning'
-                : 'default'
-          }
-        />
-      ),
-    },
-    {
-      id: 'actions',
-      label: 'Actions',
-      width: 88,
-      isSort: false,
-      isFilter: false,
-      sticky: true,
-      stickyPosition: 'right',
-      render: (_value, row) => {
-        const playbook = row as AdmissionCrmPlaybookDto;
-        return (
-          <ThreeDotsActions
-            placement="right-top"
-            showEditIcon
-            editLabel="Open Playbook"
-            handleEditClick={() => openEditor(playbook)}
-            onEditMouseDown={() => openEditor(playbook)}
-            actions={({ popover }) => (
-              <MenuList>
-                {playbook.status === AdmissionCrmPlaybookStatus.Draft ? (
-                  <MenuItem
-                    disabled={isLifecycleBusy}
-                    onClick={() => {
-                      popover.onClose();
-                      runLifecycle('publish', playbook);
-                    }}
-                  >
-                    <Publish fontSize="small" />
-                    Publish
-                  </MenuItem>
-                ) : (
-                  <MenuItem
-                    disabled={isLifecycleBusy}
-                    onClick={() => {
-                      popover.onClose();
-                      runLifecycle('version', playbook);
-                    }}
-                  >
-                    <ContentCopy fontSize="small" />
-                    Create New Version
-                  </MenuItem>
-                )}
-                {playbook.status === AdmissionCrmPlaybookStatus.Published ? (
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      setOperationsPlaybook(playbook);
-                    }}
-                  >
-                    <EventAvailable fontSize="small" />
-                    Open Slot Operations
-                  </MenuItem>
-                ) : null}
-                {playbook.status === AdmissionCrmPlaybookStatus.Published ? (
-                  <MenuItem
-                    disabled={isLifecycleBusy}
-                    onClick={() => {
-                      popover.onClose();
-                      runLifecycle('retire', playbook);
-                    }}
-                  >
-                    <Archive fontSize="small" />
-                    Retire
-                  </MenuItem>
-                ) : null}
-              </MenuList>
-            )}
-          />
-        );
+  });
+
+  const handleNextEditorStep = () => {
+    const [message] = validateAdmissionPlaybookStep(form, editorTab as 0 | 1 | 2 | 3 | 4);
+    if (message) {
+      shikshaMitraToast.error({ message });
+      return;
+    }
+    setEditorTab((current) => Math.min(current + 1, editorSteps.length - 1));
+  };
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'name',
+        label: 'Playbook',
+        minWidth: 220,
+        render: (value, row) => (
+          <Stack spacing={0.25}>
+            <Typography variant="body2" fontWeight={600}>
+              {value}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Version {(row as AdmissionCrmPlaybookDto).version}
+            </Typography>
+          </Stack>
+        ),
       },
-    },
-  ];
+      {
+        id: 'registrationPath',
+        label: 'Registration Path',
+        minWidth: 160,
+        filterType: 'enum',
+        enumOptions: Object.entries(registrationPathLabel).map(([value, label]) => ({
+          value: Number(value),
+          label,
+        })),
+        render: (value) => registrationPathLabel[value as AdmissionCrmRegistrationPath],
+      },
+      {
+        id: 'isFallback',
+        label: 'Scope',
+        width: 120,
+        filterType: 'enum',
+        enumOptions: [
+          { value: true, label: 'Fallback' },
+          { value: false, label: 'Rule based' },
+        ],
+        render: (value) => (value ? 'Fallback' : 'Rule based'),
+      },
+      {
+        id: 'rounds',
+        label: 'Rounds',
+        width: 90,
+        align: 'right',
+        isFilter: false,
+        render: (value) => value.length,
+      },
+      {
+        id: 'seatPlans',
+        label: 'Seat Plans',
+        width: 105,
+        align: 'right',
+        isFilter: false,
+        render: (value) => value.length,
+      },
+      {
+        id: 'examDefinitions',
+        label: 'Exams',
+        width: 90,
+        align: 'right',
+        isFilter: false,
+        render: (value) => value.length,
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        width: 115,
+        filterType: 'enum',
+        enumOptions: Object.entries(statusLabel).map(([value, label]) => ({
+          value: Number(value),
+          label,
+        })),
+        render: (value) => (
+          <Chip
+            size="small"
+            label={statusLabel[value as AdmissionCrmPlaybookStatus]}
+            color={
+              value === AdmissionCrmPlaybookStatus.Published
+                ? 'success'
+                : value === AdmissionCrmPlaybookStatus.Draft
+                  ? 'warning'
+                  : 'default'
+            }
+          />
+        ),
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        width: 88,
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        stickyPosition: 'right',
+        render: (_value, row) => {
+          const playbook = row as AdmissionCrmPlaybookDto;
+          return (
+            <ThreeDotsActions
+              placement="right-top"
+              showEditIcon
+              editLabel="Open Playbook"
+              handleEditClick={() => openEditor(playbook)}
+              actions={({ popover }) => (
+                <MenuList>
+                  {playbook.status === AdmissionCrmPlaybookStatus.Draft ? (
+                    <MenuItem
+                      disabled={isLifecycleBusy}
+                      onClick={() => {
+                        popover.onClose();
+                        runLifecycle('publish', playbook);
+                      }}
+                    >
+                      <Publish fontSize="small" />
+                      Publish
+                    </MenuItem>
+                  ) : (
+                    <MenuItem
+                      disabled={isLifecycleBusy}
+                      onClick={() => {
+                        popover.onClose();
+                        runLifecycle('version', playbook);
+                      }}
+                    >
+                      <ContentCopy fontSize="small" />
+                      Create New Version
+                    </MenuItem>
+                  )}
+                  {playbook.status === AdmissionCrmPlaybookStatus.Published ? (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        setOperationsPlaybook(playbook);
+                      }}
+                    >
+                      <EventAvailable fontSize="small" />
+                      Open Slot Operations
+                    </MenuItem>
+                  ) : null}
+                  {playbook.status === AdmissionCrmPlaybookStatus.Published ? (
+                    <MenuItem
+                      disabled={isLifecycleBusy}
+                      onClick={() => {
+                        popover.onClose();
+                        runLifecycle('retire', playbook);
+                      }}
+                    >
+                      <Archive fontSize="small" />
+                      Retire
+                    </MenuItem>
+                  ) : null}
+                </MenuList>
+              )}
+            />
+          );
+        },
+      },
+    ],
+    [isLifecycleBusy, openEditor, runLifecycle]
+  );
 
   return (
     <Box>
@@ -489,6 +534,18 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
           </Button>
         </Stack>
         {isFetching ? <LinearProgress /> : <Divider />}
+        {playbooksQuery.isError ? (
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={() => playbooksQuery.refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Admissions playbooks could not be loaded.
+          </Alert>
+        ) : null}
         <CustomizableTable
           tableId="student-enrollment-admissions-playbooks"
           tableTitle="Admissions Playbooks"
@@ -1612,7 +1669,7 @@ const AdmissionsPlaybookConfiguration = ({ academicYearId }: Props) => {
             <Button onClick={() => setEditorTab((current) => current - 1)}>Back</Button>
           ) : null}
           {!editing && editorTab < editorSteps.length - 1 ? (
-            <Button variant="contained" onClick={() => setEditorTab((current) => current + 1)}>
+            <Button variant="contained" onClick={handleNextEditorStep}>
               Next
             </Button>
           ) : null}

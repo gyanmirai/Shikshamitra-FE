@@ -15,13 +15,14 @@ import type {
   AdmissionCrmLeadScoringRulesDto,
   AdmissionCrmCycleConfigurationDto,
   AdmissionCrmLeadRoutingSettingsDto,
+  AdmissionCrmCommunicationProviderDto,
   AdmissionCrmApplicantChecklistItemDto,
   AdmissionCrmMessageTemplatePreviewDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { useSelector } from 'react-redux';
-import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import { Add, Delete, Visibility, ContentCopy } from '@mui/icons-material';
 import {
@@ -80,6 +81,7 @@ import {
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { buildInquirySourceSelectOptions } from './inquiry-source-utils';
+import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import {
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
@@ -121,6 +123,8 @@ type AdmissionsCrmConfigurationProps = {
 };
 
 const emptyPipelineStages: AdmissionCrmPipelineStageDto[] = [];
+const emptyFormTemplates: AdmissionCrmFormTemplateDto[] = [];
+const emptyCommunicationProviders: AdmissionCrmCommunicationProviderDto[] = [];
 
 const getSettingsErrorMessage = (error: unknown, fallback: string) => {
   const message = (error as any)?.data?.error?.message || (error as any)?.data?.message;
@@ -242,6 +246,12 @@ const buildPipelineStageFormFromStage = (
   allowedNextStages: stage.allowedNextStages || [],
 });
 
+const buildPipelineStageForms = (stages: AdmissionCrmPipelineStageDto[]) =>
+  stages.reduce<Record<string, PipelineStageForm>>((acc, stage) => {
+    acc[stage.id] = buildPipelineStageFormFromStage(stage);
+    return acc;
+  }, {});
+
 const defaultExamReadinessFields =
   AdmissionCrmExamReadinessField.Contact |
   AdmissionCrmExamReadinessField.AdmissionIntent |
@@ -289,6 +299,18 @@ const defaultProviderForm: CommunicationProviderForm = {
   settingsJson: '',
   webhookUrl: '',
 };
+
+const buildCommunicationProviderForms = (providers: AdmissionCrmCommunicationProviderDto[]) =>
+  providers.reduce<Record<number, CommunicationProviderForm>>((acc, provider) => {
+    acc[provider.channel] = {
+      isEnabled: provider.isEnabled,
+      providerName: provider.providerName || '',
+      senderId: provider.senderId || '',
+      settingsJson: JSON.stringify(provider.settings || {}),
+      webhookUrl: provider.webhookUrl || '',
+    };
+    return acc;
+  }, {});
 
 const inquiryChannelOptions = [
   AdmissionInquiryChannel.ManualBackOffice,
@@ -634,7 +656,10 @@ const AdmissionsCrmConfiguration = ({
   const tenantId =
     user?.tenantid || user?.tenantId || user?.profile?.tenantid || user?.profile?.tenantId;
   const [cycleForm, setCycleForm] = useState<CycleForm>(defaultCycleForm);
+  const [initializedCycleId, setInitializedCycleId] = useState<string | null>(null);
+  const lastCycleBaselineRef = useRef<string | null>(null);
   const [stageForms, setStageForms] = useState<Record<string, PipelineStageForm>>({});
+  const lastStageBaselineRef = useRef<string | null>(null);
   const [templateForm, setTemplateForm] = useState<TemplateForm>(() => createDefaultTemplateForm());
   const [campaignLinkNames, setCampaignLinkNames] = useState<Record<string, string>>({});
   const [staffLinkOwnerIds, setStaffLinkOwnerIds] = useState<Record<string, string>>({});
@@ -648,41 +673,109 @@ const AdmissionsCrmConfiguration = ({
     useState<AdmissionCrmMessageTemplatePreviewDto | null>(null);
   const [messagePreviewVariablesText, setMessagePreviewVariablesText] = useState('');
   const [providerForms, setProviderForms] = useState<Record<number, CommunicationProviderForm>>({});
+  const lastProviderBaselineRef = useRef<string | null>(null);
 
-  const { data: cycle, isFetching: isCycleFetching } = useGetAdmissionCrmCycleConfigurationQuery(
+  const needsCycleConfiguration =
+    (focusSection === 'journey' && focusPanel === 'cycle') ||
+    (focusSection === 'capture' && focusPanel === 'capture') ||
+    focusSection === 'routing' ||
+    focusSection === 'automation';
+  const needsPipelineStages =
+    (focusSection === 'journey' && focusPanel === 'pipeline') || focusSection === 'automation';
+  const needsMessageTemplates =
+    (focusSection === 'capture' && focusPanel === 'capture') ||
+    (focusSection === 'communications' && focusPanel === 'templates');
+  const needsInquirySources =
+    (focusSection === 'capture' && focusPanel === 'capture') ||
+    focusSection === 'routing' ||
+    focusSection === 'automation';
+  const needsStaff =
+    (focusSection === 'journey' && focusPanel === 'cycle') ||
+    (focusSection === 'capture' && focusPanel === 'capture') ||
+    focusSection === 'routing' ||
+    focusSection === 'automation';
+
+  const {
+    data: cycle,
+    isError: isCycleError,
+    isLoading: isCycleLoading,
+    isFetching: isCycleFetching,
+    refetch: refetchCycle,
+  } = useGetAdmissionCrmCycleConfigurationQuery(
     { academicYearId: academicYearId || '' },
-    { skip: !academicYearId }
+    { skip: !academicYearId || !needsCycleConfiguration }
   );
-  const { data: schoolDefaultCycle, isFetching: isSchoolDefaultCycleFetching } =
-    useGetAdmissionCrmSchoolDefaultCycleConfigurationQuery();
-  const { data: stageData, isFetching: isStagesFetching } = useGetAdmissionCrmPipelineStagesQuery(
+  const {
+    data: schoolDefaultCycle,
+    isError: isSchoolDefaultCycleError,
+    isLoading: isSchoolDefaultCycleLoading,
+    isFetching: isSchoolDefaultCycleFetching,
+    refetch: refetchSchoolDefaultCycle,
+  } = useGetAdmissionCrmSchoolDefaultCycleConfigurationQuery(undefined, {
+    skip: focusSection !== 'journey' || focusPanel !== 'cycle',
+  });
+  const {
+    data: stageData,
+    isError: isStagesError,
+    isLoading: isStagesLoading,
+    isFetching: isStagesFetching,
+    refetch: refetchStages,
+  } = useGetAdmissionCrmPipelineStagesQuery(
     { academicYearId: academicYearId || '' },
-    { skip: !academicYearId || !['journey', 'automation'].includes(focusSection) }
+    { skip: !academicYearId || !needsPipelineStages }
   );
   const stages = stageData ?? emptyPipelineStages;
-  const { data: templates, isFetching: isTemplatesFetching } = useGetAdmissionCrmFormTemplatesQuery(
+  const {
+    data: templates,
+    isError: isTemplatesError,
+    isLoading: isTemplatesLoading,
+    isFetching: isTemplatesFetching,
+    refetch: refetchTemplates,
+  } = useGetAdmissionCrmFormTemplatesQuery(
     { academicYearId: academicYearId || '', maxResultCount: 100 },
     { skip: !academicYearId || focusSection !== 'capture' }
   );
-  const { data: messageTemplates, isFetching: isMessageTemplatesFetching } =
-    useGetAdmissionCrmMessageTemplatesQuery(
-      { academicYearId: academicYearId || '', maxResultCount: 100 },
-      { skip: !academicYearId || !['capture', 'communications'].includes(focusSection) }
-    );
-  const { data: inquirySources, isFetching: isInquirySourcesFetching } =
-    useGetAdmissionCrmInquirySourcesQuery(
-      { academicYearId: academicYearId || '', includeInactive: true },
-      { skip: !academicYearId || !['capture', 'routing', 'automation'].includes(focusSection) }
-    );
-  const { data: users = [], isFetching: isUsersFetching } = useGetAdmissionCrmStaffQuery(
-    { maxResultCount: 25 },
-    { skip: !['journey', 'capture', 'routing', 'automation'].includes(focusSection) }
+  const {
+    data: messageTemplates,
+    isError: isMessageTemplatesError,
+    isLoading: isMessageTemplatesLoading,
+    isFetching: isMessageTemplatesFetching,
+    refetch: refetchMessageTemplates,
+  } = useGetAdmissionCrmMessageTemplatesQuery(
+    { academicYearId: academicYearId || '', maxResultCount: 100 },
+    { skip: !academicYearId || !needsMessageTemplates }
   );
-  const { data: communicationProviders, isFetching: isCommunicationProvidersFetching } =
-    useGetAdmissionCrmCommunicationProvidersQuery(
-      { academicYearId: academicYearId || '' },
-      { skip: !academicYearId || focusSection !== 'communications' }
-    );
+  const {
+    data: inquirySources,
+    isError: isInquirySourcesError,
+    isLoading: isInquirySourcesLoading,
+    isFetching: isInquirySourcesFetching,
+    refetch: refetchInquirySources,
+  } = useGetAdmissionCrmInquirySourcesQuery(
+    { academicYearId: academicYearId || '', includeInactive: true },
+    { skip: !academicYearId || !needsInquirySources }
+  );
+  const {
+    data: users = [],
+    isError: isUsersError,
+    isLoading: isUsersLoading,
+    isFetching: isUsersFetching,
+    refetch: refetchUsers,
+  } = useGetAdmissionCrmStaffQuery({ maxResultCount: 25 }, { skip: !needsStaff });
+  const {
+    data: communicationProviders,
+    isError: isCommunicationProvidersError,
+    isLoading: isCommunicationProvidersLoading,
+    isFetching: isCommunicationProvidersFetching,
+    refetch: refetchCommunicationProviders,
+  } = useGetAdmissionCrmCommunicationProvidersQuery(
+    { academicYearId: academicYearId || '' },
+    {
+      skip: !academicYearId || focusSection !== 'communications' || focusPanel !== 'providers',
+    }
+  );
+  const formTemplates = templates?.items ?? emptyFormTemplates;
+  const providerItems = communicationProviders?.items ?? emptyCommunicationProviders;
   const [createTemplate, { isLoading: isCreatingTemplate }] =
     useCreateAdmissionCrmFormTemplateMutation();
   const [updateTemplate, { isLoading: isUpdatingTemplate }] =
@@ -713,59 +806,135 @@ const AdmissionsCrmConfiguration = ({
     isInquirySourcesFetching ||
     isUsersFetching ||
     isCommunicationProvidersFetching;
+  const isInitialLoading =
+    isCycleLoading ||
+    isSchoolDefaultCycleLoading ||
+    isStagesLoading ||
+    isTemplatesLoading ||
+    isMessageTemplatesLoading ||
+    isInquirySourcesLoading ||
+    isUsersLoading ||
+    isCommunicationProvidersLoading ||
+    Boolean(
+      academicYearId && needsCycleConfiguration && (!cycle || initializedCycleId !== academicYearId)
+    );
+  const hasActiveQueryError =
+    (needsCycleConfiguration && isCycleError) ||
+    (focusSection === 'journey' && focusPanel === 'cycle' && isSchoolDefaultCycleError) ||
+    (needsPipelineStages && isStagesError) ||
+    (focusSection === 'capture' && isTemplatesError) ||
+    (needsMessageTemplates && isMessageTemplatesError) ||
+    (needsInquirySources && isInquirySourcesError) ||
+    (needsStaff && isUsersError) ||
+    (focusSection === 'communications' &&
+      focusPanel === 'providers' &&
+      isCommunicationProvidersError);
 
-  useEffect(() => {
-    if (!cycle) {
-      return;
+  const retryActiveQueries = () => {
+    if (needsCycleConfiguration) refetchCycle();
+    if (focusSection === 'journey' && focusPanel === 'cycle') refetchSchoolDefaultCycle();
+    if (needsPipelineStages) refetchStages();
+    if (focusSection === 'capture') refetchTemplates();
+    if (needsMessageTemplates) refetchMessageTemplates();
+    if (needsInquirySources) refetchInquirySources();
+    if (needsStaff) refetchUsers();
+    if (focusSection === 'communications' && focusPanel === 'providers') {
+      refetchCommunicationProviders();
     }
+  };
 
-    setCycleForm(buildCycleFormFromConfiguration(cycle));
-  }, [cycle]);
-
-  const isCycleDirty = useMemo(
-    () =>
-      Boolean(cycle) &&
-      JSON.stringify(cycleForm) !== JSON.stringify(buildCycleFormFromConfiguration(cycle!)),
-    [cycle, cycleForm]
+  const cycleBaseline = useMemo(
+    () => (cycle ? buildCycleFormFromConfiguration(cycle) : null),
+    [cycle]
   );
 
   useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent('admissions-settings-dirty', { detail: { dirty: isCycleDirty } })
-    );
-    return () => {
-      window.dispatchEvent(
-        new CustomEvent('admissions-settings-dirty', { detail: { dirty: false } })
-      );
-    };
-  }, [isCycleDirty]);
+    if (!cycleBaseline || !academicYearId) return;
+    const baselineJson = JSON.stringify(cycleBaseline);
+
+    setCycleForm((current) => {
+      const shouldHydrate =
+        initializedCycleId !== academicYearId ||
+        lastCycleBaselineRef.current === null ||
+        JSON.stringify(current) === lastCycleBaselineRef.current;
+      return shouldHydrate ? cycleBaseline : current;
+    });
+    lastCycleBaselineRef.current = baselineJson;
+    setInitializedCycleId(academicYearId);
+  }, [academicYearId, cycleBaseline, initializedCycleId]);
+
+  const isCycleDirty = useMemo(
+    () => Boolean(cycleBaseline) && JSON.stringify(cycleForm) !== JSON.stringify(cycleBaseline),
+    [cycleBaseline, cycleForm]
+  );
+
+  const stageFormsBaseline = useMemo(() => buildPipelineStageForms(stages), [stages]);
+  const isPipelineDirty =
+    focusPanel === 'pipeline' &&
+    Object.keys(stageForms).length > 0 &&
+    JSON.stringify(stageForms) !== JSON.stringify(stageFormsBaseline);
+  const providerFormsBaseline = useMemo(
+    () => buildCommunicationProviderForms(providerItems),
+    [providerItems]
+  );
+  const isProviderDirty =
+    focusPanel === 'providers' &&
+    Object.keys(providerForms).length > 0 &&
+    JSON.stringify(providerForms) !== JSON.stringify(providerFormsBaseline);
+  const editingFormTemplate = editingTemplateId
+    ? formTemplates.find((template) => template.id === editingTemplateId)
+    : undefined;
+  const templateFormBaseline = editingFormTemplate
+    ? buildTemplateFormFromTemplate(editingFormTemplate)
+    : createDefaultTemplateForm();
+  const isTemplateDirty =
+    admissionsCrmConfigurationDialog.value &&
+    JSON.stringify(templateForm) !== JSON.stringify(templateFormBaseline);
+  const isMessageTemplateDirty =
+    messageDialogOpen &&
+    JSON.stringify(messageTemplateForm) !== JSON.stringify(defaultMessageTemplateForm);
+
+  useEnrollmentSettingsDirtyState({
+    source: 'admissions-crm-configuration',
+    dirty:
+      isCycleDirty ||
+      isPipelineDirty ||
+      isProviderDirty ||
+      isTemplateDirty ||
+      isMessageTemplateDirty,
+    onDiscard: () => {
+      setCycleForm(cycleBaseline || defaultCycleForm);
+      setStageForms(stageFormsBaseline);
+      setProviderForms(providerFormsBaseline);
+      setTemplateForm(createDefaultTemplateForm());
+      setEditingTemplateId(null);
+      admissionsCrmConfigurationDialog.onFalse();
+      setMessageTemplateForm(defaultMessageTemplateForm);
+      setMessageDialogOpen(false);
+    },
+  });
 
   useEffect(() => {
-    setStageForms(
-      stages.reduce<Record<string, PipelineStageForm>>((acc, stage) => {
-        acc[stage.id] = buildPipelineStageFormFromStage(stage);
-        return acc;
-      }, {})
+    const baselineJson = JSON.stringify(stageFormsBaseline);
+    setStageForms((current) =>
+      lastStageBaselineRef.current === null ||
+      JSON.stringify(current) === lastStageBaselineRef.current
+        ? stageFormsBaseline
+        : current
     );
-  }, [stages]);
+    lastStageBaselineRef.current = baselineJson;
+  }, [stageFormsBaseline]);
 
   useEffect(() => {
-    setProviderForms(
-      (communicationProviders?.items || []).reduce<Record<number, CommunicationProviderForm>>(
-        (acc, provider) => {
-          acc[provider.channel] = {
-            isEnabled: provider.isEnabled,
-            providerName: provider.providerName || '',
-            senderId: provider.senderId || '',
-            settingsJson: JSON.stringify(provider.settings || {}),
-            webhookUrl: provider.webhookUrl || '',
-          };
-          return acc;
-        },
-        {}
-      )
+    const baselineJson = JSON.stringify(providerFormsBaseline);
+    setProviderForms((current) =>
+      lastProviderBaselineRef.current === null ||
+      JSON.stringify(current) === lastProviderBaselineRef.current
+        ? providerFormsBaseline
+        : current
     );
-  }, [communicationProviders]);
+    lastProviderBaselineRef.current = baselineJson;
+  }, [providerFormsBaseline]);
 
   const handleCycleChange = (
     field: keyof CycleForm,
@@ -1968,7 +2137,6 @@ const AdmissionsCrmConfiguration = ({
     }
   };
 
-  const formTemplates = templates?.items || [];
   const channelSettings = mergeChannelSettings(cycleForm.channelSettings);
   const inquirySourceOptions = buildInquirySourceSelectOptions(
     (inquirySources?.items || []).map((source) => ({
@@ -1993,6 +2161,25 @@ const AdmissionsCrmConfiguration = ({
     (template) =>
       template.status === AdmissionCrmMessageTemplateStatus.Approved && template.isActive
   );
+
+  if (isInitialLoading) {
+    return <LinearProgress aria-label="Loading Enrollment settings" />;
+  }
+
+  if (hasActiveQueryError) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <LoadingButton size="small" color="inherit" onClick={retryActiveQueries}>
+            Retry
+          </LoadingButton>
+        }
+      >
+        This settings panel could not be loaded completely.
+      </Alert>
+    );
+  }
 
   return (
     <Box sx={{ display: 'grid', gap: 1.5 }}>

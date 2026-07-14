@@ -131,6 +131,7 @@ const studentModule = (isDdvs: boolean) => ({
               _action: 'student-enrollment-pipeline',
               permissionName: studentPermissions.enrollment.pipeline,
               icon: menuIconView('mdi:view-column-outline'),
+              preserveQueryParams: ['cycle'],
             },
             {
               title: 'Entrance Exams',
@@ -138,6 +139,7 @@ const studentModule = (isDdvs: boolean) => ({
               _action: 'student-enrollment-exams',
               permissionName: studentPermissions.enrollment.exams,
               icon: menuIconView('mdi:calendar-check-outline'),
+              preserveQueryParams: ['cycle'],
             },
             {
               title: 'Registrations & Documents',
@@ -145,6 +147,7 @@ const studentModule = (isDdvs: boolean) => ({
               _action: 'student-enrollment-registrations',
               permissionName: studentPermissions.enrollment.registrations,
               icon: menuIconView('mdi:file-document-check-outline'),
+              preserveQueryParams: ['cycle'],
             },
             {
               title: 'Offers & Seats',
@@ -152,6 +155,7 @@ const studentModule = (isDdvs: boolean) => ({
               _action: 'student-enrollment-offers-seats',
               permissionName: studentPermissions.enrollment.offersSeats,
               icon: menuIconView('mdi:seat-outline'),
+              preserveQueryParams: ['cycle'],
             },
             {
               title: 'Activation',
@@ -159,6 +163,7 @@ const studentModule = (isDdvs: boolean) => ({
               _action: 'student-enrollment-activation',
               permissionName: studentPermissions.enrollment.activation,
               icon: menuIconView('mdi:account-check-outline'),
+              preserveQueryParams: ['cycle'],
             },
             {
               title: 'Operations',
@@ -166,6 +171,7 @@ const studentModule = (isDdvs: boolean) => ({
               _action: 'student-enrollment-operations',
               permissionName: studentPermissions.enrollment.operations,
               icon: menuIconView('mdi:clipboard-list-outline'),
+              preserveQueryParams: ['cycle'],
             },
             {
               title: 'Analytics',
@@ -173,6 +179,7 @@ const studentModule = (isDdvs: boolean) => ({
               _action: 'student-enrollment-analytics',
               permissionName: studentPermissions.enrollment.analytics,
               icon: menuIconView('mdi:chart-box-outline'),
+              preserveQueryParams: ['cycle'],
             },
             {
               title: 'Settings',

@@ -559,7 +559,7 @@ test.describe('Student admissions CRM E2E', () => {
     expect(page.url()).not.toContain('Parent');
     expect(page.url()).not.toContain('9999999999');
 
-    await page.getByRole('link', { name: 'Entrance Exams' }).click();
+    await page.locator('a[href^="/student/enrollment/exams"]').click();
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/exams/?\\?cycle=${academicYearId}`)
@@ -600,6 +600,17 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page.getByRole('heading', { name: 'Journey & Cycles' })).toBeVisible();
     await expect(page.getByText('Enrollment settings categories')).toHaveCount(0);
 
+    const cycleName = page.getByRole('textbox', { name: 'Cycle name' });
+    await expect(cycleName).not.toHaveValue('');
+    const originalCycleName = await cycleName.inputValue();
+    await cycleName.fill(`${originalCycleName} unsaved`);
+    await page.getByRole('tab', { name: 'Pipeline Stages' }).click();
+    await expect(page.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Discard & Continue' }).click();
+    await expect(page).toHaveURL(/panel=pipeline/);
+    await page.getByRole('tab', { name: 'Cycle & Readiness' }).click();
+    await expect(page.getByRole('textbox', { name: 'Cycle name' })).toHaveValue(originalCycleName);
+
     const inquiryCaptureLink = page.getByRole('link', { name: 'Inquiry Capture' });
     await expect(inquiryCaptureLink).toHaveAttribute('href', new RegExp(`cycle=${academicYearId}`));
     await inquiryCaptureLink.click();
@@ -625,6 +636,39 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page.getByText('General', { exact: true })).toBeVisible();
     await expect(page.getByText('Slots & Rules', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await expect(page.getByRole('textbox', { name: 'Playbook name' })).toBeVisible();
+  });
+
+  test('Enrollment settings panels request only their owned configuration data', async ({
+    page,
+  }) => {
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    const requestedPaths: string[] = [];
+    page.on('request', (request) => {
+      const { pathname } = new URL(request.url());
+      if (pathname.includes('/student-enrollment/admissions-crm/')) requestedPaths.push(pathname);
+    });
+
+    await page.goto(
+      `/student/enrollment/settings/inquiry-capture?cycle=${academicYearId}&panel=forms`,
+      { waitUntil: 'networkidle', timeout: 60_000 }
+    );
+    await expect(page.getByRole('heading', { name: 'Form Templates' })).toBeVisible();
+
+    expect(requestedPaths.some((path) => path.endsWith('/configuration/form-templates'))).toBe(
+      true
+    );
+    expect(requestedPaths.some((path) => path.endsWith('/configuration/cycle'))).toBe(false);
+    expect(requestedPaths.some((path) => path.endsWith('/configuration/pipeline-stages'))).toBe(
+      false
+    );
+    expect(requestedPaths.some((path) => path.endsWith('/configuration/message-templates'))).toBe(
+      false
+    );
+    expect(requestedPaths.some((path) => path.endsWith('/catalog/inquiry-sources'))).toBe(false);
+    expect(requestedPaths.some((path) => path.endsWith('/workspace/staff'))).toBe(false);
   });
 
   test('principal can create quick inquiry, review duplicate warning, and open CRM workspace', async ({

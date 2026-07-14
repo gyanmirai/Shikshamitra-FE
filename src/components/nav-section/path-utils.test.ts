@@ -1,6 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import { preservePathQueryParams } from './path-utils';
+import { preservePathQueryParams, isPlainPrimaryNavigationClick } from './path-utils';
 
 describe('preservePathQueryParams', () => {
   it('carries only explicitly allowed query parameters into a navigation link', () => {
@@ -12,10 +12,22 @@ describe('preservePathQueryParams', () => {
   });
 
   it('keeps existing target parameters and ignores missing values', () => {
-    const current = new URLSearchParams('cycle=academic-year-2');
+    const current = new URLSearchParams('cycle=academic-year-2&panel=forms');
 
-    expect(preservePathQueryParams('/target?panel=forms#content', ['missing'], current)).toBe(
-      '/target?panel=forms#content'
-    );
+    expect(
+      preservePathQueryParams(
+        '/target?cycle=explicit-cycle&panel=capture#content',
+        ['cycle', 'panel', 'missing'],
+        current
+      )
+    ).toBe('/target?cycle=explicit-cycle&panel=capture#content');
+  });
+
+  it('keeps modified link clicks available to the browser', () => {
+    const click = { button: 0, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false };
+    expect(isPlainPrimaryNavigationClick(click)).toBe(true);
+    expect(isPlainPrimaryNavigationClick({ ...click, ctrlKey: true })).toBe(false);
+    expect(isPlainPrimaryNavigationClick({ ...click, metaKey: true })).toBe(false);
+    expect(isPlainPrimaryNavigationClick({ ...click, button: 1 })).toBe(false);
   });
 });

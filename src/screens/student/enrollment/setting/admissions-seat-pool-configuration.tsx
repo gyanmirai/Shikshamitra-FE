@@ -1,13 +1,11 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
 import type {
   AdmissionCrmSeatPoolDto,
   AdmissionCrmSeatPoolUpsertDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import { Add, Edit, Save, RestartAlt } from '@mui/icons-material';
@@ -17,6 +15,7 @@ import {
   Alert,
   Paper,
   Stack,
+  Button,
   Tooltip,
   MenuItem,
   TextField,
@@ -30,6 +29,9 @@ import {
   useCreateAdmissionCrmSeatPoolMutation,
   useUpdateAdmissionCrmSeatPoolMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
+import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 
 const emptyForm = (): AdmissionCrmSeatPoolUpsertDto => ({
   code: '',
@@ -70,8 +72,7 @@ const toForm = (pool: AdmissionCrmSeatPoolDto): AdmissionCrmSeatPoolUpsertDto =>
 });
 
 export default function AdmissionsSeatPoolConfiguration() {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const academicYearId = currentYear?.id as string | undefined;
+  const { academicYearId } = useEnrollmentWorkspace();
   const [editing, setEditing] = useState<AdmissionCrmSeatPoolDto | null>(null);
   const [form, setForm] = useState<AdmissionCrmSeatPoolUpsertDto>(() => emptyForm());
   const poolsQuery = useGetAdmissionCrmSeatPoolsQuery(
@@ -80,6 +81,18 @@ export default function AdmissionsSeatPoolConfiguration() {
   );
   const [createPool, createState] = useCreateAdmissionCrmSeatPoolMutation();
   const [updatePool, updateState] = useUpdateAdmissionCrmSeatPoolMutation();
+
+  const formBaseline = useMemo(() => (editing ? toForm(editing) : emptyForm()), [editing]);
+  const formDirty = JSON.stringify(form) !== JSON.stringify(formBaseline);
+
+  useEnrollmentSettingsDirtyState({
+    source: 'admissions-seat-pool-editor',
+    dirty: formDirty,
+    onDiscard: () => {
+      setEditing(null);
+      setForm(emptyForm());
+    },
+  });
 
   const reset = () => {
     setEditing(null);
@@ -122,6 +135,18 @@ export default function AdmissionsSeatPoolConfiguration() {
     <Stack spacing={1.5} sx={{ py: 1 }}>
       {!academicYearId ? <Alert severity="warning">Select an academic year.</Alert> : null}
       {poolsQuery.isFetching ? <LinearProgress /> : null}
+      {poolsQuery.isError ? (
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={() => poolsQuery.refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Seat pools could not be loaded.
+        </Alert>
+      ) : null}
       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
         <Stack spacing={1.25}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>

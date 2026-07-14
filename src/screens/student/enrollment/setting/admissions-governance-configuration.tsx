@@ -1,9 +1,8 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
+import type { AdmissionCrmStaffLookupDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import { Send, Cancel, Publish, Download, PlayArrow } from '@mui/icons-material';
@@ -18,6 +17,7 @@ import {
   MenuItem,
   TextField,
   Typography,
+  Autocomplete,
   LinearProgress,
 } from '@mui/material';
 import {
@@ -25,6 +25,7 @@ import {
   AdmissionCrmRetentionAction,
   AdmissionCrmDelegationStatus,
   AdmissionCrmExportReportType,
+  useGetAdmissionCrmStaffQuery,
   AdmissionCrmRetentionCategory,
   useGetAdmissionCrmExportsQuery,
   AdmissionCrmOperationsQueueType,
@@ -48,6 +49,9 @@ import {
   usePublishAdmissionCrmRetentionPolicyMutation,
   useSetAdmissionCrmReportScheduleActiveMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
+import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 
 const reportLabels: Record<AdmissionCrmExportReportType, string> = {
   [AdmissionCrmExportReportType.Funnel]: 'Funnel',
@@ -76,10 +80,23 @@ const errorMessage = (error: unknown) => {
 const isoHoursFromNow = (hours: number) =>
   new Date(Date.now() + hours * 3600000).toISOString().slice(0, 16);
 
+const createGovernanceDefaults = () => ({
+  policyCode: '',
+  policyName: '',
+  retainDays: 365,
+  authorityNote: '',
+  reportType: AdmissionCrmExportReportType.Funnel,
+  scheduleName: '',
+  frequency: AdmissionCrmReportFrequency.Weekly,
+  nextRunAt: isoHoursFromNow(24),
+  queueType: AdmissionCrmOperationsQueueType.DocumentVerificationBacklog,
+  delegationStart: isoHoursFromNow(0),
+  delegationEnd: isoHoursFromNow(24),
+  delegationReason: '',
+});
+
 export default function AdmissionsGovernanceConfiguration() {
-  const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id) as
-    | string
-    | undefined;
+  const { academicYearId } = useEnrollmentWorkspace();
   const skip = !academicYearId;
   const policies = useGetAdmissionCrmRetentionPoliciesQuery(
     { academicYearId: academicYearId || '' },
@@ -119,36 +136,188 @@ export default function AdmissionsGovernanceConfiguration() {
   const [createDelegation, createDelegationState] = useCreateAdmissionCrmDelegationMutation();
   const [cancelDelegation] = useCancelAdmissionCrmDelegationMutation();
 
-  const [policyCode, setPolicyCode] = useState('');
-  const [policyName, setPolicyName] = useState('');
-  const [retainDays, setRetainDays] = useState(365);
-  const [authorityNote, setAuthorityNote] = useState('');
-  const [reportType, setReportType] = useState(AdmissionCrmExportReportType.Funnel);
-  const [scheduleName, setScheduleName] = useState('');
-  const [frequency, setFrequency] = useState(AdmissionCrmReportFrequency.Weekly);
-  const [nextRunAt, setNextRunAt] = useState(() => isoHoursFromNow(24));
-  const [delegatorUserId, setDelegatorUserId] = useState('');
-  const [delegateUserId, setDelegateUserId] = useState('');
-  const [queueType, setQueueType] = useState(
-    AdmissionCrmOperationsQueueType.DocumentVerificationBacklog
+  const [defaults] = useState(createGovernanceDefaults);
+  const [policyCode, setPolicyCode] = useState(defaults.policyCode);
+  const [policyName, setPolicyName] = useState(defaults.policyName);
+  const [retainDays, setRetainDays] = useState(defaults.retainDays);
+  const [authorityNote, setAuthorityNote] = useState(defaults.authorityNote);
+  const [reportType, setReportType] = useState(defaults.reportType);
+  const [scheduleName, setScheduleName] = useState(defaults.scheduleName);
+  const [frequency, setFrequency] = useState(defaults.frequency);
+  const [nextRunAt, setNextRunAt] = useState(defaults.nextRunAt);
+  const [delegator, setDelegator] = useState<AdmissionCrmStaffLookupDto | null>(null);
+  const [delegate, setDelegate] = useState<AdmissionCrmStaffLookupDto | null>(null);
+  const [staffSearch, setStaffSearch] = useState('');
+  const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
+  const [queueType, setQueueType] = useState(defaults.queueType);
+  const [delegationStart, setDelegationStart] = useState(defaults.delegationStart);
+  const [delegationEnd, setDelegationEnd] = useState(defaults.delegationEnd);
+  const [delegationReason, setDelegationReason] = useState(defaults.delegationReason);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedStaffSearch(staffSearch.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [staffSearch]);
+
+  const delegationStaffIds = useMemo(
+    () =>
+      [
+        delegator?.id,
+        delegate?.id,
+        ...(delegations.data || []).flatMap((item) => [item.delegatorUserId, item.delegateUserId]),
+      ]
+        .filter((id): id is string => Boolean(id))
+        .slice(0, 25)
+        .join(','),
+    [delegate?.id, delegations.data, delegator?.id]
   );
-  const [delegationStart, setDelegationStart] = useState(() => isoHoursFromNow(0));
-  const [delegationEnd, setDelegationEnd] = useState(() => isoHoursFromNow(24));
-  const [delegationReason, setDelegationReason] = useState('');
+  const staff = useGetAdmissionCrmStaffQuery(
+    {
+      filter: debouncedStaffSearch || undefined,
+      ids: delegationStaffIds || undefined,
+      maxResultCount: 25,
+    },
+    { skip }
+  );
+  const staffOptions = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          [delegator, delegate, ...(staff.data || [])]
+            .filter((item): item is AdmissionCrmStaffLookupDto => Boolean(item))
+            .map((item) => [item.id, item])
+        ).values()
+      ),
+    [delegate, delegator, staff.data]
+  );
+  const staffById = useMemo(
+    () => new Map(staffOptions.map((item) => [item.id, item])),
+    [staffOptions]
+  );
+
+  const resetPolicyEditor = () => {
+    setPolicyCode(defaults.policyCode);
+    setPolicyName(defaults.policyName);
+    setRetainDays(defaults.retainDays);
+    setAuthorityNote(defaults.authorityNote);
+  };
+  const resetScheduleEditor = () => {
+    setScheduleName(defaults.scheduleName);
+    setFrequency(defaults.frequency);
+    setNextRunAt(defaults.nextRunAt);
+  };
+  const resetDelegationEditor = () => {
+    setDelegator(null);
+    setDelegate(null);
+    setStaffSearch('');
+    setQueueType(defaults.queueType);
+    setDelegationStart(defaults.delegationStart);
+    setDelegationEnd(defaults.delegationEnd);
+    setDelegationReason(defaults.delegationReason);
+  };
+  const policyDirty =
+    policyCode !== defaults.policyCode ||
+    policyName !== defaults.policyName ||
+    retainDays !== defaults.retainDays ||
+    authorityNote !== defaults.authorityNote;
+  const scheduleDirty =
+    scheduleName !== defaults.scheduleName ||
+    frequency !== defaults.frequency ||
+    nextRunAt !== defaults.nextRunAt;
+  const delegationDirty =
+    Boolean(delegator || delegate) ||
+    queueType !== defaults.queueType ||
+    delegationStart !== defaults.delegationStart ||
+    delegationEnd !== defaults.delegationEnd ||
+    delegationReason !== defaults.delegationReason;
+
+  useEnrollmentSettingsDirtyState({
+    source: 'governance-editors',
+    dirty: policyDirty || scheduleDirty || delegationDirty,
+    onDiscard: () => {
+      resetPolicyEditor();
+      resetScheduleEditor();
+      resetDelegationEditor();
+    },
+  });
 
   const busy =
     policies.isFetching ||
     privacy.isFetching ||
     exportsQuery.isFetching ||
     schedules.isFetching ||
-    delegations.isFetching;
+    delegations.isFetching ||
+    staff.isFetching;
+  const hasQueryError =
+    policies.isError ||
+    privacy.isError ||
+    exportsQuery.isError ||
+    schedules.isError ||
+    delegations.isError ||
+    forecast.isError ||
+    staff.isError;
   const run = async (action: () => Promise<unknown>, success: string) => {
     try {
       await action();
       shikshaMitraToast.success({ message: success });
+      return true;
     } catch (error) {
       shikshaMitraToast.error({ message: errorMessage(error) });
+      return false;
     }
+  };
+
+  const savePolicy = async () => {
+    if (!academicYearId) return;
+    const created = await run(
+      () =>
+        createPolicy({
+          academicYearId,
+          code: policyCode.trim().toUpperCase(),
+          name: policyName.trim(),
+          category: AdmissionCrmRetentionCategory.UnsuccessfulApplicant,
+          action: AdmissionCrmRetentionAction.Anonymize,
+          retainDays,
+          authorityNote: authorityNote.trim(),
+        }).unwrap(),
+      'Retention policy draft created.'
+    );
+    if (created) resetPolicyEditor();
+  };
+
+  const saveSchedule = async () => {
+    if (!academicYearId) return;
+    const created = await run(
+      () =>
+        createSchedule({
+          academicYearId,
+          name: scheduleName.trim(),
+          reportType,
+          frequency,
+          destination: 'manual:secure-export-queue',
+          nextRunAt: new Date(nextRunAt).toISOString(),
+        }).unwrap(),
+      'Manual report schedule created.'
+    );
+    if (created) resetScheduleEditor();
+  };
+
+  const saveDelegation = async () => {
+    if (!academicYearId || !delegator || !delegate) return;
+    const created = await run(
+      () =>
+        createDelegation({
+          academicYearId,
+          delegatorUserId: delegator.id,
+          delegateUserId: delegate.id,
+          queueTypes: [queueType],
+          startsAt: new Date(delegationStart).toISOString(),
+          endsAt: new Date(delegationEnd).toISOString(),
+          reason: delegationReason.trim(),
+        }).unwrap(),
+      'Delegation created.'
+    );
+    if (created) resetDelegationEditor();
   };
 
   const download = async (exportId: string) => {
@@ -175,6 +344,33 @@ export default function AdmissionsGovernanceConfiguration() {
     return (
       <Alert severity="warning">Select an academic year to manage Enrollment governance.</Alert>
     );
+
+  if (hasQueryError) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <LoadingButton
+            size="small"
+            color="inherit"
+            onClick={() => {
+              policies.refetch();
+              privacy.refetch();
+              exportsQuery.refetch();
+              schedules.refetch();
+              delegations.refetch();
+              forecast.refetch();
+              staff.refetch();
+            }}
+          >
+            Retry
+          </LoadingButton>
+        }
+      >
+        Some governance settings could not be loaded.
+      </Alert>
+    );
+  }
 
   return (
     <Stack spacing={1.5}>
@@ -221,21 +417,7 @@ export default function AdmissionsGovernanceConfiguration() {
             variant="contained"
             loading={createPolicyState.isLoading}
             disabled={!policyCode.trim() || !policyName.trim() || !authorityNote.trim()}
-            onClick={() =>
-              run(
-                () =>
-                  createPolicy({
-                    academicYearId,
-                    code: policyCode.trim().toUpperCase(),
-                    name: policyName.trim(),
-                    category: AdmissionCrmRetentionCategory.UnsuccessfulApplicant,
-                    action: AdmissionCrmRetentionAction.Anonymize,
-                    retainDays,
-                    authorityNote: authorityNote.trim(),
-                  }).unwrap(),
-                'Retention policy draft created.'
-              )
-            }
+            onClick={savePolicy}
           >
             Create draft
           </LoadingButton>
@@ -468,20 +650,7 @@ export default function AdmissionsGovernanceConfiguration() {
             <LoadingButton
               loading={createScheduleState.isLoading}
               disabled={!scheduleName.trim()}
-              onClick={() =>
-                run(
-                  () =>
-                    createSchedule({
-                      academicYearId,
-                      name: scheduleName.trim(),
-                      reportType,
-                      frequency,
-                      destination: 'manual:secure-export-queue',
-                      nextRunAt: new Date(nextRunAt).toISOString(),
-                    }).unwrap(),
-                  'Manual report schedule created.'
-                )
-              }
+              onClick={saveSchedule}
             >
               Schedule
             </LoadingButton>
@@ -510,17 +679,35 @@ export default function AdmissionsGovernanceConfiguration() {
         <Stack spacing={1.25}>
           <Typography variant="subtitle1">Temporary work delegation</Typography>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-            <TextField
+            <Autocomplete
               size="small"
-              label="Delegator user ID"
-              value={delegatorUserId}
-              onChange={(event) => setDelegatorUserId(event.target.value)}
+              options={staffOptions}
+              value={delegator}
+              loading={staff.isFetching}
+              filterOptions={(options) => options}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+              onInputChange={(_, value, reason) => {
+                if (reason === 'input' || reason === 'clear') setStaffSearch(value);
+              }}
+              onChange={(_, value) => setDelegator(value)}
+              renderInput={(params) => <TextField {...params} label="Delegating staff" />}
+              sx={{ minWidth: 240 }}
             />
-            <TextField
+            <Autocomplete
               size="small"
-              label="Delegate user ID"
-              value={delegateUserId}
-              onChange={(event) => setDelegateUserId(event.target.value)}
+              options={staffOptions}
+              value={delegate}
+              loading={staff.isFetching}
+              filterOptions={(options) => options}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+              onInputChange={(_, value, reason) => {
+                if (reason === 'input' || reason === 'clear') setStaffSearch(value);
+              }}
+              onChange={(_, value) => setDelegate(value)}
+              renderInput={(params) => <TextField {...params} label="Delegate staff" />}
+              sx={{ minWidth: 240 }}
             />
             <TextField
               select
@@ -562,22 +749,8 @@ export default function AdmissionsGovernanceConfiguration() {
             />
             <LoadingButton
               loading={createDelegationState.isLoading}
-              disabled={!delegatorUserId || !delegateUserId || !delegationReason.trim()}
-              onClick={() =>
-                run(
-                  () =>
-                    createDelegation({
-                      academicYearId,
-                      delegatorUserId,
-                      delegateUserId,
-                      queueTypes: [queueType],
-                      startsAt: new Date(delegationStart).toISOString(),
-                      endsAt: new Date(delegationEnd).toISOString(),
-                      reason: delegationReason.trim(),
-                    }).unwrap(),
-                  'Delegation created.'
-                )
-              }
+              disabled={!delegator || !delegate || !delegationReason.trim()}
+              onClick={saveDelegation}
             >
               Delegate
             </LoadingButton>
@@ -585,7 +758,8 @@ export default function AdmissionsGovernanceConfiguration() {
           {(delegations.data || []).map((item) => (
             <Stack key={item.id} direction="row" spacing={1} alignItems="center">
               <Typography variant="body2" sx={{ flex: 1 }}>
-                {item.delegatorUserId.slice(0, 8)} → {item.delegateUserId.slice(0, 8)} ·{' '}
+                {staffById.get(item.delegatorUserId)?.displayName || 'Unknown staff'} →{' '}
+                {staffById.get(item.delegateUserId)?.displayName || 'Unknown staff'} ·{' '}
                 {queueLabels[item.queueTypes[0]] || 'Admissions queue'}
               </Typography>
               <Chip size="small" label={AdmissionCrmDelegationStatus[item.status]} />
