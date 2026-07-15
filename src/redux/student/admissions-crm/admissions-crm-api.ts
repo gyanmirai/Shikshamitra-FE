@@ -3741,9 +3741,12 @@ export type AdmissionCrmExamSlotDto = {
 
 export type AdmissionCrmStaffLookupDto = {
   id: string;
+  employeeId: string;
+  employeeCode: string;
   displayName: string;
   userName: string;
   email?: string | null;
+  isOwnerEligible: boolean;
 };
 
 export enum AdmissionCrmIntegrationCapabilityState {
@@ -3812,7 +3815,13 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
     }),
     getAdmissionCrmStaff: builder.query<
       AdmissionCrmStaffLookupDto[],
-      { filter?: string; ids?: string; maxResultCount?: number } | void
+      {
+        filter?: string;
+        ids?: string;
+        maxResultCount?: number;
+        academicYearId?: string;
+        ownerOnly?: boolean;
+      } | void
     >({
       query: (params) => ({
         url: '/student-enrollment/admissions-crm/workspace/staff',

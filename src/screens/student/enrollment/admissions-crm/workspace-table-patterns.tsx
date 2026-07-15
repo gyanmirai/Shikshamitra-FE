@@ -4,6 +4,30 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import FilterAltOffRounded from '@mui/icons-material/FilterAltOffRounded';
 import { Box, Alert, Paper, Stack, Button, Typography } from '@mui/material';
 
+export const enrollmentWorkspaceRootSx = {
+  flex: 1,
+  minWidth: 0,
+  minHeight: 0,
+  height: '100%',
+  overflow: 'hidden',
+} as const;
+
+export const enrollmentTableWrapperSx = {
+  flex: 1,
+  minWidth: 0,
+  minHeight: 0,
+  display: 'flex',
+  flexDirection: 'column',
+} as const;
+
+export const enrollmentTableContainerSx = {
+  minHeight: 320,
+  height: '100%',
+  '& .MuiTableBody-root .MuiTypography-caption': {
+    color: 'text.primary',
+  },
+} as const;
+
 type FilterPanelProps = {
   children: ReactNode;
   onClear?: () => void;

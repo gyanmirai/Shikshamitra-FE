@@ -88,11 +88,77 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(pipeline).toContain('const pageSize = 50');
     expect(operations).toContain('const pageSize = 50');
     expect(pipeline).toContain('setDebouncedStaffSearch');
-    expect(operations).toContain('setDebouncedStaffSearch');
+    expect(operations).toContain('setDebouncedOwnerSearch');
+    expect(operations).toContain('setDebouncedAssigneeSearch');
     expect(board).toContain('const PAGE_SIZE = 25');
     expect(board).toContain('Load more');
     expect(board).toContain('IntersectionObserver');
     expect(board).toContain('!academicYearId || !shouldLoad');
+  });
+
+  it('uses configurable employee-backed owners and employee task assignees', () => {
+    const pipeline = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'pipeline-workspace.tsx'
+    );
+    const drawer = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'applicant-workspace-drawer.tsx'
+    );
+    const settings = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-crm-configuration.tsx'
+    );
+
+    expect(pipeline).toContain('ownerOnly: true');
+    expect(drawer).toContain('ownerOnly: true');
+    expect(settings).toContain('label="Pipeline owners"');
+    expect(settings).toContain('ownerOnly: true');
+    expect(settings).toContain('Only active HR employees with Enrollment CRM access');
+  });
+
+  it('keeps the Enrollment navigation and registration title concise', () => {
+    const menu = read('src', 'constants', 'student-menu.ts');
+    const registration = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'registrations-workspace.tsx'
+    );
+
+    expect(menu).toContain("title: 'Registration'");
+    expect(menu).not.toContain("title: 'Registrations & Documents'");
+    expect(registration).toContain('title="Registration"');
+  });
+
+  it('pins the entrance exam admission status beside the actions column', () => {
+    const exams = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'exams-workspace.tsx'
+    );
+
+    expect(exams).toContain("label: 'Admission status'");
+    expect(exams).toContain("stickyPosition: 'right'");
+    expect(exams).toContain('icon="solar:clock-circle-bold-duotone"');
+    expect(exams).toContain('icon="solar:door-2-bold-duotone"');
   });
 
   it('keeps free-text applicant searches out of URL state', () => {

@@ -49,9 +49,9 @@ import {
   useRecalculateAdmissionCrmLeadScoreMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { AdmissionCrmStageChip } from './admission-crm-stage-chip';
 import {
   getAdmissionCrmLeadName,
-  admissionCrmStageColors,
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
 } from './admissions-crm-utils';
@@ -201,11 +201,22 @@ export function ApplicantWorkspaceDrawer({
     { leadId: leadId || '', maxResultCount: 50, sorting: 'OccurredAt DESC' },
     { skip: !leadId || tab !== 'overview' }
   );
-  const staffQuery = useGetAdmissionCrmStaffQuery(
+  const ownerStaffQuery = useGetAdmissionCrmStaffQuery(
     {
       filter: debouncedStaffSearch || undefined,
-      ids: [lead?.ownerUserId, taskAssignee?.id].filter(Boolean).join(',') || undefined,
+      ids: lead?.ownerUserId || undefined,
       maxResultCount: 25,
+      academicYearId,
+      ownerOnly: true,
+    },
+    { skip: !leadId || tab !== 'overview' }
+  );
+  const taskStaffQuery = useGetAdmissionCrmStaffQuery(
+    {
+      filter: debouncedStaffSearch || undefined,
+      ids: taskAssignee?.id || undefined,
+      maxResultCount: 25,
+      academicYearId,
     },
     { skip: !leadId || tab !== 'overview' }
   );
@@ -229,11 +240,12 @@ export function ApplicantWorkspaceDrawer({
   useEffect(() => {
     if (!lead) return;
     setPriority(lead.priority);
-    const currentOwner = staffQuery.data?.find((staff) => staff.id === lead.ownerUserId) ?? null;
+    const currentOwner =
+      ownerStaffQuery.data?.find((staff) => staff.id === lead.ownerUserId) ?? null;
     setOwner(currentOwner);
     const currentStage = stagesQuery.data?.find((item) => item.systemStage === lead.stage);
     setStage(currentStage?.allowedNextStages[0] ?? lead.stage);
-  }, [lead, staffQuery.data, stagesQuery.data]);
+  }, [lead, ownerStaffQuery.data, stagesQuery.data]);
 
   const allowedStages = useMemo(() => {
     if (!lead) return [];
@@ -296,11 +308,7 @@ export function ApplicantWorkspaceDrawer({
             </Typography>
             {lead && (
               <Stack direction="row" gap={0.75} flexWrap="wrap" mt={0.75}>
-                <Chip
-                  size="small"
-                  label={getAdmissionCrmStageLabel(lead.stage)}
-                  color={admissionCrmStageColors[lead.stage]}
-                />
+                <AdmissionCrmStageChip stage={lead.stage} />
                 <Chip size="small" variant="outlined" label={`Score ${lead.leadScore}`} />
                 <Chip
                   size="small"
@@ -434,13 +442,15 @@ export function ApplicantWorkspaceDrawer({
                     {can(permissionsByAction.assignOwner) && (
                       <Autocomplete
                         fullWidth
-                        options={staffQuery.data || []}
+                        options={ownerStaffQuery.data || []}
                         value={owner}
-                        loading={staffQuery.isFetching}
+                        loading={ownerStaffQuery.isFetching}
                         inputValue={staffSearch}
                         onInputChange={(_, value) => setStaffSearch(value)}
                         onChange={(_, value) => setOwner(value)}
-                        getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+                        getOptionLabel={(option) =>
+                          `${option.displayName} (${option.employeeCode})`
+                        }
                         isOptionEqualToValue={(option, value) => option.id === value.id}
                         renderInput={(params) => <TextField {...params} label="Lead owner" />}
                       />
@@ -609,10 +619,10 @@ export function ApplicantWorkspaceDrawer({
                     />
                   </Stack>
                   <Autocomplete
-                    options={staffQuery.data || []}
+                    options={taskStaffQuery.data || []}
                     value={taskAssignee}
                     onChange={(_, value) => setTaskAssignee(value)}
-                    getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+                    getOptionLabel={(option) => `${option.displayName} (${option.employeeCode})`}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     renderInput={(params) => <TextField {...params} label="Task assignee" />}
                   />

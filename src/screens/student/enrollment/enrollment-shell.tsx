@@ -24,7 +24,9 @@ const EnrollmentShell = ({ children }: Props) => {
   }, [pathname]);
 
   return (
-    <Box sx={{ minWidth: 0 }}>
+    <Box
+      sx={{ minWidth: 0, minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       <Box
         component="a"
         href="#student-enrollment-content"
@@ -45,7 +47,12 @@ const EnrollmentShell = ({ children }: Props) => {
       >
         Skip to Enrollment workspace
       </Box>
-      <Box id="student-enrollment-content" component="section" tabIndex={-1} sx={{ minWidth: 0 }}>
+      <Box
+        id="student-enrollment-content"
+        component="section"
+        tabIndex={-1}
+        sx={{ minWidth: 0, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}
+      >
         <Suspense fallback={<SplashScreen />}>
           <EnrollmentWorkspaceProvider>{children}</EnrollmentWorkspaceProvider>
         </Suspense>

@@ -45,6 +45,7 @@ import {
   InputLabel,
   DialogTitle,
   FormControl,
+  Autocomplete,
   DialogActions,
   DialogContent,
   LinearProgress,
@@ -90,7 +91,6 @@ import {
   getAdmissionCrmChannelLabel,
 } from '../admissions-crm/admissions-crm-utils';
 import {
-  getCrmUserLabel,
   getCrmUserOptionLabel,
   buildCrmUserSelectOptions,
   getAdmissionCrmProviderAdapter,
@@ -614,6 +614,29 @@ const AdmissionsCrmConfiguration = ({
   const [messagePreviewVariablesText, setMessagePreviewVariablesText] = useState('');
   const [providerForms, setProviderForms] = useState<Record<number, CommunicationProviderForm>>({});
   const lastProviderBaselineRef = useRef<string | null>(null);
+  const [staffSearch, setStaffSearch] = useState('');
+  const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedStaffSearch(staffSearch.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [staffSearch]);
+
+  const configuredStaffIds = useMemo(
+    () =>
+      [
+        cycleForm.leadRoutingSettings.defaultOwnerUserId,
+        ...(cycleForm.leadRoutingSettings.ownerPoolUserIds ?? []),
+        ...cycleForm.leadRoutingSettings.rules.map((rule) => rule.ownerUserId),
+        ...cycleForm.channelSettings.map((setting) => setting.defaultOwnerUserId),
+        ...cycleForm.journeyRules.map((rule) => rule.ownerUserId),
+        cycleForm.slaPolicy.escalationOwnerUserId,
+      ]
+        .filter((id): id is string => Boolean(id))
+        .filter((id, index, ids) => ids.indexOf(id) === index)
+        .join(','),
+    [cycleForm]
+  );
 
   const needsCycleConfiguration =
     (focusSection === 'journey' && focusPanel === 'cycle') ||
@@ -701,7 +724,16 @@ const AdmissionsCrmConfiguration = ({
     isLoading: isUsersLoading,
     isFetching: isUsersFetching,
     refetch: refetchUsers,
-  } = useGetAdmissionCrmStaffQuery({ maxResultCount: 25 }, { skip: !needsStaff });
+  } = useGetAdmissionCrmStaffQuery(
+    {
+      filter: debouncedStaffSearch || undefined,
+      ids: configuredStaffIds || undefined,
+      maxResultCount: 25,
+      academicYearId,
+      ownerOnly: true,
+    },
+    { skip: !needsStaff }
+  );
   const {
     data: communicationProviders,
     isError: isCommunicationProvidersError,
@@ -3187,37 +3219,35 @@ const AdmissionsCrmConfiguration = ({
                   ))}
                 </Select>
               </FormControl>
-              <FormControl fullWidth size="small">
-                <InputLabel>Owner pool</InputLabel>
-                <Select
-                  multiple
-                  label="Owner pool"
-                  value={cycleForm.leadRoutingSettings.ownerPoolUserIds ?? []}
-                  disabled={!academicYearId || isUpdatingCycle}
-                  renderValue={(selected) =>
-                    (selected as string[]).map((id) => getCrmUserLabel(ownerOptions, id)).join(', ')
-                  }
-                  onChange={(event) => {
-                    const { value } = event.target;
-                    handleRoutingSettingsChange(
-                      'ownerPoolUserIds',
-                      typeof value === 'string' ? value.split(',').filter(Boolean) : value
-                    );
-                  }}
-                >
-                  {ownerOptions.map((owner) => (
-                    <MenuItem key={owner.id} value={owner.id}>
-                      <Checkbox
-                        checked={(cycleForm.leadRoutingSettings.ownerPoolUserIds ?? []).includes(
-                          owner.id
-                        )}
-                      />
-                      {getCrmUserOptionLabel(owner)}
-                      {owner.isActive === false ? ' (Inactive)' : ''}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                multiple
+                fullWidth
+                size="small"
+                limitTags={2}
+                options={ownerOptions.filter((owner) => owner.isActive !== false)}
+                value={(cycleForm.leadRoutingSettings.ownerPoolUserIds ?? [])
+                  .map((id) => ownerOptions.find((owner) => owner.id === id))
+                  .filter((owner): owner is (typeof ownerOptions)[number] => Boolean(owner))}
+                inputValue={staffSearch}
+                onInputChange={(_, value) => setStaffSearch(value)}
+                onChange={(_, selected) =>
+                  handleRoutingSettingsChange(
+                    'ownerPoolUserIds',
+                    selected.map((owner) => owner.id)
+                  )
+                }
+                disabled={!academicYearId || isUpdatingCycle}
+                loading={isUsersFetching}
+                getOptionLabel={getCrmUserOptionLabel}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Pipeline owners"
+                    helperText="Only active HR employees with Enrollment CRM access are available."
+                  />
+                )}
+              />
             </Stack>
             <Box sx={{ display: 'grid', gap: 1 }}>
               {cycleForm.leadRoutingSettings.rules.map((rule, index) => (

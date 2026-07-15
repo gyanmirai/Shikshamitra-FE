@@ -17,9 +17,29 @@ describe('Enrollment operations queue workspace', () => {
     );
 
     expect(source).toContain('<EnrollmentWorkspaceFilterPanel');
-    expect(source).toContain('label="Work queue"');
+    expect(source).toContain('label="Queue"');
+    expect(source).toContain('label="Owner"');
+    expect(source).toContain('label="Assignee"');
+    expect(source).toContain('ownerOnly: true');
+    expect(source).toContain('Saved views');
     expect(source).not.toContain("minWidth: 'max-content'");
     expect(source).not.toContain('variant={selectedQueue === queue.queueType');
+  });
+
+  it('keeps the queue table full-height and employee-backed', () => {
+    const source = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'operations-queue-workspace.tsx'
+    );
+
+    expect(source).toContain('enrollmentWorkspaceRootSx');
+    expect(source).toContain('enrollmentTableWrapperSx');
+    expect(source).toContain('enrollmentTableContainerSx');
+    expect(source).toContain('option.employeeCode');
   });
 
   it('puts eligible applicants awaiting manual registration first', () => {

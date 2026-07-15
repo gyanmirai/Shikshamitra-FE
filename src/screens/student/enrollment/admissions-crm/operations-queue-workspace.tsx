@@ -20,11 +20,15 @@ import {
   Paper,
   Button,
   Switch,
+  Dialog,
   Divider,
   MenuItem,
   TextField,
   Typography,
+  DialogTitle,
   Autocomplete,
+  DialogContent,
+  DialogActions,
   FormControlLabel,
 } from '@mui/material';
 import {
@@ -54,7 +58,10 @@ import {
   type EnrollmentQueueVariant,
 } from './operations-queue-columns';
 import {
+  enrollmentTableWrapperSx,
   EnrollmentTableEmptyState,
+  enrollmentWorkspaceRootSx,
+  enrollmentTableContainerSx,
   EnrollmentWorkspaceErrorState,
   EnrollmentWorkspaceFilterPanel,
 } from './workspace-table-patterns';
@@ -104,36 +111,6 @@ const queueLabels: Record<AdmissionCrmOperationsQueueType, string> = {
   [AdmissionCrmOperationsQueueType.ServiceHandoffException]: 'Service Handoff Exceptions',
 };
 
-const queueDescriptions: Partial<Record<AdmissionCrmOperationsQueueType, string>> = {
-  [AdmissionCrmOperationsQueueType.UnassignedExam]:
-    'Exam-ready applicants who still need a slot assignment.',
-  [AdmissionCrmOperationsQueueType.CapacityConflict]:
-    'Exam assignments that exceed the configured slot capacity.',
-  [AdmissionCrmOperationsQueueType.NoShow]: 'Absent applicants and overdue attendance decisions.',
-  [AdmissionCrmOperationsQueueType.RegistrationInvitationPending]:
-    'Eligible applicants who can now be issued a registration form.',
-  [AdmissionCrmOperationsQueueType.ExpiringRegistrationLink]:
-    'Registration links approaching their expiry date.',
-  [AdmissionCrmOperationsQueueType.IncompleteRegistration]:
-    'Issued forms that families have not yet completed.',
-  [AdmissionCrmOperationsQueueType.RejectedDocument]:
-    'Documents returned to families for correction or replacement.',
-  [AdmissionCrmOperationsQueueType.DocumentVerificationBacklog]:
-    'Uploaded documents awaiting staff review.',
-  [AdmissionCrmOperationsQueueType.AdmissionReady]:
-    'Verified registrations with all blocking requirements resolved.',
-  [AdmissionCrmOperationsQueueType.FinalApproval]:
-    'Admission-ready applicants awaiting the final decision.',
-  [AdmissionCrmOperationsQueueType.PolicyException]:
-    'Applicants with a policy exception requiring review.',
-  [AdmissionCrmOperationsQueueType.PaymentCondition]:
-    'Offer or activation work waiting on a manually recorded payment condition.',
-  [AdmissionCrmOperationsQueueType.GovernmentAllotmentReconciliation]:
-    'Imported RTE allotments that require reconciliation.',
-  [AdmissionCrmOperationsQueueType.ActivationRepair]:
-    'Partially completed activations that can be retried safely.',
-};
-
 const allQueues = Object.values(AdmissionCrmOperationsQueueType).filter(
   (value): value is AdmissionCrmOperationsQueueType => typeof value === 'number'
 );
@@ -158,11 +135,14 @@ export function OperationsQueueWorkspace({
     state.queue != null && allowedQueues.includes(state.queue) ? state.queue : defaultQueue;
   const page = Math.max(0, state.page - 1);
   const [search, setSearch] = useState('');
-  const [staffSearch, setStaffSearch] = useState('');
-  const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
+  const [ownerSearch, setOwnerSearch] = useState('');
+  const [assigneeSearch, setAssigneeSearch] = useState('');
+  const [debouncedOwnerSearch, setDebouncedOwnerSearch] = useState('');
+  const [debouncedAssigneeSearch, setDebouncedAssigneeSearch] = useState('');
   const [owner, setOwner] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [assignee, setAssignee] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [savedViewName, setSavedViewName] = useState('');
+  const [savedViewsOpen, setSavedViewsOpen] = useState(false);
   const [showUtilities, setShowUtilities] = useState(false);
   const seatPoolsQuery = useGetAdmissionCrmSeatPoolsQuery(
     { academicYearId: academicYearId || '', maxResultCount: 100 },
@@ -170,15 +150,30 @@ export function OperationsQueueWorkspace({
   );
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedStaffSearch(staffSearch.trim()), 300);
+    const timer = window.setTimeout(() => setDebouncedOwnerSearch(ownerSearch.trim()), 300);
     return () => window.clearTimeout(timer);
-  }, [staffSearch]);
+  }, [ownerSearch]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedAssigneeSearch(assigneeSearch.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [assigneeSearch]);
 
-  const staffQuery = useGetAdmissionCrmStaffQuery(
+  const ownerStaffQuery = useGetAdmissionCrmStaffQuery(
     {
-      filter: debouncedStaffSearch || undefined,
-      ids: [state.owner, state.assignee].filter(Boolean).join(',') || undefined,
+      filter: debouncedOwnerSearch || undefined,
+      ids: state.owner || undefined,
       maxResultCount: 25,
+      academicYearId,
+      ownerOnly: true,
+    },
+    { skip: !academicYearId }
+  );
+  const assigneeStaffQuery = useGetAdmissionCrmStaffQuery(
+    {
+      filter: debouncedAssigneeSearch || undefined,
+      ids: state.assignee || undefined,
+      maxResultCount: 25,
+      academicYearId,
     },
     { skip: !academicYearId }
   );
@@ -219,7 +214,7 @@ export function OperationsQueueWorkspace({
     [queueQuery.data?.items]
   );
   const rowStaffQuery = useGetAdmissionCrmStaffQuery(
-    { ids: rowOwnerIds, maxResultCount: 1 },
+    { ids: rowOwnerIds, maxResultCount: 1, academicYearId },
     { skip: !academicYearId || !rowOwnerIds }
   );
   const savedViewsQuery = useGetAdmissionCrmOperationsSavedViewsQuery(
@@ -232,10 +227,11 @@ export function OperationsQueueWorkspace({
     useDeleteAdmissionCrmOperationsSavedViewMutation();
 
   useEffect(() => {
-    const options = staffQuery.data || [];
-    setOwner(options.find((item) => item.id === state.owner) || null);
-    setAssignee(options.find((item) => item.id === state.assignee) || null);
-  }, [staffQuery.data, state.assignee, state.owner]);
+    setOwner((ownerStaffQuery.data || []).find((item) => item.id === state.owner) || null);
+  }, [ownerStaffQuery.data, state.owner]);
+  useEffect(() => {
+    setAssignee((assigneeStaffQuery.data || []).find((item) => item.id === state.assignee) || null);
+  }, [assigneeStaffQuery.data, state.assignee]);
 
   const queueCounts = useMemo(
     () =>
@@ -254,12 +250,13 @@ export function OperationsQueueWorkspace({
   const staffById = useMemo(
     () =>
       new Map(
-        [...(staffQuery.data || []), ...(rowStaffQuery.data || [])].map((staff) => [
-          staff.id,
-          staff.displayName,
-        ])
+        [
+          ...(ownerStaffQuery.data || []),
+          ...(assigneeStaffQuery.data || []),
+          ...(rowStaffQuery.data || []),
+        ].map((staff) => [staff.id, staff.displayName])
       ),
-    [rowStaffQuery.data, staffQuery.data]
+    [assigneeStaffQuery.data, ownerStaffQuery.data, rowStaffQuery.data]
   );
   const columns = useMemo(
     () => buildOperationsQueueColumns({ variant, applicantTab, openApplicant, staffById }),
@@ -330,7 +327,7 @@ export function OperationsQueueWorkspace({
   }
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} sx={showOperationsUtilities ? { minWidth: 0 } : enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader title={title} description={description} />
 
       <EnrollmentWorkspaceFilterPanel
@@ -368,81 +365,21 @@ export function OperationsQueueWorkspace({
           )
         }
         actions={
-          <Stack spacing={1} sx={{ width: '100%' }}>
-            <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
-              <TextField
-                select
-                size="small"
-                label="Saved view"
-                value=""
-                onChange={(event) => {
-                  const view = savedViewsQuery.data?.find((item) => item.id === event.target.value);
-                  if (view) applySavedView(view);
-                }}
-                sx={{ minWidth: 220 }}
-              >
-                {(savedViewsQuery.data || [])
-                  .filter((view) => allowedQueues.includes(view.queueType))
-                  .map((view) => (
-                    <MenuItem key={view.id} value={view.id}>
-                      {view.name}
-                    </MenuItem>
-                  ))}
-              </TextField>
-              <TextField
-                size="small"
-                label="New view name"
-                value={savedViewName}
-                onChange={(event) => setSavedViewName(event.target.value)}
-                autoComplete="off"
-                sx={{ minWidth: 220 }}
-              />
-              <LoadingButton
-                size="small"
-                variant="outlined"
-                startIcon={<BookmarkAddOutlined />}
-                loading={createSavedViewState.isLoading}
-                disabled={!savedViewName.trim()}
-                onClick={handleSaveView}
-                sx={{ color: 'primary.darker', borderColor: 'primary.darker' }}
-              >
-                Save View
-              </LoadingButton>
-            </Stack>
-            {(savedViewsQuery.data || []).some((view) => allowedQueues.includes(view.queueType)) ? (
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
-                {(savedViewsQuery.data || [])
-                  .filter((view) => allowedQueues.includes(view.queueType))
-                  .map((view) => (
-                    <Chip
-                      key={view.id}
-                      label={view.name}
-                      onClick={() => applySavedView(view)}
-                      onDelete={async () => {
-                        try {
-                          await deleteSavedView({ viewId: view.id }).unwrap();
-                          shikshaMitraToast.success({ message: 'Saved view deleted.' });
-                        } catch {
-                          shikshaMitraToast.error({
-                            message: 'The saved view could not be deleted.',
-                          });
-                        }
-                      }}
-                      deleteIcon={<DeleteOutlineRounded />}
-                      disabled={deleteSavedViewState.isLoading}
-                    />
-                  ))}
-              </Stack>
-            ) : null}
-          </Stack>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<BookmarkAddOutlined />}
+            onClick={() => setSavedViewsOpen(true)}
+          >
+            Saved views
+          </Button>
         }
       >
         <TextField
           select
           size="small"
-          label="Work queue"
+          label="Queue"
           value={selectedQueue}
-          helperText={queueDescriptions[selectedQueue] || 'Applicants requiring staff action.'}
           onChange={(event) =>
             updateState(
               { queue: Number(event.target.value) as AdmissionCrmOperationsQueueType, page: 1 },
@@ -642,24 +579,28 @@ export function OperationsQueueWorkspace({
         ) : null}
         <Autocomplete
           size="small"
-          options={staffQuery.data || []}
+          options={ownerStaffQuery.data || []}
           value={owner}
-          inputValue={staffSearch}
-          onInputChange={(_, value) => setStaffSearch(value)}
+          inputValue={ownerSearch}
+          onInputChange={(_, value) => setOwnerSearch(value)}
           onChange={(_, value) => updateState({ owner: value?.id, page: 1 })}
-          getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+          getOptionLabel={(option) => `${option.displayName} (${option.employeeCode})`}
           isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => <TextField {...params} label="Lead owner" />}
+          loading={ownerStaffQuery.isFetching}
+          renderInput={(params) => <TextField {...params} label="Owner" />}
           sx={{ minWidth: { lg: 240 } }}
         />
         <Autocomplete
           size="small"
-          options={staffQuery.data || []}
+          options={assigneeStaffQuery.data || []}
           value={assignee}
+          inputValue={assigneeSearch}
+          onInputChange={(_, value) => setAssigneeSearch(value)}
           onChange={(_, value) => updateState({ assignee: value?.id, page: 1 })}
-          getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+          getOptionLabel={(option) => `${option.displayName} (${option.employeeCode})`}
           isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => <TextField {...params} label="Assigned staff" />}
+          loading={assigneeStaffQuery.isFetching}
+          renderInput={(params) => <TextField {...params} label="Assignee" />}
           sx={{ minWidth: { lg: 240 } }}
         />
         <TextField
@@ -686,6 +627,75 @@ export function OperationsQueueWorkspace({
           label="Urgent only"
         />
       </EnrollmentWorkspaceFilterPanel>
+
+      <Dialog
+        open={savedViewsOpen}
+        onClose={() => setSavedViewsOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Saved Views</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+              <TextField
+                fullWidth
+                size="small"
+                label="View name"
+                value={savedViewName}
+                onChange={(event) => setSavedViewName(event.target.value)}
+                autoComplete="off"
+              />
+              <LoadingButton
+                variant="contained"
+                startIcon={<BookmarkAddOutlined />}
+                loading={createSavedViewState.isLoading}
+                disabled={!savedViewName.trim()}
+                onClick={handleSaveView}
+              >
+                Save Current
+              </LoadingButton>
+            </Stack>
+            <Divider />
+            <Stack direction="row" gap={0.75} flexWrap="wrap">
+              {(savedViewsQuery.data || [])
+                .filter((view) => allowedQueues.includes(view.queueType))
+                .map((view) => (
+                  <Chip
+                    key={view.id}
+                    label={view.name}
+                    onClick={() => {
+                      applySavedView(view);
+                      setSavedViewsOpen(false);
+                    }}
+                    onDelete={async () => {
+                      try {
+                        await deleteSavedView({ viewId: view.id }).unwrap();
+                        shikshaMitraToast.success({ message: 'Saved view deleted.' });
+                      } catch {
+                        shikshaMitraToast.error({
+                          message: 'The saved view could not be deleted.',
+                        });
+                      }
+                    }}
+                    deleteIcon={<DeleteOutlineRounded />}
+                    disabled={deleteSavedViewState.isLoading}
+                  />
+                ))}
+              {!(savedViewsQuery.data || []).some((view) =>
+                allowedQueues.includes(view.queueType)
+              ) ? (
+                <Typography variant="body2" color="text.secondary">
+                  No saved views for this workspace.
+                </Typography>
+              ) : null}
+            </Stack>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSavedViewsOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
       {queueQuery.isError ? (
         <EnrollmentWorkspaceErrorState
@@ -726,7 +736,8 @@ export function OperationsQueueWorkspace({
             'data-testid': 'student-enrollment-operations-row',
             'data-queue-key': row.key,
           })}
-          tableContainerProps={{ sx: { minHeight: 360 } }}
+          wrapperProps={showOperationsUtilities ? undefined : { sx: enrollmentTableWrapperSx }}
+          tableContainerProps={{ sx: enrollmentTableContainerSx }}
         />
       )}
 

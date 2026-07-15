@@ -104,6 +104,11 @@ export function PipelineStageColumn({
         width: { xs: '100%', lg: 300 },
         minWidth: { xs: 0, lg: 300 },
         flex: { lg: '0 0 300px' },
+        height: { xs: 'auto', lg: '100%' },
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         bgcolor: 'background.neutral',
         borderTop: configuredColor ? `3px solid ${configuredColor}` : undefined,
       }}
@@ -144,7 +149,15 @@ export function PipelineStageColumn({
           Stage unavailable
         </Alert>
       ) : shouldLoad ? (
-        <Stack spacing={1}>
+        <Stack
+          spacing={1}
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: { xs: 'visible', lg: 'auto' },
+            pr: { lg: 0.5 },
+          }}
+        >
           {visibleLeads.length
             ? visibleLeads.map(renderLead)
             : !isFetching && (

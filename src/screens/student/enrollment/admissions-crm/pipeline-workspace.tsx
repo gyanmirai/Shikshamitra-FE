@@ -68,17 +68,20 @@ import {
 
 import { PipelineStageColumn } from './pipeline-stage-column';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
+import { AdmissionCrmStageChip } from './admission-crm-stage-chip';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
 import {
   getAdmissionCrmLeadName,
-  admissionCrmStageColors,
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
 } from './admissions-crm-utils';
 import {
   enrollmentActionsColumn,
+  enrollmentTableWrapperSx,
+  enrollmentWorkspaceRootSx,
   EnrollmentTableEmptyState,
+  enrollmentTableContainerSx,
   EnrollmentWorkspaceErrorState,
   EnrollmentWorkspaceFilterPanel,
 } from './workspace-table-patterns';
@@ -328,13 +331,27 @@ export function PipelineWorkspace() {
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
   );
-  const staffQuery = useGetAdmissionCrmStaffQuery(
+  const ownerStaffQuery = useGetAdmissionCrmStaffQuery(
     {
       filter: debouncedStaffSearch || undefined,
-      ids: [resolvedOwner, bulkOwner?.id].filter(Boolean).join(',') || undefined,
+      ids:
+        [resolvedOwner, bulkAction === 'owner' ? bulkOwner?.id : undefined]
+          .filter(Boolean)
+          .join(',') || undefined,
       maxResultCount: 25,
+      academicYearId,
+      ownerOnly: true,
     },
     { skip: !academicYearId }
+  );
+  const taskStaffQuery = useGetAdmissionCrmStaffQuery(
+    {
+      filter: debouncedStaffSearch || undefined,
+      ids: bulkAction === 'task' ? bulkOwner?.id : undefined,
+      maxResultCount: 25,
+      academicYearId,
+    },
+    { skip: !academicYearId || bulkAction !== 'task' }
   );
   const slotsQuery = useGetAdmissionCrmExamSlotsQuery(
     { academicYearId: academicYearId || '' },
@@ -353,8 +370,10 @@ export function PipelineWorkspace() {
   const [bulkArchiveLeads, bulkArchiveLeadsState] = useBulkArchiveAdmissionCrmLeadsMutation();
 
   useEffect(() => {
-    setOwnerFilter((staffQuery.data || []).find((staff) => staff.id === resolvedOwner) || null);
-  }, [resolvedOwner, staffQuery.data]);
+    setOwnerFilter(
+      (ownerStaffQuery.data || []).find((staff) => staff.id === resolvedOwner) || null
+    );
+  }, [ownerStaffQuery.data, resolvedOwner]);
   useEffect(
     () => setSelectedLeadIds([]),
     [state.channel, state.owner, state.page, state.priority, state.stage]
@@ -379,13 +398,37 @@ export function PipelineWorkspace() {
       ? state.stage
       : '';
   const leads = useMemo(() => leadsQuery.data?.items || [], [leadsQuery.data?.items]);
+  const rowOwnerIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          leads.map((lead) => lead.ownerUserId).filter((value): value is string => Boolean(value))
+        )
+      ).join(','),
+    [leads]
+  );
+  const rowStaffQuery = useGetAdmissionCrmStaffQuery(
+    { ids: rowOwnerIds || undefined, maxResultCount: 1, academicYearId },
+    { skip: !academicYearId || !rowOwnerIds }
+  );
+  const staffById = useMemo(
+    () =>
+      new Map(
+        [
+          ...(ownerStaffQuery.data || []),
+          ...(taskStaffQuery.data || []),
+          ...(rowStaffQuery.data || []),
+        ].map((staff) => [staff.id, staff.displayName])
+      ),
+    [ownerStaffQuery.data, rowStaffQuery.data, taskStaffQuery.data]
+  );
   const selectedLeadSet = useMemo(() => new Set(selectedLeadIds), [selectedLeadIds]);
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
   const ownerName = useCallback(
     (lead: AdmissionCrmLeadDto) =>
-      (staffQuery.data || []).find((staff) => staff.id === lead.ownerUserId)?.displayName ||
+      (lead.ownerUserId ? staffById.get(lead.ownerUserId) : undefined) ||
       (lead.ownerUserId ? 'Assigned staff' : 'Unassigned'),
-    [staffQuery.data]
+    [staffById]
   );
 
   const tableFilters = useMemo<IParams['filters']>(
@@ -444,6 +487,12 @@ export function PipelineWorkspace() {
         isSort: false,
         isFilter: false,
         excludeFromExport: true,
+        headerSx: {
+          px: 0,
+          '& .column-separator': { display: 'none' },
+          '& > div': { justifyContent: 'center' },
+        },
+        cellSx: { px: 0, textAlign: 'center' },
         renderColumn: () => (
           <Checkbox
             checked={leads.length > 0 && leads.every((lead) => selectedLeadSet.has(lead.id))}
@@ -511,13 +560,7 @@ export function PipelineWorkspace() {
           label: stage.stageName,
         })),
         isSort: false,
-        render: (value) => (
-          <Chip
-            size="small"
-            label={getAdmissionCrmStageLabel(value as AdmissionInquiryStage)}
-            color={admissionCrmStageColors[value as AdmissionInquiryStage]}
-          />
-        ),
+        render: (value) => <AdmissionCrmStageChip stage={value as AdmissionInquiryStage} />,
       },
       {
         id: 'channel',
@@ -825,7 +868,7 @@ export function PipelineWorkspace() {
   );
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader
         title="Admissions Pipeline"
         description="Capture, qualify, assign, and progress inquiries through exam readiness."
@@ -947,14 +990,15 @@ export function PipelineWorkspace() {
         )}
         <Autocomplete
           size="small"
-          options={staffQuery.data || []}
+          options={ownerStaffQuery.data || []}
           value={ownerFilter}
           inputValue={staffSearch}
           onInputChange={(_, value) => setStaffSearch(value)}
           onChange={(_, value) => updateState({ owner: value?.id, page: 1 })}
-          getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+          getOptionLabel={(option) => `${option.displayName} (${option.employeeCode})`}
           isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => <TextField {...params} label="Owner" />}
+          loading={ownerStaffQuery.isFetching}
+          renderInput={(params) => <TextField {...params} label="Pipeline owner" />}
         />
         {state.view === 'board' && (
           <TextField
@@ -1027,7 +1071,13 @@ export function PipelineWorkspace() {
             direction={{ xs: 'column', lg: 'row' }}
             spacing={1.25}
             alignItems="stretch"
-            sx={{ overflowX: { lg: 'auto' }, pb: 1 }}
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowX: { lg: 'auto' },
+              overflowY: { xs: 'auto', lg: 'hidden' },
+              pb: 1,
+            }}
           >
             {visibleBoardStages.map((stageItem) => (
               <PipelineStageColumn
@@ -1108,7 +1158,8 @@ export function PipelineWorkspace() {
               'data-testid': 'student-enrollment-pipeline-row',
               'data-lead-id': row.id,
             })}
-            tableContainerProps={{ sx: { minHeight: 420 } }}
+            wrapperProps={{ sx: enrollmentTableWrapperSx }}
+            tableContainerProps={{ sx: enrollmentTableContainerSx }}
           />
         ))}
 
@@ -1403,11 +1454,16 @@ export function PipelineWorkspace() {
             <Alert severity="info">{selectedLeadIds.length} selected inquiries</Alert>
             {(bulkAction === 'owner' || bulkAction === 'task') && (
               <Autocomplete
-                options={staffQuery.data || []}
+                options={
+                  bulkAction === 'owner' ? ownerStaffQuery.data || [] : taskStaffQuery.data || []
+                }
                 value={bulkOwner}
                 onChange={(_, value) => setBulkOwner(value)}
-                getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+                getOptionLabel={(option) => `${option.displayName} (${option.employeeCode})`}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
+                loading={
+                  bulkAction === 'owner' ? ownerStaffQuery.isFetching : taskStaffQuery.isFetching
+                }
                 renderInput={(params) => (
                   <TextField
                     {...params}

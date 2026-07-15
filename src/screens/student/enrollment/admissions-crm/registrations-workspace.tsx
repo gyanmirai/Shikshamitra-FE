@@ -8,7 +8,7 @@ import { OperationsQueueWorkspace } from './operations-queue-workspace';
 export function RegistrationsWorkspace() {
   return (
     <OperationsQueueWorkspace
-      title="Registrations & Documents"
+      title="Registration"
       description="Invite eligible applicants, complete registrations, verify documents, and confirm readiness."
       defaultQueue={AdmissionCrmOperationsQueueType.RegistrationInvitationPending}
       allowedQueues={registrationQueues}

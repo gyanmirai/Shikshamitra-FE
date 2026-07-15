@@ -152,7 +152,7 @@ const studentModule = (isDdvs: boolean) => ({
               preserveQueryParams: ['cycle'],
             },
             {
-              title: 'Registrations & Documents',
+              title: 'Registration',
               path: studentPaths.enrollment.registrations,
               _action: 'student-enrollment-registrations',
               permissionName: studentPermissions.enrollment.registrations,

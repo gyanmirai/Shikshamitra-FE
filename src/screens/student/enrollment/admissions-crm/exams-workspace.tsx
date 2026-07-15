@@ -49,7 +49,10 @@ import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
 import {
   enrollmentActionsColumn,
+  enrollmentTableWrapperSx,
+  enrollmentWorkspaceRootSx,
   EnrollmentTableEmptyState,
+  enrollmentTableContainerSx,
   EnrollmentWorkspaceErrorState,
 } from './workspace-table-patterns';
 
@@ -304,19 +307,25 @@ export function ExamsWorkspace() {
       },
       {
         id: 'examStartTime',
-        label: 'Schedule',
-        width: 165,
-        minWidth: 160,
+        label: 'Exam schedule',
+        width: 190,
+        minWidth: 180,
         isSort: false,
         isFilter: false,
         render: (value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
           return (
-            <Stack spacing={0.25}>
-              <Typography variant="body2">{dateTimeFormatter.format(new Date(value))}</Typography>
-              <Typography variant="caption" color="text.primary">
-                Room {exam.examRoomNo}
-              </Typography>
+            <Stack spacing={0.5}>
+              <Stack direction="row" spacing={0.75} alignItems="center">
+                <Iconify icon="solar:clock-circle-bold-duotone" width={18} aria-hidden="true" />
+                <Typography variant="body2">{dateTimeFormatter.format(new Date(value))}</Typography>
+              </Stack>
+              <Stack direction="row" spacing={0.75} alignItems="center">
+                <Iconify icon="solar:door-2-bold-duotone" width={18} aria-hidden="true" />
+                <Typography variant="caption" color="text.primary">
+                  Room {exam.examRoomNo}
+                </Typography>
+              </Stack>
             </Stack>
           );
         },
@@ -372,9 +381,14 @@ export function ExamsWorkspace() {
       },
       {
         id: 'eligibilityDecision',
-        label: 'Eligibility',
-        width: 120,
-        minWidth: 115,
+        label: 'Admission status',
+        width: 150,
+        minWidth: 145,
+        sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
+        headerSx: { px: 1.5 },
+        cellSx: { px: 1.5 },
         filterType: 'enum',
         enumOptions: Object.entries(admissionCrmEligibilityLabels).map(([value, label]) => ({
           value: Number(value),
@@ -418,7 +432,7 @@ export function ExamsWorkspace() {
   }
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader
         title="Entrance Exams"
         description="Process attendance, results, merit, and eligibility decisions from one queue."
@@ -477,7 +491,8 @@ export function ExamsWorkspace() {
             'data-testid': 'student-enrollment-exam-row',
             'data-exam-id': row.id,
           })}
-          tableContainerProps={{ sx: { minHeight: 360 } }}
+          wrapperProps={{ sx: enrollmentTableWrapperSx }}
+          tableContainerProps={{ sx: enrollmentTableContainerSx }}
         />
       )}
 
