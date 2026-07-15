@@ -10,6 +10,7 @@ import {
   useGetAdmissionCrmEntranceExamByLeadQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { ApplicantEmptyState } from './applicant-workspace-primitives';
 import { formatEnumLabel, formatEnrollmentDate } from './enrollment-display';
 
 const enumLabel = (source: Record<string, string | number>, value: number) => {
@@ -31,16 +32,15 @@ export function ApplicantExamSummary({
   if (query.isLoading) return <LinearProgress aria-label="Loading entrance exam" />;
   if (!exam) {
     return (
-      <Alert
-        severity="info"
+      <ApplicantEmptyState
+        title="Entrance exam is not scheduled"
+        description="Schedule an exam from the Entrance Exams workspace when the applicant is ready."
         action={
           <Button component={Link} href={examHref} color="inherit" size="small">
             Open Exams
           </Button>
         }
-      >
-        No entrance exam has been scheduled for this applicant.
-      </Alert>
+      />
     );
   }
 

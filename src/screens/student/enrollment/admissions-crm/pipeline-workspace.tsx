@@ -87,6 +87,7 @@ import {
 } from './workspace-table-patterns';
 
 import type { PipelineStageGroup } from './enrollment-workspace-state';
+import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
 
 const pageSize = 50;
 const permissionRoot = 'Students.Enrollment.AdmissionsCrm';
@@ -645,7 +646,7 @@ export function PipelineWorkspace() {
               placement="right-top"
               showViewIcon
               viewLabel="Open Applicant"
-              handleViewClick={() => openApplicant(lead.id)}
+              handleViewClick={() => openApplicant(lead.id, 'overview')}
               showThreeDots={canSchedule || canIssueForm}
               actions={({ popover }) => (
                 <MenuList>
@@ -1538,6 +1539,8 @@ export function PipelineWorkspace() {
       <ApplicantWorkspaceDrawer
         leadId={state.applicant}
         academicYearId={academicYearId}
+        initialTab={(state.applicantTab as ApplicantDrawerTab | undefined) || 'overview'}
+        onTabChange={(nextTab) => updateState({ applicantTab: nextTab }, 'replace')}
         onClose={closeApplicant}
       />
     </Stack>

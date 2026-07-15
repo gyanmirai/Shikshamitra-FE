@@ -269,7 +269,6 @@ const GlobalAcademicSearch = () => {
 
     const defaultOption = getDefaultAcademicSelection();
     if (!defaultOption) {
-      autoSelectedAccessTokenRef.current = accessToken;
       return;
     }
 

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Gavel, FactCheck } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
-import { Chip, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
+import { Chip, Alert, Stack, MenuItem, TextField, Typography } from '@mui/material';
 import {
   AdmissionCrmPolicyExceptionStatus,
   AdmissionCrmPolicyEvaluationStatus,
@@ -68,7 +68,7 @@ export function ApplicantPolicyReadiness({ leadId, academicYearId }: Props) {
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+    <Stack component="section" sx={{ py: 0.5 }}>
       <Stack spacing={1.25}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle2">Policy readiness</Typography>
@@ -287,6 +287,6 @@ export function ApplicantPolicyReadiness({ leadId, academicYearId }: Props) {
             </Alert>
           ))}
       </Stack>
-    </Paper>
+    </Stack>
   );
 }

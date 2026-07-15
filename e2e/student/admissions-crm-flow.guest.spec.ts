@@ -204,6 +204,12 @@ async function resolveAcademicYearId(page: Page) {
   return academicYearId as string;
 }
 
+const workspaceUrl = (path: string, academicYearId: string) => {
+  const url = new URL(path, 'http://student-enrollment.local');
+  url.searchParams.set('cycle', academicYearId);
+  return `${url.pathname}${url.search}`;
+};
+
 const uniqueToken = (prefix: string) =>
   `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
@@ -311,9 +317,10 @@ async function getCrmExamRecord(page: Page, academicYearId: string, examRecordId
 async function openExamRowInWorkspace(
   page: Page,
   applicantName: string,
-  slotName: string
+  slotName: string,
+  academicYearId: string
 ): Promise<Locator> {
-  const response = await page.goto('/student/enrollment/exams', {
+  const response = await page.goto(workspaceUrl('/student/enrollment/exams', academicYearId), {
     waitUntil: 'domcontentloaded',
     timeout: 60_000,
   });
@@ -342,11 +349,18 @@ async function openExamRowInWorkspace(
   return examRow;
 }
 
-async function openLeadCardInWorkspace(page: Page, leadName: string): Promise<Locator> {
-  const response = await page.goto('/student/enrollment/pipeline?view=board', {
-    waitUntil: 'domcontentloaded',
-    timeout: 60_000,
-  });
+async function openLeadCardInWorkspace(
+  page: Page,
+  leadName: string,
+  academicYearId: string
+): Promise<Locator> {
+  const response = await page.goto(
+    workspaceUrl('/student/enrollment/pipeline?view=board', academicYearId),
+    {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    }
+  );
   expect(response?.status(), 'GET /student/enrollment/pipeline').toBeLessThan(400);
   await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 15_000 });
   await expect(page.getByRole('heading', { name: /Admissions (CRM|Pipeline)/i })).toBeVisible({
@@ -530,11 +544,15 @@ test.describe('Student admissions CRM E2E', () => {
   }) => {
     test.setTimeout(480_000);
     await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
 
     // The same authenticated page is intentionally validated one route at a time.
     // eslint-disable-next-line no-restricted-syntax
     for (const route of [...enrollmentWorkspaceRoutes, ...enrollmentSettingsRoutes]) {
-      const response = await page.goto(route, { waitUntil: 'networkidle', timeout: 60_000 });
+      const response = await page.goto(workspaceUrl(route, academicYearId), {
+        waitUntil: 'networkidle',
+        timeout: 60_000,
+      });
       expect(response?.status(), route).toBeLessThan(400);
       await expect(page.getByRole('heading', { name: 'Sorry, page not found!' })).toHaveCount(0);
       const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
@@ -548,6 +566,7 @@ test.describe('Student admissions CRM E2E', () => {
   test('Enrollment workspaces remain usable at release viewports', async ({ page }) => {
     test.setTimeout(600_000);
     await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
 
     // Viewport changes and navigations remain serial on the same authenticated page.
     // eslint-disable-next-line no-restricted-syntax
@@ -560,7 +579,10 @@ test.describe('Student admissions CRM E2E', () => {
       await page.setViewportSize(viewport);
       // eslint-disable-next-line no-restricted-syntax
       for (const route of enrollmentWorkspaceRoutes) {
-        await page.goto(route, { waitUntil: 'networkidle', timeout: 60_000 });
+        await page.goto(workspaceUrl(route, academicYearId), {
+          waitUntil: 'networkidle',
+          timeout: 60_000,
+        });
         await expect(page.locator('#student-enrollment-content')).toBeVisible();
 
         const widths = await page.evaluate(() => ({
@@ -824,7 +846,7 @@ test.describe('Student admissions CRM E2E', () => {
     expect(duplicateLead?.likelyDuplicateCount).toBeGreaterThan(0);
     expect(duplicateLead?.duplicateContinueReason).toContain('Parent called again');
 
-    const response = await page.goto('/student/enrollment/pipeline', {
+    const response = await page.goto(workspaceUrl('/student/enrollment/pipeline', academicYearId), {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
@@ -949,7 +971,7 @@ test.describe('Student admissions CRM E2E', () => {
     expect(scheduled?.attendanceStatus).toBe(0);
 
     const slotName = scheduled.slotNameSnapshot || slot.slotName;
-    const examRow = await openExamRowInWorkspace(page, lead.firstName, slotName);
+    const examRow = await openExamRowInWorkspace(page, lead.firstName, slotName, academicYearId);
     await examRow.getByRole('button', { name: /Manage/i }).click();
     const examDialog = page.getByRole('dialog', { name: /Manage Entrance Exam/i });
     await expect(examDialog).toBeVisible({ timeout: 15_000 });
@@ -1005,7 +1027,12 @@ test.describe('Student admissions CRM E2E', () => {
 
     await examDialog.getByRole('button', { name: 'Close' }).click({ force: true });
 
-    const persistedExamRow = await openExamRowInWorkspace(page, lead.firstName, slotName);
+    const persistedExamRow = await openExamRowInWorkspace(
+      page,
+      lead.firstName,
+      slotName,
+      academicYearId
+    );
     await expect(persistedExamRow).toContainText('82/100');
     await persistedExamRow.getByRole('button', { name: 'More actions' }).click();
     await page.getByRole('menuitem', { name: 'Eligibility Handoff' }).click();
@@ -1082,7 +1109,7 @@ test.describe('Student admissions CRM E2E', () => {
         'AdmissionCrm:RegistrationFormRequiredBeforeExam'
       );
 
-      const leadCard = await openLeadCardInWorkspace(page, lead.firstName);
+      const leadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
       await expect(leadCard.getByText('Form pending')).toBeVisible();
       await leadCard.getByRole('button', { name: /Issue Form/i }).click();
 
@@ -1377,7 +1404,7 @@ test.describe('Student admissions CRM E2E', () => {
         timeout: 20_000,
       });
 
-      const leadCard = await openLeadCardInWorkspace(page, lead.firstName);
+      const leadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
       await leadCard.getByRole('button', { name: 'Manage' }).click();
       const operationsDialog = page.getByRole('dialog', { name: 'Applicant Workspace' });
       await operationsDialog.getByRole('tab', { name: 'Registration' }).click();
@@ -1413,7 +1440,7 @@ test.describe('Student admissions CRM E2E', () => {
         .getByRole('button', { name: 'Close applicant workspace' })
         .click({ force: true });
       await page.reload({ waitUntil: 'domcontentloaded' });
-      const refreshedLeadCard = await openLeadCardInWorkspace(page, lead.firstName);
+      const refreshedLeadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
       await refreshedLeadCard.getByRole('button', { name: 'Manage' }).click();
       const refreshedDialog = page.getByRole('dialog', { name: 'Applicant Workspace' });
       await refreshedDialog.getByRole('tab', { name: 'Registration' }).click();
