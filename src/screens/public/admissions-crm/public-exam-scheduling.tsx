@@ -8,6 +8,7 @@ import { Box, Alert, Stack, Divider, MenuItem, TextField, Typography } from '@mu
 
 import { publicAdmissionsActionCopy } from './public-admissions-copy';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
+import { formatPublicNumber, formatPublicDateTime } from './public-admissions-format';
 
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
@@ -106,7 +107,8 @@ export default function PublicExamScheduling({
       if (!response.ok) {
         const problem = await readPublicAdmissionStatusProblem(
           response,
-          'Unable to schedule the entrance exam.'
+          copy.examScheduleFailed,
+          language
         );
         throw new Error(problem.message);
       }
@@ -142,11 +144,11 @@ export default function PublicExamScheduling({
         eligibilityDecisionReason: exam.eligibilityDecisionReason,
       });
       shikshaMitraToast.success({
-        message: currentExam?.scheduled ? 'Entrance exam rescheduled.' : 'Entrance exam scheduled.',
+        message: currentExam?.scheduled ? copy.examRescheduled : copy.examScheduled,
       });
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : 'Unable to schedule the entrance exam.',
+        message: error instanceof Error ? error.message : copy.examScheduleFailed,
       });
     } finally {
       setIsScheduling(false);
@@ -176,8 +178,8 @@ export default function PublicExamScheduling({
           >
             {slots.map((slot) => (
               <MenuItem key={slot.entranceExamSlotId} value={slot.entranceExamSlotId}>
-                {slot.slotName} - {new Date(slot.startTime).toLocaleString()} -{' '}
-                {slot.availableSeats} seat(s)
+                {slot.slotName} - {formatPublicDateTime(slot.startTime, language)} -{' '}
+                {formatPublicNumber(slot.availableSeats, language)} {copy.seatsAvailable}
               </MenuItem>
             ))}
           </TextField>

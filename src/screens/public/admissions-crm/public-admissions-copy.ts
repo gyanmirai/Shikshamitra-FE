@@ -1,5 +1,40 @@
 export type PublicAdmissionsLanguage = 'en' | 'gu' | 'hi';
 
+export type PublicAdmissionsStatusCopy = {
+  lastActivity: string;
+  checklist: string;
+  applicantChecklist: string;
+  recentActivity: string;
+  entranceExam: string;
+  entranceExamFallback: string;
+  room: string;
+  marks: string;
+  meritRank: string;
+  admissionQuotation: string;
+  validUntil: string;
+  conditionSatisfied: string;
+  actionPending: string;
+  refundable: string;
+  nonRefundable: string;
+  total: string;
+  concession: string;
+  payable: string;
+  confirmed: string;
+  outstanding: string;
+  financeReference: string;
+  admissionRoute: string;
+  readyToJoin: string;
+  setupInProgress: string;
+  reference: string;
+  completedOn: string;
+  unableIssueOtp: string;
+  enterOtp: string;
+  unableVerifyOtp: string;
+  progress: string;
+  currentStep: string;
+  nextStep: string;
+};
+
 type PublicAdmissionsShellCopy = {
   eyebrow: string;
   privacy: string;
@@ -55,6 +90,114 @@ export const publicAdmissionsCopy: Record<PublicAdmissionsLanguage, PublicAdmiss
   },
 };
 
+export const publicAdmissionsStatusCopy: Record<
+  PublicAdmissionsLanguage,
+  PublicAdmissionsStatusCopy
+> = {
+  en: {
+    lastActivity: 'Last activity',
+    checklist: 'Checklist',
+    applicantChecklist: 'Applicant checklist',
+    recentActivity: 'Recent activity',
+    entranceExam: 'Entrance exam',
+    entranceExamFallback: 'Entrance exam',
+    room: 'Room',
+    marks: 'Marks',
+    meritRank: 'Merit rank',
+    admissionQuotation: 'Admission quotation',
+    validUntil: 'Valid until',
+    conditionSatisfied: 'Condition satisfied',
+    actionPending: 'Action pending',
+    refundable: 'Refundable',
+    nonRefundable: 'Non-refundable',
+    total: 'Total',
+    concession: 'Concession',
+    payable: 'Payable',
+    confirmed: 'Confirmed',
+    outstanding: 'Outstanding',
+    financeReference: 'Finance reference',
+    admissionRoute: 'Admission route',
+    readyToJoin: 'Ready to join school',
+    setupInProgress: 'Final enrollment setup in progress',
+    reference: 'Reference',
+    completedOn: 'completed',
+    unableIssueOtp: 'Unable to create OTP challenge.',
+    enterOtp: 'Enter the OTP code.',
+    unableVerifyOtp: 'Unable to verify OTP.',
+    progress: 'Admission progress',
+    currentStep: 'Current',
+    nextStep: 'Next',
+  },
+  gu: {
+    lastActivity: 'છેલ્લી પ્રવૃત્તિ',
+    checklist: 'ચકાસણી સૂચિ',
+    applicantChecklist: 'અરજદાર ચકાસણી સૂચિ',
+    recentActivity: 'તાજેતરની પ્રવૃત્તિ',
+    entranceExam: 'પ્રવેશ પરીક્ષા',
+    entranceExamFallback: 'પ્રવેશ પરીક્ષા',
+    room: 'ખંડ',
+    marks: 'ગુણ',
+    meritRank: 'મેરિટ ક્રમ',
+    admissionQuotation: 'પ્રવેશ ફી વિગત',
+    validUntil: 'માન્ય તારીખ',
+    conditionSatisfied: 'શરત પૂર્ણ',
+    actionPending: 'કાર્ય બાકી',
+    refundable: 'પરતપાત્ર',
+    nonRefundable: 'પરત ન મળવાપાત્ર',
+    total: 'કુલ',
+    concession: 'રાહત',
+    payable: 'ચૂકવવાપાત્ર',
+    confirmed: 'પુષ્ટિ થયેલ',
+    outstanding: 'બાકી',
+    financeReference: 'નાણાકીય સંદર્ભ',
+    admissionRoute: 'પ્રવેશ માર્ગ',
+    readyToJoin: 'શાળામાં જોડાવા માટે તૈયાર',
+    setupInProgress: 'અંતિમ નોંધણી પ્રક્રિયા ચાલુ છે',
+    reference: 'સંદર્ભ',
+    completedOn: 'પૂર્ણ થયું',
+    unableIssueOtp: 'OTP વિનંતી બનાવી શકાઈ નથી.',
+    enterOtp: 'OTP કોડ દાખલ કરો.',
+    unableVerifyOtp: 'OTP ચકાસી શકાયો નથી.',
+    progress: 'પ્રવેશ પ્રગતિ',
+    currentStep: 'હાલનું પગલું',
+    nextStep: 'આગળનું પગલું',
+  },
+  hi: {
+    lastActivity: 'अंतिम गतिविधि',
+    checklist: 'जाँच सूची',
+    applicantChecklist: 'आवेदक जाँच सूची',
+    recentActivity: 'हाल की गतिविधि',
+    entranceExam: 'प्रवेश परीक्षा',
+    entranceExamFallback: 'प्रवेश परीक्षा',
+    room: 'कक्ष',
+    marks: 'अंक',
+    meritRank: 'मेरिट क्रम',
+    admissionQuotation: 'प्रवेश शुल्क विवरण',
+    validUntil: 'मान्य तिथि',
+    conditionSatisfied: 'शर्त पूरी',
+    actionPending: 'कार्य लंबित',
+    refundable: 'वापसी योग्य',
+    nonRefundable: 'वापसी योग्य नहीं',
+    total: 'कुल',
+    concession: 'रियायत',
+    payable: 'देय',
+    confirmed: 'पुष्ट',
+    outstanding: 'बकाया',
+    financeReference: 'वित्त संदर्भ',
+    admissionRoute: 'प्रवेश मार्ग',
+    readyToJoin: 'विद्यालय में शामिल होने के लिए तैयार',
+    setupInProgress: 'अंतिम नामांकन प्रक्रिया जारी है',
+    reference: 'संदर्भ',
+    completedOn: 'पूर्ण हुआ',
+    unableIssueOtp: 'OTP अनुरोध नहीं बनाया जा सका।',
+    enterOtp: 'OTP कोड दर्ज करें।',
+    unableVerifyOtp: 'OTP सत्यापित नहीं किया जा सका।',
+    progress: 'प्रवेश प्रगति',
+    currentStep: 'वर्तमान चरण',
+    nextStep: 'अगला चरण',
+  },
+};
+
 export const publicAdmissionsActionCopy = {
   en: {
     registrationTitle: 'Registration Form',
@@ -88,6 +231,33 @@ export const publicAdmissionsActionCopy = {
     declineOffer: 'Decline Offer',
     accepted: 'Your acceptance has been recorded.',
     offerStatus: 'Offer status',
+    chooseDocument: 'Choose a document file.',
+    acceptedFormats: 'Accepted formats',
+    maximumFileSize: 'Maximum file size is',
+    enterValidityDate: 'Enter the document validity date.',
+    uploadFailed: 'Unable to upload document.',
+    uploadSuccess: 'Document uploaded for review.',
+    examScheduleFailed: 'Unable to schedule the entrance exam.',
+    examScheduled: 'Entrance exam scheduled.',
+    examRescheduled: 'Entrance exam rescheduled.',
+    seatsAvailable: 'seats available',
+    declineReasonRequired: 'Enter a reason before declining the offer.',
+    offerResponseFailed: 'Unable to record the offer response.',
+    offerAccepted: 'Offer accepted.',
+    offerDeclined: 'Offer declined.',
+    registrationSubmitFailed: 'Unable to submit registration.',
+    registrationSaveFailed: 'Unable to save registration.',
+    registrationActionFailed: 'Registration action failed.',
+    registrationSubmitted: 'Registration submitted.',
+    progressSaved: 'Progress saved.',
+    formLabel: 'Form',
+    registrationComplete: 'registration complete',
+    documentsComplete: 'documents complete',
+    registrationFee: 'Registration fee',
+    paymentReferencePending: 'Payment reference is pending.',
+    feeStatusRecorded: 'Fee status recorded.',
+    correctionRequested: 'Correction requested',
+    registrationUnderReview: 'Registration has been submitted and is under review.',
   },
   gu: {
     registrationTitle: 'નોંધણી ફોર્મ',
@@ -121,6 +291,33 @@ export const publicAdmissionsActionCopy = {
     declineOffer: 'ઑફર નકારો',
     accepted: 'તમારી સ્વીકૃતિ નોંધાઈ ગઈ છે.',
     offerStatus: 'ઑફરની સ્થિતિ',
+    chooseDocument: 'દસ્તાવેજ ફાઇલ પસંદ કરો.',
+    acceptedFormats: 'સ્વીકાર્ય ફોર્મેટ',
+    maximumFileSize: 'મહત્તમ ફાઇલ કદ',
+    enterValidityDate: 'દસ્તાવેજની માન્ય તારીખ દાખલ કરો.',
+    uploadFailed: 'દસ્તાવેજ અપલોડ થઈ શક્યો નથી.',
+    uploadSuccess: 'દસ્તાવેજ ચકાસણી માટે અપલોડ થયો.',
+    examScheduleFailed: 'પ્રવેશ પરીક્ષાનો સમય નક્કી થઈ શક્યો નથી.',
+    examScheduled: 'પ્રવેશ પરીક્ષાનો સમય નક્કી થયો.',
+    examRescheduled: 'પ્રવેશ પરીક્ષાનો સમય બદલાયો.',
+    seatsAvailable: 'બેઠકો ઉપલબ્ધ',
+    declineReasonRequired: 'ઑફર નકારવાનું કારણ દાખલ કરો.',
+    offerResponseFailed: 'ઑફરનો જવાબ નોંધાઈ શક્યો નથી.',
+    offerAccepted: 'ઑફર સ્વીકારાઈ.',
+    offerDeclined: 'ઑફર નકારાઈ.',
+    registrationSubmitFailed: 'નોંધણી સબમિટ થઈ શકી નથી.',
+    registrationSaveFailed: 'નોંધણી સાચવી શકાઈ નથી.',
+    registrationActionFailed: 'નોંધણી કાર્ય પૂર્ણ થઈ શક્યું નથી.',
+    registrationSubmitted: 'નોંધણી સબમિટ થઈ.',
+    progressSaved: 'પ્રગતિ સાચવાઈ.',
+    formLabel: 'ફોર્મ',
+    registrationComplete: 'નોંધણી પૂર્ણ',
+    documentsComplete: 'દસ્તાવેજો પૂર્ણ',
+    registrationFee: 'નોંધણી ફી',
+    paymentReferencePending: 'ચુકવણી સંદર્ભ બાકી છે.',
+    feeStatusRecorded: 'ફીની સ્થિતિ નોંધાઈ છે.',
+    correctionRequested: 'સુધારો માંગવામાં આવ્યો છે',
+    registrationUnderReview: 'નોંધણી સબમિટ થઈ છે અને ચકાસણી હેઠળ છે.',
   },
   hi: {
     registrationTitle: 'पंजीकरण फ़ॉर्म',
@@ -154,5 +351,32 @@ export const publicAdmissionsActionCopy = {
     declineOffer: 'प्रस्ताव अस्वीकार करें',
     accepted: 'आपकी स्वीकृति दर्ज हो गई है।',
     offerStatus: 'प्रस्ताव की स्थिति',
+    chooseDocument: 'दस्तावेज़ फ़ाइल चुनें।',
+    acceptedFormats: 'स्वीकृत प्रारूप',
+    maximumFileSize: 'अधिकतम फ़ाइल आकार',
+    enterValidityDate: 'दस्तावेज़ की मान्य तिथि दर्ज करें।',
+    uploadFailed: 'दस्तावेज़ अपलोड नहीं किया जा सका।',
+    uploadSuccess: 'दस्तावेज़ समीक्षा के लिए अपलोड किया गया।',
+    examScheduleFailed: 'प्रवेश परीक्षा का समय निर्धारित नहीं किया जा सका।',
+    examScheduled: 'प्रवेश परीक्षा का समय निर्धारित हुआ।',
+    examRescheduled: 'प्रवेश परीक्षा का समय बदला गया।',
+    seatsAvailable: 'सीटें उपलब्ध',
+    declineReasonRequired: 'प्रस्ताव अस्वीकार करने का कारण दर्ज करें।',
+    offerResponseFailed: 'प्रस्ताव का उत्तर दर्ज नहीं किया जा सका।',
+    offerAccepted: 'प्रस्ताव स्वीकार किया गया।',
+    offerDeclined: 'प्रस्ताव अस्वीकार किया गया।',
+    registrationSubmitFailed: 'पंजीकरण जमा नहीं किया जा सका।',
+    registrationSaveFailed: 'पंजीकरण सहेजा नहीं जा सका।',
+    registrationActionFailed: 'पंजीकरण कार्य पूरा नहीं हुआ।',
+    registrationSubmitted: 'पंजीकरण जमा किया गया।',
+    progressSaved: 'प्रगति सहेजी गई।',
+    formLabel: 'फ़ॉर्म',
+    registrationComplete: 'पंजीकरण पूर्ण',
+    documentsComplete: 'दस्तावेज़ पूर्ण',
+    registrationFee: 'पंजीकरण शुल्क',
+    paymentReferencePending: 'भुगतान संदर्भ लंबित है।',
+    feeStatusRecorded: 'शुल्क स्थिति दर्ज की गई है।',
+    correctionRequested: 'सुधार का अनुरोध किया गया',
+    registrationUnderReview: 'पंजीकरण जमा किया गया है और समीक्षा में है।',
   },
 } satisfies Record<PublicAdmissionsLanguage, Record<string, string>>;

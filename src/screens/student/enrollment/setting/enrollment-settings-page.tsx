@@ -3,9 +3,11 @@
 import type { ReactNode } from 'react';
 
 import { usePathname } from 'next/navigation';
+import { useTheme } from '@mui/material/styles';
 import { RouterLink } from 'src/routes/components';
-import { Box, Tab, Tabs, Stack, Typography } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { isPlainPrimaryNavigationClick } from 'src/components/nav-section/path-utils';
+import { Box, Tab, Tabs, Step, Stack, Stepper, StepButton, Typography } from '@mui/material';
 
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import { serializeEnrollmentWorkspaceState } from '../admissions-crm/enrollment-workspace-state';
@@ -21,6 +23,7 @@ type SettingsPageProps = {
 type SettingsPanelOption = {
   value: EnrollmentSettingsPanel;
   label: string;
+  description?: string;
 };
 
 type SettingsPanelTabsProps = {
@@ -83,6 +86,65 @@ export function EnrollmentSettingsPanelTabs({ label, value, options }: SettingsP
           />
         ))}
       </Tabs>
+    </Box>
+  );
+}
+
+export function EnrollmentSettingsSetupSteps({ label, value, options }: SettingsPanelTabsProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const pathname = usePathname();
+  const { state, updateState } = useEnrollmentWorkspace();
+  const activeStep = Math.max(
+    0,
+    options.findIndex((option) => option.value === value)
+  );
+
+  const getPanelHref = (panel: EnrollmentSettingsPanel) => {
+    const query = serializeEnrollmentWorkspaceState({
+      ...state,
+      page: 1,
+      settingsPanel: panel,
+    }).toString();
+
+    return query ? `${pathname}?${query}` : pathname;
+  };
+
+  return (
+    <Box component="section" aria-label={label} sx={{ py: 0.5, minWidth: 0 }}>
+      <Typography variant="overline" color="text.secondary">
+        Setup sequence
+      </Typography>
+      <Stepper
+        nonLinear
+        activeStep={activeStep}
+        orientation={isMobile ? 'vertical' : 'horizontal'}
+        sx={{ mt: 0.25 }}
+      >
+        {options.map((option, index) => (
+          <Step key={option.value} completed={false}>
+            <StepButton
+              component={RouterLink}
+              href={getPanelHref(option.value)}
+              onClick={(event) => {
+                if (!isPlainPrimaryNavigationClick(event)) return;
+                event.preventDefault();
+                updateState({ settingsPanel: option.value, page: 1 }, 'push');
+              }}
+              aria-current={index === activeStep ? 'step' : undefined}
+            >
+              <Stack spacing={0.125} sx={{ textAlign: 'left', minWidth: 0 }}>
+                <Typography variant="subtitle2">{option.label}</Typography>
+                {option.description ? (
+                  <Typography variant="caption" color="text.secondary" sx={{ textWrap: 'pretty' }}>
+                    {option.description}
+                  </Typography>
+                ) : null}
+              </Stack>
+            </StepButton>
+          </Step>
+        ))}
+      </Stepper>
     </Box>
   );
 }

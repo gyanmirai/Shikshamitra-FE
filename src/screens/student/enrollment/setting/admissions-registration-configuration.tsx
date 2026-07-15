@@ -63,6 +63,7 @@ import {
   useCreateAdmissionCrmRegistrationTemplateVersionMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { getAdmissionCrmStageLabel } from '../admissions-crm/admissions-crm-utils';
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import {
   createRegistrationField,
@@ -381,7 +382,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
       },
       {
         id: 'autoIssueAtStage',
-        label: 'Issue Trigger',
+        label: 'Issue Method',
         minWidth: 145,
         filterType: 'enum',
         enumOptions: [
@@ -391,7 +392,9 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
           { value: AdmissionInquiryStage.Eligible, label: 'Eligible' },
         ],
         render: (value) =>
-          value === null || value === undefined ? 'Manual' : AdmissionInquiryStage[value],
+          value === null || value === undefined
+            ? 'Staff issues manually'
+            : `Automatic at ${getAdmissionCrmStageLabel(value as AdmissionInquiryStage)}`,
       },
       {
         id: 'status',
@@ -483,14 +486,14 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
     <Box>
       <Stack spacing={1.25}>
         <Box>
-          <Typography variant="subtitle1">Registration Orchestration</Typography>
+          <Typography variant="subtitle1">Registration Forms</Typography>
           <Typography variant="caption" color="text.secondary">
-            Versioned forms and controlled form numbering
+            Published templates control the form, secure link, issue method, and numbering.
           </Typography>
         </Box>
         <Tabs value={tab} onChange={(_event, value: number) => setTab(value)}>
-          <Tab label="Form Templates" />
-          <Tab label="Number Series" />
+          <Tab label="Templates" />
+          <Tab label="Form Numbering" />
         </Tabs>
 
         {(tab === 0 && templatesQuery.isError) || (tab === 1 && seriesQuery.isError) ? (
@@ -653,9 +656,10 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                   <TextField
                     select
                     size="small"
-                    label="Automatic issue milestone"
+                    label="Issue registration form"
                     value={templateForm.autoIssueAtStage ?? ''}
                     disabled={templateReadOnly}
+                    helperText="Manual sends eligible applicants to Ready to Invite. Automatic issues this template when the selected stage is reached."
                     onChange={(event) =>
                       setTemplateForm((current) => ({
                         ...current,
@@ -666,10 +670,16 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                       }))
                     }
                   >
-                    <MenuItem value="">Manual issue only</MenuItem>
-                    <MenuItem value={AdmissionInquiryStage.ExamReady}>Exam ready</MenuItem>
-                    <MenuItem value={AdmissionInquiryStage.ExamCompleted}>Exam completed</MenuItem>
-                    <MenuItem value={AdmissionInquiryStage.Eligible}>Eligible</MenuItem>
+                    <MenuItem value="">Staff issues manually</MenuItem>
+                    <MenuItem value={AdmissionInquiryStage.ExamReady}>
+                      Automatically when exam ready
+                    </MenuItem>
+                    <MenuItem value={AdmissionInquiryStage.ExamCompleted}>
+                      Automatically when exam completed
+                    </MenuItem>
+                    <MenuItem value={AdmissionInquiryStage.Eligible}>
+                      Automatically when eligible
+                    </MenuItem>
                   </TextField>
                 </Box>
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>

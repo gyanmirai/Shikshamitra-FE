@@ -9,6 +9,7 @@ export const studentPaths = {
   dashboard: '/student/dashboard',
   enrollment: {
     root: '',
+    overview: '/student/enrollment/overview',
     pipeline: '/student/enrollment/pipeline',
     exams: '/student/enrollment/exams',
     registrations: '/student/enrollment/registrations',
@@ -58,6 +59,7 @@ export const studentPermissions = {
   enrollment: {
     root: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm`,
     admissionsCrm: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm`,
+    overview: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.View`,
     pipeline: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.View`,
     exams: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.View`,
     registrations: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.View`,
@@ -126,6 +128,14 @@ const studentModule = (isDdvs: boolean) => ({
 
           children: [
             {
+              title: 'My Work',
+              path: studentPaths.enrollment.overview,
+              _action: 'student-enrollment-overview',
+              permissionName: studentPermissions.enrollment.overview,
+              icon: menuIconView('mdi:view-dashboard-variant-outline'),
+              preserveQueryParams: ['cycle'],
+            },
+            {
               title: 'Pipeline',
               path: studentPaths.enrollment.pipeline,
               _action: 'student-enrollment-pipeline',
@@ -189,7 +199,7 @@ const studentModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
-                  title: 'Journey & Cycles',
+                  title: 'Admission Journey',
                   path: studentPaths.enrollment.settingsSections.journey,
                   _action: 'student-enrollment-settings-journey',
                   permissionName: studentPermissions.enrollment.settings,
@@ -197,7 +207,7 @@ const studentModule = (isDdvs: boolean) => ({
                   preserveQueryParams: ['cycle'],
                 },
                 {
-                  title: 'Inquiry Capture',
+                  title: 'Inquiry Forms & Sources',
                   path: studentPaths.enrollment.settingsSections.inquiryCapture,
                   _action: 'student-enrollment-settings-inquiry-capture',
                   permissionName: studentPermissions.enrollment.settings,
@@ -205,7 +215,7 @@ const studentModule = (isDdvs: boolean) => ({
                   preserveQueryParams: ['cycle'],
                 },
                 {
-                  title: 'Routing & Scoring',
+                  title: 'Assignment & Priority',
                   path: studentPaths.enrollment.settingsSections.routingScoring,
                   _action: 'student-enrollment-settings-routing-scoring',
                   permissionName: studentPermissions.enrollment.settings,
@@ -213,7 +223,7 @@ const studentModule = (isDdvs: boolean) => ({
                   preserveQueryParams: ['cycle'],
                 },
                 {
-                  title: 'Entrance Exams',
+                  title: 'Exam & Eligibility',
                   path: studentPaths.enrollment.settingsSections.entranceExams,
                   _action: 'student-enrollment-settings-entrance-exams',
                   permissionName: studentPermissions.enrollment.settings,
@@ -237,7 +247,7 @@ const studentModule = (isDdvs: boolean) => ({
                   preserveQueryParams: ['cycle'],
                 },
                 {
-                  title: 'Activation',
+                  title: 'Student Activation',
                   path: studentPaths.enrollment.settingsSections.activation,
                   _action: 'student-enrollment-settings-activation',
                   permissionName: studentPermissions.enrollment.settings,
@@ -245,7 +255,7 @@ const studentModule = (isDdvs: boolean) => ({
                   preserveQueryParams: ['cycle'],
                 },
                 {
-                  title: 'Governance',
+                  title: 'Policies & Compliance',
                   path: studentPaths.enrollment.settingsSections.governance,
                   _action: 'student-enrollment-settings-governance',
                   permissionName: studentPermissions.enrollment.settings,
@@ -253,7 +263,7 @@ const studentModule = (isDdvs: boolean) => ({
                   preserveQueryParams: ['cycle'],
                 },
                 {
-                  title: 'Communications',
+                  title: 'Messages & Delivery',
                   path: studentPaths.enrollment.settingsSections.communications,
                   _action: 'student-enrollment-settings-communications',
                   permissionName: studentPermissions.enrollment.settings,
@@ -261,7 +271,7 @@ const studentModule = (isDdvs: boolean) => ({
                   preserveQueryParams: ['cycle'],
                 },
                 {
-                  title: 'Automation',
+                  title: 'Follow-up Automation',
                   path: studentPaths.enrollment.settingsSections.automation,
                   _action: 'student-enrollment-settings-automation',
                   permissionName: studentPermissions.enrollment.settings,

@@ -7,6 +7,7 @@ const read = (...segments: string[]) =>
 
 describe('Student Enrollment workspace route contracts', () => {
   it.each([
+    ['overview', 'EnrollmentOverviewWorkspace'],
     ['pipeline', 'AdmissionsPipelineWorkspace'],
     ['exams', 'AdmissionsExamsWorkspace'],
     ['registrations', 'AdmissionsRegistrationsWorkspace'],
@@ -31,7 +32,10 @@ describe('Student Enrollment workspace route contracts', () => {
     [
       'PipelineWorkspace',
       'ExamsWorkspace',
-      'OperationsQueueWorkspace',
+      'RegistrationsWorkspace',
+      'OffersWorkspace',
+      'ActivationWorkspace',
+      'OperationsWorkspace',
       'AnalyticsWorkspace',
     ].forEach((workspace) => expect(source).toContain(workspace));
     expect(source).not.toContain('StudentAdmissionsCrmScreen');
@@ -48,6 +52,11 @@ describe('Student Enrollment workspace route contracts', () => {
         )
       )
     ).toBe(false);
+  });
+
+  it('redirects the Enrollment root to the role-focused overview', () => {
+    const source = read('src', 'app', '(auth-route)', 'student', 'enrollment', 'page.tsx');
+    expect(source).toContain("redirect('/student/enrollment/overview')");
   });
 
   it('keeps bounded server pagination and debounced staff search in owning workspaces', () => {

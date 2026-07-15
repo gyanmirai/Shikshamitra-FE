@@ -24,6 +24,7 @@ import {
 import { publicAdmissionsActionCopy } from './public-admissions-copy';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import { getAccessibleStatusChipProps } from './public-admissions-styles';
+import { formatPublicNumber, formatPublicDateTime } from './public-admissions-format';
 import {
   getPublicRegistrationValue,
   isPublicRegistrationFieldVisible,
@@ -109,18 +110,19 @@ export default function PublicRegistration({
       if (!response.ok) {
         const problem = await readPublicAdmissionStatusProblem(
           response,
-          submit ? 'Unable to submit registration.' : 'Unable to save registration.'
+          submit ? copy.registrationSubmitFailed : copy.registrationSaveFailed,
+          language
         );
         throw new Error(problem.message);
       }
       const updated = (await response.json()) as PublicRegistrationApplication;
       onUpdated(updated);
       shikshaMitraToast.success({
-        message: submit ? 'Registration submitted.' : 'Progress saved.',
+        message: submit ? copy.registrationSubmitted : copy.progressSaved,
       });
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : 'Registration action failed.',
+        message: error instanceof Error ? error.message : copy.registrationActionFailed,
       });
     } finally {
       if (submit) setIsSubmitting(false);
@@ -135,12 +137,12 @@ export default function PublicRegistration({
         <Box>
           <Typography variant="subtitle1">{copy.registrationTitle}</Typography>
           <Typography variant="caption" color="text.secondary">
-            Form {application.formNumber}
+            {copy.formLabel} {application.formNumber}
           </Typography>
         </Box>
         <Chip
           size="small"
-          label={`${application.completionPercentage.toFixed(0)}% ${copy.complete}`}
+          label={`${formatPublicNumber(application.completionPercentage, language, { maximumFractionDigits: 0 })}% ${copy.complete}`}
           {...getAccessibleStatusChipProps(
             application.completionPercentage === 100 ? 'success' : 'default'
           )}
@@ -149,17 +151,17 @@ export default function PublicRegistration({
       <LinearProgress
         variant="determinate"
         value={Math.min(100, Math.max(0, application.completionPercentage))}
-        aria-label={`${application.completionPercentage.toFixed(0)}% registration complete`}
+        aria-label={`${formatPublicNumber(application.completionPercentage, language, { maximumFractionDigits: 0 })}% ${copy.registrationComplete}`}
       />
       <Alert severity={isExpired ? 'error' : 'info'} role={isExpired ? 'alert' : 'status'}>
         {isExpired ? copy.expired : copy.linkExpires}{' '}
-        {new Date(application.linkExpiresAt).toLocaleString()}
+        {formatPublicDateTime(application.linkExpiresAt, language)}
       </Alert>
       {application.status === 5 ? <Alert severity="warning">{copy.correction}</Alert> : null}
       {application.feeAmount > 0 ? (
         <Alert severity={application.feeStatus === 1 ? 'warning' : 'success'}>
-          Registration fee: {application.feeAmount}.{' '}
-          {application.feeStatus === 1 ? 'Payment reference is pending.' : 'Fee status recorded.'}
+          {copy.registrationFee}: {formatPublicNumber(application.feeAmount, language)}.{' '}
+          {application.feeStatus === 1 ? copy.paymentReferencePending : copy.feeStatusRecorded}
         </Alert>
       ) : null}
 
@@ -253,7 +255,7 @@ export default function PublicRegistration({
                       value={String(value ?? '')}
                       disabled={!editable}
                       error={error}
-                      helperText={error ? 'Correction requested' : field.helpText}
+                      helperText={error ? copy.correctionRequested : field.helpText}
                       InputLabelProps={field.fieldType === 3 ? { shrink: true } : undefined}
                       onChange={(event) => updateValue(field.key, event.target.value)}
                     />
@@ -285,7 +287,7 @@ export default function PublicRegistration({
           </LoadingButton>
         </Stack>
       ) : (
-        <Alert severity="success">Registration has been submitted and is under review.</Alert>
+        <Alert severity="success">{copy.registrationUnderReview}</Alert>
       )}
     </Stack>
   );
