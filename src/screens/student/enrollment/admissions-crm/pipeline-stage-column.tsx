@@ -17,6 +17,7 @@ import {
   Skeleton,
   Typography,
   LinearProgress,
+  CircularProgress,
 } from '@mui/material';
 
 const PAGE_SIZE = 25;
@@ -103,6 +104,11 @@ export function PipelineStageColumn({
         width: { xs: '100%', lg: 300 },
         minWidth: { xs: 0, lg: 300 },
         flex: { lg: '0 0 300px' },
+        height: { xs: 'auto', lg: '100%' },
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         bgcolor: 'background.neutral',
         borderTop: configuredColor ? `3px solid ${configuredColor}` : undefined,
       }}
@@ -117,7 +123,11 @@ export function PipelineStageColumn({
           }
         />
         <Typography variant="caption" color="text.secondary">
-          {shouldLoad ? (data?.totalCount ?? 0) : '…'}
+          {shouldLoad ? (
+            (data?.totalCount ?? 0)
+          ) : (
+            <Skeleton component="span" width={24} aria-label="Lead count loading" />
+          )}
         </Typography>
       </Stack>
       {!shouldLoad && (
@@ -139,7 +149,15 @@ export function PipelineStageColumn({
           Stage unavailable
         </Alert>
       ) : shouldLoad ? (
-        <Stack spacing={1}>
+        <Stack
+          spacing={1}
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: { xs: 'visible', lg: 'auto' },
+            pr: { lg: 0.5 },
+          }}
+        >
           {visibleLeads.length
             ? visibleLeads.map(renderLead)
             : !isFetching && (
@@ -153,7 +171,11 @@ export function PipelineStageColumn({
               onClick={() => setPage((current) => current + 1)}
               disabled={isFetching}
             >
-              {isFetching ? 'Loading\u2026' : 'Load more'}
+              {isFetching ? (
+                <CircularProgress size={16} aria-label="Loading more leads" />
+              ) : (
+                'Load more'
+              )}
             </Button>
           )}
         </Stack>

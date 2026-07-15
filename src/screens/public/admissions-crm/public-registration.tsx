@@ -17,14 +17,20 @@ import {
   Typography,
   InputLabel,
   FormControl,
+  LinearProgress,
   FormControlLabel,
 } from '@mui/material';
 
+import { publicAdmissionsActionCopy } from './public-admissions-copy';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
+import { getAccessibleStatusChipProps } from './public-admissions-styles';
+import { formatPublicNumber, formatPublicDateTime } from './public-admissions-format';
 import {
   getPublicRegistrationValue,
   isPublicRegistrationFieldVisible,
 } from './public-registration-utils';
+
+import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
 type Field = {
   key: string;
@@ -65,6 +71,7 @@ type Props = {
   accessSessionToken: string;
   application: PublicRegistrationApplication;
   onUpdated: (application: PublicRegistrationApplication) => void;
+  language?: PublicAdmissionsLanguage;
 };
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL}/api`;
@@ -76,12 +83,15 @@ export default function PublicRegistration({
   accessSessionToken,
   application,
   onUpdated,
+  language = 'en',
 }: Props) {
+  const copy = publicAdmissionsActionCopy[language];
   const [responses, setResponses] = useState<Record<string, unknown>>(application.responses || {});
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fields = application.sections.flatMap((section) => section.fields);
-  const canEdit = editableStatuses.has(application.status);
+  const isExpired = new Date(application.linkExpiresAt) <= new Date();
+  const canEdit = editableStatuses.has(application.status) && !isExpired;
 
   const updateValue = (key: string, value: unknown) => {
     setResponses((current) => ({ ...current, [key]: value }));
@@ -100,18 +110,19 @@ export default function PublicRegistration({
       if (!response.ok) {
         const problem = await readPublicAdmissionStatusProblem(
           response,
-          submit ? 'Unable to submit registration.' : 'Unable to save registration.'
+          submit ? copy.registrationSubmitFailed : copy.registrationSaveFailed,
+          language
         );
         throw new Error(problem.message);
       }
       const updated = (await response.json()) as PublicRegistrationApplication;
       onUpdated(updated);
       shikshaMitraToast.success({
-        message: submit ? 'Registration submitted.' : 'Progress saved.',
+        message: submit ? copy.registrationSubmitted : copy.progressSaved,
       });
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : 'Registration action failed.',
+        message: error instanceof Error ? error.message : copy.registrationActionFailed,
       });
     } finally {
       if (submit) setIsSubmitting(false);
@@ -124,27 +135,33 @@ export default function PublicRegistration({
       <Divider />
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
         <Box>
-          <Typography variant="subtitle1">Registration Form</Typography>
+          <Typography variant="subtitle1">{copy.registrationTitle}</Typography>
           <Typography variant="caption" color="text.secondary">
-            Form {application.formNumber}
+            {copy.formLabel} {application.formNumber}
           </Typography>
         </Box>
         <Chip
           size="small"
-          label={`${application.completionPercentage.toFixed(0)}% complete`}
-          color={application.completionPercentage === 100 ? 'success' : 'default'}
+          label={`${formatPublicNumber(application.completionPercentage, language, { maximumFractionDigits: 0 })}% ${copy.complete}`}
+          {...getAccessibleStatusChipProps(
+            application.completionPercentage === 100 ? 'success' : 'default'
+          )}
         />
       </Stack>
-      <Alert severity={new Date(application.linkExpiresAt) <= new Date() ? 'error' : 'info'}>
-        Link expires {new Date(application.linkExpiresAt).toLocaleString()}
+      <LinearProgress
+        variant="determinate"
+        value={Math.min(100, Math.max(0, application.completionPercentage))}
+        aria-label={`${formatPublicNumber(application.completionPercentage, language, { maximumFractionDigits: 0 })}% ${copy.registrationComplete}`}
+      />
+      <Alert severity={isExpired ? 'error' : 'info'} role={isExpired ? 'alert' : 'status'}>
+        {isExpired ? copy.expired : copy.linkExpires}{' '}
+        {formatPublicDateTime(application.linkExpiresAt, language)}
       </Alert>
-      {application.status === 5 ? (
-        <Alert severity="warning">Update the highlighted fields and submit the corrections.</Alert>
-      ) : null}
+      {application.status === 5 ? <Alert severity="warning">{copy.correction}</Alert> : null}
       {application.feeAmount > 0 ? (
         <Alert severity={application.feeStatus === 1 ? 'warning' : 'success'}>
-          Registration fee: {application.feeAmount}.{' '}
-          {application.feeStatus === 1 ? 'Payment reference is pending.' : 'Fee status recorded.'}
+          {copy.registrationFee}: {formatPublicNumber(application.feeAmount, language)}.{' '}
+          {application.feeStatus === 1 ? copy.paymentReferencePending : copy.feeStatusRecorded}
         </Alert>
       ) : null}
 
@@ -238,7 +255,7 @@ export default function PublicRegistration({
                       value={String(value ?? '')}
                       disabled={!editable}
                       error={error}
-                      helperText={error ? 'Correction requested' : field.helpText}
+                      helperText={error ? copy.correctionRequested : field.helpText}
                       InputLabelProps={field.fieldType === 3 ? { shrink: true } : undefined}
                       onChange={(event) => updateValue(field.key, event.target.value)}
                     />
@@ -257,7 +274,7 @@ export default function PublicRegistration({
             disabled={isSubmitting}
             onClick={() => send(false)}
           >
-            Save Progress
+            {copy.save}
           </LoadingButton>
           <LoadingButton
             variant="contained"
@@ -266,11 +283,11 @@ export default function PublicRegistration({
             disabled={isSaving}
             onClick={() => send(true)}
           >
-            Submit Registration
+            {copy.submit}
           </LoadingButton>
         </Stack>
       ) : (
-        <Alert severity="success">Registration has been submitted and is under review.</Alert>
+        <Alert severity="success">{copy.registrationUnderReview}</Alert>
       )}
     </Stack>
   );

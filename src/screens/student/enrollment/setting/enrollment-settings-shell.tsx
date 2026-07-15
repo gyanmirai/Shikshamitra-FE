@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState, useEffect } from 'react';
 import { isPlainPrimaryNavigationClick } from 'src/components/nav-section/path-utils';
 import {
+  Box,
   Button,
   Dialog,
   Typography,
@@ -86,7 +87,42 @@ export function EnrollmentSettingsShell({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {children}
+      <Box
+        sx={{
+          '& .MuiChip-colorPrimary': {
+            bgcolor: 'transparent',
+            color: 'text.primary',
+            border: 1,
+            borderColor: 'primary.main',
+          },
+          '& .MuiChip-colorSuccess': {
+            bgcolor: 'transparent',
+            color: 'text.primary',
+            border: 1,
+            borderColor: 'success.main',
+          },
+          '& .MuiChip-colorWarning': {
+            bgcolor: 'transparent',
+            color: 'text.primary',
+            border: 1,
+            borderColor: 'warning.main',
+          },
+          '& .MuiChip-colorError': {
+            bgcolor: 'transparent',
+            color: 'text.primary',
+            border: 1,
+            borderColor: 'error.main',
+          },
+          '& .MuiChip-colorInfo': {
+            bgcolor: 'transparent',
+            color: 'text.primary',
+            border: 1,
+            borderColor: 'info.main',
+          },
+        }}
+      >
+        {children}
+      </Box>
       <Dialog
         open={Boolean(pendingHref)}
         onClose={() => setPendingHref(null)}

@@ -160,6 +160,7 @@ export enum AdmissionCrmOperationsQueueType {
   CancellationReview = 18,
   RouteAppealReview = 19,
   ServiceHandoffException = 20,
+  RegistrationInvitationPending = 21,
 }
 
 export enum AdmissionCrmAutomationRunType {
@@ -2112,6 +2113,81 @@ export type AdmissionCrmOperationsQueueItemDto = {
   ageDays: number;
   isUrgent: boolean;
   ownerUserId?: string | null;
+  registration?: AdmissionCrmRegistrationQueueContextDto | null;
+  offer?: AdmissionCrmOfferQueueContextDto | null;
+  activation?: AdmissionCrmActivationQueueContextDto | null;
+  operation?: AdmissionCrmOperationQueueContextDto | null;
+};
+
+export type AdmissionCrmRegistrationQueueContextDto = {
+  registrationApplicationId?: string | null;
+  status?: AdmissionCrmRegistrationStatus | null;
+  formNumber?: string | null;
+  completionPercentage: number;
+  linkExpiresAt?: string | null;
+  feeStatus?: AdmissionCrmRegistrationFeeStatus | null;
+  documentTotalCount: number;
+  documentResolvedCount: number;
+  documentPendingCount: number;
+  currentDocumentStatus?: AdmissionCrmApplicantDocumentStatus | null;
+  readinessConfirmed: boolean;
+};
+
+export type AdmissionCrmOfferQueueContextDto = {
+  offerId?: string | null;
+  offerNumber?: string | null;
+  offerStatus?: AdmissionCrmSeatOfferStatus | null;
+  offerExpiresAt?: string | null;
+  seatPoolId?: string | null;
+  seatPoolName?: string | null;
+  remainingSeats?: number | null;
+  decisionStatus?: AdmissionCrmAdmissionDecisionStatus | null;
+  routeType?: AdmissionCrmRouteType | null;
+  routeStatus?: AdmissionCrmRouteEligibilityStatus | null;
+  financeState?: AdmissionCrmFinanceState | null;
+  paymentGateSatisfied?: boolean | null;
+};
+
+export type AdmissionCrmActivationQueueContextDto = {
+  activationId?: string | null;
+  studentId?: string | null;
+  activationReference?: string | null;
+  status?: AdmissionCrmActivationStatus | null;
+  placementConfigured: boolean;
+  rollNumber?: number | null;
+  requireStudentAccount: boolean;
+  requireGuardianAccount: boolean;
+  attemptCount: number;
+  repairStep?: string | null;
+  repairReason?: string | null;
+};
+
+export type AdmissionCrmOperationQueueContextDto = {
+  queueType: AdmissionCrmOperationsQueueType;
+  severity: string;
+  assignmentStatus: string;
+  serviceHandoffStatus?: AdmissionCrmServiceHandoffStatus | null;
+  retryAttemptCount?: number | null;
+};
+
+export type AdmissionCrmEnrollmentOverviewItemDto = {
+  workspace: 'registrations' | 'offers' | 'activation' | 'exams' | 'operations';
+  queueType: AdmissionCrmOperationsQueueType;
+  item: AdmissionCrmOperationsQueueItemDto;
+};
+
+export type AdmissionCrmEnrollmentOverviewDto = {
+  academicYearId: string;
+  generatedAt: string;
+  unassignedLeadCount: number;
+  upcomingExamCount: number;
+  expiringRegistrationCount: number;
+  pendingApprovalCount: number;
+  activationFailureCount: number;
+  handoffBlockerCount: number;
+  urgentCount: number;
+  queues: AdmissionCrmOperationsQueueCountDto[];
+  urgentItems: AdmissionCrmEnrollmentOverviewItemDto[];
 };
 
 export type AdmissionCrmOperationsQueueDto = {
@@ -2130,6 +2206,13 @@ export type AdmissionCrmOperationsQueueFilters = {
   urgentOnly?: boolean;
   minimumAgeDays?: number;
   dueBefore?: string;
+  registrationStatus?: AdmissionCrmRegistrationStatus;
+  documentStatus?: AdmissionCrmApplicantDocumentStatus;
+  offerStatus?: AdmissionCrmSeatOfferStatus;
+  routeType?: AdmissionCrmRouteType;
+  seatPoolId?: string;
+  activationStatus?: AdmissionCrmActivationStatus;
+  serviceHandoffStatus?: AdmissionCrmServiceHandoffStatus;
   skipCount?: number;
   maxResultCount?: number;
 };
@@ -2163,6 +2246,7 @@ export type AdmissionCrmExamClassPerformanceDto = {
 };
 
 export type AdmissionCrmEntranceExamListParams = AdmissionCrmListParams & {
+  filterText?: string;
   attendanceStatus?: AdmissionCrmExamAttendanceStatus;
   examStatus?: EntranceExamStatusEnum;
   eligibilityDecision?: AdmissionCrmEligibilityDecision;
@@ -2381,6 +2465,15 @@ export const buildAdmissionCrmOperationsQueueSummaryRequest = ({
   method: 'GET',
 });
 
+export const buildAdmissionCrmEnrollmentOverviewRequest = ({
+  academicYearId,
+}: {
+  academicYearId: string;
+}): FetchArgs => ({
+  url: `/student-enrollment/admissions-crm/${academicYearId}/operations/overview`,
+  method: 'GET',
+});
+
 export const buildAdmissionCrmOperationsQueueRequest = ({
   academicYearId,
   queueType,
@@ -2391,7 +2484,7 @@ export const buildAdmissionCrmOperationsQueueRequest = ({
 } & AdmissionCrmOperationsQueueFilters): FetchArgs => ({
   url: `/student-enrollment/admissions-crm/${academicYearId}/operations/queues/${queueType}`,
   method: 'GET',
-  params: { maxResultCount: 200, ...params },
+  params: { maxResultCount: 50, ...params },
 });
 
 export const buildAdmissionCrmMessageTemplateListRequest = ({
@@ -3648,9 +3741,12 @@ export type AdmissionCrmExamSlotDto = {
 
 export type AdmissionCrmStaffLookupDto = {
   id: string;
+  employeeId: string;
+  employeeCode: string;
   displayName: string;
   userName: string;
   email?: string | null;
+  isOwnerEligible: boolean;
 };
 
 export enum AdmissionCrmIntegrationCapabilityState {
@@ -3719,7 +3815,13 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
     }),
     getAdmissionCrmStaff: builder.query<
       AdmissionCrmStaffLookupDto[],
-      { filter?: string; ids?: string; maxResultCount?: number } | void
+      {
+        filter?: string;
+        ids?: string;
+        maxResultCount?: number;
+        academicYearId?: string;
+        ownerOnly?: boolean;
+      } | void
     >({
       query: (params) => ({
         url: '/student-enrollment/admissions-crm/workspace/staff',
@@ -4757,6 +4859,17 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
     >({
       query: buildAdmissionCrmOperationsQueueSummaryRequest,
       providesTags: [studentAdmissionsCrmType.analytics],
+    }),
+    getAdmissionCrmEnrollmentOverview: builder.query<
+      AdmissionCrmEnrollmentOverviewDto,
+      { academicYearId: string }
+    >({
+      query: buildAdmissionCrmEnrollmentOverviewRequest,
+      providesTags: [
+        studentAdmissionsCrmType.analytics,
+        studentAdmissionsCrmType.lead,
+        studentAdmissionsCrmType.exam,
+      ],
     }),
     getAdmissionCrmOperationsQueue: builder.query<
       AdmissionCrmOperationsQueueDto,
@@ -6508,6 +6621,7 @@ export const {
   useGetAdmissionCrmEntranceExamsQuery,
   useGetAdmissionCrmAnalyticsSummaryQuery,
   useGetAdmissionCrmOperationsQueueSummaryQuery,
+  useGetAdmissionCrmEnrollmentOverviewQuery,
   useGetAdmissionCrmOperationsQueueQuery,
   useGetAdmissionCrmOperationsSavedViewsQuery,
   useCreateAdmissionCrmOperationsSavedViewMutation,

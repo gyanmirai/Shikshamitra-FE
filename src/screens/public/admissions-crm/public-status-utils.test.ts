@@ -20,6 +20,23 @@ describe('public admissions status OTP errors', () => {
     });
   });
 
+  it('localizes recovery guidance for Gujarati and Hindi', () => {
+    const gujarati = getPublicAdmissionStatusProblemMessage(
+      { code: 'AdmissionCrm:StatusOtpExpired' },
+      'fallback',
+      'gu'
+    );
+    const hindi = getPublicAdmissionStatusProblemMessage(
+      { code: 'AdmissionCrm:StatusTokenExpired' },
+      'fallback',
+      'hi'
+    );
+
+    expect(gujarati.message).toContain('OTP');
+    expect(gujarati.message).not.toContain('This OTP');
+    expect(hindi.message).not.toContain('This status link');
+  });
+
   it('extracts lockout codes from problem detail text', () => {
     const result = getPublicAdmissionStatusProblemMessage(
       {

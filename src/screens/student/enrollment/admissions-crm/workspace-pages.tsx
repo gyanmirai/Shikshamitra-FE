@@ -4,9 +4,6 @@ import dynamic from 'next/dynamic';
 import { SplashScreen } from 'src/components/loading-screen';
 import { studentPermissions } from 'src/constants/student-menu';
 import StudentPermissionGuard from 'src/components/student-permission-guard';
-import { AdmissionCrmOperationsQueueType } from 'src/redux/student/admissions-crm/admissions-crm-api';
-
-import { offerQueues, activationQueues, registrationQueues } from './operations-queue-config';
 
 const loading = () => <SplashScreen />;
 const PipelineWorkspace = dynamic(
@@ -21,8 +18,21 @@ const AnalyticsWorkspace = dynamic(
   () => import('./analytics-workspace').then((module) => module.AnalyticsWorkspace),
   { loading }
 );
-const OperationsQueueWorkspace = dynamic(
-  () => import('./operations-queue-workspace').then((module) => module.OperationsQueueWorkspace),
+const RegistrationsWorkspace = dynamic(
+  () => import('./registrations-workspace').then((module) => module.RegistrationsWorkspace),
+  { loading }
+);
+const OffersWorkspace = dynamic(
+  () => import('./offers-workspace').then((module) => module.OffersWorkspace),
+  { loading }
+);
+const ActivationWorkspace = dynamic(
+  () => import('./activation-workspace').then((module) => module.ActivationWorkspace),
+  { loading }
+);
+const OperationsWorkspace = dynamic(
+  () =>
+    import('./operations-workspace').then((module) => module.AdmissionsOperationsWorkspaceContent),
   { loading }
 );
 
@@ -40,48 +50,25 @@ export const AdmissionsExamsWorkspace = () => (
 
 export const AdmissionsRegistrationsWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.registrations}>
-    <OperationsQueueWorkspace
-      title="Registrations & Documents"
-      description="Resolve registration, correction, document, and admission-readiness work."
-      defaultQueue={AdmissionCrmOperationsQueueType.IncompleteRegistration}
-      allowedQueues={registrationQueues}
-      applicantTab="registration"
-    />
+    <RegistrationsWorkspace />
   </StudentPermissionGuard>
 );
 
 export const AdmissionsOffersWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.offersSeats}>
-    <OperationsQueueWorkspace
-      title="Offers & Seats"
-      description="Review approval, policy, payment, waitlist, and allotment decisions."
-      defaultQueue={AdmissionCrmOperationsQueueType.FinalApproval}
-      allowedQueues={offerQueues}
-      applicantTab="offer"
-    />
+    <OffersWorkspace />
   </StudentPermissionGuard>
 );
 
 export const AdmissionsActivationWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.activation}>
-    <OperationsQueueWorkspace
-      title="Student Activation"
-      description="Repair pending activations and review controlled cancellation or service handoff exceptions."
-      defaultQueue={AdmissionCrmOperationsQueueType.ActivationRepair}
-      allowedQueues={activationQueues}
-      applicantTab="activation"
-    />
+    <ActivationWorkspace />
   </StudentPermissionGuard>
 );
 
 export const AdmissionsOperationsWorkspace = () => (
   <StudentPermissionGuard permissionKey={studentPermissions.enrollment.operations}>
-    <OperationsQueueWorkspace
-      title="Admissions Operations"
-      description="Work cross-stage exceptions, RTE reconciliation, and data-quality queues."
-      defaultQueue={AdmissionCrmOperationsQueueType.UnassignedExam}
-      showOperationsUtilities
-    />
+    <OperationsWorkspace />
   </StudentPermissionGuard>
 );
 

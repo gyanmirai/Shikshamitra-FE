@@ -5,6 +5,12 @@ import AxeBuilder from '@axe-core/playwright';
 import { type Server, createServer } from 'node:http';
 import { test, expect, type Page, type Locator } from '@playwright/test';
 
+import {
+  admissionCrmScaleTotal,
+  buildAdmissionCrmScaleStaff,
+  buildAdmissionCrmScaleLeadPage,
+} from './fixtures/admission-crm-scale';
+
 const studentCrmE2EEnabled = process.env.E2E_STUDENT_CRM === '1';
 const tenantCode = () => process.env.E2E_TENANT || 'DDVS';
 const password = () => process.env.E2E_PASSWORD || 'Temp@123';
@@ -17,6 +23,27 @@ const counselorEmail = () =>
   process.env.E2E_STUDENT_CRM_COUNSELOR_EMAIL || 'admissions-counselor@ddvs.com';
 const approverEmail = () =>
   process.env.E2E_STUDENT_CRM_APPROVER_EMAIL || 'admissions-approver@ddvs.com';
+const enrollmentWorkspaceRoutes = [
+  '/student/enrollment/pipeline',
+  '/student/enrollment/exams',
+  '/student/enrollment/registrations',
+  '/student/enrollment/offers-seats',
+  '/student/enrollment/activation',
+  '/student/enrollment/operations',
+  '/student/enrollment/analytics',
+] as const;
+const enrollmentSettingsRoutes = [
+  '/student/enrollment/settings/journey',
+  '/student/enrollment/settings/inquiry-capture',
+  '/student/enrollment/settings/routing-scoring',
+  '/student/enrollment/settings/entrance-exams',
+  '/student/enrollment/settings/registration-documents',
+  '/student/enrollment/settings/offers-seats',
+  '/student/enrollment/settings/activation',
+  '/student/enrollment/settings/governance',
+  '/student/enrollment/settings/communications',
+  '/student/enrollment/settings/automation',
+] as const;
 let otpWebhookServer: Server;
 let otpWebhookUrl = '';
 let capturedOtp = '';
@@ -296,6 +323,18 @@ async function openExamRowInWorkspace(
     timeout: 30_000,
   });
 
+  const filteredExamsResponse = page.waitForResponse((candidate) => {
+    if (candidate.request().method() !== 'GET') return false;
+    const url = new URL(candidate.url());
+    return (
+      /\/student-enrollment\/admissions-crm\/[^/]+\/exams$/.test(url.pathname) &&
+      url.searchParams.get('filterText') === applicantName
+    );
+  });
+  await page.getByRole('textbox', { name: 'Search entrance exams' }).fill(applicantName);
+  await expectOk(await filteredExamsResponse, 'filter CRM entrance exams');
+  await expect(page.getByText(/1[–-]1 of 1/)).toBeVisible({ timeout: 15_000 });
+
   const examRow = page.getByRole('row', {
     name: new RegExp(`${escapeRegExp(applicantName)}.*${escapeRegExp(slotName)}`, 'i'),
   });
@@ -489,22 +528,15 @@ test.describe('Student admissions CRM E2E', () => {
   test('Enrollment workspaces have no serious or critical automated accessibility violations', async ({
     page,
   }) => {
-    test.setTimeout(240_000);
+    test.setTimeout(480_000);
     await login(page);
 
     // The same authenticated page is intentionally validated one route at a time.
     // eslint-disable-next-line no-restricted-syntax
-    for (const route of [
-      '/student/enrollment/pipeline',
-      '/student/enrollment/exams',
-      '/student/enrollment/registrations',
-      '/student/enrollment/offers-seats',
-      '/student/enrollment/activation',
-      '/student/enrollment/operations',
-      '/student/enrollment/analytics',
-      '/student/enrollment/settings',
-    ]) {
-      await page.goto(route, { waitUntil: 'networkidle', timeout: 60_000 });
+    for (const route of [...enrollmentWorkspaceRoutes, ...enrollmentSettingsRoutes]) {
+      const response = await page.goto(route, { waitUntil: 'networkidle', timeout: 60_000 });
+      expect(response?.status(), route).toBeLessThan(400);
+      await expect(page.getByRole('heading', { name: 'Sorry, page not found!' })).toHaveCount(0);
       const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
       const releaseBlockingViolations = results.violations.filter((violation) =>
         ['serious', 'critical'].includes(violation.impact || '')
@@ -513,11 +545,11 @@ test.describe('Student admissions CRM E2E', () => {
     }
   });
 
-  test('Enrollment pipeline remains usable at release viewports', async ({ page }) => {
-    test.setTimeout(180_000);
+  test('Enrollment workspaces remain usable at release viewports', async ({ page }) => {
+    test.setTimeout(600_000);
     await login(page);
 
-    // Viewport changes and navigations must remain serial on the same authenticated page.
+    // Viewport changes and navigations remain serial on the same authenticated page.
     // eslint-disable-next-line no-restricted-syntax
     for (const viewport of [
       { width: 1440, height: 900 },
@@ -526,22 +558,86 @@ test.describe('Student admissions CRM E2E', () => {
       { width: 390, height: 844 },
     ]) {
       await page.setViewportSize(viewport);
-      await page.goto('/student/enrollment/pipeline', {
-        waitUntil: 'networkidle',
-        timeout: 60_000,
-      });
-      await expect(page.getByRole('heading', { name: 'Admissions Pipeline' })).toBeVisible();
+      // eslint-disable-next-line no-restricted-syntax
+      for (const route of enrollmentWorkspaceRoutes) {
+        await page.goto(route, { waitUntil: 'networkidle', timeout: 60_000 });
+        await expect(page.locator('#student-enrollment-content')).toBeVisible();
 
-      const widths = await page.evaluate(() => ({
-        viewport: window.innerWidth,
-        document: document.documentElement.scrollWidth,
-        body: document.body.scrollWidth,
-      }));
-      expect(
-        Math.max(widths.document, widths.body),
-        `${viewport.width}x${viewport.height} document overflow`
-      ).toBeLessThanOrEqual(widths.viewport + 1);
+        const widths = await page.evaluate(() => ({
+          viewport: window.innerWidth,
+          document: document.documentElement.scrollWidth,
+          body: document.body.scrollWidth,
+        }));
+        expect(
+          Math.max(widths.document, widths.body),
+          `${route} at ${viewport.width}x${viewport.height} document overflow`
+        ).toBeLessThanOrEqual(widths.viewport + 1);
+      }
     }
+  });
+
+  test('Enrollment remains bounded with a deterministic 25,000-lead fixture', async ({ page }) => {
+    test.setTimeout(180_000);
+    await login(page);
+    const academicYearId = await resolveAcademicYearId(page);
+    const leadRequests: URL[] = [];
+    const staffRequests: URL[] = [];
+
+    await page.route(
+      /\/api\/student-enrollment\/admissions-crm\/[^/]+\/leads(?:\?.*)?$/,
+      async (route) => {
+        const url = new URL(route.request().url());
+        const maxResultCount = Number(url.searchParams.get('maxResultCount') || 50);
+        const skipCount = Number(url.searchParams.get('skipCount') || 0);
+        const stage = Number(url.searchParams.get('stage') || 0);
+        leadRequests.push(url);
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(
+            buildAdmissionCrmScaleLeadPage({
+              academicYearId,
+              skipCount,
+              maxResultCount,
+              stage,
+            })
+          ),
+        });
+      }
+    );
+    await page.route(
+      /\/api\/student-enrollment\/admissions-crm\/workspace\/staff(?:\?.*)?$/,
+      async (route) => {
+        const url = new URL(route.request().url());
+        const maximum = Number(url.searchParams.get('maxResultCount') || 25);
+        staffRequests.push(url);
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(buildAdmissionCrmScaleStaff(maximum)),
+        });
+      }
+    );
+
+    await page.goto(`/student/enrollment/pipeline?cycle=${academicYearId}&view=list`, {
+      waitUntil: 'networkidle',
+      timeout: 60_000,
+    });
+    await expect(page.getByText(new RegExp(`of ${admissionCrmScaleTotal}`, 'i'))).toBeVisible();
+    await expect(page.getByTestId('student-enrollment-pipeline-row')).toHaveCount(50);
+
+    await page.getByRole('button', { name: 'Board view' }).click();
+    await expect.poll(() => leadRequests.some((url) => url.searchParams.has('stage'))).toBe(true);
+
+    expect(leadRequests.length).toBeGreaterThan(1);
+    leadRequests.forEach((url) => {
+      const maximum = Number(url.searchParams.get('maxResultCount'));
+      expect(maximum).toBeLessThanOrEqual(url.searchParams.has('stage') ? 25 : 50);
+    });
+    expect(staffRequests.length).toBeGreaterThan(0);
+    staffRequests.forEach((url) => {
+      expect(Number(url.searchParams.get('maxResultCount'))).toBeLessThanOrEqual(25);
+    });
   });
 
   test('workspace URLs preserve operational state without exposing applicant search text', async ({
@@ -597,32 +693,32 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/journey/?\\?cycle=${academicYearId}`)
     );
-    await expect(page.getByRole('heading', { name: 'Journey & Cycles' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Admission Journey' })).toBeVisible();
     await expect(page.getByText('Enrollment settings categories')).toHaveCount(0);
 
     const cycleName = page.getByRole('textbox', { name: 'Cycle name' });
     await expect(cycleName).not.toHaveValue('');
     const originalCycleName = await cycleName.inputValue();
     await cycleName.fill(`${originalCycleName} unsaved`);
-    await page.getByRole('tab', { name: 'Pipeline Stages' }).click();
+    await page.getByRole('link', { name: /Applicant Stages/ }).click();
     await expect(page.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
     await page.getByRole('button', { name: 'Discard & Continue' }).click();
     await expect(page).toHaveURL(/panel=pipeline/);
-    await page.getByRole('tab', { name: 'Cycle & Readiness' }).click();
+    await page.getByRole('link', { name: /Admission Cycle/ }).click();
     await expect(page.getByRole('textbox', { name: 'Cycle name' })).toHaveValue(originalCycleName);
 
-    const inquiryCaptureLink = page.getByRole('link', { name: 'Inquiry Capture' });
+    const inquiryCaptureLink = page.getByRole('link', { name: 'Inquiry Forms & Sources' });
     await expect(inquiryCaptureLink).toHaveAttribute('href', new RegExp(`cycle=${academicYearId}`));
     await inquiryCaptureLink.click();
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/inquiry-capture/?\\?cycle=${academicYearId}`)
     );
 
-    await page.getByRole('tab', { name: 'Form Templates' }).click();
+    await page.getByRole('link', { name: /^Inquiry Forms Build and/ }).click();
     await expect(page).toHaveURL(/panel=forms/);
     await expect(page.getByRole('heading', { name: 'Form Templates' })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Entrance Exams' }).last().click();
+    await page.getByRole('link', { name: 'Exam & Eligibility' }).last().click();
     await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/entrance-exams/?\\?cycle=${academicYearId}`)
     );
@@ -754,6 +850,33 @@ test.describe('Student admissions CRM E2E', () => {
 
     const academicYearId = await resolveAcademicYearId(page);
     const template = await createPublicInquiryTemplate(page, academicYearId);
+
+    const inquiryPage = await page.context().newPage();
+    try {
+      await inquiryPage.setViewportSize({ width: 390, height: 844 });
+      await inquiryPage.goto(`/student/admissions/inquiry/${tenantId}/${template.id}`, {
+        waitUntil: 'networkidle',
+        timeout: 60_000,
+      });
+      await expect(inquiryPage.getByRole('heading', { name: template.templateName })).toBeVisible();
+      const accessibility = await new AxeBuilder({ page: inquiryPage })
+        .withTags(['wcag2a', 'wcag2aa'])
+        .analyze();
+      expect(
+        accessibility.violations.filter((violation) =>
+          ['serious', 'critical'].includes(violation.impact || '')
+        ),
+        'public inquiry accessibility'
+      ).toEqual([]);
+      const widths = await inquiryPage.evaluate(() => ({
+        viewport: window.innerWidth,
+        document: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth,
+      }));
+      expect(Math.max(widths.document, widths.body)).toBeLessThanOrEqual(widths.viewport + 1);
+    } finally {
+      await inquiryPage.close();
+    }
 
     const formResponse = await publicApiRequest(
       page,
@@ -1216,6 +1339,24 @@ test.describe('Student admissions CRM E2E', () => {
       expect(accessSessionToken).toBeTruthy();
 
       await expect(parentPage.getByText('Registration Form')).toBeVisible();
+      await parentPage.setViewportSize({ width: 390, height: 844 });
+      const parentAccessibility = await new AxeBuilder({ page: parentPage })
+        .withTags(['wcag2a', 'wcag2aa'])
+        .analyze();
+      expect(
+        parentAccessibility.violations.filter((violation) =>
+          ['serious', 'critical'].includes(violation.impact || '')
+        ),
+        'public status accessibility'
+      ).toEqual([]);
+      const parentWidths = await parentPage.evaluate(() => ({
+        viewport: window.innerWidth,
+        document: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth,
+      }));
+      expect(Math.max(parentWidths.document, parentWidths.body)).toBeLessThanOrEqual(
+        parentWidths.viewport + 1
+      );
       await parentPage.getByLabel('Parent occupation').fill('Engineer');
       await parentPage.getByRole('button', { name: 'Save Progress' }).click();
       await expect(parentPage.getByText('Progress saved.')).toBeVisible({ timeout: 15_000 });

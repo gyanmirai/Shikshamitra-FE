@@ -21,7 +21,12 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { publicAdmissionsActionCopy } from './public-admissions-copy';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
+import { getAccessibleStatusChipProps } from './public-admissions-styles';
+import { formatPublicDateTime, getPublicStatusLabel } from './public-admissions-format';
+
+import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
 export type PublicAdmissionOffer = {
   offerId: string;
@@ -45,13 +50,16 @@ export default function PublicOffer({
   accessSessionToken,
   offer,
   onUpdated,
+  language = 'en',
 }: {
   tenantId: string;
   token: string;
   accessSessionToken: string;
   offer: PublicAdmissionOffer;
   onUpdated: (offer: PublicAdmissionOffer) => void;
+  language?: PublicAdmissionsLanguage;
 }) {
+  const copy = publicAdmissionsActionCopy[language];
   const [reason, setReason] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [action, setAction] = useState<'accept' | 'decline' | null>(null);
@@ -61,7 +69,7 @@ export default function PublicOffer({
 
   const respond = async (accept: boolean) => {
     if (!accept && !reason.trim()) {
-      shikshaMitraToast.error({ message: 'Enter a reason before declining the offer.' });
+      shikshaMitraToast.error({ message: copy.declineReasonRequired });
       return;
     }
     setAction(accept ? 'accept' : 'decline');
@@ -83,18 +91,19 @@ export default function PublicOffer({
       if (!response.ok) {
         const problem = await readPublicAdmissionStatusProblem(
           response,
-          'Unable to record the offer response.'
+          copy.offerResponseFailed,
+          language
         );
         throw new Error(problem.message);
       }
       const updated = (await response.json()) as PublicAdmissionOffer;
       onUpdated(updated);
       shikshaMitraToast.success({
-        message: accept ? 'Offer accepted.' : 'Offer declined.',
+        message: accept ? copy.offerAccepted : copy.offerDeclined,
       });
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : 'Unable to record the offer response.',
+        message: error instanceof Error ? error.message : copy.offerResponseFailed,
       });
     } finally {
       setAction(null);
@@ -108,8 +117,8 @@ export default function PublicOffer({
           <Box>
             <Typography variant="subtitle1">
               {offer.offerType === AdmissionCrmSeatOfferType.Final
-                ? 'Admission Offer'
-                : 'Provisional Offer'}
+                ? copy.admissionOffer
+                : copy.provisionalOffer}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {offer.offerNumber}
@@ -117,18 +126,18 @@ export default function PublicOffer({
           </Box>
           <Chip
             size="small"
-            color={
+            {...getAccessibleStatusChipProps(
               offer.status === AdmissionCrmSeatOfferStatus.Accepted
                 ? 'success'
                 : isOpen
                   ? 'warning'
                   : 'default'
-            }
-            label={AdmissionCrmSeatOfferStatus[offer.status]}
+            )}
+            label={getPublicStatusLabel(AdmissionCrmSeatOfferStatus[offer.status], language)}
           />
         </Stack>
         <Typography variant="body2" color="text.secondary">
-          Respond by {new Date(offer.validUntil).toLocaleString()}.
+          {copy.respondBy} {formatPublicDateTime(offer.validUntil, language)}.
         </Typography>
         <Divider />
         {Object.entries(offer.terms).map(([key, value]) => (
@@ -148,11 +157,11 @@ export default function PublicOffer({
                   onChange={(event) => setTermsAccepted(event.target.checked)}
                 />
               }
-              label="I have reviewed and accept the offer terms shown above."
+              label={copy.acceptTerms}
             />
             <TextField
               size="small"
-              label="Reason for declining"
+              label={copy.declineReason}
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               multiline
@@ -167,7 +176,7 @@ export default function PublicOffer({
                 disabled={action === 'decline' || !termsAccepted}
                 onClick={() => respond(true)}
               >
-                Accept Offer
+                {copy.acceptOffer}
               </LoadingButton>
               <LoadingButton
                 variant="outlined"
@@ -177,7 +186,7 @@ export default function PublicOffer({
                 disabled={action === 'accept' || !reason.trim()}
                 onClick={() => respond(false)}
               >
-                Decline Offer
+                {copy.declineOffer}
               </LoadingButton>
             </Stack>
           </>
@@ -186,9 +195,12 @@ export default function PublicOffer({
             severity={offer.status === AdmissionCrmSeatOfferStatus.Accepted ? 'success' : 'info'}
           >
             {offer.status === AdmissionCrmSeatOfferStatus.Accepted
-              ? 'Your acceptance has been recorded.'
+              ? copy.accepted
               : offer.responseReason ||
-                `Offer status: ${AdmissionCrmSeatOfferStatus[offer.status]}.`}
+                `${copy.offerStatus}: ${getPublicStatusLabel(
+                  AdmissionCrmSeatOfferStatus[offer.status],
+                  language
+                )}.`}
           </Alert>
         )}
       </Stack>

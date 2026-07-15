@@ -249,11 +249,18 @@ export type CrmUserOption = {
 };
 
 export const getCrmUserOptionLabel = (user: CrmUserOption) => {
-  if (user.displayName) {
-    return user.displayName;
-  }
-  const displayName = [user.name, user.surname].filter(Boolean).join(' ').trim();
-  return displayName || user.userName || user.email || user.emailAddress || user.id;
+  const displayName =
+    user.displayName ||
+    [user.name, user.surname].filter(Boolean).join(' ').trim() ||
+    user.userName ||
+    user.email ||
+    user.emailAddress ||
+    user.id;
+  const employeeCode =
+    typeof user.employeeCode === 'string' && user.employeeCode.trim()
+      ? user.employeeCode.trim()
+      : null;
+  return employeeCode ? `${displayName} (${employeeCode})` : displayName;
 };
 
 export const buildCrmUserSelectOptions = (
