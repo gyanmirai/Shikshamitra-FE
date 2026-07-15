@@ -18,7 +18,7 @@ export const shikshaMitraToast = {
       return (
         <Alert
           severity="error"
-          variant="filled"
+          variant="outlined"
           onClose={() => {
             toast.dismiss(t);
           }}

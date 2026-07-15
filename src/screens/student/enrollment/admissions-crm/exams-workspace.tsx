@@ -108,8 +108,7 @@ const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
 
 type ExamRowActionsProps = {
   exam: AdmissionCrmEntranceExamDto;
-  openApplicant: (leadId: string) => void;
-  setApplicantTab: (tab: ApplicantDrawerTab) => void;
+  openApplicant: (leadId: string, tab?: ApplicantDrawerTab) => void;
   setSelectedExam: (exam: AdmissionCrmEntranceExamDto) => void;
   setHandoffExamId: (examId: string) => void;
 };
@@ -117,13 +116,7 @@ type ExamRowActionsProps = {
 type ThreeDotsActionRenderer = NonNullable<ComponentProps<typeof ThreeDotsActions>['actions']>;
 
 const ExamRowActions = memo(
-  ({
-    exam,
-    openApplicant,
-    setApplicantTab,
-    setSelectedExam,
-    setHandoffExamId,
-  }: ExamRowActionsProps) => {
+  ({ exam, openApplicant, setSelectedExam, setHandoffExamId }: ExamRowActionsProps) => {
     const renderActions = useCallback<ThreeDotsActionRenderer>(
       ({ popover }) => (
         <MenuList>
@@ -140,8 +133,7 @@ const ExamRowActions = memo(
             <MenuItem
               onClick={() => {
                 popover.onClose();
-                setApplicantTab('registration');
-                openApplicant(exam.leadId);
+                openApplicant(exam.leadId, 'registration');
               }}
             >
               <Iconify icon="mdi:file-document-edit-outline" />
@@ -150,7 +142,7 @@ const ExamRowActions = memo(
           ) : null}
         </MenuList>
       ),
-      [exam, openApplicant, setApplicantTab, setHandoffExamId]
+      [exam, openApplicant, setHandoffExamId]
     );
 
     return (
@@ -158,10 +150,7 @@ const ExamRowActions = memo(
         placement="right-top"
         showViewIcon
         viewLabel="Open Applicant"
-        handleViewClick={() => {
-          setApplicantTab('overview');
-          openApplicant(exam.leadId);
-        }}
+        handleViewClick={() => openApplicant(exam.leadId, 'exam')}
         showEditIcon
         editLabel="Manage Exam"
         handleEditClick={() => setSelectedExam(exam)}
@@ -179,7 +168,6 @@ export function ExamsWorkspace() {
   const [search, setSearch] = useState('');
   const [selectedExam, setSelectedExam] = useState<AdmissionCrmEntranceExamDto | null>(null);
   const [handoffExamId, setHandoffExamId] = useState('');
-  const [applicantTab, setApplicantTab] = useState<ApplicantDrawerTab>('overview');
   const [attendance, setAttendance] = useState(AdmissionCrmExamAttendanceStatus.NotMarked);
   const [totalMarks, setTotalMarks] = useState('100');
   const [passingMarks, setPassingMarks] = useState('40');
@@ -416,7 +404,6 @@ export function ExamsWorkspace() {
             <ExamRowActions
               exam={exam}
               openApplicant={openApplicant}
-              setApplicantTab={setApplicantTab}
               setSelectedExam={setSelectedExam}
               setHandoffExamId={setHandoffExamId}
             />
@@ -751,8 +738,7 @@ export function ExamsWorkspace() {
             <Button
               variant="contained"
               onClick={() => {
-                setApplicantTab('registration');
-                openApplicant(handoffQuery.data!.leadId);
+                openApplicant(handoffQuery.data!.leadId, 'registration');
                 setHandoffExamId('');
               }}
             >
@@ -766,7 +752,8 @@ export function ExamsWorkspace() {
       <ApplicantWorkspaceDrawer
         leadId={state.applicant}
         academicYearId={academicYearId}
-        initialTab={applicantTab}
+        initialTab={(state.applicantTab as ApplicantDrawerTab | undefined) || 'exam'}
+        onTabChange={(nextTab) => updateState({ applicantTab: nextTab }, 'replace')}
         onClose={closeApplicant}
       />
     </Stack>

@@ -19,13 +19,12 @@ import {
   Alert,
   Paper,
   Stack,
+  Button,
   Divider,
-  Checkbox,
   MenuItem,
   TextField,
   Typography,
   LinearProgress,
-  FormControlLabel,
 } from '@mui/material';
 import {
   AdmissionCrmSeatOfferType,
@@ -54,6 +53,13 @@ import {
   usePrepareAdmissionCrmWaitlistPromotionMutation,
   useUpdateAdmissionCrmWaitlistGovernanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';
+import {
+  ApplicantSwitchRow,
+  ApplicantEmptyState,
+  ApplicantActionPanel,
+} from './applicant-workspace-primitives';
 
 type Props = {
   leadId: string;
@@ -119,6 +125,7 @@ function WaitlistHistory({ entryId }: { entryId: string }) {
 
 export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Props) {
   const [seatPoolId, setSeatPoolId] = useState('');
+  const [offerFormOpen, setOfferFormOpen] = useState(false);
   const [offerType, setOfferType] = useState(AdmissionCrmSeatOfferType.Final);
   const [offerLanguage, setOfferLanguage] = useState('en');
   const [validFrom, setValidFrom] = useState(() => dateTimeLocal(0));
@@ -137,6 +144,8 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
   const [decisionReason, setDecisionReason] = useState('');
   const [decisionOverride, setDecisionOverride] = useState(false);
   const [decisionOverrideReason, setDecisionOverrideReason] = useState('');
+
+  useApplicantWorkspaceDirtyState(`offer-preparation-${leadId}`, offerFormOpen);
 
   const poolsQuery = useGetAdmissionCrmSeatPoolsQuery({
     academicYearId,
@@ -204,7 +213,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
   const anyLoading = poolsQuery.isFetching || offersQuery.isFetching || decisionsQuery.isFetching;
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+    <Box component="section">
       <Stack spacing={1.5}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
           <Box>
@@ -229,113 +238,133 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
           <Alert severity="warning">Configure an active seat pool before creating offers.</Alert>
         ) : null}
 
-        <TextField
-          select
-          size="small"
-          label="Seat pool"
-          value={seatPoolId}
-          onChange={(event) => setSeatPoolId(event.target.value)}
-        >
-          {pools.map((pool) => (
-            <MenuItem key={pool.id} value={pool.id}>
-              {pool.code} - {pool.name} ({pool.remainingCapacity} remaining)
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <Divider />
-        <Typography variant="subtitle2">Offer Preparation</Typography>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(4, minmax(0, 1fr))' },
-            gap: 1,
-          }}
-        >
-          <TextField
-            select
+        {!offerFormOpen ? (
+          <Button
+            variant="contained"
             size="small"
-            label="Offer type"
-            value={offerType}
-            onChange={(event) => setOfferType(Number(event.target.value))}
+            startIcon={<Add />}
+            onClick={() => setOfferFormOpen(true)}
+            sx={{ alignSelf: 'flex-start' }}
           >
-            <MenuItem value={AdmissionCrmSeatOfferType.Provisional}>Provisional</MenuItem>
-            <MenuItem value={AdmissionCrmSeatOfferType.Final}>Final</MenuItem>
-          </TextField>
-          <TextField
-            size="small"
-            label="Language"
-            value={offerLanguage}
-            onChange={(event) => setOfferLanguage(event.target.value)}
-          />
-          <TextField
-            size="small"
-            type="datetime-local"
-            label="Valid from"
-            value={validFrom}
-            onChange={(event) => setValidFrom(event.target.value)}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <TextField
-            size="small"
-            type="datetime-local"
-            label="Valid until"
-            value={validUntil}
-            onChange={(event) => setValidUntil(event.target.value)}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-        </Box>
-        <TextField
-          size="small"
-          multiline
-          minRows={2}
-          label="Offer conditions"
-          value={offerTerms}
-          onChange={(event) => setOfferTerms(event.target.value)}
-        />
-        <LoadingButton
-          variant="contained"
-          startIcon={<Add />}
-          loading={createOfferState.isLoading}
-          disabled={
-            !seatPoolId || !offerTerms.trim() || new Date(validUntil) <= new Date(validFrom)
-          }
-          onClick={() =>
-            perform(
-              () => createOffer({ leadId, body: offerPayload() }).unwrap(),
-              'Seat offer draft created.'
-            )
-          }
-        >
-          Create Offer Draft
-        </LoadingButton>
+            Create offer
+          </Button>
+        ) : (
+          <ApplicantActionPanel>
+            <Stack spacing={1.25}>
+              <TextField
+                select
+                size="small"
+                label="Seat pool"
+                value={seatPoolId}
+                onChange={(event) => setSeatPoolId(event.target.value)}
+              >
+                {pools.map((pool) => (
+                  <MenuItem key={pool.id} value={pool.id}>
+                    {pool.code} - {pool.name} ({pool.remainingCapacity} remaining)
+                  </MenuItem>
+                ))}
+              </TextField>
 
-        <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={capacityOverride}
-                onChange={(event) => setCapacityOverride(event.target.checked)}
+              <Divider />
+              <Typography variant="subtitle2">Offer Preparation</Typography>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: 'repeat(4, minmax(0, 1fr))' },
+                  gap: 1,
+                }}
+              >
+                <TextField
+                  select
+                  size="small"
+                  label="Offer type"
+                  value={offerType}
+                  onChange={(event) => setOfferType(Number(event.target.value))}
+                >
+                  <MenuItem value={AdmissionCrmSeatOfferType.Provisional}>Provisional</MenuItem>
+                  <MenuItem value={AdmissionCrmSeatOfferType.Final}>Final</MenuItem>
+                </TextField>
+                <TextField
+                  size="small"
+                  label="Language"
+                  value={offerLanguage}
+                  onChange={(event) => setOfferLanguage(event.target.value)}
+                />
+                <TextField
+                  size="small"
+                  type="datetime-local"
+                  label="Valid from"
+                  value={validFrom}
+                  onChange={(event) => setValidFrom(event.target.value)}
+                  slotProps={{ inputLabel: { shrink: true } }}
+                />
+                <TextField
+                  size="small"
+                  type="datetime-local"
+                  label="Valid until"
+                  value={validUntil}
+                  onChange={(event) => setValidUntil(event.target.value)}
+                  slotProps={{ inputLabel: { shrink: true } }}
+                />
+              </Box>
+              <TextField
+                size="small"
+                multiline
+                minRows={2}
+                label="Offer conditions"
+                value={offerTerms}
+                onChange={(event) => setOfferTerms(event.target.value)}
               />
-            }
-            label="Capacity override"
-          />
-          <TextField
-            size="small"
-            fullWidth
-            label="Capacity override reason"
-            value={capacityOverrideReason}
-            disabled={!capacityOverride}
-            onChange={(event) => setCapacityOverrideReason(event.target.value)}
-          />
-          <TextField
-            size="small"
-            fullWidth
-            label="Response or revocation reason"
-            value={responseReason}
-            onChange={(event) => setResponseReason(event.target.value)}
-          />
-        </Stack>
+              <LoadingButton
+                variant="contained"
+                startIcon={<Add />}
+                loading={createOfferState.isLoading}
+                disabled={
+                  !seatPoolId || !offerTerms.trim() || new Date(validUntil) <= new Date(validFrom)
+                }
+                onClick={() =>
+                  perform(
+                    () => createOffer({ leadId, body: offerPayload() }).unwrap(),
+                    'Seat offer draft created.'
+                  )
+                }
+              >
+                Create Offer Draft
+              </LoadingButton>
+
+              <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
+                <ApplicantSwitchRow
+                  label="Enable capacity override"
+                  description="Allow this offer to exceed configured seat capacity."
+                  checked={capacityOverride}
+                  onChange={setCapacityOverride}
+                />
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Capacity override reason"
+                  value={capacityOverrideReason}
+                  disabled={!capacityOverride}
+                  onChange={(event) => setCapacityOverrideReason(event.target.value)}
+                />
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Response or revocation reason"
+                  value={responseReason}
+                  onChange={(event) => setResponseReason(event.target.value)}
+                />
+              </Stack>
+              <Button
+                size="small"
+                onClick={() => setOfferFormOpen(false)}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Cancel offer preparation
+              </Button>
+            </Stack>
+          </ApplicantActionPanel>
+        )}
 
         <Stack spacing={1}>
           {offers.map((offer) => (
@@ -558,7 +587,10 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
             </Paper>
           ))}
           {!offersQuery.isFetching && !offers.length ? (
-            <Alert severity="info">No seat offers have been created for this applicant.</Alert>
+            <ApplicantEmptyState
+              title="No seat offers"
+              description="Create an offer draft after selecting an eligible seat pool."
+            />
           ) : null}
         </Stack>
 
@@ -617,14 +649,10 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
           >
             Add to Waitlist
           </LoadingButton>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={priorityOverride}
-                onChange={(event) => setPriorityOverride(event.target.checked)}
-              />
-            }
-            label="Override rank"
+          <ApplicantSwitchRow
+            label="Enable rank override"
+            checked={priorityOverride}
+            onChange={setPriorityOverride}
           />
           <TextField
             size="small"
@@ -791,14 +819,11 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
           onChange={(event) => setDecisionReason(event.target.value)}
         />
         <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={decisionOverride}
-                onChange={(event) => setDecisionOverride(event.target.checked)}
-              />
-            }
-            label="Governed override"
+          <ApplicantSwitchRow
+            label="Enable governed override"
+            description="Record an exception to the configured admission decision rules."
+            checked={decisionOverride}
+            onChange={setDecisionOverride}
           />
           <TextField
             size="small"
@@ -867,6 +892,6 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
           </Stack>
         ) : null}
       </Stack>
-    </Paper>
+    </Box>
   );
 }

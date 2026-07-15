@@ -73,3 +73,12 @@ export const formatEnrollmentDate = (value?: string | Date | null, includeTime =
   if (Number.isNaN(date.getTime())) return 'Not set';
   return (includeTime ? enrollmentDateTimeFormatter : enrollmentDateFormatter).format(date);
 };
+
+export const joinEnrollmentMetadata = (...values: Array<string | null | undefined>) =>
+  values.filter((value): value is string => Boolean(value?.trim())).join(' | ');
+
+export const formatApplicantContact = (phone?: string | null, email?: string | null) =>
+  phone || email || 'Contact not captured';
+
+export const getApplicantUpdateError = (fallback: string) =>
+  `${fallback} Check the information and try again.`;

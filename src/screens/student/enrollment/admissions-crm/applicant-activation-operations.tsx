@@ -7,10 +7,11 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import { Gavel, Preview, Approval, PlayArrow, CancelOutlined } from '@mui/icons-material';
 import {
+  Box,
   Chip,
   Alert,
-  Paper,
   Stack,
+  Button,
   Checkbox,
   MenuItem,
   TextField,
@@ -36,6 +37,14 @@ import {
   useGetAdmissionCrmActivationCancellationPreviewQuery,
   useRequestAdmissionCrmActivationCancellationMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { formatEnumLabel } from './enrollment-display';
+import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';
+import {
+  ApplicantSwitchRow,
+  ApplicantEmptyState,
+  ApplicantInlineNotice,
+} from './applicant-workspace-primitives';
 
 type Props = { leadId: string; academicYearId: string };
 const statusLabels = [
@@ -63,6 +72,7 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
   const placements = useGetAdmissionCrmPlacementOptionsQuery({ academicYearId });
   const series = useGetAdmissionCrmNumberSeriesQuery({ academicYearId });
   const [placementId, setPlacementId] = useState('');
+  const [activationFormOpen, setActivationFormOpen] = useState(false);
   const [seriesId, setSeriesId] = useState('');
   const [rollNumber, setRollNumber] = useState('');
   const [gender, setGender] = useState(0);
@@ -77,6 +87,7 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
   const [manualIdentifierReason, setManualIdentifierReason] = useState('');
   const [cancellationReason, setCancellationReason] = useState('');
   const [previewData, setPreviewData] = useState<AdmissionCrmActivationPreviewDto>();
+  useApplicantWorkspaceDirtyState(`activation-setup-${leadId}`, activationFormOpen);
   const [preview, previewState] = usePreviewAdmissionCrmActivationMutation();
   const [request, requestState] = useRequestAdmissionCrmActivationMutation();
   const [approve, approveState] = useApproveAdmissionCrmActivationMutation();
@@ -126,12 +137,10 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
       const value = await action();
       shikshaMitraToast.success({ message });
       return value;
-    } catch (error) {
-      const data =
-        typeof error === 'object' && error && 'data' in error
-          ? (error as { data?: { errorCode?: string } }).data
-          : undefined;
-      shikshaMitraToast.error({ message: data?.errorCode || 'Activation action failed.' });
+    } catch {
+      shikshaMitraToast.error({
+        message: 'The activation change could not be saved. Review the fields and try again.',
+      });
       return undefined;
     }
   };
@@ -145,7 +154,7 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+    <Box component="section">
       <Stack spacing={1.25}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle2">Student activation</Typography>
@@ -168,171 +177,197 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
         )}
         {!current && (
           <>
-            <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-              <TextField
-                size="small"
-                select
-                fullWidth
-                label="Academic placement"
-                value={placementId}
-                onChange={(e) => {
-                  setPlacementId(e.target.value);
-                  setPreviewData(undefined);
-                }}
-              >
-                <MenuItem value="">Select placement</MenuItem>
-                {(placements.data || []).map((x) => (
-                  <MenuItem key={x.divisionId} value={x.divisionId}>
-                    {x.boardName} / {x.mediumName} / {x.stageName} / {x.standardName} /{' '}
-                    {x.divisionName} ({x.divisionStrength})
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                size="small"
-                select
-                label="GR number series"
-                value={seriesId}
-                onChange={(e) => {
-                  setSeriesId(e.target.value);
-                  setPreviewData(undefined);
-                }}
-                sx={{ minWidth: 220 }}
-              >
-                <MenuItem value="">Select series</MenuItem>
-                {(series.data || [])
-                  .filter((x) => x.status === AdmissionCrmNumberSeriesStatus.Published)
-                  .map((x) => (
-                    <MenuItem key={x.id} value={x.id}>
-                      {x.name} - {x.nextPreview}
-                    </MenuItem>
-                  ))}
-              </TextField>
-              <TextField
-                size="small"
-                type="number"
-                label="Roll number"
-                value={rollNumber}
-                onChange={(e) => setRollNumber(e.target.value)}
-              />
-              <TextField
-                size="small"
-                select
-                label="Gender"
-                value={gender}
-                onChange={(e) => setGender(Number(e.target.value))}
-                sx={{ minWidth: 120 }}
-              >
-                <MenuItem value={0}>Male</MenuItem>
-                <MenuItem value={1}>Female</MenuItem>
-              </TextField>
-            </Stack>
-            <Stack direction="row" gap={1}>
-              <FormControlLabel
-                control={
-                  <Checkbox
+            <ApplicantEmptyState
+              title="Activation has not started"
+              description="Review academic placement, identifiers, account access, and optional handoffs before requesting approval."
+              action={
+                !activationFormOpen ? (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => setActivationFormOpen(true)}
+                  >
+                    Prepare activation
+                  </Button>
+                ) : undefined
+              }
+            />
+            {activationFormOpen ? (
+              <>
+                <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                  <TextField
+                    size="small"
+                    select
+                    fullWidth
+                    label="Academic placement"
+                    value={placementId}
+                    onChange={(e) => {
+                      setPlacementId(e.target.value);
+                      setPreviewData(undefined);
+                    }}
+                  >
+                    <MenuItem value="">Select placement</MenuItem>
+                    {(placements.data || []).map((x) => (
+                      <MenuItem key={x.divisionId} value={x.divisionId}>
+                        {x.boardName} / {x.mediumName} / {x.stageName} / {x.standardName} /{' '}
+                        {x.divisionName} ({x.divisionStrength})
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    size="small"
+                    select
+                    label="GR number series"
+                    value={seriesId}
+                    onChange={(e) => {
+                      setSeriesId(e.target.value);
+                      setPreviewData(undefined);
+                    }}
+                    sx={{ minWidth: 220 }}
+                  >
+                    <MenuItem value="">Select series</MenuItem>
+                    {(series.data || [])
+                      .filter((x) => x.status === AdmissionCrmNumberSeriesStatus.Published)
+                      .map((x) => (
+                        <MenuItem key={x.id} value={x.id}>
+                          {x.name} - {x.nextPreview}
+                        </MenuItem>
+                      ))}
+                  </TextField>
+                  <TextField
+                    size="small"
+                    type="number"
+                    label="Roll number"
+                    value={rollNumber}
+                    onChange={(e) => setRollNumber(e.target.value)}
+                  />
+                  <TextField
+                    size="small"
+                    select
+                    label="Gender"
+                    value={gender}
+                    onChange={(e) => setGender(Number(e.target.value))}
+                    sx={{ minWidth: 120 }}
+                  >
+                    <MenuItem value={0}>Male</MenuItem>
+                    <MenuItem value={1}>Female</MenuItem>
+                  </TextField>
+                </Stack>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                    columnGap: 2,
+                  }}
+                >
+                  <ApplicantSwitchRow
+                    label="Student account access"
+                    description="Create or link student access during activation."
                     checked={requireStudentAccount}
-                    onChange={(e) => setRequireStudentAccount(e.target.checked)}
+                    onChange={setRequireStudentAccount}
                   />
-                }
-                label="Student access required"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
+                  <ApplicantSwitchRow
+                    label="Guardian account access"
+                    description="Create or link guardian access during activation."
                     checked={requireGuardianAccount}
-                    onChange={(e) => setRequireGuardianAccount(e.target.checked)}
+                    onChange={setRequireGuardianAccount}
                   />
-                }
-                label="Guardian access required"
-              />
-            </Stack>
-            <Stack spacing={0.5}>
-              <Typography variant="caption" color="text.secondary">
-                Optional service interests
-              </Typography>
-              <Stack direction="row" gap={0.5} flexWrap="wrap">
-                {serviceOptions.map((type) => (
+                </Box>
+                <Stack spacing={0.5}>
+                  <Typography variant="caption" color="text.secondary">
+                    Optional service interests
+                  </Typography>
+                  <Stack direction="row" gap={0.5} flexWrap="wrap">
+                    {serviceOptions.map((type) => {
+                      const selected = selectedServices.includes(type);
+                      return (
+                        <Chip
+                          key={type}
+                          clickable
+                          size="small"
+                          color={selected ? 'primary' : 'default'}
+                          variant={selected ? 'filled' : 'outlined'}
+                          label={formatEnumLabel(AdmissionCrmServiceHandoffType[type])}
+                          aria-pressed={selected}
+                          onClick={() =>
+                            setSelectedServices((items) =>
+                              selected ? items.filter((item) => item !== type) : [...items, type]
+                            )
+                          }
+                        />
+                      );
+                    })}
+                  </Stack>
                   <FormControlLabel
-                    key={type}
                     control={
                       <Checkbox
-                        size="small"
-                        checked={selectedServices.includes(type)}
-                        onChange={(event) =>
-                          setSelectedServices((items) =>
-                            event.target.checked
-                              ? [...items, type]
-                              : items.filter((item) => item !== type)
-                          )
-                        }
+                        checked={serviceConsent}
+                        disabled={!selectedServices.length}
+                        onChange={(event) => setServiceConsent(event.target.checked)}
                       />
                     }
-                    label={AdmissionCrmServiceHandoffType[type]}
+                    label="Consent confirmed for minimum-data service handoff"
                   />
-                ))}
-              </Stack>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={serviceConsent}
-                    disabled={!selectedServices.length}
-                    onChange={(event) => setServiceConsent(event.target.checked)}
-                  />
-                }
-                label="Consent confirmed for minimum-data service handoff"
-              />
-            </Stack>
-            <Stack direction="row" gap={1}>
-              <LoadingButton
-                variant="outlined"
-                startIcon={<Preview />}
-                loading={previewState.isLoading}
-                disabled={!body || !seriesId}
-                onClick={runPreview}
-              >
-                Preview readiness
-              </LoadingButton>
-              <LoadingButton
-                variant="contained"
-                startIcon={<Approval />}
-                loading={requestState.isLoading}
-                disabled={!previewData?.isReady || !body}
-                onClick={() =>
-                  body &&
-                  run(
-                    () => request({ leadId, body: { ...body, gender } }).unwrap(),
-                    'Activation submitted for approval.'
-                  )
-                }
-              >
-                Request activation
-              </LoadingButton>
-            </Stack>
-            {previewData && (
-              <Stack spacing={0.5}>
-                <Alert severity={previewData.isReady ? 'success' : 'warning'}>
-                  {previewData.isReady
-                    ? `Ready to activate with ${previewData.grNumberPreview}.`
-                    : 'Resolve blocking readiness items before activation.'}
-                </Alert>
-                {previewData.items.map((item) => (
-                  <Stack key={item.key} direction="row" justifyContent="space-between" gap={1}>
-                    <Typography variant="body2">
-                      {item.label}
-                      <Typography display="block" variant="caption" color="text.secondary">
-                        {item.detail}
-                      </Typography>
-                    </Typography>
-                    <Chip
-                      size="small"
-                      color={item.status === 1 ? 'success' : 'error'}
-                      label={item.status === 1 ? 'Passed' : 'Failed'}
-                    />
+                </Stack>
+                <Stack direction="row" gap={1}>
+                  <LoadingButton
+                    variant="outlined"
+                    startIcon={<Preview />}
+                    loading={previewState.isLoading}
+                    disabled={!body || !seriesId}
+                    onClick={runPreview}
+                  >
+                    Preview readiness
+                  </LoadingButton>
+                  <LoadingButton
+                    variant="contained"
+                    startIcon={<Approval />}
+                    loading={requestState.isLoading}
+                    disabled={!previewData?.isReady || !body}
+                    onClick={() =>
+                      body &&
+                      run(
+                        () => request({ leadId, body: { ...body, gender } }).unwrap(),
+                        'Activation submitted for approval.'
+                      )
+                    }
+                  >
+                    Request activation
+                  </LoadingButton>
+                </Stack>
+                {previewData && (
+                  <Stack spacing={0.5}>
+                    <Alert severity={previewData.isReady ? 'success' : 'warning'}>
+                      {previewData.isReady
+                        ? `Ready to activate with ${previewData.grNumberPreview}.`
+                        : 'Resolve blocking readiness items before activation.'}
+                    </Alert>
+                    {previewData.items.map((item) => (
+                      <Stack key={item.key} direction="row" justifyContent="space-between" gap={1}>
+                        <Typography variant="body2">
+                          {item.label}
+                          <Typography display="block" variant="caption" color="text.secondary">
+                            {item.detail}
+                          </Typography>
+                        </Typography>
+                        <Chip
+                          size="small"
+                          color={item.status === 1 ? 'success' : 'error'}
+                          label={item.status === 1 ? 'Passed' : 'Failed'}
+                        />
+                      </Stack>
+                    ))}
                   </Stack>
-                ))}
-              </Stack>
-            )}
+                )}
+                <Button
+                  size="small"
+                  sx={{ alignSelf: 'flex-start' }}
+                  onClick={() => setActivationFormOpen(false)}
+                >
+                  Cancel activation setup
+                </Button>
+              </>
+            ) : null}
           </>
         )}
         {current && (
@@ -437,13 +472,18 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
               AdmissionCrmActivationStatus.CancellationPending,
             ].includes(current.status) && (
               <Stack spacing={1}>
-                {cancellationPreview.data && (
-                  <Alert severity={cancellationPreview.data.canCancel ? 'info' : 'warning'}>
-                    {cancellationPreview.data.canCancel
-                      ? 'This activation is inside the controlled cancellation window.'
-                      : 'Cancellation is blocked. Use Student Records when the safe window or activity checks fail.'}
-                  </Alert>
-                )}
+                {cancellationPreview.data ? (
+                  cancellationPreview.data.canCancel ? (
+                    <ApplicantInlineNotice>
+                      This activation is inside the controlled cancellation window.
+                    </ApplicantInlineNotice>
+                  ) : (
+                    <Alert severity="warning">
+                      Cancellation is blocked. Use Student Records when the safe window or activity
+                      checks fail.
+                    </Alert>
+                  )
+                ) : null}
                 {cancellationPreview.data?.checks.map((check) => (
                   <Typography
                     key={check.key}
@@ -632,6 +672,6 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
           </>
         )}
       </Stack>
-    </Paper>
+    </Box>
   );
 }

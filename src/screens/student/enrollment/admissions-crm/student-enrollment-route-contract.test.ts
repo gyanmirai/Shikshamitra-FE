@@ -105,13 +105,13 @@ describe('Student Enrollment workspace route contracts', () => {
       'admissions-crm',
       'pipeline-workspace.tsx'
     );
-    const drawer = read(
+    const overview = read(
       'src',
       'screens',
       'student',
       'enrollment',
       'admissions-crm',
-      'applicant-workspace-drawer.tsx'
+      'applicant-workspace-overview.tsx'
     );
     const settings = read(
       'src',
@@ -123,7 +123,7 @@ describe('Student Enrollment workspace route contracts', () => {
     );
 
     expect(pipeline).toContain('ownerOnly: true');
-    expect(drawer).toContain('ownerOnly: true');
+    expect(overview).toContain('ownerOnly: true');
     expect(settings).toContain('label="Pipeline owners"');
     expect(settings).toContain('ownerOnly: true');
     expect(settings).toContain('Only active HR employees with Enrollment CRM access');
