@@ -9,6 +9,7 @@ export const studentPaths = {
   dashboard: '/student/dashboard',
   enrollment: {
     root: '',
+    overview: '/student/enrollment/overview',
     pipeline: '/student/enrollment/pipeline',
     exams: '/student/enrollment/exams',
     registrations: '/student/enrollment/registrations',
@@ -58,6 +59,7 @@ export const studentPermissions = {
   enrollment: {
     root: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm`,
     admissionsCrm: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm`,
+    overview: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.View`,
     pipeline: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.View`,
     exams: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.View`,
     registrations: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.View`,
@@ -125,6 +127,14 @@ const studentModule = (isDdvs: boolean) => ({
           icon: menuIconView('mdi:account-school-outline'),
 
           children: [
+            {
+              title: 'My Work',
+              path: studentPaths.enrollment.overview,
+              _action: 'student-enrollment-overview',
+              permissionName: studentPermissions.enrollment.overview,
+              icon: menuIconView('mdi:view-dashboard-variant-outline'),
+              preserveQueryParams: ['cycle'],
+            },
             {
               title: 'Pipeline',
               path: studentPaths.enrollment.pipeline,

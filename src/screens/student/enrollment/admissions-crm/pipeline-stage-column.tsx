@@ -17,6 +17,7 @@ import {
   Skeleton,
   Typography,
   LinearProgress,
+  CircularProgress,
 } from '@mui/material';
 
 const PAGE_SIZE = 25;
@@ -117,7 +118,11 @@ export function PipelineStageColumn({
           }
         />
         <Typography variant="caption" color="text.secondary">
-          {shouldLoad ? (data?.totalCount ?? 0) : '...'}
+          {shouldLoad ? (
+            (data?.totalCount ?? 0)
+          ) : (
+            <Skeleton component="span" width={24} aria-label="Lead count loading" />
+          )}
         </Typography>
       </Stack>
       {!shouldLoad && (
@@ -153,7 +158,11 @@ export function PipelineStageColumn({
               onClick={() => setPage((current) => current + 1)}
               disabled={isFetching}
             >
-              {isFetching ? 'Loading...' : 'Load more'}
+              {isFetching ? (
+                <CircularProgress size={16} aria-label="Loading more leads" />
+              ) : (
+                'Load more'
+              )}
             </Button>
           )}
         </Stack>

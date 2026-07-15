@@ -1,16 +1,17 @@
 'use client';
 
+import type { ComponentProps } from 'react';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { AdmissionCrmEntranceExamDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { memo, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Chip,
@@ -102,10 +103,77 @@ const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
   return filter ? Number(filter.value) : undefined;
 };
 
+type ExamRowActionsProps = {
+  exam: AdmissionCrmEntranceExamDto;
+  openApplicant: (leadId: string) => void;
+  setApplicantTab: (tab: ApplicantDrawerTab) => void;
+  setSelectedExam: (exam: AdmissionCrmEntranceExamDto) => void;
+  setHandoffExamId: (examId: string) => void;
+};
+
+type ThreeDotsActionRenderer = NonNullable<ComponentProps<typeof ThreeDotsActions>['actions']>;
+
+const ExamRowActions = memo(
+  ({
+    exam,
+    openApplicant,
+    setApplicantTab,
+    setSelectedExam,
+    setHandoffExamId,
+  }: ExamRowActionsProps) => {
+    const renderActions = useCallback<ThreeDotsActionRenderer>(
+      ({ popover }) => (
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              popover.onClose();
+              setHandoffExamId(exam.id);
+            }}
+          >
+            <Iconify icon="mdi:account-arrow-right-outline" />
+            Eligibility Handoff
+          </MenuItem>
+          {exam.eligibilityDecision === AdmissionCrmEligibilityDecision.Eligible ? (
+            <MenuItem
+              onClick={() => {
+                popover.onClose();
+                setApplicantTab('registration');
+                openApplicant(exam.leadId);
+              }}
+            >
+              <Iconify icon="mdi:file-document-edit-outline" />
+              Open Registration
+            </MenuItem>
+          ) : null}
+        </MenuList>
+      ),
+      [exam, openApplicant, setApplicantTab, setHandoffExamId]
+    );
+
+    return (
+      <ThreeDotsActions
+        placement="right-top"
+        showViewIcon
+        viewLabel="Open Applicant"
+        handleViewClick={() => {
+          setApplicantTab('overview');
+          openApplicant(exam.leadId);
+        }}
+        showEditIcon
+        editLabel="Manage Exam"
+        handleEditClick={() => setSelectedExam(exam)}
+        onEditMouseDown={() => setSelectedExam(exam)}
+        actions={renderActions}
+      />
+    );
+  }
+);
+
 export function ExamsWorkspace() {
   const { academicYearId, state, updateState, openApplicant, closeApplicant } =
     useEnrollmentWorkspace();
   const page = Math.max(0, state.page - 1);
+  const [search, setSearch] = useState('');
   const [selectedExam, setSelectedExam] = useState<AdmissionCrmEntranceExamDto | null>(null);
   const [handoffExamId, setHandoffExamId] = useState('');
   const [applicantTab, setApplicantTab] = useState<ApplicantDrawerTab>('overview');
@@ -122,6 +190,7 @@ export function ExamsWorkspace() {
   const examsQuery = useGetAdmissionCrmEntranceExamsQuery(
     {
       academicYearId: academicYearId || '',
+      filterText: search.trim() || undefined,
       attendanceStatus: state.attendance,
       examStatus: state.examStatus,
       eligibilityDecision: state.eligibility,
@@ -330,47 +399,12 @@ export function ExamsWorkspace() {
         render: (_value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
           return (
-            <ThreeDotsActions
-              placement="right-top"
-              showViewIcon
-              viewLabel="Open Applicant"
-              handleViewClick={() => {
-                setApplicantTab('overview');
-                openApplicant(exam.leadId);
-              }}
-              showEditIcon
-              editLabel="Manage Exam"
-              handleEditClick={() => setSelectedExam(exam)}
-              onEditMouseDown={() => setSelectedExam(exam)}
-              actions={({ popover }) => (
-                <MenuList>
-                  <MenuItem
-                    onMouseDown={() => {
-                      popover.onClose();
-                      setHandoffExamId(exam.id);
-                    }}
-                    onClick={() => {
-                      popover.onClose();
-                      setHandoffExamId(exam.id);
-                    }}
-                  >
-                    <Iconify icon="mdi:account-arrow-right-outline" />
-                    Eligibility Handoff
-                  </MenuItem>
-                  {exam.eligibilityDecision === AdmissionCrmEligibilityDecision.Eligible ? (
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                        setApplicantTab('registration');
-                        openApplicant(exam.leadId);
-                      }}
-                    >
-                      <Iconify icon="mdi:file-document-edit-outline" />
-                      Open Registration
-                    </MenuItem>
-                  ) : null}
-                </MenuList>
-              )}
+            <ExamRowActions
+              exam={exam}
+              openApplicant={openApplicant}
+              setApplicantTab={setApplicantTab}
+              setSelectedExam={setSelectedExam}
+              setHandoffExamId={setHandoffExamId}
             />
           );
         },
@@ -402,16 +436,25 @@ export function ExamsWorkspace() {
           columns={columns}
           data={examsQuery.data?.items || []}
           isLoading={examsQuery.isLoading}
-          isSearch={false}
           serverSide
           serverSidePagination
+          serverSideSearch
           serverSideFilter
+          defaultSearchTerm={search}
+          searchFieldProps={{
+            placeholder: 'Search applicant or exam slot',
+            inputProps: { 'aria-label': 'Search entrance exams' },
+          }}
           filters={tableFilters}
           totalCount={examsQuery.data?.totalCount || 0}
           page={page}
           rowsPerPage={pageSize}
           defaultRowsPerPage={pageSize}
           rowsPerPageOptions={[pageSize]}
+          onServerSearch={(value) => {
+            setSearch(value);
+            updateState({ page: 1 }, 'replace');
+          }}
           onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
           onServerFilter={(filters) =>
             updateState(

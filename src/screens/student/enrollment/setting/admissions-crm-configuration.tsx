@@ -337,7 +337,7 @@ const templateSystemFieldOptions = [
   { value: 'PrimaryContactNo', label: 'Primary contact number' },
   { value: 'Email', label: 'Email' },
   { value: 'AdmissionIntent', label: 'Admission intent' },
-  { value: 'TargetStandardId', label: 'Target standard ID' },
+  { value: 'TargetStandardId', label: 'Target class' },
   { value: 'DesiredClassName', label: 'Desired class text' },
   { value: 'CampaignName', label: 'Campaign name' },
   { value: 'CampusBranchName', label: 'Campus branch' },

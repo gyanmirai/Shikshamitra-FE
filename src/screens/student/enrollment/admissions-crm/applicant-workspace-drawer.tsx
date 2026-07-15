@@ -86,9 +86,13 @@ const ApplicantHouseholdIdentityOperations = dynamic(() =>
 const GeneratedDocumentOperations = dynamic(() =>
   import('./generated-document-operations').then((module) => module.GeneratedDocumentOperations)
 );
+const ApplicantExamSummary = dynamic(() =>
+  import('./applicant-exam-summary').then((module) => module.ApplicantExamSummary)
+);
 
 export type ApplicantDrawerTab =
   | 'overview'
+  | 'exam'
   | 'registration'
   | 'offer'
   | 'activation'
@@ -98,6 +102,7 @@ type Props = {
   leadId?: string;
   academicYearId?: string;
   initialTab?: ApplicantDrawerTab;
+  onTabChange?: (tab: ApplicantDrawerTab) => void;
   onClose: () => void;
 };
 
@@ -121,10 +126,47 @@ const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
 
 const taskStatusLabel = (status: number) => (status === 1 ? 'Open' : 'Completed');
 
+const journeySteps = [
+  'Inquiry',
+  'Entrance Exam',
+  'Eligibility',
+  'Registration',
+  'Offer',
+  'Activation',
+];
+
+const getJourneyStep = (stage: AdmissionInquiryStage) => {
+  if (stage === AdmissionInquiryStage.ExamReady || stage === AdmissionInquiryStage.ExamScheduled)
+    return 1;
+  if (
+    stage === AdmissionInquiryStage.ExamCompleted ||
+    stage === AdmissionInquiryStage.Waitlisted ||
+    stage === AdmissionInquiryStage.Rejected
+  )
+    return 2;
+  if (stage === AdmissionInquiryStage.Eligible) return 3;
+  return 0;
+};
+
+const getNextAction = (stage: AdmissionInquiryStage) => {
+  if (stage === AdmissionInquiryStage.NewInquiry) return 'Qualify the inquiry and plan follow-up.';
+  if (stage === AdmissionInquiryStage.FollowUp) return 'Complete the next follow-up action.';
+  if (stage === AdmissionInquiryStage.ExamReady) return 'Schedule an entrance exam slot.';
+  if (stage === AdmissionInquiryStage.ExamScheduled) return 'Record attendance and exam result.';
+  if (stage === AdmissionInquiryStage.ExamCompleted) return 'Record the eligibility decision.';
+  if (stage === AdmissionInquiryStage.Eligible) return 'Issue or review the registration form.';
+  if (stage === AdmissionInquiryStage.Waitlisted)
+    return 'Review waitlist priority and seat movement.';
+  if (stage === AdmissionInquiryStage.Rejected) return 'No action unless the decision is reviewed.';
+  if (stage === AdmissionInquiryStage.Stale) return 'Re-engage the family or archive the inquiry.';
+  return 'Review the archived inquiry before reopening it.';
+};
+
 export function ApplicantWorkspaceDrawer({
   leadId,
   academicYearId,
   initialTab = 'overview',
+  onTabChange,
   onClose,
 }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -198,6 +240,15 @@ export function ApplicantWorkspaceDrawer({
     const configured = stagesQuery.data?.find((item) => item.systemStage === lead.stage);
     return configured?.allowedNextStages ?? [];
   }, [lead, stagesQuery.data]);
+  const currentStageConfiguration = useMemo(
+    () => stagesQuery.data?.find((item) => item.systemStage === lead?.stage),
+    [lead?.stage, stagesQuery.data]
+  );
+  const journeyStep = lead ? getJourneyStep(lead.stage) : 0;
+  const slaDueAt =
+    lead && currentStageConfiguration?.slaTargetHours
+      ? dayjs(lead.lastActivityTime).add(currentStageConfiguration.slaTargetHours, 'hour')
+      : null;
 
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
   const requireReason = () => {
@@ -266,18 +317,86 @@ export function ApplicantWorkspaceDrawer({
         <Divider />
         <Tabs
           value={tab}
-          onChange={(_, value: ApplicantDrawerTab) => setTab(value)}
+          onChange={(_, value: ApplicantDrawerTab) => {
+            setTab(value);
+            onTabChange?.(value);
+          }}
           variant="scrollable"
           scrollButtons="auto"
           aria-label="Applicant workspace sections"
           sx={{ px: 1 }}
         >
           <Tab value="overview" label="Overview" />
+          <Tab value="exam" label="Entrance Exam" />
           <Tab value="registration" label="Registration" />
           <Tab value="offer" label="Offer & Seat" />
           <Tab value="activation" label="Activation" />
           <Tab value="governance" label="Governance" />
         </Tabs>
+        <Divider />
+
+        {lead ? (
+          <Stack spacing={1} px={{ xs: 1.5, sm: 2 }} py={1.25} bgcolor="background.neutral">
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              gap={0.75}
+            >
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Next required action
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {getNextAction(lead.stage)}
+                </Typography>
+              </Box>
+              <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={lead.ownerUserId ? 'Owner assigned' : 'Owner required'}
+                  color={lead.ownerUserId ? 'default' : 'warning'}
+                />
+                {slaDueAt ? (
+                  <Chip
+                    size="small"
+                    color={slaDueAt.isBefore(dayjs()) ? 'warning' : 'default'}
+                    label={`${slaDueAt.isBefore(dayjs()) ? 'SLA overdue' : 'SLA due'} ${slaDueAt.format('DD MMM, HH:mm')}`}
+                  />
+                ) : null}
+              </Stack>
+            </Stack>
+            <Box
+              aria-label={`Admission journey: ${journeySteps[journeyStep]}`}
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${journeySteps.length}, minmax(72px, 1fr))`,
+                gap: 0.5,
+                overflowX: 'auto',
+                pb: 0.25,
+              }}
+            >
+              {journeySteps.map((label, index) => (
+                <Stack key={label} spacing={0.5} minWidth={72}>
+                  <Box
+                    sx={{
+                      height: 4,
+                      borderRadius: 1,
+                      bgcolor: index <= journeyStep ? 'primary.main' : 'divider',
+                    }}
+                  />
+                  <Typography
+                    variant="caption"
+                    color={index === journeyStep ? 'text.primary' : 'text.secondary'}
+                    fontWeight={index === journeyStep ? 600 : 400}
+                  >
+                    {label}
+                  </Typography>
+                </Stack>
+              ))}
+            </Box>
+          </Stack>
+        ) : null}
         <Divider />
 
         <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 1.5, sm: 2 } }}>
@@ -701,6 +820,9 @@ export function ApplicantWorkspaceDrawer({
               <ApplicantRegistrationOperations leadId={leadId} academicYearId={academicYearId} />
               <GeneratedDocumentOperations leadId={leadId} />
             </Stack>
+          )}
+          {leadId && academicYearId && tab === 'exam' && (
+            <ApplicantExamSummary leadId={leadId} academicYearId={academicYearId} />
           )}
           {leadId && academicYearId && tab === 'offer' && (
             <Stack spacing={2}>

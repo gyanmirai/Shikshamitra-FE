@@ -24,6 +24,7 @@ import {
 import { publicAdmissionsActionCopy } from './public-admissions-copy';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import { getAccessibleStatusChipProps } from './public-admissions-styles';
+import { formatPublicDateTime, getPublicStatusLabel } from './public-admissions-format';
 
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
 
@@ -68,7 +69,7 @@ export default function PublicOffer({
 
   const respond = async (accept: boolean) => {
     if (!accept && !reason.trim()) {
-      shikshaMitraToast.error({ message: 'Enter a reason before declining the offer.' });
+      shikshaMitraToast.error({ message: copy.declineReasonRequired });
       return;
     }
     setAction(accept ? 'accept' : 'decline');
@@ -90,18 +91,19 @@ export default function PublicOffer({
       if (!response.ok) {
         const problem = await readPublicAdmissionStatusProblem(
           response,
-          'Unable to record the offer response.'
+          copy.offerResponseFailed,
+          language
         );
         throw new Error(problem.message);
       }
       const updated = (await response.json()) as PublicAdmissionOffer;
       onUpdated(updated);
       shikshaMitraToast.success({
-        message: accept ? 'Offer accepted.' : 'Offer declined.',
+        message: accept ? copy.offerAccepted : copy.offerDeclined,
       });
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : 'Unable to record the offer response.',
+        message: error instanceof Error ? error.message : copy.offerResponseFailed,
       });
     } finally {
       setAction(null);
@@ -131,11 +133,11 @@ export default function PublicOffer({
                   ? 'warning'
                   : 'default'
             )}
-            label={AdmissionCrmSeatOfferStatus[offer.status]}
+            label={getPublicStatusLabel(AdmissionCrmSeatOfferStatus[offer.status], language)}
           />
         </Stack>
         <Typography variant="body2" color="text.secondary">
-          {copy.respondBy} {new Date(offer.validUntil).toLocaleString()}.
+          {copy.respondBy} {formatPublicDateTime(offer.validUntil, language)}.
         </Typography>
         <Divider />
         {Object.entries(offer.terms).map(([key, value]) => (
@@ -195,7 +197,10 @@ export default function PublicOffer({
             {offer.status === AdmissionCrmSeatOfferStatus.Accepted
               ? copy.accepted
               : offer.responseReason ||
-                `${copy.offerStatus}: ${AdmissionCrmSeatOfferStatus[offer.status]}.`}
+                `${copy.offerStatus}: ${getPublicStatusLabel(
+                  AdmissionCrmSeatOfferStatus[offer.status],
+                  language
+                )}.`}
           </Alert>
         )}
       </Stack>

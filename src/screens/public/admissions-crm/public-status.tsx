@@ -24,21 +24,24 @@ import {
   LinearProgress,
 } from '@mui/material';
 
-import { publicAdmissionsCopy } from './public-admissions-copy';
 import { PublicAdmissionsShell } from './public-admissions-shell';
 import PublicOffer, { type PublicAdmissionOffer } from './public-offer';
 import { readPublicAdmissionStatusProblem } from './public-status-utils';
 import { getAccessibleStatusChipProps } from './public-admissions-styles';
 import PublicDocuments, { type PublicDocumentChecklist } from './public-documents';
 import PublicExamScheduling, { type PublicExamSnapshot } from './public-exam-scheduling';
+import { publicAdmissionsCopy, publicAdmissionsStatusCopy } from './public-admissions-copy';
 import PublicRegistration, { type PublicRegistrationApplication } from './public-registration';
+import {
+  formatPublicNumber,
+  getPublicRouteLabel,
+  formatPublicCurrency,
+  formatPublicDateTime,
+  getPublicStatusLabel,
+  getPublicRouteEligibilityLabel,
+} from './public-admissions-format';
 
 import type { PublicAdmissionsLanguage } from './public-admissions-copy';
-
-const dateTimeFormatter = new Intl.DateTimeFormat('en-IN', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
 
 type OtpChallenge = {
   maskedDestination: string;
@@ -147,6 +150,7 @@ export default function PublicAdmissionStatusScreen({
   const [otpFeedback, setOtpFeedback] = useState<OtpFeedback | null>(null);
   const [language, setLanguage] = useState<PublicAdmissionsLanguage>('en');
   const copy = publicAdmissionsCopy[language];
+  const statusCopy = publicAdmissionsStatusCopy[language];
   const isOtpLocked = otpFeedback?.code === 'AdmissionCrm:StatusOtpLocked';
 
   const issueOtp = async () => {
@@ -160,7 +164,8 @@ export default function PublicAdmissionStatusScreen({
       if (!response.ok) {
         const problem = await readPublicAdmissionStatusProblem(
           response,
-          'Unable to create OTP challenge.'
+          statusCopy.unableIssueOtp,
+          language
         );
         setOtpFeedback({
           code: problem.code,
@@ -175,7 +180,7 @@ export default function PublicAdmissionStatusScreen({
       setOtpFeedback(null);
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : 'Unable to create OTP challenge.',
+        message: error instanceof Error ? error.message : statusCopy.unableIssueOtp,
       });
     } finally {
       setIsIssuing(false);
@@ -184,7 +189,7 @@ export default function PublicAdmissionStatusScreen({
 
   const verifyOtp = async () => {
     if (!otpCode.trim()) {
-      shikshaMitraToast.error({ message: 'Enter the OTP code.' });
+      shikshaMitraToast.error({ message: statusCopy.enterOtp });
       return;
     }
 
@@ -200,7 +205,11 @@ export default function PublicAdmissionStatusScreen({
         }
       );
       if (!response.ok) {
-        const problem = await readPublicAdmissionStatusProblem(response, 'Unable to verify OTP.');
+        const problem = await readPublicAdmissionStatusProblem(
+          response,
+          statusCopy.unableVerifyOtp,
+          language
+        );
         setOtpFeedback({
           code: problem.code,
           message: problem.message,
@@ -217,7 +226,7 @@ export default function PublicAdmissionStatusScreen({
       setOtpFeedback(null);
     } catch (error) {
       shikshaMitraToast.error({
-        message: error instanceof Error ? error.message : 'Unable to verify OTP.',
+        message: error instanceof Error ? error.message : statusCopy.unableVerifyOtp,
       });
     } finally {
       setIsVerifying(false);
@@ -298,12 +307,40 @@ export default function PublicAdmissionStatusScreen({
                 <Chip {...getAccessibleStatusChipProps('primary')} label={status.stageName} />
               </Stack>
               <Typography variant="body2" color="text.secondary">
-                Last activity: {dateTimeFormatter.format(new Date(status.lastActivityTime))}
+                {statusCopy.lastActivity}: {formatPublicDateTime(status.lastActivityTime, language)}
               </Typography>
+              <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+                <Stack spacing={1}>
+                  <Stack direction="row" justifyContent="space-between" gap={1}>
+                    <Typography variant="subtitle2">{statusCopy.progress}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {status.checklist.filter((item) => item.status === 'Completed').length}/
+                      {status.checklist.length}
+                    </Typography>
+                  </Stack>
+                  <LinearProgress
+                    variant="determinate"
+                    value={
+                      status.checklist.length
+                        ? (status.checklist.filter((item) => item.status === 'Completed').length /
+                            status.checklist.length) *
+                          100
+                        : 0
+                    }
+                    aria-label={statusCopy.progress}
+                  />
+                  <Typography variant="body2">
+                    <strong>{statusCopy.currentStep}:</strong> {status.stageName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>{statusCopy.nextStep}:</strong> {status.nextStep}
+                  </Typography>
+                </Stack>
+              </Paper>
               <Alert severity="info">{status.nextStep}</Alert>
               <Divider />
               <Stack spacing={1}>
-                <Typography variant="subtitle2">Checklist</Typography>
+                <Typography variant="subtitle2">{statusCopy.checklist}</Typography>
                 {status.checklist.map((item) => (
                   <Stack
                     key={item.key}
@@ -322,7 +359,7 @@ export default function PublicAdmissionStatusScreen({
                     </Box>
                     <Chip
                       size="small"
-                      label={item.status}
+                      label={getPublicStatusLabel(item.status, language)}
                       {...getAccessibleStatusChipProps(
                         item.status === 'Completed' ? 'success' : 'default'
                       )}
@@ -334,7 +371,7 @@ export default function PublicAdmissionStatusScreen({
                 <>
                   <Divider />
                   <Stack spacing={1}>
-                    <Typography variant="subtitle2">Applicant checklist</Typography>
+                    <Typography variant="subtitle2">{statusCopy.applicantChecklist}</Typography>
                     {(status.applicantChecklist ?? []).map((item) => (
                       <Stack
                         key={item.key}
@@ -353,7 +390,7 @@ export default function PublicAdmissionStatusScreen({
                         </Box>
                         <Chip
                           size="small"
-                          label={item.status}
+                          label={getPublicStatusLabel(item.status, language)}
                           {...getAccessibleStatusChipProps(getApplicantChecklistColor(item))}
                         />
                       </Stack>
@@ -365,7 +402,7 @@ export default function PublicAdmissionStatusScreen({
                 <>
                   <Divider />
                   <Stack spacing={1}>
-                    <Typography variant="subtitle2">Recent activity</Typography>
+                    <Typography variant="subtitle2">{statusCopy.recentActivity}</Typography>
                     {status.activity.map((item, index) => (
                       <Stack
                         key={`${item.type}-${item.occurredAt}-${index}`}
@@ -383,7 +420,7 @@ export default function PublicAdmissionStatusScreen({
                           )}
                         </Box>
                         <Typography variant="caption" color="text.secondary">
-                          {dateTimeFormatter.format(new Date(item.occurredAt))}
+                          {formatPublicDateTime(item.occurredAt, language)}
                         </Typography>
                       </Stack>
                     ))}
@@ -394,13 +431,14 @@ export default function PublicAdmissionStatusScreen({
                 <>
                   <Divider />
                   <Stack spacing={0.5}>
-                    <Typography variant="subtitle2">Entrance Exam</Typography>
+                    <Typography variant="subtitle2">{statusCopy.entranceExam}</Typography>
                     <Typography variant="body2">
-                      {status.exam.slotName || 'Entrance exam'} - room {status.exam.roomNo || '-'}
+                      {status.exam.slotName || statusCopy.entranceExamFallback} - {statusCopy.room}{' '}
+                      {status.exam.roomNo || '-'}
                     </Typography>
                     {status.exam.examStartTime && (
                       <Typography variant="body2" color="text.secondary">
-                        {dateTimeFormatter.format(new Date(status.exam.examStartTime))}
+                        {formatPublicDateTime(status.exam.examStartTime, language)}
                       </Typography>
                     )}
                     {status.exam.obtainedMarks !== null &&
@@ -408,15 +446,18 @@ export default function PublicAdmissionStatusScreen({
                       status.exam.totalMarks !== null &&
                       status.exam.totalMarks !== undefined && (
                         <Typography variant="body2" color="text.secondary">
-                          Marks: {status.exam.obtainedMarks}/{status.exam.totalMarks}
+                          {statusCopy.marks}:{' '}
+                          {formatPublicNumber(status.exam.obtainedMarks, language)}/
+                          {formatPublicNumber(status.exam.totalMarks, language)}
                           {status.exam.percentage !== null && status.exam.percentage !== undefined
-                            ? ` (${status.exam.percentage.toFixed(2)}%)`
+                            ? ` (${formatPublicNumber(status.exam.percentage, language, { maximumFractionDigits: 2 })}%)`
                             : ''}
                         </Typography>
                       )}
                     {status.exam.meritRank && (
                       <Typography variant="body2" color="text.secondary">
-                        Merit rank: {status.exam.meritRank}
+                        {statusCopy.meritRank}:{' '}
+                        {formatPublicNumber(status.exam.meritRank, language)}
                       </Typography>
                     )}
                     {status.exam.eligibilityDecisionReason && (
@@ -448,10 +489,10 @@ export default function PublicAdmissionStatusScreen({
                       alignItems="center"
                     >
                       <Box>
-                        <Typography variant="subtitle2">Admission quotation</Typography>
+                        <Typography variant="subtitle2">{statusCopy.admissionQuotation}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {status.financialStatus.quotationNumber} - valid until{' '}
-                          {dateTimeFormatter.format(new Date(status.financialStatus.validUntil))}
+                          {status.financialStatus.quotationNumber} - {statusCopy.validUntil}{' '}
+                          {formatPublicDateTime(status.financialStatus.validUntil, language)}
                         </Typography>
                       </Box>
                       <Chip
@@ -461,8 +502,8 @@ export default function PublicAdmissionStatusScreen({
                         )}
                         label={
                           status.financialStatus.isGateSatisfied
-                            ? 'Condition satisfied'
-                            : 'Action pending'
+                            ? statusCopy.conditionSatisfied
+                            : statusCopy.actionPending
                         }
                       />
                     </Stack>
@@ -477,45 +518,51 @@ export default function PublicAdmissionStatusScreen({
                         <Box>
                           <Typography variant="body2">{component.name}</Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {component.isRefundable ? 'Refundable' : 'Non-refundable'}
+                            {component.isRefundable
+                              ? statusCopy.refundable
+                              : statusCopy.nonRefundable}
                             {component.parentDescription ? ` - ${component.parentDescription}` : ''}
                           </Typography>
                         </Box>
                         <Typography variant="body2">
-                          {status.financialStatus!.currency} {component.amount.toFixed(2)}
+                          {formatPublicCurrency(
+                            component.amount,
+                            status.financialStatus!.currency,
+                            language
+                          )}
                         </Typography>
                       </Stack>
                     ))}
                     <Stack direction="row" gap={0.75} flexWrap="wrap">
                       <Chip
                         size="small"
-                        label={`Total: ${status.financialStatus.currency} ${status.financialStatus.grossAmount.toFixed(2)}`}
+                        label={`${statusCopy.total}: ${formatPublicCurrency(status.financialStatus.grossAmount, status.financialStatus.currency, language)}`}
                       />
                       <Chip
                         size="small"
-                        label={`Concession: ${status.financialStatus.currency} ${status.financialStatus.concessionAmount.toFixed(2)}`}
+                        label={`${statusCopy.concession}: ${formatPublicCurrency(status.financialStatus.concessionAmount, status.financialStatus.currency, language)}`}
                       />
                       <Chip
                         size="small"
                         {...getAccessibleStatusChipProps('primary')}
-                        label={`Payable: ${status.financialStatus.currency} ${status.financialStatus.netAmount.toFixed(2)}`}
+                        label={`${statusCopy.payable}: ${formatPublicCurrency(status.financialStatus.netAmount, status.financialStatus.currency, language)}`}
                       />
                       <Chip
                         size="small"
                         {...getAccessibleStatusChipProps('success')}
-                        label={`Confirmed: ${status.financialStatus.currency} ${status.financialStatus.confirmedAmount.toFixed(2)}`}
+                        label={`${statusCopy.confirmed}: ${formatPublicCurrency(status.financialStatus.confirmedAmount, status.financialStatus.currency, language)}`}
                       />
                       <Chip
                         size="small"
                         {...getAccessibleStatusChipProps(
                           status.financialStatus.outstandingAmount ? 'warning' : 'default'
                         )}
-                        label={`Outstanding: ${status.financialStatus.currency} ${status.financialStatus.outstandingAmount.toFixed(2)}`}
+                        label={`${statusCopy.outstanding}: ${formatPublicCurrency(status.financialStatus.outstandingAmount, status.financialStatus.currency, language)}`}
                       />
                     </Stack>
                     {status.financialStatus.financeReference ? (
                       <Typography variant="caption" color="text.secondary">
-                        Finance reference: {status.financialStatus.financeReference}
+                        {statusCopy.financeReference}: {status.financialStatus.financeReference}
                       </Typography>
                     ) : null}
                   </Stack>
@@ -537,11 +584,11 @@ export default function PublicAdmissionStatusScreen({
                 <>
                   <Divider />
                   <Stack spacing={0.75}>
-                    <Typography variant="subtitle2">Admission route</Typography>
+                    <Typography variant="subtitle2">{statusCopy.admissionRoute}</Typography>
                     <Stack direction="row" gap={0.75} flexWrap="wrap">
                       <Chip
                         size="small"
-                        label={AdmissionCrmRouteType[status.admissionRoute.routeType]}
+                        label={getPublicRouteLabel(status.admissionRoute.routeType, language)}
                       />
                       <Chip
                         size="small"
@@ -556,11 +603,10 @@ export default function PublicAdmissionStatusScreen({
                               ? 'error'
                               : 'warning'
                         )}
-                        label={
-                          AdmissionCrmRouteEligibilityStatus[
-                            status.admissionRoute.eligibilityStatus
-                          ]
-                        }
+                        label={getPublicRouteEligibilityLabel(
+                          status.admissionRoute.eligibilityStatus,
+                          language
+                        )}
                       />
                     </Stack>
                   </Stack>
@@ -578,13 +624,13 @@ export default function PublicAdmissionStatusScreen({
                   >
                     <Typography variant="subtitle2">
                       {status.activation.status === AdmissionCrmActivationStatus.FirstDayReady
-                        ? 'Ready to join school'
-                        : 'Final enrollment setup in progress'}
+                        ? statusCopy.readyToJoin
+                        : statusCopy.setupInProgress}
                     </Typography>
                     <Typography variant="body2">
-                      Reference {status.activation.activationReference}
+                      {statusCopy.reference} {status.activation.activationReference}
                       {status.activation.firstDayReadyAt
-                        ? ` - completed ${dateTimeFormatter.format(new Date(status.activation.firstDayReadyAt))}`
+                        ? ` - ${statusCopy.completedOn} ${formatPublicDateTime(status.activation.firstDayReadyAt, language)}`
                         : ''}
                     </Typography>
                   </Alert>

@@ -20,6 +20,7 @@ import {
 import type {
   EnrollmentPersona,
   EnrollmentWorkspace,
+  EnrollmentApplicantTab,
   EnrollmentWorkspaceState,
   EnrollmentWorkspaceStatePatch,
 } from './enrollment-workspace-state';
@@ -40,7 +41,7 @@ type EnrollmentWorkspaceContextValue = {
   currentUserId?: string;
   state: EnrollmentWorkspaceState;
   updateState: (patch: EnrollmentWorkspaceStatePatch, mode?: 'push' | 'replace') => void;
-  openApplicant: (leadId: string) => void;
+  openApplicant: (leadId: string, tab?: EnrollmentApplicantTab) => void;
   closeApplicant: () => void;
 };
 
@@ -125,8 +126,10 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       currentUserId: user?.sub || user?.id,
       state,
       updateState,
-      openApplicant: (leadId) => updateState({ applicant: leadId }, 'push'),
-      closeApplicant: () => updateState({ applicant: undefined }, 'replace'),
+      openApplicant: (leadId, tab = 'overview') =>
+        updateState({ applicant: leadId, applicantTab: tab }, 'push'),
+      closeApplicant: () =>
+        updateState({ applicant: undefined, applicantTab: undefined }, 'replace'),
     }),
     [currentYear?.id, persona, state, updateState, user?.id, user?.sub, workspace]
   );

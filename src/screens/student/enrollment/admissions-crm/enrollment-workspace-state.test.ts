@@ -1,8 +1,14 @@
 import { it, expect, describe } from 'vitest';
 import {
   AdmissionInquiryStage,
+  AdmissionCrmRouteType,
   AdmissionInquiryChannel,
+  AdmissionCrmSeatOfferStatus,
+  AdmissionCrmActivationStatus,
+  AdmissionCrmRegistrationStatus,
   AdmissionCrmOperationsQueueType,
+  AdmissionCrmServiceHandoffStatus,
+  AdmissionCrmApplicantDocumentStatus,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import {
@@ -32,23 +38,35 @@ describe('Enrollment workspace URL state', () => {
   it('round trips non-sensitive workspace state', () => {
     const state = parseEnrollmentWorkspaceState(
       new URLSearchParams(
-        'cycle=cycle-1&view=list&page=3&stage=2&channel=1&owner=staff-1&urgent=1&applicant=lead-1&panel=forms'
+        `cycle=cycle-1&view=list&group=decision&page=3&stage=2&channel=1&owner=staff-1&urgent=1&applicant=lead-1&tab=exam&panel=forms&registrationStatus=${AdmissionCrmRegistrationStatus.Submitted}&documentStatus=${AdmissionCrmApplicantDocumentStatus.Verified}&offerStatus=${AdmissionCrmSeatOfferStatus.Accepted}&routeType=${AdmissionCrmRouteType.RteEws}&seatPool=pool-1&activationStatus=${AdmissionCrmActivationStatus.InProgress}&handoffStatus=${AdmissionCrmServiceHandoffStatus.Acknowledged}`
       )
     );
 
     expect(state).toMatchObject({
       cycle: 'cycle-1',
       view: 'list',
+      stageGroup: 'decision',
       page: 3,
       stage: AdmissionInquiryStage.ExamReady,
       channel: AdmissionInquiryChannel.QuickCallEntry,
       owner: 'staff-1',
       urgent: true,
       applicant: 'lead-1',
+      applicantTab: 'exam',
       settingsPanel: 'forms',
+      registrationStatus: AdmissionCrmRegistrationStatus.Submitted,
+      documentStatus: AdmissionCrmApplicantDocumentStatus.Verified,
+      offerStatus: AdmissionCrmSeatOfferStatus.Accepted,
+      routeType: AdmissionCrmRouteType.RteEws,
+      seatPoolId: 'pool-1',
+      activationStatus: AdmissionCrmActivationStatus.InProgress,
+      serviceHandoffStatus: AdmissionCrmServiceHandoffStatus.Acknowledged,
     });
     expect(serializeEnrollmentWorkspaceState(state).get('page')).toBe('3');
     expect(serializeEnrollmentWorkspaceState(state).get('panel')).toBe('forms');
+    expect(serializeEnrollmentWorkspaceState(state).get('tab')).toBe('exam');
+    expect(serializeEnrollmentWorkspaceState(state).get('group')).toBe('decision');
+    expect(serializeEnrollmentWorkspaceState(state).get('seatPool')).toBe('pool-1');
   });
 
   it('rejects invalid enum, date, and pagination values', () => {
@@ -98,6 +116,9 @@ describe('Enrollment workspace URL state', () => {
     });
     expect(getPersonaWorkspaceDefaults('registrations', 'counselor')).toEqual({
       queue: AdmissionCrmOperationsQueueType.RegistrationInvitationPending,
+    });
+    expect(getPersonaWorkspaceDefaults('operations', 'administrator')).toEqual({
+      queue: AdmissionCrmOperationsQueueType.HouseholdResolution,
     });
   });
 });

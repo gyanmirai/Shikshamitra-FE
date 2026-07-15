@@ -323,6 +323,18 @@ async function openExamRowInWorkspace(
     timeout: 30_000,
   });
 
+  const filteredExamsResponse = page.waitForResponse((candidate) => {
+    if (candidate.request().method() !== 'GET') return false;
+    const url = new URL(candidate.url());
+    return (
+      /\/student-enrollment\/admissions-crm\/[^/]+\/exams$/.test(url.pathname) &&
+      url.searchParams.get('filterText') === applicantName
+    );
+  });
+  await page.getByRole('textbox', { name: 'Search entrance exams' }).fill(applicantName);
+  await expectOk(await filteredExamsResponse, 'filter CRM entrance exams');
+  await expect(page.getByText(/1[–-]1 of 1/)).toBeVisible({ timeout: 15_000 });
+
   const examRow = page.getByRole('row', {
     name: new RegExp(`${escapeRegExp(applicantName)}.*${escapeRegExp(slotName)}`, 'i'),
   });

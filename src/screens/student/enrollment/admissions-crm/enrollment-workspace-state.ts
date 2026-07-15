@@ -1,14 +1,21 @@
 import {
   AdmissionInquiryStage,
+  AdmissionCrmRouteType,
   EntranceExamStatusEnum,
   AdmissionInquiryChannel,
   AdmissionCrmLeadPriority,
+  AdmissionCrmSeatOfferStatus,
+  AdmissionCrmActivationStatus,
+  AdmissionCrmRegistrationStatus,
   AdmissionCrmOperationsQueueType,
   AdmissionCrmEligibilityDecision,
+  AdmissionCrmServiceHandoffStatus,
   AdmissionCrmExamAttendanceStatus,
+  AdmissionCrmApplicantDocumentStatus,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 export type EnrollmentWorkspace =
+  | 'overview'
   | 'pipeline'
   | 'exams'
   | 'registrations'
@@ -26,7 +33,15 @@ export type EnrollmentPersona =
   | 'restricted';
 
 export type PipelineView = 'board' | 'list';
+export type PipelineStageGroup = 'active' | 'decision' | 'closed';
 export type ScoreBandFilter = 'all' | 'hot' | 'warm' | 'needsAttention';
+export type EnrollmentApplicantTab =
+  | 'overview'
+  | 'exam'
+  | 'registration'
+  | 'offer'
+  | 'activation'
+  | 'governance';
 export type EnrollmentSettingsPanel =
   | 'cycle'
   | 'pipeline'
@@ -45,8 +60,10 @@ export type EnrollmentSettingsPanel =
 export type EnrollmentWorkspaceState = {
   cycle?: string;
   applicant?: string;
+  applicantTab?: EnrollmentApplicantTab;
   page: number;
   view?: PipelineView;
+  stageGroup?: PipelineStageGroup;
   stage?: AdmissionInquiryStage;
   channel?: AdmissionInquiryChannel;
   campaign?: string;
@@ -58,6 +75,13 @@ export type EnrollmentWorkspaceState = {
   assignee?: string;
   urgent?: boolean;
   minimumAgeDays?: number;
+  registrationStatus?: AdmissionCrmRegistrationStatus;
+  documentStatus?: AdmissionCrmApplicantDocumentStatus;
+  offerStatus?: AdmissionCrmSeatOfferStatus;
+  routeType?: AdmissionCrmRouteType;
+  seatPoolId?: string;
+  activationStatus?: AdmissionCrmActivationStatus;
+  serviceHandoffStatus?: AdmissionCrmServiceHandoffStatus;
   attendance?: AdmissionCrmExamAttendanceStatus;
   examStatus?: EntranceExamStatusEnum;
   eligibility?: AdmissionCrmEligibilityDecision;
@@ -92,6 +116,18 @@ const stages = enumValues<AdmissionInquiryStage>(AdmissionInquiryStage);
 const channels = enumValues<AdmissionInquiryChannel>(AdmissionInquiryChannel);
 const priorities = enumValues<AdmissionCrmLeadPriority>(AdmissionCrmLeadPriority);
 const queues = enumValues<AdmissionCrmOperationsQueueType>(AdmissionCrmOperationsQueueType);
+const registrationStatuses = enumValues<AdmissionCrmRegistrationStatus>(
+  AdmissionCrmRegistrationStatus
+);
+const documentStatuses = enumValues<AdmissionCrmApplicantDocumentStatus>(
+  AdmissionCrmApplicantDocumentStatus
+);
+const offerStatuses = enumValues<AdmissionCrmSeatOfferStatus>(AdmissionCrmSeatOfferStatus);
+const routeTypes = enumValues<AdmissionCrmRouteType>(AdmissionCrmRouteType);
+const activationStatuses = enumValues<AdmissionCrmActivationStatus>(AdmissionCrmActivationStatus);
+const serviceHandoffStatuses = enumValues<AdmissionCrmServiceHandoffStatus>(
+  AdmissionCrmServiceHandoffStatus
+);
 const attendanceStatuses = enumValues<AdmissionCrmExamAttendanceStatus>(
   AdmissionCrmExamAttendanceStatus
 );
@@ -100,6 +136,15 @@ const eligibilityDecisions = enumValues<AdmissionCrmEligibilityDecision>(
   AdmissionCrmEligibilityDecision
 );
 const scoreBands = new Set<ScoreBandFilter>(['all', 'hot', 'warm', 'needsAttention']);
+const stageGroups = new Set<PipelineStageGroup>(['active', 'decision', 'closed']);
+const applicantTabs = new Set<EnrollmentApplicantTab>([
+  'overview',
+  'exam',
+  'registration',
+  'offer',
+  'activation',
+  'governance',
+]);
 const settingsPanels = new Set<EnrollmentSettingsPanel>([
   'cycle',
   'pipeline',
@@ -134,6 +179,7 @@ const parsePositiveInteger = (value: string | null, maximum = 10_000) => {
 };
 
 export const getWorkspaceFromPathname = (pathname: string): EnrollmentWorkspace => {
+  if (pathname.includes('/overview')) return 'overview';
   if (pathname.includes('/settings')) return 'settings';
   if (pathname.includes('/exams')) return 'exams';
   if (pathname.includes('/registrations')) return 'registrations';
@@ -165,7 +211,7 @@ export const getPersonaWorkspaceDefaults = (
     return { queue: AdmissionCrmOperationsQueueType.ActivationRepair };
   }
   if (workspace === 'operations') {
-    return { queue: AdmissionCrmOperationsQueueType.UnassignedExam };
+    return { queue: AdmissionCrmOperationsQueueType.HouseholdResolution };
   }
   return {};
 };
@@ -179,16 +225,24 @@ export const parseEnrollmentWorkspaceState = (
   const fromValue = searchParams.get('from');
   const toValue = searchParams.get('to');
   const settingsPanelValue = searchParams.get('panel') as EnrollmentSettingsPanel | null;
+  const applicantTabValue = searchParams.get('tab') as EnrollmentApplicantTab | null;
 
   return {
     ...defaults,
     cycle: parseToken(searchParams.get('cycle')) ?? defaults.cycle,
     applicant: parseToken(searchParams.get('applicant')) ?? defaults.applicant,
+    applicantTab:
+      applicantTabValue && applicantTabs.has(applicantTabValue)
+        ? applicantTabValue
+        : defaults.applicantTab,
     page: parsePositiveInteger(searchParams.get('page')) ?? defaults.page ?? 1,
     view:
       viewValue === 'board' || viewValue === 'list'
         ? viewValue
         : (defaults.view as PipelineView | undefined),
+    stageGroup: stageGroups.has(searchParams.get('group') as PipelineStageGroup)
+      ? (searchParams.get('group') as PipelineStageGroup)
+      : defaults.stageGroup,
     stage: parseEnum(searchParams.get('stage'), stages) ?? defaults.stage,
     channel: parseEnum(searchParams.get('channel'), channels) ?? defaults.channel,
     campaign: parseToken(searchParams.get('campaign')) ?? defaults.campaign,
@@ -200,6 +254,20 @@ export const parseEnrollmentWorkspaceState = (
     assignee: parseToken(searchParams.get('assignee')) ?? defaults.assignee,
     urgent: searchParams.get('urgent') === '1' ? true : defaults.urgent,
     minimumAgeDays: parsePositiveInteger(searchParams.get('age'), 3_650) ?? defaults.minimumAgeDays,
+    registrationStatus:
+      parseEnum(searchParams.get('registrationStatus'), registrationStatuses) ??
+      defaults.registrationStatus,
+    documentStatus:
+      parseEnum(searchParams.get('documentStatus'), documentStatuses) ?? defaults.documentStatus,
+    offerStatus: parseEnum(searchParams.get('offerStatus'), offerStatuses) ?? defaults.offerStatus,
+    routeType: parseEnum(searchParams.get('routeType'), routeTypes) ?? defaults.routeType,
+    seatPoolId: parseToken(searchParams.get('seatPool')) ?? defaults.seatPoolId,
+    activationStatus:
+      parseEnum(searchParams.get('activationStatus'), activationStatuses) ??
+      defaults.activationStatus,
+    serviceHandoffStatus:
+      parseEnum(searchParams.get('handoffStatus'), serviceHandoffStatuses) ??
+      defaults.serviceHandoffStatus,
     attendance:
       parseEnum(searchParams.get('attendance'), attendanceStatuses) ?? defaults.attendance,
     examStatus: parseEnum(searchParams.get('result'), examStatuses) ?? defaults.examStatus,
@@ -222,8 +290,10 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
 
   set('cycle', state.cycle);
   set('applicant', state.applicant);
+  set('tab', state.applicantTab);
   if (state.page > 1) set('page', state.page);
   set('view', state.view);
+  set('group', state.stageGroup);
   set('stage', state.stage);
   set('channel', state.channel);
   set('campaign', state.campaign);
@@ -235,6 +305,13 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
   set('assignee', state.assignee);
   if (state.urgent) set('urgent', 1);
   set('age', state.minimumAgeDays);
+  set('registrationStatus', state.registrationStatus);
+  set('documentStatus', state.documentStatus);
+  set('offerStatus', state.offerStatus);
+  set('routeType', state.routeType);
+  set('seatPool', state.seatPoolId);
+  set('activationStatus', state.activationStatus);
+  set('handoffStatus', state.serviceHandoffStatus);
   set('attendance', state.attendance);
   set('result', state.examStatus);
   set('eligibility', state.eligibility);

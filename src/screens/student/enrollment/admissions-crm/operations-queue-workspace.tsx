@@ -1,9 +1,7 @@
 'use client';
 
-import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmStaffLookupDto,
-  AdmissionCrmOperationsQueueItemDto,
   AdmissionCrmOperationsSavedViewDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
@@ -11,7 +9,6 @@ import dynamic from 'next/dynamic';
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import BookmarkAddOutlined from '@mui/icons-material/BookmarkAddOutlined';
 import DeleteOutlineRounded from '@mui/icons-material/DeleteOutlineRounded';
@@ -31,8 +28,15 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import {
+  AdmissionCrmRouteType,
+  AdmissionCrmSeatOfferStatus,
   useGetAdmissionCrmStaffQuery,
+  AdmissionCrmActivationStatus,
+  AdmissionCrmRegistrationStatus,
   AdmissionCrmOperationsQueueType,
+  AdmissionCrmServiceHandoffStatus,
+  useGetAdmissionCrmSeatPoolsQuery,
+  AdmissionCrmApplicantDocumentStatus,
   useGetAdmissionCrmOperationsQueueQuery,
   useGetAdmissionCrmOperationsSavedViewsQuery,
   useGetAdmissionCrmOperationsQueueSummaryQuery,
@@ -40,12 +44,16 @@ import {
   useDeleteAdmissionCrmOperationsSavedViewMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { formatEnumLabel } from './enrollment-display';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
 import { IntegrationCapabilitiesPanel } from './integration-capabilities-panel';
 import {
-  enrollmentActionsColumn,
+  buildOperationsQueueColumns,
+  type EnrollmentQueueVariant,
+} from './operations-queue-columns';
+import {
   EnrollmentTableEmptyState,
   EnrollmentWorkspaceErrorState,
   EnrollmentWorkspaceFilterPanel,
@@ -66,23 +74,11 @@ type Props = {
   defaultQueue: AdmissionCrmOperationsQueueType;
   allowedQueues?: AdmissionCrmOperationsQueueType[];
   applicantTab?: ApplicantDrawerTab;
+  variant?: EnrollmentQueueVariant;
   showOperationsUtilities?: boolean;
 };
 
 const pageSize = 50;
-const dateFormatter = new Intl.DateTimeFormat('en-IN', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-});
-
-const formatQueueDate = (value: unknown) => {
-  if (!value) return '-';
-
-  const date = new Date(value as string | number | Date);
-  return Number.isNaN(date.getTime()) ? '-' : dateFormatter.format(date);
-};
-
 const queueLabels: Record<AdmissionCrmOperationsQueueType, string> = {
   [AdmissionCrmOperationsQueueType.UnassignedExam]: 'Unassigned Exams',
   [AdmissionCrmOperationsQueueType.CapacityConflict]: 'Capacity Conflicts',
@@ -142,12 +138,18 @@ const allQueues = Object.values(AdmissionCrmOperationsQueueType).filter(
   (value): value is AdmissionCrmOperationsQueueType => typeof value === 'number'
 );
 
+const enumOptions = <T extends number>(source: Record<string, string | number>) =>
+  Object.entries(source)
+    .filter((entry): entry is [string, T] => typeof entry[1] === 'number')
+    .map(([key, value]) => ({ value, label: formatEnumLabel(key) }));
+
 export function OperationsQueueWorkspace({
   title,
   description,
   defaultQueue,
   allowedQueues = allQueues,
   applicantTab = 'overview',
+  variant = 'operations',
   showOperationsUtilities = false,
 }: Props) {
   const { academicYearId, state, updateState, openApplicant, closeApplicant } =
@@ -162,6 +164,10 @@ export function OperationsQueueWorkspace({
   const [assignee, setAssignee] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [savedViewName, setSavedViewName] = useState('');
   const [showUtilities, setShowUtilities] = useState(false);
+  const seatPoolsQuery = useGetAdmissionCrmSeatPoolsQuery(
+    { academicYearId: academicYearId || '', maxResultCount: 100 },
+    { skip: !academicYearId || variant !== 'offer' }
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedStaffSearch(staffSearch.trim()), 300);
@@ -189,10 +195,32 @@ export function OperationsQueueWorkspace({
       assignedToUserId: state.assignee,
       urgentOnly: state.urgent || undefined,
       minimumAgeDays: state.minimumAgeDays,
+      registrationStatus: state.registrationStatus,
+      documentStatus: state.documentStatus,
+      offerStatus: state.offerStatus,
+      routeType: state.routeType,
+      seatPoolId: state.seatPoolId,
+      activationStatus: state.activationStatus,
+      serviceHandoffStatus: state.serviceHandoffStatus,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
     },
     { skip: !academicYearId }
+  );
+  const rowOwnerIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (queueQuery.data?.items || [])
+            .map((item) => item.ownerUserId)
+            .filter((value): value is string => Boolean(value))
+        )
+      ).join(','),
+    [queueQuery.data?.items]
+  );
+  const rowStaffQuery = useGetAdmissionCrmStaffQuery(
+    { ids: rowOwnerIds, maxResultCount: 1 },
+    { skip: !academicYearId || !rowOwnerIds }
   );
   const savedViewsQuery = useGetAdmissionCrmOperationsSavedViewsQuery(
     { academicYearId: academicYearId || '' },
@@ -223,107 +251,19 @@ export function OperationsQueueWorkspace({
     [allowedQueues, summaryQuery.data?.queues]
   );
 
-  const columns = useMemo<IColumn[]>(
-    () => [
-      {
-        id: 'applicantName',
-        label: 'Applicant',
-        width: 230,
-        minWidth: 210,
-        sticky: true,
-        stickyPosition: 'left',
-        stickyOnMobile: false,
-        isSort: false,
-        isFilter: false,
-        render: (value) => (
-          <Typography variant="subtitle2" noWrap>
-            {value}
-          </Typography>
-        ),
-      },
-      {
-        id: 'title',
-        label: 'Action Required',
-        width: 360,
-        minWidth: 280,
-        isSort: false,
-        isFilter: false,
-        render: (value, row) => {
-          const item = row as AdmissionCrmOperationsQueueItemDto;
-          return (
-            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-              <Typography variant="body2" noWrap>
-                {value}
-              </Typography>
-              {item.details && (
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {item.details}
-                </Typography>
-              )}
-            </Stack>
-          );
-        },
-      },
-      {
-        id: 'status',
-        label: 'Status',
-        width: 210,
-        minWidth: 180,
-        isSort: false,
-        isFilter: false,
-        render: (value, row) => {
-          const item = row as AdmissionCrmOperationsQueueItemDto;
-          return (
-            <Stack direction="row" gap={0.5} alignItems="center">
-              <Chip size="small" variant="outlined" label={value} />
-              {item.isUrgent && <Chip size="small" color="warning" label="Urgent" />}
-            </Stack>
-          );
-        },
-      },
-      {
-        id: 'ageDays',
-        label: 'Age',
-        width: 100,
-        minWidth: 90,
-        isSort: false,
-        isFilter: false,
-        render: (value) => `${value} days`,
-      },
-      {
-        id: 'dueAt',
-        label: 'Due',
-        width: 135,
-        minWidth: 125,
-        isSort: false,
-        isFilter: false,
-        render: formatQueueDate,
-      },
-      {
-        id: 'actions',
-        label: 'Actions',
-        ...enrollmentActionsColumn,
-        isSort: false,
-        isFilter: false,
-        render: (_value, row) => {
-          const item = row as AdmissionCrmOperationsQueueItemDto;
-          return (
-            <ThreeDotsActions
-              placement="right-top"
-              showViewIcon
-              viewLabel={
-                selectedQueue === AdmissionCrmOperationsQueueType.RegistrationInvitationPending
-                  ? 'Issue Registration'
-                  : 'Review Applicant'
-              }
-              handleViewClick={() => openApplicant(item.leadId)}
-              showThreeDots={false}
-            />
-          );
-        },
-      },
-    ],
-    [openApplicant, selectedQueue]
+  const staffById = useMemo(
+    () =>
+      new Map(
+        [...(staffQuery.data || []), ...(rowStaffQuery.data || [])].map((staff) => [
+          staff.id,
+          staff.displayName,
+        ])
+      ),
+    [rowStaffQuery.data, staffQuery.data]
+  );
+  const columns = useMemo(
+    () => buildOperationsQueueColumns({ variant, applicantTab, openApplicant, staffById }),
+    [applicantTab, openApplicant, staffById, variant]
   );
 
   const applySavedView = (savedView: AdmissionCrmOperationsSavedViewDto) => {
@@ -341,6 +281,13 @@ export function OperationsQueueWorkspace({
         assignee: savedView.filters.assignedToUserId,
         urgent: savedView.filters.urgentOnly || undefined,
         minimumAgeDays: savedView.filters.minimumAgeDays,
+        registrationStatus: savedView.filters.registrationStatus,
+        documentStatus: savedView.filters.documentStatus,
+        offerStatus: savedView.filters.offerStatus,
+        routeType: savedView.filters.routeType,
+        seatPoolId: savedView.filters.seatPoolId,
+        activationStatus: savedView.filters.activationStatus,
+        serviceHandoffStatus: savedView.filters.serviceHandoffStatus,
         page: 1,
       },
       'push'
@@ -359,6 +306,13 @@ export function OperationsQueueWorkspace({
           assignedToUserId: state.assignee,
           urgentOnly: state.urgent || undefined,
           minimumAgeDays: state.minimumAgeDays,
+          registrationStatus: state.registrationStatus,
+          documentStatus: state.documentStatus,
+          offerStatus: state.offerStatus,
+          routeType: state.routeType,
+          seatPoolId: state.seatPoolId,
+          activationStatus: state.activationStatus,
+          serviceHandoffStatus: state.serviceHandoffStatus,
         },
         isShared: false,
       }).unwrap();
@@ -380,8 +334,20 @@ export function OperationsQueueWorkspace({
       <EnrollmentWorkspaceHeader title={title} description={description} />
 
       <EnrollmentWorkspaceFilterPanel
-        columns={{ xs: 1, sm: 2, lg: 5 }}
-        clearDisabled={!state.owner && !state.assignee && !state.minimumAgeDays && !state.urgent}
+        columns={{ xs: 1, sm: 2, lg: 4 }}
+        clearDisabled={
+          !state.owner &&
+          !state.assignee &&
+          !state.minimumAgeDays &&
+          !state.urgent &&
+          state.registrationStatus == null &&
+          state.documentStatus == null &&
+          state.offerStatus == null &&
+          state.routeType == null &&
+          !state.seatPoolId &&
+          state.activationStatus == null &&
+          state.serviceHandoffStatus == null
+        }
         onClear={() =>
           updateState(
             {
@@ -389,6 +355,13 @@ export function OperationsQueueWorkspace({
               assignee: undefined,
               minimumAgeDays: undefined,
               urgent: undefined,
+              registrationStatus: undefined,
+              documentStatus: undefined,
+              offerStatus: undefined,
+              routeType: undefined,
+              seatPoolId: undefined,
+              activationStatus: undefined,
+              serviceHandoffStatus: undefined,
               page: 1,
             },
             'push'
@@ -497,6 +470,176 @@ export function OperationsQueueWorkspace({
             </MenuItem>
           ))}
         </TextField>
+        {variant === 'registration' ? (
+          <>
+            <TextField
+              select
+              size="small"
+              label="Registration status"
+              value={state.registrationStatus ?? ''}
+              onChange={(event) =>
+                updateState({
+                  registrationStatus:
+                    event.target.value === ''
+                      ? undefined
+                      : (Number(event.target.value) as AdmissionCrmRegistrationStatus),
+                  page: 1,
+                })
+              }
+            >
+              <MenuItem value="">All statuses</MenuItem>
+              {enumOptions<AdmissionCrmRegistrationStatus>(AdmissionCrmRegistrationStatus).map(
+                (option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                )
+              )}
+            </TextField>
+            <TextField
+              select
+              size="small"
+              label="Document status"
+              value={state.documentStatus ?? ''}
+              onChange={(event) =>
+                updateState({
+                  documentStatus:
+                    event.target.value === ''
+                      ? undefined
+                      : (Number(event.target.value) as AdmissionCrmApplicantDocumentStatus),
+                  page: 1,
+                })
+              }
+            >
+              <MenuItem value="">All documents</MenuItem>
+              {enumOptions<AdmissionCrmApplicantDocumentStatus>(
+                AdmissionCrmApplicantDocumentStatus
+              ).map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </>
+        ) : null}
+        {variant === 'offer' ? (
+          <>
+            <TextField
+              select
+              size="small"
+              label="Offer status"
+              value={state.offerStatus ?? ''}
+              onChange={(event) =>
+                updateState({
+                  offerStatus:
+                    event.target.value === ''
+                      ? undefined
+                      : (Number(event.target.value) as AdmissionCrmSeatOfferStatus),
+                  page: 1,
+                })
+              }
+            >
+              <MenuItem value="">All offers</MenuItem>
+              {enumOptions<AdmissionCrmSeatOfferStatus>(AdmissionCrmSeatOfferStatus).map(
+                (option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                )
+              )}
+            </TextField>
+            <TextField
+              select
+              size="small"
+              label="Admission route"
+              value={state.routeType ?? ''}
+              onChange={(event) =>
+                updateState({
+                  routeType:
+                    event.target.value === ''
+                      ? undefined
+                      : (Number(event.target.value) as AdmissionCrmRouteType),
+                  page: 1,
+                })
+              }
+            >
+              <MenuItem value="">All routes</MenuItem>
+              {enumOptions<AdmissionCrmRouteType>(AdmissionCrmRouteType).map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              size="small"
+              label="Seat pool"
+              value={state.seatPoolId || ''}
+              onChange={(event) =>
+                updateState({ seatPoolId: event.target.value || undefined, page: 1 })
+              }
+            >
+              <MenuItem value="">All seat pools</MenuItem>
+              {(seatPoolsQuery.data?.items || []).map((pool) => (
+                <MenuItem key={pool.id} value={pool.id}>
+                  {pool.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </>
+        ) : null}
+        {variant === 'activation' ? (
+          <TextField
+            select
+            size="small"
+            label="Activation status"
+            value={state.activationStatus ?? ''}
+            onChange={(event) =>
+              updateState({
+                activationStatus:
+                  event.target.value === ''
+                    ? undefined
+                    : (Number(event.target.value) as AdmissionCrmActivationStatus),
+                page: 1,
+              })
+            }
+          >
+            <MenuItem value="">All statuses</MenuItem>
+            {enumOptions<AdmissionCrmActivationStatus>(AdmissionCrmActivationStatus).map(
+              (option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              )
+            )}
+          </TextField>
+        ) : null}
+        {variant === 'operations' ? (
+          <TextField
+            select
+            size="small"
+            label="Handoff status"
+            value={state.serviceHandoffStatus ?? ''}
+            onChange={(event) =>
+              updateState({
+                serviceHandoffStatus:
+                  event.target.value === ''
+                    ? undefined
+                    : (Number(event.target.value) as AdmissionCrmServiceHandoffStatus),
+                page: 1,
+              })
+            }
+          >
+            <MenuItem value="">All handoff states</MenuItem>
+            {enumOptions<AdmissionCrmServiceHandoffStatus>(AdmissionCrmServiceHandoffStatus).map(
+              (option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              )
+            )}
+          </TextField>
+        ) : null}
         <Autocomplete
           size="small"
           options={staffQuery.data || []}
@@ -563,7 +706,7 @@ export function OperationsQueueWorkspace({
           searchTerm={search}
           defaultSearchTerm={search}
           searchFieldProps={{
-            placeholder: 'Search this queue...',
+            placeholder: 'Search this queue',
             inputProps: { 'aria-label': 'Search this admissions queue' },
           }}
           totalCount={queueQuery.data?.totalCount || 0}
@@ -618,7 +761,8 @@ export function OperationsQueueWorkspace({
       <ApplicantWorkspaceDrawer
         leadId={state.applicant}
         academicYearId={academicYearId}
-        initialTab={applicantTab}
+        initialTab={(state.applicantTab as ApplicantDrawerTab | undefined) || applicantTab}
+        onTabChange={(tab) => updateState({ applicantTab: tab }, 'replace')}
         onClose={closeApplicant}
       />
     </Stack>

@@ -1,6 +1,10 @@
 import { it, expect, describe } from 'vitest';
 
-import { publicAdmissionsCopy, publicAdmissionsActionCopy } from './public-admissions-copy';
+import {
+  publicAdmissionsCopy,
+  publicAdmissionsActionCopy,
+  publicAdmissionsStatusCopy,
+} from './public-admissions-copy';
 
 describe('public admissions copy', () => {
   it.each(['en', 'gu', 'hi'] as const)(
@@ -23,6 +27,15 @@ describe('public admissions copy', () => {
       Object.keys(publicAdmissionsActionCopy.en)
     );
     Object.values(publicAdmissionsActionCopy[language]).forEach((value) =>
+      expect(value.trim()).not.toBe('')
+    );
+  });
+
+  it.each(['en', 'gu', 'hi'] as const)('provides complete status copy for %s', (language) => {
+    expect(Object.keys(publicAdmissionsStatusCopy[language])).toEqual(
+      Object.keys(publicAdmissionsStatusCopy.en)
+    );
+    Object.values(publicAdmissionsStatusCopy[language]).forEach((value) =>
       expect(value.trim()).not.toBe('')
     );
   });

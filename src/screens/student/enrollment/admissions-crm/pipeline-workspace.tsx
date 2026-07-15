@@ -25,13 +25,13 @@ import {
   Box,
   Chip,
   Card,
+  Paper,
   Alert,
   Stack,
   Button,
   Dialog,
   Select,
   Switch,
-  Divider,
   Checkbox,
   MenuItem,
   MenuList,
@@ -83,6 +83,8 @@ import {
   EnrollmentWorkspaceFilterPanel,
 } from './workspace-table-patterns';
 
+import type { PipelineStageGroup } from './enrollment-workspace-state';
+
 const pageSize = 50;
 const permissionRoot = 'Students.Enrollment.AdmissionsCrm';
 const actionPermissions = {
@@ -113,6 +115,22 @@ const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
   [AdmissionCrmLeadPriority.Warm]: 'Warm',
   [AdmissionCrmLeadPriority.Cold]: 'Cold',
   [AdmissionCrmLeadPriority.Low]: 'Low',
+};
+
+const pipelineStageGroups: Record<PipelineStageGroup, AdmissionInquiryStage[]> = {
+  active: [
+    AdmissionInquiryStage.NewInquiry,
+    AdmissionInquiryStage.FollowUp,
+    AdmissionInquiryStage.ExamReady,
+    AdmissionInquiryStage.ExamScheduled,
+    AdmissionInquiryStage.ExamCompleted,
+  ],
+  decision: [AdmissionInquiryStage.Eligible, AdmissionInquiryStage.Waitlisted],
+  closed: [
+    AdmissionInquiryStage.Rejected,
+    AdmissionInquiryStage.Stale,
+    AdmissionInquiryStage.Archived,
+  ],
 };
 
 type QuickInquiryForm = {
@@ -345,6 +363,16 @@ export function PipelineWorkspace() {
   const stages = useMemo(
     () => (stagesQuery.data || []).filter((stage) => stage.isEnabled),
     [stagesQuery.data]
+  );
+  const stageGroup = state.stageGroup || 'active';
+  const visibleBoardStages = useMemo(
+    () =>
+      stages.filter((stageItem) =>
+        state.stage == null
+          ? pipelineStageGroups[stageGroup].includes(stageItem.systemStage)
+          : stageItem.systemStage === state.stage
+      ),
+    [stageGroup, stages, state.stage]
   );
   const stageSelectValue =
     state.stage != null && stages.some((stage) => stage.systemStage === state.stage)
@@ -835,20 +863,37 @@ export function PipelineWorkspace() {
           !search
         }
         actions={
-          <ToggleButtonGroup
-            exclusive
-            size="small"
-            value={state.view || 'list'}
-            onChange={(_, value) => value && updateState({ view: value, page: 1 }, 'push')}
-            aria-label="Pipeline view"
-          >
-            <ToggleButton value="board" aria-label="Board view">
-              <ViewColumnRounded />
-            </ToggleButton>
-            <ToggleButton value="list" aria-label="List view">
-              <FormatListBulletedRounded />
-            </ToggleButton>
-          </ToggleButtonGroup>
+          <Stack direction="row" gap={0.75} flexWrap="wrap" justifyContent="flex-end">
+            {state.view === 'board' ? (
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={stageGroup}
+                onChange={(_, value: PipelineStageGroup | null) =>
+                  value && updateState({ stageGroup: value, stage: undefined, page: 1 }, 'push')
+                }
+                aria-label="Pipeline stage group"
+              >
+                <ToggleButton value="active">Active</ToggleButton>
+                <ToggleButton value="decision">Decision</ToggleButton>
+                <ToggleButton value="closed">Closed</ToggleButton>
+              </ToggleButtonGroup>
+            ) : null}
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={state.view || 'list'}
+              onChange={(_, value) => value && updateState({ view: value, page: 1 }, 'push')}
+              aria-label="Pipeline view"
+            >
+              <ToggleButton value="board" aria-label="Board view">
+                <ViewColumnRounded />
+              </ToggleButton>
+              <ToggleButton value="list" aria-label="List view">
+                <FormatListBulletedRounded />
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Stack>
         }
       >
         {state.view === 'board' && (
@@ -935,8 +980,12 @@ export function PipelineWorkspace() {
       </EnrollmentWorkspaceFilterPanel>
 
       {selectedLeadIds.length > 0 && (
-        <>
-          <Divider />
+        <Paper
+          variant="outlined"
+          role="region"
+          aria-label="Bulk inquiry actions"
+          sx={{ p: 1, position: 'sticky', top: 8, zIndex: 2, borderRadius: 1 }}
+        >
           <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
             <Chip label={`${selectedLeadIds.length} selected`} color="primary" />
             {can(actionPermissions.assignOwner) && (
@@ -960,7 +1009,7 @@ export function PipelineWorkspace() {
               </Button>
             )}
           </Stack>
-        </>
+        </Paper>
       )}
 
       {stagesQuery.isFetching && <LinearProgress aria-label="Loading pipeline stages" />}
@@ -971,16 +1020,16 @@ export function PipelineWorkspace() {
         />
       )}
 
-      {state.view === 'board' && !stagesQuery.isError && (
-        <Stack
-          direction={{ xs: 'column', lg: 'row' }}
-          spacing={1.25}
-          alignItems="stretch"
-          sx={{ overflowX: { lg: 'auto' }, pb: 1 }}
-        >
-          {stages
-            .filter((stageItem) => state.stage == null || stageItem.systemStage === state.stage)
-            .map((stageItem) => (
+      {state.view === 'board' &&
+        !stagesQuery.isError &&
+        (visibleBoardStages.length ? (
+          <Stack
+            direction={{ xs: 'column', lg: 'row' }}
+            spacing={1.25}
+            alignItems="stretch"
+            sx={{ overflowX: { lg: 'auto' }, pb: 1 }}
+          >
+            {visibleBoardStages.map((stageItem) => (
               <PipelineStageColumn
                 key={stageItem.id}
                 academicYearId={academicYearId}
@@ -997,8 +1046,12 @@ export function PipelineWorkspace() {
                 renderLead={renderLeadCard}
               />
             ))}
-        </Stack>
-      )}
+          </Stack>
+        ) : (
+          <Alert severity="info">
+            No enabled stages are configured for this pipeline group. Review Journey settings.
+          </Alert>
+        ))}
 
       {(state.view || 'list') === 'list' &&
         (leadsQuery.isError ? (
@@ -1020,7 +1073,7 @@ export function PipelineWorkspace() {
             searchTerm={search}
             defaultSearchTerm={search}
             searchFieldProps={{
-              placeholder: 'Search applicants...',
+              placeholder: 'Search applicants',
               inputProps: { 'aria-label': 'Search applicants' },
             }}
             filters={tableFilters}

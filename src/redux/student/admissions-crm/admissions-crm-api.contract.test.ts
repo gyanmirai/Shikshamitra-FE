@@ -16,6 +16,7 @@ import {
   AdmissionCrmPolicyPackStatus,
   AdmissionCrmAutomationRunType,
   AdmissionCrmTimelineEventType,
+  AdmissionCrmRegistrationStatus,
   AdmissionCrmExamReadinessField,
   AdmissionCrmAutomationRunStatus,
   AdmissionCrmLeadRoutingStrategy,
@@ -47,6 +48,7 @@ import {
   buildPublicAdmissionCrmDocumentUploadUrl,
   buildPreviewAdmissionCrmExamResultRequest,
   buildAdmissionCrmActivationPreviewRequest,
+  buildAdmissionCrmEnrollmentOverviewRequest,
   buildChangeAdmissionCrmLeadPriorityRequest,
   buildMergeAdmissionCrmDuplicateLeadRequest,
   buildAssignAdmissionCrmSpecialRouteRequest,
@@ -225,15 +227,24 @@ describe('admissions CRM API contracts', () => {
       url: '/student-enrollment/admissions-crm/year-1/operations/queues/summary',
       method: 'GET',
     });
+    expect(buildAdmissionCrmEnrollmentOverviewRequest({ academicYearId: 'year-1' })).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/operations/overview',
+      method: 'GET',
+    });
     expect(
       buildAdmissionCrmOperationsQueueRequest({
         academicYearId: 'year-1',
         queueType: AdmissionCrmOperationsQueueType.AdmissionReady,
+        registrationStatus: AdmissionCrmRegistrationStatus.AdmissionReady,
+        maxResultCount: 50,
       })
     ).toEqual({
       url: '/student-enrollment/admissions-crm/year-1/operations/queues/7',
       method: 'GET',
-      params: { maxResultCount: 200 },
+      params: {
+        maxResultCount: 50,
+        registrationStatus: AdmissionCrmRegistrationStatus.AdmissionReady,
+      },
     });
   });
 
@@ -560,6 +571,13 @@ describe('admissions CRM API contracts', () => {
       url: '/student-enrollment/admissions-crm/year-1/exams',
       method: 'GET',
       params: {},
+    });
+    expect(
+      buildAdmissionCrmExamListRequest({ academicYearId: 'year-1', filterText: 'Riya' })
+    ).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/exams',
+      method: 'GET',
+      params: { filterText: 'Riya' },
     });
 
     expect(buildAdmissionCrmAnalyticsSummaryRequest({ academicYearId: 'year-1' })).toEqual({
