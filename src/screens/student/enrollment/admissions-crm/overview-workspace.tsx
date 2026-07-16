@@ -8,7 +8,13 @@ import { useMemo, useCallback } from 'react';
 import { studentPaths } from 'src/constants/student-menu';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import LinkOffOutlined from '@mui/icons-material/LinkOffOutlined';
+import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
+import PersonOffOutlined from '@mui/icons-material/PersonOffOutlined';
+import WarningAmberRounded from '@mui/icons-material/WarningAmberRounded';
+import SyncProblemOutlined from '@mui/icons-material/SyncProblemOutlined';
 import { Box, Chip, Alert, Stack, Paper, Typography } from '@mui/material';
+import EventAvailableOutlined from '@mui/icons-material/EventAvailableOutlined';
 import { useGetAdmissionCrmEnrollmentOverviewQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { formatEnrollmentDate } from './enrollment-display';
@@ -16,9 +22,25 @@ import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import {
   enrollmentActionsColumn,
+  enrollmentTableWrapperSx,
   EnrollmentTableEmptyState,
+  enrollmentWorkspaceRootSx,
+  enrollmentTableContainerSx,
   EnrollmentWorkspaceErrorState,
 } from './workspace-table-patterns';
+
+const metricPresentation = {
+  urgent: { icon: <WarningAmberRounded />, color: 'warning.main', surface: 'warning.lighter' },
+  unassigned: { icon: <PersonOffOutlined />, color: 'info.main', surface: 'info.lighter' },
+  exams: { icon: <EventAvailableOutlined />, color: 'primary.main', surface: 'primary.lighter' },
+  links: { icon: <LinkOffOutlined />, color: 'error.main', surface: 'error.lighter' },
+  approvals: { icon: <TaskAltOutlined />, color: 'success.main', surface: 'success.lighter' },
+  activation: {
+    icon: <SyncProblemOutlined />,
+    color: 'secondary.main',
+    surface: 'secondary.lighter',
+  },
+} as const;
 
 const workspaceLabels = {
   registrations: 'Registrations',
@@ -178,7 +200,7 @@ export function EnrollmentOverviewWorkspace() {
     return <Alert severity="info">Select an academic year to open My Work.</Alert>;
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader
         title="My Admissions Work"
         description="Urgent actions and handoff blockers for the selected admission cycle."
@@ -190,36 +212,68 @@ export function EnrollmentOverviewWorkspace() {
         />
       ) : (
         <>
-          <Paper variant="outlined" sx={{ borderRadius: 1, overflow: 'hidden' }}>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: 'repeat(2, minmax(0, 1fr))',
-                  md: `repeat(${Math.max(metrics.length, 1)}, minmax(0, 1fr))`,
-                },
-              }}
-            >
-              {metrics.map((metric) => (
-                <Stack
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))',
+              gap: 1,
+            }}
+          >
+            {metrics.map((metric) => {
+              const presentation =
+                metricPresentation[metric.key as keyof typeof metricPresentation];
+
+              return (
+                <Paper
                   key={metric.key}
-                  spacing={0.25}
+                  variant="outlined"
                   sx={{
-                    px: 1.5,
-                    py: 1.25,
-                    borderRight: 1,
-                    borderBottom: { xs: 1, md: 0 },
-                    borderColor: 'divider',
+                    p: 1.5,
+                    minWidth: 0,
+                    borderRadius: 1.5,
+                    borderTop: 3,
+                    borderTopColor: presentation.color,
                   }}
                 >
-                  <Typography variant="h6">{metric.value}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {metric.label}
-                  </Typography>
-                </Stack>
-              ))}
-            </Box>
-          </Paper>
+                  <Stack
+                    direction="row"
+                    alignItems="flex-start"
+                    justifyContent="space-between"
+                    gap={1}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="h5" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {metric.value}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ lineHeight: 1.35 }}
+                      >
+                        {metric.label}
+                      </Typography>
+                    </Box>
+                    <Box
+                      aria-hidden="true"
+                      sx={{
+                        display: 'grid',
+                        placeItems: 'center',
+                        flexShrink: 0,
+                        width: 32,
+                        height: 32,
+                        borderRadius: 1,
+                        color: presentation.color,
+                        bgcolor: presentation.surface,
+                        '& .MuiSvgIcon-root': { fontSize: 19 },
+                      }}
+                    >
+                      {presentation.icon}
+                    </Box>
+                  </Stack>
+                </Paper>
+              );
+            })}
+          </Box>
           <CustomizableTable
             tableId="student-enrollment-overview-urgent-work"
             tableTitle="Urgent Work"
@@ -234,7 +288,8 @@ export function EnrollmentOverviewWorkspace() {
                 description="No permitted admissions queue currently has urgent work."
               />
             }
-            tableContainerProps={{ sx: { minHeight: 320 } }}
+            wrapperProps={{ sx: enrollmentTableWrapperSx }}
+            tableContainerProps={{ sx: enrollmentTableContainerSx }}
           />
           {overview ? (
             <Typography variant="caption" color="text.secondary" textAlign="right">

@@ -64,14 +64,19 @@ export function EnrollmentWorkspaceFilterPanel({
   onClear,
   clearDisabled = false,
   actions,
-  columns = { xs: 1, sm: 2, lg: 4 },
+  columns,
 }: FilterPanelProps) {
-  const templateColumns = Object.fromEntries(
-    Object.entries(columns).map(([breakpoint, count]) => [
-      breakpoint,
-      `repeat(${count}, minmax(0, 1fr))`,
-    ])
-  );
+  const templateColumns = columns
+    ? Object.fromEntries(
+        Object.entries(columns).map(([breakpoint, count]) => [
+          breakpoint,
+          `repeat(${count}, minmax(0, 1fr))`,
+        ])
+      )
+    : {
+        xs: 'minmax(0, 1fr)',
+        sm: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
+      };
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
@@ -82,7 +87,13 @@ export function EnrollmentWorkspaceFilterPanel({
             gridTemplateColumns: templateColumns,
             gap: 1,
             alignItems: 'center',
-            '& .MuiFormControl-root': { minWidth: 0 },
+            '& > *': { minWidth: 0, width: '100%' },
+            '& .MuiFormControl-root': { minWidth: 0, width: '100%' },
+            '& .MuiFormControlLabel-root': {
+              minHeight: 40,
+              m: 0,
+              px: 0.5,
+            },
           }}
         >
           {children}

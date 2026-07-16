@@ -331,7 +331,6 @@ export function OperationsQueueWorkspace({
       <EnrollmentWorkspaceHeader title={title} description={description} />
 
       <EnrollmentWorkspaceFilterPanel
-        columns={{ xs: 1, sm: 2, lg: 4 }}
         clearDisabled={
           !state.owner &&
           !state.assignee &&
@@ -588,7 +587,7 @@ export function OperationsQueueWorkspace({
           isOptionEqualToValue={(option, value) => option.id === value.id}
           loading={ownerStaffQuery.isFetching}
           renderInput={(params) => <TextField {...params} label="Owner" />}
-          sx={{ minWidth: { lg: 240 } }}
+          sx={{ minWidth: 0, width: '100%' }}
         />
         <Autocomplete
           size="small"
@@ -601,11 +600,13 @@ export function OperationsQueueWorkspace({
           isOptionEqualToValue={(option, value) => option.id === value.id}
           loading={assigneeStaffQuery.isFetching}
           renderInput={(params) => <TextField {...params} label="Assignee" />}
-          sx={{ minWidth: { lg: 240 } }}
+          sx={{ minWidth: 0, width: '100%' }}
         />
         <TextField
           size="small"
           type="number"
+          name="minimumAgeDays"
+          autoComplete="off"
           label="Minimum age (days)"
           value={state.minimumAgeDays || ''}
           onChange={(event) =>
@@ -615,7 +616,7 @@ export function OperationsQueueWorkspace({
             })
           }
           inputProps={{ min: 1, max: 3650 }}
-          sx={{ width: { lg: 170 } }}
+          sx={{ minWidth: 0, width: '100%' }}
         />
         <FormControlLabel
           control={
