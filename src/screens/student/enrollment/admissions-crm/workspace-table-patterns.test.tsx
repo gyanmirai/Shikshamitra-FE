@@ -32,6 +32,17 @@ describe('Enrollment workspace table patterns', () => {
     expect(onClear).toHaveBeenCalledOnce();
   });
 
+  it('keeps every filter within its responsive grid cell', () => {
+    renderWithProviders(
+      <EnrollmentWorkspaceFilterPanel>
+        <TextField id="responsive-workspace-filter" label="Assignee" size="small" />
+      </EnrollmentWorkspaceFilterPanel>
+    );
+
+    const filter = screen.getByLabelText('Assignee');
+    expect(filter.closest('.MuiFormControl-root')).toHaveStyle({ width: '100%' });
+  });
+
   it('uses a consistent, descriptive empty state', () => {
     renderWithProviders(
       <EnrollmentTableEmptyState title="Queue cleared" description="No applicants need action." />
