@@ -69,7 +69,7 @@ const ScheduleExamKpiStrip = ({ summary, rows = [] }: ScheduleExamKpiStripProps)
     <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 0.5 }}>
       {cards.map((card) => (
         <Card key={card.label} sx={kpiCardSx}>
-          <Stack direction="row" alignItems="center" spacing={1.25}>
+          <Stack direction="row" alignItems="center" spacing={1}>
             <Box
               sx={{
                 width: 34,

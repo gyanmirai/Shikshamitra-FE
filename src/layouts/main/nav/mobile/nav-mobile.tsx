@@ -63,7 +63,7 @@ export function NavMobile({ data, open, onClose, slots, sx }: NavMobileProps) {
       </Scrollbar>
 
       {slots?.bottomArea ?? (
-        <Box gap={1.5} display="flex" sx={{ px: 2.5, py: 3 }}>
+        <Box gap={1} display="flex" sx={{ px: 2.5, py: 3 }}>
           <SignInButton fullWidth />
 
           <Button fullWidth variant="contained" rel="noopener" target="_blank" href="">

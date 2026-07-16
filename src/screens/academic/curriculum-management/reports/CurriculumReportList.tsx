@@ -162,6 +162,7 @@ const CurriculumReportList = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {!addReportDialog.value && (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Reports"
           description="View and manage generated curriculum reports"
           links={[

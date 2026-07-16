@@ -251,7 +251,7 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
               <Typography variant="caption" color="text.secondary">
                 Optional service interests
               </Typography>
-              <Stack direction="row" gap={0.5} flexWrap="wrap">
+              <Stack direction="row" gap={1} flexWrap="wrap">
                 {serviceOptions.map((type) => (
                   <FormControlLabel
                     key={type}
@@ -535,7 +535,7 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
                   <Stack
                     key={handoff.id}
                     direction={{ xs: 'column', sm: 'row' }}
-                    gap={0.75}
+                    gap={1}
                     alignItems={{ sm: 'center' }}
                   >
                     <Chip

@@ -237,7 +237,7 @@ export function OperationsQueueWorkspace({
         render: (value, row) => {
           const item = row as AdmissionCrmOperationsQueueItemDto;
           return (
-            <Stack direction="row" gap={0.5} alignItems="center">
+            <Stack direction="row" gap={1} alignItems="center">
               <Chip size="small" variant="outlined" label={value} />
               {item.isUrgent && <Chip size="small" color="warning" label="Urgent" />}
             </Stack>
@@ -345,7 +345,7 @@ export function OperationsQueueWorkspace({
       <EnrollmentWorkspaceHeader title={title} description={description} />
 
       <Paper variant="outlined" sx={{ p: 1, borderRadius: 1, overflowX: 'auto' }}>
-        <Stack direction="row" gap={0.75} sx={{ minWidth: 'max-content' }}>
+        <Stack direction="row" gap={1} sx={{ minWidth: 'max-content' }}>
           {queueCounts.map((queue) => (
             <Button
               key={queue.queueType}
@@ -373,7 +373,7 @@ export function OperationsQueueWorkspace({
 
       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
         <Stack spacing={1.25}>
-          <Stack direction={{ xs: 'column', lg: 'row' }} gap={1.25} alignItems={{ lg: 'center' }}>
+          <Stack direction={{ xs: 'column', lg: 'row' }} gap={1} alignItems={{ lg: 'center' }}>
             <Autocomplete
               size="small"
               options={staffQuery.data || []}

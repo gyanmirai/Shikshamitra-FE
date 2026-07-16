@@ -144,7 +144,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             animate="show"
             style={{ width: '100%' }}
           >
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               <Grid size={{ xs: 12, md: 4 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
                   <ShakingTextField
@@ -471,7 +471,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      gap: 1.5,
+                      gap: 1,
                     }}
                   >
                     <Box>
@@ -501,7 +501,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       bgcolor: 'background.neutral',
                     }}
                   >
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
                       <Chip
                         icon={<Iconify icon="solar:pen-new-square-bold-duotone" />}
                         label="Manual scheduling"

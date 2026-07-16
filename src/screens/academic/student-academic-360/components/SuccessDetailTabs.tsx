@@ -46,7 +46,7 @@ export function SuccessDetailTabs({ data, activeTab, isLoading }: SuccessDetailT
   if (activeTab === 'attendance') {
     const history = data?.attendance?.recentHistory || [];
     return (
-      <Stack spacing={2}>
+      <Stack spacing={1}>
         <AttendanceSnapshot attendance={data?.attendance} isLoading={isLoading} />
         <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
           <Typography variant="subtitle1" sx={{ mb: 1.5 }}>Recent Attendance History</Typography>
@@ -143,7 +143,7 @@ export function SuccessDetailTabs({ data, activeTab, isLoading }: SuccessDetailT
       <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         <Typography variant="subtitle1" sx={{ mb: 1.5 }}>Interventions & Support Plans</Typography>
         {interventions.length > 0 ? (
-          <Stack spacing={1.5}>
+          <Stack spacing={1}>
             {interventions.map((item) => (
               <Box key={item.id || item.concern} sx={{ p: 1.75, border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1} flexWrap="wrap">
@@ -163,15 +163,15 @@ export function SuccessDetailTabs({ data, activeTab, isLoading }: SuccessDetailT
                   </Box>
                 )}
                 {(item.owner || item.reviewDate) && (
-                  <Stack direction="row" spacing={2} sx={{ mt: 1.25 }} flexWrap="wrap">
+                  <Stack direction="row" spacing={1} sx={{ mt: 1.25 }} flexWrap="wrap">
                     {item.owner && (
-                      <Stack direction="row" spacing={0.5} alignItems="center">
+                      <Stack direction="row" spacing={1} alignItems="center">
                         <Iconify icon="mdi:account-outline" width={14} sx={{ color: 'text.secondary' }} />
                         <Typography variant="caption" color="text.secondary">{item.owner}</Typography>
                       </Stack>
                     )}
                     {item.reviewDate && (
-                      <Stack direction="row" spacing={0.5} alignItems="center">
+                      <Stack direction="row" spacing={1} alignItems="center">
                         <Iconify icon="mdi:calendar-clock-outline" width={14} sx={{ color: 'text.secondary' }} />
                         <Typography variant="caption" color="text.secondary">Next review: {item.reviewDate}</Typography>
                       </Stack>
@@ -194,7 +194,7 @@ export function SuccessDetailTabs({ data, activeTab, isLoading }: SuccessDetailT
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1}>
       <TimetableSnapshot timetable={data?.timetable} isLoading={isLoading} />
       <AcademicInsightSections
         learningTasks={data?.learningTasks}

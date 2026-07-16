@@ -258,7 +258,7 @@ const ExaminationReportPreviewDrawer = ({
           py: 2,
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
+          gap: 1,
           background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
           color: theme.palette.primary.contrastText,
           flexShrink: 0,
@@ -342,7 +342,7 @@ const ExaminationReportPreviewDrawer = ({
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      gap: 1.5,
+                      gap: 1,
                     }}
                   >
                     <Iconify icon="mdi:table-off" width={48} sx={{ color: 'text.disabled' }} />

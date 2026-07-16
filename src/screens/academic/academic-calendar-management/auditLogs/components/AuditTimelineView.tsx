@@ -25,7 +25,7 @@ const AuditTimelineView = ({ logs, onLogClick, hasActiveFilters }: Props) => {
 
   if (logs.length === 0) {
     return (
-      <Stack alignItems="center" spacing={1.5} sx={{ py: 8 }}>
+      <Stack alignItems="center" spacing={1} sx={{ py: 8 }}>
         <Box
           sx={{
             width: 64,
@@ -56,7 +56,7 @@ const AuditTimelineView = ({ logs, onLogClick, hasActiveFilters }: Props) => {
   }
 
   return (
-    <Stack spacing={3} sx={{ py: 1 }}>
+    <Stack spacing={1} sx={{ py: 1 }}>
       {groups.map((group) => (
         <Box key={group.date}>
           {/* Date header */}
@@ -80,12 +80,12 @@ const AuditTimelineView = ({ logs, onLogClick, hasActiveFilters }: Props) => {
           </Stack>
 
           {/* Events */}
-          <Stack spacing={1.5}>
+          <Stack spacing={1}>
             {group.items.map((log, idx) => {
               const ts = dayjs(log.timestamp);
               const isLast = idx === group.items.length - 1;
               return (
-                <Box key={log.id} sx={{ display: 'flex', gap: 1.5 }}>
+                <Box key={log.id} sx={{ display: 'flex', gap: 1 }}>
                   {/* Time + spine */}
                   <Stack alignItems="center" sx={{ minWidth: 64 }}>
                     <Typography variant="caption" fontWeight={700} color="text.secondary">
@@ -138,7 +138,7 @@ const AuditTimelineView = ({ logs, onLogClick, hasActiveFilters }: Props) => {
                       justifyContent="space-between"
                       gap={1}
                     >
-                      <Stack direction="row" alignItems="center" gap={1.25} sx={{ minWidth: 0 }}>
+                      <Stack direction="row" alignItems="center" gap={1} sx={{ minWidth: 0 }}>
                         <Avatar
                           sx={{
                             width: 28,
@@ -157,7 +157,7 @@ const AuditTimelineView = ({ logs, onLogClick, hasActiveFilters }: Props) => {
                           <Stack
                             direction="row"
                             alignItems="center"
-                            gap={0.75}
+                            gap={1}
                             sx={{ mt: 0.5 }}
                             flexWrap="wrap"
                           >
@@ -172,7 +172,7 @@ const AuditTimelineView = ({ logs, onLogClick, hasActiveFilters }: Props) => {
                         </Box>
                       </Stack>
 
-                      <Stack direction="row" alignItems="center" gap={0.75} flexWrap="wrap">
+                      <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
                         <Tooltip title={log.entityName ?? ''}>
                           <Typography
                             variant="caption"

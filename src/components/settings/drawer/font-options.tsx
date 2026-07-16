@@ -17,7 +17,7 @@ type Props = {
 export function FontOptions({ value, options, onClickOption }: Props) {
   return (
     <Block title="Font">
-      <Box component="ul" gap={1.5} display="grid" gridTemplateColumns="repeat(2, 1fr)">
+      <Box component="ul" gap={1} display="grid" gridTemplateColumns="repeat(2, 1fr)">
         {options.map((option) => {
           const selected = value === option;
 

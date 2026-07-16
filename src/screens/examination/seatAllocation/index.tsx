@@ -118,6 +118,7 @@ const SeatAllocation = () => {
     <Box height="100%" display="flex" flexDirection="column">
       {openSeatAllocation.value ? (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Seating Plan"
           description="This table lists all scheduled exams eligible for seat allocation. Click 'Allocate Seat' to assign students to exam halls for a specific exam."
           isBack
@@ -132,6 +133,7 @@ const SeatAllocation = () => {
         />
       ) : (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Seating Plan"
           description="This table lists all scheduled exams eligible for seat allocation. Click 'Allocate Seat' to assign students to exam halls for a specific exam."
           links={[
@@ -246,7 +248,7 @@ const SeatAllocation = () => {
               </Box>
 
               {/* CTA buttons */}
-              <Box sx={{ display: 'flex', gap: 1.5, flexShrink: 0 }}>
+              <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
                 <Button
                   startIcon={<Iconify icon={GlobalIcons.cancel} />}
                   variant="outlined"
@@ -284,7 +286,7 @@ const SeatAllocation = () => {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 3,
+                  gap: 1,
                   pb: 1.25,
                   flexWrap: 'wrap',
                 }}

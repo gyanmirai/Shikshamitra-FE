@@ -256,7 +256,7 @@ const TeacherAssignment = ({
             }}
           />
         </Box>
-        <Box display="flex" gap={2} justifyContent="flex-end">
+        <Box display="flex" gap={1} justifyContent="flex-end">
           <Button
             variant="outlined"
             startIcon={<Iconify icon={GlobalIcons.resetIcon} />}

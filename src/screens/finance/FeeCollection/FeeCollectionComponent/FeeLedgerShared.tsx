@@ -189,7 +189,7 @@ export const FeeRow = ({
           '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
         }}
       />
-      <Box display="flex" alignItems="center" gap={0.5} minWidth={0}>
+      <Box display="flex" alignItems="center" gap={1} minWidth={0}>
         <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
           {name}
         </Typography>

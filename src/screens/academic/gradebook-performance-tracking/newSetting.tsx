@@ -53,6 +53,7 @@ const SettingScreen = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Settings"
         links={[
           { name: 'Academics' },

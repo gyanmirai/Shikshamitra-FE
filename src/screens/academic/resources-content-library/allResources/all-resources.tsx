@@ -159,6 +159,7 @@ const AllResources = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="All Resources"
         links={[
           { name: 'Academics' },

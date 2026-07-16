@@ -9,7 +9,7 @@ import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytic
 const AttendaceOverview = () => {
   const theme = useTheme();
   return (
-    <Grid container spacing={2} mt={2}>
+    <Grid container spacing={1} mt={2}>
       <Grid size={{ xs: 12, sm: 6 }}>
         <AppCurrentDownload
           title="Attendance Overview"

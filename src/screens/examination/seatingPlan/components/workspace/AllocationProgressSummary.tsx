@@ -51,7 +51,7 @@ export default function AllocationProgressSummary({
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: 3,
+        gap: 1,
         px: 2,
         py: 1,
         borderBottom: '1px solid',

@@ -40,7 +40,7 @@ export function AcademicHealthScoreCard({
         bgcolor: alpha(toneMain, 0.05),
       }}
     >
-      <Stack direction="row" spacing={1.5} alignItems="flex-start" justifyContent="space-between">
+      <Stack direction="row" spacing={1} alignItems="flex-start" justifyContent="space-between">
         <Box>
           <Typography variant="subtitle2" color="text.secondary">
             {title}

@@ -28,6 +28,7 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
   return (
     <Box sx={{ mb: 3 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Dashboard"
         links={[{ name: 'Academics' }, { name: 'Curriculum' }, { name: 'Dashboard' }]}
         action={
@@ -55,7 +56,7 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
           />
         }
       />
-      <Grid container spacing={2} alignItems="stretch">
+      <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, md: 6, lg: 6, xl: 4 }}>
           <Card
             sx={{

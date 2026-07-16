@@ -405,7 +405,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
       renderColumn: () => {
         const indeterminate = selectedInViewCount > 0 && !allSelectedInView;
         return (
-          <Box display="flex" alignItems="center" gap={0.5}>
+          <Box display="flex" alignItems="center" gap={1}>
             <Checkbox
               size="small"
               checked={allSelectedInView}

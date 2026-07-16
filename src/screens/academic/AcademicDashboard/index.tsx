@@ -366,10 +366,10 @@ const CurriculumSnapshotCard = ({ data }: { data: AdminAcademicDashboardData }) 
         </Button>
       }
     >
-      <Stack spacing={1.25}>
+      <Stack spacing={1}>
         <Stack
           direction={{ xs: 'column', sm: 'row', lg: 'column', xl: 'row' }}
-          spacing={1.25}
+          spacing={1}
           alignItems="center"
         >
           <Box
@@ -475,7 +475,7 @@ const TimetablePulseCard = ({ data }: { data: AdminAcademicDashboardData }) => {
         </Button>
       }
     >
-      <Stack spacing={1.25}>
+      <Stack spacing={1}>
         <Box
           sx={{
             p: 1.5,
@@ -486,7 +486,7 @@ const TimetablePulseCard = ({ data }: { data: AdminAcademicDashboardData }) => {
         >
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
-            spacing={1.25}
+            spacing={1}
             alignItems={{ xs: 'stretch', sm: 'center' }}
             justifyContent="space-between"
           >
@@ -623,7 +623,7 @@ const GradingReadinessCard = ({ data }: { data: AdminAcademicDashboardData }) =>
         />
       }
     >
-      <Stack spacing={1.25}>
+      <Stack spacing={1}>
         <Box
           component={Link}
           href={academicPaths.examination.recordMarks}
@@ -775,7 +775,7 @@ const SmartAcademicInsightsCard = ({ data }: { data: AdminAcademicDashboardData 
             justifyContent="space-between"
             spacing={1}
           >
-            <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ minWidth: 0 }}>
+            <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ minWidth: 0 }}>
               <Box
                 sx={{
                   width: 30,
@@ -829,20 +829,20 @@ const SmartAcademicInsightsCard = ({ data }: { data: AdminAcademicDashboardData 
 );
 
 const DashboardSkeleton = () => (
-  <Stack spacing={1.5}>
-    <Grid container spacing={1.5}>
+  <Stack spacing={1}>
+    <Grid container spacing={1}>
       {Array.from({ length: 3 }).map((_, index) => (
         <Grid key={index} size={{ xs: 12, lg: index === 1 ? 5 : index === 2 ? 3 : 4 }}>
           <Skeleton variant="rounded" height={260} />
         </Grid>
       ))}
     </Grid>
-    <Grid container spacing={1.5}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12 }}>
         <Skeleton variant="rounded" height={180} />
       </Grid>
     </Grid>
-    <Grid container spacing={1.5}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12, md: 6 }}>
         <Skeleton variant="rounded" height={320} />
       </Grid>
@@ -895,7 +895,7 @@ const AcademicDashboardScreen = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pb: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 2 }}>
       <AcademicCommandHeader
         eyebrow="Admin View"
         title="Academic Command Center"
@@ -917,7 +917,7 @@ const AcademicDashboardScreen = () => {
 
       {isRefreshing || isFetching ? <LinearProgress /> : null}
 
-      <Grid container spacing={1.5} alignItems="stretch">
+      <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, lg: 4 }}>
           <AcademicHealthScoreCard
             title="Academic Health"
@@ -945,7 +945,7 @@ const AcademicDashboardScreen = () => {
       </Grid>
 
       {/* Snapshot Cards */}
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, lg: 4 }}>
           <CurriculumSnapshotCard data={data} />
         </Grid>
@@ -958,14 +958,14 @@ const AcademicDashboardScreen = () => {
       </Grid>
 
       {/* Smart Insights & System Alerts */}
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12 }}>
           <SmartAcademicInsightsCard data={data} />
         </Grid>
       </Grid>
 
       {/* Row 3 - Charts */}
-      <Grid container spacing={1.5} alignItems="stretch">
+      <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, md: 6 }}>
           <SubjectPassFailChart chartData={data.subjectPassFailChart} />
         </Grid>
@@ -975,7 +975,7 @@ const AcademicDashboardScreen = () => {
       </Grid>
 
       {/* Row 4 - Operational Compliance Lists */}
-      <Grid container spacing={1.5} alignItems="stretch">
+      <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, lg: 4 }}>
           <RecentActivities activities={data.recentActivities} />
         </Grid>

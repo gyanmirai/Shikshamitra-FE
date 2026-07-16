@@ -457,7 +457,7 @@ const PendingAssignmentScreen = ({ division, classes }: { division: string; clas
         }}
       >
         {/* Date range — same pattern as entrance-exam screen */}
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={1}>
           <CustomDateRangePicker
             label="Admission From - To"
             value={[startDate, endDate]}
@@ -514,7 +514,7 @@ const PendingAssignmentScreen = ({ division, classes }: { division: string; clas
           >
             {/* Roll arrangement selectors — visible only on Roll tab */}
             {activeTab === TAB_ROLL && (
-              <Box display="flex" gap={2}>
+              <Box display="flex" gap={1}>
                 <CustomSelect
                   options={[
                     { id: 'mix', name: 'Mix' },

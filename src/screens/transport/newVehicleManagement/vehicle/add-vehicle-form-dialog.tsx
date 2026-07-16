@@ -77,13 +77,13 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
     }
   };
   return (
-    <Box display="flex" flexDirection="column" gap={2} height="100%">
+    <Box display="flex" flexDirection="column" gap={1} height="100%">
       <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
         <CustomBreadcrumbs
           heading="Vehicle Management"
           links={[{ name: 'Transport' }, { name: 'Vehicle Management' }, { name: 'Form' }]}
         />
-        <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
+        <Box sx={{ mr: '15px', mb: '20px' }} gap={1} display="flex" justifyContent="flex-end">
           <Button
             startIcon={<Iconify icon="eva:arrow-back-fill" />}
             onClick={handleCloseDialog}

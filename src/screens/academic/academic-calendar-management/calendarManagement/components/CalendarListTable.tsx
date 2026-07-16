@@ -218,7 +218,7 @@ const CalendarListTable = ({
             {rows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
-                  <Stack alignItems="center" spacing={1.5}>
+                  <Stack alignItems="center" spacing={1}>
                     <Box
                       sx={{
                         width: 64,
@@ -267,7 +267,7 @@ const CalendarListTable = ({
                 >
                   {/* Name */}
                   <TableCell sx={{ pl: 2 }}>
-                    <Stack direction="row" alignItems="center" gap={1.5}>
+                    <Stack direction="row" alignItems="center" gap={1}>
                       <Avatar
                         sx={{
                           width: 36,
@@ -282,7 +282,7 @@ const CalendarListTable = ({
                         {cal.name.slice(0, 2).toUpperCase()}
                       </Avatar>
                       <Box>
-                        <Stack direction="row" alignItems="center" gap={0.75}>
+                        <Stack direction="row" alignItems="center" gap={1}>
                           <Typography variant="body2" fontWeight={700}>
                             {cal.name}
                           </Typography>
@@ -378,7 +378,7 @@ const CalendarListTable = ({
 
                   {/* Actions */}
                   <TableCell align="right" sx={{ pr: 2 }}>
-                    <Stack direction="row" justifyContent="flex-end" spacing={0.25}>
+                    <Stack direction="row" justifyContent="flex-end" spacing={1}>
                       <Tooltip title="Select & View Calendar">
                         <IconButton
                           size="small"

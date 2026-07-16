@@ -3,7 +3,7 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Box, Grid, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -19,6 +19,7 @@ import AverageCoursePerformace from './component/averageCoursePerformace';
 const ReportsAnalytics = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="Reports And Analytics"
       links={[
         { name: 'Academics' },
@@ -29,7 +30,7 @@ const ReportsAnalytics = (props: TabComponentType) => (
     <Typography variant="h6" sx={{ mb: 3 }}>
       Course performance
     </Typography>
-    <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+    <Box sx={{ display: 'flex', gap: 1, mb: 4 }}>
       <CustomSelect
         options={[]}
         value=""
@@ -40,7 +41,7 @@ const ReportsAnalytics = (props: TabComponentType) => (
       <DatePicker label="Start Date" slotProps={{ textField: { size: 'small' } }} />
       <DatePicker label="End Date" slotProps={{ textField: { size: 'small' } }} />
     </Box>
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       <AverageCoursePerformace />
       <TotalAssignments />
       <AssignmentAnalytics />

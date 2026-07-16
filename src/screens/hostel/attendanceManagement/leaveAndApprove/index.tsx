@@ -140,7 +140,7 @@ const LeaveAndApprove = () => {
         </Card>
       ) : (
         <>
-          <Box display="flex" gap={2}>
+          <Box display="flex" gap={1}>
             <Autocomplete
               options={[
                 { id: 'H1', name: 'Hostel A' },

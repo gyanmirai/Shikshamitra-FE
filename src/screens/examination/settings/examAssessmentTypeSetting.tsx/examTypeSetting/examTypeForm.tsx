@@ -89,7 +89,7 @@ const SectionHeader = ({
   caption: string;
   iconBg: string;
 }) => (
-  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
     <Box
       sx={{
         width: 34,
@@ -228,9 +228,9 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box display="flex" flexDirection="column" gap={2}>
+      <Box display="flex" flexDirection="column" gap={1}>
         <Scrollbar sx={{ height: '480px' }}>
-          <Stack spacing={2.5} sx={{ p: 2.5 }}>
+          <Stack spacing={1} sx={{ p: 2.5 }}>
             {/* Section 1: Basic Information */}
             <Box sx={sectionCardSx}>
               <SectionHeader
@@ -239,7 +239,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 caption="Name, category and current status"
                 iconBg={alpha(theme.palette.primary.main, 0.1)}
               />
-              <Grid container spacing={2}>
+              <Grid container spacing={1}>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={!!(formik.touched.examType && formik.errors.examType)}>
                     <TextField
@@ -325,7 +325,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 caption="Defaults applied when this exam type is used"
                 iconBg={alpha(theme.palette.primary.main, 0.1)}
               />
-              <Grid container spacing={2}>
+              <Grid container spacing={1}>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <ShakingTextField
                     error={!!(formik.touched.defaultTotalMarks && formik.errors.defaultTotalMarks)}
@@ -402,7 +402,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 caption="Toggle how this exam type behaves"
                 iconBg={alpha(theme.palette.primary.main, 0.1)}
               />
-              <Grid container spacing={1.5}>
+              <Grid container spacing={1}>
                 {TOGGLE_OPTIONS.map((toggle) => {
                   const checked = Boolean(formik.values[toggle.name as keyof typeof formik.values]);
                   return (
@@ -411,7 +411,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                         direction="row"
                         alignItems="center"
                         justifyContent="space-between"
-                        spacing={1.5}
+                        spacing={1}
                         onClick={() => formik.setFieldValue(toggle.name, !checked)}
                         sx={{
                           p: 1.5,
@@ -433,7 +433,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                         <Stack
                           direction="row"
                           alignItems="center"
-                          spacing={1.25}
+                          spacing={1}
                           sx={{ minWidth: 0 }}
                         >
                           <Box

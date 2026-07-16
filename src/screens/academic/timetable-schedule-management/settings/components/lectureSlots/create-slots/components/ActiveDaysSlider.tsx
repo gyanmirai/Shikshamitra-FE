@@ -78,7 +78,7 @@ const ActiveDaysSlider: React.FC<IActiveDaysSliderProps> = ({
       </Box>
 
       {/* Day chips */}
-      <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
         {dayMarks.map((day) => {
           const isSelected = day.value >= start && day.value <= end;
           const isBoundary = day.value === start || day.value === end;

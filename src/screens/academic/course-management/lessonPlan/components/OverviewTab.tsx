@@ -78,10 +78,10 @@ const OverviewTab = ({
   ].slice(0, 8);
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1}>
       {/* Teaching Command Center header */}
       <Card sx={{ p: 2, bgcolor: 'primary.darker', color: 'white' }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between">
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent="space-between">
           <Box>
             <Typography variant="h6" fontWeight={700}>
               Teaching Command Center
@@ -90,7 +90,7 @@ const OverviewTab = ({
               {dayjs().format('dddd, DD MMMM YYYY')} • Real-time academic execution overview
             </Typography>
           </Box>
-          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
             {[
               { label: "Today's Plans", value: todayPlans.length, icon: 'mdi:calendar-today' },
               {
@@ -110,7 +110,7 @@ const OverviewTab = ({
               },
             ].map((item) => (
               <Box key={item.label} sx={{ textAlign: 'center', minWidth: 80 }}>
-                <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+                <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
                   <Iconify icon={item.icon} width={16} />
                   <Typography variant="h5" fontWeight={700}>
                     {item.value}
@@ -126,7 +126,7 @@ const OverviewTab = ({
       </Card>
 
       <Box
-        sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' } }}
+        sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' } }}
       >
         {/* Today's lessons */}
         <Card>
@@ -175,7 +175,7 @@ const OverviewTab = ({
                           {plan.className}-{plan.divisionName} • {plan.teacherName}
                         </Typography>
                       </Box>
-                      <Stack spacing={0.5} alignItems="flex-end">
+                      <Stack spacing={1} alignItems="flex-end">
                         <Label
                           color={
                             plan.planStatus === 'Approved'
@@ -245,7 +245,7 @@ const OverviewTab = ({
           <Typography variant="subtitle1" sx={{ mb: 1.5 }}>
             Teacher-wise Diary Compliance
           </Typography>
-          <Stack spacing={1.5}>
+          <Stack spacing={1}>
             {teacherCompliance.map((item) => (
               <Box key={item.teacher}>
                 <Stack

@@ -174,7 +174,7 @@ function EmployeeViewSkeleton() {
             borderLeft: (theme) => `4px solid ${theme.vars.palette.grey[300]}`,
           }}
         >
-          <Box display="flex" gap={2} alignItems="center">
+          <Box display="flex" gap={1} alignItems="center">
             {/* Avatar */}
             <Skeleton variant="circular" width={64} height={64} sx={{ flexShrink: 0 }} />
 
@@ -374,7 +374,7 @@ export function EmployeeCard({
             }}
           >
             <motion.div variants={staggerContainer} initial="hidden" animate="show">
-              <Box display="flex" gap={2} alignItems="center">
+              <Box display="flex" gap={1} alignItems="center">
                 <motion.div variants={avatarVariant}>
                   <Avatar
                     src={

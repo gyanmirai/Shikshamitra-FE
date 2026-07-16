@@ -1020,7 +1020,7 @@ const StudentRecordsReportForm = ({
               )}
 
               {/* Submit buttons */}
-              <Grid size={12} justifyContent="flex-end" display="flex" gap={1.5}>
+              <Grid size={12} justifyContent="flex-end" display="flex" gap={1}>
                 <Button
                   startIcon={<Iconify icon="mdi:eye-outline" />}
                   type="submit"

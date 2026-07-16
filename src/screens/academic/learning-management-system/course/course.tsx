@@ -244,6 +244,7 @@ const Course = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Course"
         links={[{ name: 'Academics' }, { name: 'Learning Management System' }, { name: 'Course' }]}
       />

@@ -30,7 +30,7 @@ const CollectFeesForm: React.FC<ICollectFeesFormProps> = ({ open, onClose, stude
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-            <Box flex={8} display="flex" flexDirection="row" gap={2} py="12px">
+            <Box flex={8} display="flex" flexDirection="row" gap={1} py="12px">
               <Label color="primary" sx={{ fontSize: '12px' }}>
                 Name : ABC
               </Label>

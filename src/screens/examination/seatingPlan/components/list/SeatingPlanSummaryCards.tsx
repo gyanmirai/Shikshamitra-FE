@@ -65,7 +65,7 @@ interface Props {
 
 export default function SeatingPlanSummaryCards({ rows, isLoading, activeFilter, onFilterClick }: Props) {
   return (
-    <Grid container spacing={1.5} sx={{ mb: 1.5 }}>
+    <Grid container spacing={1} sx={{ mb: 1.5 }}>
       {CARD_DEFS.map((cardDef) => (
         <Grid key={cardDef.key} size={{ xs: 6, sm: 4, md: 2 }}>
           <Paper

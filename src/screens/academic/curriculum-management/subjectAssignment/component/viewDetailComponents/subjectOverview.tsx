@@ -13,7 +13,7 @@ interface InfoItemProps {
 }
 
 const InfoItem = ({ icon, label, value }: InfoItemProps) => (
-  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
     <Box
       sx={{
         width: 40,
@@ -65,7 +65,7 @@ const InfoItem = ({ icon, label, value }: InfoItemProps) => (
 
 const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
   <Box sx={{ height: '100%' }}>
-    <Grid container spacing={3} sx={{ height: '100%' }}>
+    <Grid container spacing={1} sx={{ height: '100%' }}>
       <Grid size={{ xs: 12, md: 8 }} sx={{ height: '100%' }}>
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-10)', borderRadius: 2 }}>
           <Scrollbar sx={{ height: '100%' }}>
@@ -74,7 +74,7 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
                 Subject Details
               </Typography>
 
-              <Grid container spacing={3}>
+              <Grid container spacing={1}>
                 <Grid size={{ xs: 12 }}>
                   <InfoItem
                     icon={<Iconify icon="mdi:code-tags" />}
@@ -145,7 +145,7 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
                       `1px solid ${varAlpha(theme.palette.primary.mainChannel, 0.16)}`,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 2,
+                    gap: 1,
                     transition: 'all 0.2s',
                     '&:hover': {
                       bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
@@ -223,7 +223,7 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
                           `1px solid ${varAlpha(theme.palette.info.mainChannel, 0.12)}`,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 1.5,
+                        gap: 1,
                         transition: 'all 0.2s',
                         '&:hover': {
                           bgcolor: (theme) => varAlpha(theme.palette.info.mainChannel, 0.1),

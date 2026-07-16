@@ -475,7 +475,7 @@ export default function PublicAdmissionStatusScreen({
                         </Typography>
                       </Stack>
                     ))}
-                    <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    <Stack direction="row" gap={1} flexWrap="wrap">
                       <Chip
                         size="small"
                         label={`Total: ${status.financialStatus.currency} ${status.financialStatus.grossAmount.toFixed(2)}`}
@@ -524,7 +524,7 @@ export default function PublicAdmissionStatusScreen({
                   <Divider />
                   <Stack spacing={0.75}>
                     <Typography variant="subtitle2">Admission route</Typography>
-                    <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    <Stack direction="row" gap={1} flexWrap="wrap">
                       <Chip
                         size="small"
                         label={AdmissionCrmRouteType[status.admissionRoute.routeType]}

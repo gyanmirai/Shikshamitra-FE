@@ -621,6 +621,7 @@ const GradeEntry = (props: TabComponentType) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Grade Entry"
           description="Enter and manage student examination marks and grades"
           links={[
@@ -629,7 +630,7 @@ const GradeEntry = (props: TabComponentType) => {
             { name: 'Grade Entry' },
           ]}
           action={
-            <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap alignItems="center">
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
               {/* Keyboard helper shortcut button */}
               <Tooltip title="Keyboard Shortcut Help">
                 <IconButton size="small" color="primary" onClick={keyboardHelpDialog.onTrue}>
@@ -770,7 +771,7 @@ const GradeEntry = (props: TabComponentType) => {
               bgcolor: 'background.paper',
               boxShadow: 'var(--shadows-3)',
               p: 1,
-              gap: 2,
+              gap: 1,
               mb: 1,
             }}
           >
@@ -874,7 +875,7 @@ const GradeEntry = (props: TabComponentType) => {
                   },
                 }}
               >
-                <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" useFlexGap>
+                <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
                   <Typography
                     variant="overline"
                     sx={{
@@ -911,7 +912,7 @@ const GradeEntry = (props: TabComponentType) => {
                       value: `Pending Publish: ${targetSummaryData?.pendingPublishedCount ?? 0} Subj`,
                     },
                   ].map((info) => (
-                    <Stack key={info.value} direction="row" alignItems="center" spacing={0.5}>
+                    <Stack key={info.value} direction="row" alignItems="center" spacing={1}>
                       <Iconify icon={info.icon} width={14} sx={{ color: 'text.disabled' }} />
                       <Typography variant="caption" color="text.secondary" noWrap>
                         {info.value}
@@ -919,7 +920,7 @@ const GradeEntry = (props: TabComponentType) => {
                     </Stack>
                   ))}
                 </Stack>
-                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ ml: 'auto' }}>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 'auto' }}>
                   <Label
                     color={GradeEntryWorkflowStatusColor[workflowStatus] as any}
                     variant="soft"
@@ -940,9 +941,9 @@ const GradeEntry = (props: TabComponentType) => {
 
               <Collapse in={summaryOpen}>
                 <Box sx={{ p: 2 }}>
-                  <Grid container spacing={2}>
+                  <Grid container spacing={1}>
                     <Grid size={{ xs: 12, md: 8 }}>
-                      <Grid container spacing={1.25}>
+                      <Grid container spacing={1}>
                         {(analyticsStats
                           ? [
                               {
@@ -997,7 +998,7 @@ const GradeEntry = (props: TabComponentType) => {
                           ) : (
                             <Grid size={{ xs: 6, sm: 4 }} key={stat.label}>
                               <Stack
-                                spacing={0.5}
+                                spacing={1}
                                 sx={{
                                   p: 1.1,
                                   borderRadius: 2,
@@ -1016,7 +1017,7 @@ const GradeEntry = (props: TabComponentType) => {
                                   },
                                 }}
                               >
-                                <Stack direction="row" alignItems="center" spacing={0.75}>
+                                <Stack direction="row" alignItems="center" spacing={1}>
                                   <Box
                                     sx={{
                                       width: 22,
@@ -1074,9 +1075,9 @@ const GradeEntry = (props: TabComponentType) => {
                       }}
                     >
                       {analyticsStats ? (
-                        <Stack spacing={1.25} height="100%">
-                          <Stack spacing={0.5}>
-                            <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <Stack spacing={1} height="100%">
+                          <Stack spacing={1}>
+                            <Stack direction="row" alignItems="center" spacing={1}>
                               <Box
                                 sx={{
                                   height: 8,
@@ -1098,7 +1099,7 @@ const GradeEntry = (props: TabComponentType) => {
                               )}
                             </Stack>
                             <Stack direction="row" justifyContent="space-between">
-                              <Stack direction="row" alignItems="center" spacing={0.5}>
+                              <Stack direction="row" alignItems="center" spacing={1}>
                                 <Box
                                   sx={{
                                     width: 7,
@@ -1119,7 +1120,7 @@ const GradeEntry = (props: TabComponentType) => {
                                   </Typography>
                                 </Typography>
                               </Stack>
-                              <Stack direction="row" alignItems="center" spacing={0.5}>
+                              <Stack direction="row" alignItems="center" spacing={1}>
                                 <Box
                                   sx={{
                                     width: 7,
@@ -1143,7 +1144,7 @@ const GradeEntry = (props: TabComponentType) => {
                             </Stack>
                           </Stack>
                           <Divider sx={{ borderStyle: 'dashed' }} />
-                          <Stack spacing={0.75}>
+                          <Stack spacing={1}>
                             <Typography
                               variant="overline"
                               sx={{
@@ -1161,7 +1162,7 @@ const GradeEntry = (props: TabComponentType) => {
                               />
                               Result Readiness
                             </Typography>
-                            <Grid container spacing={0.6}>
+                            <Grid container spacing={1}>
                               {[
                                 { label: 'All Students Graded', done: allMarksAssigned },
                                 {
@@ -1183,7 +1184,7 @@ const GradeEntry = (props: TabComponentType) => {
                                   <Stack
                                     direction="row"
                                     alignItems="center"
-                                    spacing={0.6}
+                                    spacing={1}
                                     sx={{
                                       py: 0.4,
                                       px: 0.75,
@@ -1221,7 +1222,7 @@ const GradeEntry = (props: TabComponentType) => {
                           </Stack>
                         </Stack>
                       ) : (
-                        <Stack spacing={1.5} height="100%">
+                        <Stack spacing={1} height="100%">
                           {[...Array(3)].map((_, i) => (
                             <Skeleton
                               key={i}
@@ -1296,7 +1297,7 @@ const GradeEntry = (props: TabComponentType) => {
               boxShadow: 'var(--shadows-2)',
             }}
           >
-            <Stack spacing={2} alignItems="center" sx={{ px: 3, maxWidth: 460 }}>
+            <Stack spacing={1} alignItems="center" sx={{ px: 3, maxWidth: 460 }}>
               <Box
                 sx={{
                   width: 72,
@@ -1310,7 +1311,7 @@ const GradeEntry = (props: TabComponentType) => {
               >
                 <Iconify icon="solar:clipboard-list-bold" width={36} />
               </Box>
-              <Stack spacing={0.75}>
+              <Stack spacing={1}>
                 <Typography variant="h6">Please select an exam</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Choose an exam title from the filters above to view students and start entering

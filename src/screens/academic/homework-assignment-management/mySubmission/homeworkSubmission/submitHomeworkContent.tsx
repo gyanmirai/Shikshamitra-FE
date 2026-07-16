@@ -29,7 +29,7 @@ export const SubmitHomeworkContent = ({
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} p={1}>
+    <Box display="flex" flexDirection="column" gap={1} p={1}>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, height: '300px' }}>

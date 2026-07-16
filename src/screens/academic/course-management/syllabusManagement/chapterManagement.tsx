@@ -139,6 +139,7 @@ const Subjects = () => {
     params: {
       academicMediumId: medium?.id,
       standardId: classId,
+      status: SubjectAssignmentStatus.Published,
     },
     options: {
       skip: !medium?.id || !classId,
@@ -197,6 +198,7 @@ const Subjects = () => {
       {/* Custom breadcrumbs component for navigation and page header */}
       {addChapterDialog.value || bulkChapterDialog.value ? (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           // heading={selectedChapter ? 'Update Chapter' : 'Add Chapter'}
           heading="Syllabus"
           description={
@@ -225,6 +227,7 @@ const Subjects = () => {
         />
       ) : (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Syllabus"
           description="Select a class and subject to manage chapters, including the chapter name, number, and associated learning materials."
           links={[
@@ -270,12 +273,12 @@ const Subjects = () => {
             <Box
               sx={{
                 display: 'flex',
-                gap: 2,
+                gap: 1,
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
-              <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
                 <CustomSelect
                   label="Class"
                   name="class"
@@ -299,7 +302,7 @@ const Subjects = () => {
                     const allOptions: SubjectOption[] = [];
 
                     subjectOptionsData?.data?.items?.forEach((item: any) => {
-                      if (item.status === SubjectAssignmentStatus.Draft) return;
+                      if (item.status !== SubjectAssignmentStatus.Published) return;
 
                       if (item.subjects?.length > 1 && item.electiveGroupName) {
                         // Elective group — each subject as its own dropdown entry

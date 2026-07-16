@@ -44,7 +44,7 @@ const StudentVsClass = () => {
       <Typography variant="h6" mb={2}>
         Student vs Class Average
       </Typography>
-      <Box display="flex" gap={2}>
+      <Box display="flex" gap={1}>
         <CustomSelect
           label="Class"
           options={classData?.items || []}

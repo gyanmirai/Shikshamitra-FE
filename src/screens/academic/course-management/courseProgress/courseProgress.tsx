@@ -105,6 +105,7 @@ const CourseProgress = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Chapters Progress"
         description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
         links={[
@@ -113,7 +114,7 @@ const CourseProgress = (props: TabComponentType) => {
           { name: 'Chapters Progress' },
         ]}
       />
-      <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
+      <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <CustomSelect
           options={allClass}
           label="Class"

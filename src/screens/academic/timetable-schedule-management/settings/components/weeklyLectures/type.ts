@@ -39,6 +39,8 @@ export interface IWeeklyLecture extends IData {
   availableTeachingCapacity?: number;
   difference?: number;
   status?: TimetableSettingStatus;
+  statusLabel?: string;
+  newSubject?: string;
 }
 
 export interface ISubjectFormValues {
@@ -52,6 +54,8 @@ export interface ISubjectFormValues {
   availableTeachingCapacity?: number;
   difference?: number;
   status?: TimetableSettingStatus;
+  statusLabel?: string;
+  newSubject?: string;
 }
 
 export interface ICreateNoOfLectureProps {

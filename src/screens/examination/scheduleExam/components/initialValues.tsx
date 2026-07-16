@@ -25,6 +25,7 @@ export const defaultExamFormValues: IExamFormValues = {
   subjects: [],
   description: '',
   isRoomAssign: false,
+  syncToAcademicCalendar: false,
   roomDetails: {},
 };
 
@@ -328,6 +329,7 @@ export function mapBackendToFormik(
     subjects,
     description: basicData?.description ?? '',
     isRoomAssign: roomData?.isRoomAssigned ?? false,
+    syncToAcademicCalendar: false,
     roomDetails,
   };
 }
@@ -403,7 +405,7 @@ export function serializeSchedulePayload(values: IExamFormValues) {
     }
   });
 
-  return { subjects };
+  return { subjects, syncToAcademicCalendar: values.syncToAcademicCalendar };
 }
 
 export function serializeRoomAssignmentPayload(values: IExamFormValues) {

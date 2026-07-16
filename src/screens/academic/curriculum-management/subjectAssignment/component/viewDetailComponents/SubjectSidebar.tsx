@@ -16,6 +16,30 @@ import {
 
 import type { ISubjectDetail } from '../type';
 
+const STATUS_CONFIG: Record<string | number, { label: string; color: LabelColor }> = {
+  0: { label: 'Draft', color: 'info' },
+  1: { label: 'Published', color: 'success' },
+  2: { label: 'In Review', color: 'warning' },
+  3: { label: 'Needs Setup', color: 'error' },
+  4: { label: 'Archived', color: 'default' },
+  5: { label: 'Inactive', color: 'default' },
+  'Draft': { label: 'Draft', color: 'info' },
+  'Published': { label: 'Published', color: 'success' },
+  'InReview': { label: 'In Review', color: 'warning' },
+  'NeedsSetup': { label: 'Needs Setup', color: 'error' },
+  'Archived': { label: 'Archived', color: 'default' },
+  'Inactive': { label: 'Inactive', color: 'default' },
+};
+
+const getStatusLabelAndColor = (status: any) => {
+  if (status === undefined || status === null) {
+    return { label: 'Draft', color: 'info' as LabelColor };
+  }
+  const config = STATUS_CONFIG[status];
+  if (config) return config;
+  return { label: String(status), color: 'default' as LabelColor };
+};
+
 interface SubjectSidebarProps {
   subjectAssignmentData: Record<string, any> | null;
   expandedSubject: string | null;
@@ -52,7 +76,7 @@ const SubjectSidebar = ({
           borderBottom: `1px dashed ${theme.palette.divider}`,
           display: 'flex',
           flexDirection: 'column',
-          gap: 1.5,
+          gap: 1,
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -72,20 +96,14 @@ const SubjectSidebar = ({
             </Typography>
           </Box>
 
-          <Label
-            variant="soft"
-            color={
-              PublishUnpublishStatusTypeColors[
-                subjectAssignmentData?.data?.status as PublishUnpublishStatusType
-              ] as LabelColor
-            }
-          >
-            {
-              PublishUnpublishStatusType[
-                subjectAssignmentData?.data?.status as PublishUnpublishStatusType
-              ] as string
-            }
-          </Label>
+          {(() => {
+            const { label, color } = getStatusLabelAndColor(subjectAssignmentData?.data?.status);
+            return (
+              <Label variant="soft" color={color}>
+                {label}
+              </Label>
+            );
+          })()}
         </Box>
       </Box>
 
@@ -104,7 +122,7 @@ const SubjectSidebar = ({
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 2,
+                  gap: 1,
                   p: 1.5,
                   cursor: 'pointer',
                   borderRadius: 1.5,

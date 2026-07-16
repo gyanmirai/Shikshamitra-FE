@@ -77,7 +77,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               pb: 12,
               display: 'flex',
               flexDirection: 'column',
-              gap: 2.5,
+              gap: 1,
             }}
           >
             {/* Slot Configurations Header */}
@@ -85,10 +85,10 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               direction={{ xs: 'column', sm: 'row' }}
               alignItems={{ xs: 'flex-start', sm: 'center' }}
               justifyContent="space-between"
-              spacing={1.5}
+              spacing={1}
               sx={{ mt: 0.5 }}
             >
-              <Stack direction="row" alignItems="center" spacing={1.25}>
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <Box
                   sx={{
                     width: 32,
@@ -127,22 +127,8 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                   <Button
                     variant="contained"
                     size="small"
-                    startIcon={<AddIcon />}
+                    startIcon={<AddIcon fontSize="small" />}
                     onClick={handleAddSlotConfiguration}
-                    sx={{
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      px: 2,
-                      boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.primary.main, 0.25)}`,
-                      transition: 'transform 150ms ease, box-shadow 200ms ease',
-                      '&:hover': {
-                        transform: 'translateY(-1px)',
-                        boxShadow: (theme) =>
-                          `0 6px 16px ${alpha(theme.palette.primary.main, 0.35)}`,
-                      },
-                      '&:active': { transform: 'translateY(0)' },
-                    }}
                   >
                     Add Slot Group
                   </Button>

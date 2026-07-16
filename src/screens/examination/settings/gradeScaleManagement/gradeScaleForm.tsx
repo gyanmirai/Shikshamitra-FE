@@ -264,7 +264,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box display="flex" flexDirection="column" gap={2}>
+      <Box display="flex" flexDirection="column" gap={1}>
         <Box borderBottom={1} borderColor="divider" px={2}>
           <Tabs value={activeTab} onChange={(_e, v) => setActiveTab(v)} variant="fullWidth">
             <Tab label="Basic Details" />
@@ -275,7 +275,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
 
         <Scrollbar sx={{ p: 2, height: '400px' }}>
           {activeTab === 0 && (
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               {/* Template Section */}
               {!data && !viewOnly && (
                 <Grid size={{ xs: 12 }}>
@@ -421,7 +421,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
           )}
 
           {activeTab === 1 && (
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               <Grid size={{ xs: 12 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                   <Typography variant="h6">Configured Grade Ranges</Typography>
@@ -461,7 +461,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                 {formik.values.gradingScale?.map((scale: IGradingScale, index: number) => (
                   <Grid
                     container
-                    spacing={2}
+                    spacing={1}
                     key={index}
                     mb={2.5}
                     alignItems="center"
@@ -724,7 +724,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
           )}
 
           {activeTab === 2 && (
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               <Grid size={{ xs: 12 }}>
                 <Typography variant="subtitle1" gutterBottom>
                   Grade Scaling Simulator
@@ -753,7 +753,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnl
                     borderColor="success.light"
                     borderRadius={1}
                   >
-                    <Grid container spacing={2}>
+                    <Grid container spacing={1}>
                       <Grid size={{ xs: 6, sm: 3 }}>
                         <Typography variant="caption" color="text.secondary" display="block">
                           Calculated Grade

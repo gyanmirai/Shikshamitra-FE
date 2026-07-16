@@ -42,6 +42,7 @@ const QuizManagement = (props: TabComponentType) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Quiz Management"
         description={currentTab?.description}
         links={[

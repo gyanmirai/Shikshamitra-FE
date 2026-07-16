@@ -7,7 +7,7 @@ import { Box, Grid, List, ListItem, Typography, ListItemText, ListItemIcon } fro
 
 const RoomAllocation = (props: TabComponentType) => (
   <Box>
-    <Grid container spacing={2}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12, md: 8 }}>
         <CalendarView />
       </Grid>

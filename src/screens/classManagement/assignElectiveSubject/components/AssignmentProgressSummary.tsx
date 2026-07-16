@@ -22,12 +22,12 @@ function SummaryCard({ title, value, subValue, icon, color, tooltip, onClick, ac
       <Card
         onClick={onClick}
         sx={{
-          p: 1.5,
-          flex: 1,
-          minWidth: 130,
+          p: 1.25,
+          flex: '1 1 112px',
+          minWidth: 112,
           display: 'flex',
           alignItems: 'center',
-          gap: 1.25,
+          gap: 1,
           cursor: onClick ? 'pointer' : 'default',
           border: `1px solid ${active ? color : theme.vars.palette.divider}`,
           boxShadow: active ? `0 0 0 1px ${color} inset` : 'var(--shadows-2)',
@@ -39,8 +39,8 @@ function SummaryCard({ title, value, subValue, icon, color, tooltip, onClick, ac
       >
         <Box
           sx={{
-            width: 36,
-            height: 36,
+            width: 32,
+            height: 32,
             borderRadius: '50%',
             backgroundColor: `${color}20`,
             display: 'flex',
@@ -49,10 +49,10 @@ function SummaryCard({ title, value, subValue, icon, color, tooltip, onClick, ac
             flexShrink: 0,
           }}
         >
-          <Iconify icon={icon} sx={{ color, width: 20, height: 20 }} />
+          <Iconify icon={icon} sx={{ color, width: 18, height: 18 }} />
         </Box>
-        <Box>
-          <Typography variant="subtitle1" fontWeight={700} lineHeight={1.2}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle2" fontWeight={700} lineHeight={1.15} noWrap>
             {value}
           </Typography>
           <Typography variant="caption" color="text.secondary" noWrap>
@@ -80,6 +80,7 @@ interface AssignmentProgressSummaryProps {
   onFilterUnassigned: () => void;
   onFilterPreferenceMismatch: () => void;
   onOpenIssues: () => void;
+  sx?: object;
 }
 
 export default function AssignmentProgressSummary({
@@ -93,11 +94,12 @@ export default function AssignmentProgressSummary({
   onFilterUnassigned,
   onFilterPreferenceMismatch,
   onOpenIssues,
+  sx,
 }: AssignmentProgressSummaryProps) {
   const theme = useTheme();
 
   return (
-    <Box sx={{ display: 'flex', gap: 1.25, mb: 1.5, flexWrap: 'wrap' }}>
+    <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap', ...sx }}>
       <SummaryCard
         title="Total Students"
         value={total}

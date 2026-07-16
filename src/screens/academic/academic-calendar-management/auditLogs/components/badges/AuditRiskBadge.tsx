@@ -52,7 +52,7 @@ const AuditRiskBadge = ({ level, showTooltip = true, size = 'small' }: Props) =>
   return (
     <Tooltip
       title={
-        <Stack spacing={0.5} sx={{ p: 0.5 }}>
+        <Stack spacing={1} sx={{ p: 0.5 }}>
           <Box sx={{ fontWeight: 700 }}>{label} Risk</Box>
           <Box sx={{ opacity: 0.85, fontSize: '12px' }}>{explanation}</Box>
         </Stack>

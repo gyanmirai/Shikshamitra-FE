@@ -295,7 +295,7 @@ export default function AdmissionsSeatPoolConfiguration() {
                     .join(' / ') || 'General pool'}
                 </Typography>
               </Box>
-              <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+              <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
                 <Chip
                   size="small"
                   label={`${pool.occupiedSeats}/${pool.approvedCapacity} occupied`}

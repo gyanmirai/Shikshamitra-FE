@@ -128,7 +128,7 @@ export function AnalyticsWorkspace() {
       />
 
       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25} alignItems={{ sm: 'center' }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} gap={1} alignItems={{ sm: 'center' }}>
           <TextField
             size="small"
             type="date"
@@ -244,7 +244,7 @@ export function AnalyticsWorkspace() {
           >
             <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
               <Typography variant="subtitle2">Entrance Exams</Typography>
-              <Stack direction="row" gap={0.75} flexWrap="wrap" mt={1}>
+              <Stack direction="row" gap={1} flexWrap="wrap" mt={1}>
                 <Chip
                   label={`${formatPercent(analytics.examAnalytics.attendanceRate)} attendance`}
                 />
@@ -257,7 +257,7 @@ export function AnalyticsWorkspace() {
             </Paper>
             <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
               <Typography variant="subtitle2">Registration & Documents</Typography>
-              <Stack direction="row" gap={0.75} flexWrap="wrap" mt={1}>
+              <Stack direction="row" gap={1} flexWrap="wrap" mt={1}>
                 <Chip
                   label={`${formatPercent(analytics.registrationAnalytics.completionRate)} completion`}
                 />
@@ -272,7 +272,7 @@ export function AnalyticsWorkspace() {
             </Paper>
             <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
               <Typography variant="subtitle2">Activation</Typography>
-              <Stack direction="row" gap={0.75} flexWrap="wrap" mt={1}>
+              <Stack direction="row" gap={1} flexWrap="wrap" mt={1}>
                 <Chip
                   label={`${analytics.activationAnalytics.firstDayReadyCount} first-day ready`}
                   color="success"

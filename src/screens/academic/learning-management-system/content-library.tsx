@@ -14,6 +14,7 @@ const ContentLibrary = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Content Library"
         links={[
           { name: 'Academics' },

@@ -573,7 +573,7 @@ export default function AdmissionsPolicyPackConfiguration() {
                     {new Date(pack.reviewDueAt).toLocaleDateString()}
                   </Typography>
                 </Box>
-                <Stack direction="row" gap={0.75} alignItems="center">
+                <Stack direction="row" gap={1} alignItems="center">
                   <Chip
                     size="small"
                     label={statusLabel[pack.status]}

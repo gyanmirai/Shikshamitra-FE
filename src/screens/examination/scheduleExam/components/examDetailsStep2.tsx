@@ -11,7 +11,8 @@ import CustomSelect from 'src/components/custom-select';
 import { memo, useMemo, useState, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import {
   Box,
@@ -28,6 +29,8 @@ import {
   TableCell,
   TableHead,
   TextField,
+  FormControlLabel,
+  Switch,
   Typography,
   TableContainer,
   AccordionSummary,
@@ -162,6 +165,7 @@ interface SubjectScheduleRowProps {
   gradeScalings: any[];
   isGradeScalingsLoading: boolean;
   currentYear: any;
+  standardId?: string | null;
   isReadOnly?: boolean;
 }
 
@@ -175,6 +179,7 @@ const SubjectScheduleRow = memo(
     gradeScalings,
     isGradeScalingsLoading,
     currentYear,
+    standardId,
     isReadOnly = false,
   }: SubjectScheduleRowProps) => (
     <TableRow
@@ -235,6 +240,9 @@ const SubjectScheduleRow = memo(
             }}
             minDate={dayjs()}
             maxDate={dayjs(currentYear?.endDate)}
+            academicYearId={currentYear?.id}
+            standardId={standardId}
+            validationType="ExamSchedule"
             slotProps={{
               textField: {
                 size: 'small',
@@ -544,7 +552,7 @@ interface SectionHeaderProps {
 }
 
 const SectionHeader = memo(({ icon, accent, title, chips }: SectionHeaderProps) => (
-  <Stack direction="row" alignItems="center" gap={1.5} sx={{ mb: 2 }}>
+  <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 2 }}>
     <Box
       sx={{
         width: 36,
@@ -628,6 +636,7 @@ interface ElectiveGroupCardProps {
   gradeScalings: any[];
   isGradeScalingsLoading: boolean;
   currentYear: any;
+  standardId?: string | null;
 }
 
 const ElectiveGroupCard = memo(
@@ -637,6 +646,7 @@ const ElectiveGroupCard = memo(
     gradeScalings,
     isGradeScalingsLoading,
     currentYear,
+    standardId,
   }: ElectiveGroupCardProps) => {
     const group = formik.values.subjects[groupIndex];
     const groupName: string = group?.subjectName || group?.electiveGroupName || 'Elective Group';
@@ -786,6 +796,7 @@ const ElectiveGroupCard = memo(
                       gradeScalings={gradeScalings}
                       isGradeScalingsLoading={isGradeScalingsLoading}
                       currentYear={currentYear}
+                      standardId={standardId}
                     />
                   );
                 })}
@@ -866,6 +877,51 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
     >
+      <Paper
+        variant="outlined"
+        sx={{
+          mb: 3,
+          p: 2,
+          borderRadius: 2,
+          borderColor: 'divider',
+          bgcolor: (theme) => varAlpha(theme.vars.palette.info.mainChannel, 0.04),
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          justifyContent="space-between"
+        >
+          <Stack direction="row" spacing={1} alignItems="flex-start">
+            <Iconify
+              icon="solar:calendar-add-bold-duotone"
+              width={24}
+              sx={{ color: 'info.main', mt: 0.25 }}
+            />
+            <Box>
+              <Typography variant="subtitle2">Add exam dates to academic calendar</Typography>
+              <Typography variant="caption" color="text.secondary">
+                Creates class-specific exam markers named Exam Name (Subject Name).
+              </Typography>
+            </Box>
+          </Stack>
+
+          <FormControlLabel
+            sx={{ m: 0 }}
+            control={
+              <Switch
+                checked={Boolean(formik.values.syncToAcademicCalendar)}
+                onChange={(event) =>
+                  formik.setFieldValue('syncToAcademicCalendar', event.target.checked)
+                }
+                color="primary"
+              />
+            }
+            label={formik.values.syncToAcademicCalendar ? 'Enabled' : 'Disabled'}
+          />
+        </Stack>
+      </Paper>
       {/* ═══════════════════════════════════
           CORE SUBJECTS SECTION
       ═══════════════════════════════════ */}
@@ -919,6 +975,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                       gradeScalings={gradeScalingsList}
                       isGradeScalingsLoading={isGradeScalingsLoading}
                       currentYear={currentYear}
+                      standardId={formik.values.className}
                     />
                   );
                 })}
@@ -959,6 +1016,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
               gradeScalings={gradeScalingsList}
               isGradeScalingsLoading={isGradeScalingsLoading}
               currentYear={currentYear}
+              standardId={formik.values.className}
             />
           ))}
         </Box>
@@ -972,7 +1030,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 1.5,
+            gap: 1,
             py: 10,
             color: 'text.disabled',
             textAlign: 'center',

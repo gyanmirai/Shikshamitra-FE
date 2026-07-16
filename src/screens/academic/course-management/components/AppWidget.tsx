@@ -36,7 +36,7 @@ const AppWidget: React.FC<AppWidgetProps> = ({ title, total, icon, chart }) => {
     <Box
       sx={{
         p: 1.5,
-        gap: 2,
+        gap: 1,
         borderRadius: 2,
         display: 'flex',
         flexDirection: 'column',

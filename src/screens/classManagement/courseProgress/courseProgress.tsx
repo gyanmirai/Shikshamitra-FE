@@ -53,7 +53,7 @@ const EndToolTip = () => (
     sx={{ textAlign: 'left' }}
     arrow
     title={
-      <Box display="flex" flexDirection="column" gap={0.5}>
+      <Box display="flex" flexDirection="column" gap={1}>
         {/* Map through color indicators and their meanings */}
         {[
           { label: 'Red', color: 'error.main', text: 'Due within 7 days' },
@@ -632,8 +632,8 @@ const CourseProgressComponent = ({
           updateProgressDialog.onFalse();
         }}
         title={
-          <Box display="flex" flexDirection="column" gap={0.5}>
-            <Box display="flex" flexDirection="row" gap={0.75} alignItems="center">
+          <Box display="flex" flexDirection="column" gap={1}>
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h6" component="span" sx={{ fontWeight: 700 }}>
                 Update Chapter Progress
               </Typography>
@@ -677,8 +677,8 @@ const CourseProgressComponent = ({
         }}
         maxWidth="sm"
         title={
-          <Box display="flex" flexDirection="column" gap={0.5}>
-            <Box display="flex" flexDirection="row" gap={0.75} alignItems="center">
+          <Box display="flex" flexDirection="column" gap={1}>
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h6" component="span" sx={{ fontWeight: 700 }}>
                 Chapter Logs
               </Typography>

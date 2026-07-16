@@ -124,12 +124,12 @@ const FeeRunPanel = ({ academicMediumId, academicYearId }: FeeRunPanelProps) => 
 
   return (
     <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 2 }}>
-      <Box p={2} display="flex" flexDirection="column" gap={2}>
+      <Box p={2} display="flex" flexDirection="column" gap={1}>
         <Typography variant="h6" color="primary">
           Fee Runs
         </Typography>
 
-        <Box display="grid" gap={2} gridTemplateColumns={{ xs: '1fr', md: 'repeat(4, 1fr)' }}>
+        <Box display="grid" gap={1} gridTemplateColumns={{ xs: '1fr', md: 'repeat(4, 1fr)' }}>
           <TextField
             size="small"
             type="date"

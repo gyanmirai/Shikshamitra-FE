@@ -142,7 +142,7 @@ export default function RecentActivities({ activities }: { activities?: Activity
                 borderColor: 'divider',
               }}
             >
-              <Stack direction="row" alignItems="center" spacing={1.25}>
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <Box
                   sx={{
                     width: 32,

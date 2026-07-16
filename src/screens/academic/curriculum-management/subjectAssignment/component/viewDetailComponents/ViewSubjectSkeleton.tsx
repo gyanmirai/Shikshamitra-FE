@@ -7,7 +7,7 @@ export const ViewSubjectSkeleton = () => {
   const theme = useTheme();
 
   return (
-    <Grid container spacing={2} sx={{ height: '100%' }}>
+    <Grid container spacing={1} sx={{ height: '100%' }}>
       {/* Sidebar Skeleton */}
       <Grid size={{ xs: 12, md: 3 }} sx={{ height: '100%' }}>
         <Card
@@ -27,7 +27,7 @@ export const ViewSubjectSkeleton = () => {
               borderBottom: `1px dashed ${theme.palette.divider}`,
               display: 'flex',
               flexDirection: 'column',
-              gap: 1.5,
+              gap: 1,
             }}
           >
             <Box
@@ -50,7 +50,7 @@ export const ViewSubjectSkeleton = () => {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 2,
+                  gap: 1,
                   p: 1.5,
                   borderRadius: 1.5,
                 }}
@@ -99,15 +99,15 @@ export const ViewSubjectSkeleton = () => {
 
           {/* Overview Content Skeleton */}
           <Box sx={{ flexGrow: 1, overflow: 'hidden', p: 3 }}>
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               <Grid size={{ xs: 12, md: 8 }}>
                 <Card sx={{ boxShadow: 'var(--shadows-10)', borderRadius: 2 }}>
                   <CardContent sx={{ p: 3 }}>
                     <Skeleton variant="text" width={140} height={28} sx={{ mb: 3 }} />
-                    <Grid container spacing={3}>
+                    <Grid container spacing={1}>
                       {[...Array(4)].map((_, i) => (
                         <Grid size={{ xs: 12, sm: i < 2 ? 6 : 12 }} key={i}>
-                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                             <Skeleton
                               variant="rounded"
                               width={40}

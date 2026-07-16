@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
   Card,
@@ -48,7 +48,6 @@ type Props = {
   onSubmitDiary: (plan: LessonPlanRow) => void;
   onCreateHomework?: (plan: LessonPlanRow) => void;
   onMarkMissed: (plan: LessonPlanRow) => void;
-  onCreateFromTimetable: (date: Dayjs) => void;
   onCopyPreviousWeek: () => void;
 };
 
@@ -60,7 +59,6 @@ const WeeklyPlannerTab = ({
   onSubmitDiary,
   onCreateHomework,
   onMarkMissed,
-  onCreateFromTimetable,
   onCopyPreviousWeek,
 }: Props) => {
   const [weekStart, setWeekStart] = useState<Dayjs | null>(dayjs(weekStartIso));
@@ -86,7 +84,7 @@ const WeeklyPlannerTab = ({
         direction={{ xs: 'column', sm: 'row' }}
         justifyContent="space-between"
         alignItems={{ sm: 'center' }}
-        spacing={2}
+        spacing={1}
         sx={{ mb: 2.5 }}
       >
         <Stack direction="row" spacing={1} alignItems="center">
@@ -116,7 +114,7 @@ const WeeklyPlannerTab = ({
       <Box
         sx={{
           display: 'grid',
-          gap: 2,
+          gap: 1,
           gridTemplateColumns: {
             xs: '1fr',
             md: 'repeat(2, 1fr)',
@@ -151,7 +149,7 @@ const WeeklyPlannerTab = ({
                   sx={{ mb: 1.5 }}
                 >
                   <Box>
-                    <Stack direction="row" spacing={0.75} alignItems="center">
+                    <Stack direction="row" spacing={1} alignItems="center">
                       <Typography variant="subtitle1" fontWeight={600}>
                         {day}
                       </Typography>
@@ -209,7 +207,7 @@ const WeeklyPlannerTab = ({
                       >
                         No lesson planned
                       </Typography>
-                      <Stack direction="row" spacing={0.5} justifyContent="center" flexWrap="wrap">
+                      <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
                         <Button
                           size="small"
                           variant="text"
@@ -218,15 +216,6 @@ const WeeklyPlannerTab = ({
                           sx={{ fontSize: 11 }}
                         >
                           Add Lesson
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="text"
-                          startIcon={<Iconify icon="mdi:timetable" width={14} />}
-                          onClick={() => onCreateFromTimetable(date)}
-                          sx={{ fontSize: 11 }}
-                        >
-                          From Timetable
                         </Button>
                       </Stack>
                     </Box>
@@ -253,7 +242,7 @@ const WeeklyPlannerTab = ({
                           alignItems="center"
                           sx={{ mb: 0.5 }}
                         >
-                          <Stack direction="row" spacing={0.5} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
                             <Typography variant="caption" fontWeight={600} color="text.secondary">
                               {plan.period}
                             </Typography>
@@ -261,7 +250,7 @@ const WeeklyPlannerTab = ({
                               • {plan.plannedTime}
                             </Typography>
                           </Stack>
-                          <Stack direction="row" spacing={0.5}>
+                          <Stack direction="row" spacing={1}>
                             <Label
                               color={planStatusColor[plan.planStatus] || 'default'}
                               variant="soft"
@@ -295,7 +284,7 @@ const WeeklyPlannerTab = ({
                         {plan.insightMessage && (
                           <Stack
                             direction="row"
-                            spacing={0.5}
+                            spacing={1}
                             alignItems="flex-start"
                             sx={{
                               mt: 0.75,
@@ -315,7 +304,7 @@ const WeeklyPlannerTab = ({
                           alignItems="center"
                           sx={{ mt: 0.75 }}
                         >
-                          <Stack spacing={0.25}>
+                          <Stack spacing={1}>
                             <Typography variant="caption" color="text.secondary">
                               Progress: {plan.actualCompletionPercentage}% /{' '}
                               {plan.plannedCompletionPercentage}%

@@ -284,7 +284,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
     >
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
         <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={1}>
-          <Box display="flex" gap={2}>
+          <Box display="flex" gap={1}>
             <CustomSelect
               options={[
                 { id: 'mix', name: 'Mix' },
@@ -314,7 +314,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
           </Box>
 
           {arrangeBy && (
-            <Box display="flex" gap={2} alignItems="center">
+            <Box display="flex" gap={1} alignItems="center">
               {/* Visual indicator for pending changes */}
               {changesSummary.length > 0 && (
                 <Chip

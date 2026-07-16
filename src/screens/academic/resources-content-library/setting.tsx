@@ -93,13 +93,14 @@ const Setting = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Settings"
         links={[{ name: 'Academics' }, { name: 'Resource Content Library' }, { name: 'Settings' }]}
       />
-      <Grid container spacing={2} marginTop={1}>
+      <Grid container spacing={1} marginTop={1}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <CustomSelect
                 options={[]}
                 label="Who can upload resources"
@@ -245,10 +246,10 @@ const AddCategory: React.FC<AddCategoryProps> = ({ onSubmit, data, isEdit }) => 
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={12}>
               <TextField
                 fullWidth

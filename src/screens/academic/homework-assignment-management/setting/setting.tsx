@@ -3,7 +3,7 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -25,6 +25,7 @@ import HomeworkTypeSettingCard from './homeworkType/homeworkTypeSettingCard';
 const Setting = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="Settings"
       links={[
         { name: 'Academics', href: '/academic/dashboard' },
@@ -32,8 +33,8 @@ const Setting = (props: TabComponentType) => (
         { name: 'Settings' },
       ]}
     />
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Grid container spacing={2} alignItems="center">
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Grid container spacing={1} alignItems="center">
         <Grid size={{ xs: 12, md: 6 }}>
           <HomeworkTypeSettingCard />
         </Grid>
@@ -42,7 +43,7 @@ const Setting = (props: TabComponentType) => (
         </Grid>
       </Grid>
 
-      <Grid container spacing={2} alignItems="stretch">
+      <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, md: 6 }}>
           <Card
             sx={{
@@ -82,7 +83,7 @@ const Setting = (props: TabComponentType) => (
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 2,
+                    gap: 1,
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -130,7 +131,7 @@ const Setting = (props: TabComponentType) => (
                 <Box
                   sx={{
                     display: 'flex',
-                    gap: 2,
+                    gap: 1,
                     alignItems: 'center',
                     flexWrap: 'wrap',
                   }}

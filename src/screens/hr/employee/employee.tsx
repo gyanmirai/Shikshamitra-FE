@@ -623,7 +623,7 @@ const HrEmployee = () => {
             open={payrollDialog.value}
             handleClose={handleClosePayroll}
             title={
-              <Box display="flex" flexDirection="column" gap={0.5}>
+              <Box display="flex" flexDirection="column" gap={1}>
                 <Box display="flex" flexDirection="row" gap={1} alignItems="center">
                   <Typography variant="h5">Salary Structure</Typography>
                   <CustomTooltip

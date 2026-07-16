@@ -33,6 +33,7 @@ const SyllabusSetting = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Setting"
         description="Setting for learning resource type and notification setting"
         links={[

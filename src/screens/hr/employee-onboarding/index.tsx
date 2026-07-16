@@ -1748,7 +1748,7 @@ function FinalizeDialog({
                                           color="text.secondary"
                                           display="flex"
                                           alignItems="center"
-                                          gap={0.5}
+                                          gap={1}
                                         >
                                           <Iconify icon="lucide:layers" width={12} />
                                           {experience.department}
@@ -1759,7 +1759,7 @@ function FinalizeDialog({
                                         color="text.secondary"
                                         display="flex"
                                         alignItems="center"
-                                        gap={0.5}
+                                        gap={1}
                                       >
                                         <Iconify icon="lucide:calendar" width={12} />
                                         {[
@@ -2122,7 +2122,7 @@ function FinalizeDialog({
                           render={({ slots }) => {
                             const hasErr = formik.touched.adharNo && Boolean(formik.errors.adharNo);
                             return (
-                              <Box display="flex" gap={0.75} alignItems="center" flexWrap="nowrap">
+                              <Box display="flex" gap={1} alignItems="center" flexWrap="nowrap">
                                 {slots.map((slot, i) => (
                                   <React.Fragment key={i}>
                                     <Box
@@ -2231,7 +2231,7 @@ function FinalizeDialog({
                           render={({ slots }) => {
                             const hasErr = formik.touched.panNo && Boolean(formik.errors.panNo);
                             return (
-                              <Box display="flex" gap={0.75} alignItems="center" flexWrap="nowrap">
+                              <Box display="flex" gap={1} alignItems="center" flexWrap="nowrap">
                                 {slots.map((slot, i) => (
                                   <React.Fragment key={i}>
                                     <Box

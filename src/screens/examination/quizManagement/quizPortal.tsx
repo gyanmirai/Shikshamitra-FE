@@ -158,7 +158,7 @@ const QuestionList = ({
           sx={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
-            gap: 1.5,
+            gap: 1,
           }}
         >
           {Array.from({ length: totalQuestions }, (_, i) => (
@@ -184,7 +184,7 @@ const QuestionList = ({
       <Divider />
 
       <Box sx={{ p: 3, bgcolor: 'background.neutral' }}>
-        <Grid container spacing={2}>
+        <Grid container spacing={1}>
           {legends.map((item) => (
             <Grid size={{ xs: 6 }}>
               <Stack direction="row" alignItems="center" spacing={1}>
@@ -257,7 +257,7 @@ const QuestionDisplay = ({ question, onAnswer, currentAnswer, totalQuestions }: 
                             value={option.value}
                             control={<Radio sx={{ display: 'none' }} />}
                             label={
-                              <Stack direction="row" alignItems="center" spacing={2}>
+                              <Stack direction="row" alignItems="center" spacing={1}>
                                 <Box
                                   sx={{
                                     width: 24,
@@ -312,7 +312,7 @@ const QuestionDisplay = ({ question, onAnswer, currentAnswer, totalQuestions }: 
                             value={value}
                             control={<Radio sx={{ display: 'none' }} />}
                             label={
-                              <Stack direction="row" alignItems="center" spacing={2}>
+                              <Stack direction="row" alignItems="center" spacing={1}>
                                 <Box
                                   sx={{
                                     width: 24,
@@ -368,10 +368,10 @@ const QuestionDisplay = ({ question, onAnswer, currentAnswer, totalQuestions }: 
                 );
               case 'matchTheFollowing':
                 return (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     {question.pairs.map((pair: any, idx: number) => (
                       <Paper key={idx} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                        <Grid container alignItems="center" spacing={2}>
+                        <Grid container alignItems="center" spacing={1}>
                           <Grid size={{ xs: 12, md: 4 }}>
                             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                               {pair.left}
@@ -391,7 +391,7 @@ const QuestionDisplay = ({ question, onAnswer, currentAnswer, totalQuestions }: 
                                 newAnswers[idx] = e.target.value;
                                 onAnswer(newAnswers);
                               }}
-                              sx={{ gap: 2 }}
+                              sx={{ gap: 1 }}
                             >
                               {pair.rightOptions.map((option: string) => (
                                 <FormControlLabel
@@ -462,7 +462,7 @@ const NavigationButtons = ({
       )}
     </Box>
 
-    <Stack direction="row" spacing={2}>
+    <Stack direction="row" spacing={1}>
       <Button
         size="large"
         color="warning"
@@ -638,7 +638,7 @@ const QuizPortal = ({ handleClose }: { handleClose: () => void }) => {
           <Typography variant="h4" fontWeight={800} sx={{ color: 'text.primary', mb: 0.5 }}>
             General Knowledge Quiz
           </Typography>
-          <Stack direction="row" spacing={2}>
+          <Stack direction="row" spacing={1}>
             <Typography variant="body2" color="text.secondary">
               Total Questions: {quizList.length}
             </Typography>
@@ -655,7 +655,7 @@ const QuizPortal = ({ handleClose }: { handleClose: () => void }) => {
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: 1.5,
+            gap: 1,
             px: 2.5,
             py: 1,
             borderRadius: 50,
@@ -674,9 +674,9 @@ const QuizPortal = ({ handleClose }: { handleClose: () => void }) => {
         </Box>
       </Paper>
 
-      <Grid container spacing={4}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 8, lg: 9 }}>
-          <Stack spacing={3}>
+          <Stack spacing={1}>
             <QuestionDisplay
               question={{ ...quizList[currentQuestion - 1], questionNumber: currentQuestion }}
               totalQuestions={quizList.length}

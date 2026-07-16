@@ -2,7 +2,7 @@
 
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
-import { Box, Tab, Tabs, Alert, Stack, Button, Drawer, Divider, Skeleton } from '@mui/material';
+import { Box, Tab, Tabs, Alert, Stack, Button, Drawer, Divider, Skeleton, Grid, Card } from '@mui/material';
 import { useGetStudentAcademic360Query } from 'src/redux/academicAPI/StudentAcademic360Api/studentAcademic360Api';
 
 import { getStudentId } from '../types';
@@ -151,13 +151,15 @@ export function StudentAcademic360Drawer({
 
         <Box sx={{ flex: 1, overflow: 'auto', p: 2, bgcolor: 'background.neutral' }}>
           {student ? (
-            <Stack spacing={2}>
+            <Stack spacing={1}>
               {isError && (
                 <Alert severity="error" variant="outlined">
                   Unable to load the Academic 360 summary. Please try again.
                 </Alert>
               )}
-              {activeTab === 'overview' ? (
+              {isFetching ? (
+                <DrawerSkeleton activeTab={activeTab} />
+              ) : activeTab === 'overview' ? (
                 <SuccessOverview data={academic360} />
               ) : (
                 <SuccessDetailTabs data={academic360} activeTab={activeTab} isLoading={isFetching} />
@@ -174,4 +176,121 @@ export function StudentAcademic360Drawer({
       </Box>
     </Drawer>
   );
+}
+
+type DrawerSkeletonProps = {
+  activeTab: string;
+};
+
+function DrawerSkeleton({ activeTab }: DrawerSkeletonProps) {
+  if (activeTab === 'overview') {
+    return (
+      <Stack spacing={1}>
+        <Grid container spacing={1}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Card variant="outlined" sx={{ p: 2.5, height: 180, borderRadius: 2 }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Skeleton variant="circular" width={72} height={72} />
+                <Box sx={{ flex: 1 }}>
+                  <Skeleton variant="text" width="60%" height={24} />
+                  <Skeleton variant="text" width="40%" height={20} />
+                </Box>
+              </Stack>
+              <Skeleton variant="text" width="90%" sx={{ mt: 2 }} />
+              <Skeleton variant="text" width="80%" />
+            </Card>
+          </Grid>
+          {[1, 2, 3, 4].map((i) => (
+            <Grid key={i} size={{ xs: 12, sm: 6, md: 2 }}>
+              <Card variant="outlined" sx={{ p: 2, height: 180, borderRadius: 2 }}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Skeleton variant="rectangular" width={32} height={32} sx={{ borderRadius: 1 }} />
+                  <Skeleton variant="text" width="50%" />
+                </Stack>
+                <Skeleton variant="text" width="70%" height={40} sx={{ mt: 2 }} />
+                <Skeleton variant="text" width="40%" sx={{ mt: 1 }} />
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+        <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+          <Skeleton variant="text" width="150px" height={24} sx={{ mb: 1.5 }} />
+          <Stack spacing={1}>
+            {[1, 2].map((i) => (
+              <Box key={i} sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
+                <Stack direction="row" justifyContent="space-between">
+                  <Box sx={{ flex: 1 }}>
+                    <Skeleton variant="text" width="100px" />
+                    <Skeleton variant="text" width="80%" sx={{ mt: 1 }} />
+                  </Box>
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        </Card>
+      </Stack>
+    );
+  }
+  if (activeTab === 'attendance') {
+    return (
+      <Stack spacing={1}>
+        <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+          <Skeleton variant="text" width="100px" height={24} />
+          <Skeleton variant="text" width="60%" height={20} />
+          <Skeleton variant="rectangular" height={100} sx={{ mt: 2, borderRadius: 1 }} />
+        </Card>
+        <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+          <Skeleton variant="text" width="200px" height={24} sx={{ mb: 1.5 }} />
+          <Skeleton variant="rectangular" height={150} sx={{ borderRadius: 1 }} />
+        </Card>
+      </Stack>
+    );
+  }
+  if (activeTab === 'learning' || activeTab === 'exams') {
+    return (
+      <Stack spacing={1}>
+        <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+          <Skeleton variant="text" width="150px" height={24} sx={{ mb: 1.5 }} />
+          <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 1 }} />
+        </Card>
+        <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+          <Skeleton variant="text" width="180px" height={24} sx={{ mb: 1.5 }} />
+          <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 1 }} />
+        </Card>
+      </Stack>
+    );
+  }
+  if (activeTab === 'timeline') {
+    return (
+      <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+        <Skeleton variant="text" width="150px" height={24} sx={{ mb: 1.5 }} />
+        <Stack spacing={1}>
+          {[1, 2, 3].map((i) => (
+            <Stack key={i} direction="row" spacing={1} alignItems="center">
+              <Skeleton variant="text" width="50px" />
+              <Skeleton variant="circular" width={16} height={16} />
+              <Skeleton variant="text" width="200px" />
+            </Stack>
+          ))}
+        </Stack>
+      </Card>
+    );
+  }
+  if (activeTab === 'interventions') {
+    return (
+      <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+        <Skeleton variant="text" width="220px" height={24} sx={{ mb: 1.5 }} />
+        <Stack spacing={1}>
+          {[1, 2].map((i) => (
+            <Box key={i} sx={{ p: 1.75, border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
+              <Skeleton variant="text" width="150px" height={20} />
+              <Skeleton variant="text" width="250px" sx={{ mt: 1 }} />
+              <Skeleton variant="rectangular" height={10} sx={{ mt: 2, borderRadius: 1 }} />
+            </Box>
+          ))}
+        </Stack>
+      </Card>
+    );
+  }
+  return <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />;
 }

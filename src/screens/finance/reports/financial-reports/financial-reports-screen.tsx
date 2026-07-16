@@ -125,7 +125,7 @@ const FinancialReportsScreen = () => {
 
   return (
     <>
-      <Box display="flex" flexDirection="row" gap={3} justifyItems="center" alignItems="center">
+      <Box display="flex" flexDirection="row" gap={1} justifyItems="center" alignItems="center">
         <CustomSelect
           label="Report Type"
           options={[

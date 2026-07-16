@@ -788,7 +788,7 @@ export default function AdmissionsGovernanceConfiguration() {
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack spacing={1}>
             <Typography variant="subtitle1">Advisory demand outlook</Typography>
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
+            <Stack direction="row" gap={1} flexWrap="wrap">
               <Chip label={`${forecast.data.currentOpenLeadCount} open leads`} />
               <Chip
                 label={`${forecast.data.projectedAdditionalAcceptedOffers} projected acceptances`}

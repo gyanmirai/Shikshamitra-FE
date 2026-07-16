@@ -155,7 +155,7 @@ export const RoomTimelineView = ({
                         direction="row"
                         alignItems="center"
                         justifyContent="center"
-                        spacing={0.5}
+                        spacing={1}
                       >
                         <Iconify icon="mdi:plus" width={14} color="text.disabled" />
                         <Typography variant="caption" color="text.disabled">

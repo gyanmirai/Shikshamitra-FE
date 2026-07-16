@@ -208,9 +208,10 @@ const RoomAvailabilityScreen = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pb: 4 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 4 }}>
       {/* ── Breadcrumbs & Header ─────────────────────────── */}
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Room Availability"
         description="Find free rooms, inspect conflicts, reserve rooms, and review room usage."
         links={[
@@ -271,7 +272,7 @@ const RoomAvailabilityScreen = () => {
             <Tab
               value="reservations"
               label={
-                <Stack direction="row" alignItems="center" spacing={0.5}>
+                <Stack direction="row" alignItems="center" spacing={1}>
                   <span>Reservations</span>
                 </Stack>
               }
@@ -281,7 +282,7 @@ const RoomAvailabilityScreen = () => {
             <Tab
               value="approvals"
               label={
-                <Stack direction="row" alignItems="center" spacing={0.75}>
+                <Stack direction="row" alignItems="center" spacing={1}>
                   <CheckCircle fontSize="small" />
                   <span>Approvals</span>
                   {pendingCount > 0 && (
@@ -299,7 +300,7 @@ const RoomAvailabilityScreen = () => {
 
           {/* Right side: View Switcher & Filters — only for availability tab */}
           {activeTab === 'availability' && (
-            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: 1 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
               <CustomDateRangePicker
                 label="Select Date Range"
                 value={[startDate, endDate]}

@@ -94,9 +94,9 @@ const AuditAnalyticsView = ({ logs }: Props) => {
   ];
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1}>
       {/* Top stat tiles */}
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         {tiles.map((t) => (
           <Grid size={{ xs: 6, md: 3 }} key={t.label}>
             <Card sx={{ p: 2, borderRadius: 2.5, border: `1px solid ${alpha(t.color, 0.15)}` }}>
@@ -129,7 +129,7 @@ const AuditAnalyticsView = ({ logs }: Props) => {
       </Grid>
 
       {/* Charts row */}
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 7 }}>
           <Card sx={{ borderRadius: 3 }}>
             <CardHeader
@@ -184,7 +184,7 @@ const AuditAnalyticsView = ({ logs }: Props) => {
       </Grid>
 
       {/* Top entities + users */}
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ borderRadius: 3, p: 2 }}>
             <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 1.5 }}>
@@ -234,7 +234,7 @@ const AuditAnalyticsView = ({ logs }: Props) => {
             </Stack>
             <Stack spacing={1}>
               {analytics.topUsers.map((u, i) => (
-                <Stack key={`${u.name}-${i}`} direction="row" alignItems="center" gap={1.25}>
+                <Stack key={`${u.name}-${i}`} direction="row" alignItems="center" gap={1}>
                   <Box
                     component="span"
                     sx={{
@@ -298,7 +298,7 @@ const AuditAnalyticsView = ({ logs }: Props) => {
             </Typography>
           </Box>
         </Stack>
-        <Stack spacing={1.5}>
+        <Stack spacing={1}>
           {analytics.suspiciousAlerts.map((alert) => {
             const color =
               alert.severity === 'error' ? theme.palette.error.main : theme.palette.warning.main;
@@ -313,7 +313,7 @@ const AuditAnalyticsView = ({ logs }: Props) => {
                   backgroundColor: alpha(color, 0.02),
                 }}
               >
-                <Stack direction="row" alignItems="flex-start" gap={1.5}>
+                <Stack direction="row" alignItems="flex-start" gap={1}>
                   <Iconify
                     icon={alert.severity === 'error' ? 'mdi:alert-circle' : 'mdi:alert'}
                     width={20}
@@ -330,7 +330,7 @@ const AuditAnalyticsView = ({ logs }: Props) => {
                     >
                       {alert.message}
                     </Typography>
-                    <Stack direction="row" alignItems="center" gap={0.5} sx={{ mt: 0.75 }}>
+                    <Stack direction="row" alignItems="center" gap={1} sx={{ mt: 0.75 }}>
                       <Iconify icon="mdi:lightbulb-on-outline" width={12} color="info.main" />
                       <Typography variant="caption" color="info.main" fontWeight={600}>
                         {alert.suggestedAction}

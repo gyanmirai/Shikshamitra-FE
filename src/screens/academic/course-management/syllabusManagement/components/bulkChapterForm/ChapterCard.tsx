@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Editor } from 'src/components/editor';
 import { useTheme } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -33,6 +33,7 @@ import type { IChapterCardProps } from './type';
 const ChapterCard: React.FC<IChapterCardProps> = ({
   entry,
   index,
+  classId,
   onRemove,
   onChange,
   onBlur,
@@ -84,7 +85,7 @@ const ChapterCard: React.FC<IChapterCardProps> = ({
           '& .MuiAccordionSummary-content': { alignItems: 'center', display: 'flex', gap: 1 },
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
           <Iconify
             icon="mdi:book-open-page-variant"
             width={20}
@@ -146,7 +147,7 @@ const ChapterCard: React.FC<IChapterCardProps> = ({
         </Stack>
         <Divider sx={{ mb: 2 }} />
 
-        <Grid container spacing={3} mb={3}>
+        <Grid container spacing={1} mb={3}>
           {/* Chapter Number */}
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(touched?.chapterNo && errors?.chapterNo)}>
@@ -220,6 +221,7 @@ const ChapterCard: React.FC<IChapterCardProps> = ({
                 label="Start Date *"
                 format="DD/MM/YYYY"
                 value={entry.startDate}
+                standardId={classId}
                 onChange={(val) => {
                   onChange(entry.uid, 'startDate', val);
                 }}
@@ -247,6 +249,7 @@ const ChapterCard: React.FC<IChapterCardProps> = ({
                 label="End Date *"
                 format="DD/MM/YYYY"
                 value={entry.endDate}
+                standardId={classId}
                 onChange={(val) => {
                   onChange(entry.uid, 'endDate', val);
                 }}

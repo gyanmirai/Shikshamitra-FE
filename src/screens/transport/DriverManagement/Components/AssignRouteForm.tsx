@@ -108,7 +108,7 @@ const AssignRouteForm: React.FC<IAssignRouteFormProps> = ({ onClose, driverData 
               }}
             >
               <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
-                <Box display="flex" alignItems="center" gap={2.5}>
+                <Box display="flex" alignItems="center" gap={1}>
                   <Avatar
                     sx={{
                       width: 56,

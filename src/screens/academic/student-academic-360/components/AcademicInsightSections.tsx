@@ -21,7 +21,7 @@ type AcademicInsightSectionsProps = {
 
 function SectionHeader({ icon, title, badge }: { icon: string; title: string; badge?: string }) {
   return (
-    <Stack direction="row" spacing={1.5} alignItems="center">
+    <Stack direction="row" spacing={1} alignItems="center">
       <Box
         sx={{
           width: 34,
@@ -53,9 +53,9 @@ export function AcademicInsightSections({
       : 0;
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1}>
       <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-        <Stack spacing={1.5}>
+        <Stack spacing={1}>
           <SectionHeader
             icon="mdi:clipboard-text-outline"
             title="Homework & Assignment"
@@ -76,9 +76,9 @@ export function AcademicInsightSections({
             <Chip size="small" color="info" variant="soft" label={`${learningTasks?.pendingEvaluation || 0} evaluation`} />
           </Stack>
           {(learningTasks?.recentTasks || []).length > 0 ? (
-            <Stack spacing={0.75}>
+            <Stack spacing={1}>
               {(learningTasks?.recentTasks || []).slice(0, 4).map((task) => (
-                <Stack key={task.id} direction="row" justifyContent="space-between" gap={2}>
+                <Stack key={task.id} direction="row" justifyContent="space-between" gap={1}>
                   <Typography variant="body2" noWrap>{task.type}: {task.title}</Typography>
                   <Typography variant="body2" color="text.secondary" noWrap>{task.subjectName} · {task.status}</Typography>
                 </Stack>
@@ -96,12 +96,12 @@ export function AcademicInsightSections({
       </Card>
 
       <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-        <Stack spacing={1.5}>
+        <Stack spacing={1}>
           <SectionHeader icon="mdi:trophy-outline" title="Exams & Results" badge={`${exams.length} exams`} />
           {exams.length > 0 ? (
-            <Stack spacing={0.75}>
+            <Stack spacing={1}>
               {exams.slice(0, 4).map((exam) => (
-                <Stack key={exam.examId} direction="row" justifyContent="space-between" alignItems="center" gap={2}>
+                <Stack key={exam.examId} direction="row" justifyContent="space-between" alignItems="center" gap={1}>
                   <Typography variant="body2" noWrap>{exam.examName}</Typography>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Typography variant="body2" color="text.secondary">
@@ -125,7 +125,7 @@ export function AcademicInsightSections({
       </Card>
 
       <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-        <Stack spacing={1.5}>
+        <Stack spacing={1}>
           <SectionHeader icon="mdi:chart-line" title="Subject Performance" />
           {subjectPerformance.length > 0 ? (
             <Stack spacing={1}>
@@ -165,10 +165,10 @@ export function AcademicInsightSections({
       </Card>
 
       <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-        <Stack spacing={1.5}>
+        <Stack spacing={1}>
           <SectionHeader icon="mdi:bell-alert-outline" title="Academic Alerts" />
           {alerts.length > 0 ? (
-            <Stack spacing={0.75}>
+            <Stack spacing={1}>
               {alerts.map((alert) => (
                 <Chip
                   key={`${alert.source}-${alert.title}`}

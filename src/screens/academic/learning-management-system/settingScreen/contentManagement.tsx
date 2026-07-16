@@ -8,8 +8,9 @@ import { Box, Grid, Switch, TextField, Typography } from '@mui/material';
 const ContentManagementSetting = () => {
   const [isContentModerateVisible, setIsContentModerateVisible] = useState<boolean>(false);
   return (
-    <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Content Management"
         description="Manage your content settings for the learning management system."
         links={[
@@ -22,9 +23,9 @@ const ContentManagementSetting = () => {
         ]}
       />
 
-      <Grid container spacing={4}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 4 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant="h6" pb={2}>
               Supported File Types
             </Typography>
@@ -43,7 +44,7 @@ const ContentManagementSetting = () => {
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant="h6" pb={2}>
               Content Moderation
             </Typography>

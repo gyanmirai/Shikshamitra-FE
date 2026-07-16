@@ -15,7 +15,7 @@ const TDS = () => {
   return (
     <>
       <Typography variant="h5">TDS Setup</Typography>
-      <Box display="flex" gap={2} alignItems="center" mt={2}>
+      <Box display="flex" gap={1} alignItems="center" mt={2}>
         <Autocomplete
           loading={isLoading}
           multiple

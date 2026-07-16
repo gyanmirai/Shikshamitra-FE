@@ -181,7 +181,7 @@ const GradingScale = () => {
               bgcolor: (theme) => alpha(theme.palette.background.paper, 0.9),
             }}
           >
-            <Stack spacing={0.5}>
+            <Stack spacing={1}>
               <Typography variant="caption" color="text.secondary">
                 {card.label}
               </Typography>

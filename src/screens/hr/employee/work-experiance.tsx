@@ -68,7 +68,7 @@ const WorkExperiences = (props: any) => {
         )}
       </Box>
 
-      <Box display="flex" flexDirection="column" gap={2} mt={2} width="100%">
+      <Box display="flex" flexDirection="column" gap={1} mt={2} width="100%">
         {values.experiences.length === 0 && <EmptyContent title="No work experience added yet." />}
         {values.experiences.map((experience: any, index: number) => (
           <Paper

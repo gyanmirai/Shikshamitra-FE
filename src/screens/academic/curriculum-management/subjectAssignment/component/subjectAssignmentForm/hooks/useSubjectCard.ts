@@ -86,7 +86,6 @@ export const useSubjectCard = ({
       for (let i = 0; i < newFiles.length; i++) {
         const file = newFiles[i];
         const formData = new FormData();
-        formData.append('FileName', file.name);
         formData.append('File', file);
         // eslint-disable-next-line no-await-in-loop
         const response = await uploadCurriculumFile(formData).unwrap();

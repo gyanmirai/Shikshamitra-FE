@@ -331,7 +331,7 @@ const ClassTeacherAssignment = () => {
             formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
           />
 
-          <Box display="flex" gap={2} justifyContent="flex-end">
+          <Box display="flex" gap={1} justifyContent="flex-end">
             <Button
               variant="outlined"
               startIcon={<Iconify icon={GlobalIcons.resetIcon} />}

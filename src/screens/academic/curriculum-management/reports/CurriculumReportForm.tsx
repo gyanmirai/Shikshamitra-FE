@@ -348,7 +348,7 @@ const CurriculumReportForm = ({
       <Card>
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               {/* Organisation */}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField
@@ -474,7 +474,7 @@ const CurriculumReportForm = ({
               )}
 
               {/* Submit */}
-              <Grid size={12} justifyContent="flex-end" display="flex" gap={1.5}>
+              <Grid size={12} justifyContent="flex-end" display="flex" gap={1}>
                 <Button
                   startIcon={<Iconify icon="mdi:eye-outline" />}
                   type="submit"

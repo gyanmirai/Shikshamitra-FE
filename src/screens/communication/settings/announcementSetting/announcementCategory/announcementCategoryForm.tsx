@@ -145,7 +145,7 @@ const AnnouncementCategory = () => {
   return (
     <Box>
       <Box display="flex" justifyContent="flex-end" alignItems="flex-end" mb={3}>
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={1}>
           <Button
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"

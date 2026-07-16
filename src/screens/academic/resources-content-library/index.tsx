@@ -47,6 +47,7 @@ const ResourceContentLibraryScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Resources and Content Library"
         links={[
           { name: 'Academic And Assessment' },

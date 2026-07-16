@@ -21,15 +21,15 @@ export const FeeSummaryCard = ({
 }) => (
   // Get the current theme for consistent styling across the component
 
-  <Box display="flex" gap={2} alignItems="center">
+  <Box display="flex" gap={1} alignItems="center">
     {/* Avatar */}
 
     {/* Student Info + Fees */}
-    <Box flex={1} display="flex" flexDirection="column" gap={2}>
+    <Box flex={1} display="flex" flexDirection="column" gap={1}>
       {/* Top Row: Name + Status */}
       {showHeader && (
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box display="flex" alignItems="center" gap={1}>
             <Avatar alt={student?.name} src="" sx={{ width: 50, height: 50 }} />
             <Box>
               <Typography variant="subtitle1" fontWeight="bold">

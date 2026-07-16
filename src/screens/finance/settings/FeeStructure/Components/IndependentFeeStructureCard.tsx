@@ -352,7 +352,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
           }}
         >
           {/* Left side: index badge + name + chips */}
-          <Box display="flex" alignItems="center" gap={1.5} flex={1} minWidth={0}>
+          <Box display="flex" alignItems="center" gap={1} flex={1} minWidth={0}>
             {/* Index badge */}
             <Box
               sx={{

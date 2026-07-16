@@ -328,7 +328,7 @@ const FinanceIncomeReports = () => {
       <Typography variant="h6" sx={{ pt: '15px', pb: '15px' }}>
         Generate Reports
       </Typography>
-      <Box display="flex" flexDirection="row" gap={3} justifyItems="center" alignItems="center">
+      <Box display="flex" flexDirection="row" gap={1} justifyItems="center" alignItems="center">
         <CustomSelect
           label="Date Range"
           options={[]}
@@ -364,7 +364,7 @@ const FinanceIncomeReports = () => {
         tableId="pending-income-table"
       />
 
-      <Box py="15px" gap={3} display="flex" justifyContent="flex-end">
+      <Box py="15px" gap={1} display="flex" justifyContent="flex-end">
         {/* <Button variant="contained" size="small">
                     Export to PDF
                 </Button>

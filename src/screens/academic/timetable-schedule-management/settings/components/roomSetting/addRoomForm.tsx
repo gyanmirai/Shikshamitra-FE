@@ -55,7 +55,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
       <DialogScrollContent sx={{ p: 2 }}>
         {/* <form onSubmit={formik.handleSubmit}> */}
         {/* <Scrollbar sx={{ p: 2, height: '150px' }}> */}
-        <Grid container spacing={3}>
+        <Grid container spacing={1}>
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.roomNumber && formik.errors.roomNumber)}>
               <TextField

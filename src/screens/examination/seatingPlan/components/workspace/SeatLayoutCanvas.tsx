@@ -183,7 +183,7 @@ export default function SeatLayoutCanvas({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: { xs: 'flex-start', md: 'center' },
-          gap: 1.5,
+          gap: 1,
           mb: 1,
           px: 1,
           flexWrap: 'wrap',
@@ -228,7 +228,7 @@ export default function SeatLayoutCanvas({
           )}
         </Stack>
 
-        <Stack direction="row" spacing={0.5}>
+        <Stack direction="row" spacing={1}>
           <Tooltip title="Zoom out">
             <IconButton size="small" onClick={() => setZoom((z) => Math.max(0.7, z - 0.1))}>
               <Iconify icon="mdi:magnify-minus-outline" width={16} />
@@ -461,7 +461,7 @@ export default function SeatLayoutCanvas({
           </Stack>
 
           <Divider sx={{ my: 1.25 }} />
-          <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             {[
               { label: 'Empty', color: 'text.disabled', bg: 'background.neutral' },
               { label: 'Allocated', color: 'success.main', bg: 'success.lighter' },
@@ -469,7 +469,7 @@ export default function SeatLayoutCanvas({
               { label: 'Swap target', color: 'warning.main', bg: 'warning.lighter' },
               { label: 'Conflict', color: 'error.main', bg: 'error.lighter' },
             ].map((item) => (
-              <Stack key={item.label} direction="row" spacing={0.75} alignItems="center">
+              <Stack key={item.label} direction="row" spacing={1} alignItems="center">
                 <Box
                   sx={{
                     width: 14,

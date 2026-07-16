@@ -31,7 +31,7 @@ const ReviewGatePassRequestStaffTable = () => {
   const [status, setStatus] = useState('');
   return (
     <Box>
-      <Box display="flex" alignItems="center" flexDirection="row" gap={2} py="20px">
+      <Box display="flex" alignItems="center" flexDirection="row" gap={1} py="20px">
         <Grid size={{ xs: 12, md: 3 }}>
           <DatePicker
             label="Start Date"

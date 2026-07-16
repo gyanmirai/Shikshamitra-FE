@@ -28,7 +28,7 @@ export const StudentEnrollmentCard = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        gap: 5,
+        gap: 1,
         flexGrow: 1,
         cursor: 'pointer',
         height: '100%',

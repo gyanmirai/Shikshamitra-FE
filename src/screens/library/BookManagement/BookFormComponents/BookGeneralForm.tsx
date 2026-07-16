@@ -566,7 +566,7 @@ const BookGeneralStep = ({ formik, isEdit }: BookGeneralStepProps) => {
                     Book Cover Image
                   </Typography>
                   {formik.values.coverImage ? (
-                    <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
+                    <Box display="flex" alignItems="center" gap={1} mt={0.5}>
                       <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
                       <Typography variant="caption" color="success.main" fontWeight={600}>
                         Uploaded

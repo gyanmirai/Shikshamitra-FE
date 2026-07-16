@@ -50,7 +50,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
     <Box
       display="flex"
       alignItems="center"
-      gap={1.25}
+      gap={1}
       px={1.5}
       py={1.25}
       sx={{

@@ -51,11 +51,11 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
   const completeness = data?.dataCompleteness;
 
   return (
-    <Stack spacing={2}>
-      <Grid container spacing={2}>
+    <Stack spacing={1}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card variant="outlined" sx={{ p: 2.5, height: '100%', borderRadius: 2 }}>
-            <Stack direction="row" spacing={2.5} alignItems="center">
+            <Stack direction="row" spacing={1} alignItems="center">
               <HealthScoreGauge score={health?.score} />
               <Box sx={{ minWidth: 0 }}>
                 <Typography variant="subtitle1">Academic Health</Typography>
@@ -97,7 +97,7 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
               </Stack>
               <Typography variant="h5" sx={{ mt: 1 }}>{kpi.displayValue}</Typography>
               {kpi.trend && (
-                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.25 }}>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.25 }}>
                   <Iconify
                     icon={
                       trendColor(kpi.trend) === 'success.main'
@@ -155,7 +155,7 @@ export function SuccessOverview({ data }: SuccessOverviewProps) {
         )}
       </Card>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card variant="outlined" sx={{ p: 2, height: '100%', borderRadius: 2 }}>
             <Typography variant="subtitle1" sx={{ mb: 1 }}>Today & Upcoming</Typography>

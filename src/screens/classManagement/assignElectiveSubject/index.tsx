@@ -17,12 +17,12 @@ import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
+  Grid,
   Chip,
   Alert,
   Button,
   Tooltip,
   Checkbox,
-  AlertTitle,
 } from '@mui/material';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
@@ -33,7 +33,6 @@ import {
 
 import { workflowStatusConfig } from './statusConfig';
 import BulkAssignmentBar from './components/BulkAssignmentBar';
-import AssignmentToolbar from './components/AssignmentToolbar';
 import ElectiveContextBar from './components/ElectiveContextBar';
 import ReviewAndLockDrawer from './components/ReviewAndLockDrawer';
 import UnsavedChangesDialog from './components/UnsavedChangesDialog';
@@ -293,17 +292,64 @@ const AssignElectiveSubject = () => {
           { name: 'Student Elective Assignment' },
         ]}
         action={
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
-            <Label color={statusInfo.color} variant="soft">
-              {statusInfo.label}
-            </Label>
-            {isLocked ? (
-              <Box sx={{ fontSize: 12, color: 'text.disabled' }}>Locked · editing disabled</Box>
-            ) : unsavedChangesCount > 0 ? (
-              <Box sx={{ fontSize: 12, color: 'text.disabled' }}>
-                {unsavedChangesCount} unsaved change{unsavedChangesCount === 1 ? '' : 's'}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
+              <Label color={statusInfo.color} variant="soft">
+                {statusInfo.label}
+              </Label>
+              {isLocked ? (
+                <Box sx={{ fontSize: 12, color: 'text.disabled' }}>Locked · editing disabled</Box>
+              ) : unsavedChangesCount > 0 ? (
+                <Box sx={{ fontSize: 12, color: 'text.disabled' }}>
+                  {unsavedChangesCount} unsaved change{unsavedChangesCount === 1 ? '' : 's'}
+                </Box>
+              ) : null}
+            </Box>
+
+            {electiveGroupId && (
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                {!isLocked && (
+                  <>
+                    <Button
+                      variant="outlined"
+                      color="inherit"
+                      size="small"
+                      startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+                      disabled={!hasSelections}
+                      onClick={resetDialog.onTrue}
+                    >
+                      Discard
+                    </Button>
+
+                    <LoadingButton
+                      variant="contained"
+                      size="small"
+                      startIcon={<Iconify icon={GlobalIcons.submit} />}
+                      disabled={!hasUnsavedChanges}
+                      onClick={saveDialog.onTrue}
+                      loading={isSaving}
+                    >
+                      Save Draft
+                    </LoadingButton>
+                  </>
+                )}
+
+                <Tooltip title={getLockTooltip()} arrow>
+                  <span>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      color={isLocked ? 'success' : 'error'}
+                      startIcon={<Iconify icon={isLocked ? GlobalIcons.approvedIcon : GlobalIcons.lockIcon} />}
+                      disabled={isLocked}
+                      onClick={reviewDrawer.onTrue}
+                    >
+                      {isLocked ? 'Locked' : 'Review & Lock'}
+                    </Button>
+                  </span>
+                </Tooltip>
               </Box>
-            ) : null}
+            )}
           </Box>
         }
       />
@@ -324,104 +370,36 @@ const AssignElectiveSubject = () => {
       />
 
       {electiveGroupId && (
-        <>
-          {/* PROGRESS SUMMARY */}
-          <AssignmentProgressSummary
-            total={summary.total}
-            assigned={summary.assigned}
-            unassigned={summary.unassigned}
-            issues={summary.issues}
-            preferenceMatchPct={summary.preferenceMatchPct}
-            activeFilter={statusFilter}
-            onFilterAssigned={() => setStatusFilter(statusFilter === 'assigned' ? 'all' : 'assigned')}
-            onFilterUnassigned={() =>
-              setStatusFilter(statusFilter === 'unassigned' ? 'all' : 'unassigned')
-            }
-            onFilterPreferenceMismatch={() =>
-              setStatusFilter(statusFilter === 'preferenceMismatch' ? 'all' : 'preferenceMismatch')
-            }
-            onOpenIssues={issuesDrawer.onTrue}
-          />
-
-          {/* SUBJECT CAPACITY OVERVIEW */}
-          <SubjectCapacityOverview subjects={subjectCapacity} totalStudents={summary.total} />
-
-          {/* ACTIONS */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: 1.5,
-              mb: 1.5,
-              flexWrap: 'wrap',
-            }}
-          >
-            {!isLocked && (
-              <>
-                <Button
-                  variant="outlined"
-                  color="inherit"
-                  startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-                  disabled={!hasSelections}
-                  onClick={resetDialog.onTrue}
-                >
-                  Discard Changes
-                </Button>
-
-                <LoadingButton
-                  variant="contained"
-                  startIcon={<Iconify icon={GlobalIcons.submit} />}
-                  disabled={!hasUnsavedChanges}
-                  onClick={saveDialog.onTrue}
-                  loading={isSaving}
-                  sx={{ boxShadow: (theme) => theme.customShadows.z8 }}
-                >
-                  Save Draft
-                </LoadingButton>
-              </>
-            )}
-
-            <Tooltip title={getLockTooltip()} arrow>
-              <span>
-                <Button
-                  variant="contained"
-                  color={isLocked ? 'success' : 'error'}
-                  startIcon={<Iconify icon={isLocked ? GlobalIcons.approvedIcon : GlobalIcons.lockIcon} />}
-                  disabled={isLocked}
-                  onClick={reviewDrawer.onTrue}
-                  sx={{ boxShadow: (theme) => theme.customShadows.z8 }}
-                >
-                  {isLocked ? 'Locked' : 'Review & Lock'}
-                </Button>
-              </span>
-            </Tooltip>
-          </Box>
-
-          {isLocked && (
-            <Alert
-              severity="error"
-              variant="standard"
-              icon={<Iconify icon={GlobalIcons.lockIcon} sx={{ width: 22, height: 22 }} />}
-              sx={{ mb: 1.5 }}
-            >
-              <AlertTitle sx={{ fontWeight: 600 }}>Assignments Locked</AlertTitle>
-              This allocation is locked and cannot be edited without reopening or submitting a
-              reassignment request.
-            </Alert>
-          )}
-
-          {/* TOOLBAR */}
-          <AssignmentToolbar
-            searchTerm={searchTerm}
-            onSearchTermChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            onClearFilters={() => {
-              setSearchTerm('');
-              setStatusFilter('all');
-            }}
-            disabled={students.length === 0}
-          />
+        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          {/* INSIGHTS & CAPACITY OVERVIEW */}
+          <Grid container spacing={1} sx={{ mb: 1 }}>
+            <Grid item xs={12} lg={8.5}>
+              <AssignmentProgressSummary
+                total={summary.total}
+                assigned={summary.assigned}
+                unassigned={summary.unassigned}
+                issues={summary.issues}
+                preferenceMatchPct={summary.preferenceMatchPct}
+                activeFilter={statusFilter}
+                onFilterAssigned={() => setStatusFilter(statusFilter === 'assigned' ? 'all' : 'assigned')}
+                onFilterUnassigned={() =>
+                  setStatusFilter(statusFilter === 'unassigned' ? 'all' : 'unassigned')
+                }
+                onFilterPreferenceMismatch={() =>
+                  setStatusFilter(statusFilter === 'preferenceMismatch' ? 'all' : 'preferenceMismatch')
+                }
+                onOpenIssues={issuesDrawer.onTrue}
+                sx={{ mb: 0 }}
+              />
+            </Grid>
+            <Grid item xs={12} lg={3.5}>
+              <SubjectCapacityOverview
+                subjects={subjectCapacity}
+                totalStudents={summary.total}
+                sx={{ mb: 0, height: '100%' }}
+              />
+            </Grid>
+          </Grid>
 
           {/* BULK ASSIGNMENT BAR */}
           {!isLocked && (
@@ -445,7 +423,19 @@ const AssignElectiveSubject = () => {
             tableId="elective-table"
             data={filteredStudents}
             isLoading={isElectiveLoading || isElectiveFetching}
+            isSearch={false}
             noDataText={<>No Students Found</>}
+            wrapperProps={{
+              sx: {
+                flex: 1,
+                minHeight: { xs: 420, md: 0 },
+              },
+            }}
+            tableContainerProps={{
+              sx: {
+                minHeight: { xs: 340, md: 0 },
+              },
+            }}
             columns={[
               {
                 id: 'rowSelect',
@@ -556,7 +546,7 @@ const AssignElectiveSubject = () => {
               },
             ]}
           />
-        </>
+        </Box>
       )}
 
       {!electiveGroupId && (

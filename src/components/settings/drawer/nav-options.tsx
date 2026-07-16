@@ -56,7 +56,7 @@ export function NavOptions({ options, value, onClickOption, hideNavColor, hideNa
       <Box component="span" sx={labelStyles}>
         Layout
       </Box>
-      <Box gap={1.5} display="flex" sx={{ mt: 1.5 }}>
+      <Box gap={1} display="flex" sx={{ mt: 1.5 }}>
         {options.layouts.map((option) => (
           <LayoutOption
             key={option}
@@ -74,7 +74,7 @@ export function NavOptions({ options, value, onClickOption, hideNavColor, hideNa
       <Box component="span" sx={labelStyles}>
         Color
       </Box>
-      <Box gap={1.5} display="flex" sx={{ mt: 1.5 }}>
+      <Box gap={1} display="flex" sx={{ mt: 1.5 }}>
         {options.colors.map((option) => (
           <ColorOption
             key={option}

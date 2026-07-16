@@ -215,7 +215,7 @@ function QuestionFormFields({
   };
 
   return (
-    <Grid container spacing={2.5}>
+    <Grid container spacing={1}>
       <Grid size={12} display="flex" justifyContent="center">
         <ToggleButtonGroup
           exclusive
@@ -408,14 +408,14 @@ function QuestionFormFields({
               >
                 Answer Options
               </Typography>
-              <Stack spacing={1.5}>
+              <Stack spacing={1}>
                 {formik.values.options.map((option: any, index: number) => (
                   <Box
                     key={index}
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 1.5,
+                      gap: 1,
                       p: 1.5,
                       borderRadius: 1.5,
                       border: '1px solid',
@@ -583,7 +583,7 @@ function QuestionFormFields({
                 borderColor: 'info.light',
               }}
             >
-              <Stack direction="row" spacing={2} alignItems="center">
+              <Stack direction="row" spacing={1} alignItems="center">
                 <Box
                   sx={{
                     p: 1.5,

@@ -7,6 +7,7 @@ import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 const Dashboard = () => (
   <Box>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="Dashboard"
       links={[{ name: 'Academics' }, { name: 'Curriculum' }, { name: 'Dashboard' }]}
       action={
@@ -34,7 +35,7 @@ const Dashboard = () => (
         />
       }
     />
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       <Grid size={{ lg: 4 }}>
         <Card sx={{ p: 3, height: '100%' }}>
           <Box display="flex" alignItems="center" justifyContent="space-between">

@@ -16,7 +16,7 @@ export const RoomAvailabilityKpiCards = ({
 }: RoomAvailabilityKpiCardsProps) => {
   if (isLoading || !summary) {
     return (
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} sx={{ flex: 1, p: 2 }}>
             <Skeleton variant="rectangular" height={70} />
@@ -76,7 +76,7 @@ export const RoomAvailabilityKpiCards = ({
       context: undefined,
       extra:
         summary.conflictsVisible > 0 ? (
-          <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
+          <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
             {summary.criticalConflicts > 0 && (
               <Chip
                 size="small"
@@ -103,7 +103,7 @@ export const RoomAvailabilityKpiCards = ({
   ];
 
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
       {cards.map((card) => (
         <Tooltip key={card.label} title={card.tooltip} arrow>
           <Card
@@ -117,7 +117,7 @@ export const RoomAvailabilityKpiCards = ({
             }}
           >
             <Box sx={{ p: 2 }}>
-              <Stack direction="row" alignItems="flex-start" spacing={2}>
+              <Stack direction="row" alignItems="flex-start" spacing={1}>
                 <Box
                   sx={{
                     width: 44,

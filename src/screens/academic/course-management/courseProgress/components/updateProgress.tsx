@@ -39,7 +39,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }) => {
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box component="form" flexDirection="column" onSubmit={formik.handleSubmit} p={2} gap={3}>
+      <Box component="form" flexDirection="column" onSubmit={formik.handleSubmit} p={2} gap={1}>
         <ShakingTextField
           error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
         >

@@ -298,7 +298,7 @@ export const RenderComponents = ({
               label: 'Component',
               render(value: any, row: any) {
                 return (
-                  <Box display="flex" flexDirection="column" gap={0.5} py={0.5}>
+                  <Box display="flex" flexDirection="column" gap={1} py={0.5}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <Box
                         sx={{
@@ -667,7 +667,7 @@ const RenderPayrollFields = (props: any) => {
               display="flex"
               alignItems={{ xs: 'flex-start', sm: 'center' }}
               justifyContent="space-between"
-              gap={1.5}
+              gap={1}
               flexDirection={{ xs: 'column', sm: 'row' }}
             >
               <Box>
@@ -735,7 +735,7 @@ const RenderPayrollFields = (props: any) => {
               display="flex"
               alignItems={{ xs: 'flex-start', sm: 'center' }}
               justifyContent="space-between"
-              gap={1.5}
+              gap={1}
               flexDirection={{ xs: 'column', sm: 'row' }}
             >
               <Box>

@@ -488,7 +488,7 @@ const CalendarImpactLogs = () => {
                   return null;
                 }
                 return (
-                  <Stack direction="row" justifyContent="flex-end" spacing={0.25}>
+                  <Stack direction="row" justifyContent="flex-end" spacing={1}>
                     <Tooltip title="Mark Resolved">
                       <IconButton
                         size="small"
@@ -538,6 +538,7 @@ const CalendarImpactLogs = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Impact Logs"
         description="Review and resolve academic activities impacted by calendar changes."
         links={[
@@ -645,7 +646,7 @@ const CalendarImpactLogs = () => {
         columns={columns}
         data={logs}
         noDataText={
-          <Stack alignItems="center" spacing={1.5} sx={{ py: 6 }}>
+          <Stack alignItems="center" spacing={1} sx={{ py: 6 }}>
             <Box
               sx={{
                 width: 64,
@@ -674,7 +675,7 @@ const CalendarImpactLogs = () => {
         maxWidth="xs"
       >
         <DialogScrollContent>
-          <Stack spacing={2.5}>
+          <Stack spacing={1}>
             {selectedLog && (
               <Paper
                 variant="outlined"
@@ -738,7 +739,7 @@ const CalendarImpactLogs = () => {
         maxWidth="xs"
       >
         <DialogScrollContent>
-          <Stack spacing={2.5}>
+          <Stack spacing={1}>
             {selectedLog && (
               <Paper
                 variant="outlined"
@@ -805,7 +806,7 @@ const CalendarImpactLogs = () => {
         maxWidth="xs"
       >
         <DialogScrollContent>
-          <Stack spacing={2.5}>
+          <Stack spacing={1}>
             {selectedLog && (
               <Paper
                 variant="outlined"
@@ -819,7 +820,7 @@ const CalendarImpactLogs = () => {
                 <Typography variant="body2" fontWeight={700}>
                   {selectedLog.affectedEntityName}
                 </Typography>
-                <Stack direction="row" gap={2} mt={0.5}>
+                <Stack direction="row" gap={1} mt={0.5}>
                   <Typography variant="caption" color="text.secondary">
                     Original: {dayjs(selectedLog.affectedDate).format('DD MMM YYYY')}
                   </Typography>

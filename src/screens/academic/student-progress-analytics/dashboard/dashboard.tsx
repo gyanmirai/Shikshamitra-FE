@@ -12,10 +12,11 @@ import StudentProgressCards from './component/studentProgressCards';
 const Dashboard = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="Dashboard"
       links={[{ name: 'Academics' }, { name: 'Student Progress Analytics' }, { name: 'Dashboard' }]}
     />
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       <StudentProgressCards />
       <PerformanceTrends />
     </Grid>

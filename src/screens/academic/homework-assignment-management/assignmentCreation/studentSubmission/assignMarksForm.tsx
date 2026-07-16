@@ -212,7 +212,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
           onSubmit={formik.handleSubmit}
         >
           <Scrollbar sx={{ height: '500px', p: 2 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={1}>
               {/* Student Profile Section */}
               <Grid size={{ xs: 12 }}>
                 <Card
@@ -236,9 +236,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       direction="row"
                       alignItems="center"
                       justifyContent="space-between"
-                      spacing={2}
+                      spacing={1}
                     >
-                      <Stack direction="row" alignItems="center" spacing={1.5}>
+                      <Stack direction="row" alignItems="center" spacing={1}>
                         <Avatar
                           alt={data?.studentName || 'Student'}
                           sx={{
@@ -326,7 +326,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                         '&:hover': { bgcolor: 'action.hover' },
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
                         {getFileIconByType(document.type ?? 'txt', 36)}
                         <Box sx={{ minWidth: 0 }}>
                           <Typography variant="body2" fontWeight={600} noWrap>
@@ -338,7 +338,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                           </Typography>
                         </Box>
                       </Box>
-                      <Stack direction="row" spacing={0.5} flexShrink={0}>
+                      <Stack direction="row" spacing={1} flexShrink={0}>
                         <Tooltip title="Preview">
                           <IconButton
                             size="small"
@@ -411,7 +411,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                   </Box>
 
                   <Box sx={{ p: 2 }}>
-                    <Grid container spacing={2}>
+                    <Grid container spacing={1}>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <ShakingTextField
                           error={!!(formik.touched.totalMarks && formik.errors.totalMarks)}

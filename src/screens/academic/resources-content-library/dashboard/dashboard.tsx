@@ -26,6 +26,7 @@ const Dashboard = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Dashboard"
         links={[{ name: 'Academics' }, { name: 'Resource Content Library' }, { name: 'Dashboard' }]}
         action={
@@ -53,7 +54,7 @@ const Dashboard = (props: TabComponentType) => {
           />
         }
       />
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         <RecentResources />
         <AnalyticsTrafficBySite list={quickStatsData} />
         <Grid size={{ xs: 12 }}>
@@ -100,7 +101,7 @@ export function AnalyticsTrafficBySite({ title, subheader, list, ...other }: Pro
   return (
     <Grid size={{ xs: 12, md: 6 }}>
       <Card {...other}>
-        <Box display="grid" gap={2} gridTemplateColumns="repeat(2, 1fr)" sx={{ p: 3 }}>
+        <Box display="grid" gap={1} gridTemplateColumns="repeat(2, 1fr)" sx={{ p: 3 }}>
           {list.map((site) => (
             <Box
               key={site.label}

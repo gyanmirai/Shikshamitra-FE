@@ -244,7 +244,7 @@ export function ApplicantWorkspaceDrawer({
               {lead ? getAdmissionCrmLeadName(lead) : 'Loading applicant…'}
             </Typography>
             {lead && (
-              <Stack direction="row" gap={0.75} flexWrap="wrap" mt={0.75}>
+              <Stack direction="row" gap={1} flexWrap="wrap" mt={0.75}>
                 <Chip
                   size="small"
                   label={getAdmissionCrmStageLabel(lead.stage)}
@@ -311,7 +311,7 @@ export function ApplicantWorkspaceDrawer({
               {(can(permissionsByAction.assignOwner) || can(permissionsByAction.setPriority)) && (
                 <>
                   <Divider />
-                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                     {can(permissionsByAction.assignOwner) && (
                       <Autocomplete
                         fullWidth
@@ -403,7 +403,7 @@ export function ApplicantWorkspaceDrawer({
                 <>
                   <Divider />
                   <Typography variant="subtitle2">Move Pipeline Stage</Typography>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                     <TextField
                       select
                       fullWidth
@@ -473,7 +473,7 @@ export function ApplicantWorkspaceDrawer({
 
               {can(permissionsByAction.manageTasks) && (
                 <Stack spacing={1.25}>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                     <TextField
                       fullWidth
                       label="Task title"

@@ -145,6 +145,7 @@ const TimetableSettingScreen = () => {
         <>
           {viewSlotsDialog.value ? (
             <CustomBreadcrumbs
+              sx={{ mb: 1 }}
               heading="View Slots"
               description="View the detailed lecture slots for the selected class."
               links={[
@@ -159,6 +160,7 @@ const TimetableSettingScreen = () => {
             />
           ) : (
             <CustomBreadcrumbs
+              sx={{ mb: 1 }}
               heading="Settings"
               description="Configure timetable settings by defining weekly lectures, lecture slots, and room allocations."
               links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
@@ -184,7 +186,7 @@ const TimetableSettingScreen = () => {
 
                   setSearchParams({ tab: value });
                 }}
-                sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+                sx={{ '& .MuiTabs-flexContainer': { gap: 1 } }}
                 role="tablist"
               >
                 {TABS.map((tab) => (

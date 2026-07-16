@@ -90,7 +90,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           py: 2,
           display: 'flex',
           flexDirection: 'column',
-          gap: 2,
+          gap: 1,
         }}
       >
         {rows.map((row, index) => {
@@ -184,7 +184,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                  gap: 1.25,
+                  gap: 1,
                   mb: 1.5,
                 }}
               >
@@ -218,7 +218,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' },
-                  gap: 1.25,
+                  gap: 1,
                   mb: 1.5,
                 }}
               >
@@ -333,7 +333,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           px: 2.5,
           py: 1.75,
           display: 'flex',
-          gap: 1.5,
+          gap: 1,
           justifyContent: 'flex-end',
           flexShrink: 0,
         }}

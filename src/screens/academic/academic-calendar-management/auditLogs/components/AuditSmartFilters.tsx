@@ -119,7 +119,7 @@ const AuditSmartFilters = ({
         backgroundColor: 'background.paper',
       }}
     >
-      <Grid container spacing={1.5} alignItems="center">
+      <Grid container spacing={1} alignItems="center">
         {/* Search */}
         <Grid size={{ xs: 12, md: 4 }}>
           <TextField
@@ -251,7 +251,7 @@ const AuditSmartFilters = ({
 
       {/* Active filter chips */}
       {hasAnyFilter && (
-        <Stack direction="row" gap={0.75} flexWrap="wrap" sx={{ mt: 1.5 }}>
+        <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 1.5 }}>
           {filters.search && (
             <Chip
               size="small"
@@ -280,7 +280,7 @@ const AuditSmartFilters = ({
         hasForm={false}
       >
         <DialogScrollContent>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Date Range</InputLabel>
@@ -473,7 +473,7 @@ const AuditSmartFilters = ({
                       .join(', ')}
                   </Typography>
                 </Box>
-                <Stack direction="row" gap={0.5}>
+                <Stack direction="row" gap={1}>
                   <IconButton
                     size="small"
                     color="primary"

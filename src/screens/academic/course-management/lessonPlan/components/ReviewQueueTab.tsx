@@ -5,7 +5,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -215,7 +215,7 @@ const ReviewQueueTab = ({
   return (
     <Box>
       {/* Toolbar */}
-      <Stack spacing={1.5} sx={{ mb: 2 }}>
+      <Stack spacing={1} sx={{ mb: 2 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle1">
             Review Queue ({filteredReviewRows.length}/{reviewRows.length} pending)
@@ -335,7 +335,7 @@ const ReviewQueueTab = ({
         <Box
           sx={{
             display: 'grid',
-            gap: 2,
+            gap: 1,
             gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', xl: 'repeat(3, 1fr)' },
           }}
         >
@@ -402,7 +402,7 @@ const ReviewQueueTab = ({
 
                 {/* AI Summary */}
                 <Box sx={{ p: 1, bgcolor: 'grey.50', borderRadius: 1, mb: 1 }}>
-                  <Stack direction="row" spacing={0.5} alignItems="flex-start">
+                  <Stack direction="row" spacing={1} alignItems="flex-start">
                     <Iconify
                       icon="mdi:robot-outline"
                       width={14}
@@ -574,7 +574,7 @@ const ReviewQueueTab = ({
                     render: (_: any, row: any) => {
                       const reviewRow = row as ReviewRow;
                       return canReviewRow(reviewRow) ? (
-                        <Stack direction="row" spacing={0.5} justifyContent="center">
+                        <Stack direction="row" spacing={1} justifyContent="center">
                           <Button
                             size="small"
                             variant="contained"
@@ -637,7 +637,7 @@ const ReviewQueueTab = ({
         handleClose={closeReview}
       >
         <DialogScrollContent>
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             {/* Action toggle */}
             <Stack direction="row" spacing={1}>
               {(['approve', 'changes', 'reject'] as const).map((action) => (

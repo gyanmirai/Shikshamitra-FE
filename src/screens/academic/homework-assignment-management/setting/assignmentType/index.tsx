@@ -117,6 +117,7 @@ const AssignmentTypeCreation = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Homework & Assignment' },
@@ -141,7 +142,7 @@ const AssignmentTypeCreation = () => {
       />
 
       {/* Summary Cards */}
-      <Box display="grid" gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' }} gap={2} mb={3}>
+      <Box display="grid" gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' }} gap={1} mb={3}>
         {[
           { label: 'Total Types', value: totalTypes, color: 'primary.main' },
           { label: 'Active Types', value: activeTypes, color: 'success.main' },

@@ -211,7 +211,7 @@ const FeeStructureStep = ({
                         alignItems="center"
                         justifyContent="space-between"
                         width="100%"
-                        gap={0.5}
+                        gap={1}
                       >
                         <Typography
                           variant="caption"
@@ -340,7 +340,7 @@ const FeeStructureStep = ({
                                         varAlpha(theme.palette.grey['500Channel'], 0.03),
                                     }}
                                   >
-                                    <Box display="flex" alignItems="center" gap={1.5}>
+                                    <Box display="flex" alignItems="center" gap={1}>
                                       {/* index badge */}
                                       <Box
                                         sx={{
@@ -381,7 +381,7 @@ const FeeStructureStep = ({
                                       )}
                                     </Box>
 
-                                    <Box display="flex" alignItems="center" gap={0.5}>
+                                    <Box display="flex" alignItems="center" gap={1}>
                                       <Button
                                         variant="outlined"
                                         size="small"

@@ -484,7 +484,7 @@ export function ApplicantRegistrationOperations({ leadId, academicYearId }: Prop
           ) : null}
           {checklist ? (
             <>
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
+              <Stack direction="row" gap={1} flexWrap="wrap">
                 <Chip
                   size="small"
                   label={`${checklist.completionPercentage.toFixed(0)}% complete`}

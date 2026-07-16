@@ -94,7 +94,7 @@ const RightLoadingState = () => (
     exit={{ opacity: 0 }}
     transition={{ duration: 0.15 }}
   >
-    <Box display="flex" alignItems="center" gap={2} mb={2.5}>
+    <Box display="flex" alignItems="center" gap={1} mb={2.5}>
       <Skeleton variant="circular" width={52} height={52} />
       <Box flex={1}>
         <Skeleton width="60%" height={20} sx={{ mb: 0.5 }} />
@@ -103,7 +103,7 @@ const RightLoadingState = () => (
       <Skeleton width={60} height={24} sx={{ borderRadius: 1 }} />
     </Box>
     {[1, 2, 3, 4].map((i) => (
-      <Box key={i} display="flex" alignItems="center" gap={1.5} mb={1.5}>
+      <Box key={i} display="flex" alignItems="center" gap={1} mb={1.5}>
         <Skeleton variant="rounded" width={30} height={30} />
         <Box flex={1}>
           <Skeleton width="30%" height={14} sx={{ mb: 0.25 }} />
@@ -163,7 +163,7 @@ const RightManagerProfile = ({ employee }: { employee: any }) => {
       transition={{ duration: 0.25 }}
     >
       {/* Avatar row */}
-      <Box display="flex" alignItems="center" gap={2} mb={2.5}>
+      <Box display="flex" alignItems="center" gap={1} mb={2.5}>
         <Avatar
           sx={{
             width: 52,
@@ -193,7 +193,7 @@ const RightManagerProfile = ({ employee }: { employee: any }) => {
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         {detailRows.map((row) =>
           row.value ? (
-            <Box key={row.label} display="flex" alignItems="center" gap={1.5}>
+            <Box key={row.label} display="flex" alignItems="center" gap={1}>
               <Box
                 sx={{
                   width: 30,
@@ -493,7 +493,7 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                     }}
                   >
                     {/* "Currently assigned" header */}
-                    <Box display="flex" alignItems="center" gap={0.75} mb={1.5}>
+                    <Box display="flex" alignItems="center" gap={1} mb={1.5}>
                       <Iconify icon="solar:check-circle-bold" width={16} color="success.main" />
                       <Typography variant="caption" fontWeight={600} color="success.dark">
                         Currently assigned
@@ -501,7 +501,7 @@ export const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                     </Box>
 
                     {/* Manager row */}
-                    <Box display="flex" alignItems="center" gap={1.5}>
+                    <Box display="flex" alignItems="center" gap={1}>
                       <Avatar
                         sx={{
                           width: 40,

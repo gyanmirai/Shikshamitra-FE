@@ -304,7 +304,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           <Stack
             direction="row"
             flexWrap="wrap"
-            gap={0.75}
+            gap={1}
             alignItems="center"
             sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}
           >

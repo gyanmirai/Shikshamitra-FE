@@ -87,7 +87,7 @@ const AuditAISummaryDrawer = ({ open, onClose, log }: Props) => {
         }}
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" alignItems="center" gap={1.5}>
+          <Stack direction="row" alignItems="center" gap={1}>
             <Box
               sx={{
                 width: 38,
@@ -116,14 +116,14 @@ const AuditAISummaryDrawer = ({ open, onClose, log }: Props) => {
       {/* Body */}
       <Box sx={{ flex: 1, overflow: 'auto', p: 2.5 }}>
         {loading ? (
-          <Stack spacing={1.5} sx={{ py: 3 }}>
+          <Stack spacing={1} sx={{ py: 3 }}>
             <Typography variant="caption" color="text.secondary">
               Analyzing audit activity...
             </Typography>
             <LinearProgress />
           </Stack>
         ) : (
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             {/* AI disclaimer */}
             <Paper
               variant="outlined"

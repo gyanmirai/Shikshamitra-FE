@@ -31,6 +31,7 @@ const TimetableReports = ({ addReportDialog }: { addReportDialog: UseBooleanRetu
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Generate Report"
         description="Generate and manage timetable reports"
         links={[

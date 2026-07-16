@@ -15,7 +15,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { normalizeTimetableStatus } from 'src/utils/timetable-capacity';
+import { TIMETABLE_STATUS_LABEL, normalizeTimetableStatus } from 'src/utils/timetable-capacity';
 import { Box, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import { useGetLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
 import { TimetableStatusChip } from 'src/components/timetable-status-chip/TimetableStatusChip';
@@ -24,6 +24,10 @@ import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings
 import ViewCreateSlots from './ViewCreateSlots';
 import AssignSlots from './assignSlotsComponent';
 import CreateSlotsForm, { getDayLabel } from './createSlotsForm';
+
+const TIMETABLE_SETTING_STATUS_FILTER_OPTIONS = Object.values(TIMETABLE_STATUS_LABEL).map(
+  (label) => ({ value: label, label })
+);
 
 const LectureSlots = () => {
   const [editData, setEditData] = useState<any>(null);
@@ -56,7 +60,28 @@ const LectureSlots = () => {
     options: { skip: !medium?.id },
   });
 
-  const tableData = useMemo(() => lectureSlotsData?.items ?? [], [lectureSlotsData]);
+  const tableData = useMemo(
+    () =>
+      lectureSlotsData?.items?.map((item: any) => {
+        const normalizedStatus = normalizeTimetableStatus(item.status);
+        const slotConfigurationSummary =
+          item.slotConfigurations
+            ?.map((config: any) => {
+              const fromDay = getDayLabel(config.fromDay);
+              const toDay = getDayLabel(config.toDay);
+              const dayRange = config.fromDay === config.toDay ? fromDay : `${fromDay} to ${toDay}`;
+              return `${dayRange} ${config.totalSlots} slot${config.totalSlots === 1 ? '' : 's'}`;
+            })
+            .join(' ') ?? '';
+
+        return {
+          ...item,
+          statusLabel: normalizedStatus ? TIMETABLE_STATUS_LABEL[normalizedStatus] : '',
+          slotConfigurationSummary,
+        };
+      }) ?? [],
+    [lectureSlotsData]
+  );
 
   const summaryCards = useMemo(() => {
     const total = tableData.length;
@@ -147,7 +172,15 @@ const LectureSlots = () => {
 
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'standardName', label: 'Class', filterType: 'number', align: 'left', sticky: true },
+      {
+        id: 'standardName',
+        label: 'Class',
+        filterType: 'string',
+        align: 'left',
+        sticky: true,
+        stickyPosition: 'left',
+        minWidth: 120,
+      },
       {
         id: 'activeDaysCount',
         label: 'Active Days',
@@ -173,18 +206,11 @@ const LectureSlots = () => {
         render: (value) => (value == null ? '—' : `${value}/week`),
       },
       {
-        id: 'status',
-        label: 'Status',
-        minWidth: 150,
-        isSort: false,
-        align: 'left',
-        render: (value) => (value ? <TimetableStatusChip status={value} /> : '—'),
-      },
-      {
-        id: 'slotConfigurations',
+        id: 'slotConfigurationSummary',
         label: 'Slot Configuration',
+        minWidth: 220,
         isSort: false,
-        isFilter: false,
+        filterType: 'string',
         align: 'left',
         render: (_: any, row: any) => (
           <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 1 }}>
@@ -198,7 +224,7 @@ const LectureSlots = () => {
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1.2,
+                    gap: 1,
                     p: 1,
                     borderRadius: 1.5,
                     bgcolor: (theme) => theme.vars.palette.background.paper,
@@ -235,9 +261,23 @@ const LectureSlots = () => {
         ),
       },
       {
+        id: 'statusLabel',
+        label: 'Status',
+        minWidth: 170,
+        isSort: false,
+        filterType: 'enum',
+        enumOptions: TIMETABLE_SETTING_STATUS_FILTER_OPTIONS,
+        align: 'left',
+        sticky: true,
+        stickyPosition: 'right',
+        render: (_value, row) =>
+          row.status != null ? <TimetableStatusChip status={row.status} /> : '—',
+      },
+      {
         id: 'action',
         label: 'Actions',
         sticky: true,
+        stickyPosition: 'right',
         align: 'left',
         isSort: false,
         isFilter: false,
@@ -274,6 +314,7 @@ const LectureSlots = () => {
       {/* Conditional Breadcrumbs */}
       {viewSlotsDialog.value ? (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="View Slots"
           description="View the detailed lecture slots for the selected class."
           links={[
@@ -287,6 +328,7 @@ const LectureSlots = () => {
         />
       ) : addLectureSlotDialog.value ? (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading={`${isEdit ? 'Update' : 'Add'} Lecture Slot`}
           description={`${isEdit ? 'Update' : 'Add'} a new lecture slot for a class.`}
           links={[
@@ -301,6 +343,7 @@ const LectureSlots = () => {
         />
       ) : assignSlotsDialog.value ? (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Assign Lecture Slot"
           description="Assign this lecture slot configuration to one or more classes."
           links={[

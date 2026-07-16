@@ -30,7 +30,7 @@ export function UndoToast({ id, duration, message, onUndo }: UndoToastProps) {
   }, [duration, id]);
 
   return (
-    <Box display="flex" alignItems="center" gap={2}>
+    <Box display="flex" alignItems="center" gap={1}>
       <Typography variant="body2">
         {message} • Undo in {seconds}s
       </Typography>

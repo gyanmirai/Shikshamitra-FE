@@ -76,6 +76,7 @@ const IndividualStudentProgress = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Individual Student Progress"
         links={[
           { name: 'Academics' },
@@ -84,7 +85,7 @@ const IndividualStudentProgress = (props: TabComponentType) => {
         ]}
       />
 
-      <Grid container spacing={3} justifyContent="center" alignItems="center">
+      <Grid container spacing={1} justifyContent="center" alignItems="center">
         <Grid size={{ xs: 12 }}>
           <CustomSelect
             label="Class"
@@ -195,8 +196,8 @@ export default IndividualStudentProgress;
 //           {user.name}
 //         </Typography>
 //       </Box>
-//       <Box sx={{ display: 'flex', flexDirection: 'column', width: '80%', gap: 3 }}>
-//         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2 }}>
+//       <Box sx={{ display: 'flex', flexDirection: 'column', width: '80%', gap: 1 }}>
+//         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 1 }}>
 //           {[
 //             { label: 'Present Days', icon: 'mdi:tick-circle-outline', value: '56' },
 //             { label: 'Absent Days', icon: 'mdi:tick-circle-outline', value: '20' },
@@ -222,7 +223,7 @@ export default IndividualStudentProgress;
 //         </Box>
 
 //         {/* Second Row */}
-//         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2 }}>
+//         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 1 }}>
 //           {[
 //             { label: 'Behaviour Score', value: '0' },
 //             {

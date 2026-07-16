@@ -219,7 +219,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                 <Divider sx={{ mb: 2 }} />
 
                 {/* One card per installment */}
-                <Box display="flex" flexDirection="column" gap={2}>
+                <Box display="flex" flexDirection="column" gap={1}>
                   {installments.map((installment, index) => {
                     const nameError = !!(
                       formik?.touched?.installments?.[index]?.installmentName &&

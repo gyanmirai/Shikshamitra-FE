@@ -93,7 +93,7 @@ const SeatManagement = ({
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           Seat Layout
@@ -103,7 +103,7 @@ const SeatManagement = ({
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: 3,
+            gap: 1,
             bgcolor: 'background.paper',
             px: 2,
             py: 1,
@@ -192,7 +192,7 @@ const SeatManagement = ({
         </Box>
 
         <motion.div variants={containerVariants} initial="hidden" animate="show">
-          <Grid container spacing={4} justifyContent="center">
+          <Grid container spacing={1} justifyContent="center">
             {Array.from({ length: roomColumns }).map((_, colIdx) => {
               // Filter seats for this column and group by bench
               const columnSeats = seatList.filter((s) => s.column === colIdx);
@@ -216,7 +216,7 @@ const SeatManagement = ({
                       sx={{
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: 2,
+                        gap: 1,
                         p: 2,
                         borderRadius: 2,
                         bgcolor: 'background.neutral',
@@ -267,7 +267,7 @@ const SeatManagement = ({
                                 minWidth: 0,
                                 justifyContent: 'center',
                                 flexWrap: 'wrap',
-                                gap: 1.5,
+                                gap: 1,
                                 p: 1.5,
                                 borderRadius: 1.5,
                                 bgcolor: 'background.paper',

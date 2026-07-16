@@ -94,6 +94,7 @@ export default function SeatingPlanListPage() {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Seating Plan"
         description="Plan, validate, and finalize exam seating"
         links={[

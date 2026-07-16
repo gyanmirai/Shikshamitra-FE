@@ -82,7 +82,7 @@ const SubjectDifficultyBarChart = () => {
         subheader="Failure Rate by Class & Subject"
         sx={{ p: 0 }}
         action={
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <CustomSelect
               options={allClass}
               label="Class"

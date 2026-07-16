@@ -57,10 +57,21 @@ const SubjectAssignmentForm = ({
 
   const handleRemoveSubject = useCallback(
     (subject: { subjectId: string; electiveGroupId?: string; subjectType: number }) => {
-      const removeKey = subject.subjectType === 1 ? subject.electiveGroupId : subject.subjectId;
-      const nextSelected = (formik.values.selectedSubjects || []).filter(
-        (opt: any) => opt.value !== removeKey
-      );
+      const nextSelected = (formik.values.selectedSubjects || []).flatMap((opt: any) => {
+        if (subject.subjectType !== 1) {
+          return opt.value === subject.subjectId ? [] : [opt];
+        }
+
+        if (opt.value !== subject.electiveGroupId) {
+          return [opt];
+        }
+
+        const remainingSubjects = (opt.subjects || []).filter(
+          (item: any) => item.id !== subject.subjectId
+        );
+
+        return remainingSubjects.length > 0 ? [{ ...opt, subjects: remainingSubjects }] : [];
+      });
       handleSubjectChange(nextSelected);
     },
     [formik.values.selectedSubjects, handleSubjectChange]
@@ -73,7 +84,7 @@ const SubjectAssignmentForm = ({
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" sx={{ height: '100%' }}>
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                   <CustomSelect

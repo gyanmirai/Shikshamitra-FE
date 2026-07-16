@@ -132,7 +132,7 @@ export default function PublicOffer({
         </Typography>
         <Divider />
         {Object.entries(offer.terms).map(([key, value]) => (
-          <Stack key={key} direction={{ xs: 'column', sm: 'row' }} gap={0.5}>
+          <Stack key={key} direction={{ xs: 'column', sm: 'row' }} gap={1}>
             <Typography variant="body2" fontWeight={600} sx={{ minWidth: 120 }}>
               {key}
             </Typography>

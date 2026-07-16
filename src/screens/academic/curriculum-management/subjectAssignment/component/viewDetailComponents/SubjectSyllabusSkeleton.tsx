@@ -5,7 +5,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 export const SubjectSyllabusSkeleton = () => (
   <Box sx={{ height: '100%' }}>
     <Scrollbar sx={{ height: '100%', pb: 2 }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {[...Array(5)].map((_, index) => (
           <Box
             key={index}

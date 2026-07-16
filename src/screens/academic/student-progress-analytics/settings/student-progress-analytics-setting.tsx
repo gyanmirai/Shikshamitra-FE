@@ -18,10 +18,11 @@ import {
 const StudentProgressAnalyticsSetting = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="Settings"
       links={[{ name: 'Academics' }, { name: 'Student Progress Analytics' }, { name: 'Settings' }]}
     />
-    <Grid container spacing={2}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ p: 2, height: '100%' }}>
           <Box sx={{ py: '7px' }} />
@@ -34,7 +35,7 @@ const StudentProgressAnalyticsSetting = (props: TabComponentType) => (
             onChange={() => {}}
             fullWidth
           />
-          <Box sx={{ py: '8px', display: 'flex', flexDirection: 'row' }} gap={3}>
+          <Box sx={{ py: '8px', display: 'flex', flexDirection: 'row' }} gap={1}>
             <FormControlLabel control={<Switch />} label="Sending reports to teachers" />
             <FormControlLabel control={<Switch />} label="Sending reports to parents" />
           </Box>
@@ -56,7 +57,7 @@ const StudentProgressAnalyticsSetting = (props: TabComponentType) => (
             label="Notification thresholds, like 3 absences"
             size="small"
           />
-          <Box sx={{ py: '8px', display: 'flex', flexDirection: 'row' }} gap={3}>
+          <Box sx={{ py: '8px', display: 'flex', flexDirection: 'row' }} gap={1}>
             <FormControlLabel control={<Switch />} label="Sending reports to teachers" />
             <FormControlLabel control={<Switch />} label="Sending reports to parents" />
           </Box>

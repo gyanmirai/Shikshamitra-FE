@@ -105,7 +105,7 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
           />
         </Box>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={1}>
           {/* Left Column: Grade Entry Statistics */}
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography
@@ -116,7 +116,7 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
             >
               Marks Summary KPIs
             </Typography>
-            <Grid container spacing={1.5}>
+            <Grid container spacing={1}>
               {[
                 {
                   label: 'Highest Marks',
@@ -145,7 +145,7 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
               ].map((stat) => (
                 <Grid size={{ xs: 6 }} key={stat.label}>
                   <Stack
-                    spacing={0.5}
+                    spacing={1}
                     sx={{
                       p: 1.5,
                       borderRadius: 1.5,
@@ -153,7 +153,7 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
                       border: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <Stack direction="row" spacing={0.5} alignItems="center">
+                    <Stack direction="row" spacing={1} alignItems="center">
                       <Iconify icon={stat.icon} width={16} sx={{ color: stat.color }} />
                       <Typography variant="caption" color="text.secondary">
                         {stat.label}

@@ -1,7 +1,7 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -17,7 +17,7 @@ const DueDateCalendar = (props: TabComponentType) => {
       <CustomDialog title="New Assignment" open={dialog.value} handleClose={dialog.onFalse}>
         <Box>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
-            <Box display="flex" flexDirection="column" gap={2}>
+            <Box display="flex" flexDirection="column" gap={1}>
               <TextField label="Assignment Title" fullWidth />
 
               <TextField label="Description" fullWidth multiline rows={4} />

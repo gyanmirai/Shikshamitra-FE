@@ -35,6 +35,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Dashboard"
         links={[{ name: 'Academics' }, { name: 'Time Table' }, { name: 'Dashboard' }]}
         action={
@@ -62,7 +63,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
           />
         }
       />
-      <Box display="flex" flexDirection="row" gap={2} mb={2}>
+      <Box display="flex" flexDirection="row" gap={1} mb={2}>
         <CustomSelect
           label="Organization"
           options={[]}
@@ -138,7 +139,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
           </CardContent>
         </Card>
       </Grid>
-      {/* <Grid2 container spacing={3}>
+      {/* <Grid2 container spacing={1}>
         <Grid2 xs={12} md={6} lg={6}>
           <ScrollableCard
             filterLabel="Subject"
@@ -155,7 +156,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
           />
         </Grid2>
       </Grid2>
-      <Grid2 container spacing={3}>
+      <Grid2 container spacing={1}>
         <Grid2 xs={12} md={6} lg={6}>
           <ScrollableCard
             showFilter={false}

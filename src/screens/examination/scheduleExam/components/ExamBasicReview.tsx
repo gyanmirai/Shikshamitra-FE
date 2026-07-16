@@ -31,7 +31,7 @@ interface InfoItemProps {
 }
 
 const InfoItem = ({ icon, label, value }: InfoItemProps) => (
-  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
     <Box
       sx={{
         width: 40,
@@ -147,7 +147,7 @@ const ExamBasicReview = ({
           borderBottom: (theme) => `1px dashed ${varAlpha(theme.palette.grey['500Channel'], 0.2)}`,
         }}
       >
-        <Box display="flex" alignItems="center" gap={2}>
+        <Box display="flex" alignItems="center" gap={1}>
           <Box
             sx={{
               width: 48,
@@ -202,7 +202,7 @@ const ExamBasicReview = ({
 
       {/* Body */}
       <Box sx={{ p: 2 }}>
-        <Grid container spacing={3}>
+        <Grid container spacing={1}>
           {/* Exam Name */}
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <InfoItem icon={<Description />} label="Exam Name" value={values.examName || '-'} />
@@ -229,7 +229,7 @@ const ExamBasicReview = ({
               label="Division"
               value={
                 divisions.length > 0 ? (
-                  <Box display="flex" flexWrap="wrap" gap={0.5}>
+                  <Box display="flex" flexWrap="wrap" gap={1}>
                     {divisions.map((division: Division) => (
                       <Chip
                         key={division.id}
@@ -267,7 +267,7 @@ const ExamBasicReview = ({
               label="Subjects"
               value={
                 values.subjects.length > 0 ? (
-                  <Box display="flex" flexWrap="wrap" gap={0.5}>
+                  <Box display="flex" flexWrap="wrap" gap={1}>
                     {values.subjects.map((subject) => (
                       <Chip
                         key={subject.subjectId}

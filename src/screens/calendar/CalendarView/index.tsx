@@ -153,7 +153,7 @@ const CalendarView = () => {
           direction={{ xs: 'column', md: 'row' }}
           alignItems={{ xs: 'stretch', md: 'center' }}
           justifyContent="space-between"
-          gap={2}
+          gap={1}
         >
           <Box sx={{ flexGrow: 1 }}>
             <FilterControls

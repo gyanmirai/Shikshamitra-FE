@@ -191,7 +191,7 @@ function PipelineLeadCard({
             />
           )}
         </Stack>
-        <Stack direction="row" gap={0.5} flexWrap="wrap">
+        <Stack direction="row" gap={1} flexWrap="wrap">
           <Chip size="small" label={`Score ${lead.leadScore}`} variant="outlined" />
           {lead.priority !== AdmissionCrmLeadPriority.None && (
             <Chip size="small" label={priorityLabels[lead.priority]} color="warning" />
@@ -215,7 +215,7 @@ function PipelineLeadCard({
           <Typography variant="caption" color="text.secondary">
             {dayjs(lead.lastActivityTime).format('DD MMM, HH:mm')}
           </Typography>
-          <Stack direction="row" gap={0.5}>
+          <Stack direction="row" gap={1}>
             {canIssueRegistrationForm && !lead.registrationFormNumber && !lead.archivedAt && (
               <Button
                 size="small"
@@ -944,7 +944,7 @@ export function PipelineWorkspace() {
           {selectedLeadIds.length > 0 && (
             <>
               <Divider />
-              <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+              <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
                 <Chip label={`${selectedLeadIds.length} selected`} color="primary" />
                 {can(actionPermissions.assignOwner) && (
                   <Button size="small" onClick={() => setBulkAction('owner')}>
@@ -1094,7 +1094,7 @@ export function PipelineWorkspace() {
             <Alert severity="info">
               Contact details and admission intent are enough to create an inquiry.
             </Alert>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
                 fullWidth
                 label="Student name"
@@ -1117,7 +1117,7 @@ export function PipelineWorkspace() {
                 }}
               />
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
                 fullWidth
                 label="Contact number"
@@ -1151,7 +1151,7 @@ export function PipelineWorkspace() {
                 setDuplicateReviewed(false);
               }}
             />
-            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
                 fullWidth
                 label="Desired class"

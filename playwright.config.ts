@@ -1,7 +1,42 @@
 /* eslint-disable import/no-extraneous-dependencies */
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { devices, defineConfig } from '@playwright/test';
 
+// Inline loader for .env.local and .env files to populate process.env
+(() => {
+  for (const fileName of ['.env.local', '.env']) {
+    const filePath = path.resolve(process.cwd(), fileName);
+    if (!existsSync(filePath)) continue;
+
+    for (const rawLine of readFileSync(filePath, 'utf8').split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith('#')) continue;
+
+      const separator = line.indexOf('=');
+      if (separator <= 0) continue;
+
+      const key = line.slice(0, separator).trim();
+      let value = line.slice(separator + 1).trim();
+
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+
+      // Only assign if not already defined in shell environment
+      if (process.env[key] === undefined) {
+        process.env[key] = value;
+      }
+    }
+  }
+})();
+
 const baseURL = process.env.E2E_BASE_URL || 'http://localhost:3000';
+
+
 
 export default defineConfig({
   testDir: './e2e',

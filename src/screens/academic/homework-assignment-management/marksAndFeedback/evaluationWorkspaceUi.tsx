@@ -102,7 +102,7 @@ export function EvaluationSummaryCards({ summary }: { summary: Required<Summary>
   ];
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(120px, 1fr))', gap: 1.25 }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(120px, 1fr))', gap: 1 }}>
       {cards.map((card) => (
         <Card key={card.label} variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
           <Stack direction="row" alignItems="center" spacing={1}>

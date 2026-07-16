@@ -65,7 +65,7 @@ const KpiCard = ({ label, value, helper, icon, colorKey, trend }: KpiProps) => {
               {label}
             </Typography>
             {helper && (
-              <Stack direction="row" alignItems="center" gap={0.5} sx={{ mt: 0.5 }}>
+              <Stack direction="row" alignItems="center" gap={1} sx={{ mt: 0.5 }}>
                 {trend && (
                   <Iconify
                     icon={trend === 'up' ? 'mdi:trending-up' : 'mdi:trending-down'}
@@ -124,7 +124,7 @@ const SkeletonCard = () => {
 const AuditSummaryCards = ({ summary, loading }: Props) => {
   if (loading || !summary) {
     return (
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         {[0, 1, 2, 3].map((i) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
             <SkeletonCard />
@@ -138,7 +138,7 @@ const AuditSummaryCards = ({ summary, loading }: Props) => {
   const lastSynced = summary.lastSyncedAt ? formatAuditTimestamp(summary.lastSyncedAt) : null;
 
   return (
-    <Grid container spacing={1.5}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <KpiCard
           label="Total Audit Events"

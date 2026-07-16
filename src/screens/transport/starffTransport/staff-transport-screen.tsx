@@ -150,7 +150,7 @@ const StaffTransportScreen = () => {
 
   return (
     <>
-      <Box gap={3} py="15px" display="flex" flexDirection="row" justifyContent="flex-end">
+      <Box gap={1} py="15px" display="flex" flexDirection="row" justifyContent="flex-end">
         <Button onClick={dialogForBulkEdit.onTrue} variant="contained" size="small">
           Bulk Assign
         </Button>

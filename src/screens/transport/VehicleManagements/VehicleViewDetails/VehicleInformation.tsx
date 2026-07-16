@@ -178,7 +178,7 @@ const VehicleInformationCard = ({ vehicleId }: VehicleInformationCardProps) => {
         </Label>
       </Stack>
 
-      <Grid container spacing={4} rowSpacing={4}>
+      <Grid container spacing={4} rowSpacing={1}>
         {/* Row 1 - Matching the image fields */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           {renderDetailItem(

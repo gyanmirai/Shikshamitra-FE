@@ -45,6 +45,7 @@ const ResourceTypeCreation = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Setting"
         description="Setting for learning resource type and notification setting"
         links={[

@@ -110,7 +110,7 @@ const CurrentVehicleCard = () => {
           <Box
             display="flex"
             alignItems="center"
-            gap={2}
+            gap={1}
             minWidth={{ xs: '100%', sm: 220 }}
             sx={{
               p: 2,
@@ -166,7 +166,7 @@ const CurrentVehicleCard = () => {
           <Box
             display="flex"
             alignItems="center"
-            gap={2}
+            gap={1}
             minWidth={{ xs: '100%', sm: 220 }}
             sx={{
               p: 2,

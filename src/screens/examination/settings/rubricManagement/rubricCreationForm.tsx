@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
@@ -19,10 +19,10 @@ const RubricCreationForm = ({ onClose }: { onClose?: () => void }) => {
   const [, setDivisionOptions] = useState<any[]>([]);
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <form onSubmit={() => {}}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <CustomSelect
                 options={classData?.items || []}
@@ -101,6 +101,8 @@ const RubricCreationForm = ({ onClose }: { onClose?: () => void }) => {
               <DatePicker
                 label="Date"
                 value={dayjs()}
+                standardId={classes || null}
+                validationType="ExamSchedule"
                 onChange={(val) => {
                   // formik.setFieldValue('dueDate', val);
                 }}

@@ -8,7 +8,8 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { alpha, useTheme } from '@mui/material/styles';
 import { shikshaMitraToast } from 'src/components/toast';
-import { DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { TimePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -153,7 +154,7 @@ const CalendarDayFormDialog = ({
     <>
       <CustomDialog open={open} handleClose={onClose} title={title} maxWidth="sm">
         <DialogScrollContent>
-          <Grid container spacing={2.5}>
+          <Grid container spacing={1}>
           {/* Day Type */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl
@@ -190,7 +191,7 @@ const CalendarDayFormDialog = ({
                   const icon = DAY_TYPE_ICONS[opt.value as DayType] ?? 'mdi:calendar-outline';
                   return (
                     <MenuItem key={opt.value} value={opt.value}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Iconify icon={icon} width={18} sx={{ color }} />
                         <Typography variant="body2">{opt.label}</Typography>
                       </Box>
@@ -209,6 +210,7 @@ const CalendarDayFormDialog = ({
             <DatePicker
               label={isVacation ? 'Start Date *' : 'Date *'}
               value={formik.values.date ? dayjs(formik.values.date) : null}
+              blockedDayTypes={[]}
               onChange={(val) => formik.setFieldValue('date', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
               slotProps={{
                 textField: {
@@ -257,6 +259,7 @@ const CalendarDayFormDialog = ({
                 label="End Date *"
                 value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
                 minDate={formik.values.date ? dayjs(formik.values.date) : undefined}
+                blockedDayTypes={[]}
                 onChange={(val) => formik.setFieldValue('endDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
                 slotProps={{
                   textField: {
@@ -368,7 +371,7 @@ const CalendarDayFormDialog = ({
               >
                 Scope & Visibility
               </Typography>
-              <Stack spacing={2}>
+              <Stack spacing={1}>
                 <FormControlLabel
                   control={
                     <Switch
@@ -396,7 +399,7 @@ const CalendarDayFormDialog = ({
                 />
 
                  {!formik.values.appliesToAll && (
-                  <Grid container spacing={2} sx={{ pt: 1 }}>
+                  <Grid container spacing={1} sx={{ pt: 1 }}>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <FormControl
                         fullWidth

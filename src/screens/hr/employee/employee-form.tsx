@@ -1495,7 +1495,7 @@ const FormSlider = ({
                     p={2}
                     display={step === 2 || step === 1 || step === 3 ? 'block' : 'flex'}
                     flexWrap="wrap"
-                    gap={2}
+                    gap={1}
                     width="100%"
                     height="100%"
                   >

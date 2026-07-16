@@ -57,7 +57,7 @@ const SendInstantNotificationDialog: React.FC<ISendInstantNotificationDialogProp
     <CustomDialog maxWidth="md" title="Send Instant Notification" handleClose={onClose} open={open}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '400px' }}>
         <Box p={2}>
-          <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={2} mt={2} mb={2}>
+          <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={1} mt={2} mb={2}>
             <CustomSelect
               label="Select Communication Channels"
               options={CHANNEL_OPTIONS}
