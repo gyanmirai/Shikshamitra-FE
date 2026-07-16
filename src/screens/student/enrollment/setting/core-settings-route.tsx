@@ -28,7 +28,7 @@ const sectionDefinitions: Record<AdmissionsCrmConfigurationFocusSection, Section
     description:
       'Set the admission calendar, service targets, applicant stages, and team handoffs.',
     defaultPanel: 'cycle',
-    panelNavigation: 'steps',
+    panelNavigation: 'tabs',
     panels: [
       {
         value: 'cycle',

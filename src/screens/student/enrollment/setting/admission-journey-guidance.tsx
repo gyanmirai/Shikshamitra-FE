@@ -1,20 +1,8 @@
 'use client';
 
-import { useTheme } from '@mui/material/styles';
 import { RouterLink } from 'src/routes/components';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import { studentPaths } from 'src/constants/student-menu';
-import {
-  Box,
-  Chip,
-  Step,
-  Alert,
-  Stack,
-  Stepper,
-  AlertTitle,
-  StepButton,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Paper, Alert, Stack, AlertTitle, Typography } from '@mui/material';
 
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 
@@ -58,8 +46,6 @@ const journeySteps = [
 ] as const;
 
 export function AdmissionJourneyOverview() {
-  const theme = useTheme();
-  const isTabletOrSmaller = useMediaQuery(theme.breakpoints.down('md'));
   const { state } = useEnrollmentWorkspace();
   const withCycle = (path: string) =>
     state.cycle ? `${path}?cycle=${encodeURIComponent(state.cycle)}` : path;
@@ -70,42 +56,53 @@ export function AdmissionJourneyOverview() {
       aria-labelledby="admission-journey-overview-title"
       sx={{ minWidth: 0 }}
     >
-      <Stack spacing={0.25} sx={{ mb: 1 }}>
+      <Stack spacing={0.25} sx={{ mb: 1.25 }}>
         <Typography id="admission-journey-overview-title" component="h2" variant="subtitle1">
-          Applicant handoff map
+          Applicant journey
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Select a step to open its work queue. Team names are typical owners; permissions still
-          control who can complete each action.
+          Five clear handoffs take an inquiry from first contact to an active student.
         </Typography>
       </Stack>
-      <Stepper
-        nonLinear
-        activeStep={-1}
-        orientation={isTabletOrSmaller ? 'vertical' : 'horizontal'}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, minmax(0, 1fr))',
+            lg: 'repeat(5, minmax(0, 1fr))',
+          },
+          gap: 1,
+        }}
       >
-        {journeySteps.map((step) => (
-          <Step key={step.label} completed={false}>
-            <StepButton component={RouterLink} href={withCycle(step.path)}>
-              <Stack spacing={0.25} sx={{ textAlign: 'left', minWidth: 0 }}>
-                <Typography variant="subtitle2">{step.label}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Typical owner: {step.owner}
-                </Typography>
-                <Chip
-                  size="small"
-                  variant="outlined"
-                  label={step.mode}
-                  sx={{ alignSelf: 'flex-start' }}
-                />
-                <Typography variant="caption" color="text.secondary" sx={{ textWrap: 'pretty' }}>
-                  {step.transition}
+        {journeySteps.map((step, index) => (
+          <Paper
+            key={step.label}
+            component={RouterLink}
+            href={withCycle(step.path)}
+            variant="outlined"
+            sx={{
+              p: 1.25,
+              color: 'inherit',
+              textDecoration: 'none',
+              '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
+            }}
+          >
+            <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+                <Chip size="small" color="primary" label={index + 1} sx={{ minWidth: 28 }} />
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {step.owner}
                 </Typography>
               </Stack>
-            </StepButton>
-          </Step>
+              <Typography variant="subtitle2">{step.label}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {step.mode}
+              </Typography>
+            </Stack>
+          </Paper>
         ))}
-      </Stepper>
+      </Box>
     </Box>
   );
 }
