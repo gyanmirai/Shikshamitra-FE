@@ -99,7 +99,7 @@ const AssignToPurchaseDialog = () => {
         </Grid>
       </Scrollbar>
       <DialogActions>
-        <Box display="flex" gap={2} width="100%" flexDirection="row" justifyContent="flex-end">
+        <Box display="flex" gap={1} width="100%" flexDirection="row" justifyContent="flex-end">
           <Button startIcon={<Iconify icon={GlobalIcons.approvedIcon} />} variant="contained">
             Assign To Purchase
           </Button>

@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
   Card,
@@ -76,7 +76,7 @@ const DailyTimelineTab = ({
         direction={{ xs: 'column', sm: 'row' }}
         justifyContent="space-between"
         alignItems={{ sm: 'center' }}
-        spacing={2}
+        spacing={1}
         sx={{ mb: 4 }}
       >
         <Stack direction="row" spacing={1} alignItems="center">
@@ -108,13 +108,13 @@ const DailyTimelineTab = ({
 
       {/* Skeletons loader */}
       {isLoading ? (
-        <Stack spacing={2.5}>
+        <Stack spacing={1}>
           {[1, 2, 3].map((key) => (
             <Box
               key={key}
               sx={{ p: 2.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}
             >
-              <Grid container spacing={2}>
+              <Grid container spacing={1}>
                 <Grid size={{ xs: 12, md: 3 }}>
                   <Skeleton variant="rectangular" width={100} height={40} />
                 </Grid>
@@ -141,7 +141,7 @@ const DailyTimelineTab = ({
         </Stack>
       ) : (
         /* Timeline slots list */
-        <Stack spacing={2.5}>
+        <Stack spacing={1}>
           {slots.map((slot) => {
             const hasPlan = !!slot.lessonPlan;
             const plan = slot.lessonPlan;
@@ -183,10 +183,10 @@ const DailyTimelineTab = ({
                   },
                 }}
               >
-                <Grid container spacing={2} alignItems="center">
+                <Grid container spacing={1} alignItems="center">
                   {/* Period & Time slot info */}
                   <Grid size={{ xs: 12, md: 3 }}>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Stack direction="row" spacing={1} alignItems="center">
                       <Box
                         sx={{
                           p: 1,
@@ -255,7 +255,7 @@ const DailyTimelineTab = ({
                             {plan.insightMessage}
                           </Alert>
                         )}
-                        <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 0.5 }}>
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
                           <Typography variant="caption" color="text.secondary">
                             Planned completion: <strong>{plan.plannedCompletionPercentage}%</strong>
                           </Typography>

@@ -44,7 +44,7 @@ export default Records;
 
 const RenderBehavioralRecord = () => (
   <>
-    <Box display="flex" gap={2}>
+    <Box display="flex" gap={1}>
       <StudentEnrollmentCard
         icon="wpf:inspection"
         title="Merits and Achievements"

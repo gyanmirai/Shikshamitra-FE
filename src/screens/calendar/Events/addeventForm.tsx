@@ -616,7 +616,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                 }}
               >
                 <Grid size={{ xs: 12 }}>
-                  <Box display="flex" alignItems="center" gap={2}>
+                  <Box display="flex" alignItems="center" gap={1}>
                     <span>Offline</span>
                     <Switch
                       checked={formik.values.eventMode === 'online'}

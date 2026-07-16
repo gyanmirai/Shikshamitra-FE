@@ -16,7 +16,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
   }, [courses, selectedCourseId, handleCardDetails]);
 
   return (
-    <Grid container spacing={2} marginTop={2} marginBottom={4} gap={1}>
+    <Grid container spacing={1} marginTop={2} marginBottom={4} gap={1}>
       {courses.map((course) => {
         const isSelected = selectedCourseId === course.id;
 

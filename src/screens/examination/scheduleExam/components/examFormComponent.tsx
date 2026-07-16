@@ -135,7 +135,7 @@ const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
             sx={{ color: 'text.disabled', mx: 0.25 }}
           />
 
-          <Stack direction="row" alignItems="center" spacing={0.75}>
+          <Stack direction="row" alignItems="center" spacing={1}>
             {className && (
               <Tooltip title="Class" arrow>
                 <Chip
@@ -184,7 +184,7 @@ const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
             sx={{ color: 'text.disabled', mx: 0.25 }}
           />
 
-          <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
             {subjects.slice(0, 5).map((sub: any) => (
               <Chip
                 key={sub.subjectId}

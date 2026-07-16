@@ -7,13 +7,13 @@ import { Box, Card, Grid, Button, Typography, CardActions, CardContent } from '@
 const Reports = (props: TabComponentType) => (
   <Box sx={{ p: 4, minHeight: '100vh' }}>
     {/* Report Creation Section */}
-    <Grid container spacing={4} sx={{ mb: 4 }}>
+    <Grid container spacing={1} sx={{ mb: 4 }}>
       <Grid size={{ xs: 12, md: 6 }}>
         <Typography variant="h5" gutterBottom>
           Report Creation Process
         </Typography>
 
-        <Box display="flex" gap={2} mb={2}>
+        <Box display="flex" gap={1} mb={2}>
           <CustomSelect
             options={[]}
             label="Select Report Type"
@@ -30,7 +30,7 @@ const Reports = (props: TabComponentType) => (
           />
         </Box>
 
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={1}>
           <Button variant="contained" sx={{ backgroundColor: '#3488e3' }}>
             Preview
           </Button>
@@ -42,7 +42,7 @@ const Reports = (props: TabComponentType) => (
     </Grid>
 
     {/* Pre-built Templates Section */}
-    <Grid container spacing={4}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12 }}>
         <Typography variant="h5" gutterBottom>
           Pre-built Templates

@@ -414,7 +414,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
               display="flex"
               justifyContent="flex-end"
               alignItems="center"
-              gap={2}
+              gap={1}
               px={2}
               py={0.75}
               sx={{ bgcolor: (t) => alpha(t.palette.success.main, 0.04) }}

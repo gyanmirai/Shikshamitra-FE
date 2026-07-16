@@ -575,7 +575,7 @@ export function ApplicantActivationOperations({ leadId, academicYearId }: Props)
                   <Stack
                     key={handoff.id}
                     direction={{ xs: 'column', sm: 'row' }}
-                    gap={0.75}
+                    gap={1}
                     alignItems={{ sm: 'center' }}
                   >
                     <Chip

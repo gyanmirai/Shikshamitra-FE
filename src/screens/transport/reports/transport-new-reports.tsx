@@ -163,7 +163,7 @@ const TransportReportsScreen = () => {
                     </Field>
                   </Grid>
 
-                  <Grid size={12} justifyContent="flex-end" display="flex" gap={3}>
+                  <Grid size={12} justifyContent="flex-end" display="flex" gap={1}>
                     <Button
                       startIcon={<Iconify icon="ion:download" />}
                       variant="contained"

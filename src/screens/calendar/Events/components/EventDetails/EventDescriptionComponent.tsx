@@ -10,7 +10,7 @@ const EventDescriptionComponent = ({ event }: { event: IEventAnnouncement | null
     {/* Attachment */}
     {event?.attachment ? (
       <Card sx={{ p: 2, mb: 2, boxShadow: 3 }}>
-        <Box display="flex" alignItems="center" gap={2}>
+        <Box display="flex" alignItems="center" gap={1}>
           <AttachFile fontSize="small" color="action" />
           <Box flexGrow={1}>
             <Typography variant="body1">{event.attachment.name}</Typography>

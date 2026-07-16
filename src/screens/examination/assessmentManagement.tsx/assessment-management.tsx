@@ -186,8 +186,9 @@ const AssessmentManagement = (props: TabComponentType) => {
   );
 
   return (
-    <Box height="100%" display="flex" flexDirection="column" gap={2}>
+    <Box height="100%" display="flex" flexDirection="column" gap={1}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Assessment"
         description={
           open
@@ -225,13 +226,13 @@ const AssessmentManagement = (props: TabComponentType) => {
         <>
           <Box
             display="flex"
-            gap={2}
+            gap={1}
             flexWrap="wrap"
             alignItems="center"
             justifyContent="space-between"
             mb={3}
           >
-            <Box display="flex" gap={2}>
+            <Box display="flex" gap={1}>
               <CustomSelect
                 label="Class"
                 options={classData?.items || []}

@@ -571,7 +571,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                     Next: {series.nextPreview}
                   </Typography>
                 </Box>
-                <Stack direction="row" alignItems="center" gap={0.5}>
+                <Stack direction="row" alignItems="center" gap={1}>
                   <Chip
                     size="small"
                     label={series.isActive ? 'Active' : 'Inactive'}

@@ -156,7 +156,7 @@ const DayCell = ({
       </Box>
 
       {/* Events */}
-      <Stack spacing={0.4}>
+      <Stack spacing={1}>
         {events.slice(0, 2).map((ev, i) => {
           const evColor = DAY_TYPE_COLORS[ev.dayType as DayType];
           return (
@@ -255,7 +255,7 @@ const CalendarMonthView = ({
       sx={{
         display: 'flex',
         flexDirection: { xs: 'column', lg: 'row' },
-        gap: 2,
+        gap: 1,
         alignItems: 'flex-start',
       }}
     >
@@ -326,7 +326,7 @@ const CalendarMonthView = ({
 
           <Stack direction="row" gap={1} alignItems="center">
             {monthEvents.length > 0 && (
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
+              <Stack direction="row" gap={1} flexWrap="wrap">
                 {[DayType.Holiday, DayType.Exam, DayType.Event, DayType.Vacation].map((dt) => {
                   const count = monthEvents.filter((e) => e.dayType === dt).length;
                   if (!count) return null;
@@ -493,7 +493,7 @@ const CalendarMonthView = ({
                 background: alpha(theme.palette.primary.main, 0.04),
               }}
             >
-              <Stack direction="row" alignItems="center" gap={0.75}>
+              <Stack direction="row" alignItems="center" gap={1}>
                 <Iconify icon="mdi:calendar-star-outline" width={17} color="primary.main" />
                 <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '13px' }}>
                   {currentMonth.format('MMMM')} Events
@@ -531,7 +531,7 @@ const CalendarMonthView = ({
                         transition: 'background 0.15s',
                       }}
                     >
-                      <Stack direction="row" alignItems="center" spacing={1.25}>
+                      <Stack direction="row" alignItems="center" spacing={1}>
                         <Avatar
                           sx={{
                             width: 34,
@@ -561,7 +561,7 @@ const CalendarMonthView = ({
                           >
                             {ev.title}
                           </Typography>
-                          <Stack direction="row" alignItems="center" gap={0.75} mt={0.3}>
+                          <Stack direction="row" alignItems="center" gap={1} mt={0.3}>
                             <CalendarDayTypeChip dayType={ev.dayType} />
                             <Typography
                               variant="caption"

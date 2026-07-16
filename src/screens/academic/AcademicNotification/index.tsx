@@ -64,6 +64,7 @@ const AcademicNotificationScreen = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {dialog?.value ? (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading={isViewMode ? 'View Notification' : 'Edit Notification'}
           description="Configure notifications for curriculum, timetable, homework, and examinations."
           links={[
@@ -111,7 +112,7 @@ const AcademicNotificationScreen = () => {
               }
               setSearchParams('tab', value);
             }}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 } }}
             role="tablist"
           >
             {TABS.map((tab) => (

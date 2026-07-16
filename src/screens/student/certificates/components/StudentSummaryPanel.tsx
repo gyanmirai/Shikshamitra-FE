@@ -356,7 +356,7 @@ const StudentSummaryPanel: React.FC<StudentSummaryPanelProps> = ({
         >
           Certificates Generated
         </Typography>
-        <Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap" gap={0.75}>
+        <Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap" gap={1}>
           {CERT_STATS.map((stat) => (
             <Box
               key={stat.label}

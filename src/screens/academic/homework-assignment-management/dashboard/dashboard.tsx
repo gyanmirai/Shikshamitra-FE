@@ -53,6 +53,7 @@ const Dashboard = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Dashboard"
         links={[{ name: 'Academics' }, { name: 'Homework & Assignment' }, { name: 'Dashboard' }]}
         action={
@@ -136,7 +137,7 @@ const Dashboard = (props: TabComponentType) => {
           />
         </Box>
       </Card>
-      <Grid container spacing={2} mt={1}>
+      <Grid container spacing={1} mt={1}>
         <DashboardCards />
         <HomeworkAssignmentCards standardId={classes} divisionId={division} subjectId={subject} />
       </Grid>
@@ -203,7 +204,7 @@ export default Dashboard;
 //           }}
 //         >
 //           <Box display="flex" flexDirection="column" justifyContent="space-between" height="100%">
-//             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+//             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 2 }}>
 //               <Box sx={{ typography: 'subtitle1' }}>{title}</Box>
 //               {/* <Typography variant="h6">Total Employees</Typography> */}
 //             </Box>

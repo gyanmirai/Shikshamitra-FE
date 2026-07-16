@@ -242,7 +242,7 @@ const CourseManagement = (props: TabComponentType) => {
         />
       </CustomDialog>
 
-      <Grid container spacing={2} mt={4}>
+      <Grid container spacing={1} mt={4}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%', display: 'flex', justifyContent: 'space-between' }}>
             <AppWidget

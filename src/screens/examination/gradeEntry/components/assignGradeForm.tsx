@@ -229,7 +229,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <Scrollbar sx={{ height: '500px', p: 2 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={1}>
               {/* Student Profile */}
               <Grid size={{ xs: 12 }}>
                 <Card
@@ -248,7 +248,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                     }}
                   />
                   <Box sx={{ p: 2 }}>
-                    <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <Stack direction="row" alignItems="center" spacing={1}>
                       <Avatar
                         alt={data?.studentName || 'Student'}
                         sx={{
@@ -392,7 +392,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                       pointerEvents: isAbsent ? 'none' : 'auto',
                     }}
                   >
-                    <Grid container spacing={2}>
+                    <Grid container spacing={1}>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
                           label="Total Marks"

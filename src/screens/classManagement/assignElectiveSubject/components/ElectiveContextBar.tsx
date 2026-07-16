@@ -41,11 +41,12 @@ export default function ElectiveContextBar({
   const groupName = electiveGroups.find((g) => g.id === electiveGroupId)?.name;
 
   return (
-    <Card sx={{ p: 2, mb: 1.5 }}>
+    <Card sx={{ p: 1.5, mb: 1 }}>
       <Box
         sx={{
           display: 'flex',
-          gap: 1.5,
+          alignItems: { sm: 'center' },
+          gap: 1.25,
           flexDirection: { xs: 'column', sm: 'row' },
         }}
       >
@@ -86,7 +87,7 @@ export default function ElectiveContextBar({
 
       {groupName && subjectNames.length > 0 && (
         <>
-          <Divider sx={{ my: 1.5 }} />
+          <Divider sx={{ my: 1 }} />
           <Typography variant="body2" color="text.secondary">
             <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>
               {groupName}

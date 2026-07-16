@@ -152,7 +152,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       {/* <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}> */}
       <DialogScrollContent>
-        <Stack spacing={3} sx={{ pt: 1 }}>
+        <Stack spacing={1} sx={{ pt: 1 }}>
           <ShakingTextField
             error={!!(formik.touched.homeworkTypeName && formik.errors.homeworkTypeName) || false}
           >
@@ -192,7 +192,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
             helperText={formik.touched.description && formik.errors.description}
           />
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
             <TextField
               fullWidth
               select
@@ -233,7 +233,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
             </TextField>
           </Stack>
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
             <TextField
               fullWidth
               type="number"

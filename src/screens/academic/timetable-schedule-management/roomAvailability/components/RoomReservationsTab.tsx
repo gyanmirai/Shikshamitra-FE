@@ -49,9 +49,9 @@ export const RoomReservationsTab = ({
   ];
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1}>
       {/* Status filter chips */}
-      <Stack direction="row" flexWrap="wrap" gap={0.75}>
+      <Stack direction="row" flexWrap="wrap" gap={1}>
         {statusFilters.map((sf) => (
           <Chip
             key={sf.value}

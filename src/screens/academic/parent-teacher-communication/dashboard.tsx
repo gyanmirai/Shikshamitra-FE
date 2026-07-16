@@ -12,7 +12,7 @@ const Dashboard = (props: TabComponentType) => (
       p: 2,
 
       flexWrap: 'wrap',
-      gap: 2,
+      gap: 1,
     }}
   >
     <Card sx={{ width: '100%', maxWidth: 400, p: 2 }}>

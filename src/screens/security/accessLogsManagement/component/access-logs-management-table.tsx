@@ -16,7 +16,7 @@ import {
 
 const AccessLogsManagementTable = () => (
   <>
-    <Box display="flex" alignItems="center" flexDirection="row" gap={2}>
+    <Box display="flex" alignItems="center" flexDirection="row" gap={1}>
       <Grid size={{ xs: 12, md: 3 }}>
         <DatePicker
           label="Start Date"

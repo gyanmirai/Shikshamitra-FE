@@ -11,10 +11,12 @@ import {
   useGetSubjectKpiQuery,
   useGetSubjectAssignmentsQuery,
   useArchiveSubjectAssignmentMutation,
+  useRestoreSubjectAssignmentMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { useClassSelection } from './useClassSelection';
 import { useSubjectMutations } from './useSubjectMutations';
+import { SubjectAssignmentStatus } from '../enum/subjectType';
 
 import type { ISubjectFormValues } from '../component/type';
 
@@ -38,7 +40,7 @@ export function useSubjectAssignment() {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
-    params: { standardId: classId, ...query },
+    params: { standardId: classId, ...query, status: 'all' },
     options: { skip: !classId },
   });
 
@@ -50,12 +52,14 @@ export function useSubjectAssignment() {
   });
 
   const [archiveSubject, { isLoading: isArchiveLoading }] = useArchiveSubjectAssignmentMutation();
+  const [restoreSubject, { isLoading: isRestoreLoading }] = useRestoreSubjectAssignmentMutation();
 
   const addSubjectDialog = useBoolean();
   const deleteConfirmDialog = useBoolean();
   const confirmPublishDialog = useBoolean();
   const showSubjectDialog = useBoolean();
   const archiveConfirmDialog = useBoolean();
+  const restoreConfirmDialog = useBoolean();
 
   const [selectedSubject, setSelectedSubject] = useState<ISubjectFormValues | null>(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -64,9 +68,10 @@ export function useSubjectAssignment() {
     deleteConfirmDialog.onFalse();
     confirmPublishDialog.onFalse();
     archiveConfirmDialog.onFalse();
+    restoreConfirmDialog.onFalse();
     setIsEdit(false);
     setTimeout(() => setSelectedSubject(null), 100);
-  }, [deleteConfirmDialog, confirmPublishDialog, archiveConfirmDialog]);
+  }, [deleteConfirmDialog, confirmPublishDialog, archiveConfirmDialog, restoreConfirmDialog]);
 
   const { isDeleteLoading, isPublishLoading, handleConfirmDelete, handleConfirmPublish } =
     useSubjectMutations({
@@ -150,9 +155,13 @@ export function useSubjectAssignment() {
   const handleRequestToggleStatus = useCallback(
     (row: ISubjectFormValues) => {
       setSelectedSubject(row);
+      if (row.status === SubjectAssignmentStatus.Archived) {
+        restoreConfirmDialog.onTrue();
+        return;
+      }
       confirmPublishDialog.onTrue();
     },
-    [confirmPublishDialog]
+    [confirmPublishDialog, restoreConfirmDialog]
   );
 
   const handleRequestArchive = useCallback(
@@ -161,6 +170,14 @@ export function useSubjectAssignment() {
       archiveConfirmDialog.onTrue();
     },
     [archiveConfirmDialog]
+  );
+
+  const handleRequestRestore = useCallback(
+    (row: ISubjectFormValues) => {
+      setSelectedSubject(row);
+      restoreConfirmDialog.onTrue();
+    },
+    [restoreConfirmDialog]
   );
 
   const handleConfirmArchive = useCallback(async () => {
@@ -174,6 +191,18 @@ export function useSubjectAssignment() {
       // error handled by RTK Query
     }
   }, [selectedSubject, archiveSubject, archiveConfirmDialog, refetch]);
+
+  const handleConfirmRestore = useCallback(async () => {
+    if (!selectedSubject?.id) return;
+    try {
+      await restoreSubject({ assignmentId: selectedSubject.id }).unwrap();
+      restoreConfirmDialog.onFalse();
+      setSelectedSubject(null);
+      refetch();
+    } catch {
+      // error handled by RTK Query
+    }
+  }, [selectedSubject, restoreSubject, restoreConfirmDialog, refetch]);
 
   const handleAddNew = useCallback(() => {
     addSubjectDialog.onTrue();
@@ -195,6 +224,7 @@ export function useSubjectAssignment() {
     isDeleteLoading,
     isPublishLoading,
     isArchiveLoading,
+    isRestoreLoading,
     isTableLoading,
     isFetching,
     subjectTableData,
@@ -204,6 +234,7 @@ export function useSubjectAssignment() {
     deleteConfirmDialog,
     confirmPublishDialog,
     archiveConfirmDialog,
+    restoreConfirmDialog,
     showSubjectDialog,
     handleClose,
     handleViewSubject,
@@ -211,7 +242,9 @@ export function useSubjectAssignment() {
     handleRequestDelete,
     handleRequestToggleStatus,
     handleRequestArchive,
+    handleRequestRestore,
     handleConfirmArchive,
+    handleConfirmRestore,
     handleCloseDialog,
     handleConfirmDelete,
     handleConfirmPublish,

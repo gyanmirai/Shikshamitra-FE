@@ -80,6 +80,7 @@ const SubjectCreation = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Subject Creation"
         description="Manage master subjects used across curriculum, timetable, exams, lesson plans, and reports."
         links={[
@@ -409,7 +410,7 @@ const UsageRow = ({
         '&:last-of-type': { borderBottom: 'none' },
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Box
           sx={{
             width: 32,

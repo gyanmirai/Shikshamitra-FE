@@ -4,7 +4,7 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -337,7 +337,7 @@ export const DirectRoomReservationDrawer = ({
             `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={2}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <Box
             sx={{
               width: 44,
@@ -388,7 +388,7 @@ export const DirectRoomReservationDrawer = ({
 
         <Stack
           direction={{ xs: 'column', md: 'row' }}
-          spacing={3}
+          spacing={1}
           sx={{ height: '100%', alignItems: 'stretch', overflow: 'hidden' }}
         >
           {/* Left Column: Room Timeline & Available Slots */}
@@ -401,8 +401,8 @@ export const DirectRoomReservationDrawer = ({
               height: '100%',
             }}
           >
-            <Stack spacing={2} sx={{ height: '100%' }}>
-              <Stack direction="row" alignItems="center" spacing={1.25}>
+            <Stack spacing={1} sx={{ height: '100%' }}>
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <StepBadge number={1} />
                 <Box>
                   <Typography variant="subtitle1" fontWeight={700} color="text.primary">
@@ -425,13 +425,13 @@ export const DirectRoomReservationDrawer = ({
               />
 
               {/* Legend */}
-              <Stack direction="row" spacing={2.5}>
+              <Stack direction="row" spacing={1}>
                 {[
                   { label: 'Available', color: 'success.main' },
                   { label: 'Selected', color: 'primary.main' },
                   { label: 'Occupied', color: 'text.disabled' },
                 ].map((item) => (
-                  <Stack key={item.label} direction="row" alignItems="center" spacing={0.75}>
+                  <Stack key={item.label} direction="row" alignItems="center" spacing={1}>
                     <Box sx={{ width: 9, height: 9, borderRadius: '50%', bgcolor: item.color }} />
                     <Typography variant="caption" color="text.secondary">
                       {item.label}
@@ -465,7 +465,7 @@ export const DirectRoomReservationDrawer = ({
                     sx={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                      gap: 1.25,
+                      gap: 1,
                     }}
                   >
                     {schedule.data.slots.map((slot: any, idx: number) => {
@@ -617,8 +617,8 @@ export const DirectRoomReservationDrawer = ({
           >
             {/* Scrollable Form Body */}
             <Box sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
-              <Stack spacing={2.5}>
-                <Stack direction="row" alignItems="center" spacing={1.25}>
+              <Stack spacing={1}>
+                <Stack direction="row" alignItems="center" spacing={1}>
                   <StepBadge number={2} />
                   <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                     Booking Details
@@ -626,7 +626,7 @@ export const DirectRoomReservationDrawer = ({
                 </Stack>
 
                 <Stack
-                  spacing={2.5}
+                  spacing={1}
                   sx={{
                     p: 2.5,
                     borderRadius: 2,
@@ -643,7 +643,7 @@ export const DirectRoomReservationDrawer = ({
                   fullWidth
                 />
 
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <CustomSelect
                     label="Reservation Type *"
                     options={RESERVATION_TYPE_OPTIONS.map((o) => ({
@@ -670,7 +670,7 @@ export const DirectRoomReservationDrawer = ({
                   placeholder="e.g. Grade 9 Chemistry Lab"
                 />
 
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <TextField
                     size="small"
                     label="Start Time *"
@@ -732,7 +732,7 @@ export const DirectRoomReservationDrawer = ({
 
                 {requirements.isRecurring && (
                   <Stack
-                    spacing={2}
+                    spacing={1}
                     sx={{
                       p: 2,
                       bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
@@ -745,7 +745,7 @@ export const DirectRoomReservationDrawer = ({
                       Recurring Configuration
                     </Typography>
 
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <CustomSelect
                         label="Repeat Pattern"
                         options={[
@@ -837,7 +837,7 @@ export const DirectRoomReservationDrawer = ({
                       </Stack>
                     )}
 
-                    <Stack direction="row" flexWrap="wrap" gap={2}>
+                    <Stack direction="row" flexWrap="wrap" gap={1}>
                       <FormControlLabel
                         control={
                           <Switch

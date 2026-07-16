@@ -45,7 +45,7 @@ const AuditActionBadge = ({ action, variant = 'chip' }: Props) => {
 
   if (variant === 'inline') {
     return (
-      <Stack direction="row" alignItems="center" gap={1.25}>
+      <Stack direction="row" alignItems="center" gap={1}>
         <Box
           sx={{
             width: 32,

@@ -7,6 +7,9 @@ import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import type { TResource } from '../all-resources';
@@ -20,6 +23,10 @@ interface ResourceFormProps {
 
 const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, isEdit }) => {
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'draft'));
+  const [uploadFile, { isLoading: isUploading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
   // const dialog = useBoolean();
   const formik = useFormik<TResource>({
     initialValues: {
@@ -45,10 +52,10 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, is
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '250px' }}>
-          <Grid container spacing={2} marginTop={1}>
+          <Grid container spacing={1} marginTop={1}>
             <Grid size={{ xs: 12 }}>
               <TextField
                 disabled={isEdit}
@@ -109,7 +116,21 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, is
 
             <Grid size={{ xs: 12 }}>
               <UploadBox
-                onDrop={() => {}}
+                onDrop={async (acceptedFiles: File[]) => {
+                  const file = acceptedFiles[0];
+                  if (!file) return;
+
+                  try {
+                    const formData = new FormData();
+                    formData.append('File', file);
+                    const response = await uploadFile(formData).unwrap();
+                    formik.setFieldValue('fileType', response.data || file.name);
+                    shikshaMitraToast.success({ message: 'Document uploaded successfully.' });
+                  } catch (error) {
+                    console.error('Resource document upload failed', error);
+                    shikshaMitraToast.error({ message: 'Document upload failed.' });
+                  }
+                }}
                 placeholder={
                   <Box
                     sx={{
@@ -142,6 +163,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, is
               formik.handleSubmit();
             }}
             color="warning"
+            disabled={isUploading}
           >
             Save as Draft
           </Button>
@@ -152,6 +174,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, is
               setIsDraft(false);
               formik.handleSubmit();
             }}
+            disabled={isUploading}
           >
             Save and Publish
           </Button>

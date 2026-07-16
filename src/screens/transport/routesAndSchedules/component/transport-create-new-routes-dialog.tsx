@@ -36,8 +36,8 @@
 
 //     return (
 //         <CustomDialog title="Enter Route Details" open={dialogValue} handleClose={onClose}>
-//             <Box py="15px" px="15px" display="flex" flexDirection="column" gap={2}>
-//                 <Box display="flex" flexDirection="row" gap={2}>
+//             <Box py="15px" px="15px" display="flex" flexDirection="column" gap={1}>
+//                 <Box display="flex" flexDirection="row" gap={1}>
 //                     <TextField
 //                         name="department"
 //                         label="Department"

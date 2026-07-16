@@ -14,7 +14,7 @@ import type {
 
 import dayjs from 'dayjs';
 import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -1682,7 +1682,7 @@ const SubstitutionManagementScreen = () => {
       sticky: true,
       stickyPosition: 'right' as const,
       render: (_value: unknown, row: SubstitutionRow) => (
-        <Stack direction="row" spacing={0.75} justifyContent="center">
+        <Stack direction="row" spacing={1} justifyContent="center">
           <Button
             size="small"
             variant={row.substituteTeacherName ? 'outlined' : 'contained'}
@@ -1710,7 +1710,7 @@ const SubstitutionManagementScreen = () => {
         md: 'repeat(3, 1fr)',
         lg: 'repeat(6, 1fr)',
       }}
-      gap={1.5}
+      gap={1}
     >
       {metrics.map((item) => (
         <Card
@@ -1804,7 +1804,7 @@ const SubstitutionManagementScreen = () => {
       alignItems="center"
       sx={{ pb: 1.5, mb: 1.5, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}
     >
-      <Stack direction="row" spacing={1.25} alignItems="center">
+      <Stack direction="row" spacing={1} alignItems="center">
         <Box
           sx={{
             width: 32,
@@ -1841,7 +1841,7 @@ const SubstitutionManagementScreen = () => {
         'Today Timeline',
         <Chip size="small" label={`${todayRows.length} periods`} variant="outlined" />
       )}
-      <Stack spacing={1.25}>
+      <Stack spacing={1}>
         {todayRows.length === 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
             No periods scheduled for today.
@@ -1881,7 +1881,7 @@ const SubstitutionManagementScreen = () => {
                     Room {item.assignedRoomName || item.roomName}
                   </Typography>
                 </Box>
-                <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {renderStatus(item.status)}
                   {renderAck(item.acknowledgementStatus)}
                   <Chip
@@ -1933,7 +1933,7 @@ const SubstitutionManagementScreen = () => {
         {renderSectionHeader('mdi:radar', 'AI Risk Panel')}
         <Stack direction="row" divider={<Divider orientation="vertical" flexItem />} sx={{ mb: 2 }}>
           {riskStats.map((stat) => (
-            <Stack key={stat.label} spacing={0.25} alignItems="center" sx={{ flex: 1 }}>
+            <Stack key={stat.label} spacing={1} alignItems="center" sx={{ flex: 1 }}>
               <Iconify icon={stat.icon} width={18} sx={{ opacity: 0.6 }} />
               <Typography variant="h6" sx={{ lineHeight: 1.1 }}>
                 {stat.value}
@@ -1960,7 +1960,7 @@ const SubstitutionManagementScreen = () => {
                   border: (theme) => `1px solid ${theme.palette.divider}`,
                 }}
               >
-                <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
                   <Iconify
                     icon={isClear ? 'mdi:check-circle-outline' : 'mdi:alert-circle-outline'}
                     width={18}
@@ -1993,7 +1993,7 @@ const SubstitutionManagementScreen = () => {
       }}
     >
       {renderSectionHeader('mdi:account-group-outline', 'Teacher Load Snapshot')}
-      <Stack spacing={1.75}>
+      <Stack spacing={1}>
         {(
           dashboardResult?.workloadSnapshot?.map((teacher: ApiSuggestedTeacher) =>
             mapApiSuggestedTeacher(teacher)
@@ -2042,7 +2042,7 @@ const SubstitutionManagementScreen = () => {
     ];
 
     return (
-      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} alignItems="stretch">
+      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1} alignItems="stretch">
         {columns.map((column) => {
           const rows = filteredSubstitutions.filter((item) => item.status === column.key);
           return (
@@ -2080,7 +2080,7 @@ const SubstitutionManagementScreen = () => {
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                       Substitute: {item.substituteTeacherName || 'Not Assigned'}
                     </Typography>
-                    <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
                       <Chip
                         size="small"
                         label={item.priority}
@@ -2113,7 +2113,7 @@ const SubstitutionManagementScreen = () => {
       <Typography variant="h6" sx={{ mb: 1.5 }}>
         Calendar View
       </Typography>
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} flexWrap="wrap" useFlexGap>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} flexWrap="wrap" useFlexGap>
         {lectureSlotOptions.map((slot) => {
           const rows = filteredSubstitutions.filter((item) => item.period === slot.value);
           return (
@@ -2127,7 +2127,7 @@ const SubstitutionManagementScreen = () => {
               }}
             >
               <Typography variant="subtitle2">{slot.label}</Typography>
-              <Stack spacing={0.75} sx={{ mt: 1 }}>
+              <Stack spacing={1} sx={{ mt: 1 }}>
                 {rows.length === 0 ? (
                   <Typography variant="caption" color="text.secondary">
                     No substitution
@@ -2167,8 +2167,9 @@ const SubstitutionManagementScreen = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Substitution Management"
         description="Manage teacher unavailability, substitution duties and daily coverage."
         links={[
@@ -2248,7 +2249,7 @@ const SubstitutionManagementScreen = () => {
 
           {/* Filters Button aligned on the right side of the Tabs row (only where filtering applies) */}
           {activeTab === 'board' && (
-            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: 2 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 2 }}>
               <FiltersBar
                 filters={filters}
                 onChange={(patch) => setFilters((current) => ({ ...current, ...patch }))}
@@ -2271,12 +2272,12 @@ const SubstitutionManagementScreen = () => {
       </Card>
 
       {activeTab === 'overview' && (
-        <Stack spacing={2}>
-          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} alignItems="stretch">
+        <Stack spacing={1}>
+          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1} alignItems="stretch">
             <Box sx={{ flex: 1.4 }}>{renderTimeline()}</Box>
             <Box sx={{ flex: 1 }}>{renderRiskPanel()}</Box>
           </Stack>
-          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} alignItems="stretch">
+          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1} alignItems="stretch">
             <Card
               sx={{
                 p: 2.5,
@@ -2322,7 +2323,7 @@ const SubstitutionManagementScreen = () => {
                         >
                           <Stack
                             direction="row"
-                            spacing={1.25}
+                            spacing={1}
                             alignItems="center"
                             sx={{ minWidth: 0 }}
                           >
@@ -2364,7 +2365,7 @@ const SubstitutionManagementScreen = () => {
       )}
 
       {activeTab === 'board' && (
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
             <Typography variant="h6">Substitution Board</Typography>
             <ToggleButtonGroup
@@ -2544,7 +2545,7 @@ const SubstitutionManagementScreen = () => {
       )}
 
       {activeTab === 'myDuties' && (
-        <Stack spacing={2.5}>
+        <Stack spacing={1}>
           {(() => {
             const terminalStatuses: SubstitutionStatus[] = ['Completed', 'Cancelled', 'Rejected'];
             const needsActionCount = myDutyRows.filter(
@@ -2570,7 +2571,7 @@ const SubstitutionManagementScreen = () => {
               <Box
                 display="grid"
                 gridTemplateColumns={{ xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }}
-                gap={1.5}
+                gap={1}
               >
                 {dutyStats.map((stat) => (
                   <Card
@@ -2582,7 +2583,7 @@ const SubstitutionManagementScreen = () => {
                       border: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <Stack direction="row" spacing={1.25} alignItems="center">
+                    <Stack direction="row" spacing={1} alignItems="center">
                       <Box
                         sx={{
                           width: 34,
@@ -2659,7 +2660,7 @@ const SubstitutionManagementScreen = () => {
                     direction={{ xs: 'column', md: 'row' }}
                     justifyContent="space-between"
                     alignItems={{ md: 'flex-start' }}
-                    spacing={1.5}
+                    spacing={1}
                   >
                     <Box>
                       {(() => {
@@ -2693,14 +2694,14 @@ const SubstitutionManagementScreen = () => {
                         {item.subjectName} · {item.time} · Room{' '}
                         {item.assignedRoomName || item.roomName}
                       </Typography>
-                      <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.5 }}>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
                         <Iconify icon="mdi:account-outline" width={15} color="text.disabled" />
                         <Typography variant="caption" color="text.secondary">
                           Covering for {item.originalTeacherName}
                         </Typography>
                       </Stack>
                     </Box>
-                    <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                       {renderStatus(item.status)}
                       {renderAck(item.acknowledgementStatus)}
                     </Stack>
@@ -2716,7 +2717,7 @@ const SubstitutionManagementScreen = () => {
                       bgcolor: 'background.neutral',
                     }}
                   >
-                    <Stack direction="row" spacing={0.75} alignItems="center">
+                    <Stack direction="row" spacing={1} alignItems="center">
                       <Iconify
                         icon={
                           item.status === 'Completed'
@@ -2783,12 +2784,12 @@ const SubstitutionManagementScreen = () => {
       )}
 
       {activeTab === 'analytics' && (
-        <Stack spacing={3}>
+        <Stack spacing={1}>
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             justifyContent="space-between"
             alignItems={{ xs: 'flex-start', sm: 'center' }}
-            spacing={2}
+            spacing={1}
           >
             <Box>
               <Typography variant="h6">Substitution Rules</Typography>
@@ -2811,7 +2812,7 @@ const SubstitutionManagementScreen = () => {
           <Box
             display="grid"
             gridTemplateColumns={{ xs: '1fr', md: 'repeat(3, 1fr)' }}
-            gap={2.5}
+            gap={1}
             alignItems="stretch"
           >
             <Card
@@ -2824,7 +2825,7 @@ const SubstitutionManagementScreen = () => {
             >
               <Stack
                 direction="row"
-                spacing={1.5}
+                spacing={1}
                 alignItems="center"
                 sx={{
                   px: 2.5,
@@ -2856,7 +2857,7 @@ const SubstitutionManagementScreen = () => {
                 </Box>
               </Stack>
               <CardContent sx={{ p: 2.5 }}>
-                <Stack spacing={2.5}>
+                <Stack spacing={1}>
                   <TextField
                     size="small"
                     type="number"
@@ -2901,7 +2902,7 @@ const SubstitutionManagementScreen = () => {
             >
               <Stack
                 direction="row"
-                spacing={1.5}
+                spacing={1}
                 alignItems="center"
                 sx={{
                   px: 2.5,
@@ -2933,12 +2934,12 @@ const SubstitutionManagementScreen = () => {
                 </Box>
               </Stack>
               <CardContent sx={{ p: 2.5 }}>
-                <Stack spacing={2}>
+                <Stack spacing={1}>
                   <Stack
                     direction="row"
                     alignItems="center"
                     justifyContent="space-between"
-                    spacing={1.5}
+                    spacing={1}
                     sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
                   >
                     <Box>
@@ -2964,7 +2965,7 @@ const SubstitutionManagementScreen = () => {
                     direction="row"
                     alignItems="center"
                     justifyContent="space-between"
-                    spacing={1.5}
+                    spacing={1}
                     sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
                   >
                     <Box>
@@ -3014,7 +3015,7 @@ const SubstitutionManagementScreen = () => {
             >
               <Stack
                 direction="row"
-                spacing={1.5}
+                spacing={1}
                 alignItems="center"
                 sx={{
                   px: 2.5,
@@ -3046,12 +3047,12 @@ const SubstitutionManagementScreen = () => {
                 </Box>
               </Stack>
               <CardContent sx={{ p: 2.5 }}>
-                <Stack spacing={2}>
+                <Stack spacing={1}>
                   <Stack
                     direction="row"
                     alignItems="center"
                     justifyContent="space-between"
-                    spacing={1.5}
+                    spacing={1}
                     sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
                   >
                     <Box>
@@ -3077,7 +3078,7 @@ const SubstitutionManagementScreen = () => {
                     direction="row"
                     alignItems="center"
                     justifyContent="space-between"
-                    spacing={1.5}
+                    spacing={1}
                     sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}
                   >
                     <Box>
@@ -3188,13 +3189,13 @@ const SubstitutionManagementScreen = () => {
         handleClose={() => setCreateDialogOpen(false)}
       >
         <DialogScrollContent>
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             {formError && <Alert severity="error">{formError}</Alert>}
             <Alert severity="info" icon={<AutoAwesome />}>
               Select the affected lecture, review auto-filled details, choose a substitute teacher,
               then save draft or assign and notify.
             </Alert>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <DatePicker
                 label="Date"
                 value={substitutionForm.date}
@@ -3285,7 +3286,7 @@ const SubstitutionManagementScreen = () => {
                 }
               />
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <CustomSelect
                 label="Lecture Slot"
                 options={lectureSelectOptions}
@@ -3365,7 +3366,7 @@ const SubstitutionManagementScreen = () => {
                 }}
               />
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <CustomSelect
                 label="Original Teacher"
                 options={teacherSelectOptions}
@@ -3495,7 +3496,7 @@ const SubstitutionManagementScreen = () => {
                 )}
               </Stack>
             </Card>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <CustomSelect
                 label="Substitute Teacher"
                 options={availableTeacherSelectOptions}
@@ -3523,7 +3524,7 @@ const SubstitutionManagementScreen = () => {
                 }}
               />
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <CustomSelect
                 label="Reason"
                 options={reasonOptions}
@@ -3555,7 +3556,7 @@ const SubstitutionManagementScreen = () => {
                 }
               />
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <CustomSelect
                 label="Notification Method"
                 options={notificationMethods}
@@ -3579,7 +3580,7 @@ const SubstitutionManagementScreen = () => {
                 }
               />
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <FormControlLabel
                 control={
                   <Switch
@@ -3652,7 +3653,7 @@ const SubstitutionManagementScreen = () => {
         handleClose={() => setAssignDialogOpen(false)}
       >
         <DialogScrollContent>
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             {selectedSubstitution && (
               <Alert severity="info">
                 {selectedSubstitution.period} | Class {selectedSubstitution.className}-
@@ -3692,7 +3693,7 @@ const SubstitutionManagementScreen = () => {
                         {teacher.loadStatus}
                       </Typography>
                     </Box>
-                    <Stack direction="row" flexWrap="wrap" gap={0.75}>
+                    <Stack direction="row" flexWrap="wrap" gap={1}>
                       {teacher.canTeachSubject && (
                         <Chip
                           size="small"
@@ -3732,7 +3733,7 @@ const SubstitutionManagementScreen = () => {
                 </Box>
               );
             })}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <CustomSelect
                 label="Room Change (Optional)"
                 options={[{ value: '', label: 'Keep current room' }, ...roomOptions]}
@@ -3767,9 +3768,9 @@ const SubstitutionManagementScreen = () => {
         handleClose={() => setAvailabilityDialogOpen(false)}
       >
         <DialogScrollContent>
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             {availabilityError && <Alert severity="error">{availabilityError}</Alert>}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <PaginatedSearchSelect<EmployeeOption>
                 label="Teacher"
                 fetchOptions={fetchAvailabilityTeacherOptions}
@@ -3823,7 +3824,7 @@ const SubstitutionManagementScreen = () => {
               }
               label="Full day unavailable"
             />
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <TextField
                 size="small"
                 type="time"
@@ -3847,7 +3848,7 @@ const SubstitutionManagementScreen = () => {
                 fullWidth
               />
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <CustomSelect
                 label="Availability Status"
                 options={availabilityStatusOptions}
@@ -3868,7 +3869,7 @@ const SubstitutionManagementScreen = () => {
                 }
               />
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <FormControlLabel
                 control={
                   <Switch
@@ -3994,7 +3995,7 @@ const SubstitutionManagementScreen = () => {
         handleClose={() => setAuditDialogOpen(false)}
       >
         <DialogScrollContent>
-          <Stack spacing={1.25}>
+          <Stack spacing={1}>
             {selectedSubstitution?.auditLog.map((entry, index) => (
               <Box
                 key={`${entry.at}-${index}`}

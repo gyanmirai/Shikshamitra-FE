@@ -4,7 +4,7 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
 import { Box, Grid, Card } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -30,6 +30,7 @@ const GradingAndAnalytics = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Student Performance And Analytics"
         description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
         links={[
@@ -38,7 +39,7 @@ const GradingAndAnalytics = (props: TabComponentType) => {
           { name: 'Student Performance And Analytics' },
         ]}
       />
-      <Box display="flex" gap={2} mt={2} mb={5}>
+      <Box display="flex" gap={1} mt={2} mb={5}>
         <CustomSelect
           label="Class"
           options={classData?.items || []}
@@ -70,17 +71,21 @@ const GradingAndAnalytics = (props: TabComponentType) => {
         <DatePicker
           label="Start Date"
           format="DD-MM-YYYY"
+          standardId={classes || null}
+          divisionId={division || null}
           sx={{ maxWidth: '180px', width: '100%' }}
           slotProps={{ textField: { size: 'small' } }}
         />
         <DatePicker
           label="End Date"
           format="DD-MM-YYYY"
+          standardId={classes || null}
+          divisionId={division || null}
           sx={{ maxWidth: '180px', width: '100%' }}
           slotProps={{ textField: { size: 'small' } }}
         />
       </Box>
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <AnalyticsWebsiteVisits
@@ -112,7 +117,7 @@ const GradingAndAnalytics = (props: TabComponentType) => {
       </Grid>
 
       <Box sx={{ display: 'flex', mt: 2 }}>
-        <Grid container spacing={2}>
+        <Grid container spacing={1}>
           <Grid size={{ xs: 12, md: 6 }}>
             <TopPerformer
               title="Top Performer"
@@ -169,7 +174,7 @@ const GradingAndAnalytics = (props: TabComponentType) => {
         </Grid>
       </Box>
 
-      {/* <Box display="flex" gap={2} mt={2} justifyContent="end" mb={20}>
+      {/* <Box display="flex" gap={1} mt={2} justifyContent="end" mb={20}>
         <Button
           startIcon={<Iconify icon="mingcute:notification-fill" />}
           color="warning"

@@ -14,7 +14,7 @@ const icons = {
 };
 
 const ActivityDashboardCards = () => (
-  <Grid container spacing={2}>
+  <Grid container spacing={1}>
     {/* Statistics Cards */}
     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
       <ActivityDashboardCard

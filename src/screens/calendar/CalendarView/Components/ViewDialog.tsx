@@ -102,7 +102,7 @@ export default function CalendarViewDialog({ open, onClose, data }: ViewDialogPr
             py: 2.5,
             borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
           }}
-          gap={2}
+          gap={1}
         >
           <Stack gap={1} sx={{ minWidth: 0 }}>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>

@@ -59,6 +59,7 @@ const StudentProgressAnalyticsScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Student Progress & Analytics"
         links={[
           { name: 'Academic And Assessment' },

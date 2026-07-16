@@ -94,8 +94,9 @@ const CalendarSettingsScreen = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Calendar Settings"
         description="Configure all rules for the academic calendar — weekends, blocking, notifications, and visibility."
         links={[
@@ -134,7 +135,7 @@ const CalendarSettingsScreen = () => {
         <CustomTabs
           value={searchParams.tab}
           onChange={(_, val) => setParam('tab', val)}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
         >
           {TABS.map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
@@ -167,7 +168,7 @@ const CalendarSettingsScreen = () => {
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
               alignItems={{ sm: 'center' }}
-              gap={2}
+              gap={1}
               mb={3}
             >
               <Box>

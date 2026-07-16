@@ -245,7 +245,7 @@ const ReceiptManagement = () => {
       <Box
         display="flex"
         flexWrap="wrap"
-        gap={1.5}
+        gap={1}
         sx={{
           borderRadius: 2,
           bgcolor: 'background.paper',

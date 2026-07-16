@@ -122,7 +122,7 @@ export default function PayrollComponentDialog({
           fullWidth
           loading={isLoading}
           loadingText={
-            <Box display="flex" alignItems="center" gap={1.5} justifyContent="center" py={1.5}>
+            <Box display="flex" alignItems="center" gap={1} justifyContent="center" py={1.5}>
               <CircularProgress size={20} color="inherit" />
               <Typography variant="body2" color="text.secondary">
                 Loading components...

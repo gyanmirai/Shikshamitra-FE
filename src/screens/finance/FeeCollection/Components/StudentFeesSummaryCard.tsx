@@ -107,7 +107,7 @@ export const StudentFeeSummaryCard: React.FC<{
                 pb: { xs: 1.2, lg: 0 },
               }}
             >
-              <Box display="flex" alignItems="center" gap={1.4}>
+              <Box display="flex" alignItems="center" gap={1}>
                 <Avatar
                   src={student.profileImage}
                   sx={{
@@ -140,7 +140,7 @@ export const StudentFeeSummaryCard: React.FC<{
                     </Typography>
                   </Box>
 
-                  <Box display="flex" alignItems="center" gap={0.8} flexWrap="wrap">
+                  <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
                     <Typography
                       variant="caption"
                       sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 0.6 }}

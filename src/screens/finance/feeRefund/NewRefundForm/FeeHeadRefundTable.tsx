@@ -353,7 +353,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
         <Box
           display="flex"
           alignItems="flex-start"
-          gap={1.5}
+          gap={1}
           px={2}
           py={1.5}
           mb={1}

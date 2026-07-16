@@ -80,11 +80,11 @@ const HostelPaymentMethodComponent = (props: TabComponentType) => {
     setSelectedPaymentMethodName(null);
   };
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <Grid container spacing={2}>
         {/* Add New Payment Method */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Box pt="15px" display="flex" alignItems="center" gap={3}>
+          <Box pt="15px" display="flex" alignItems="center" gap={1}>
             <TextField
               autoFocus
               name="newPaymentMethod"

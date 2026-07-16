@@ -20,7 +20,7 @@ export default function SeatingReadinessBanner({ blockers, warnings, allocationP
 
   return (
     <Alert severity={severity} variant="filled" sx={{ mb: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         <Typography variant="subtitle1" fontWeight={700}>
           {title}
         </Typography>

@@ -38,7 +38,7 @@ const InventoryCategoryChart = () => {
       <CardHeader
         title=" Inventory Status by Category"
         action={
-          <Box display="flex" gap={2}>
+          <Box display="flex" gap={1}>
             <ChartSelect
               options={months.map((item) => item)}
               value={selectedMonth}

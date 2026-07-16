@@ -4,7 +4,7 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useCallback } from 'react';
@@ -286,7 +286,7 @@ export const LessonPlanFilters = ({ filters, onChange, onReset }: LessonPlanFilt
           </Button>
         </Stack>
 
-        <Stack spacing={2.5} sx={{ maxHeight: 420, overflowY: 'auto', pr: 0.5, mb: 3 }}>
+        <Stack spacing={1} sx={{ maxHeight: 420, overflowY: 'auto', pr: 0.5, mb: 3 }}>
           {/* Section 1: Period & Quick filter */}
           <Typography
             variant="overline"
@@ -302,7 +302,7 @@ export const LessonPlanFilters = ({ filters, onChange, onReset }: LessonPlanFilt
             formControlProps={{ fullWidth: true }}
           />
 
-          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1}>
             <DatePicker
               label="From Date"
               value={draftFilters.fromDate}
@@ -326,7 +326,7 @@ export const LessonPlanFilters = ({ filters, onChange, onReset }: LessonPlanFilt
           >
             Academic Info
           </Typography>
-          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1}>
             <CustomSelect
               label="Teacher"
               options={allTeacherOptions}
@@ -373,7 +373,7 @@ export const LessonPlanFilters = ({ filters, onChange, onReset }: LessonPlanFilt
           >
             Status info
           </Typography>
-          <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={2}>
+          <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={1}>
             <CustomSelect
               label="Plan Status"
               options={planStatusOptions}
@@ -398,7 +398,7 @@ export const LessonPlanFilters = ({ filters, onChange, onReset }: LessonPlanFilt
           </Box>
         </Stack>
 
-        <Stack direction="row" spacing={1.5} justifyContent="flex-end">
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
           <Button variant="outlined" color="inherit" onClick={popover.onClose}>
             Cancel
           </Button>

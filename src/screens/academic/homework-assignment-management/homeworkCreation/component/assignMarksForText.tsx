@@ -142,7 +142,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
           onSubmit={formik.handleSubmit}
         >
           <Scrollbar sx={{ flex: 1, minHeight: 0, p: 2 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={1}>
               {/* Student Profile Section */}
               <Grid size={{ xs: 12 }}>
                 <Card
@@ -166,9 +166,9 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                       direction="row"
                       alignItems="center"
                       justifyContent="space-between"
-                      spacing={2}
+                      spacing={1}
                     >
-                      <Stack direction="row" alignItems="center" spacing={1.5}>
+                      <Stack direction="row" alignItems="center" spacing={1}>
                         <Avatar
                           alt={data?.studentName || 'Student'}
                           sx={{
@@ -369,7 +369,7 @@ I have completed all answers as per the instructions.`}
                   </Box>
 
                   <Box sx={{ p: 2 }}>
-                    <Grid container spacing={2}>
+                    <Grid container spacing={1}>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <ShakingTextField
                           error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}

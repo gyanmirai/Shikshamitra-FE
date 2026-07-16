@@ -206,7 +206,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           <Tabs
             value={tabs.value}
             onChange={handleTabChange}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 2 }, flexGrow: 1 }}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, flexGrow: 1 }}
           >
             {TABS.map((tab) => (
               <Tab
@@ -291,7 +291,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               isFilter: false,
               isSort: false,
               render: (value) => (
-                <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                <Stack direction="row" flexWrap="wrap" gap={1}>
                   {(value || []).slice(0, 2).map((division: string) => (
                     <Chip key={division} label={division} size="small" variant="soft" />
                   ))}
@@ -332,7 +332,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               isFilter: false,
               isSort: false,
               render: (_value, row) => (
-                <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                <Stack direction="row" flexWrap="wrap" gap={1}>
                   {(row.issueCount ?? 0) > 0 ? (
                     <Chip
                       label={`${row.issueCount} issue${row.issueCount > 1 ? 's' : ''}`}

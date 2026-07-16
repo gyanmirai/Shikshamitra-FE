@@ -93,7 +93,7 @@ const SecurityReportsScreen = () => {
 
             {/* Action Buttons */}
             <Grid size={12}>
-              <Box display="flex" justifyContent="flex-end" gap={2}>
+              <Box display="flex" justifyContent="flex-end" gap={1}>
                 <Button
                   startIcon={<Iconify icon="ion:download" />}
                   variant="contained"

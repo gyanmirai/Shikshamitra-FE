@@ -13,6 +13,8 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   type LearningResourceDto,
   useGetLearningResourcesQuery,
@@ -40,6 +42,10 @@ const LearningResources = (props: TabComponentType) => {
   const [updateLearningResource, { isLoading: isUpdating }] = useUpdateLearningResourceMutation();
   const [publishLearningResource] = usePublishLearningResourceMutation();
   const [archiveLearningResource] = useArchiveLearningResourceMutation();
+  const [uploadFile, { isLoading: isUploading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
 
   // Function to close the dialog and reset form state
   const handleClose = (_e: unknown, isSubmit?: boolean) => {
@@ -75,6 +81,7 @@ const LearningResources = (props: TabComponentType) => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* CustomBreadcrumbs component for navigation and page header */}
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Resources"
         description={
           addLearningResourceDialog.value
@@ -110,10 +117,10 @@ const LearningResources = (props: TabComponentType) => {
         }}
       >
         <CreateNewResource
-          isSaving={isAdding || isUpdating}
+          isSaving={isAdding || isUpdating || isUploading}
           onSave={async (values) => {
             try {
-              const body = toResourcePayload(values);
+              const body = await toResourcePayload(values, uploadFile);
               if (selectedEntry?.id) {
                 await updateLearningResource({ id: selectedEntry.id, body }).unwrap();
                 shikshaMitraToast.success({ message: 'Learning resource updated successfully.' });
@@ -171,10 +178,10 @@ const LearningResources = (props: TabComponentType) => {
         }}
       >
         <CreateNewResource
-          isSaving={isAdding || isUpdating}
+          isSaving={isAdding || isUpdating || isUploading}
           onSave={async (values) => {
             try {
-              const body = toResourcePayload(values);
+              const body = await toResourcePayload(values, uploadFile);
               if (selectedEntry?.id) {
                 await updateLearningResource({ id: selectedEntry.id, body }).unwrap();
                 shikshaMitraToast.success({ message: 'Learning resource updated successfully.' });
@@ -220,10 +227,26 @@ const toFormResource = (resource: LearningResourceDto): IResourceData => ({
   document: resource.fileName,
 });
 
-const toResourcePayload = (values: IResourceData) => {
+const toResourcePayload = async (
+  values: IResourceData,
+  uploadFile: (body: FormData) => { unwrap: () => Promise<{ data?: string }> }
+) => {
   const file = values.document instanceof File ? values.document : null;
-  const fileName = file?.name || String(values.document || values.resourceTitle);
+  let blobName = String(values.document || values.resourceTitle);
+  const fileName = file?.name || blobName;
   const contentType = file?.type || 'application/pdf';
+  const size = file?.size || 1;
+
+  if (file) {
+    const formData = new FormData();
+    formData.append('File', file);
+    const uploadResponse = await uploadFile(formData).unwrap();
+    blobName = uploadResponse?.data || '';
+
+    if (!blobName) {
+      throw new Error('File upload failed.');
+    }
+  }
 
   return {
     standardId: values.className,
@@ -232,10 +255,10 @@ const toResourcePayload = (values: IResourceData) => {
     resourceTitle: values.resourceTitle,
     topic: values.resourceTitle,
     resourceType: contentType.includes('video') ? 'Video' : 'Document',
-    blobName: fileName,
+    blobName,
     fileName,
     contentType,
-    size: file?.size || 1,
+    size,
     visibility: 1,
   };
 };

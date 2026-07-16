@@ -38,7 +38,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2.5}>
+        <Grid container spacing={1}>
           <Grid size={{ xs: 12 }}>
             <Typography variant="subtitle2">Basic Details</Typography>
           </Grid>

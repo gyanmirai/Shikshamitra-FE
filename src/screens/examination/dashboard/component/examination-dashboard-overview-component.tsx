@@ -51,6 +51,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Dashboard"
         links={[
           { name: 'Examination and Assessment' },
@@ -118,7 +119,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
           formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
         />
       </Box>
-      <Grid container spacing={2} mt={1}>
+      <Grid container spacing={1} mt={1}>
         <Grid size={{ xs: 12, md: 3 }}>
           <EmployeeDashboardCard
             title="Total Exam"
@@ -171,7 +172,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
         </Grid>
       </Grid>
 
-      <Grid container spacing={2} mt={1}>
+      <Grid container spacing={1} mt={1}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -237,7 +238,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
         </Grid>
       </Grid>
 
-      {/* <Grid2 container spacing={3}>
+      {/* <Grid2 container spacing={1}>
         <Grid2 xs={12} md={6} lg={6}>
           <Card sx={{ p: 3, height: '100%' }}>
             <Typography component="span" variant="h6" gutterBottom>
@@ -263,7 +264,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
           <ScrollableCard showFilter title="Upcoming Exams" content={pendingExams} />{' '}
         </Grid2>
       </Grid2>
-      <Grid2 container spacing={3}>
+      <Grid2 container spacing={1}>
         <Grid2 xs={12} md={6} lg={6}>
           <ScrollableCard showFilter={false} title="Completed Exams" content={pendingExams} />
         </Grid2>
@@ -272,7 +273,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
         </Grid2>
       </Grid2>
 
-      <Box display="flex" flexDirection="row" gap={3} sx={{ pb: '20px', pt: '20px' }}>
+      <Box display="flex" flexDirection="row" gap={1} sx={{ pb: '20px', pt: '20px' }}>
         <CustomSelect
           label="Class"
           options={[]}

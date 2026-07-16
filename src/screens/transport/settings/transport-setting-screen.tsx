@@ -67,7 +67,7 @@ const TransportSettingScreen = () => {
     </Box>
     // <>
     //   <Typography variant="h6">Notification Settings</Typography>
-    //   <Box sx={{ py: '8px', display: 'flex', flexDirection: 'row' }} gap={3}>
+    //   <Box sx={{ py: '8px', display: 'flex', flexDirection: 'row' }} gap={1}>
     //     <FormControlLabel control={<Switch />} label="Receive Maintenance Alerts" />
     //     <FormControlLabel control={<Switch />} label="Receive Delay Notifications" />
     //   </Box>
@@ -82,11 +82,11 @@ const TransportSettingScreen = () => {
     //   <Typography sx={{ pt: '15px', pb: '10px' }} variant="h6">
     //     User Preferences
     //   </Typography>
-    //   <Box sx={{ py: '8px', display: 'flex', flexDirection: 'row' }} gap={3}>
+    //   <Box sx={{ py: '8px', display: 'flex', flexDirection: 'row' }} gap={1}>
     //     <FormControlLabel control={<Switch />} label="Receive Maintenance Alerts" />
     //     <FormControlLabel control={<Switch />} label="Receive Delay Notifications" />
     //   </Box>
-    //   <Box display="flex" flexDirection="row" gap={3}>
+    //   <Box display="flex" flexDirection="row" gap={1}>
     //     <CustomSelect
     //       label="Map View Customization"
     //       name="MapViewCustomization"

@@ -82,7 +82,7 @@ export function CalendarToolbar({
         justifyContent="space-between"
         sx={{ p: 2.5, pr: 2, position: 'relative' }}
       >
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={1}>
           <ButtonGroup
             size="small"
             sx={{

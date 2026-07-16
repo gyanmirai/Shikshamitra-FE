@@ -163,7 +163,7 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
   return (
     <Box>
       {selectedTemplate === null && (
-        <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+        <Box display="flex" gap={1} flexWrap="wrap" mb={2}>
           <CustomSelect
             options={[{ name: 'All', id: 'all' }, ...allOrganization]}
             label="Organization"
@@ -205,7 +205,7 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
             <Typography variant="h6" mb={2}>
               Choose Template
             </Typography>
-            <Box flexGrow={1} display="flex" gap={2} flexWrap="wrap">
+            <Box flexGrow={1} display="flex" gap={1} flexWrap="wrap">
               {Object.values(IcardTemplate).map((CurrentTemplate, index) => {
                 const Comp = CurrentTemplate.default;
                 return (

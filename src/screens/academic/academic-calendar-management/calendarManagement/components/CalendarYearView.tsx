@@ -14,6 +14,8 @@ interface Props {
   calendarEndDate: string;
   isLoading: boolean;
   onDayClick: (date: string) => void;
+  activeDayType: DayType | null;
+  onToggleDayType: (type: DayType) => void;
 }
 
 const WEEKDAY_ABBR = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -37,6 +39,7 @@ const MonthInner = ({
   endDate,
   today,
   onDayClick,
+  activeDayType,
 }: {
   monthStart: dayjs.Dayjs;
   dayMap: Record<string, any>;
@@ -44,6 +47,7 @@ const MonthInner = ({
   endDate: string;
   today: string;
   onDayClick: (date: string) => void;
+  activeDayType: DayType | null;
 }) => {
   const theme = useTheme();
   const daysInMonth = monthStart.daysInMonth();
@@ -324,6 +328,8 @@ const CalendarYearView = ({
   calendarEndDate,
   isLoading,
   onDayClick,
+  activeDayType,
+  onToggleDayType,
 }: Props) => {
   const theme = useTheme();
 
@@ -418,7 +424,7 @@ const CalendarYearView = ({
             backgroundColor: alpha(theme.palette.primary.main, 0.01),
           }}
         >
-          <Stack direction="row" flexWrap="wrap" gap={2} alignItems="center">
+          <Stack direction="row" flexWrap="wrap" gap={1} alignItems="center">
             <Stack direction="row" alignItems="center" gap={1} mr={1.5}>
               <Avatar
                 sx={{
@@ -440,7 +446,7 @@ const CalendarYearView = ({
               </Typography>
             </Stack>
 
-            <Stack direction="row" flexWrap="wrap" gap={1.25} flex={1}>
+            <Stack direction="row" flexWrap="wrap" gap={1} flex={1}>
               {stats.map((s) => (
                 <Box
                   key={s.label}
@@ -484,7 +490,7 @@ const CalendarYearView = ({
 
         {/* Legend Row */}
         <Box sx={{ px: 3, py: 1.75, backgroundColor: alpha(theme.palette.grey[500], 0.02) }}>
-          <Stack direction="row" flexWrap="wrap" gap={2} alignItems="center">
+          <Stack direction="row" flexWrap="wrap" gap={1} alignItems="center">
             <Typography
               variant="caption"
               color="text.disabled"
@@ -493,40 +499,60 @@ const CalendarYearView = ({
             >
               Legend
             </Typography>
-            {LEGEND_ITEMS.map(({ type, label }) => (
-              <Stack key={type} direction="row" alignItems="center" gap={0.75}>
-                <Box
+            {LEGEND_ITEMS.map(({ type, label }) => {
+              const isActive = activeDayType === type;
+
+              return (
+                <Stack
+                  key={type}
+                  component="button"
+                  type="button"
+                  direction="row"
+                  alignItems="center"
+                  gap={1}
+                  onClick={() => onToggleDayType(type)}
                   sx={{
-                    width: 14,
-                    height: 14,
-                    borderRadius: '50%',
-                    backgroundColor: alpha(DAY_TYPE_COLORS[type], 0.15),
-                    border: `1.5px solid ${alpha(DAY_TYPE_COLORS[type], 0.5)}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    border: 0,
+                    cursor: 'pointer',
+                    borderRadius: 1,
+                    px: 0.75,
+                    py: 0.5,
+                    backgroundColor: isActive ? alpha(DAY_TYPE_COLORS[type], 0.12) : 'transparent',
                   }}
                 >
                   <Box
                     sx={{
-                      width: 5,
-                      height: 5,
+                      width: 14,
+                      height: 14,
                       borderRadius: '50%',
-                      backgroundColor: DAY_TYPE_COLORS[type],
+                      backgroundColor: alpha(DAY_TYPE_COLORS[type], 0.15),
+                      border: `1.5px solid ${alpha(DAY_TYPE_COLORS[type], 0.5)}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
-                  />
-                </Box>
-                <Typography
-                  variant="caption"
-                  fontWeight={600}
-                  color="text.secondary"
-                  sx={{ fontSize: '11px' }}
-                >
-                  {label}
-                </Typography>
-              </Stack>
-            ))}
-            <Stack direction="row" alignItems="center" gap={0.75}>
+                  >
+                    <Box
+                      sx={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: '50%',
+                        backgroundColor: DAY_TYPE_COLORS[type],
+                      }}
+                    />
+                  </Box>
+                  <Typography
+                    variant="caption"
+                    fontWeight={600}
+                    color="text.secondary"
+                    sx={{ fontSize: '11px' }}
+                  >
+                    {label}
+                  </Typography>
+                </Stack>
+              );
+            })}
+            <Stack direction="row" alignItems="center" gap={1}>
               <Box
                 sx={{
                   width: 14,
@@ -545,7 +571,7 @@ const CalendarYearView = ({
                 Weekend
               </Typography>
             </Stack>
-            <Stack direction="row" alignItems="center" gap={0.75} ml={{ md: 'auto' }}>
+            <Stack direction="row" alignItems="center" gap={1} ml={{ md: 'auto' }}>
               <Box
                 sx={{
                   width: 14,
@@ -578,7 +604,7 @@ const CalendarYearView = ({
       <Box
         sx={{
           display: 'grid',
-          gap: 1.5,
+          gap: 1,
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         }}
       >

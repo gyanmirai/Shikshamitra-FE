@@ -293,7 +293,7 @@ export function ChartWithTwoDropDown({
         title={title}
         subheader={subheader}
         action={
-          <Box display="flex" gap={3}>
+          <Box display="flex" gap={1}>
             {/* Vehicle (Data) Dropdown */}
             {selectedSeries === 'Daily' && (
               <ChartSelect

@@ -89,3 +89,28 @@ setup('authenticate HR manager', async ({ page }) => {
   await page.evaluate(() => localStorage.setItem('onboarding_completed', 'true'));
   await page.context().storageState({ path: authFile });
 });
+
+const academicAuthFile = path.join(process.cwd(), 'playwright/.auth/academic-admin.json');
+setup('authenticate academic admin', async ({ page }) => {
+  await login(
+    page,
+    process.env.E2E_ADMIN_EMAIL || 'admin-ddvs@ddvs.com',
+    process.env.E2E_PASSWORD || 'Temp@123'
+  );
+
+  await page.evaluate(() => localStorage.setItem('onboarding_completed', 'true'));
+  await page.context().storageState({ path: academicAuthFile });
+});
+
+const teacherAuthFile = path.join(process.cwd(), 'playwright/.auth/teacher.json');
+setup('authenticate teacher', async ({ page }) => {
+  await login(
+    page,
+    process.env.E2E_TEACHER_EMAIL || 'teacher-gseb@ddvs.com',
+    process.env.E2E_PASSWORD || 'Temp@123'
+  );
+
+  await page.evaluate(() => localStorage.setItem('onboarding_completed', 'true'));
+  await page.context().storageState({ path: teacherAuthFile });
+});
+

@@ -64,7 +64,7 @@ const NewCreateRouteScreen = () => {
               heading="Routes and Schedules"
               links={[{ name: 'Transport' }, { name: 'Routes and Schedules' }, { name: 'Form' }]}
             />
-            <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
+            <Box sx={{ mr: '15px', mb: '20px' }} gap={1} display="flex" justifyContent="flex-end">
               <Button
                 startIcon={<Iconify icon="eva:arrow-back-fill" />}
                 onClick={closeHandler}

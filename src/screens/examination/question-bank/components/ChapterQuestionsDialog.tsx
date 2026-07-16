@@ -97,10 +97,10 @@ export default function ChapterQuestionsDialog({
         filterType: 'string' as const,
         minWidth: 260,
         render: (_: any, row: any) => (
-          <Stack spacing={0.5}>
+          <Stack spacing={1}>
             <Typography variant="body2">{row.questionText}</Typography>
             {!!row.tags?.length && (
-              <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {row.tags.map((tag: string) => (
                   <Chip key={tag} size="small" label={tag} variant="soft" />
                 ))}

@@ -178,7 +178,7 @@ const WeeklyPlanningForCatering = () => {
 
   return (
     <Box>
-      <Box display="flex" gap={2} mb={1}>
+      <Box display="flex" gap={1} mb={1}>
         <Autocomplete
           options={[
             { id: 'H1', name: 'Hostel A' },

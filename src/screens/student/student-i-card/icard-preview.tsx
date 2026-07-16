@@ -15,7 +15,7 @@ const IcardPreview = ({
   return (
     <Box>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <Box display="flex" flexWrap="wrap" gap={2}>
+        <Box display="flex" flexWrap="wrap" gap={1}>
           <Paper
             elevation={2}
             sx={{

@@ -14,7 +14,7 @@ export function EnrollmentWorkspaceHeader({ title, description, actions }: Props
       direction={{ xs: 'column', sm: 'row' }}
       alignItems={{ xs: 'stretch', sm: 'center' }}
       justifyContent="space-between"
-      gap={1.5}
+      gap={1}
     >
       <Box sx={{ minWidth: 0 }}>
         <Typography variant="h5" component="h1">

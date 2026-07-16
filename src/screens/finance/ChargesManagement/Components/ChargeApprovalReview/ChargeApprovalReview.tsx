@@ -456,7 +456,7 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
             alignItems="center"
             justifyContent="flex-end"
             flexWrap="wrap"
-            gap={1.5}
+            gap={1}
           >
             <Stack direction="row" spacing={1.5} flexWrap="wrap">
               {/* Info about selected students */}

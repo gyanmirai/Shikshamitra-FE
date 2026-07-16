@@ -16,6 +16,7 @@ const StudentProgressTracking = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Student Progress Tracking"
         links={[
           { name: 'Academics' },
@@ -23,7 +24,7 @@ const StudentProgressTracking = (props: TabComponentType) => {
           { name: 'Student Progress Tracking' },
         ]}
       />
-      <Box display="flex" gap={2} mt={2}>
+      <Box display="flex" gap={1} mt={2}>
         <CustomSelect
           options={[]}
           value=""

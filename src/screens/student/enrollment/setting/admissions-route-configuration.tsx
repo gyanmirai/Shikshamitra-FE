@@ -259,7 +259,7 @@ export default function AdmissionsRouteConfiguration() {
                   {item.configuration.requiredEvidenceCodes.join(', ') || 'No route-only evidence'}
                 </Typography>
               </Box>
-              <Stack direction="row" gap={0.75}>
+              <Stack direction="row" gap={1}>
                 <Chip
                   size="small"
                   label={['Draft', 'Approval pending', 'Published', 'Retired'][item.status]}

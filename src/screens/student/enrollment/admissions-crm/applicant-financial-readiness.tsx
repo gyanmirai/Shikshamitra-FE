@@ -144,7 +144,7 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
     <Stack component="section" sx={{ py: 0.5 }}>
       <Stack spacing={1.25}>
         <Stack direction="row" gap={1} alignItems="center" justifyContent="space-between">
-          <Stack direction="row" gap={0.75} alignItems="center">
+          <Stack direction="row" gap={1} alignItems="center">
             <AccountBalance fontSize="small" />
             <Typography variant="subtitle2">Financial readiness</Typography>
           </Stack>
@@ -197,7 +197,7 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
           </Stack>
         ) : (
           <Stack spacing={1}>
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
+            <Stack direction="row" gap={1} flexWrap="wrap">
               <Chip size="small" label={quotation.quotationNumber} />
               <Chip
                 size="small"
@@ -417,7 +417,7 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
             spacing={0.75}
             sx={{ py: 0.75, borderTop: '1px solid', borderColor: 'divider' }}
           >
-            <Stack direction="row" gap={0.75} alignItems="center" flexWrap="wrap">
+            <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
               <Typography variant="body2">{concessionLabels[concession.type]}</Typography>
               <Chip size="small" label={AdmissionCrmConcessionStatus[concession.status]} />
               <Typography variant="caption" color="text.secondary">

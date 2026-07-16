@@ -69,6 +69,8 @@ export interface ISubjectFormValues {
   weeklyPeriods?: number;
   lastUpdatedAt?: string;
   setupHealthScore?: number;
+  canDelete?: boolean;
+  deleteDisabledReason?: string | null;
 
   // New schema fields
   academicMediumId?: string;
@@ -87,6 +89,8 @@ export interface ISubjectTableProps {
   onView: (subject: ISubjectFormValues) => void;
   onEdit: (subject: ISubjectFormValues) => void;
   onDelete: (subject: ISubjectFormValues) => void;
+  onArchive?: (subject: ISubjectFormValues) => void;
+  onRestore?: (subject: ISubjectFormValues) => void;
   onToggleStatus: (subject: ISubjectFormValues) => void;
   query: {
     page: number;

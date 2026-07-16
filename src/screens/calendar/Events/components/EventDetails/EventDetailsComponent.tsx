@@ -88,7 +88,7 @@ const EventDetailsComponent = ({
           direction="row"
           alignItems="flex-start"
           justifyContent="space-between"
-          gap={2}
+          gap={1}
           sx={{ px: 3, py: 2.5 }}
         >
           <Stack gap={1} minWidth={0}>
@@ -225,7 +225,7 @@ const InfoCard: React.FC<InfoCardProps> = ({ icon, title, value }) => (
       bgcolor: 'background.paper',
     }}
   >
-    <Stack direction="row" gap={1.5} alignItems="flex-start">
+    <Stack direction="row" gap={1} alignItems="flex-start">
       <Box
         sx={{
           width: 36,
@@ -241,7 +241,7 @@ const InfoCard: React.FC<InfoCardProps> = ({ icon, title, value }) => (
       >
         {icon}
       </Box>
-      <Stack gap={0.5} minWidth={0}>
+      <Stack gap={1} minWidth={0}>
         <Typography variant="caption" color="text.secondary" fontWeight={600}>
           {title}
         </Typography>

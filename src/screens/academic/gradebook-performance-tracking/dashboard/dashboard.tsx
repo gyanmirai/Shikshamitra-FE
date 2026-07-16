@@ -72,6 +72,7 @@ const Dashboard = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Dashboard"
         links={[
           { name: 'Academics' },
@@ -133,7 +134,7 @@ const Dashboard = (props: TabComponentType) => {
           }}
         />
       </Box>
-      <Grid container spacing={2} alignItems="stretch">
+      <Grid container spacing={1} alignItems="stretch">
         <TotalGradeEntered />
         <AvgClassPerformace />
         <StudentPerformance />

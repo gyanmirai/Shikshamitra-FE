@@ -21,7 +21,7 @@ const ActivityDashboardGroup = () => {
   });
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12, md: 12 }} sx={{ mt: 2 }}>
         <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
           <Box display="flex" alignItems="center" sx={{ mt: 2, gap: 1, mb: 2 }}>

@@ -1,81 +1,122 @@
 'use client';
 
-import { Iconify } from 'src/components/iconify';
-import { Box, Card, Stack, Tooltip, Typography, LinearProgress } from '@mui/material';
+import { Chart, useChart } from 'src/components/chart';
+import { Box, Card, Stack, Typography } from '@mui/material';
 
 import type { SubjectCapacityRow } from '../types';
 
 interface SubjectCapacityOverviewProps {
   subjects: SubjectCapacityRow[];
   totalStudents: number;
+  sx?: object;
 }
 
 export default function SubjectCapacityOverview({
   subjects,
   totalStudents,
+  sx,
 }: SubjectCapacityOverviewProps) {
+  const assignedTotal = subjects.reduce((total, subject) => total + subject.assignedCount, 0);
+  const unassignedTotal = Math.max(totalStudents - assignedTotal, 0);
+  const chartRows = [
+    ...subjects.map((subject) => ({
+      label: subject.subjectName,
+      value: subject.assignedCount,
+      color: subject.subjectColor || '#3b82f6',
+    })),
+    ...(unassignedTotal > 0
+      ? [{ label: 'Unassigned', value: unassignedTotal, color: '#ff5630' }]
+      : []),
+  ].filter((item) => item.value > 0);
+
+  const labels = chartRows.length > 0 ? chartRows.map((item) => item.label) : ['No allocation'];
+  const colors = chartRows.length > 0 ? chartRows.map((item) => item.color) : ['#dfe3e8'];
+  const series = chartRows.length > 0 ? chartRows.map((item) => item.value) : [1];
+
+  const chartOptions = useChart({
+    labels,
+    colors,
+    stroke: {
+      colors: ['background.paper'],
+    },
+    legend: {
+      show: false,
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    tooltip: {
+      fillSeriesColor: false,
+      y: {
+        formatter: (value: number) => `${value} student${value === 1 ? '' : 's'}`,
+      },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '62%',
+          labels: {
+            show: true,
+            total: {
+              show: true,
+              label: 'Students',
+              formatter: () => `${totalStudents}`,
+            },
+          },
+        },
+      },
+    },
+  });
+
   if (subjects.length === 0) return null;
 
   return (
-    <Card sx={{ p: 2, mb: 1.5 }}>
-      <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-        Subject Capacity Overview
+    <Card sx={{ p: 1.5, mb: 1.5, ...sx }}>
+      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+        Subject Allocation Progress
       </Typography>
-      <Stack
-        direction="row"
-        flexWrap="wrap"
-        gap={2}
-        sx={{
-          '& > *': { flex: '1 1 220px', minWidth: 220 },
-        }}
-      >
-        {subjects.map((subject) => {
-          const pct = totalStudents > 0 ? Math.round((subject.assignedCount / totalStudents) * 100) : 0;
-          const color = subject.subjectColor || '#3b82f6';
-
-          return (
-            <Box key={subject.subjectId}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+      <Stack direction="row" alignItems="center" spacing={1.25}>
+        <Box sx={{ width: 112, minWidth: 112 }} dir="ltr">
+          <Chart type="donut" series={series} options={chartOptions} height={112} />
+        </Box>
+        <Stack spacing={0.75} sx={{ minWidth: 0, flex: 1 }}>
+          {chartRows.length > 0 ? (
+            chartRows.map((item) => (
+              <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <Box
                   sx={{
                     width: 8,
                     height: 8,
                     borderRadius: '50%',
-                    backgroundColor: color,
+                    backgroundColor: item.color,
                     flexShrink: 0,
                   }}
                 />
-                <Typography variant="body2" fontWeight={600} noWrap sx={{ flexGrow: 1 }}>
-                  {subject.subjectName}
+                <Typography variant="caption" fontWeight={600} noWrap sx={{ flex: 1 }}>
+                  {item.label}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" noWrap>
-                  {subject.assignedCount}/{totalStudents}
+                  {item.value}/{totalStudents}
                 </Typography>
               </Box>
-              <LinearProgress
-                variant="determinate"
-                value={pct}
+            ))
+          ) : (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Box
                 sx={{
-                  height: 6,
-                  borderRadius: 1,
-                  bgcolor: 'action.hover',
-                  '& .MuiLinearProgress-bar': { bgcolor: color, borderRadius: 1 },
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor: '#dfe3e8',
+                  flexShrink: 0,
                 }}
               />
-              <Tooltip title="Maximum capacity has not been configured for this subject" arrow>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                  <Iconify
-                    icon="solar:info-circle-bold-duotone"
-                    sx={{ width: 14, height: 14, color: 'text.disabled' }}
-                  />
-                  <Typography variant="caption" color="text.disabled">
-                    Capacity not configured
-                  </Typography>
-                </Box>
-              </Tooltip>
+              <Typography variant="caption" color="text.secondary">
+                No allocation yet
+              </Typography>
             </Box>
-          );
-        })}
+          )}
+        </Stack>
       </Stack>
     </Card>
   );

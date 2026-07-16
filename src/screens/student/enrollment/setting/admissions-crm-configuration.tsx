@@ -2264,7 +2264,7 @@ const AdmissionsCrmConfiguration = ({
                   }
                 />
               </Stack>
-              <Stack direction="row" gap={0.5} flexWrap="wrap">
+              <Stack direction="row" gap={1} flexWrap="wrap">
                 {slaWorkingDayOptions.map((day) => (
                   <FormControlLabel
                     key={day.value}
@@ -2466,7 +2466,7 @@ const AdmissionsCrmConfiguration = ({
               </Stack>
               <Stack spacing={0.5}>
                 <Typography variant="subtitle2">Exam readiness</Typography>
-                <Stack direction="row" gap={0.5} flexWrap="wrap">
+                <Stack direction="row" gap={1} flexWrap="wrap">
                   {readinessOptions.map((option) => (
                     <FormControlLabel
                       key={option.value}
@@ -3954,7 +3954,7 @@ const AdmissionsCrmConfiguration = ({
                     <Typography variant="body2" color="text.secondary">
                       {template.fields.length} fields
                     </Typography>
-                    <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    <Stack direction="row" gap={1} flexWrap="wrap">
                       <Button
                         size="small"
                         variant="outlined"
@@ -3986,7 +3986,7 @@ const AdmissionsCrmConfiguration = ({
                     {template.isPublic && (
                       <Stack
                         direction={{ xs: 'column', md: 'row' }}
-                        gap={0.75}
+                        gap={1}
                         alignItems={{ xs: 'stretch', md: 'center' }}
                       >
                         <TextField
@@ -4019,7 +4019,7 @@ const AdmissionsCrmConfiguration = ({
                       template.channel === AdmissionInquiryChannel.StaffSharedLink && (
                         <Stack
                           direction={{ xs: 'column', md: 'row' }}
-                          gap={0.75}
+                          gap={1}
                           alignItems={{ xs: 'stretch', md: 'center' }}
                         >
                           <FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
@@ -4119,7 +4119,7 @@ const AdmissionsCrmConfiguration = ({
                     <Typography variant="body2" color="text.secondary" noWrap>
                       {template.body}
                     </Typography>
-                    <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+                    <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
                       <Chip
                         size="small"
                         label={template.isActive ? 'Active' : 'Inactive'}
@@ -4932,7 +4932,7 @@ const AdmissionsCrmConfiguration = ({
             </Stack>
             <Stack spacing={0.75}>
               <Typography variant="subtitle2">Preview</Typography>
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
+              <Stack direction="row" gap={1} flexWrap="wrap">
                 {[...templateForm.fields]
                   .sort((a, b) => a.displayOrder - b.displayOrder)
                   .map((field) => (

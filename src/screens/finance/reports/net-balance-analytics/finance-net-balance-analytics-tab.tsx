@@ -315,7 +315,7 @@ const FinanceNetbalanceAnalyticsTab = () => {
   */}
       </Grid>
 
-      <Box py="15px" gap={3} display="flex" justifyContent="flex-end">
+      <Box py="15px" gap={1} display="flex" justifyContent="flex-end">
         {/* <Button onClick={exportToPDF} variant="contained" size="small">
           Export to PDF
         </Button >

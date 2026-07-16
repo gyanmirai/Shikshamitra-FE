@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Box, Typography } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -232,7 +232,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           boxShadow: 'var(--shadows-3)',
           mt: 1,
           p: 1,
-          gap: 2,
+          gap: 1,
           mb: 1,
         }}
       >

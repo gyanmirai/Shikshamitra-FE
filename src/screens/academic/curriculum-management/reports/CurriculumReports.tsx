@@ -33,6 +33,7 @@ const CurriculumReports = ({ addReportDialog }: { addReportDialog: UseBooleanRet
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Generate Report"
         links={[
           { name: 'Academic', href: '/academic/dashboard/' },

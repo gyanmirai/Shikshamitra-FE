@@ -3,7 +3,7 @@
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import {
@@ -109,7 +109,7 @@ export const RoomMaintenanceDrawer = ({
         justifyContent="space-between"
         sx={{ px: 2.5, py: 2, borderBottom: 1, borderColor: 'divider' }}
       >
-        <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <Iconify icon="mdi:wrench" width={22} color="warning.main" />
           <Box>
             <Typography variant="h6">Mark Maintenance</Typography>
@@ -127,7 +127,7 @@ export const RoomMaintenanceDrawer = ({
 
       {/* Body */}
       <Box sx={{ flex: 1, overflow: 'auto', px: 2.5, py: 2 }}>
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           <Alert severity="warning" icon={<Iconify icon="mdi:alert" />}>
             Maintenance will block all reservations for the selected period. Affected reservations
             will be notified.
@@ -163,7 +163,7 @@ export const RoomMaintenanceDrawer = ({
             onChange={(v) => patch({ severity: v as any })}
           />
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
             <DateTimePicker
               label="Start Date & Time *"
               value={dayjs(form.startDateTime)}

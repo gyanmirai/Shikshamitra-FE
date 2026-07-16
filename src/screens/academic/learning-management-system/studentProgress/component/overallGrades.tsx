@@ -4,7 +4,7 @@ import { Grid } from '@mui/material';
 import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
 
 const OverallGrades = () => (
-  <Grid container spacing={3}>
+  <Grid container spacing={1}>
     <Grid size={{ xs: 12, md: 6 }}>
       <AppCurrentDownload
         title="Grade breakdown"

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Description } from '@mui/icons-material';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Paper, Button, Typography } from '@mui/material';
@@ -15,7 +15,7 @@ const IndividualReport = () => (
     </Box>
 
     <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-      <Grid container spacing={3} alignItems="flex-end">
+      <Grid container spacing={1} alignItems="flex-end">
         <Grid size={{ xs: 12, sm: 3 }}>
           <CustomSelect
             options={[]}

@@ -113,7 +113,7 @@ const LibraryPermissionSettingScreen = () => {
           }}
         >
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
-            <Box display="flex" flexDirection="column" gap={2}>
+            <Box display="flex" flexDirection="column" gap={1}>
               <TextField label="Role Name" value="" onChange={(e) => {}} fullWidth />
               <TextField
                 label="Permissions"

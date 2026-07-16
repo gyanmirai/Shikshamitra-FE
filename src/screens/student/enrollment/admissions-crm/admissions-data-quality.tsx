@@ -98,7 +98,7 @@ export function AdmissionsDataQuality({ academicYearId }: { academicYearId: stri
                     {new Date(issue.lastDetectedAt).toLocaleString()}
                   </Typography>
                 </Box>
-                <Stack direction="row" gap={0.5} flexWrap="wrap">
+                <Stack direction="row" gap={1} flexWrap="wrap">
                   <Chip
                     size="small"
                     color={severityColor(issue.severity)}
@@ -114,7 +114,7 @@ export function AdmissionsDataQuality({ academicYearId }: { academicYearId: stri
               <Typography variant="caption" color="text.secondary">
                 Impacts: {issue.impactedReports.join(', ') || 'Operational reporting'}
               </Typography>
-              <Stack direction="row" gap={0.75} flexWrap="wrap">
+              <Stack direction="row" gap={1} flexWrap="wrap">
                 {issue.status === AdmissionCrmDataQualityIssueStatus.Open && (
                   <LoadingButton
                     size="small"
@@ -134,7 +134,7 @@ export function AdmissionsDataQuality({ academicYearId }: { academicYearId: stri
                 </LoadingButton>
               </Stack>
               {selectedIssueId === issue.id && (
-                <Stack direction={{ xs: 'column', sm: 'row' }} gap={0.75}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                   <TextField
                     size="small"
                     fullWidth

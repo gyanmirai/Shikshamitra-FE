@@ -99,6 +99,7 @@ const HomeworkSetting = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Settings"
         description={
           currentActiveComponent?.value === 'homeworkType'
@@ -126,7 +127,7 @@ const HomeworkSetting = () => {
 
             setSearchParams({ tab: value });
           }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1 } }}
           role="tablist"
         >
           {TABS.map((tab) => (

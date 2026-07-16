@@ -351,7 +351,7 @@ const TimetableReportForm = ({
       <Card>
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               {/* Organisation */}
               {showField('organization') && (
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -505,7 +505,7 @@ const TimetableReportForm = ({
               )}
 
               {/* Submit */}
-              <Grid size={12} justifyContent="flex-end" display="flex" gap={1.5}>
+              <Grid size={12} justifyContent="flex-end" display="flex" gap={1}>
                 <Button
                   startIcon={<Iconify icon="mdi:eye-outline" />}
                   type="submit"

@@ -15,7 +15,7 @@ type Props = CardProps & {
 
 export function BookingWidgetSummary({ title, percent, total, icon, sx, ...other }: Props) {
   const renderTrending = (
-    <Box gap={0.5} display="flex" alignItems="center" sx={{ typography: 'subtitle2' }}>
+    <Box gap={1} display="flex" alignItems="center" sx={{ typography: 'subtitle2' }}>
       <Iconify
         width={24}
         icon={

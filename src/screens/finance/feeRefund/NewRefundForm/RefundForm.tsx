@@ -56,7 +56,7 @@ interface FeeRefundFormProps {
 }
 
 const RefundFormSkeleton = (): React.ReactElement => (
-  <Stack gap={2}>
+  <Stack gap={1}>
     {/* Student Information Card Skeleton */}
     <Paper
       variant="outlined"
@@ -101,7 +101,7 @@ const RefundFormSkeleton = (): React.ReactElement => (
         </Box>
       </Stack>
       <Divider sx={{ mb: 2 }} />
-      <Stack gap={1.5} mb={2}>
+      <Stack gap={1} mb={2}>
         {[...Array(3)].map((_, index) => (
           <Box
             key={index}
@@ -424,10 +424,10 @@ const FeeRefundFormComponent = ({
           alignItems="center"
           justifyContent="space-between"
           flexWrap="wrap"
-          gap={1.5}
+          gap={1}
         >
           {/* Left: selection summary */}
-          <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
+          <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
             {totalSelectedMonths > 0 ? (
               <>
                 <Chip
@@ -438,7 +438,7 @@ const FeeRefundFormComponent = ({
                   icon={<Iconify icon="solar:calendar-bold" width={14} />}
                 />
                 {totalRefundRequested > 0 && (
-                  <Box display="flex" alignItems="center" gap={0.75}>
+                  <Box display="flex" alignItems="center" gap={1}>
                     <Typography variant="caption" color="text.secondary">
                       Refund Amount:
                     </Typography>
@@ -456,7 +456,7 @@ const FeeRefundFormComponent = ({
           </Box>
 
           {/* Right: actions */}
-          <Box display="flex" alignItems="center" gap={1.5}>
+          <Box display="flex" alignItems="center" gap={1}>
             <Divider
               orientation="vertical"
               flexItem

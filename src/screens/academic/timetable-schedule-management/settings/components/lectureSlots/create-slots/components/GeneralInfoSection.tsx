@@ -33,7 +33,7 @@ const GeneralInfoSection: React.FC<IGeneralInfoSectionProps> = ({
   const lockedByEdit = disabled || (isEdit && !!hasData);
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField error={Boolean(classNameError)}>
           <CustomSelect

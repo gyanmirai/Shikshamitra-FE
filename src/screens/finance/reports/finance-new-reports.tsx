@@ -219,7 +219,7 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
                     </Grid>
                   )}
 
-                  <Grid size={{ xs: 12 }} justifyContent="flex-end" display="flex" gap={3}>
+                  <Grid size={{ xs: 12 }} justifyContent="flex-end" display="flex" gap={1}>
                     <Button
                       startIcon={<Iconify icon="ion:download" />}
                       variant="contained"

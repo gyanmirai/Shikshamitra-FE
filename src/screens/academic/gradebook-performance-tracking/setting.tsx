@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -121,7 +121,7 @@ const Setting = (props: TabComponentType) => {
   };
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" my={1}>
@@ -440,10 +440,10 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth

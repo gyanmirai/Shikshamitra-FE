@@ -10,7 +10,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Archive, RemoveCircle } from '@mui/icons-material';
+import { Archive, Restore, RemoveCircle } from '@mui/icons-material';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -81,11 +81,12 @@ const SubjectTable = ({
   onEdit,
   onDelete,
   onArchive,
+  onRestore,
   onToggleStatus,
   query,
   setQuery,
   totalCount,
-}: ISubjectTableProps & { onArchive?: (row: ISubjectFormValues) => void }) => {
+}: ISubjectTableProps) => {
   const theme = useTheme();
   const { permissions } = useSelector((state: RootState) => state.auth);
 
@@ -109,7 +110,7 @@ const SubjectTable = ({
         subjectTypeValue: SubjectType[item.subjectType] || 'Core',
         subjectsName: item?.subjects?.map((sub: any) => sub.subjectName).join(', '),
         subjectName: (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
             {item?.subjects?.map(
               (
                 sub: { color?: string; subjectName?: string; subjectCode?: string },
@@ -151,34 +152,63 @@ const SubjectTable = ({
   );
 
   const actions = useCallback(
-    ({ popover, row }: any) => (
-      <MenuList disablePadding dense>
-        {canDelete && (
-          <MenuItem
-            onClick={() => {
-              onArchive?.(row);
-              popover.onClose();
-            }}
-          >
-            <Archive sx={{ width: 18, height: 18, color: 'warning.main', mr: 1 }} />
-            Archive
-          </MenuItem>
-        )}
-        {canDelete && (
-          <MenuItem
-            onClick={() => {
-              onDelete(row);
-              popover.onClose();
-            }}
-            sx={{ color: 'error.main' }}
-          >
-            <RemoveCircle sx={{ width: 18, height: 18, mr: 1 }} />
-            Remove
-          </MenuItem>
-        )}
-      </MenuList>
-    ),
-    [onDelete, onArchive, canDelete]
+    ({ popover, row }: any) => {
+      const removeDisabled = row.canDelete === false;
+      const isArchived = row.status === SubjectAssignmentStatus.Archived;
+      const removeDisabledReason =
+        row.deleteDisabledReason ||
+        'This subject is already used in another module. Remove those references before removing it.';
+
+      return (
+        <MenuList disablePadding dense>
+          {isArchived && canAdd && (
+            <MenuItem
+              onClick={() => {
+                onRestore?.(row);
+                popover.onClose();
+              }}
+            >
+              <Restore sx={{ width: 18, height: 18, color: 'success.main', mr: 1 }} />
+              Reactivate
+            </MenuItem>
+          )}
+          {!isArchived && canDelete && (
+            <MenuItem
+              onClick={() => {
+                onArchive?.(row);
+                popover.onClose();
+              }}
+            >
+              <Archive sx={{ width: 18, height: 18, color: 'warning.main', mr: 1 }} />
+              Archive
+            </MenuItem>
+          )}
+          {canDelete && (
+            <CustomTooltip
+              title={removeDisabled ? removeDisabledReason : 'Remove'}
+              arrow
+              placement="left"
+            >
+              <Box component="span" sx={{ display: 'block' }}>
+                <MenuItem
+                  disabled={removeDisabled}
+                  onClick={() => {
+                    if (removeDisabled) return;
+                    onDelete(row);
+                    popover.onClose();
+                  }}
+                  sx={{ color: removeDisabled ? 'text.disabled' : 'error.main' }}
+                >
+                  <RemoveCircle sx={{ width: 18, height: 18, mr: 1 }} />
+                  Remove
+                </MenuItem>
+              </Box>
+            </CustomTooltip>
+          )}
+        </MenuList>
+      );
+    },
+    [onDelete, onArchive, onRestore, canAdd, canDelete]
   );
 
   const columns: IColumn[] = useMemo(

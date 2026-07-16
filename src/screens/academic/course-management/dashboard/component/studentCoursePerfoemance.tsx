@@ -23,7 +23,7 @@ const StudentCoursePerfoemance = () => {
   });
   const theme = useTheme();
   return (
-    <Grid container spacing={2} mt={1}>
+    <Grid container spacing={1} mt={1}>
       <Grid size={{ xs: 12, sm: 6 }}>
         <Card sx={{ alignItems: 'center', p: 2, height: '100%' }}>
           <Box display="flex" justifyContent="space-between" alignItems="flex-end">

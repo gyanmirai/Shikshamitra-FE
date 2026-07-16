@@ -11,7 +11,7 @@ import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
@@ -80,7 +80,7 @@ const SubmissionTypeCard = ({
       transition: 'all 0.2s',
       display: 'flex',
       alignItems: 'center',
-      gap: 2,
+      gap: 1,
       '&:hover': {
         borderColor: 'primary.main',
         bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
@@ -144,7 +144,6 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     try {
       const uploadPromises = newFiles.map(async (file) => {
         const formData = new FormData();
-        formData.append('FileName', file.name);
         formData.append('File', file);
         const response = await uploadCurriculumFile(formData).unwrap();
         if (response.data) {
@@ -287,8 +286,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
 
         if (values.attachments && values.attachments.length > 0) {
           values.attachments.forEach((file: any) => {
-            const fileValue = file instanceof File ? file : file.url || file.filePath || file;
-            formData.append('attachment', fileValue);
+            const fileValue = file instanceof File ? null : file.url || file.filePath || file;
+            if (fileValue) formData.append('attachment', fileValue);
           });
         }
 
@@ -375,7 +374,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
               <Box sx={{ ...cardStyle, mb: 2 }}>
                 <Skeleton variant="text" width={180} height={28} sx={{ mb: 0.5 }} />
                 <Skeleton variant="text" width={260} height={20} sx={{ mb: 2 }} />
-                <Grid container spacing={2}>
+                <Grid container spacing={1}>
                   {[...Array(6)].map((_, i) => (
                     <Grid size={{ xs: 12, md: 6 }} key={i}>
                       <Skeleton variant="rounded" height={40} />
@@ -400,7 +399,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
               <Box sx={{ ...cardStyle, mb: 2 }}>
                 <Skeleton variant="text" width={200} height={28} sx={{ mb: 0.5 }} />
                 <Skeleton variant="text" width={280} height={20} sx={{ mb: 2 }} />
-                <Grid container spacing={2}>
+                <Grid container spacing={1}>
                   {[...Array(4)].map((_, i) => (
                     <Grid size={{ xs: 12, md: 6 }} key={i}>
                       <Skeleton variant="rounded" height={40} />
@@ -415,7 +414,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
               <Box sx={{ ...cardStyle, mb: 2 }}>
                 <Skeleton variant="text" width={160} height={28} sx={{ mb: 0.5 }} />
                 <Skeleton variant="text" width={280} height={20} sx={{ mb: 2 }} />
-                <Grid container spacing={2}>
+                <Grid container spacing={1}>
                   {[...Array(3)].map((_, i) => (
                     <Grid size={{ xs: 12, md: 4 }} key={i}>
                       <Skeleton variant="rounded" height={60} />
@@ -433,7 +432,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
             p: 2,
             display: 'flex',
             justifyContent: 'flex-end',
-            gap: 2,
+            gap: 1,
             borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
             bgcolor: 'background.paper',
           }}
@@ -525,7 +524,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                               divisionId: divId,
                               divisionName: selectedDivData?.name || '',
                               createdAt: dayjs(),
-                              publishDate: publishDate,
+                              publishDate,
                               dueDate: defaultDueDays !== undefined && defaultDueDays !== null ? publishDate.add(defaultDueDays, 'day') : null,
                             }
                           );
@@ -774,7 +773,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     </Typography>
                   }
                 >
-                  <Grid container spacing={2} sx={{ width: '100%' }}>
+                  <Grid container spacing={1} sx={{ width: '100%' }}>
                     {formik.values.divisions.map((div: any, idx: number) => {
                       const divError = (formik.errors.divisions as any[])?.[idx] as
                         | Record<string, string>
@@ -795,7 +794,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                             <Stack
                               direction={{ xs: 'column', sm: 'row' }}
                               alignItems="center"
-                              spacing={3}
+                              spacing={1}
                             >
                               <Box sx={{ minWidth: 80 }}>
                                 <Chip
@@ -807,7 +806,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                                 />
                               </Box>
 
-                              <Grid container spacing={2} sx={{ flexGrow: 1 }}>
+                              <Grid container spacing={1} sx={{ flexGrow: 1 }}>
                                 <Grid size={{ xs: 12, md: 6 }}>
                                   <ShakingTextField
                                     error={
@@ -929,7 +928,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     error={!!(formik.touched.submissionType && formik.errors.submissionType)}
                     fullWidth
                   >
-                    <Grid container spacing={2}>
+                    <Grid container spacing={1}>
                       {[
                         { value: 0, label: 'Online Text' },
                         { value: 1, label: 'File Upload' },
@@ -964,7 +963,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
             p: 2,
             display: 'flex',
             justifyContent: 'flex-end',
-            gap: 2,
+            gap: 1,
             borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
             bgcolor: 'background.paper',
           }}

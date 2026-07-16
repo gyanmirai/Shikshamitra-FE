@@ -150,7 +150,7 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
     return (
       <Box component="section">
         <Stack spacing={1.25}>
-          <Stack direction="row" gap={0.75} alignItems="center">
+          <Stack direction="row" gap={1} alignItems="center">
             <Badge fontSize="small" />
             <Typography variant="subtitle2">Household and identity</Typography>
           </Stack>
@@ -308,7 +308,7 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
             label={readinessLabels[profile.status]}
           />
         </Stack>
-        <Stack direction="row" gap={0.75} flexWrap="wrap">
+        <Stack direction="row" gap={1} flexWrap="wrap">
           <Chip
             size="small"
             color={profile.accountableContactReady ? 'success' : 'warning'}
@@ -572,7 +572,7 @@ export function ApplicantHouseholdIdentityOperations({ leadId }: Props) {
             spacing={0.75}
             sx={{ py: 0.75, borderTop: '1px solid', borderColor: 'divider' }}
           >
-            <Stack direction="row" gap={0.75} alignItems="center" flexWrap="wrap">
+            <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
               <Typography variant="body2">
                 {[guardian.guardian.firstName, guardian.guardian.lastName]
                   .filter(Boolean)

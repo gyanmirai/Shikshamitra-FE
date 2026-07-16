@@ -3,7 +3,10 @@
 import React from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
-import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
+import {
+  AcademicDatePicker as DatePicker,
+  AcademicDateTimePicker as DateTimePicker,
+} from 'src/components/academic-date-picker';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { useCurriculumForm } from '../hooks/useCurriculumForm';
@@ -24,10 +27,10 @@ export const CurriculumForm: React.FC<CurriculumFormProps> = ({
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, height: '200px' }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth

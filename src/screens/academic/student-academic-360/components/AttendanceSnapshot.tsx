@@ -64,7 +64,7 @@ export function AttendanceSnapshot({ attendance, isLoading }: AttendanceSnapshot
           <CircularProgress size={24} />
         </Box>
       ) : totalCount > 0 ? (
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           <Box>
             <Stack direction="row" alignItems="baseline" spacing={1}>
               <Typography variant="h4" sx={{ color: `${color}.main` }}>{percentage}%</Typography>
@@ -93,7 +93,7 @@ export function AttendanceSnapshot({ attendance, isLoading }: AttendanceSnapshot
                     <Typography variant="body2">
                       {readText(record.date ?? record.attendanceDate ?? record.creationTime)}
                     </Typography>
-                    <Stack direction="row" spacing={0.5} alignItems="center">
+                    <Stack direction="row" spacing={1} alignItems="center">
                       <Iconify
                         icon={present ? 'mdi:check-circle' : 'mdi:close-circle'}
                         width={14}

@@ -19,11 +19,11 @@ const QuizSolutionComponent = () => {
             return (
               <>
                 {row.response.length > 0 && (
-                  <Box display="flex" flexDirection="column" gap={2}>
+                  <Box display="flex" flexDirection="column" gap={1}>
                     <Scrollbar sx={{ height: '200px' }}>
                       {row.response.map((val: any, index: any) => (
                         <React.Fragment key={index}>
-                          <Box display="flex" alignItems="center" gap={2}>
+                          <Box display="flex" alignItems="center" gap={1}>
                             <Paper elevation={4} sx={{ p: 2, width: '100%', mt: 1 }}>
                               <Typography variant="body1">Question: {val.question}</Typography>
                               <Typography variant="body2">Answer: {val.answer}</Typography>

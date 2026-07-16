@@ -60,6 +60,7 @@ export interface IExamFormValues {
   subjects: IExamSubject[];
   description: string;
   isRoomAssign: boolean;
+  syncToAcademicCalendar: boolean;
   /** key: subjectId → divisionId → { roomIds, capacity } */
   roomDetails: IRoomDetails;
   status?: number;

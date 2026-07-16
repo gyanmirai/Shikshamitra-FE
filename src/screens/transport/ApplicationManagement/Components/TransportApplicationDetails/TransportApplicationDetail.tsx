@@ -113,7 +113,7 @@ const TransportApplicationDetail = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box display="flex" flexDirection="column" gap={2} height="100%">
+      <Box display="flex" flexDirection="column" gap={1} height="100%">
         <Scrollbar sx={{ p: 2, height: '100%' }}>
           <TransportMemberProfile selectedMember={selectedApplication} fromViewScreen />
           <TransportApplicationRouteDetail

@@ -348,10 +348,10 @@ const SchoolAcademicSnapshotCard = ({ data }: { data: PrincipalAcademicDashboard
       height="100%"
       minHeight={236}
     >
-      <Stack spacing={1.25}>
+      <Stack spacing={1}>
         <Stack
           direction={{ xs: 'column', sm: 'row', lg: 'column', xl: 'row' }}
-          spacing={1.25}
+          spacing={1}
           alignItems="center"
         >
           <Box
@@ -450,7 +450,7 @@ const SyllabusCoveragePulseCard = ({ data }: { data: PrincipalAcademicDashboardD
         </Button>
       }
     >
-      <Stack spacing={1.25}>
+      <Stack spacing={1}>
         <Box
           sx={{
             p: 1.5,
@@ -461,7 +461,7 @@ const SyllabusCoveragePulseCard = ({ data }: { data: PrincipalAcademicDashboardD
         >
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
-            spacing={1.25}
+            spacing={1}
             alignItems={{ xs: 'stretch', sm: 'center' }}
             justifyContent="space-between"
           >
@@ -546,7 +546,7 @@ const PrincipalReadinessCard = ({ data }: { data: PrincipalAcademicDashboardData
       height="100%"
       minHeight={236}
     >
-      <Stack spacing={1.25}>
+      <Stack spacing={1}>
         <Box
           component={Link}
           href={academicPaths.examination.recordMarks}
@@ -661,7 +661,7 @@ const PrincipalInsightsCard = ({ data }: { data: PrincipalAcademicDashboardData 
             justifyContent="space-between"
             spacing={1}
           >
-            <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ minWidth: 0 }}>
+            <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ minWidth: 0 }}>
               <Box
                 sx={{
                   width: 30,
@@ -722,20 +722,20 @@ const PrincipalInsightsCard = ({ data }: { data: PrincipalAcademicDashboardData 
 );
 
 const DashboardSkeleton = () => (
-  <Stack spacing={1.5}>
-    <Grid container spacing={1.5}>
+  <Stack spacing={1}>
+    <Grid container spacing={1}>
       {Array.from({ length: 3 }).map((_, index) => (
         <Grid key={index} size={{ xs: 12, lg: index === 1 ? 5 : index === 2 ? 3 : 4 }}>
           <Skeleton variant="rounded" height={260} />
         </Grid>
       ))}
     </Grid>
-    <Grid container spacing={1.5}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12 }}>
         <Skeleton variant="rounded" height={180} />
       </Grid>
     </Grid>
-    <Grid container spacing={1.5}>
+    <Grid container spacing={1}>
       {Array.from({ length: 4 }).map((_, index) => (
         <Grid key={index} size={{ xs: 12, md: 6 }}>
           <Skeleton variant="rounded" height={300} />
@@ -841,7 +841,7 @@ const AcademicPrincipalDashboardScreen = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pb: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 2 }}>
       <AcademicCommandHeader
         eyebrow="Principal View"
         title="School Academic Command Center"
@@ -863,7 +863,7 @@ const AcademicPrincipalDashboardScreen = () => {
 
       {isRefreshing || isFetching ? <LinearProgress /> : null}
 
-      <Grid container spacing={1.5} alignItems="stretch">
+      <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, lg: 4 }}>
           <AcademicHealthScoreCard
             title="School Academic Health"
@@ -891,7 +891,7 @@ const AcademicPrincipalDashboardScreen = () => {
       </Grid>
 
       {/* Snapshot Cards */}
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, lg: 4 }}>
           <SchoolAcademicSnapshotCard data={data} />
         </Grid>
@@ -904,14 +904,14 @@ const AcademicPrincipalDashboardScreen = () => {
       </Grid>
 
       {/* Smart Alerts & Insights */}
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12 }}>
           <PrincipalInsightsCard data={data} />
         </Grid>
       </Grid>
 
       {/* Charts & Detail Grid */}
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
           <ChapterCompletionChart chartData={data.chapterCompletionChart} />
         </Grid>

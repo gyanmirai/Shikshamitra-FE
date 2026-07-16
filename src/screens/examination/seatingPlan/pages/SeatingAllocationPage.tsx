@@ -732,7 +732,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
           )}
         </Paper>
 
-        <Box sx={{ display: 'flex', gap: 1.5, px: 2, py: 1, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 1, px: 2, py: 1, flexWrap: 'wrap' }}>
           <CustomSelect
             options={divisionsData?.items || []}
             label="Division"
@@ -865,7 +865,7 @@ export default function SeatingAllocationPage({ examId, onClose, onOpenReview }:
         >
           <DialogTitle>Create Seating Plan</DialogTitle>
           <DialogContent>
-            <Stack spacing={1.5} sx={{ pt: 1 }}>
+            <Stack spacing={1} sx={{ pt: 1 }}>
               <TextField
                 label="Plan name"
                 value={scopeName}

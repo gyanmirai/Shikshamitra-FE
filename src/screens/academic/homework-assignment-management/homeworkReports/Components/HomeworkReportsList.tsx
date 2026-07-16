@@ -173,6 +173,7 @@ const HomeworkReportsList = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {!addReportDialog.value && (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Homework Reports"
           description="View and manage generated homework reports"
           links={[

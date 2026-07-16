@@ -112,8 +112,8 @@ const TransportBulkRouteDialog: React.FC<TransportBulkRouteDialogProps> = ({
       <Scrollbar>
         <Box px="15px">
           <form onSubmit={formik.handleSubmit}>
-            <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-              <Box pt="10px" display="flex" flexDirection="row" gap={3}>
+            <Box pt="10px" display="flex" flexDirection="column" gap={1}>
+              <Box pt="10px" display="flex" flexDirection="row" gap={1}>
                 <CustomSelect
                   label="Names"
                   options={nameOptions}
@@ -131,7 +131,7 @@ const TransportBulkRouteDialog: React.FC<TransportBulkRouteDialogProps> = ({
                 />
               </Box>
 
-              <Box pt="10px" display="flex" flexDirection="row" gap={3}>
+              <Box pt="10px" display="flex" flexDirection="row" gap={1}>
                 <CustomSelect
                   label="Position"
                   options={positionOptions}
@@ -147,7 +147,7 @@ const TransportBulkRouteDialog: React.FC<TransportBulkRouteDialogProps> = ({
                 />
               </Box>
 
-              <Box pt="10px" display="flex" flexDirection="row" gap={3}>
+              <Box pt="10px" display="flex" flexDirection="row" gap={1}>
                 <CustomSelect
                   label="Pickup Point"
                   options={pickupPoints.map((point) => ({ label: point, value: point }))}

@@ -6,8 +6,9 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Grid, Card, Switch, Checkbox, TextField, Typography } from '@mui/material';
 
 const GeneralSettings = () => (
-  <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+  <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="General"
       description="Configure general settings for the learning management system."
       links={[
@@ -18,7 +19,7 @@ const GeneralSettings = () => (
       ]}
     />
     <Card sx={{ p: 2 }}>
-      <Grid container spacing={2} alignItems="center">
+      <Grid container spacing={1} alignItems="center">
         <Grid size={{ xs: 12, md: 4 }}>
           <CustomSelect
             options={[
@@ -48,7 +49,7 @@ const GeneralSettings = () => (
 
     <Card sx={{ p: 2 }}>
       <Typography variant="h6">Permissions</Typography>
-      <Grid container spacing={2} alignItems="center">
+      <Grid container spacing={1} alignItems="center">
         <Grid size={{ xs: 12, md: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />

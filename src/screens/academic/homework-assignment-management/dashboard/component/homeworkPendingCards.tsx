@@ -41,7 +41,7 @@ export const assignmentData = [
 const HomeworkPendingCards = () => (
   // const [hoveredResource, setHoveredResource] = useState<string | null>(null);
 
-  <Grid container spacing={2} mt={1}>
+  <Grid container spacing={1} mt={1}>
     <Grid size={{ xs: 12 }}>
       <Typography variant="h6">My Assignments</Typography>
       <CustomizableTable

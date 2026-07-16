@@ -31,6 +31,7 @@ const SharedWithMe = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Shared With Me"
         links={[
           { name: 'Academics' },

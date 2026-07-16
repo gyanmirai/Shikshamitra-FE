@@ -197,7 +197,7 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({
       <Card sx={{ width: '70%', height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Scrollbar sx={{ flex: 1, p: 2 }}>
           {selectedResource ? (
-            <Stack spacing={2}>
+            <Stack spacing={1}>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Box>
                   <Typography variant="h6">{selectedResource.resourceTitle}</Typography>

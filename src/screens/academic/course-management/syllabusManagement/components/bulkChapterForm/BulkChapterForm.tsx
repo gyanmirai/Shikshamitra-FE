@@ -270,7 +270,6 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
     async (uid: string, files: (File | string)[]) => {
       if (!files.length) return;
       const formData = new FormData();
-      formData.append('FileName', (files[0] as File)?.name);
       formData.append('File', files[0] as File);
       const response = await uploadCurriculumFile(formData).unwrap();
       formik.setFieldValue(
@@ -308,7 +307,7 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
+        <Box display="flex" flexDirection="column" gap={1} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             {/* ── Context Header ─────────────────────────────────────── */}
             <Paper
@@ -321,7 +320,7 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
                 border: (t) => `1px solid rgba(${t.vars.palette.primary.mainChannel} / 0.18)`,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 2,
+                gap: 1,
                 flexWrap: 'wrap',
               }}
             >
@@ -414,6 +413,7 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
                     key={entry.uid}
                     entry={entry}
                     index={index}
+                    classId={classId}
                     isExpanded={activeEntryId === entry.uid}
                     onToggle={handleAccordionToggle}
                     onRemove={handleRemoveEntry}
@@ -437,7 +437,7 @@ const BulkChapterForm: React.FC<IBulkChapterFormProps> = ({
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 2,
+                  gap: 1,
                   borderStyle: 'dashed',
                 }}
               >

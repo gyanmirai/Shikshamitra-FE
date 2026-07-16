@@ -399,7 +399,7 @@ const AttendanceShiftMonitoring = () => {
 
         <Divider sx={{ borderStyle: 'dashed', mb: 2 }} />
 
-        <Stack direction="row" flexWrap="wrap" justifyContent="center" gap={1.5}>
+        <Stack direction="row" flexWrap="wrap" justifyContent="center" gap={1}>
           {SHIFT_DATA.map((s, i) => (
             <Stack
               key={s.id}

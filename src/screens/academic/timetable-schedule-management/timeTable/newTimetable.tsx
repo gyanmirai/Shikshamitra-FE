@@ -56,6 +56,7 @@ import {
 } from '@mui/material';
 import {
   useCreateTimetableMutation,
+  useValidateTimetableMutation,
   useGetTimetableByStandardDivisionQuery,
   useGetTimetableManagementByStandardQuery,
 } from 'src/redux/academicAPI/timetableApi/timetableManagementApi';
@@ -387,6 +388,29 @@ const transformScheduleToGrid = (scheduleData: any[]): TimetableSlot[] => {
 
 const timetableData: TimetableSlot[] = transformScheduleToGrid(mockDayScheduleData);
 
+const getTimetableApiErrorMessage = (error: unknown) => {
+  const apiError = error as {
+    data?: {
+      error?: {
+        message?: string;
+        data?: {
+          message?: string;
+        };
+      };
+      message?: string;
+    };
+    error?: string;
+  };
+
+  return (
+    apiError.data?.error?.data?.message ||
+    apiError.data?.error?.message ||
+    apiError.data?.message ||
+    apiError.error ||
+    'Server validation failed. Please review timetable conflicts and try again.'
+  );
+};
+
 const getDisplayStatus = (row: any) => {
   if (!row.isReady) return 'Not Ready';
   if (row.status === 0) return 'Not Started';
@@ -410,6 +434,11 @@ const DISPLAY_STATUS_COLORS: Record<string, LabelColor> = {
   'In Progress': 'info',
   'Draft': 'warning',
 };
+
+const DISPLAY_STATUS_FILTER_OPTIONS = Object.keys(DISPLAY_STATUS_COLORS).map((status) => ({
+  value: status,
+  label: status,
+}));
 
 const SummaryTile = ({
   label,
@@ -537,29 +566,41 @@ const TimeTableGrid = () => {
 
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'divisionName', label: 'Division', align: 'left' },
+      {
+        id: 'divisionName',
+        label: 'Division',
+        filterType: 'string',
+        align: 'left',
+        sticky: true,
+        stickyPosition: 'left',
+        minWidth: 130,
+      },
       {
         id: 'weeklySlots',
         label: 'Weekly Slots',
+        filterType: 'number',
         align: 'left',
         render: (value, row) => (row.weeklySlots === 0 ? '-' : `${row.weeklySlots} slots`),
       },
       {
         id: 'filledSlots',
         label: 'Filled Slots',
+        filterType: 'number',
         align: 'left',
         render: (value, row) => (row.weeklySlots === 0 ? '-' : `${row.filledSlots}/${row.weeklySlots}`),
       },
       {
-        id: 'subjectProgress',
+        id: 'subjectProgressText',
         label: 'Subject Progress',
+        filterType: 'string',
         align: 'left',
         render: (value, row) =>
           row.weeklySlots === 0 ? '-' : `${row.subjectCompletedCount}/${row.subjectTotalCount} complete`,
       },
       {
-        id: 'teacherAssignment',
+        id: 'teacherAssignmentText',
         label: 'Teacher Assignment',
+        filterType: 'string',
         align: 'left',
         render: (value, row) => {
           if (row.weeklySlots === 0) return '-';
@@ -569,8 +610,9 @@ const TimeTableGrid = () => {
         },
       },
       {
-        id: 'roomAssignment',
+        id: 'roomAssignmentText',
         label: 'Room Assignment',
+        filterType: 'string',
         align: 'left',
         render: (value, row) => {
           if (row.weeklySlots === 0) return '-';
@@ -580,8 +622,9 @@ const TimeTableGrid = () => {
         },
       },
       {
-        id: 'conflicts',
+        id: 'conflictCount',
         label: 'Conflicts',
+        filterType: 'number',
         align: 'left',
         render: (value, row) =>
           row.conflictCount > 0 ? (
@@ -591,8 +634,12 @@ const TimeTableGrid = () => {
           ),
       },
       {
-        id: 'status',
+        id: 'displayStatus',
         label: 'Status',
+        filterType: 'enum',
+        enumOptions: DISPLAY_STATUS_FILTER_OPTIONS,
+        sticky: true,
+        stickyPosition: 'right',
         align: 'left',
         render: (value, row) => {
           const displayStatus = getDisplayStatus(row);
@@ -605,6 +652,7 @@ const TimeTableGrid = () => {
         label: 'Action',
         align: 'left',
         sticky: true,
+        stickyPosition: 'right',
         isSort: false,
         isFilter: false,
         render: (value, row) => {
@@ -690,10 +738,9 @@ const TimeTableGrid = () => {
     },
   });
 
-  const itemsList = timetableManagementData?.items || [];
-  
   const stats = useMemo(() => {
-    let total = itemsList.length;
+    const itemsList = timetableManagementData?.items || [];
+    const total = itemsList.length;
     let published = 0;
     let draftInProgress = 0;
     let readyToPublish = 0;
@@ -702,21 +749,56 @@ const TimeTableGrid = () => {
 
     itemsList.forEach((row: any) => {
       const status = getDisplayStatus(row);
-      if (status === 'Published') published++;
-      else if (status === 'Draft' || status === 'In Progress') draftInProgress++;
-      else if (status === 'Ready to Publish') readyToPublish++;
-      else if (status === 'Not Ready') notReady++;
+      if (status === 'Published') published += 1;
+      else if (status === 'Draft' || status === 'In Progress') draftInProgress += 1;
+      else if (status === 'Ready to Publish') readyToPublish += 1;
+      else if (status === 'Not Ready') notReady += 1;
       
-      if (row.conflictCount > 0) conflicts++;
+      if (row.conflictCount > 0) conflicts += 1;
     });
 
     return { total, published, draftInProgress, readyToPublish, conflicts, notReady };
-  }, [itemsList]);
+  }, [timetableManagementData?.items]);
+
+  const timetableRows = useMemo(
+    () =>
+      (timetableManagementData?.items || []).map((row: any) => {
+        const teacherPending = row.teacherTotalCount - row.teacherAssignedCount;
+        const roomPending = row.roomTotalCount - row.roomAssignedCount;
+
+        return {
+          ...row,
+          displayStatus: getDisplayStatus(row),
+          subjectProgressText:
+            row.weeklySlots === 0
+              ? '-'
+              : `${row.subjectCompletedCount}/${row.subjectTotalCount} complete`,
+          teacherAssignmentText:
+            row.weeklySlots === 0
+              ? '-'
+              : row.teacherTotalCount === 0
+                ? 'No slots filled'
+                : teacherPending === 0
+                  ? 'All assigned'
+                  : `${teacherPending} pending`,
+          roomAssignmentText:
+            row.weeklySlots === 0
+              ? '-'
+              : row.roomTotalCount === 0
+                ? 'No slots filled'
+                : roomPending === 0
+                  ? 'All assigned'
+                  : `${row.roomAssignedCount}/${row.roomTotalCount} assigned`,
+        };
+      }),
+    [timetableManagementData?.items]
+  );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {open ? (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Timetable"
           links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Timetable' }]}
           description="Create and manage class schedules by assigning subjects, teachers and rooms to specific time slots"
@@ -725,6 +807,7 @@ const TimeTableGrid = () => {
         />
       ) : (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Timetable Management"
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
@@ -790,7 +873,7 @@ const TimeTableGrid = () => {
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
                 Pending Setup Items:
               </Typography>
-              <Stack spacing={1.25}>
+              <Stack spacing={1}>
                 {readinessCheckDivision.missingItems.map((item: string, idx: number) => (
                   <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Iconify icon="lucide:x-circle" color="error.main" sx={{ flexShrink: 0 }} />
@@ -836,7 +919,7 @@ const TimeTableGrid = () => {
               />
             </Box>
           </Card>
-          <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid container spacing={1} sx={{ mb: 2 }}>
             <Grid size={{ xs: 12, sm: 4, md: 2 }}>
               <SummaryTile label="Total Divisions" value={stats.total} icon="solar:users-group-two-rounded-bold" color="primary" />
             </Grid>
@@ -879,7 +962,7 @@ const TimeTableGrid = () => {
             }
             columns={columns}
             isLoading={isTimetableManagementLoading || isTimetableManagementFetching}
-            data={timetableManagementData?.items || []}
+            data={timetableRows}
           />{' '}
         </>
       )}
@@ -1109,6 +1192,10 @@ const TimeTableForm = ({
     type: 'mutation',
     currentQueryAndMutation: useCreateTimetableMutation,
   });
+  const [validateTimetable, { isLoading: isValidating }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useValidateTimetableMutation,
+  });
 
   const transformSlotsToPayload = useCallback(
     (slots: Record<DayOfWeek, TimeSlot[]>, status: number) => {
@@ -1148,13 +1235,19 @@ const TimeTableForm = ({
 
   const handleSubmit = useCallback(
     async (slots: Record<DayOfWeek, TimeSlot[]>, status: number) => {
-      const body = transformSlotsToPayload(slots, status);
-      await createTimetable({ standardId, divisionId, body }).unwrap();
-      shikshaMitraToast.success({
-        message: status === 1 ? 'Timetable saved as draft.' : 'Timetable published successfully.',
-      });
-      setIsDirty(false);
-      onClose();
+      try {
+        const body = transformSlotsToPayload(slots, status);
+        await createTimetable({ standardId, divisionId, body }).unwrap();
+        shikshaMitraToast.success({
+          message: status === 1 ? 'Timetable saved as draft.' : 'Timetable published successfully.',
+        });
+        setIsDirty(false);
+        onClose();
+      } catch (error) {
+        shikshaMitraToast.error({
+          message: getTimetableApiErrorMessage(error),
+        });
+      }
     },
     [createTimetable, divisionId, onClose, setIsDirty, standardId, transformSlotsToPayload]
   );
@@ -1231,7 +1324,7 @@ const TimeTableForm = ({
 
   const subjectProgress = useMemo(() => {
     let completed = 0;
-    let total = subjects.length;
+    const total = subjects.length;
     
     subjects.forEach((subject: any) => {
       const subjectKey = subject.electiveGroupId || subject.subjectId;
@@ -1329,7 +1422,7 @@ const TimeTableForm = ({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
 
-  const handleValidate = useCallback(() => {
+  const handleValidate = useCallback(async () => {
     const errors: string[] = [...conflicts];
     let emptySlots = 0;
     
@@ -1364,13 +1457,28 @@ const TimeTableForm = ({
       }
     });
 
+    try {
+      const body = transformSlotsToPayload(formik.values.slots, 1);
+      await validateTimetable({ standardId, divisionId, body }).unwrap();
+    } catch (error) {
+      errors.push(getTimetableApiErrorMessage(error));
+    }
+
     setValidationResult({
       passed: errors.length === 0 && incompleteSubjects.length === 0,
       conflicts: errors,
       emptySlots,
       incompleteSubjects,
     });
-  }, [conflicts, formik.values.slots, subjects]);
+  }, [
+    conflicts,
+    divisionId,
+    formik.values.slots,
+    standardId,
+    subjects,
+    transformSlotsToPayload,
+    validateTimetable,
+  ]);
 
   const handlePublishClick = () => {
     let emptySlots = 0;
@@ -1407,6 +1515,11 @@ const TimeTableForm = ({
     setPublishConfirmOpen(true);
   };
 
+  const handlePublishFromValidation = () => {
+    setValidationResult(null);
+    setPublishConfirmOpen(true);
+  };
+
   return (
     <DialogScrollContent
       sx={{ paddingBottom: '16px', height: '100%', p: 2 }}
@@ -1427,7 +1540,7 @@ const TimeTableForm = ({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            gap: 2,
+            gap: 1,
             pb: 1,
             flexWrap: 'wrap',
           }}
@@ -1565,7 +1678,7 @@ const TimeTableForm = ({
           </Box>
 
           {/* Actions */}
-          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             {/* Progress indicator */}
             {slotSummary.total > 0 && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 120 }}>
@@ -1615,7 +1728,7 @@ const TimeTableForm = ({
               color="info"
               startIcon={<Iconify icon="lucide:check-square" />}
               onClick={handleValidate}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isValidating}
             >
               Validate
             </Button>
@@ -1682,7 +1795,7 @@ const TimeTableForm = ({
         </DialogTitle>
         <DialogContent dividers>
           {validationResult && (
-            <Stack spacing={2}>
+            <Stack spacing={1}>
               {validationResult.passed ? (
                 <Box>
                   <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
@@ -1705,7 +1818,7 @@ const TimeTableForm = ({
                   <Typography variant="subtitle2" color="error" sx={{ mb: 1.5, fontWeight: 700 }}>
                     Please fix the following issues before publishing:
                   </Typography>
-                  <Stack spacing={1.5}>
+                  <Stack spacing={1}>
                     {validationResult.conflicts.map((err, idx) => (
                       <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                         <Iconify icon="lucide:x-circle" color="error.main" sx={{ mt: 0.25, flexShrink: 0 }} />
@@ -1729,9 +1842,24 @@ const TimeTableForm = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setValidationResult(null)} variant="contained" color="primary">
+          <Button
+            onClick={() => setValidationResult(null)}
+            variant={validationResult?.passed ? 'outlined' : 'contained'}
+            color={validationResult?.passed ? 'inherit' : 'primary'}
+          >
             Close
           </Button>
+          {validationResult?.passed && (
+            <Button
+              onClick={handlePublishFromValidation}
+              variant="contained"
+              color="primary"
+              startIcon={<Iconify icon={GlobalIcons.publish} />}
+              disabled={isSubmitting}
+            >
+              Publish Now
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 
@@ -1803,7 +1931,7 @@ const TimeTableForm = ({
             slots={formik.values.slots}
             onChange={() => {}}
             subjects={subjects}
-            readOnly={true}
+            readOnly
             selectedClass={selectedClass}
             selectedDivision={selectedDivision}
             standardId={standardId}

@@ -502,7 +502,7 @@ export function ExamsWorkspace() {
               <Typography variant="subtitle2" gutterBottom>
                 Attendance
               </Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                 <TextField
                   select
                   fullWidth
@@ -540,7 +540,7 @@ export function ExamsWorkspace() {
               <Typography variant="subtitle2" gutterBottom>
                 Marks & Merit
               </Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
                 <TextField
                   label="Total marks"
                   type="number"

@@ -57,7 +57,7 @@ const AuditImpactPanel = ({ impact, impactLevel = AuditImpactLevel.None }: Props
           backgroundColor: alpha(theme.palette.success.main, 0.04),
         }}
       >
-        <Stack direction="row" alignItems="center" gap={1.5}>
+        <Stack direction="row" alignItems="center" gap={1}>
           <Iconify icon="mdi:check-circle-outline" width={22} color={theme.palette.success.main} />
           <Box>
             <Typography variant="subtitle2" fontWeight={700} color="success.dark">
@@ -90,7 +90,7 @@ const AuditImpactPanel = ({ impact, impactLevel = AuditImpactLevel.None }: Props
         }}
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-          <Stack direction="row" alignItems="center" gap={1.5}>
+          <Stack direction="row" alignItems="center" gap={1}>
             <Box
               sx={{
                 width: 36,
@@ -176,7 +176,7 @@ const AuditImpactPanel = ({ impact, impactLevel = AuditImpactLevel.None }: Props
               return (
                 <TableRow key={key} hover>
                   <TableCell sx={{ py: 1 }}>
-                    <Stack direction="row" alignItems="center" gap={1.5}>
+                    <Stack direction="row" alignItems="center" gap={1}>
                       <Box
                         sx={{
                           width: 26,

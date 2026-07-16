@@ -205,7 +205,7 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
             alignItems: 'center',
             justifyContent: 'space-between',
             width: '100%',
-            gap: 2,
+            gap: 1,
           },
           '& .MuiAccordionSummary-expandIconWrapper': {
             transition: 'transform 250ms ease',
@@ -221,7 +221,7 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
       >
         <Stack
           direction="row"
-          spacing={1.5}
+          spacing={1}
           alignItems="center"
           sx={{ flexWrap: 'wrap', width: '100%', rowGap: 1 }}
         >
@@ -376,7 +376,7 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
             direction="row"
             alignItems="center"
             justifyContent="flex-end"
-            spacing={1.5}
+            spacing={1}
             sx={{ mt: 2 }}
           >
             <Typography variant="caption" color="text.secondary" fontWeight={500}>

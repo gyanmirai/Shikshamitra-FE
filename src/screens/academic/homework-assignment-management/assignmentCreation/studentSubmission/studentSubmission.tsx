@@ -177,7 +177,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 
   return (
     <>
-      <Stack spacing={1.5}>
+      <Stack spacing={1}>
         <EvaluationSummaryCards summary={summary} />
         <EvaluationFilterBar value={activeFilter} onChange={setActiveFilter} />
       </Stack>

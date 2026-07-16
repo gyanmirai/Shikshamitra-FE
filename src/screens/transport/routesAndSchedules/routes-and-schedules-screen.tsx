@@ -166,7 +166,7 @@ const RoutesAndSchedulesScreen = () => {
 
   return (
     <>
-      <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
+      <Box gap={1} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button onClick={dialog.onTrue} variant="contained" size="small">
           Create New Route
         </Button>
@@ -270,7 +270,7 @@ const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => 
   };
 
   return (
-    <Box display="flex" flexDirection="row" gap={2}>
+    <Box display="flex" flexDirection="row" gap={1}>
       <Box flex={3}>
         <CustomSelect
           multiple

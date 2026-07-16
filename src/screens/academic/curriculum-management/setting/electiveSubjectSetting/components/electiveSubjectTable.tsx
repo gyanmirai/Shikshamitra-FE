@@ -104,7 +104,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
               placement="top"
               title={subjects.map((subject) => subject.name).join(', ')}
             >
-              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {visibleSubjects.map((subject) => (
                   <Chip
                     key={subject.id || subject.name}
@@ -193,7 +193,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
           const group = row as IElectiveSubject;
           const isArchived = getStatusLabel(group.status) === 'Archived';
           return (
-            <Stack direction="row" spacing={0.5} justifyContent="center">
+            <Stack direction="row" spacing={1} justifyContent="center">
               {canView && (
                 <GroupActionButton
                   title="View usage"
@@ -249,12 +249,12 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
   );
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <Box
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' },
-          gap: 1.25,
+          gap: 1,
         }}
       >
         {[

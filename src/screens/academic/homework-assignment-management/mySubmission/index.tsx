@@ -35,6 +35,7 @@ const MySubmission = () => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="My Submission"
         description={
           currentActiveComponent?.value === 'Homeworks'
@@ -55,7 +56,7 @@ const MySubmission = () => {
         <CustomTabs
           value={searchParams.tab}
           onChange={(e, value) => setSearchParams({ tab: value })}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1 } }}
         >
           {TABS.map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} />

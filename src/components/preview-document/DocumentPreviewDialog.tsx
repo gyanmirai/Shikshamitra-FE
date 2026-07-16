@@ -108,7 +108,7 @@ const DocumentPreviewDialog: React.FC<DocumentPreviewDialogProps> = ({
         sx={{ height: { xs: '48vh', sm: '58vh', md: '64vh' }, maxHeight: 'calc(100vh - 180px)' }}
       >
         {isLoading ? (
-          <Box display="flex" flexDirection="column" alignItems="center" gap={1.5} py={6}>
+          <Box display="flex" flexDirection="column" alignItems="center" gap={1} py={6}>
             <CircularProgress size={28} />
             <Typography variant="body2" color="text.secondary">
               Loading preview...
@@ -143,7 +143,7 @@ const DocumentPreviewDialog: React.FC<DocumentPreviewDialogProps> = ({
               flexDirection="column"
               alignItems="center"
               justifyContent="center"
-              gap={2}
+              gap={1}
               py={6}
             >
               <Typography variant="body2" color="text.secondary" align="center">

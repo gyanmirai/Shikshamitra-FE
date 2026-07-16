@@ -27,7 +27,7 @@ const FormFooter: React.FC<IFormFooterProps> = ({ isEdit, loading, onCancel, onS
       px: { xs: 2, sm: 3 },
       py: 1.5,
       display: 'flex',
-      gap: 1.25,
+      gap: 1,
       justifyContent: 'flex-end',
       alignItems: 'center',
       zIndex: 10,

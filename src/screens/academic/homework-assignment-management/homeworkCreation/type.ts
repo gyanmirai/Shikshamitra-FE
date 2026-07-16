@@ -8,6 +8,7 @@ export interface UploadedFile {
   size: number;
   type: string;
   base64: string;
+  file?: File;
 }
 
 export interface DivisionHomeworkMeta {

@@ -518,7 +518,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         >
           Back
         </Button>
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={1}>
           {showSaveButton && (
             <LoadingButton
               variant="outlined"

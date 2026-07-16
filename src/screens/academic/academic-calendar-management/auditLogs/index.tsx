@@ -247,8 +247,9 @@ const CalendarAuditLogs = () => {
   // Permission gate
   if (!canView) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Audit Logs"
           description="Track every academic calendar change with full history, impact, and accountability."
           links={[
@@ -265,9 +266,10 @@ const CalendarAuditLogs = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%' }}>
       {/* Header */}
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Audit Logs"
         description="Track every academic calendar change with full history, impact, and accountability."
         links={[
@@ -320,12 +322,12 @@ const CalendarAuditLogs = () => {
       />
 
       {/* View switcher */}
-      <Stack direction="row" alignItems="center" gap={1.5}>
+      <Stack direction="row" alignItems="center" gap={1}>
         <Paper sx={{ flex: 1 }}>
           <CustomTabs
             value={view}
             onChange={(_, val) => setView(val as AuditView)}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
           >
             {VIEW_TABS.filter((t) => (t.value === 'analytics' ? canViewAnalytics : true)).map(
               (tab) => (
@@ -347,7 +349,7 @@ const CalendarAuditLogs = () => {
                 Keyboard Shortcuts
               </Typography>
               {KEYBOARD_SHORTCUTS.map((s) => (
-                <Stack key={s.key} direction="row" justifyContent="space-between" gap={2}>
+                <Stack key={s.key} direction="row" justifyContent="space-between" gap={1}>
                   <Typography variant="caption" color="text.secondary">
                     {s.description}
                   </Typography>
@@ -439,7 +441,7 @@ const CalendarAuditLogs = () => {
         maxWidth="xs"
       >
         <DialogScrollContent>
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             <Alert severity="warning" icon={<Iconify icon="mdi:undo-variant" />}>
               This will revert the selected record to its previous state. A new audit log will be
               created for this restore action.

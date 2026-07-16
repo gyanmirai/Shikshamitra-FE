@@ -65,7 +65,7 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
 
         <Collapse in={!folders.value} unmountOnExit>
           <Box
-            gap={3}
+            gap={1}
             display="grid"
             gridTemplateColumns={{
               xs: 'repeat(1, 1fr)',
@@ -108,7 +108,7 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
               md: 'repeat(3, 1fr)',
               lg: 'repeat(4, 1fr)',
             }}
-            gap={3}
+            gap={1}
           >
             {dataFiltered
               .filter((i) => i.type !== 'folder')

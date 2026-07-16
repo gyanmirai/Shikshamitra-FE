@@ -120,8 +120,8 @@ const CompletedAssessment = () => {
         <Scrollbar>
           <Box px="15px">
             <form onSubmit={formik.handleSubmit}>
-              <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-                <Box py="8px" display="flex" flexDirection="column" gap={3}>
+              <Box pt="10px" display="flex" flexDirection="column" gap={1}>
+                <Box py="8px" display="flex" flexDirection="column" gap={1}>
                   <CustomSelect
                     label="Student"
                     options={[

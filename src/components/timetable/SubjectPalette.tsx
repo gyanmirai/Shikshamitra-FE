@@ -292,7 +292,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
               <Tab label="Subjects" />
               <Tab
                 label={
-                  <Box display="flex" alignItems="center" gap={0.5}>
+                  <Box display="flex" alignItems="center" gap={1}>
                     Issues
                     {conflicts.length > 0 && (
                       <Chip

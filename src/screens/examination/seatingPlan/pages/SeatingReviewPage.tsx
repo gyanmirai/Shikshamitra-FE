@@ -228,6 +228,7 @@ export default function SeatingReviewPage({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 2 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Allocation Review"
         isBack
         onBack={() => {

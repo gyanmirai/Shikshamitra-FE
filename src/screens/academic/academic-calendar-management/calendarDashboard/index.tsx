@@ -383,8 +383,9 @@ const AcademicCalendarDashboard = () => {
   ];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Academic Calendar"
         description="Manage your school's academic year — holidays, vacations, events, and scheduling rules."
         links={[
@@ -425,7 +426,7 @@ const AcademicCalendarDashboard = () => {
                 : alpha(theme.palette.primary.main, 0.04),
           }}
         >
-          <Stack direction="row" alignItems="center" gap={1.75}>
+          <Stack direction="row" alignItems="center" gap={1}>
             <Box
               sx={{
                 width: 44,
@@ -519,7 +520,7 @@ const AcademicCalendarDashboard = () => {
       </Paper>
 
       {/* ── Stats Grid ── */}
-      <Grid container spacing={1.5} columns={10}>
+      <Grid container spacing={1} columns={10}>
         {STATS.map((stat) => (
           <Grid
             size={{ xs: 5, sm: 2, md: 2 }}
@@ -543,7 +544,7 @@ const AcademicCalendarDashboard = () => {
       </Grid>
 
       {/* ── Bottom: Calendars + Pending Logs + Quick Actions ── */}
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         {/* All Calendars */}
         <Grid size={{ xs: 12, md: 5 }}>
           <Paper
@@ -762,7 +763,7 @@ const AcademicCalendarDashboard = () => {
                     }}
                     onClick={() => router.push(academicPaths.academicCalendar.impactLogs)}
                   >
-                    <Stack direction="row" alignItems="flex-start" gap={1.5}>
+                    <Stack direction="row" alignItems="flex-start" gap={1}>
                       <Box
                         sx={{
                           width: 32,
@@ -827,7 +828,7 @@ const AcademicCalendarDashboard = () => {
                 Quick Actions
               </Typography>
             </Stack>
-            <Grid container spacing={1.5}>
+            <Grid container spacing={1}>
               {[
                 {
                   icon: 'mdi:calendar-plus-outline',

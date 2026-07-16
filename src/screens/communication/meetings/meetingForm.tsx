@@ -347,7 +347,7 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
+        <Box display="flex" flexDirection="column" gap={1} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Basic Information">
@@ -794,7 +794,7 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({
             <Grid size={{ xs: 12 }} mb={2}>
               <SectionCard title="Event Mode">
                 <Grid size={{ xs: 12 }}>
-                  <Box display="flex" alignItems="center" gap={2}>
+                  <Box display="flex" alignItems="center" gap={1}>
                     <span>Offline</span>
                     <Switch
                       checked={formik.values.mode === 'online'}

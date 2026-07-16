@@ -274,6 +274,7 @@ const Gradebook = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Gradebook"
         links={[
           { name: 'Academics' },
@@ -281,7 +282,7 @@ const Gradebook = (props: TabComponentType) => {
           { name: 'Gradebook' },
         ]}
       />
-      <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
+      <Box display="flex" gap={1} flexWrap="wrap" alignItems="center" mb={3}>
         <CustomSelect
           label="Class"
           options={classData?.items || []}

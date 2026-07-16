@@ -131,7 +131,7 @@ const AuditExportMenu = ({ anchorEl, open, onClose }: Props) => {
             />
           }
           label={
-            <Stack direction="row" alignItems="center" gap={0.5}>
+            <Stack direction="row" alignItems="center" gap={1}>
               <Iconify icon="mdi:compare-horizontal" width={14} color="text.secondary" />
               <Typography variant="caption">Include diff details</Typography>
             </Stack>

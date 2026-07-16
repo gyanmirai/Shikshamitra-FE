@@ -223,7 +223,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
             </Typography>
           </Box>
           {selectedPool ? (
-            <Stack direction="row" gap={0.75} flexWrap="wrap">
+            <Stack direction="row" gap={1} flexWrap="wrap">
               <Chip size="small" label={`${selectedPool.remainingCapacity} remaining`} />
               <Chip size="small" label={`${selectedPool.reservedSeats} reserved`} />
               <Chip size="small" label={`${selectedPool.acceptedSeats} accepted`} />
@@ -373,7 +373,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
                   justifyContent="space-between"
-                  gap={0.75}
+                  gap={1}
                 >
                   <Box>
                     <Typography variant="body2" fontWeight={600}>
@@ -401,7 +401,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
                     {new Date(offer.reservation.expiresAt).toLocaleString()}
                   </Typography>
                 ) : null}
-                <Stack direction="row" gap={0.75} flexWrap="wrap">
+                <Stack direction="row" gap={1} flexWrap="wrap">
                   {offer.status === AdmissionCrmSeatOfferStatus.Draft ? (
                     <LoadingButton
                       size="small"
@@ -878,7 +878,7 @@ export function ApplicantFinalAdmissionOperations({ leadId, academicYearId }: Pr
               <Stack
                 key={decision.id}
                 direction={{ xs: 'column', sm: 'row' }}
-                gap={0.75}
+                gap={1}
                 alignItems={{ sm: 'center' }}
               >
                 <Chip size="small" label={decisionStatusLabels[decision.status]} />

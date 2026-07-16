@@ -58,7 +58,7 @@ const SettingsSection = ({ icon, title, description, iconColor, children }: Sect
           borderBottom: `1px solid ${alpha(color, 0.12)}`,
         }}
       >
-        <Stack direction="row" alignItems="center" gap={1.5}>
+        <Stack direction="row" alignItems="center" gap={1}>
           <Box
             sx={{
               width: 34,
@@ -212,7 +212,7 @@ const CalendarSettingsForm = ({ settingsData, onSave, isSaving }: Props) => {
 
   return (
     <Box component="form" id="calendar-settings-form" onSubmit={formik.handleSubmit} noValidate>
-      <Grid container spacing={2.5}>
+      <Grid container spacing={1}>
         {/* ROW 1: Weekend & Working Day Rules (1 select) & Visibility Rules (1 select) */}
         <Grid size={{ xs: 12, md: 6 }}>
           <SettingsSection

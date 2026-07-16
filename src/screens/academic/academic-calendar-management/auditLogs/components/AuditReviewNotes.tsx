@@ -34,7 +34,7 @@ const AuditReviewNotes = ({ notes = [], canAddNote = true, onAdd }: Props) => {
   };
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1}>
       {notes.length === 0 && !canAddNote && (
         <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, textAlign: 'center' }}>
           <Typography variant="caption" color="text.secondary">
@@ -54,7 +54,7 @@ const AuditReviewNotes = ({ notes = [], canAddNote = true, onAdd }: Props) => {
             backgroundColor: alpha(theme.palette.info.main, 0.02),
           }}
         >
-          <Stack direction="row" alignItems="flex-start" gap={1.25}>
+          <Stack direction="row" alignItems="flex-start" gap={1}>
             <Avatar
               sx={{
                 width: 28,

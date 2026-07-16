@@ -22,6 +22,7 @@ import ActivityStudentEnrollment from './component/activityStudentEnrollment';
 const Dashboard = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
+      sx={{ mb: 1 }}
       heading="Dashboard"
       links={[{ name: 'Academics' }, { name: 'Activity' }, { name: 'Dashboard' }]}
       action={

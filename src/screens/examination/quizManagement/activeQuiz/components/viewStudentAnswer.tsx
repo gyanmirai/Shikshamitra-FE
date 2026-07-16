@@ -164,7 +164,7 @@ export const ViewAnswers = () => {
                   />
                 </Paper>
 
-                <Stack direction="row" spacing={2} mt={2}>
+                <Stack direction="row" spacing={1} mt={2}>
                   <TextField
                     label="Marks *"
                     placeholder="Marks"
@@ -193,7 +193,7 @@ export const ViewAnswers = () => {
         ))}
       </Scrollbar>
 
-      <Box display="flex" justifyContent="flex-end" gap={2}>
+      <Box display="flex" justifyContent="flex-end" gap={1}>
         <Button variant="outlined" startIcon={<Iconify icon={GlobalIcons.cancel} />}>
           Cancel
         </Button>

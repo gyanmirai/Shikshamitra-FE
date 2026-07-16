@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useCallback } from 'react';
@@ -1008,7 +1008,7 @@ const LessonPlanScreen = () => {
       isFilter: false,
       render: (v: string, row: any) =>
         v ? (
-          <Stack direction="row" spacing={0.75} alignItems="flex-start">
+          <Stack direction="row" spacing={1} alignItems="flex-start">
             <Iconify
               icon="mdi:information-outline"
               width={16}
@@ -1031,7 +1031,7 @@ const LessonPlanScreen = () => {
       filterType: 'number' as const,
       minWidth: 100,
       render: (v: number) => (
-        <Stack spacing={0.25}>
+        <Stack spacing={1}>
           <Typography variant="body2">{v}%</Typography>
           <LinearProgress variant="determinate" value={v} sx={{ height: 4, borderRadius: 1 }} />
         </Stack>
@@ -1043,7 +1043,7 @@ const LessonPlanScreen = () => {
       filterType: 'number' as const,
       minWidth: 100,
       render: (v: number) => (
-        <Stack spacing={0.25}>
+        <Stack spacing={1}>
           <Typography variant="body2">{v}%</Typography>
           <LinearProgress
             variant="determinate"
@@ -1198,8 +1198,9 @@ const LessonPlanScreen = () => {
   });
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Lesson Plan / Teacher Diary"
         description="Plan lessons, record daily teaching evidence, review diary submissions, and track syllabus progress in one place."
         links={[
@@ -1225,7 +1226,6 @@ const LessonPlanScreen = () => {
       <TeachingKpiCards
         lessonPlans={lessonPlans}
         diaryEntries={diaryEntries}
-        healthScore={healthScore}
         onCardClick={(key) => {
           if (key === 'pending_approvals') setActiveTab('reviewQueue');
           else if (key === 'missed_lessons') {
@@ -1346,11 +1346,6 @@ const LessonPlanScreen = () => {
           onMarkMissed={(plan) => {
             shikshaMitraToast.info({ message: `Mark missed for ${plan.topic} is not wired yet.` });
           }}
-          onCreateFromTimetable={(date) =>
-            shikshaMitraToast.info({
-              message: `Timetable sync for ${date.format('DD MMM')} coming soon.`,
-            })
-          }
           onCopyPreviousWeek={() =>
             shikshaMitraToast.info({ message: 'Previous week lessons copied as draft.' })
           }
@@ -1428,7 +1423,7 @@ const LessonPlanScreen = () => {
         handleClose={closeHomeworkFromPlan}
       >
         <DialogScrollContent sx={{ bgcolor: 'background.neutral', pb: 2 }}>
-          <Stack spacing={2}>
+          <Stack spacing={1}>
             {homeworkError && (
               <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
                 {homeworkError}
@@ -1444,7 +1439,7 @@ const LessonPlanScreen = () => {
                   border: (theme) => `1px solid ${theme.palette.divider}`,
                 }}
               >
-                <Stack spacing={0.5}>
+                <Stack spacing={1}>
                   <Typography variant="subtitle2">{homeworkPlan.topic}</Typography>
                   <Typography variant="caption" color="text.secondary">
                     {homeworkPlan.className}-{homeworkPlan.divisionName} /{' '}
@@ -1515,7 +1510,7 @@ const LessonPlanScreen = () => {
               formControlProps={{ fullWidth: true }}
             />
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <DateTimePicker
                 label="Publish Date *"
                 value={homeworkForm.publishAt}

@@ -48,7 +48,7 @@ const TransportNotifyParentsDialog: React.FC<TransportNotifyParentsDialogProps> 
       <Scrollbar>
         <Box px="15px">
           <form onSubmit={formik.handleSubmit}>
-            <Box pt="10px" display="flex" flexDirection="column" gap={3}>
+            <Box pt="10px" display="flex" flexDirection="column" gap={1}>
               <TextField
                 name="name"
                 label="Name"

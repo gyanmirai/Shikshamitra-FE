@@ -92,7 +92,7 @@ const TransportAddNewVehicleDialog: React.FC<TransportAddNewVehicleDialogProps> 
       <Scrollbar>
         <Box px="15px">
           <form onSubmit={formik.handleSubmit}>
-            <Box pt="10px" display="flex" flexDirection="column" gap={3}>
+            <Box pt="10px" display="flex" flexDirection="column" gap={1}>
               <Grid container spacing={2}>
                 <Grid size={6}>
                   <TextField

@@ -108,7 +108,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
       const { row } = params;
       const isPending = row.status === AdjustmentStatusEnum.Pending;
       return (
-        <Box display="flex" gap={0.5} alignItems="center">
+        <Box display="flex" gap={1} alignItems="center">
           <ThreeDotsActions
             showThreeDots={false}
             showViewIcon

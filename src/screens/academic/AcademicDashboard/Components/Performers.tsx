@@ -59,7 +59,7 @@ export const PerformersList = ({ title, subheader, list, type, ...other }: Props
         subheader={subheader}
         sx={{ p: 2 }}
         action={
-          <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <CustomSelect
               options={allClass}
               label="Class"
@@ -88,7 +88,7 @@ export const PerformersList = ({ title, subheader, list, type, ...other }: Props
         sx={{
           px: 2,
           pb: 2,
-          gap: 1.25,
+          gap: 1,
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -132,7 +132,7 @@ function Item({
   return (
     <Box
       sx={{
-        gap: 2,
+        gap: 1,
         display: 'flex',
         alignItems: 'center',
         py: 1.5,

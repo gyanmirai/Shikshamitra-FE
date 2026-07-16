@@ -66,7 +66,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
   // The sections themselves are also memoized.
   const formContent = useMemo(
     () => (
-      <Box display="flex" flexDirection="column" gap={2} height="100%">
+      <Box display="flex" flexDirection="column" gap={1} height="100%">
         <Scrollbar
           sx={{
             p: 2,

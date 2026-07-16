@@ -166,6 +166,7 @@ const CalendarManagement = () => {
   const [selectedDayDate, setSelectedDayDate] = useState<string>('');
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [filterStandardId, setFilterStandardId] = useState<string>('all');
+  const [activeDayType, setActiveDayType] = useState<DayType | null>(null);
 
   // Auto-creation lock ref
   const autoCreatingRef = React.useRef(false);
@@ -351,6 +352,7 @@ const CalendarManagement = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
       {/* Breadcrumbs */}
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Calendar Management"
         description="Build and manage academic calendars — set holidays, vacations, events, and day markers."
         links={[
@@ -381,12 +383,12 @@ const CalendarManagement = () => {
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             alignItems={{ sm: 'center' }}
-            gap={2.5}
+            gap={1}
             flexWrap="wrap"
           >
             {/* Static Selected Calendar Indicator */}
             {selectedCalendar ? (
-              <Stack direction="row" alignItems="center" gap={1.5}>
+              <Stack direction="row" alignItems="center" gap={1}>
                 <Avatar
                   sx={{
                     width: 36,
@@ -398,14 +400,14 @@ const CalendarManagement = () => {
                 >
                   <Iconify icon="mdi:calendar-month-outline" width={18} sx={{ color: '#fff' }} />
                 </Avatar>
-                <Stack spacing={0.1}>
+                <Stack spacing={1}>
                   <Typography variant="caption" color="text.secondary" fontWeight={500}>
                     Selected Calendar
                   </Typography>
                   <Typography variant="subtitle2" fontWeight={700}>
                     {selectedCalendar.name}
                   </Typography>
-                  <Stack direction="row" alignItems="center" gap={0.5}>
+                  <Stack direction="row" alignItems="center" gap={1}>
                     <Iconify icon="mdi:calendar-range-outline" width={15} color="text.secondary" />
                     <Typography variant="caption" color="text.secondary" fontWeight={500}>
                       {dayjs(calendarStartDate).format('DD MMM YYYY')} –{' '}
@@ -415,7 +417,7 @@ const CalendarManagement = () => {
                 </Stack>
               </Stack>
             ) : (
-              <Stack direction="row" alignItems="center" gap={1.5}>
+              <Stack direction="row" alignItems="center" gap={1}>
                 <Avatar
                   sx={{
                     width: 36,
@@ -435,7 +437,7 @@ const CalendarManagement = () => {
 
             {/* Stats */}
             {selectedCalendar && (
-              <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap">
+              <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
                 <Box
                   sx={{
                     display: 'flex',
@@ -502,7 +504,7 @@ const CalendarManagement = () => {
       </Paper>
 
       {/* Class Filter + Tabs */}
-      <Stack direction="row" alignItems="center" gap={1.5}>
+      <Stack direction="row" alignItems="center" gap={1}>
         <CustomSelect
           label="Class"
           options={classFilterOptions}
@@ -522,7 +524,7 @@ const CalendarManagement = () => {
           <CustomTabs
             value={searchParams.tab}
             onChange={(_, val) => setParam('tab', val)}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
           >
             {TABS.map((tab) => (
               <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
@@ -547,6 +549,8 @@ const CalendarManagement = () => {
                 calendarEndDate={calendarEndDate}
                 isLoading={daysLoading}
                 onDayClick={handleDayClick}
+                activeDayType={activeDayType}
+                onToggleDayType={(type) => setActiveDayType((prev) => (prev === type ? null : type))}
               />
             )}
           </>
@@ -566,6 +570,8 @@ const CalendarManagement = () => {
                 onMonthChange={setCurrentMonth}
                 onDayClick={handleDayClick}
                 isLoading={daysLoading}
+                activeDayType={activeDayType}
+                onToggleDayType={(type) => setActiveDayType((prev) => (prev === type ? null : type))}
               />
             )}
           </>

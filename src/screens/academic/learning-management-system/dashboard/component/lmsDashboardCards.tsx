@@ -6,7 +6,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Card, Grid, Button, Typography } from '@mui/material';
 
 const LmsDashboardCards = () => (
-  <Grid container spacing={2}>
+  <Grid container spacing={1}>
     <Grid size={{ xs: 12, md: 6 }}>
       <Card
         sx={{

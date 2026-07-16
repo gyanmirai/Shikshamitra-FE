@@ -203,7 +203,7 @@ const ChapterCompletionChart = ({ chartData }: { chartData?: ChapterCompletionCh
             <Typography variant="caption" color="text.secondary">
               Avg School Syllabus Progress
             </Typography>
-            <Stack direction="row" alignItems="center" spacing={0.75}>
+            <Stack direction="row" alignItems="center" spacing={1}>
               <Typography variant="h4">{avgCompletion}%</Typography>
               <Box
                 sx={{
@@ -221,13 +221,13 @@ const ChapterCompletionChart = ({ chartData }: { chartData?: ChapterCompletionCh
           </Box>
         </Box>
       ) : (
-        <Grid container spacing={1.25} sx={{ mt: 1.5, mb: 1.25 }}>
+        <Grid container spacing={1} sx={{ mt: 1.5, mb: 1.25 }}>
           <Grid size={{ xs: 12, sm: 4 }}>
             <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'background.neutral' }}>
               <Typography variant="caption" color="text.secondary">
                 Avg Completion
               </Typography>
-              <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <Typography variant="h4">{avgCompletion}%</Typography>
                 <Box
                   sx={{
@@ -250,7 +250,7 @@ const ChapterCompletionChart = ({ chartData }: { chartData?: ChapterCompletionCh
               <Typography variant="caption" color="text.secondary">
                 Completed
               </Typography>
-              <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <Typography variant="h4">{totalCompleted}</Typography>
                 <Box
                   sx={{
@@ -273,7 +273,7 @@ const ChapterCompletionChart = ({ chartData }: { chartData?: ChapterCompletionCh
               <Typography variant="caption" color="text.secondary">
                 Pending
               </Typography>
-              <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <Typography variant="h4">{totalPending}</Typography>
                 <Box
                   sx={{
@@ -294,14 +294,14 @@ const ChapterCompletionChart = ({ chartData }: { chartData?: ChapterCompletionCh
       )}
 
       {!chartData && (
-        <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
-          <Stack direction="row" spacing={0.75} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+          <Stack direction="row" spacing={1} alignItems="center">
             <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: '#20A26B' }} />
             <Typography variant="body2" color="text.secondary">
               Completed
             </Typography>
           </Stack>
-          <Stack direction="row" spacing={0.75} alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center">
             <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: '#E79C23' }} />
             <Typography variant="body2" color="text.secondary">
               Pending

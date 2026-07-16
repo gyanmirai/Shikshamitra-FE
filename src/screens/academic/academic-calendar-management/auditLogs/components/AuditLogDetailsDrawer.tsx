@@ -88,7 +88,7 @@ const Section = ({
         '& .MuiAccordionSummary-content': { my: 1.25, mx: 0 },
       }}
     >
-      <Stack direction="row" alignItems="center" gap={1.25}>
+      <Stack direction="row" alignItems="center" gap={1}>
         <Box
           sx={{
             width: 30,
@@ -239,7 +239,7 @@ const AuditLogDetailsDrawer = ({
               gap={1}
               sx={{ mt: 2 }}
             >
-              <Stack direction="row" alignItems="center" gap={1.25}>
+              <Stack direction="row" alignItems="center" gap={1}>
                 <Avatar
                   sx={{
                     width: 34,
@@ -265,7 +265,7 @@ const AuditLogDetailsDrawer = ({
                 <Stack
                   direction="row"
                   alignItems="center"
-                  gap={0.5}
+                  gap={1}
                   sx={{
                     px: 1,
                     py: 0.5,
@@ -294,7 +294,7 @@ const AuditLogDetailsDrawer = ({
         }}
       >
         {!loading && log && (
-          <Stack spacing={1.5}>
+          <Stack spacing={1}>
             {/* Change Details */}
             <Section
               icon="mdi:clipboard-text-outline"
@@ -316,7 +316,7 @@ const AuditLogDetailsDrawer = ({
                   </DetailRow>
                 )}
                 <DetailRow label="Log ID" last>
-                  <Stack direction="row" alignItems="center" gap={0.5} sx={{ minWidth: 0 }}>
+                  <Stack direction="row" alignItems="center" gap={1} sx={{ minWidth: 0 }}>
                     <Typography
                       variant="caption"
                       fontWeight={600}
@@ -409,13 +409,13 @@ const AuditLogDetailsDrawer = ({
                 subtitle="Other records connected to this change"
                 defaultExpanded={false}
               >
-                <Stack spacing={0.75}>
+                <Stack spacing={1}>
                   {log.relatedRecords.map((r, i) => (
                     <Stack
                       key={`${r.name}-${i}`}
                       direction="row"
                       alignItems="center"
-                      gap={1.5}
+                      gap={1}
                       sx={{
                         py: 0.75,
                         cursor: r.href ? 'pointer' : 'default',
@@ -461,7 +461,7 @@ const AuditLogDetailsDrawer = ({
           }}
         >
           <Stack direction="row" gap={1} justifyContent="space-between" flexWrap="wrap">
-            <Stack direction="row" gap={0.75}>
+            <Stack direction="row" gap={1}>
               <Button
                 size="small"
                 variant="text"
@@ -525,7 +525,7 @@ const DetailRow = ({
     <Stack
       direction="row"
       alignItems="center"
-      gap={1.5}
+      gap={1}
       sx={{
         py: 1,
         minHeight: 34,

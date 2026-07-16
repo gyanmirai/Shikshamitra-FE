@@ -134,11 +134,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
           onSubmit={formik.handleSubmit}
         >
           <Scrollbar sx={{ height: '500px', p: 2 }}>
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               {/* Student Profile Section */}
               <Grid size={{ xs: 12 }}>
                 <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-                  <Stack direction="row" alignItems="center" spacing={2}>
+                  <Stack direction="row" alignItems="center" spacing={1}>
                     <Avatar
                       alt={data?.studentName || 'Student'}
                       sx={{
@@ -200,7 +200,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                           },
                         }}
                       >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           {getFileIconByType(data.originalFileName ?? document.type ?? 'txt', 32)}
                           <Box>
                             <Typography variant="subtitle2" noWrap sx={{ maxWidth: 240 }}>
@@ -299,7 +299,7 @@ I have completed all answers according to the given instructions and provided sc
                     Evaluation & Feedback
                   </Typography>
 
-                  <Grid container spacing={2}>
+                  <Grid container spacing={1}>
                     <Grid size={{ xs: 12, md: 6 }}>
                       <ShakingTextField
                         error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}

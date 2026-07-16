@@ -50,6 +50,7 @@ const MarksFeedbackHomeworkAssignment = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Evaluation & Feedback"
         description={
           currentActiveComponent?.value === 'homeworkMarks'
@@ -79,7 +80,7 @@ const MarksFeedbackHomeworkAssignment = () => {
 
             setSearchParams('tab', value);
           }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: 2 }}
           role="tablist"
         >
           {TABS.map((tab) => (

@@ -533,7 +533,7 @@ export default function PublicAdmissionStatusScreen({
                         </Typography>
                       </Stack>
                     ))}
-                    <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    <Stack direction="row" gap={1} flexWrap="wrap">
                       <Chip
                         size="small"
                         label={`${statusCopy.total}: ${formatPublicCurrency(status.financialStatus.grossAmount, status.financialStatus.currency, language)}`}

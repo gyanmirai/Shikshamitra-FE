@@ -29,6 +29,14 @@ export const timetableManagementApi = academicApi.injectEndpoints({
       invalidatesTags: [academicType.timetableManagement],
     }),
 
+    validateTimetable: builder.mutation({
+      query: ({ standardId, divisionId, body }) => ({
+        url: `academics/timetable/by-standard/${standardId}/division/${divisionId}/validate`,
+        method: 'POST',
+        body,
+      }),
+    }),
+
     assignTeachers: builder.mutation({
       query: (body: {
         standardId: string;
@@ -72,6 +80,7 @@ export const {
   useGetTimetableManagementByStandardQuery,
   useGetTimetableByStandardDivisionQuery,
   useCreateTimetableMutation,
+  useValidateTimetableMutation,
   useAssignTeachersMutation,
   useAssignRoomsMutation,
 } = timetableManagementApi;

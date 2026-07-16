@@ -12,6 +12,8 @@ interface AssignmentToolbarProps {
   onStatusFilterChange: (value: AssignmentFilterValue) => void;
   onClearFilters: () => void;
   disabled?: boolean;
+  showInsights?: boolean;
+  onToggleInsights?: () => void;
 }
 
 const filterOptions: { value: AssignmentFilterValue; label: string }[] = [
@@ -28,6 +30,8 @@ export default function AssignmentToolbar({
   onStatusFilterChange,
   onClearFilters,
   disabled,
+  showInsights,
+  onToggleInsights,
 }: AssignmentToolbarProps) {
   const hasActiveFilters = !!searchTerm || statusFilter !== 'all';
 
@@ -80,6 +84,26 @@ export default function AssignmentToolbar({
         >
           Clear Filters
         </Button>
+      )}
+
+      {onToggleInsights && (
+        <>
+          <Box sx={{ flexGrow: 1 }} />
+          <Button
+            size="small"
+            color="inherit"
+            variant="outlined"
+            startIcon={
+              <Iconify
+                icon={showInsights ? 'solar:eye-closed-bold-duotone' : 'solar:eye-bold-duotone'}
+              />
+            }
+            onClick={onToggleInsights}
+            sx={{ borderColor: 'divider' }}
+          >
+            {showInsights ? 'Hide Insights' : 'Show Insights'}
+          </Button>
+        </>
       )}
     </Box>
   );

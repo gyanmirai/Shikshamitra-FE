@@ -82,7 +82,7 @@ const TransportReportsScreen = () => {
         </Grid>
         <Grid size={{ sm: 12, md: 6 }}>
           <Card sx={{ p: 3, height: '100%' }}>
-            <Box display="flex" flexDirection="column" gap={2}>
+            <Box display="flex" flexDirection="column" gap={1}>
               <Typography variant="subtitle1" sx={{ pt: 2 }}>
                 Trip Summary
               </Typography>
@@ -110,7 +110,7 @@ const TransportReportsScreen = () => {
 
         <Grid size={{ sm: 12, md: 6 }}>
           <Card sx={{ p: 3, height: '100%' }}>
-            <Box display="flex" flexDirection="column" gap={2}>
+            <Box display="flex" flexDirection="column" gap={1}>
               <Typography variant="subtitle1" sx={{ pt: 2 }}>
                 Vehicle Usage Frequency
               </Typography>
@@ -136,7 +136,7 @@ const TransportReportsScreen = () => {
         </Grid>
         <Grid size={{ sm: 12, md: 6 }}>
           <Card sx={{ p: 3, height: '100%' }}>
-            <Box display="flex" flexDirection="column" gap={2}>
+            <Box display="flex" flexDirection="column" gap={1}>
               <Typography variant="subtitle1" sx={{ pt: 2 }}>
                 Route Efficiency
               </Typography>
@@ -188,7 +188,7 @@ const TransportReportsScreen = () => {
       </Grid>
       <Grid>
         <Card sx={{ p: 3, height: '100%' }}>
-          <Box display="flex" flexDirection="column" gap={2}>
+          <Box display="flex" flexDirection="column" gap={1}>
             <CustomSelect
               label="Vehicle"
               options={[]}

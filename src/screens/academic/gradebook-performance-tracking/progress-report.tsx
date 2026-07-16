@@ -5,7 +5,7 @@ import { varAlpha } from 'src/theme/styles';
 import { Search } from '@mui/icons-material';
 import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -26,7 +26,7 @@ import {
 
 const ProgressReport = (props: TabComponentType) => (
   <Box>
-    <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
+    <Box display="flex" gap={1} flexWrap="wrap" alignItems="center" mb={3}>
       <CustomSelect
         label="Class"
         options={[
@@ -71,7 +71,7 @@ const ProgressReport = (props: TabComponentType) => (
       />
       <Button variant="contained">Generate Report</Button>
     </Box>
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12, md: 6 }}>
         <AnalyticsWebsiteVisits
           title="Performance by Assignment"

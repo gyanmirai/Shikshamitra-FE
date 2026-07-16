@@ -51,6 +51,35 @@ interface FileUploaderProps<T extends boolean = true> {
   dragProps?: BoxProps;
 }
 
+const getAbsoluteFileUrl = (url: string) => {
+  if (!url) return '';
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('blob:') ||
+    url.startsWith('data:')
+  ) {
+    return url;
+  }
+
+  const apiRoot = process.env.NEXT_PUBLIC_API_URL || '';
+
+  // If the url is already prefixed with /api/files/ or api/files/
+  if (url.includes('/api/files/')) {
+    if (url.startsWith('/')) {
+      return `${apiRoot}${url}`;
+    }
+    return `${apiRoot}/${url}`;
+  }
+
+  const cleanFilename = url.startsWith('/') ? url.slice(1) : url;
+
+  if (cleanFilename.startsWith('api/')) {
+    return `${apiRoot}/${cleanFilename}`;
+  }
+  return `${apiRoot}/api/files/${encodeURIComponent(cleanFilename)}`;
+};
+
 const getFileNameFromUrl = (file: string | File): string => {
   if (!file) return '';
   if (file instanceof File) return file.name;
@@ -74,14 +103,24 @@ const getFileType = (fileUrl: string): string => {
 
 const normalizeFile = (file: any): File | FileData => {
   if (typeof file === 'string') {
+    const absoluteUrl = getAbsoluteFileUrl(file);
     return {
-      url: file,
-      filePath: file,
+      url: absoluteUrl,
+      filePath: absoluteUrl,
       name: getFileNameFromUrl(file),
       size: undefined,
       type: getFileType(file),
     };
   }
+
+  if (file && typeof file === 'object' && !(file instanceof File)) {
+    return {
+      ...file,
+      url: file.url ? getAbsoluteFileUrl(file.url) : file.url,
+      filePath: file.filePath ? getAbsoluteFileUrl(file.filePath) : file.filePath,
+    };
+  }
+
   return file;
 };
 

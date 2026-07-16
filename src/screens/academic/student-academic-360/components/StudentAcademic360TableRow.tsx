@@ -115,7 +115,7 @@ export function StudentAcademic360TableRow({
       }}
     >
       <TableCell sx={{ minWidth: 250 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar src={item.profileImageUrl} alt={item.name} sx={{ width: 36, height: 36 }}>
             {item.name.charAt(0)}
           </Avatar>

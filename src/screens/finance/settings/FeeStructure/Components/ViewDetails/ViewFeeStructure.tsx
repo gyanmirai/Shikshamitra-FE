@@ -222,7 +222,7 @@ const ViewFeeStructure = ({
                         alignItems="center"
                         justifyContent="space-between"
                         width="100%"
-                        gap={0.5}
+                        gap={1}
                       >
                         <Typography
                           variant="body2"
@@ -250,7 +250,7 @@ const ViewFeeStructure = ({
                       {isLoadingThis ? (
                         <Skeleton variant="text" width={60} height={16} sx={{ mt: 0.25 }} />
                       ) : summary ? (
-                        <Box display="flex" alignItems="center" gap={0.5} mt={0.25}>
+                        <Box display="flex" alignItems="center" gap={1} mt={0.25}>
                           <Iconify
                             icon="mdi:lock-outline"
                             width={11}
@@ -322,7 +322,7 @@ const ViewFeeStructure = ({
               bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.02),
             }}
           >
-            <Box display="flex" alignItems="center" gap={1.5}>
+            <Box display="flex" alignItems="center" gap={1}>
               <Iconify
                 icon="solar:bill-list-bold-duotone"
                 width={20}

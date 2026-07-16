@@ -252,7 +252,7 @@ const SortableFeeRow = ({
       </Box>
 
       {/* amount + remove */}
-      <Box display="flex" alignItems="center" gap={0.5} flexShrink={0}>
+      <Box display="flex" alignItems="center" gap={1} flexShrink={0}>
         <Typography
           variant="body2"
           sx={{
@@ -2038,7 +2038,7 @@ const FeeCollectComponentForm = ({
         open={receiptDialogOpen}
         handleClose={handleReceiptDialogClose}
         title={
-          <Box display="flex" alignItems="center" gap={0.5}>
+          <Box display="flex" alignItems="center" gap={1}>
             <Typography variant="h6" fontWeight={700}>
               Payment Receipts
             </Typography>

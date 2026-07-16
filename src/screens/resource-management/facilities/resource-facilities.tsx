@@ -16,7 +16,7 @@ const ResourceFacilities = () => (
       heading="Classroom & Facilities"
       links={[{ name: 'Resource Management' }, { name: 'Classroom & Facilities' }]}
     />
-    <Box display="flex" flexDirection="column" gap={3}>
+    <Box display="flex" flexDirection="column" gap={1}>
       <ResourceFacilitiesCardSection />
       <FacilitiesAllocationOverview />
       <AllFacilitiesTableSection />

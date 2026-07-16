@@ -39,7 +39,7 @@ const SubjectDocument = ({ subject }: { subject: ISubjectDetail | null }) => {
 
   return (
     <Box>
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         {documents.map((docItem: any, index: number) => {
           const docUrl =
             typeof docItem === 'string' ? docItem : docItem?.url || docItem?.filePath || '';

@@ -52,7 +52,7 @@ export function HomeMinimal({ sx, ...other }: StackProps) {
                 component={motion.div}
                 key={item.title}
                 variants={varFade({ distance: 24 }).inUp}
-                gap={3}
+                gap={1}
                 display="flex"
               >
                 {/* <SvgColor src={item.icon as any} sx={{ width: 40, height: 40 }} /> */}

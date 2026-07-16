@@ -119,7 +119,7 @@ export const AIRoomAssistantPanel = ({
 
       {/* Example prompts */}
       {!data && !isLoading && (
-        <Stack direction="row" flexWrap="wrap" gap={0.75} sx={{ mb: 1.5 }}>
+        <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 1.5 }}>
           <Typography variant="caption" color="text.secondary" sx={{ width: '100%' }}>
             Try:
           </Typography>
@@ -252,7 +252,7 @@ export const AIRoomAssistantPanel = ({
                         {room.buildingName} · {room.capacity} seats
                       </Typography>
                     </Box>
-                    <Stack direction="row" spacing={0.5} alignItems="center">
+                    <Stack direction="row" spacing={1} alignItems="center">
                       <Chip
                         size="small"
                         label={`${room.matchScore}%`}

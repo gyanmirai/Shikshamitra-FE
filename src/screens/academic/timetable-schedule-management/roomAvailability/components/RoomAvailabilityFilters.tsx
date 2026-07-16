@@ -2,7 +2,7 @@
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useCallback } from 'react';
@@ -321,7 +321,7 @@ export const RoomAvailabilityFilters = ({
           </Button>
         </Stack>
 
-        <Stack spacing={2} sx={{ maxHeight: 420, overflowY: 'auto', pr: 0.5, mb: 3 }}>
+        <Stack spacing={1} sx={{ maxHeight: 420, overflowY: 'auto', pr: 0.5, mb: 3 }}>
           {/* Section 0: Search Room */}
           <TextField
             size="small"
@@ -358,7 +358,7 @@ export const RoomAvailabilityFilters = ({
           >
             Location & Schedule
           </Typography>
-          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1}>
             <DatePicker
               label="Date"
               value={draftFilters.date === 'today' ? dayjs() : dayjs(draftFilters.date)}
@@ -409,7 +409,7 @@ export const RoomAvailabilityFilters = ({
           >
             Specifications & Availability
           </Typography>
-          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1}>
             <CustomSelect
               label="Min Capacity"
               options={CAPACITY_OPTIONS}
@@ -478,7 +478,7 @@ export const RoomAvailabilityFilters = ({
           >
             System Status & Conflict severity
           </Typography>
-          <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={2}>
+          <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={1}>
             <CustomSelect
               label="Status"
               options={STATUS_FILTER_OPTIONS}
@@ -503,7 +503,7 @@ export const RoomAvailabilityFilters = ({
           </Box>
         </Stack>
 
-        <Stack direction="row" spacing={1.5} justifyContent="flex-end">
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
           <Button variant="outlined" color="inherit" onClick={popover.onClose}>
             Cancel
           </Button>

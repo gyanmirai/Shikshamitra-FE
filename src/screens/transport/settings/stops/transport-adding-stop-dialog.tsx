@@ -143,7 +143,7 @@ const TransportAddingStopDialog: React.FC<ITransportAddingStopDialogProps> = ({
 
         <Grid container sx={{ mt: 0 }} gap={1}>
           <Grid size={3}>
-            <Box display="flex" flexDirection="row" marginTop="30px" gap={2} alignItems="center">
+            <Box display="flex" flexDirection="row" marginTop="30px" gap={1} alignItems="center">
               <TextField
                 size="small"
                 fullWidth

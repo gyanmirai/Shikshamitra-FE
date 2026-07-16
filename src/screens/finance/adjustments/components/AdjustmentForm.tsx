@@ -161,9 +161,9 @@ const AdjustmentForm: React.FC<
           alignItems="center"
           justifyContent="space-between"
           flexWrap="wrap"
-          gap={1.5}
+          gap={1}
         >
-          <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
+          <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
             {totalSelectedMonths > 0 ? (
               <>
                 <Chip
@@ -174,7 +174,7 @@ const AdjustmentForm: React.FC<
                   icon={<Iconify icon="solar:calendar-bold" width={14} />}
                 />
                 {totalAdjustmentAmount > 0 && (
-                  <Box display="flex" alignItems="center" gap={0.75}>
+                  <Box display="flex" alignItems="center" gap={1}>
                     <Typography variant="caption" color="text.secondary">
                       Adjustment Amount:
                     </Typography>
@@ -191,7 +191,7 @@ const AdjustmentForm: React.FC<
             )}
           </Box>
 
-          <Box display="flex" alignItems="center" gap={1.5}>
+          <Box display="flex" alignItems="center" gap={1}>
             <Divider
               orientation="vertical"
               flexItem

@@ -128,7 +128,7 @@ const RoomDetails = ({ addRoomDialog }: any) => {
 
   return (
     <Box>
-      {/* <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
+      {/* <Box display="flex" gap={1} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           size="small"

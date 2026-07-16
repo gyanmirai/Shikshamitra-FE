@@ -90,7 +90,7 @@ const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsPro
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1.5,
+                gap: 1,
                 mb: 2.5,
                 p: 2,
                 borderRadius: 2,
@@ -280,7 +280,7 @@ const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsPro
           px: { xs: 2, sm: 3 },
           py: 1.5,
           display: 'flex',
-          gap: 1.25,
+          gap: 1,
           justifyContent: 'flex-end',
           alignItems: 'center',
           zIndex: 10,

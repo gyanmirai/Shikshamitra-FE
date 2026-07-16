@@ -53,7 +53,7 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({
   });
 
   return (
-    // <Box display="flex" flexDirection="column" gap={2}>
+    // <Box display="flex" flexDirection="column" gap={1}>
     <BackPopUpChecked
       initialValues={slotData.subjects}
       currentValues={slotData.subjects.map((s: any) => ({

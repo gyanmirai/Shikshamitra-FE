@@ -10,7 +10,7 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -218,7 +218,7 @@ const EmergencyClosureScreen = () => {
       filterType: 'string',
       isFilter: true,
       render: (value, row) => (
-        <Stack spacing={0.3}>
+        <Stack spacing={1}>
           <Typography variant="body2" fontWeight={700}>
             {value}
           </Typography>
@@ -255,7 +255,7 @@ const EmergencyClosureScreen = () => {
       label: 'Actions',
       align: 'right',
       render: (_, row) => (
-        <Stack direction="row" justifyContent="flex-end" gap={0.5}>
+        <Stack direction="row" justifyContent="flex-end" gap={1}>
           <Tooltip title="View details">
             <IconButton size="small" onClick={() => handleViewClick(row)}>
               <Iconify icon="mdi:eye-outline" width={18} />
@@ -281,8 +281,9 @@ const EmergencyClosureScreen = () => {
   ];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Emergency Closure"
         description="Review declared emergency closures and add a new closure when school operations need to pause."
         links={[
@@ -323,7 +324,7 @@ const EmergencyClosureScreen = () => {
         columns={columns}
         data={tableData}
         noDataText={
-          <Stack alignItems="center" spacing={1.5} sx={{ py: 6 }}>
+          <Stack alignItems="center" spacing={1} sx={{ py: 6 }}>
             <Box
               sx={{
                 width: 64,
@@ -348,7 +349,7 @@ const EmergencyClosureScreen = () => {
         open={addDialog.value}
         handleClose={closeAddDialog}
         title={
-          <Stack direction="row" alignItems="center" gap={0.75}>
+          <Stack direction="row" alignItems="center" gap={1}>
             <span>{editingClosureId ? 'Edit Emergency Closure' : 'Declare Emergency Closure'}</span>
             <CustomTooltip
               arrow
@@ -362,11 +363,12 @@ const EmergencyClosureScreen = () => {
         maxWidth="md"
       >
         <DialogScrollContent>
-          <Grid container spacing={2.5}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DatePicker
                 label="Closure Date *"
                 value={formik.values.date ? dayjs(formik.values.date) : null}
+                blockedDayTypes={[]}
                 onChange={(val) =>
                   formik.setFieldValue('date', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)
                 }
@@ -579,7 +581,7 @@ const EmergencyClosureScreen = () => {
       >
         <DialogScrollContent>
           {viewingClosure && (
-            <Stack spacing={2}>
+            <Stack spacing={1}>
               <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                 <Box>
                   <Typography variant="caption" color="text.secondary">
@@ -595,7 +597,7 @@ const EmergencyClosureScreen = () => {
                 </Label>
               </Stack>
 
-              <Grid container spacing={2}>
+              <Grid container spacing={1}>
                 <Grid size={{ xs: 6 }}>
                   <Typography variant="caption" color="text.secondary">
                     Closure Date

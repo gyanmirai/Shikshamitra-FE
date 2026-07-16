@@ -99,6 +99,7 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {showBreadCumb && (
         <CustomBreadcrumbs
+          sx={{ mb: 1 }}
           heading="Learning Tasks"
           description={
             currentActiveComponent?.value === 'homeworkCreation'
@@ -130,7 +131,7 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
 
             setSearchParams('tab', value);
           }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
           role="tablist"
         >
           {TABS.map((tab) => (

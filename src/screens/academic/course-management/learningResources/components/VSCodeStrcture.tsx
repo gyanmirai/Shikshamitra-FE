@@ -134,9 +134,9 @@
 //     >
 //       {({ values, errors, touched, handleChange, handleBlur, isValid, dirty }) => (
 //         <Form>
-//           <Box display="flex" flexDirection="column" gap={2} height="100%">
+//           <Box display="flex" flexDirection="column" gap={1} height="100%">
 //             <Scrollbar sx={{ p: 2, height: '100%' }}>
-//               <Grid container spacing={2}>
+//               <Grid container spacing={1}>
 //                 <Grid item xs={12}>
 //                   <TextField
 //                     fullWidth
@@ -219,9 +219,9 @@
 //     >
 //       {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isValid }) => (
 //         <Form>
-//           <Box display="flex" flexDirection="column" gap={2} height="100%">
+//           <Box display="flex" flexDirection="column" gap={1} height="100%">
 //             <Scrollbar sx={{ p: 2, height: '100%' }}>
-//               <Grid container spacing={2}>
+//               <Grid container spacing={1}>
 //                 <Grid item xs={12}>
 //                   <TextField
 //                     fullWidth
@@ -304,7 +304,7 @@
 //   if (!file.file || !(file.file instanceof File)) {
 //     return (
 //       <Card sx={{ height: '100%', p: 2 }}>
-//         <Box display="flex" alignItems="center" gap={2} mb={3}>
+//         <Box display="flex" alignItems="center" gap={1} mb={3}>
 //           <FileThumbnail
 //             file={file.file || { name: file.name, path: file.path }}
 //             sx={{
@@ -706,7 +706,7 @@
 //   };
 
 //   return (
-//     <Box sx={{ height: '100vh', display: 'flex', gap: 2 }}>
+//     <Box sx={{ height: '100vh', display: 'flex', gap: 1 }}>
 //       {/* Left Panel - Folder Tree */}
 //       <Paper
 //         sx={{

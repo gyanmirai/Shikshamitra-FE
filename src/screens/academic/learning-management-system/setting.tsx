@@ -46,6 +46,7 @@ const SettingScreen = (props: TabComponentType) => {
   return (
     <>
       <CustomBreadcrumbs
+        sx={{ mb: 1 }}
         heading="Settings"
         description="Manage learning management system settings including courses, content, notifications, and integrations."
         links={[{ name: 'Academics' }, { name: 'Settings' }]}

@@ -160,7 +160,7 @@ export default function RubricEvaluationPanel({
           </LoadingButton>
         </Stack>
       ) : (
-        <Stack spacing={1.25}>
+        <Stack spacing={1}>
           {activeRubric.criteria.map((criterion) => (
             <Stack
               key={criterion.id}

@@ -159,7 +159,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
             </Typography>
           </Stack>
 
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center">
             <Box
               sx={{
                 display: 'inline-flex',
@@ -187,7 +187,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
 
       {/* ── Slot Configurations ────────────────────────────────────────── */}
       {viewData?.slotConfigurations && viewData.slotConfigurations.length > 0 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {viewData.slotConfigurations.map((config, index) => {
             const isExpanded = expandedConfigs[config.id] ?? false;
             const lectureCount = config.timeSlots.filter((s) => s.slotType !== 'break').length;
@@ -256,7 +256,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                     gap={1}
                   >
                     {/* Config title */}
-                    <Stack direction="row" alignItems="center" spacing={1.25}>
+                    <Stack direction="row" alignItems="center" spacing={1}>
                       <Box
                         sx={{
                           width: 8,
@@ -288,7 +288,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                     </Stack>
 
                     {/* Summary pills */}
-                    <Stack direction="row" spacing={0.75} flexWrap="wrap">
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
                       <Chip
                         label={`${config.timeSlots.length} slots`}
                         size="small"
@@ -405,7 +405,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                                 sx={{
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: 1.5,
+                                  gap: 1,
                                   px: 1.5,
                                   py: 1,
                                   borderRadius: 2,
@@ -458,7 +458,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                                 </Box>
 
                                 {/* Times */}
-                                <Stack direction="row" alignItems="center" spacing={0.5} flex={1}>
+                                <Stack direction="row" alignItems="center" spacing={1} flex={1}>
                                   <Iconify
                                     icon="mdi:clock-start"
                                     width={13}

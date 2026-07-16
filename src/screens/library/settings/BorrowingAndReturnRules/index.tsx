@@ -214,7 +214,7 @@ const BorrowingReturnRules = () => {
           { name: 'Borrowing Rules' },
         ]}
         action={
-          <Box display="flex" gap={2}>
+          <Box display="flex" gap={1}>
             <Button
               variant="outlined"
               startIcon={<Iconify icon={GlobalIcons.resetIcon} />}

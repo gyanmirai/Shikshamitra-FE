@@ -25,7 +25,7 @@ const HomeHero = () => (
         <Grid
           size={{ xs: 12, md: 6 }}
           display="flex"
-          gap={3}
+          gap={1}
           justifyContent="center"
           flexDirection="column"
         >

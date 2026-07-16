@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { DatePicker } from '@mui/x-date-pickers';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { shikshaMitraToast } from 'src/components/toast';
 import {
   useCreateCalendarMutation,
@@ -69,7 +69,7 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
 
   return (
     <Box component="form" onSubmit={formik.handleSubmit} noValidate>
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         {/* Calendar Name */}
         <Grid size={{ xs: 12 }}>
           <TextField
@@ -91,6 +91,7 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
           <DatePicker
             label="Start Date *"
             value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
+            blockedDayTypes={[]}
             onChange={(val) => formik.setFieldValue('startDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
             slotProps={{
               textField: {
@@ -109,6 +110,7 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
             label="End Date *"
             value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
             minDate={formik.values.startDate ? dayjs(formik.values.startDate) : undefined}
+            blockedDayTypes={[]}
             onChange={(val) => formik.setFieldValue('endDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
             slotProps={{
               textField: {

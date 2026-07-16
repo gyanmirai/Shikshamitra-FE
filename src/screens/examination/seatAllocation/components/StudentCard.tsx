@@ -25,7 +25,7 @@ const StudentCard = ({ student, theme }: { student: IStudentRoomAssignment; them
         p: 1.5,
         display: 'flex',
         alignItems: 'center',
-        gap: 2,
+        gap: 1,
         cursor: isAssigned ? 'pointer' : 'grab',
         transition: 'all 0.2s ease-in-out',
         borderRadius: 1.5,

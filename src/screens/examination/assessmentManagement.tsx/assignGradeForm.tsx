@@ -23,7 +23,7 @@ export const AssignGrade: React.FC<AssignGradeProps> = ({
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} p={1}>
+    <Box display="flex" flexDirection="column" gap={1} p={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar
           sx={{ p: 2, bgcolor: 'background.neutral', height: !isBulk ? '500px' : '200px' }}
@@ -33,7 +33,7 @@ export const AssignGrade: React.FC<AssignGradeProps> = ({
               <CertificateDocument />
             </PDFViewer>
           )}
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid size={{ xs: 12 }}>
               <CustomSelect
                 options={[
