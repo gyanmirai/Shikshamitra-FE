@@ -686,6 +686,28 @@ export type AdmissionCrmCycleConfigurationDto = {
   notes?: string | null;
 };
 
+export type AdmissionCrmSettingsAccessMode = 0 | 1 | 2;
+export type AdmissionCrmSetupReadiness = 0 | 1 | 2 | 3 | 4;
+
+export type AdmissionCrmSetupItemDto = {
+  key: string;
+  title: string;
+  status: AdmissionCrmSetupReadiness;
+  accessMode: AdmissionCrmSettingsAccessMode;
+  blockerCodes: string[];
+  path: string;
+};
+
+export type AdmissionCrmSetupStatusDto = {
+  academicYearId: string;
+  cycleName: string;
+  status: AdmissionCrmSetupReadiness;
+  appliedPresetName?: string | null;
+  appliedPresetVersion?: number | null;
+  lastUpdatedAt?: string | null;
+  items: AdmissionCrmSetupItemDto[];
+};
+
 export type AdmissionCrmSlaPolicyDto = {
   timeZoneId: string;
   workingDays: number[];
@@ -4182,6 +4204,16 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
       }),
       providesTags: [studentAdmissionsCrmType.configuration],
     }),
+    getAdmissionCrmSetupStatus: builder.query<
+      AdmissionCrmSetupStatusDto,
+      { academicYearId: string }
+    >({
+      query: ({ academicYearId }) => ({
+        url: `/student-enrollment/admissions-crm/setup/${academicYearId}/status`,
+        method: 'GET',
+      }),
+      providesTags: [studentAdmissionsCrmType.configuration],
+    }),
     updateAdmissionCrmCycleConfiguration: builder.mutation<
       AdmissionCrmCycleConfigurationDto,
       { academicYearId: string; body: Partial<AdmissionCrmCycleConfigurationDto> }
@@ -6553,6 +6585,7 @@ export const {
   useGetAdmissionCrmSchoolDefaultCycleConfigurationQuery,
   useUpdateAdmissionCrmSchoolDefaultCycleConfigurationMutation,
   useGetAdmissionCrmCycleConfigurationQuery,
+  useGetAdmissionCrmSetupStatusQuery,
   useUpdateAdmissionCrmCycleConfigurationMutation,
   useGetAdmissionCrmPipelineStagesQuery,
   useUpdateAdmissionCrmPipelineStageMutation,

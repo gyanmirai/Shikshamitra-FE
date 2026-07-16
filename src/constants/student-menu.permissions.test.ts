@@ -66,7 +66,7 @@ describe('student permission groups', () => {
       'src/app/(auth-route)/student/enrollment/settings/page.tsx'
     ).trimStart();
     expect(settingsRedirectSource).not.toMatch(/^['"]use client['"]/);
-    expect(settingsRedirectSource).toContain('redirect(');
+    expect(settingsRedirectSource).toContain('EnrollmentSetupCenter');
 
     const settingsLayoutSource = readSource(
       'src/app/(auth-route)/student/enrollment/settings/layout.tsx'

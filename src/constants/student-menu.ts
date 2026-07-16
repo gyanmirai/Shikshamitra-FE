@@ -199,6 +199,14 @@ const studentModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
+                  title: 'Setup Center',
+                  path: studentPaths.enrollment.settings,
+                  _action: 'student-enrollment-settings-setup-center',
+                  permissionName: studentPermissions.enrollment.settings,
+                  icon: menuIconView('mdi:view-dashboard-outline'),
+                  preserveQueryParams: ['cycle'],
+                },
+                {
                   title: 'Admission Journey',
                   path: studentPaths.enrollment.settingsSections.journey,
                   _action: 'student-enrollment-settings-journey',

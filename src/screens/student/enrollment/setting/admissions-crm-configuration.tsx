@@ -2208,423 +2208,502 @@ const AdmissionsCrmConfiguration = ({
                 </Stack>
               </Stack>
               <Divider />
-              <TextField
-                size="small"
-                label="Cycle name"
-                value={cycleForm.cycleName}
-                disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                onChange={(event) => handleCycleChange('cycleName', event.target.value)}
-              />
-              <Typography variant="subtitle2">SLA working calendar</Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Time zone"
-                  value={cycleForm.slaPolicy.timeZoneId}
-                  onChange={(event) =>
-                    setCycleForm((current) => ({
-                      ...current,
-                      slaPolicy: { ...current.slaPolicy, timeZoneId: event.target.value },
-                    }))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Working day starts"
-                  inputProps={{ min: 0, max: 23 }}
-                  value={cycleForm.slaPolicy.workingDayStartHour}
-                  onChange={(event) =>
-                    setCycleForm((current) => ({
-                      ...current,
-                      slaPolicy: {
-                        ...current.slaPolicy,
-                        workingDayStartHour: Number(event.target.value),
-                      },
-                    }))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Working day ends"
-                  inputProps={{ min: 1, max: 24 }}
-                  value={cycleForm.slaPolicy.workingDayEndHour}
-                  onChange={(event) =>
-                    setCycleForm((current) => ({
-                      ...current,
-                      slaPolicy: {
-                        ...current.slaPolicy,
-                        workingDayEndHour: Number(event.target.value),
-                      },
-                    }))
-                  }
-                />
-              </Stack>
-              <Stack direction="row" gap={1} flexWrap="wrap">
-                {slaWorkingDayOptions.map((day) => (
-                  <FormControlLabel
-                    key={day.value}
-                    label={day.label}
-                    control={
-                      <Checkbox
-                        size="small"
-                        checked={cycleForm.slaPolicy.workingDays.includes(day.value)}
+              <Accordion defaultExpanded disableGutters variant="outlined">
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Box>
+                    <Typography variant="subtitle2">Basics</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Name and identify this admission cycle.
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Cycle name"
+                    value={cycleForm.cycleName}
+                    disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                    onChange={(event) => handleCycleChange('cycleName', event.target.value)}
+                  />
+                </AccordionDetails>
+              </Accordion>
+              <Accordion disableGutters variant="outlined">
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Box>
+                    <Typography variant="subtitle2">Working calendar</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Working days, hours, holidays, and escalation ownership.
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails sx={{ display: 'grid', gap: 1.25 }}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Time zone"
+                      value={cycleForm.slaPolicy.timeZoneId}
+                      onChange={(event) =>
+                        setCycleForm((current) => ({
+                          ...current,
+                          slaPolicy: { ...current.slaPolicy, timeZoneId: event.target.value },
+                        }))
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Working day starts"
+                      inputProps={{ min: 0, max: 23 }}
+                      value={cycleForm.slaPolicy.workingDayStartHour}
+                      onChange={(event) =>
+                        setCycleForm((current) => ({
+                          ...current,
+                          slaPolicy: {
+                            ...current.slaPolicy,
+                            workingDayStartHour: Number(event.target.value),
+                          },
+                        }))
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Working day ends"
+                      inputProps={{ min: 1, max: 24 }}
+                      value={cycleForm.slaPolicy.workingDayEndHour}
+                      onChange={(event) =>
+                        setCycleForm((current) => ({
+                          ...current,
+                          slaPolicy: {
+                            ...current.slaPolicy,
+                            workingDayEndHour: Number(event.target.value),
+                          },
+                        }))
+                      }
+                    />
+                  </Stack>
+                  <Stack direction="row" gap={1} flexWrap="wrap">
+                    {slaWorkingDayOptions.map((day) => (
+                      <FormControlLabel
+                        key={day.value}
+                        label={day.label}
+                        control={
+                          <Checkbox
+                            size="small"
+                            checked={cycleForm.slaPolicy.workingDays.includes(day.value)}
+                            onChange={(event) =>
+                              setCycleForm((current) => ({
+                                ...current,
+                                slaPolicy: {
+                                  ...current.slaPolicy,
+                                  workingDays: event.target.checked
+                                    ? [...current.slaPolicy.workingDays, day.value]
+                                    : current.slaPolicy.workingDays.filter(
+                                        (value) => value !== day.value
+                                      ),
+                                },
+                              }))
+                            }
+                          />
+                        }
+                      />
+                    ))}
+                  </Stack>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Holidays"
+                      helperText="Comma-separated dates in YYYY-MM-DD format"
+                      value={cycleForm.slaPolicy.holidays.join(', ')}
+                      onChange={(event) =>
+                        setCycleForm((current) => ({
+                          ...current,
+                          slaPolicy: {
+                            ...current.slaPolicy,
+                            holidays: event.target.value
+                              .split(',')
+                              .map((value) => value.trim())
+                              .filter(Boolean),
+                          },
+                        }))
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Escalate after additional hours"
+                      inputProps={{ min: 0, max: 720 }}
+                      value={cycleForm.slaPolicy.escalationAfterHours}
+                      onChange={(event) =>
+                        setCycleForm((current) => ({
+                          ...current,
+                          slaPolicy: {
+                            ...current.slaPolicy,
+                            escalationAfterHours: Number(event.target.value),
+                          },
+                        }))
+                      }
+                    />
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Escalation owner</InputLabel>
+                      <Select
+                        label="Escalation owner"
+                        inputProps={{ 'aria-label': 'Escalation owner' }}
+                        value={cycleForm.slaPolicy.escalationOwnerUserId || ''}
                         onChange={(event) =>
                           setCycleForm((current) => ({
                             ...current,
                             slaPolicy: {
                               ...current.slaPolicy,
-                              workingDays: event.target.checked
-                                ? [...current.slaPolicy.workingDays, day.value]
-                                : current.slaPolicy.workingDays.filter(
-                                    (value) => value !== day.value
-                                  ),
+                              escalationOwnerUserId: event.target.value || null,
                             },
                           }))
                         }
-                      />
-                    }
-                  />
-                ))}
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Holidays"
-                  helperText="Comma-separated dates in YYYY-MM-DD format"
-                  value={cycleForm.slaPolicy.holidays.join(', ')}
-                  onChange={(event) =>
-                    setCycleForm((current) => ({
-                      ...current,
-                      slaPolicy: {
-                        ...current.slaPolicy,
-                        holidays: event.target.value
-                          .split(',')
-                          .map((value) => value.trim())
-                          .filter(Boolean),
-                      },
-                    }))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Escalate after additional hours"
-                  inputProps={{ min: 0, max: 720 }}
-                  value={cycleForm.slaPolicy.escalationAfterHours}
-                  onChange={(event) =>
-                    setCycleForm((current) => ({
-                      ...current,
-                      slaPolicy: {
-                        ...current.slaPolicy,
-                        escalationAfterHours: Number(event.target.value),
-                      },
-                    }))
-                  }
-                />
-                <FormControl fullWidth size="small">
-                  <InputLabel>Escalation owner</InputLabel>
-                  <Select
-                    label="Escalation owner"
-                    inputProps={{ 'aria-label': 'Escalation owner' }}
-                    value={cycleForm.slaPolicy.escalationOwnerUserId || ''}
-                    onChange={(event) =>
-                      setCycleForm((current) => ({
-                        ...current,
-                        slaPolicy: {
-                          ...current.slaPolicy,
-                          escalationOwnerUserId: event.target.value || null,
-                        },
-                      }))
-                    }
-                  >
-                    <MenuItem value="">Lead owner</MenuItem>
-                    {ownerOptions.map((owner) => (
-                      <MenuItem key={owner.id} value={owner.id}>
-                        {getCrmUserOptionLabel(owner)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Lead SLA hours"
-                  value={cycleForm.defaultLeadSlaHours}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange('defaultLeadSlaHours', Number(event.target.value))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Passing %"
-                  value={cycleForm.defaultExamPassingPercentage}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange('defaultExamPassingPercentage', Number(event.target.value))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Activation cancellation window (days)"
-                  inputProps={{ min: 0, max: 90 }}
-                  value={cycleForm.activationCancellationWindowDays}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange(
-                      'activationCancellationWindowDays',
-                      Number(event.target.value)
-                    )
-                  }
-                />
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Stale after days"
-                  value={cycleForm.staleAfterDays}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange('staleAfterDays', Number(event.target.value))
-                  }
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Archive after days"
-                  value={cycleForm.archiveAfterDays}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange('archiveAfterDays', Number(event.target.value))
-                  }
-                />
-              </Stack>
-              <FormControl fullWidth size="small">
-                <InputLabel>Merit ranking</InputLabel>
-                <Select
-                  label="Merit ranking"
-                  inputProps={{ 'aria-label': 'Merit ranking' }}
-                  value={cycleForm.meritRankingMode}
-                  disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                  onChange={(event) =>
-                    handleCycleChange(
-                      'meritRankingMode',
-                      Number(event.target.value) as AdmissionCrmMeritRankingMode
-                    )
-                  }
-                >
-                  {Object.entries(meritModeLabel).map(([value, label]) => (
-                    <MenuItem key={value} value={Number(value)}>
-                      {label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={cycleForm.isActive}
+                      >
+                        <MenuItem value="">Lead owner</MenuItem>
+                        {ownerOptions.map((owner) => (
+                          <MenuItem key={owner.id} value={owner.id}>
+                            {getCrmUserOptionLabel(owner)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+              <Accordion disableGutters variant="outlined">
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Box>
+                    <Typography variant="subtitle2">Evaluation and automation</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Service targets, passing score, inactivity, and ranking defaults.
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails sx={{ display: 'grid', gap: 1.25 }}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Lead SLA hours"
+                      value={cycleForm.defaultLeadSlaHours}
                       disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                      onChange={(event) => handleCycleChange('isActive', event.target.checked)}
+                      onChange={(event) =>
+                        handleCycleChange('defaultLeadSlaHours', Number(event.target.value))
+                      }
                     />
-                  }
-                  label="Active"
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={cycleForm.registrationFormRequiredBeforeExam}
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Passing %"
+                      value={cycleForm.defaultExamPassingPercentage}
                       disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
                       onChange={(event) =>
                         handleCycleChange(
-                          'registrationFormRequiredBeforeExam',
-                          event.target.checked
+                          'defaultExamPassingPercentage',
+                          Number(event.target.value)
                         )
                       }
                     />
-                  }
-                  label="Registration before exam"
-                />
-              </Stack>
-              <Stack spacing={0.5}>
-                <Typography variant="subtitle2">Exam readiness</Typography>
-                <Stack direction="row" gap={1} flexWrap="wrap">
-                  {readinessOptions.map((option) => (
-                    <FormControlLabel
-                      key={option.value}
-                      sx={{ mr: 1 }}
-                      control={
-                        <Checkbox
-                          size="small"
-                          checked={(cycleForm.examReadinessFields & option.value) === option.value}
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onChange={() => handleCycleReadinessToggle(option.value)}
-                        />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Activation cancellation window (days)"
+                      inputProps={{ min: 0, max: 90 }}
+                      value={cycleForm.activationCancellationWindowDays}
+                      disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                      onChange={(event) =>
+                        handleCycleChange(
+                          'activationCancellationWindowDays',
+                          Number(event.target.value)
+                        )
                       }
-                      label={option.label}
                     />
-                  ))}
-                </Stack>
-              </Stack>
-              <Stack spacing={0.75}>
-                <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
-                  justifyContent="space-between"
-                  gap={1}
-                  alignItems={{ sm: 'center' }}
-                >
+                  </Stack>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Stale after days"
+                      value={cycleForm.staleAfterDays}
+                      disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                      onChange={(event) =>
+                        handleCycleChange('staleAfterDays', Number(event.target.value))
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Archive after days"
+                      value={cycleForm.archiveAfterDays}
+                      disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                      onChange={(event) =>
+                        handleCycleChange('archiveAfterDays', Number(event.target.value))
+                      }
+                    />
+                  </Stack>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Merit ranking</InputLabel>
+                    <Select
+                      label="Merit ranking"
+                      inputProps={{ 'aria-label': 'Merit ranking' }}
+                      value={cycleForm.meritRankingMode}
+                      disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
+                      onChange={(event) =>
+                        handleCycleChange(
+                          'meritRankingMode',
+                          Number(event.target.value) as AdmissionCrmMeritRankingMode
+                        )
+                      }
+                    >
+                      {Object.entries(meritModeLabel).map(([value, label]) => (
+                        <MenuItem key={value} value={Number(value)}>
+                          {label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </AccordionDetails>
+              </Accordion>
+              <Accordion disableGutters variant="outlined">
+                <AccordionSummary expandIcon={<ExpandMore />}>
                   <Box>
-                    <Typography variant="subtitle2">Applicant checklist</Typography>
+                    <Typography variant="subtitle2">Activation safeguards</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Show required and optional items on the secure status link.
+                      Cycle availability and registration-before-exam controls.
                     </Typography>
                   </Box>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    disabled={!academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle}
-                    onClick={handleAddApplicantChecklistItem}
-                  >
-                    Add Item
-                  </Button>
-                </Stack>
-                <Box sx={{ display: 'grid', gap: 1 }}>
-                  {cycleForm.applicantChecklist.map((item, index) => (
-                    <Box
-                      key={`${item.key}-${index}`}
-                      sx={{
-                        border: 1,
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        p: 1,
-                        display: 'grid',
-                        gap: 1,
-                      }}
-                    >
-                      <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Label"
-                          value={item.label}
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={cycleForm.isActive}
                           disabled={
                             !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
                           }
-                          onChange={(event) =>
-                            handleApplicantChecklistChange(index, 'label', event.target.value)
-                          }
+                          onChange={(event) => handleCycleChange('isActive', event.target.checked)}
                         />
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Key"
-                          value={item.key}
+                      }
+                      label="Active"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={cycleForm.registrationFormRequiredBeforeExam}
                           disabled={
                             !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
                           }
                           onChange={(event) =>
-                            handleApplicantChecklistChange(index, 'key', event.target.value)
-                          }
-                        />
-                      </Stack>
-                      <Stack
-                        direction={{ xs: 'column', md: 'row' }}
-                        gap={1}
-                        alignItems={{ md: 'center' }}
-                      >
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Details"
-                          value={item.details ?? ''}
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onChange={(event) =>
-                            handleApplicantChecklistChange(index, 'details', event.target.value)
-                          }
-                        />
-                        <TextField
-                          size="small"
-                          type="number"
-                          label="Order"
-                          value={item.displayOrder}
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onChange={(event) =>
-                            handleApplicantChecklistChange(
-                              index,
-                              'displayOrder',
-                              Number(event.target.value)
+                            handleCycleChange(
+                              'registrationFormRequiredBeforeExam',
+                              event.target.checked
                             )
                           }
                         />
+                      }
+                      label="Registration before exam"
+                    />
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+              <Accordion disableGutters variant="outlined">
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Box>
+                    <Typography variant="subtitle2">Readiness and applicant checklist</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Required inquiry information and the family-facing checklist.
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails sx={{ display: 'grid', gap: 1.25 }}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="subtitle2">Exam readiness</Typography>
+                    <Stack direction="row" gap={1} flexWrap="wrap">
+                      {readinessOptions.map((option) => (
                         <FormControlLabel
+                          key={option.value}
+                          sx={{ mr: 1 }}
                           control={
-                            <Switch
-                              checked={item.isRequired}
+                            <Checkbox
+                              size="small"
+                              checked={
+                                (cycleForm.examReadinessFields & option.value) === option.value
+                              }
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onChange={() => handleCycleReadinessToggle(option.value)}
+                            />
+                          }
+                          label={option.label}
+                        />
+                      ))}
+                    </Stack>
+                  </Stack>
+                  <Stack spacing={0.75}>
+                    <Stack
+                      direction={{ xs: 'column', sm: 'row' }}
+                      justifyContent="space-between"
+                      gap={1}
+                      alignItems={{ sm: 'center' }}
+                    >
+                      <Box>
+                        <Typography variant="subtitle2">Applicant checklist</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Show required and optional items on the secure status link.
+                        </Typography>
+                      </Box>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={
+                          !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                        }
+                        onClick={handleAddApplicantChecklistItem}
+                      >
+                        Add Item
+                      </Button>
+                    </Stack>
+                    <Box sx={{ display: 'grid', gap: 1 }}>
+                      {cycleForm.applicantChecklist.map((item, index) => (
+                        <Box
+                          key={`${item.key}-${index}`}
+                          sx={{
+                            border: 1,
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            p: 1,
+                            display: 'grid',
+                            gap: 1,
+                          }}
+                        >
+                          <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label="Label"
+                              value={item.label}
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onChange={(event) =>
+                                handleApplicantChecklistChange(index, 'label', event.target.value)
+                              }
+                            />
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label="Key"
+                              value={item.key}
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onChange={(event) =>
+                                handleApplicantChecklistChange(index, 'key', event.target.value)
+                              }
+                            />
+                          </Stack>
+                          <Stack
+                            direction={{ xs: 'column', md: 'row' }}
+                            gap={1}
+                            alignItems={{ md: 'center' }}
+                          >
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label="Details"
+                              value={item.details ?? ''}
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onChange={(event) =>
+                                handleApplicantChecklistChange(index, 'details', event.target.value)
+                              }
+                            />
+                            <TextField
+                              size="small"
+                              type="number"
+                              label="Order"
+                              value={item.displayOrder}
                               disabled={
                                 !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
                               }
                               onChange={(event) =>
                                 handleApplicantChecklistChange(
                                   index,
-                                  'isRequired',
-                                  event.target.checked
+                                  'displayOrder',
+                                  Number(event.target.value)
                                 )
                               }
                             />
-                          }
-                          label="Required"
-                        />
-                        <Button
-                          size="small"
-                          color="error"
-                          disabled={
-                            !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
-                          }
-                          onClick={() => handleRemoveApplicantChecklistItem(index)}
-                        >
-                          Remove
-                        </Button>
-                      </Stack>
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  checked={item.isRequired}
+                                  disabled={
+                                    !academicYearId ||
+                                    isUpdatingCycle ||
+                                    isUpdatingSchoolDefaultCycle
+                                  }
+                                  onChange={(event) =>
+                                    handleApplicantChecklistChange(
+                                      index,
+                                      'isRequired',
+                                      event.target.checked
+                                    )
+                                  }
+                                />
+                              }
+                              label="Required"
+                            />
+                            <Button
+                              size="small"
+                              color="error"
+                              disabled={
+                                !academicYearId || isUpdatingCycle || isUpdatingSchoolDefaultCycle
+                              }
+                              onClick={() => handleRemoveApplicantChecklistItem(index)}
+                            >
+                              Remove
+                            </Button>
+                          </Stack>
+                        </Box>
+                      ))}
+                      {!cycleForm.applicantChecklist.length && (
+                        <Typography variant="body2" color="text.secondary">
+                          No applicant checklist items configured
+                        </Typography>
+                      )}
                     </Box>
-                  ))}
-                  {!cycleForm.applicantChecklist.length && (
-                    <Typography variant="body2" color="text.secondary">
-                      No applicant checklist items configured
-                    </Typography>
-                  )}
-                </Box>
-              </Stack>
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
               <LoadingButton
                 size="small"
                 variant="contained"
                 loading={isUpdatingCycle}
                 disabled={!academicYearId || isUpdatingSchoolDefaultCycle}
                 onClick={handleSaveCycle}
-                sx={{ alignSelf: 'flex-start' }}
+                sx={{
+                  alignSelf: 'flex-start',
+                  position: 'sticky',
+                  bottom: 16,
+                  zIndex: 1,
+                  boxShadow: 2,
+                }}
               >
                 Save Cycle
               </LoadingButton>

@@ -37,7 +37,7 @@ describe('Enrollment settings route contracts', () => {
     ).toBe(true);
   });
 
-  it('keeps the root settings URL and redirects it to Journey', () => {
+  it('keeps the root settings URL as the Enrollment Setup Center', () => {
     const source = read(
       'src',
       'app',
@@ -47,8 +47,8 @@ describe('Enrollment settings route contracts', () => {
       'settings',
       'page.tsx'
     );
-    expect(source).toContain('redirect(');
-    expect(source).toContain('settingsSections.journey');
+    expect(source).toContain('EnrollmentSetupCenter');
+    expect(source).not.toContain('redirect(');
   });
 
   it('protects dirty settings across domain-sidebar navigation and browser exit', () => {
@@ -98,7 +98,7 @@ describe('Enrollment settings route contracts', () => {
     expect(menu).toContain("title: 'Admission Journey'");
     expect(menu).toContain("title: 'Exam & Eligibility'");
     expect(menu).toContain('studentPaths.enrollment.settingsSections.automation');
-    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(18);
+    expect(menu.match(/preserveQueryParams: \['cycle'\]/g)).toHaveLength(19);
   });
 
   it('uses URL-backed panels to progressively disclose dense settings', () => {
@@ -196,7 +196,8 @@ describe('Enrollment settings route contracts', () => {
       'admissions-crm-configuration.tsx'
     );
 
-    expect(guidance).toContain('Applicant handoff map');
+    expect(guidance).toContain('Applicant journey');
+    expect(guidance).toContain('gridTemplateColumns');
     expect(guidance).toContain('Automatic stage');
     expect(guidance).toContain('Ready to Invite');
     expect(configuration).toContain('Applicant Stages');
