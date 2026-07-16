@@ -2,10 +2,11 @@
 
 import { Alert, Stack } from '@mui/material';
 
+import { RegistrationOfferHandoffGuidance } from './admission-journey-guidance';
 import AdmissionsDocumentConfiguration from './admissions-document-configuration';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import AdmissionsRegistrationConfiguration from './admissions-registration-configuration';
-import { EnrollmentSettingsPage, EnrollmentSettingsPanelTabs } from './enrollment-settings-page';
+import { EnrollmentSettingsPage, EnrollmentSettingsSetupSteps } from './enrollment-settings-page';
 
 export function RegistrationDocumentSettingsRoute() {
   const { academicYearId, state } = useEnrollmentWorkspace();
@@ -14,14 +15,23 @@ export function RegistrationDocumentSettingsRoute() {
   return (
     <EnrollmentSettingsPage
       title="Registration & Documents"
-      description="Design registration forms, numbering, and document verification requirements."
+      description="Control how eligible applicants receive forms and complete document verification."
     >
-      <EnrollmentSettingsPanelTabs
-        label="Registration and document settings"
+      <RegistrationOfferHandoffGuidance />
+      <EnrollmentSettingsSetupSteps
+        label="Registration and document setup sequence"
         value={panel}
         options={[
-          { value: 'registration', label: 'Registration Setup' },
-          { value: 'documents', label: 'Document Checklists' },
+          {
+            value: 'registration',
+            label: 'Registration Forms',
+            description: 'Issue rules, secure links, form fields, fees, and numbering.',
+          },
+          {
+            value: 'documents',
+            label: 'Required Documents',
+            description: 'Checklist rules, verification, correction, and readiness.',
+          },
         ]}
       />
       {academicYearId ? (

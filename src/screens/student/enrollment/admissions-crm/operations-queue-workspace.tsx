@@ -1,9 +1,7 @@
 'use client';
 
-import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmStaffLookupDto,
-  AdmissionCrmOperationsQueueItemDto,
   AdmissionCrmOperationsSavedViewDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
@@ -11,7 +9,6 @@ import dynamic from 'next/dynamic';
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import BookmarkAddOutlined from '@mui/icons-material/BookmarkAddOutlined';
 import DeleteOutlineRounded from '@mui/icons-material/DeleteOutlineRounded';
@@ -23,16 +20,27 @@ import {
   Paper,
   Button,
   Switch,
+  Dialog,
   Divider,
   MenuItem,
   TextField,
   Typography,
+  DialogTitle,
   Autocomplete,
+  DialogContent,
+  DialogActions,
   FormControlLabel,
 } from '@mui/material';
 import {
+  AdmissionCrmRouteType,
+  AdmissionCrmSeatOfferStatus,
   useGetAdmissionCrmStaffQuery,
+  AdmissionCrmActivationStatus,
+  AdmissionCrmRegistrationStatus,
   AdmissionCrmOperationsQueueType,
+  AdmissionCrmServiceHandoffStatus,
+  useGetAdmissionCrmSeatPoolsQuery,
+  AdmissionCrmApplicantDocumentStatus,
   useGetAdmissionCrmOperationsQueueQuery,
   useGetAdmissionCrmOperationsSavedViewsQuery,
   useGetAdmissionCrmOperationsQueueSummaryQuery,
@@ -40,10 +48,23 @@ import {
   useDeleteAdmissionCrmOperationsSavedViewMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { formatEnumLabel } from './enrollment-display';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
 import { IntegrationCapabilitiesPanel } from './integration-capabilities-panel';
+import {
+  buildOperationsQueueColumns,
+  type EnrollmentQueueVariant,
+} from './operations-queue-columns';
+import {
+  enrollmentTableWrapperSx,
+  EnrollmentTableEmptyState,
+  enrollmentWorkspaceRootSx,
+  enrollmentTableContainerSx,
+  EnrollmentWorkspaceErrorState,
+  EnrollmentWorkspaceFilterPanel,
+} from './workspace-table-patterns';
 
 import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
 
@@ -60,27 +81,16 @@ type Props = {
   defaultQueue: AdmissionCrmOperationsQueueType;
   allowedQueues?: AdmissionCrmOperationsQueueType[];
   applicantTab?: ApplicantDrawerTab;
+  variant?: EnrollmentQueueVariant;
   showOperationsUtilities?: boolean;
 };
 
 const pageSize = 50;
-const dateFormatter = new Intl.DateTimeFormat('en-IN', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-});
-
-const formatQueueDate = (value: unknown) => {
-  if (!value) return '—';
-
-  const date = new Date(value as string | number | Date);
-  return Number.isNaN(date.getTime()) ? '—' : dateFormatter.format(date);
-};
-
 const queueLabels: Record<AdmissionCrmOperationsQueueType, string> = {
   [AdmissionCrmOperationsQueueType.UnassignedExam]: 'Unassigned Exams',
   [AdmissionCrmOperationsQueueType.CapacityConflict]: 'Capacity Conflicts',
   [AdmissionCrmOperationsQueueType.NoShow]: 'Exam No-shows',
+  [AdmissionCrmOperationsQueueType.RegistrationInvitationPending]: 'Ready to Invite',
   [AdmissionCrmOperationsQueueType.ExpiringRegistrationLink]: 'Expiring Links',
   [AdmissionCrmOperationsQueueType.IncompleteRegistration]: 'Incomplete Registrations',
   [AdmissionCrmOperationsQueueType.RejectedDocument]: 'Rejected Documents',
@@ -105,12 +115,18 @@ const allQueues = Object.values(AdmissionCrmOperationsQueueType).filter(
   (value): value is AdmissionCrmOperationsQueueType => typeof value === 'number'
 );
 
+const enumOptions = <T extends number>(source: Record<string, string | number>) =>
+  Object.entries(source)
+    .filter((entry): entry is [string, T] => typeof entry[1] === 'number')
+    .map(([key, value]) => ({ value, label: formatEnumLabel(key) }));
+
 export function OperationsQueueWorkspace({
   title,
   description,
   defaultQueue,
   allowedQueues = allQueues,
   applicantTab = 'overview',
+  variant = 'operations',
   showOperationsUtilities = false,
 }: Props) {
   const { academicYearId, state, updateState, openApplicant, closeApplicant } =
@@ -119,23 +135,45 @@ export function OperationsQueueWorkspace({
     state.queue != null && allowedQueues.includes(state.queue) ? state.queue : defaultQueue;
   const page = Math.max(0, state.page - 1);
   const [search, setSearch] = useState('');
-  const [staffSearch, setStaffSearch] = useState('');
-  const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
+  const [ownerSearch, setOwnerSearch] = useState('');
+  const [assigneeSearch, setAssigneeSearch] = useState('');
+  const [debouncedOwnerSearch, setDebouncedOwnerSearch] = useState('');
+  const [debouncedAssigneeSearch, setDebouncedAssigneeSearch] = useState('');
   const [owner, setOwner] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [assignee, setAssignee] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [savedViewName, setSavedViewName] = useState('');
+  const [savedViewsOpen, setSavedViewsOpen] = useState(false);
   const [showUtilities, setShowUtilities] = useState(false);
+  const seatPoolsQuery = useGetAdmissionCrmSeatPoolsQuery(
+    { academicYearId: academicYearId || '', maxResultCount: 100 },
+    { skip: !academicYearId || variant !== 'offer' }
+  );
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedStaffSearch(staffSearch.trim()), 300);
+    const timer = window.setTimeout(() => setDebouncedOwnerSearch(ownerSearch.trim()), 300);
     return () => window.clearTimeout(timer);
-  }, [staffSearch]);
+  }, [ownerSearch]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedAssigneeSearch(assigneeSearch.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [assigneeSearch]);
 
-  const staffQuery = useGetAdmissionCrmStaffQuery(
+  const ownerStaffQuery = useGetAdmissionCrmStaffQuery(
     {
-      filter: debouncedStaffSearch || undefined,
-      ids: [state.owner, state.assignee].filter(Boolean).join(',') || undefined,
+      filter: debouncedOwnerSearch || undefined,
+      ids: state.owner || undefined,
       maxResultCount: 25,
+      academicYearId,
+      ownerOnly: true,
+    },
+    { skip: !academicYearId }
+  );
+  const assigneeStaffQuery = useGetAdmissionCrmStaffQuery(
+    {
+      filter: debouncedAssigneeSearch || undefined,
+      ids: state.assignee || undefined,
+      maxResultCount: 25,
+      academicYearId,
     },
     { skip: !academicYearId }
   );
@@ -152,10 +190,32 @@ export function OperationsQueueWorkspace({
       assignedToUserId: state.assignee,
       urgentOnly: state.urgent || undefined,
       minimumAgeDays: state.minimumAgeDays,
+      registrationStatus: state.registrationStatus,
+      documentStatus: state.documentStatus,
+      offerStatus: state.offerStatus,
+      routeType: state.routeType,
+      seatPoolId: state.seatPoolId,
+      activationStatus: state.activationStatus,
+      serviceHandoffStatus: state.serviceHandoffStatus,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
     },
     { skip: !academicYearId }
+  );
+  const rowOwnerIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (queueQuery.data?.items || [])
+            .map((item) => item.ownerUserId)
+            .filter((value): value is string => Boolean(value))
+        )
+      ).join(','),
+    [queueQuery.data?.items]
+  );
+  const rowStaffQuery = useGetAdmissionCrmStaffQuery(
+    { ids: rowOwnerIds, maxResultCount: 1, academicYearId },
+    { skip: !academicYearId || !rowOwnerIds }
   );
   const savedViewsQuery = useGetAdmissionCrmOperationsSavedViewsQuery(
     { academicYearId: academicYearId || '' },
@@ -167,10 +227,11 @@ export function OperationsQueueWorkspace({
     useDeleteAdmissionCrmOperationsSavedViewMutation();
 
   useEffect(() => {
-    const options = staffQuery.data || [];
-    setOwner(options.find((item) => item.id === state.owner) || null);
-    setAssignee(options.find((item) => item.id === state.assignee) || null);
-  }, [staffQuery.data, state.assignee, state.owner]);
+    setOwner((ownerStaffQuery.data || []).find((item) => item.id === state.owner) || null);
+  }, [ownerStaffQuery.data, state.owner]);
+  useEffect(() => {
+    setAssignee((assigneeStaffQuery.data || []).find((item) => item.id === state.assignee) || null);
+  }, [assigneeStaffQuery.data, state.assignee]);
 
   const queueCounts = useMemo(
     () =>
@@ -178,7 +239,7 @@ export function OperationsQueueWorkspace({
         const summary = summaryQuery.data?.queues.find((item) => item.queueType === queueType);
         return {
           queueType,
-          label: summary?.label || queueLabels[queueType],
+          label: queueLabels[queueType],
           count: summary?.count || 0,
           urgentCount: summary?.urgentCount || 0,
         };
@@ -186,109 +247,20 @@ export function OperationsQueueWorkspace({
     [allowedQueues, summaryQuery.data?.queues]
   );
 
-  const columns = useMemo<IColumn[]>(
-    () => [
-      {
-        id: 'applicantName',
-        label: 'Applicant',
-        width: 230,
-        minWidth: 210,
-        sticky: true,
-        stickyPosition: 'left',
-        stickyOnMobile: false,
-        isSort: false,
-        isFilter: false,
-        render: (value) => (
-          <Typography variant="subtitle2" noWrap>
-            {value}
-          </Typography>
-        ),
-      },
-      {
-        id: 'title',
-        label: 'Action Required',
-        width: 360,
-        minWidth: 280,
-        isSort: false,
-        isFilter: false,
-        render: (value, row) => {
-          const item = row as AdmissionCrmOperationsQueueItemDto;
-          return (
-            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-              <Typography variant="body2" noWrap>
-                {value}
-              </Typography>
-              {item.details && (
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {item.details}
-                </Typography>
-              )}
-            </Stack>
-          );
-        },
-      },
-      {
-        id: 'status',
-        label: 'Status',
-        width: 210,
-        minWidth: 180,
-        isSort: false,
-        isFilter: false,
-        render: (value, row) => {
-          const item = row as AdmissionCrmOperationsQueueItemDto;
-          return (
-            <Stack direction="row" gap={1} alignItems="center">
-              <Chip size="small" variant="outlined" label={value} />
-              {item.isUrgent && <Chip size="small" color="warning" label="Urgent" />}
-            </Stack>
-          );
-        },
-      },
-      {
-        id: 'ageDays',
-        label: 'Age',
-        width: 100,
-        minWidth: 90,
-        isSort: false,
-        isFilter: false,
-        render: (value) => `${value} days`,
-      },
-      {
-        id: 'dueAt',
-        label: 'Due',
-        width: 135,
-        minWidth: 125,
-        isSort: false,
-        isFilter: false,
-        render: formatQueueDate,
-      },
-      {
-        id: 'actions',
-        label: 'Actions',
-        width: 80,
-        minWidth: 72,
-        sticky: true,
-        stickyPosition: 'right',
-        stickyOnMobile: false,
-        isSort: false,
-        isFilter: false,
-        headerSx: { px: 1.5 },
-        cellSx: { px: 1.5 },
-        render: (_value, row) => {
-          const item = row as AdmissionCrmOperationsQueueItemDto;
-          return (
-            <ThreeDotsActions
-              placement="right-top"
-              showViewIcon
-              viewLabel="Review Applicant"
-              handleViewClick={() => openApplicant(item.leadId)}
-              showThreeDots={false}
-            />
-          );
-        },
-      },
-    ],
-    [openApplicant]
+  const staffById = useMemo(
+    () =>
+      new Map(
+        [
+          ...(ownerStaffQuery.data || []),
+          ...(assigneeStaffQuery.data || []),
+          ...(rowStaffQuery.data || []),
+        ].map((staff) => [staff.id, staff.displayName])
+      ),
+    [assigneeStaffQuery.data, ownerStaffQuery.data, rowStaffQuery.data]
+  );
+  const columns = useMemo(
+    () => buildOperationsQueueColumns({ variant, applicantTab, openApplicant, staffById }),
+    [applicantTab, openApplicant, staffById, variant]
   );
 
   const applySavedView = (savedView: AdmissionCrmOperationsSavedViewDto) => {
@@ -306,6 +278,13 @@ export function OperationsQueueWorkspace({
         assignee: savedView.filters.assignedToUserId,
         urgent: savedView.filters.urgentOnly || undefined,
         minimumAgeDays: savedView.filters.minimumAgeDays,
+        registrationStatus: savedView.filters.registrationStatus,
+        documentStatus: savedView.filters.documentStatus,
+        offerStatus: savedView.filters.offerStatus,
+        routeType: savedView.filters.routeType,
+        seatPoolId: savedView.filters.seatPoolId,
+        activationStatus: savedView.filters.activationStatus,
+        serviceHandoffStatus: savedView.filters.serviceHandoffStatus,
         page: 1,
       },
       'push'
@@ -324,6 +303,13 @@ export function OperationsQueueWorkspace({
           assignedToUserId: state.assignee,
           urgentOnly: state.urgent || undefined,
           minimumAgeDays: state.minimumAgeDays,
+          registrationStatus: state.registrationStatus,
+          documentStatus: state.documentStatus,
+          offerStatus: state.offerStatus,
+          routeType: state.routeType,
+          seatPoolId: state.seatPoolId,
+          activationStatus: state.activationStatus,
+          serviceHandoffStatus: state.serviceHandoffStatus,
         },
         isShared: false,
       }).unwrap();
@@ -341,160 +327,382 @@ export function OperationsQueueWorkspace({
   }
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} sx={showOperationsUtilities ? { minWidth: 0 } : enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader title={title} description={description} />
 
-      <Paper variant="outlined" sx={{ p: 1, borderRadius: 1, overflowX: 'auto' }}>
-        <Stack direction="row" gap={1} sx={{ minWidth: 'max-content' }}>
+      <EnrollmentWorkspaceFilterPanel
+        clearDisabled={
+          !state.owner &&
+          !state.assignee &&
+          !state.minimumAgeDays &&
+          !state.urgent &&
+          state.registrationStatus == null &&
+          state.documentStatus == null &&
+          state.offerStatus == null &&
+          state.routeType == null &&
+          !state.seatPoolId &&
+          state.activationStatus == null &&
+          state.serviceHandoffStatus == null
+        }
+        onClear={() =>
+          updateState(
+            {
+              owner: undefined,
+              assignee: undefined,
+              minimumAgeDays: undefined,
+              urgent: undefined,
+              registrationStatus: undefined,
+              documentStatus: undefined,
+              offerStatus: undefined,
+              routeType: undefined,
+              seatPoolId: undefined,
+              activationStatus: undefined,
+              serviceHandoffStatus: undefined,
+              page: 1,
+            },
+            'push'
+          )
+        }
+        actions={
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<BookmarkAddOutlined />}
+            onClick={() => setSavedViewsOpen(true)}
+          >
+            Saved views
+          </Button>
+        }
+      >
+        <TextField
+          select
+          size="small"
+          label="Queue"
+          value={selectedQueue}
+          onChange={(event) =>
+            updateState(
+              { queue: Number(event.target.value) as AdmissionCrmOperationsQueueType, page: 1 },
+              'push'
+            )
+          }
+        >
           {queueCounts.map((queue) => (
-            <Button
-              key={queue.queueType}
-              size="small"
-              variant={selectedQueue === queue.queueType ? 'contained' : 'outlined'}
-              onClick={() => updateState({ queue: queue.queueType, page: 1 }, 'push')}
-              sx={
-                selectedQueue === queue.queueType
-                  ? {
-                      bgcolor: 'primary.darker',
-                      color: 'common.white',
-                      '&:hover': { bgcolor: 'primary.dark' },
-                    }
-                  : {
-                      color: 'text.primary',
-                      borderColor: queue.urgentCount > 0 ? 'warning.darker' : 'divider',
-                    }
-              }
-            >
-              {queue.label} ({queue.count})
-            </Button>
+            <MenuItem key={queue.queueType} value={queue.queueType}>
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                gap={1}
+                sx={{ width: '100%' }}
+              >
+                <span>{queue.label}</span>
+                <Stack direction="row" gap={0.5} alignItems="center">
+                  <Chip size="small" variant="outlined" label={queue.count} />
+                  {queue.urgentCount > 0 ? (
+                    <Chip size="small" color="warning" label={`${queue.urgentCount} urgent`} />
+                  ) : null}
+                </Stack>
+              </Stack>
+            </MenuItem>
           ))}
-        </Stack>
-      </Paper>
-
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack spacing={1.25}>
-          <Stack direction={{ xs: 'column', lg: 'row' }} gap={1} alignItems={{ lg: 'center' }}>
-            <Autocomplete
-              size="small"
-              options={staffQuery.data || []}
-              value={owner}
-              inputValue={staffSearch}
-              onInputChange={(_, value) => setStaffSearch(value)}
-              onChange={(_, value) => updateState({ owner: value?.id, page: 1 })}
-              getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              renderInput={(params) => <TextField {...params} label="Lead owner" />}
-              sx={{ minWidth: { lg: 240 } }}
-            />
-            <Autocomplete
-              size="small"
-              options={staffQuery.data || []}
-              value={assignee}
-              onChange={(_, value) => updateState({ assignee: value?.id, page: 1 })}
-              getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              renderInput={(params) => <TextField {...params} label="Assigned staff" />}
-              sx={{ minWidth: { lg: 240 } }}
-            />
-            <TextField
-              size="small"
-              type="number"
-              label="Minimum age (days)"
-              value={state.minimumAgeDays || ''}
-              onChange={(event) =>
-                updateState({
-                  minimumAgeDays: event.target.value ? Number(event.target.value) : undefined,
-                  page: 1,
-                })
-              }
-              inputProps={{ min: 1, max: 3650 }}
-              sx={{ width: { lg: 170 } }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={Boolean(state.urgent)}
-                  onChange={(_, checked) => updateState({ urgent: checked || undefined, page: 1 })}
-                />
-              }
-              label="Urgent only"
-            />
-          </Stack>
-
-          <Divider />
-          <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>
+        </TextField>
+        {variant === 'registration' ? (
+          <>
             <TextField
               select
               size="small"
-              label="Saved view"
-              value=""
-              onChange={(event) => {
-                const view = savedViewsQuery.data?.find((item) => item.id === event.target.value);
-                if (view) applySavedView(view);
-              }}
-              sx={{ minWidth: 220 }}
+              label="Registration status"
+              value={state.registrationStatus ?? ''}
+              onChange={(event) =>
+                updateState({
+                  registrationStatus:
+                    event.target.value === ''
+                      ? undefined
+                      : (Number(event.target.value) as AdmissionCrmRegistrationStatus),
+                  page: 1,
+                })
+              }
             >
+              <MenuItem value="">All statuses</MenuItem>
+              {enumOptions<AdmissionCrmRegistrationStatus>(AdmissionCrmRegistrationStatus).map(
+                (option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                )
+              )}
+            </TextField>
+            <TextField
+              select
+              size="small"
+              label="Document status"
+              value={state.documentStatus ?? ''}
+              onChange={(event) =>
+                updateState({
+                  documentStatus:
+                    event.target.value === ''
+                      ? undefined
+                      : (Number(event.target.value) as AdmissionCrmApplicantDocumentStatus),
+                  page: 1,
+                })
+              }
+            >
+              <MenuItem value="">All documents</MenuItem>
+              {enumOptions<AdmissionCrmApplicantDocumentStatus>(
+                AdmissionCrmApplicantDocumentStatus
+              ).map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </>
+        ) : null}
+        {variant === 'offer' ? (
+          <>
+            <TextField
+              select
+              size="small"
+              label="Offer status"
+              value={state.offerStatus ?? ''}
+              onChange={(event) =>
+                updateState({
+                  offerStatus:
+                    event.target.value === ''
+                      ? undefined
+                      : (Number(event.target.value) as AdmissionCrmSeatOfferStatus),
+                  page: 1,
+                })
+              }
+            >
+              <MenuItem value="">All offers</MenuItem>
+              {enumOptions<AdmissionCrmSeatOfferStatus>(AdmissionCrmSeatOfferStatus).map(
+                (option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                )
+              )}
+            </TextField>
+            <TextField
+              select
+              size="small"
+              label="Admission route"
+              value={state.routeType ?? ''}
+              onChange={(event) =>
+                updateState({
+                  routeType:
+                    event.target.value === ''
+                      ? undefined
+                      : (Number(event.target.value) as AdmissionCrmRouteType),
+                  page: 1,
+                })
+              }
+            >
+              <MenuItem value="">All routes</MenuItem>
+              {enumOptions<AdmissionCrmRouteType>(AdmissionCrmRouteType).map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              size="small"
+              label="Seat pool"
+              value={state.seatPoolId || ''}
+              onChange={(event) =>
+                updateState({ seatPoolId: event.target.value || undefined, page: 1 })
+              }
+            >
+              <MenuItem value="">All seat pools</MenuItem>
+              {(seatPoolsQuery.data?.items || []).map((pool) => (
+                <MenuItem key={pool.id} value={pool.id}>
+                  {pool.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </>
+        ) : null}
+        {variant === 'activation' ? (
+          <TextField
+            select
+            size="small"
+            label="Activation status"
+            value={state.activationStatus ?? ''}
+            onChange={(event) =>
+              updateState({
+                activationStatus:
+                  event.target.value === ''
+                    ? undefined
+                    : (Number(event.target.value) as AdmissionCrmActivationStatus),
+                page: 1,
+              })
+            }
+          >
+            <MenuItem value="">All statuses</MenuItem>
+            {enumOptions<AdmissionCrmActivationStatus>(AdmissionCrmActivationStatus).map(
+              (option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              )
+            )}
+          </TextField>
+        ) : null}
+        {variant === 'operations' ? (
+          <TextField
+            select
+            size="small"
+            label="Handoff status"
+            value={state.serviceHandoffStatus ?? ''}
+            onChange={(event) =>
+              updateState({
+                serviceHandoffStatus:
+                  event.target.value === ''
+                    ? undefined
+                    : (Number(event.target.value) as AdmissionCrmServiceHandoffStatus),
+                page: 1,
+              })
+            }
+          >
+            <MenuItem value="">All handoff states</MenuItem>
+            {enumOptions<AdmissionCrmServiceHandoffStatus>(AdmissionCrmServiceHandoffStatus).map(
+              (option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              )
+            )}
+          </TextField>
+        ) : null}
+        <Autocomplete
+          size="small"
+          options={ownerStaffQuery.data || []}
+          value={owner}
+          inputValue={ownerSearch}
+          onInputChange={(_, value) => setOwnerSearch(value)}
+          onChange={(_, value) => updateState({ owner: value?.id, page: 1 })}
+          getOptionLabel={(option) => `${option.displayName} (${option.employeeCode})`}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          loading={ownerStaffQuery.isFetching}
+          renderInput={(params) => <TextField {...params} label="Owner" />}
+          sx={{ minWidth: 0, width: '100%' }}
+        />
+        <Autocomplete
+          size="small"
+          options={assigneeStaffQuery.data || []}
+          value={assignee}
+          inputValue={assigneeSearch}
+          onInputChange={(_, value) => setAssigneeSearch(value)}
+          onChange={(_, value) => updateState({ assignee: value?.id, page: 1 })}
+          getOptionLabel={(option) => `${option.displayName} (${option.employeeCode})`}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          loading={assigneeStaffQuery.isFetching}
+          renderInput={(params) => <TextField {...params} label="Assignee" />}
+          sx={{ minWidth: 0, width: '100%' }}
+        />
+        <TextField
+          size="small"
+          type="number"
+          name="minimumAgeDays"
+          autoComplete="off"
+          label="Minimum age (days)"
+          value={state.minimumAgeDays || ''}
+          onChange={(event) =>
+            updateState({
+              minimumAgeDays: event.target.value ? Number(event.target.value) : undefined,
+              page: 1,
+            })
+          }
+          inputProps={{ min: 1, max: 3650 }}
+          sx={{ minWidth: 0, width: '100%' }}
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={Boolean(state.urgent)}
+              onChange={(_, checked) => updateState({ urgent: checked || undefined, page: 1 })}
+            />
+          }
+          label="Urgent only"
+        />
+      </EnrollmentWorkspaceFilterPanel>
+
+      <Dialog
+        open={savedViewsOpen}
+        onClose={() => setSavedViewsOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Saved Views</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+              <TextField
+                fullWidth
+                size="small"
+                label="View name"
+                value={savedViewName}
+                onChange={(event) => setSavedViewName(event.target.value)}
+                autoComplete="off"
+              />
+              <LoadingButton
+                variant="contained"
+                startIcon={<BookmarkAddOutlined />}
+                loading={createSavedViewState.isLoading}
+                disabled={!savedViewName.trim()}
+                onClick={handleSaveView}
+              >
+                Save Current
+              </LoadingButton>
+            </Stack>
+            <Divider />
+            <Stack direction="row" gap={0.75} flexWrap="wrap">
               {(savedViewsQuery.data || [])
                 .filter((view) => allowedQueues.includes(view.queueType))
                 .map((view) => (
-                  <MenuItem key={view.id} value={view.id}>
-                    {view.name}
-                  </MenuItem>
+                  <Chip
+                    key={view.id}
+                    label={view.name}
+                    onClick={() => {
+                      applySavedView(view);
+                      setSavedViewsOpen(false);
+                    }}
+                    onDelete={async () => {
+                      try {
+                        await deleteSavedView({ viewId: view.id }).unwrap();
+                        shikshaMitraToast.success({ message: 'Saved view deleted.' });
+                      } catch {
+                        shikshaMitraToast.error({
+                          message: 'The saved view could not be deleted.',
+                        });
+                      }
+                    }}
+                    deleteIcon={<DeleteOutlineRounded />}
+                    disabled={deleteSavedViewState.isLoading}
+                  />
                 ))}
-            </TextField>
-            <TextField
-              size="small"
-              label="New view name"
-              value={savedViewName}
-              onChange={(event) => setSavedViewName(event.target.value)}
-              autoComplete="off"
-              sx={{ minWidth: 220 }}
-            />
-            <LoadingButton
-              size="small"
-              variant="outlined"
-              startIcon={<BookmarkAddOutlined />}
-              loading={createSavedViewState.isLoading}
-              disabled={!savedViewName.trim()}
-              onClick={handleSaveView}
-              sx={{ color: 'primary.darker', borderColor: 'primary.darker' }}
-            >
-              Save View
-            </LoadingButton>
-            {(savedViewsQuery.data || [])
-              .filter((view) => allowedQueues.includes(view.queueType))
-              .map((view) => (
-                <Chip
-                  key={view.id}
-                  label={view.name}
-                  onClick={() => applySavedView(view)}
-                  onDelete={async () => {
-                    try {
-                      await deleteSavedView({ viewId: view.id }).unwrap();
-                      shikshaMitraToast.success({ message: 'Saved view deleted.' });
-                    } catch {
-                      shikshaMitraToast.error({ message: 'The saved view could not be deleted.' });
-                    }
-                  }}
-                  deleteIcon={<DeleteOutlineRounded />}
-                  disabled={deleteSavedViewState.isLoading}
-                />
-              ))}
+              {!(savedViewsQuery.data || []).some((view) =>
+                allowedQueues.includes(view.queueType)
+              ) ? (
+                <Typography variant="body2" color="text.secondary">
+                  No saved views for this workspace.
+                </Typography>
+              ) : null}
+            </Stack>
           </Stack>
-        </Stack>
-      </Paper>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSavedViewsOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
       {queueQuery.isError ? (
-        <Alert
-          severity="error"
-          action={
-            <Button color="inherit" size="small" onClick={() => queueQuery.refetch()}>
-              Retry
-            </Button>
-          }
-        >
-          This operations queue is unavailable.
-        </Alert>
+        <EnrollmentWorkspaceErrorState
+          message="This operations queue is unavailable."
+          onRetry={() => queueQuery.refetch()}
+        />
       ) : (
         <CustomizableTable
           tableId={`student-enrollment-operations-${selectedQueue}`}
@@ -508,7 +716,10 @@ export function OperationsQueueWorkspace({
           serverSideFilter
           searchTerm={search}
           defaultSearchTerm={search}
-          searchFieldProps={{ placeholder: 'Search this queue...' }}
+          searchFieldProps={{
+            placeholder: 'Search this queue',
+            inputProps: { 'aria-label': 'Search this admissions queue' },
+          }}
           totalCount={queueQuery.data?.totalCount || 0}
           page={page}
           rowsPerPage={pageSize}
@@ -517,18 +728,17 @@ export function OperationsQueueWorkspace({
           onServerSearch={setSearch}
           onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
           noDataText={
-            <Stack spacing={0.5} alignItems="center">
-              <Typography variant="subtitle2">Queue cleared</Typography>
-              <Typography variant="body2" color="text.secondary">
-                No applicants currently need action in this queue.
-              </Typography>
-            </Stack>
+            <EnrollmentTableEmptyState
+              title="Queue cleared"
+              description="No applicants currently need action in this queue."
+            />
           }
           rowProps={(row) => ({
             'data-testid': 'student-enrollment-operations-row',
             'data-queue-key': row.key,
           })}
-          tableContainerProps={{ sx: { minHeight: 360 } }}
+          wrapperProps={showOperationsUtilities ? undefined : { sx: enrollmentTableWrapperSx }}
+          tableContainerProps={{ sx: enrollmentTableContainerSx }}
         />
       )}
 
@@ -563,7 +773,8 @@ export function OperationsQueueWorkspace({
       <ApplicantWorkspaceDrawer
         leadId={state.applicant}
         academicYearId={academicYearId}
-        initialTab={applicantTab}
+        initialTab={(state.applicantTab as ApplicantDrawerTab | undefined) || applicantTab}
+        onTabChange={(tab) => updateState({ applicantTab: tab }, 'replace')}
         onClose={closeApplicant}
       />
     </Stack>

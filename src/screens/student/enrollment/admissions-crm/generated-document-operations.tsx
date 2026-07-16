@@ -4,13 +4,15 @@ import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import { Download, Visibility, Description } from '@mui/icons-material';
-import { Chip, Alert, Paper, Stack, MenuItem, TextField, Typography } from '@mui/material';
+import { Chip, Alert, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import {
   AdmissionCrmGeneratedDocumentType,
   useIssueAdmissionCrmGeneratedDocumentMutation,
   useGetAdmissionCrmGeneratedDocumentHistoryQuery,
   usePreviewAdmissionCrmGeneratedDocumentMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
+
+import { ApplicantSection } from './applicant-workspace-primitives';
 
 type Props = {
   leadId: string;
@@ -65,6 +67,7 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
   );
   const [language, setLanguage] = useState('en');
   const [reason, setReason] = useState('');
+  const [editorOpen, setEditorOpen] = useState(false);
   const [preview, previewState] = usePreviewAdmissionCrmGeneratedDocumentMutation();
   const [issue, issueState] = useIssueAdmissionCrmGeneratedDocumentMutation();
   const historyQuery = useGetAdmissionCrmGeneratedDocumentHistoryQuery({ leadId });
@@ -88,6 +91,7 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
       }).unwrap();
       openPdf(result.content, result.fileName, true);
       setReason('');
+      setEditorOpen(false);
       shikshaMitraToast.success({ message: `${result.documentTypeName} issued.` });
     } catch (error) {
       shikshaMitraToast.error({ message: readError(error, 'Unable to issue the document.') });
@@ -95,72 +99,88 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+    <ApplicantSection
+      title="Generated documents"
+      description="Preview and issue applicant-safe documents with an audited history."
+      action={
+        <Button
+          size="small"
+          variant={editorOpen ? 'text' : 'outlined'}
+          startIcon={<Description />}
+          onClick={() => setEditorOpen((current) => !current)}
+        >
+          {editorOpen ? 'Close' : 'Generate document'}
+        </Button>
+      }
+    >
       <Stack spacing={1.25}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-          <Typography variant="subtitle2">Generated documents</Typography>
-          <Chip size="small" label="CRM-owned" color="primary" variant="outlined" />
-        </Stack>
-        <Alert severity="info">
-          Preview or issue applicant-safe hall tickets, acknowledgements, offers, admission letters,
-          correction notices, and cancellation letters. Issuing creates an audited timeline event.
-        </Alert>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Document"
-            value={documentType}
-            onChange={(event) =>
-              setDocumentType(Number(event.target.value) as AdmissionCrmGeneratedDocumentType)
-            }
-          >
-            {documentTypes.map((type) => (
-              <MenuItem key={type} value={type}>
-                {documentTypeLabels[type]}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Language"
-            value={language}
-            onChange={(event) => setLanguage(event.target.value)}
-          >
-            <MenuItem value="en">English</MenuItem>
-            <MenuItem value="gu">Gujarati</MenuItem>
-            <MenuItem value="hi">Hindi</MenuItem>
-          </TextField>
-          <TextField
-            fullWidth
-            size="small"
-            label="Issue reason"
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            placeholder="Required for a correction or override"
-          />
-        </Stack>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <LoadingButton
-            variant="outlined"
-            startIcon={<Visibility />}
-            loading={previewState.isLoading}
-            onClick={runPreview}
-          >
-            Preview
-          </LoadingButton>
-          <LoadingButton
-            variant="contained"
-            startIcon={<Description />}
-            loading={issueState.isLoading}
-            onClick={runIssue}
-          >
-            Issue document
-          </LoadingButton>
-        </Stack>
+        <Chip
+          size="small"
+          label="CRM-owned"
+          color="primary"
+          variant="outlined"
+          sx={{ alignSelf: 'flex-start' }}
+        />
+        {editorOpen ? (
+          <>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Document"
+                value={documentType}
+                onChange={(event) =>
+                  setDocumentType(Number(event.target.value) as AdmissionCrmGeneratedDocumentType)
+                }
+              >
+                {documentTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {documentTypeLabels[type]}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Language"
+                value={language}
+                onChange={(event) => setLanguage(event.target.value)}
+              >
+                <MenuItem value="en">English</MenuItem>
+                <MenuItem value="gu">Gujarati</MenuItem>
+                <MenuItem value="hi">Hindi</MenuItem>
+              </TextField>
+              <TextField
+                fullWidth
+                size="small"
+                label="Issue reason"
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                placeholder="Required for a correction or override"
+              />
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <LoadingButton
+                variant="outlined"
+                startIcon={<Visibility />}
+                loading={previewState.isLoading}
+                onClick={runPreview}
+              >
+                Preview
+              </LoadingButton>
+              <LoadingButton
+                variant="contained"
+                startIcon={<Description />}
+                loading={issueState.isLoading}
+                onClick={runIssue}
+              >
+                Issue document
+              </LoadingButton>
+            </Stack>
+          </>
+        ) : null}
         {historyQuery.isFetching ? (
           <Typography variant="caption">{'Loading issue history\u2026'}</Typography>
         ) : null}
@@ -194,6 +214,6 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
           </Stack>
         ) : null}
       </Stack>
-    </Paper>
+    </ApplicantSection>
   );
 }

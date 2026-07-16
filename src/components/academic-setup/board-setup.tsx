@@ -309,31 +309,54 @@ export const BoardForm = ({
   const formik = useFormik({
     initialValues: {
       board: editData ? (editData.type?.toString() ?? '') : '',
-      startDate: editData?.startDate
-        ? parseAcademicYearDateForPicker(editData.startDate)
-        : (null as dayjs.Dayjs | null),
-      endDate: editData?.endDate
-        ? parseAcademicYearDateForPicker(editData.endDate)
-        : (null as dayjs.Dayjs | null),
+      startDate: editData?.startDate ? dayjs(editData.startDate) : (null as dayjs.Dayjs | null),
+      endDate: editData?.endDate ? dayjs(editData.endDate) : (null as dayjs.Dayjs | null),
     },
     validationSchema: Yup.object().shape({
       board: Yup.string().required('Board is required.'),
       startDate: Yup.date()
         .nullable()
         .required('Start Date is required.')
-        .typeError('Start Date is required.'),
+        .typeError('Start Date is required.')
+        .test(
+          'board-start-within-year',
+          yearStart && yearEnd
+            ? `Start Date must be within the academic year (${yearStart.format('DD MMM YYYY')} – ${yearEnd.format('DD MMM YYYY')}).`
+            : 'Start Date must be within the academic year.',
+          (value) => {
+            if (!value || !yearStart || !yearEnd) return true;
+            const d = dayjs(value);
+            return (
+              (d.isAfter(yearStart, 'day') || d.isSame(yearStart, 'day')) &&
+              (d.isBefore(yearEnd, 'day') || d.isSame(yearEnd, 'day'))
+            );
+          }
+        ),
       endDate: Yup.date()
         .nullable()
         .required('End Date is required.')
         .typeError('End Date is required.')
-        .min(Yup.ref('startDate'), 'End Date must be on or after Start Date.'),
+        .min(Yup.ref('startDate'), 'End Date must be on or after Start Date.')
+        .test(
+          'board-end-within-year',
+          yearStart && yearEnd
+            ? `End Date must be within the academic year (${yearStart.format('DD MMM YYYY')} – ${yearEnd.format('DD MMM YYYY')}).`
+            : 'End Date must be within the academic year.',
+          (value) => {
+            if (!value || !yearStart || !yearEnd) return true;
+            const d = dayjs(value);
+            return (
+              (d.isAfter(yearStart, 'day') || d.isSame(yearStart, 'day')) &&
+              (d.isBefore(yearEnd, 'day') || d.isSame(yearEnd, 'day'))
+            );
+          }
+        ),
     }),
     validateOnMount: false,
     onSubmit: async (values) => {
       confirm.onTrue();
     },
   });
-
   const handleSubmitClick = (e: any) => {
     formik.setTouched({ board: true, startDate: true, endDate: true });
     formik.handleSubmit(e);
@@ -394,13 +417,19 @@ export const BoardForm = ({
               icon={<Iconify icon="solar:calendar-bold-duotone" width={18} />}
               sx={{ borderRadius: 1.5, '& .MuiAlert-message': { width: '100%' } }}
             >
-              <Typography variant="caption" sx={{ display: 'block' }}>
-                This board belongs to academic year{' '}
-                <b>
-                  {academicYear?.name || `${yearStart?.format('YYYY')}-${yearEnd?.format('YYYY')}`}
-                </b>
-                .
+              <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
+                Academic Year:{' '}
+                {academicYear?.name || `${yearStart?.format('YYYY')}-${yearEnd?.format('YYYY')}`}
               </Typography>
+              {yearStart && yearEnd && (
+                <Typography variant="caption" sx={{ display: 'block', mt: 0.25 }}>
+                  Allowed date range:{' '}
+                  <b>
+                    {yearStart.format('DD MMM YYYY')} – {yearEnd.format('DD MMM YYYY')}
+                  </b>
+                  . Board start and end dates must fall within this range.
+                </Typography>
+              )}
             </Alert>
           )}
 
@@ -429,8 +458,8 @@ export const BoardForm = ({
               <DatePicker
                 label="Start Date *"
                 value={formik.values.startDate}
-                minDate={dayjs(`01-01-${yearStart?.format('YYYY')}`, 'DD-MM-YYYY')}
-                maxDate={dayjs(`31-12-${yearEnd?.format('YYYY')}`, 'DD-MM-YYYY')}
+                minDate={yearStart ?? undefined}
+                maxDate={yearEnd ?? undefined}
                 format="DD-MMM-YYYY"
                 onChange={(newValue) => {
                   formik.setFieldValue('startDate', newValue);
@@ -455,8 +484,12 @@ export const BoardForm = ({
                 label="End Date *"
                 value={formik.values.endDate}
                 format="DD-MMM-YYYY"
-                minDate={dayjs(`01-01-${yearStart?.format('YYYY')}`, 'DD-MM-YYYY')}
-                maxDate={dayjs(`31-12-${yearEnd?.format('YYYY')}`, 'DD-MM-YYYY')}
+                minDate={
+                  formik.values.startDate
+                    ? dayjs(formik.values.startDate)
+                    : (yearStart ?? undefined)
+                }
+                maxDate={yearEnd ?? undefined}
                 onChange={(newValue) => {
                   formik.setFieldValue('endDate', newValue);
                 }}

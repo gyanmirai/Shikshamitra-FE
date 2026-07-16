@@ -8,7 +8,6 @@ import {
   Box,
   Chip,
   Alert,
-  Paper,
   Stack,
   Button,
   Divider,
@@ -142,7 +141,7 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
     );
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+    <Stack component="section" sx={{ py: 0.5 }}>
       <Stack spacing={1.25}>
         <Stack direction="row" gap={1} alignItems="center" justifyContent="space-between">
           <Stack direction="row" gap={1} alignItems="center">
@@ -514,6 +513,6 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
           </Stack>
         ))}
       </Stack>
-    </Paper>
+    </Stack>
   );
 }

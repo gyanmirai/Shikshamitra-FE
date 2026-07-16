@@ -8,15 +8,13 @@ import {
   Box,
   Chip,
   Alert,
-  Paper,
   Stack,
+  Button,
   Divider,
-  Checkbox,
   MenuItem,
   TextField,
   Typography,
   LinearProgress,
-  FormControlLabel,
 } from '@mui/material';
 import {
   AdmissionCrmRegistrationStatus,
@@ -44,9 +42,13 @@ import {
   useRecordAdmissionCrmRegistrationPaymentReferenceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';
+import { ApplicantSwitchRow, ApplicantEmptyState } from './applicant-workspace-primitives';
+
 type Props = {
   leadId: string;
   academicYearId: string;
+  hasRegistration: boolean;
 };
 
 const registrationStatusLabels: Record<AdmissionCrmRegistrationStatus, string> = {
@@ -88,8 +90,15 @@ const readError = (error: unknown, fallback: string) => {
   return fallback;
 };
 
-export function ApplicantRegistrationOperations({ leadId, academicYearId }: Props) {
-  const registrationQuery = useGetCurrentAdmissionCrmRegistrationByLeadQuery({ leadId });
+export function ApplicantRegistrationOperations({
+  leadId,
+  academicYearId,
+  hasRegistration,
+}: Props) {
+  const registrationQuery = useGetCurrentAdmissionCrmRegistrationByLeadQuery(
+    { leadId },
+    { skip: !hasRegistration }
+  );
   const registration = registrationQuery.data;
   const templatesQuery = useGetAdmissionCrmRegistrationTemplatesQuery(
     {
@@ -114,6 +123,7 @@ export function ApplicantRegistrationOperations({ leadId, academicYearId }: Prop
   );
 
   const [registrationTemplateId, setRegistrationTemplateId] = useState('');
+  const [issueFormOpen, setIssueFormOpen] = useState(false);
   const [seriesId, setSeriesId] = useState('');
   const [checklistTemplateId, setChecklistTemplateId] = useState('');
   const [reason, setReason] = useState('');
@@ -123,6 +133,8 @@ export function ApplicantRegistrationOperations({ leadId, academicYearId }: Prop
   const [paymentReference, setPaymentReference] = useState('');
   const [overrideReadiness, setOverrideReadiness] = useState(false);
   const [documentReasonByKey, setDocumentReasonByKey] = useState<Record<string, string>>({});
+
+  useApplicantWorkspaceDirtyState(`registration-issue-${leadId}`, issueFormOpen);
 
   const [issue, issueState] = useIssueAdmissionCrmRegistrationApplicationMutation();
   const [returnForCorrection, correctionState] =
@@ -169,73 +181,97 @@ export function ApplicantRegistrationOperations({ leadId, academicYearId }: Prop
 
   if (!registration) {
     return (
-      <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+      <Box component="section">
         <Stack spacing={1.25}>
           <Typography variant="subtitle2">Registration</Typography>
-          <Alert severity="info">No CRM registration has been issued for this applicant.</Alert>
-          <Box
-            sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr auto' }, gap: 1 }}
-          >
-            <TextField
-              select
-              size="small"
-              label="Registration template"
-              value={registrationTemplateId}
-              onChange={(event) => setRegistrationTemplateId(event.target.value)}
+          <ApplicantEmptyState
+            title="Registration has not been issued"
+            description="Select a template and expiry date to start the applicant registration."
+            action={
+              !issueFormOpen ? (
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<Description />}
+                  onClick={() => setIssueFormOpen(true)}
+                >
+                  Issue registration
+                </Button>
+              ) : undefined
+            }
+          />
+          {issueFormOpen ? (
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr auto' },
+                gap: 1,
+              }}
             >
-              {(templatesQuery.data?.items || []).map((template) => (
-                <MenuItem key={template.id} value={template.id}>
-                  {template.name} - v{template.version}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              select
-              size="small"
-              label="Form number series"
-              value={seriesId}
-              onChange={(event) => setSeriesId(event.target.value)}
-            >
-              <MenuItem value="">Automatic or manual fallback</MenuItem>
-              {(seriesQuery.data?.items || [])
-                .filter((item) => item.isActive)
-                .map((item) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {item.name} - {item.nextPreview}
+              <TextField
+                select
+                size="small"
+                label="Registration template"
+                value={registrationTemplateId}
+                onChange={(event) => setRegistrationTemplateId(event.target.value)}
+              >
+                {(templatesQuery.data?.items || []).map((template) => (
+                  <MenuItem key={template.id} value={template.id}>
+                    {template.name} - v{template.version}
                   </MenuItem>
                 ))}
-            </TextField>
-            <LoadingButton
-              variant="contained"
-              startIcon={<Description />}
-              loading={issueState.isLoading}
-              disabled={!registrationTemplateId}
-              onClick={() =>
-                perform(
-                  () =>
-                    issue({
-                      leadId,
-                      body: {
-                        registrationTemplateId,
-                        formNumberSeriesId: seriesId || null,
-                        waiveFee: false,
-                      },
-                    }).unwrap(),
-                  'Registration issued.'
-                )
-              }
-            >
-              Issue
-            </LoadingButton>
-          </Box>
+              </TextField>
+              <TextField
+                select
+                size="small"
+                label="Form number series"
+                value={seriesId}
+                onChange={(event) => setSeriesId(event.target.value)}
+              >
+                <MenuItem value="">Automatic or manual fallback</MenuItem>
+                {(seriesQuery.data?.items || [])
+                  .filter((item) => item.isActive)
+                  .map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.name} - {item.nextPreview}
+                    </MenuItem>
+                  ))}
+              </TextField>
+              <LoadingButton
+                variant="contained"
+                startIcon={<Description />}
+                loading={issueState.isLoading}
+                disabled={!registrationTemplateId}
+                onClick={() =>
+                  perform(
+                    () =>
+                      issue({
+                        leadId,
+                        body: {
+                          registrationTemplateId,
+                          formNumberSeriesId: seriesId || null,
+                          waiveFee: false,
+                        },
+                      }).unwrap(),
+                    'Registration issued.'
+                  )
+                }
+              >
+                Issue
+              </LoadingButton>
+              <Button size="small" onClick={() => setIssueFormOpen(false)}>
+                Cancel
+              </Button>
+            </Box>
+          ) : null}
         </Stack>
-      </Paper>
+      </Box>
     );
   }
 
   return (
     <Stack spacing={1.25}>
-      <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+      <Box component="section">
         <Stack spacing={1.25}>
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
             <Box>
@@ -441,9 +477,9 @@ export function ApplicantRegistrationOperations({ leadId, academicYearId }: Prop
           ) : null}
           {isRegistrationBusy ? <LinearProgress /> : null}
         </Stack>
-      </Paper>
+      </Box>
 
-      <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1 }}>
+      <Box component="section">
         <Stack spacing={1.25}>
           <Typography variant="subtitle2">Document Verification</Typography>
           {checklistQuery.isFetching ? <LinearProgress /> : null}
@@ -635,14 +671,11 @@ export function ApplicantRegistrationOperations({ leadId, academicYearId }: Prop
               ))}
               {!checklist.readinessConfirmed ? (
                 <Stack spacing={1}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={overrideReadiness}
-                        onChange={(event) => setOverrideReadiness(event.target.checked)}
-                      />
-                    }
-                    label="Override unresolved blocking requirements"
+                  <ApplicantSwitchRow
+                    label="Enable readiness override"
+                    description="Continue despite unresolved blocking document requirements."
+                    checked={overrideReadiness}
+                    onChange={setOverrideReadiness}
                   />
                   <LoadingButton
                     variant="contained"
@@ -677,7 +710,7 @@ export function ApplicantRegistrationOperations({ leadId, academicYearId }: Prop
             </>
           ) : null}
         </Stack>
-      </Paper>
+      </Box>
     </Stack>
   );
 }

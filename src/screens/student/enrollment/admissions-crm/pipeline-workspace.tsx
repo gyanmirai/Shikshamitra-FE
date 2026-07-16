@@ -25,14 +25,13 @@ import {
   Box,
   Chip,
   Card,
+  Paper,
   Alert,
   Stack,
-  Paper,
   Button,
   Dialog,
   Select,
   Switch,
-  Divider,
   Checkbox,
   MenuItem,
   MenuList,
@@ -69,14 +68,26 @@ import {
 
 import { PipelineStageColumn } from './pipeline-stage-column';
 import { EnrollmentWorkspaceHeader } from './workspace-header';
+import { AdmissionCrmStageChip } from './admission-crm-stage-chip';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
 import { ApplicantWorkspaceDrawer } from './applicant-workspace-drawer';
 import {
   getAdmissionCrmLeadName,
-  admissionCrmStageColors,
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
 } from './admissions-crm-utils';
+import {
+  enrollmentActionsColumn,
+  enrollmentTableWrapperSx,
+  enrollmentWorkspaceRootSx,
+  EnrollmentTableEmptyState,
+  enrollmentTableContainerSx,
+  EnrollmentWorkspaceErrorState,
+  EnrollmentWorkspaceFilterPanel,
+} from './workspace-table-patterns';
+
+import type { PipelineStageGroup } from './enrollment-workspace-state';
+import type { ApplicantDrawerTab } from './applicant-workspace-drawer';
 
 const pageSize = 50;
 const permissionRoot = 'Students.Enrollment.AdmissionsCrm';
@@ -102,12 +113,33 @@ const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
   return filter ? Number(filter.value) : undefined;
 };
 
+const getLatestStringFilter = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  return filter?.value ? String(filter.value) : undefined;
+};
+
 const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
   [AdmissionCrmLeadPriority.None]: 'Not set',
   [AdmissionCrmLeadPriority.Hot]: 'Hot',
   [AdmissionCrmLeadPriority.Warm]: 'Warm',
   [AdmissionCrmLeadPriority.Cold]: 'Cold',
   [AdmissionCrmLeadPriority.Low]: 'Low',
+};
+
+const pipelineStageGroups: Record<PipelineStageGroup, AdmissionInquiryStage[]> = {
+  active: [
+    AdmissionInquiryStage.NewInquiry,
+    AdmissionInquiryStage.FollowUp,
+    AdmissionInquiryStage.ExamReady,
+    AdmissionInquiryStage.ExamScheduled,
+    AdmissionInquiryStage.ExamCompleted,
+  ],
+  decision: [AdmissionInquiryStage.Eligible, AdmissionInquiryStage.Waitlisted],
+  closed: [
+    AdmissionInquiryStage.Rejected,
+    AdmissionInquiryStage.Stale,
+    AdmissionInquiryStage.Archived,
+  ],
 };
 
 type QuickInquiryForm = {
@@ -249,7 +281,6 @@ export function PipelineWorkspace() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [staffSearch, setStaffSearch] = useState('');
   const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
-  const [ownerFilter, setOwnerFilter] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [quickDialogOpen, setQuickDialogOpen] = useState(false);
   const [quickForm, setQuickForm] = useState<QuickInquiryForm>(emptyQuickInquiry);
   const [duplicateMatches, setDuplicateMatches] = useState<AdmissionCrmLeadDto['likelyDuplicates']>(
@@ -305,13 +336,27 @@ export function PipelineWorkspace() {
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
   );
-  const staffQuery = useGetAdmissionCrmStaffQuery(
+  const ownerStaffQuery = useGetAdmissionCrmStaffQuery(
     {
       filter: debouncedStaffSearch || undefined,
-      ids: [resolvedOwner, bulkOwner?.id].filter(Boolean).join(',') || undefined,
+      ids:
+        [resolvedOwner, bulkAction === 'owner' ? bulkOwner?.id : undefined]
+          .filter(Boolean)
+          .join(',') || undefined,
       maxResultCount: 25,
+      academicYearId,
+      ownerOnly: true,
     },
     { skip: !academicYearId }
+  );
+  const taskStaffQuery = useGetAdmissionCrmStaffQuery(
+    {
+      filter: debouncedStaffSearch || undefined,
+      ids: bulkAction === 'task' ? bulkOwner?.id : undefined,
+      maxResultCount: 25,
+      academicYearId,
+    },
+    { skip: !academicYearId || bulkAction !== 'task' }
   );
   const slotsQuery = useGetAdmissionCrmExamSlotsQuery(
     { academicYearId: academicYearId || '' },
@@ -329,9 +374,6 @@ export function PipelineWorkspace() {
   const [bulkChangeStages, bulkChangeStagesState] = useBulkChangeAdmissionCrmStagesMutation();
   const [bulkArchiveLeads, bulkArchiveLeadsState] = useBulkArchiveAdmissionCrmLeadsMutation();
 
-  useEffect(() => {
-    setOwnerFilter((staffQuery.data || []).find((staff) => staff.id === resolvedOwner) || null);
-  }, [resolvedOwner, staffQuery.data]);
   useEffect(
     () => setSelectedLeadIds([]),
     [state.channel, state.owner, state.page, state.priority, state.stage]
@@ -341,18 +383,64 @@ export function PipelineWorkspace() {
     () => (stagesQuery.data || []).filter((stage) => stage.isEnabled),
     [stagesQuery.data]
   );
+  const stageGroup = state.stageGroup || 'active';
+  const visibleBoardStages = useMemo(
+    () =>
+      stages.filter((stageItem) =>
+        state.stage == null
+          ? pipelineStageGroups[stageGroup].includes(stageItem.systemStage)
+          : stageItem.systemStage === state.stage
+      ),
+    [stageGroup, stages, state.stage]
+  );
   const stageSelectValue =
     state.stage != null && stages.some((stage) => stage.systemStage === state.stage)
       ? state.stage
       : '';
   const leads = useMemo(() => leadsQuery.data?.items || [], [leadsQuery.data?.items]);
+  const rowOwnerIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          leads.map((lead) => lead.ownerUserId).filter((value): value is string => Boolean(value))
+        )
+      ).join(','),
+    [leads]
+  );
+  const rowStaffQuery = useGetAdmissionCrmStaffQuery(
+    { ids: rowOwnerIds || undefined, maxResultCount: 1, academicYearId },
+    { skip: !academicYearId || !rowOwnerIds }
+  );
+  const staffById = useMemo(
+    () =>
+      new Map(
+        [
+          ...(ownerStaffQuery.data || []),
+          ...(taskStaffQuery.data || []),
+          ...(rowStaffQuery.data || []),
+        ].map((staff) => [staff.id, staff.displayName])
+      ),
+    [ownerStaffQuery.data, rowStaffQuery.data, taskStaffQuery.data]
+  );
+  const ownerFilterOptions = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          [...(ownerStaffQuery.data || []), ...(rowStaffQuery.data || [])].map((staff) => [
+            staff.id,
+            { value: staff.id, label: staff.displayName },
+          ])
+        ).values()
+      ),
+    [ownerStaffQuery.data, rowStaffQuery.data]
+  );
   const selectedLeadSet = useMemo(() => new Set(selectedLeadIds), [selectedLeadIds]);
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
   const ownerName = useCallback(
     (lead: AdmissionCrmLeadDto) =>
-      (staffQuery.data || []).find((staff) => staff.id === lead.ownerUserId)?.displayName ||
+      (lead.ownerUserId ? staffById.get(lead.ownerUserId) : undefined) ||
       (lead.ownerUserId ? 'Assigned staff' : 'Unassigned'),
-    [staffQuery.data]
+    [staffById]
   );
 
   const tableFilters = useMemo<IParams['filters']>(
@@ -393,8 +481,20 @@ export function PipelineWorkspace() {
               displayValue: priorityLabels[state.priority as AdmissionCrmLeadPriority],
             },
           ]),
+      ...(!resolvedOwner
+        ? []
+        : [
+            {
+              column: 'ownerUserId',
+              type: 'equals',
+              value: resolvedOwner,
+              valueType: 'enum',
+              label: 'Owner',
+              displayValue: staffById.get(resolvedOwner) || 'Assigned staff',
+            },
+          ]),
     ],
-    [state.channel, state.priority, state.stage]
+    [resolvedOwner, staffById, state.channel, state.priority, state.stage]
   );
 
   const columns = useMemo<IColumn[]>(
@@ -411,6 +511,12 @@ export function PipelineWorkspace() {
         isSort: false,
         isFilter: false,
         excludeFromExport: true,
+        headerSx: {
+          px: 0,
+          '& .column-separator': { display: 'none' },
+          '& > div': { justifyContent: 'center' },
+        },
+        cellSx: { px: 0, textAlign: 'center' },
         renderColumn: () => (
           <Checkbox
             checked={leads.length > 0 && leads.every((lead) => selectedLeadSet.has(lead.id))}
@@ -478,13 +584,7 @@ export function PipelineWorkspace() {
           label: stage.stageName,
         })),
         isSort: false,
-        render: (value) => (
-          <Chip
-            size="small"
-            label={getAdmissionCrmStageLabel(value as AdmissionInquiryStage)}
-            color={admissionCrmStageColors[value as AdmissionInquiryStage]}
-          />
-        ),
+        render: (value) => <AdmissionCrmStageChip stage={value as AdmissionInquiryStage} />,
       },
       {
         id: 'channel',
@@ -516,8 +616,9 @@ export function PipelineWorkspace() {
         label: 'Owner',
         width: 170,
         minWidth: 150,
+        filterType: 'enum',
+        enumOptions: ownerFilterOptions,
         isSort: false,
-        isFilter: false,
         render: (_value, row) => ownerName(row as AdmissionCrmLeadDto),
       },
       {
@@ -554,15 +655,9 @@ export function PipelineWorkspace() {
       {
         id: 'actions',
         label: 'Actions',
-        width: 88,
-        minWidth: 80,
-        sticky: true,
-        stickyPosition: 'right',
-        stickyOnMobile: false,
+        ...enrollmentActionsColumn,
         isSort: false,
         isFilter: false,
-        headerSx: { px: 1.5 },
-        cellSx: { px: 1.5 },
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
           const canSchedule =
@@ -575,7 +670,7 @@ export function PipelineWorkspace() {
               placement="right-top"
               showViewIcon
               viewLabel="Open Applicant"
-              handleViewClick={() => openApplicant(lead.id)}
+              handleViewClick={() => openApplicant(lead.id, 'overview')}
               showThreeDots={canSchedule || canIssueForm}
               actions={({ popover }) => (
                 <MenuList>
@@ -610,7 +705,16 @@ export function PipelineWorkspace() {
         },
       },
     ],
-    [leads, openApplicant, ownerName, permissions, selectedLeadIds.length, selectedLeadSet, stages]
+    [
+      leads,
+      openApplicant,
+      ownerFilterOptions,
+      ownerName,
+      permissions,
+      selectedLeadIds.length,
+      selectedLeadSet,
+      stages,
+    ]
   );
 
   const resetQuickInquiry = () => {
@@ -798,124 +902,23 @@ export function PipelineWorkspace() {
   );
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
       <EnrollmentWorkspaceHeader
         title="Admissions Pipeline"
         description="Capture, qualify, assign, and progress inquiries through exam readiness."
         actions={
-          can(actionPermissions.add) ? (
-            <Button
-              variant="contained"
-              startIcon={<AddRounded />}
-              onClick={() => setQuickDialogOpen(true)}
-            >
-              Quick Inquiry
-            </Button>
-          ) : undefined
-        }
-      />
-
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-        <Stack spacing={1.25}>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns:
-                state.view === 'board'
-                  ? 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))'
-                  : { xs: '1fr', sm: 'minmax(240px, 320px)' },
-              gap: 1,
-              alignItems: 'center',
-            }}
-          >
-            {state.view === 'board' && (
-              <>
-                <TextField
-                  size="small"
-                  label="Search applicants"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  autoComplete="off"
-                />
-                <TextField
-                  select
-                  size="small"
-                  label="Stage"
-                  value={stageSelectValue}
-                  onChange={(event) =>
-                    updateState({
-                      stage: event.target.value === '' ? undefined : Number(event.target.value),
-                      page: 1,
-                    })
-                  }
-                >
-                  <MenuItem value="">All stages</MenuItem>
-                  {stages.map((stageItem) => (
-                    <MenuItem key={stageItem.id} value={stageItem.systemStage}>
-                      {stageItem.stageName}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  select
-                  size="small"
-                  label="Channel"
-                  value={state.channel ?? ''}
-                  onChange={(event) =>
-                    updateState({
-                      channel: event.target.value === '' ? undefined : Number(event.target.value),
-                      page: 1,
-                    })
-                  }
-                >
-                  <MenuItem value="">All channels</MenuItem>
-                  {channels.map((channel) => (
-                    <MenuItem key={channel} value={channel}>
-                      {getAdmissionCrmChannelLabel(channel)}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </>
-            )}
-            <Autocomplete
-              size="small"
-              options={staffQuery.data || []}
-              value={ownerFilter}
-              inputValue={staffSearch}
-              onInputChange={(_, value) => setStaffSearch(value)}
-              onChange={(_, value) => updateState({ owner: value?.id, page: 1 })}
-              getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              renderInput={(params) => <TextField {...params} label="Owner" />}
-            />
-            {state.view === 'board' && (
-              <TextField
-                select
-                size="small"
-                label="Priority"
-                value={state.priority ?? ''}
-                onChange={(event) =>
-                  updateState({
-                    priority: event.target.value === '' ? undefined : Number(event.target.value),
-                    page: 1,
-                  })
-                }
-              >
-                <MenuItem value="">All priorities</MenuItem>
-                {priorities.map((priority) => (
-                  <MenuItem key={priority} value={priority}>
-                    {priorityLabels[priority]}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          </Box>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+          <Stack direction="row" alignItems="center" gap={1}>
             <ToggleButtonGroup
               exclusive
               size="small"
               value={state.view || 'list'}
-              onChange={(_, value) => value && updateState({ view: value, page: 1 }, 'push')}
+              onChange={(_, value) =>
+                value &&
+                updateState(
+                  { view: value, owner: value === 'board' ? undefined : state.owner, page: 1 },
+                  'push'
+                )
+              }
               aria-label="Pipeline view"
             >
               <ToggleButton value="board" aria-label="Board view">
@@ -925,77 +928,179 @@ export function PipelineWorkspace() {
                 <FormatListBulletedRounded />
               </ToggleButton>
             </ToggleButtonGroup>
-            <Button
+            {can(actionPermissions.add) ? (
+              <Button
+                variant="contained"
+                startIcon={<AddRounded />}
+                onClick={() => setQuickDialogOpen(true)}
+              >
+                Quick Inquiry
+              </Button>
+            ) : null}
+          </Stack>
+        }
+      />
+
+      {state.view === 'board' ? (
+        <EnrollmentWorkspaceFilterPanel
+          columns={{ xs: 1, sm: 2, lg: 4 }}
+          onClear={() => {
+            setSearch('');
+            setDebouncedSearch('');
+            updateState({
+              stage: undefined,
+              channel: undefined,
+              priority: undefined,
+              page: 1,
+            });
+          }}
+          clearDisabled={
+            state.stage == null && state.channel == null && state.priority == null && !search
+          }
+          actions={
+            <Stack direction="row" gap={0.75} flexWrap="wrap" justifyContent="flex-end">
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={stageGroup}
+                onChange={(_, value: PipelineStageGroup | null) =>
+                  value && updateState({ stageGroup: value, stage: undefined, page: 1 }, 'push')
+                }
+                aria-label="Pipeline stage group"
+              >
+                <ToggleButton value="active">Active</ToggleButton>
+                <ToggleButton value="decision">Decision</ToggleButton>
+                <ToggleButton value="closed">Closed</ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
+          }
+        >
+          <>
+            <TextField
               size="small"
-              onClick={() =>
+              label="Search applicants"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              autoComplete="off"
+            />
+            <TextField
+              select
+              size="small"
+              label="Stage"
+              value={stageSelectValue}
+              onChange={(event) =>
                 updateState({
-                  stage: undefined,
-                  channel: undefined,
-                  owner: undefined,
-                  priority: undefined,
+                  stage: event.target.value === '' ? undefined : Number(event.target.value),
                   page: 1,
                 })
               }
             >
-              Clear Filters
-            </Button>
-          </Stack>
+              <MenuItem value="">All stages</MenuItem>
+              {stages.map((stageItem) => (
+                <MenuItem key={stageItem.id} value={stageItem.systemStage}>
+                  {stageItem.stageName}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              size="small"
+              label="Channel"
+              value={state.channel ?? ''}
+              onChange={(event) =>
+                updateState({
+                  channel: event.target.value === '' ? undefined : Number(event.target.value),
+                  page: 1,
+                })
+              }
+            >
+              <MenuItem value="">All channels</MenuItem>
+              {channels.map((channel) => (
+                <MenuItem key={channel} value={channel}>
+                  {getAdmissionCrmChannelLabel(channel)}
+                </MenuItem>
+              ))}
+            </TextField>
+          </>
+          <TextField
+            select
+            size="small"
+            label="Priority"
+            value={state.priority ?? ''}
+            onChange={(event) =>
+              updateState({
+                priority: event.target.value === '' ? undefined : Number(event.target.value),
+                page: 1,
+              })
+            }
+          >
+            <MenuItem value="">All priorities</MenuItem>
+            {priorities.map((priority) => (
+              <MenuItem key={priority} value={priority}>
+                {priorityLabels[priority]}
+              </MenuItem>
+            ))}
+          </TextField>
+        </EnrollmentWorkspaceFilterPanel>
+      ) : null}
 
-          {selectedLeadIds.length > 0 && (
-            <>
-              <Divider />
-              <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
-                <Chip label={`${selectedLeadIds.length} selected`} color="primary" />
-                {can(actionPermissions.assignOwner) && (
-                  <Button size="small" onClick={() => setBulkAction('owner')}>
-                    Assign Owner
-                  </Button>
-                )}
-                {can(actionPermissions.manageTasks) && (
-                  <Button size="small" onClick={() => setBulkAction('task')}>
-                    Create Task
-                  </Button>
-                )}
-                {can(actionPermissions.changeStage) && (
-                  <Button size="small" onClick={() => setBulkAction('stage')}>
-                    Move Stage
-                  </Button>
-                )}
-                {can(actionPermissions.archiveReopen) && (
-                  <Button size="small" color="warning" onClick={() => setBulkAction('archive')}>
-                    Archive
-                  </Button>
-                )}
-              </Stack>
-            </>
-          )}
-        </Stack>
-      </Paper>
+      {selectedLeadIds.length > 0 && (
+        <Paper
+          variant="outlined"
+          role="region"
+          aria-label="Bulk inquiry actions"
+          sx={{ p: 1, position: 'sticky', top: 8, zIndex: 2, borderRadius: 1 }}
+        >
+          <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+            <Chip label={`${selectedLeadIds.length} selected`} color="primary" />
+            {can(actionPermissions.assignOwner) && (
+              <Button size="small" onClick={() => setBulkAction('owner')}>
+                Assign Owner
+              </Button>
+            )}
+            {can(actionPermissions.manageTasks) && (
+              <Button size="small" onClick={() => setBulkAction('task')}>
+                Create Task
+              </Button>
+            )}
+            {can(actionPermissions.changeStage) && (
+              <Button size="small" onClick={() => setBulkAction('stage')}>
+                Move Stage
+              </Button>
+            )}
+            {can(actionPermissions.archiveReopen) && (
+              <Button size="small" color="warning" onClick={() => setBulkAction('archive')}>
+                Archive
+              </Button>
+            )}
+          </Stack>
+        </Paper>
+      )}
 
       {stagesQuery.isFetching && <LinearProgress aria-label="Loading pipeline stages" />}
       {stagesQuery.isError && (
-        <Alert
-          severity="error"
-          action={
-            <Button size="small" color="inherit" onClick={() => stagesQuery.refetch()}>
-              Retry
-            </Button>
-          }
-        >
-          Pipeline stages are unavailable. Review Enrollment configuration before continuing.
-        </Alert>
+        <EnrollmentWorkspaceErrorState
+          message="Pipeline stages are unavailable. Review Enrollment configuration before continuing."
+          onRetry={() => stagesQuery.refetch()}
+        />
       )}
 
-      {state.view === 'board' && !stagesQuery.isError && (
-        <Stack
-          direction={{ xs: 'column', lg: 'row' }}
-          spacing={1.25}
-          alignItems="stretch"
-          sx={{ overflowX: { lg: 'auto' }, pb: 1 }}
-        >
-          {stages
-            .filter((stageItem) => state.stage == null || stageItem.systemStage === state.stage)
-            .map((stageItem) => (
+      {state.view === 'board' &&
+        !stagesQuery.isError &&
+        (visibleBoardStages.length ? (
+          <Stack
+            direction={{ xs: 'column', lg: 'row' }}
+            spacing={1.25}
+            alignItems="stretch"
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowX: { lg: 'auto' },
+              overflowY: { xs: 'auto', lg: 'hidden' },
+              pb: 1,
+            }}
+          >
+            {visibleBoardStages.map((stageItem) => (
               <PipelineStageColumn
                 key={stageItem.id}
                 academicYearId={academicYearId}
@@ -1004,29 +1109,26 @@ export function PipelineWorkspace() {
                   filterText: debouncedSearch || undefined,
                   channel: state.channel,
                   campaignName: state.campaign,
-                  ownerUserId: resolvedOwner,
                   priority: state.priority,
                 }}
-                resetKey={`${state.channel}-${state.campaign}-${resolvedOwner}-${state.priority}-${debouncedSearch}`}
+                resetKey={`${state.channel}-${state.campaign}-${state.priority}-${debouncedSearch}`}
                 clientFilter={() => true}
                 renderLead={renderLeadCard}
               />
             ))}
-        </Stack>
-      )}
+          </Stack>
+        ) : (
+          <Alert severity="info">
+            No enabled stages are configured for this pipeline group. Review Journey settings.
+          </Alert>
+        ))}
 
       {(state.view || 'list') === 'list' &&
         (leadsQuery.isError ? (
-          <Alert
-            severity="error"
-            action={
-              <Button size="small" color="inherit" onClick={() => leadsQuery.refetch()}>
-                Retry
-              </Button>
-            }
-          >
-            Inquiry leads are unavailable.
-          </Alert>
+          <EnrollmentWorkspaceErrorState
+            message="Inquiry leads are unavailable."
+            onRetry={() => leadsQuery.refetch()}
+          />
         ) : (
           <CustomizableTable
             tableId="student-enrollment-pipeline"
@@ -1041,7 +1143,7 @@ export function PipelineWorkspace() {
             searchTerm={search}
             defaultSearchTerm={search}
             searchFieldProps={{
-              placeholder: 'Search applicants...',
+              placeholder: 'Search applicants',
               inputProps: { 'aria-label': 'Search applicants' },
             }}
             filters={tableFilters}
@@ -1061,24 +1163,24 @@ export function PipelineWorkspace() {
                   stage: getLatestEnumFilter(filters, 'stage'),
                   channel: getLatestEnumFilter(filters, 'channel'),
                   priority: getLatestEnumFilter(filters, 'priority'),
+                  owner: getLatestStringFilter(filters, 'ownerUserId'),
                   page: 1,
                 },
                 'push'
               )
             }
             noDataText={
-              <Stack spacing={0.5} alignItems="center">
-                <Typography variant="subtitle2">No matching inquiries</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Change the table filters or create a new inquiry.
-                </Typography>
-              </Stack>
+              <EnrollmentTableEmptyState
+                title="No matching inquiries"
+                description="Change the table filters or create a new inquiry."
+              />
             }
             rowProps={(row) => ({
               'data-testid': 'student-enrollment-pipeline-row',
               'data-lead-id': row.id,
             })}
-            tableContainerProps={{ sx: { minHeight: 420 } }}
+            wrapperProps={{ sx: enrollmentTableWrapperSx }}
+            tableContainerProps={{ sx: enrollmentTableContainerSx }}
           />
         ))}
 
@@ -1373,11 +1475,18 @@ export function PipelineWorkspace() {
             <Alert severity="info">{selectedLeadIds.length} selected inquiries</Alert>
             {(bulkAction === 'owner' || bulkAction === 'task') && (
               <Autocomplete
-                options={staffQuery.data || []}
+                options={
+                  bulkAction === 'owner' ? ownerStaffQuery.data || [] : taskStaffQuery.data || []
+                }
                 value={bulkOwner}
+                inputValue={staffSearch}
+                onInputChange={(_, value) => setStaffSearch(value)}
                 onChange={(_, value) => setBulkOwner(value)}
-                getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
+                getOptionLabel={(option) => `${option.displayName} (${option.employeeCode})`}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
+                loading={
+                  bulkAction === 'owner' ? ownerStaffQuery.isFetching : taskStaffQuery.isFetching
+                }
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -1452,6 +1561,8 @@ export function PipelineWorkspace() {
       <ApplicantWorkspaceDrawer
         leadId={state.applicant}
         academicYearId={academicYearId}
+        initialTab={(state.applicantTab as ApplicantDrawerTab | undefined) || 'overview'}
+        onTabChange={(nextTab) => updateState({ applicantTab: nextTab }, 'replace')}
         onClose={closeApplicant}
       />
     </Stack>

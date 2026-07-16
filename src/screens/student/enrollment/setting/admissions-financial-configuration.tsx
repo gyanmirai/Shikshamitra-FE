@@ -295,6 +295,7 @@ export default function AdmissionsFinancialConfiguration() {
                   <span>
                     <IconButton
                       size="small"
+                      aria-label={`Remove fee component ${component.name || index + 1}`}
                       disabled={components.length === 1}
                       onClick={() =>
                         setComponents((items) =>

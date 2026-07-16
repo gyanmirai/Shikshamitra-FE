@@ -1,60 +1,46 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { AdmissionCrmStaffLookupDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
+import type { MouseEvent } from 'react';
 
 import dayjs from 'dayjs';
 import dynamic from 'next/dynamic';
-import { useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
-import { shikshaMitraToast } from 'src/components/toast';
-import CloseRounded from '@mui/icons-material/CloseRounded';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { LoadingButton } from 'src/components/loading-button';
-import RefreshRounded from '@mui/icons-material/RefreshRounded';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { CustomTabs } from 'src/components/custom-tabs';
+import {
+  useGetAdmissionCrmLeadQuery,
+  useGetAdmissionCrmPipelineStagesQuery,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
 import {
   Box,
   Tab,
-  Tabs,
   Chip,
+  Menu,
   Alert,
   Stack,
   Button,
   Drawer,
   Divider,
   MenuItem,
-  TextField,
   Typography,
   IconButton,
-  Autocomplete,
   LinearProgress,
 } from '@mui/material';
-import {
-  AdmissionInquiryStage,
-  AdmissionCrmLeadPriority,
-  useGetAdmissionCrmLeadQuery,
-  useGetAdmissionCrmStaffQuery,
-  useGetAdmissionCrmTasksQuery,
-  useGetAdmissionCrmTimelineQuery,
-  useCreateAdmissionCrmTaskMutation,
-  useReopenAdmissionCrmLeadMutation,
-  useAddAdmissionCrmLeadNoteMutation,
-  useArchiveAdmissionCrmLeadMutation,
-  useCompleteAdmissionCrmTaskMutation,
-  useGetAdmissionCrmPipelineStagesQuery,
-  useAssignAdmissionCrmLeadOwnerMutation,
-  useChangeAdmissionCrmLeadStageMutation,
-  useChangeAdmissionCrmLeadPriorityMutation,
-  useMergeAdmissionCrmDuplicateLeadMutation,
-  useRecalculateAdmissionCrmLeadScoreMutation,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { AdmissionCrmStageChip } from './admission-crm-stage-chip';
+import { ApplicantWorkspaceOverview } from './applicant-workspace-overview';
+import { getAdmissionCrmLeadName, getAdmissionCrmChannelLabel } from './admissions-crm-utils';
 import {
-  getAdmissionCrmLeadName,
-  admissionCrmStageColors,
-  getAdmissionCrmStageLabel,
-  getAdmissionCrmChannelLabel,
-} from './admissions-crm-utils';
+  formatEnrollmentDate,
+  formatApplicantContact,
+  joinEnrollmentMetadata,
+} from './enrollment-display';
+import {
+  ApplicantWorkspaceDirtyProvider,
+  useApplicantWorkspaceTransition,
+} from './applicant-workspace-dirty-context';
 
 const ApplicantRegistrationOperations = dynamic(() =>
   import('./applicant-registration-operations').then(
@@ -86,9 +72,13 @@ const ApplicantHouseholdIdentityOperations = dynamic(() =>
 const GeneratedDocumentOperations = dynamic(() =>
   import('./generated-document-operations').then((module) => module.GeneratedDocumentOperations)
 );
+const ApplicantExamSummary = dynamic(() =>
+  import('./applicant-exam-summary').then((module) => module.ApplicantExamSummary)
+);
 
 export type ApplicantDrawerTab =
   | 'overview'
+  | 'exam'
   | 'registration'
   | 'offer'
   | 'activation'
@@ -98,191 +88,211 @@ type Props = {
   leadId?: string;
   academicYearId?: string;
   initialTab?: ApplicantDrawerTab;
+  onTabChange?: (tab: ApplicantDrawerTab) => void;
   onClose: () => void;
 };
 
-const permissionRoot = 'Students.Enrollment.AdmissionsCrm';
-const permissionsByAction = {
-  assignOwner: `${permissionRoot}.AssignOwner`,
-  setPriority: `${permissionRoot}.SetPriority`,
-  changeStage: `${permissionRoot}.ChangeStage`,
-  manageTasks: `${permissionRoot}.ManageTasks`,
-  archiveReopen: `${permissionRoot}.ArchiveReopen`,
-  mergeDuplicate: `${permissionRoot}.MergeDuplicate`,
-};
+const sections: Array<{ value: ApplicantDrawerTab; label: string; icon: string }> = [
+  { value: 'overview', label: 'Overview', icon: 'solar:widget-2-bold-duotone' },
+  { value: 'exam', label: 'Entrance Exam', icon: 'solar:clipboard-check-bold-duotone' },
+  { value: 'registration', label: 'Registration', icon: 'solar:document-add-bold-duotone' },
+  { value: 'offer', label: 'Offer & Seat', icon: 'solar:ticket-sale-bold-duotone' },
+  { value: 'activation', label: 'Activation', icon: 'solar:user-check-bold-duotone' },
+  { value: 'governance', label: 'Governance', icon: 'solar:shield-check-bold-duotone' },
+];
 
-const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
-  [AdmissionCrmLeadPriority.None]: 'Not set',
-  [AdmissionCrmLeadPriority.Hot]: 'Hot',
-  [AdmissionCrmLeadPriority.Warm]: 'Warm',
-  [AdmissionCrmLeadPriority.Cold]: 'Cold',
-  [AdmissionCrmLeadPriority.Low]: 'Low',
-};
-
-const taskStatusLabel = (status: number) => (status === 1 ? 'Open' : 'Completed');
-
-export function ApplicantWorkspaceDrawer({
+function ApplicantWorkspaceDrawerContent({
   leadId,
   academicYearId,
   initialTab = 'overview',
+  onTabChange,
   onClose,
 }: Props) {
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { requestTransition } = useApplicantWorkspaceTransition();
   const [tab, setTab] = useState<ApplicantDrawerTab>(initialTab);
-  const [staffSearch, setStaffSearch] = useState('');
-  const [debouncedStaffSearch, setDebouncedStaffSearch] = useState('');
-  const [owner, setOwner] = useState<AdmissionCrmStaffLookupDto | null>(null);
-  const [priority, setPriority] = useState<AdmissionCrmLeadPriority>(AdmissionCrmLeadPriority.None);
-  const [stage, setStage] = useState<AdmissionInquiryStage>(AdmissionInquiryStage.FollowUp);
-  const [reason, setReason] = useState('');
-  const [note, setNote] = useState('');
-  const [taskTitle, setTaskTitle] = useState('');
-  const [taskDueAt, setTaskDueAt] = useState(() =>
-    dayjs().add(1, 'day').format('YYYY-MM-DDTHH:mm')
-  );
-  const [taskAssignee, setTaskAssignee] = useState<AdmissionCrmStaffLookupDto | null>(null);
-  const [taskNotes, setTaskNotes] = useState('');
-  const [completionNotes, setCompletionNotes] = useState<Record<string, string>>({});
-  const [duplicateLeadId, setDuplicateLeadId] = useState('');
-
+  const [sectionMenuAnchor, setSectionMenuAnchor] = useState<HTMLElement | null>(null);
   const leadQuery = useGetAdmissionCrmLeadQuery({ leadId: leadId || '' }, { skip: !leadId });
   const lead = leadQuery.data;
   const stagesQuery = useGetAdmissionCrmPipelineStagesQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId || !leadId }
   );
-  const tasksQuery = useGetAdmissionCrmTasksQuery(
-    { leadId: leadId || '', maxResultCount: 50 },
-    { skip: !leadId || tab !== 'overview' }
+  const currentStage = useMemo(
+    () => stagesQuery.data?.find((item) => item.systemStage === lead?.stage),
+    [lead?.stage, stagesQuery.data]
   );
-  const timelineQuery = useGetAdmissionCrmTimelineQuery(
-    { leadId: leadId || '', maxResultCount: 50, sorting: 'OccurredAt DESC' },
-    { skip: !leadId || tab !== 'overview' }
-  );
-  const staffQuery = useGetAdmissionCrmStaffQuery(
-    {
-      filter: debouncedStaffSearch || undefined,
-      ids: [lead?.ownerUserId, taskAssignee?.id].filter(Boolean).join(',') || undefined,
-      maxResultCount: 25,
-    },
-    { skip: !leadId || tab !== 'overview' }
-  );
-
-  const [assignOwner, assignOwnerState] = useAssignAdmissionCrmLeadOwnerMutation();
-  const [changePriority, changePriorityState] = useChangeAdmissionCrmLeadPriorityMutation();
-  const [changeStage, changeStageState] = useChangeAdmissionCrmLeadStageMutation();
-  const [addNote, addNoteState] = useAddAdmissionCrmLeadNoteMutation();
-  const [createTask, createTaskState] = useCreateAdmissionCrmTaskMutation();
-  const [completeTask, completeTaskState] = useCompleteAdmissionCrmTaskMutation();
-  const [archiveLead, archiveState] = useArchiveAdmissionCrmLeadMutation();
-  const [reopenLead, reopenState] = useReopenAdmissionCrmLeadMutation();
-  const [recalculateScore, recalculateState] = useRecalculateAdmissionCrmLeadScoreMutation();
-  const [mergeDuplicate, mergeState] = useMergeAdmissionCrmDuplicateLeadMutation();
+  const slaDueAt =
+    lead && currentStage?.slaTargetHours
+      ? dayjs(lead.lastActivityTime).add(currentStage.slaTargetHours, 'hour')
+      : null;
+  const selectedSection = sections.find((section) => section.value === tab) || sections[0];
 
   useEffect(() => setTab(initialTab), [initialTab, leadId]);
-  useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedStaffSearch(staffSearch.trim()), 300);
-    return () => window.clearTimeout(timer);
-  }, [staffSearch]);
-  useEffect(() => {
-    if (!lead) return;
-    setPriority(lead.priority);
-    const currentOwner = staffQuery.data?.find((staff) => staff.id === lead.ownerUserId) ?? null;
-    setOwner(currentOwner);
-    const currentStage = stagesQuery.data?.find((item) => item.systemStage === lead.stage);
-    setStage(currentStage?.allowedNextStages[0] ?? lead.stage);
-  }, [lead, staffQuery.data, stagesQuery.data]);
 
-  const allowedStages = useMemo(() => {
-    if (!lead) return [];
-    const configured = stagesQuery.data?.find((item) => item.systemStage === lead.stage);
-    return configured?.allowedNextStages ?? [];
-  }, [lead, stagesQuery.data]);
+  const changeTab = (nextTab: ApplicantDrawerTab) => {
+    if (nextTab === tab) return;
+    requestTransition(() => {
+      setTab(nextTab);
+      onTabChange?.(nextTab);
+    });
+  };
 
-  const can = (permission: string) => hasGrantedPermission(permissions, permission);
-  const requireReason = () => {
-    if (reason.trim()) return true;
-    shikshaMitraToast.error({ message: 'Enter a reason before applying this change.' });
-    return false;
-  };
-  const run = async (action: () => Promise<unknown>, success: string) => {
-    try {
-      await action();
-      shikshaMitraToast.success({ message: success });
-      setReason('');
-      await leadQuery.refetch();
-    } catch {
-      shikshaMitraToast.error({
-        message: 'The applicant could not be updated. Review the fields and retry.',
-      });
-    }
-  };
+  const handleClose = () => requestTransition(onClose);
 
   return (
     <Drawer
       anchor="right"
       open={Boolean(leadId)}
-      onClose={onClose}
+      onClose={handleClose}
+      transitionDuration={{ exit: 0 }}
       PaperProps={{
         role: 'dialog',
         'aria-modal': true,
         'aria-label': 'Applicant Workspace',
         sx: {
-          width: { xs: '100%', md: 760 },
-          maxWidth: '100%',
+          width: { xs: '100%', sm: 720, lg: 860 },
+          maxWidth: '100vw',
+          overflow: 'hidden',
           overscrollBehavior: 'contain',
         },
       }}
     >
-      <Stack sx={{ height: '100%', minHeight: 0 }}>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1} p={2}>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="overline" color="text.secondary">
-              Applicant Workspace
-            </Typography>
-            <Typography variant="h6" component="h2" noWrap>
-              {lead ? getAdmissionCrmLeadName(lead) : 'Loading applicant…'}
-            </Typography>
-            {lead && (
-              <Stack direction="row" gap={1} flexWrap="wrap" mt={0.75}>
-                <Chip
-                  size="small"
-                  label={getAdmissionCrmStageLabel(lead.stage)}
-                  color={admissionCrmStageColors[lead.stage]}
-                />
-                <Chip size="small" variant="outlined" label={`Score ${lead.leadScore}`} />
+      <Stack sx={{ height: '100%', minHeight: 0, overflow: 'hidden' }}>
+        <Box component="header" sx={{ px: { xs: 1.5, sm: 2 }, py: 1.25, flexShrink: 0 }}>
+          <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.4 }}>
+                Applicant workspace
+              </Typography>
+              <Typography variant="h6" component="h2" noWrap>
+                {lead ? getAdmissionCrmLeadName(lead) : 'Loading applicant...'}
+              </Typography>
+              {lead ? (
+                <Typography variant="caption" color="text.secondary" noWrap component="div">
+                  {joinEnrollmentMetadata(
+                    lead.desiredClassName || 'Class not captured',
+                    formatApplicantContact(lead.primaryContactNo, lead.email),
+                    lead.inquirySourceSnapshot || getAdmissionCrmChannelLabel(lead.channel)
+                  )}
+                </Typography>
+              ) : null}
+            </Box>
+            <IconButton
+              aria-label="Close applicant workspace"
+              title="Close applicant workspace"
+              onClick={handleClose}
+              edge="end"
+            >
+              <Iconify icon="solar:close-circle-linear" />
+            </IconButton>
+          </Stack>
+          {lead ? (
+            <Stack direction="row" gap={0.75} flexWrap="wrap" mt={1} alignItems="center">
+              <AdmissionCrmStageChip stage={lead.stage} />
+              <Chip size="small" variant="outlined" label={`Score ${lead.leadScore}`} />
+              <Chip
+                size="small"
+                variant="outlined"
+                color={lead.ownerUserId ? 'default' : 'warning'}
+                label={lead.ownerUserId ? 'Owner assigned' : 'Owner required'}
+              />
+              {slaDueAt ? (
                 <Chip
                   size="small"
                   variant="outlined"
-                  label={getAdmissionCrmChannelLabel(lead.channel)}
+                  color={slaDueAt.isBefore(dayjs()) ? 'warning' : 'default'}
+                  label={`${slaDueAt.isBefore(dayjs()) ? 'SLA overdue' : 'SLA due'} ${formatEnrollmentDate(
+                    slaDueAt.toDate(),
+                    true
+                  )}`}
                 />
-              </Stack>
-            )}
-          </Box>
-          <IconButton aria-label="Close applicant workspace" onClick={onClose}>
-            <CloseRounded />
-          </IconButton>
-        </Stack>
-        <Divider />
-        <Tabs
-          value={tab}
-          onChange={(_, value: ApplicantDrawerTab) => setTab(value)}
-          variant="scrollable"
-          scrollButtons="auto"
-          aria-label="Applicant workspace sections"
-          sx={{ px: 1 }}
-        >
-          <Tab value="overview" label="Overview" />
-          <Tab value="registration" label="Registration" />
-          <Tab value="offer" label="Offer & Seat" />
-          <Tab value="activation" label="Activation" />
-          <Tab value="governance" label="Governance" />
-        </Tabs>
+              ) : null}
+            </Stack>
+          ) : null}
+        </Box>
         <Divider />
 
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 1.5, sm: 2 } }}>
-          {leadQuery.isFetching && !lead && <LinearProgress aria-label="Loading applicant" />}
-          {leadQuery.isError && (
+        {isMobile ? (
+          <Box sx={{ px: 1.5, py: 1, flexShrink: 0 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              aria-haspopup="menu"
+              aria-expanded={Boolean(sectionMenuAnchor)}
+              startIcon={<Iconify icon={selectedSection.icon} />}
+              endIcon={<Iconify icon="eva:chevron-down-fill" />}
+              onClick={(event: MouseEvent<HTMLButtonElement>) =>
+                setSectionMenuAnchor(event.currentTarget)
+              }
+              sx={{ justifyContent: 'space-between', minHeight: 44 }}
+            >
+              {selectedSection.label}
+            </Button>
+            <Menu
+              anchorEl={sectionMenuAnchor}
+              open={Boolean(sectionMenuAnchor)}
+              onClose={() => setSectionMenuAnchor(null)}
+              MenuListProps={{ 'aria-label': 'Applicant workspace sections' }}
+              slotProps={{ paper: { sx: { width: 'calc(100vw - 24px)', maxWidth: 420 } } }}
+            >
+              {sections.map((section) => (
+                <MenuItem
+                  key={section.value}
+                  selected={section.value === tab}
+                  onClick={() => {
+                    setSectionMenuAnchor(null);
+                    changeTab(section.value);
+                  }}
+                >
+                  <Iconify icon={section.icon} sx={{ mr: 1 }} />
+                  {section.label}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Box>
+        ) : (
+          <CustomTabs
+            value={tab}
+            onChange={(_, value: ApplicantDrawerTab) => changeTab(value)}
+            variant="scrollable"
+            scrollButtons="auto"
+            aria-label="Applicant workspace sections"
+            sx={{ flexShrink: 0 }}
+            slotProps={{
+              scroller: { px: 1, py: 0.5 },
+              tab: { px: 1.25, minHeight: 40 },
+            }}
+          >
+            {sections.map((section) => (
+              <Tab
+                key={section.value}
+                value={section.value}
+                icon={<Iconify icon={section.icon} width={18} />}
+                iconPosition="start"
+                label={section.label}
+              />
+            ))}
+          </CustomTabs>
+        )}
+        <Divider />
+
+        <Box
+          component="main"
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            px: { xs: 1.5, sm: 2 },
+            py: 1.5,
+            scrollBehavior: 'smooth',
+            '@media (prefers-reduced-motion: reduce)': { scrollBehavior: 'auto' },
+          }}
+        >
+          {leadQuery.isFetching && !lead ? <LinearProgress aria-label="Loading applicant" /> : null}
+          {leadQuery.isError ? (
             <Alert
               severity="error"
               action={
@@ -291,435 +301,61 @@ export function ApplicantWorkspaceDrawer({
                 </Button>
               }
             >
-              Applicant details are unavailable.
+              Applicant details are unavailable. Check your connection and try again.
             </Alert>
-          )}
+          ) : null}
 
-          {lead && tab === 'overview' && (
+          {lead && tab === 'overview' ? (
+            <ApplicantWorkspaceOverview
+              lead={lead}
+              academicYearId={academicYearId}
+              stages={stagesQuery.data || []}
+              slaDueAt={slaDueAt}
+              refetchLead={() => leadQuery.refetch()}
+            />
+          ) : null}
+
+          {leadId && academicYearId && tab === 'exam' ? (
+            <ApplicantExamSummary leadId={leadId} academicYearId={academicYearId} />
+          ) : null}
+          {leadId && academicYearId && tab === 'registration' ? (
             <Stack spacing={2}>
-              <Box>
-                <Typography variant="subtitle2" gutterBottom>
-                  Admission Intent
-                </Typography>
-                <Typography variant="body2">{lead.admissionIntent}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {lead.desiredClassName || 'Class not captured'} ·{' '}
-                  {lead.primaryContactNo || lead.email || 'Contact not captured'}
-                </Typography>
-              </Box>
-
-              {(can(permissionsByAction.assignOwner) || can(permissionsByAction.setPriority)) && (
-                <>
-                  <Divider />
-                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                    {can(permissionsByAction.assignOwner) && (
-                      <Autocomplete
-                        fullWidth
-                        options={staffQuery.data || []}
-                        value={owner}
-                        loading={staffQuery.isFetching}
-                        inputValue={staffSearch}
-                        onInputChange={(_, value) => setStaffSearch(value)}
-                        onChange={(_, value) => setOwner(value)}
-                        getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
-                        isOptionEqualToValue={(option, value) => option.id === value.id}
-                        renderInput={(params) => <TextField {...params} label="Lead owner" />}
-                      />
-                    )}
-                    {can(permissionsByAction.setPriority) && (
-                      <TextField
-                        select
-                        fullWidth
-                        label="Priority"
-                        value={priority}
-                        onChange={(event) => setPriority(Number(event.target.value))}
-                      >
-                        {Object.entries(priorityLabels).map(([value, label]) => (
-                          <MenuItem key={value} value={Number(value)}>
-                            {label}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    )}
-                  </Stack>
-                  <Stack direction="row" gap={1} flexWrap="wrap">
-                    {can(permissionsByAction.assignOwner) && (
-                      <LoadingButton
-                        size="small"
-                        variant="outlined"
-                        loading={assignOwnerState.isLoading}
-                        onClick={() =>
-                          run(
-                            () =>
-                              assignOwner({
-                                leadId: lead.id,
-                                body: { ownerUserId: owner?.id || null },
-                              }).unwrap(),
-                            'Lead owner updated.'
-                          )
-                        }
-                      >
-                        Save Owner
-                      </LoadingButton>
-                    )}
-                    {can(permissionsByAction.setPriority) && (
-                      <LoadingButton
-                        size="small"
-                        variant="outlined"
-                        loading={changePriorityState.isLoading}
-                        onClick={() =>
-                          run(
-                            () =>
-                              changePriority({
-                                leadId: lead.id,
-                                body: { priority, reason: reason.trim() || undefined },
-                              }).unwrap(),
-                            'Lead priority updated.'
-                          )
-                        }
-                      >
-                        Save Priority
-                      </LoadingButton>
-                    )}
-                    <LoadingButton
-                      size="small"
-                      variant="text"
-                      startIcon={<RefreshRounded />}
-                      loading={recalculateState.isLoading}
-                      onClick={() =>
-                        run(
-                          () => recalculateScore({ leadId: lead.id }).unwrap(),
-                          'Lead score recalculated.'
-                        )
-                      }
-                    >
-                      Recalculate Score
-                    </LoadingButton>
-                  </Stack>
-                </>
-              )}
-
-              {can(permissionsByAction.changeStage) && allowedStages.length > 0 && (
-                <>
-                  <Divider />
-                  <Typography variant="subtitle2">Move Pipeline Stage</Typography>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Next stage"
-                      value={stage}
-                      onChange={(event) => setStage(Number(event.target.value))}
-                    >
-                      {allowedStages.map((value) => (
-                        <MenuItem key={value} value={value}>
-                          {getAdmissionCrmStageLabel(value)}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                    <TextField
-                      fullWidth
-                      required
-                      label="Reason"
-                      value={reason}
-                      onChange={(event) => setReason(event.target.value)}
-                    />
-                  </Stack>
-                  <LoadingButton
-                    variant="outlined"
-                    loading={changeStageState.isLoading}
-                    disabled={!allowedStages.includes(stage)}
-                    onClick={() => {
-                      if (!requireReason()) return;
-                      run(
-                        () =>
-                          changeStage({
-                            leadId: lead.id,
-                            body: { stage, reason: reason.trim() },
-                          }).unwrap(),
-                        'Pipeline stage updated.'
-                      );
-                    }}
-                    sx={{ alignSelf: 'flex-start' }}
-                  >
-                    Move Stage
-                  </LoadingButton>
-                </>
-              )}
-
-              <Divider />
-              <Typography variant="subtitle2">Notes & Follow-up</Typography>
-              <TextField
-                label="Add note"
-                value={note}
-                onChange={(event) => setNote(event.target.value)}
-                multiline
-                minRows={2}
-              />
-              <LoadingButton
-                variant="outlined"
-                loading={addNoteState.isLoading}
-                disabled={!note.trim()}
-                onClick={() =>
-                  run(
-                    () => addNote({ leadId: lead.id, body: { note: note.trim() } }).unwrap(),
-                    'Note added.'
-                  ).then(() => setNote(''))
-                }
-                sx={{ alignSelf: 'flex-start' }}
-              >
-                Add Note
-              </LoadingButton>
-
-              {can(permissionsByAction.manageTasks) && (
-                <Stack spacing={1.25}>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-                    <TextField
-                      fullWidth
-                      label="Task title"
-                      value={taskTitle}
-                      onChange={(event) => setTaskTitle(event.target.value)}
-                    />
-                    <TextField
-                      fullWidth
-                      label="Due date"
-                      type="datetime-local"
-                      value={taskDueAt}
-                      onChange={(event) => setTaskDueAt(event.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Stack>
-                  <Autocomplete
-                    options={staffQuery.data || []}
-                    value={taskAssignee}
-                    onChange={(_, value) => setTaskAssignee(value)}
-                    getOptionLabel={(option) => `${option.displayName} (${option.userName})`}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    renderInput={(params) => <TextField {...params} label="Task assignee" />}
-                  />
-                  <TextField
-                    label="Task notes"
-                    value={taskNotes}
-                    onChange={(event) => setTaskNotes(event.target.value)}
-                    multiline
-                    minRows={2}
-                  />
-                  <LoadingButton
-                    variant="contained"
-                    loading={createTaskState.isLoading}
-                    disabled={!taskTitle.trim() || !taskDueAt}
-                    onClick={() =>
-                      run(
-                        () =>
-                          createTask({
-                            leadId: lead.id,
-                            body: {
-                              title: taskTitle.trim(),
-                              dueAt: dayjs(taskDueAt).toISOString(),
-                              assignedUserId: taskAssignee?.id,
-                              notes: taskNotes.trim() || undefined,
-                            },
-                          }).unwrap(),
-                        'Follow-up task created.'
-                      ).then(() => {
-                        setTaskTitle('');
-                        setTaskNotes('');
-                      })
-                    }
-                    sx={{ alignSelf: 'flex-start' }}
-                  >
-                    Create Task
-                  </LoadingButton>
-                </Stack>
-              )}
-
-              <Stack spacing={1}>
-                {(tasksQuery.data?.items || []).map((task) => (
-                  <Box key={task.id} sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
-                    <Stack
-                      direction={{ xs: 'column', sm: 'row' }}
-                      justifyContent="space-between"
-                      gap={1}
-                    >
-                      <Box>
-                        <Typography variant="subtitle2">{task.title}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {dayjs(task.dueAt).format('DD MMM YYYY, HH:mm')} ·{' '}
-                          {taskStatusLabel(task.status)}
-                        </Typography>
-                      </Box>
-                      {task.status === 1 && can(permissionsByAction.manageTasks) && (
-                        <Stack direction="row" gap={1} alignItems="center">
-                          <TextField
-                            size="small"
-                            label="Completion note"
-                            value={completionNotes[task.id] || ''}
-                            onChange={(event) =>
-                              setCompletionNotes((current) => ({
-                                ...current,
-                                [task.id]: event.target.value,
-                              }))
-                            }
-                          />
-                          <LoadingButton
-                            size="small"
-                            loading={completeTaskState.isLoading}
-                            onClick={() =>
-                              run(
-                                () =>
-                                  completeTask({
-                                    taskId: task.id,
-                                    body: {
-                                      completionNotes: completionNotes[task.id] || undefined,
-                                    },
-                                  }).unwrap(),
-                                'Task completed.'
-                              )
-                            }
-                          >
-                            Complete
-                          </LoadingButton>
-                        </Stack>
-                      )}
-                    </Stack>
-                  </Box>
-                ))}
-                {!tasksQuery.isFetching && !tasksQuery.data?.items.length && (
-                  <Typography variant="body2" color="text.secondary">
-                    No follow-up tasks recorded.
-                  </Typography>
+              <ApplicantRegistrationOperations
+                leadId={leadId}
+                academicYearId={academicYearId}
+                hasRegistration={Boolean(
+                  lead?.registrationFormIssuedAt || lead?.registrationFormNumber
                 )}
-              </Stack>
-
-              {lead.likelyDuplicates.length > 0 && can(permissionsByAction.mergeDuplicate) && (
-                <>
-                  <Divider />
-                  <Alert severity="warning">This inquiry has likely duplicate records.</Alert>
-                  <TextField
-                    select
-                    label="Duplicate inquiry"
-                    value={duplicateLeadId}
-                    onChange={(event) => setDuplicateLeadId(event.target.value)}
-                  >
-                    {lead.likelyDuplicates.map((duplicate) => (
-                      <MenuItem key={duplicate.leadId} value={duplicate.leadId}>
-                        {[duplicate.firstName, duplicate.lastName].filter(Boolean).join(' ') ||
-                          'Unnamed inquiry'}{' '}
-                        · {duplicate.matchReason}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  <TextField
-                    required
-                    label="Merge reason"
-                    value={reason}
-                    onChange={(event) => setReason(event.target.value)}
-                  />
-                  <LoadingButton
-                    variant="outlined"
-                    color="warning"
-                    loading={mergeState.isLoading}
-                    disabled={!duplicateLeadId}
-                    onClick={() => {
-                      if (!requireReason()) return;
-                      run(
-                        () =>
-                          mergeDuplicate({
-                            leadId: lead.id,
-                            body: { duplicateLeadId, reason: reason.trim() },
-                          }).unwrap(),
-                        'Duplicate inquiry merged.'
-                      );
-                    }}
-                    sx={{ alignSelf: 'flex-start' }}
-                  >
-                    Merge Duplicate
-                  </LoadingButton>
-                </>
-              )}
-
-              {can(permissionsByAction.archiveReopen) && (
-                <>
-                  <Divider />
-                  <Typography variant="subtitle2">Archive Control</Typography>
-                  <TextField
-                    required
-                    label={lead.archivedAt ? 'Reopen reason' : 'Archive reason'}
-                    value={reason}
-                    onChange={(event) => setReason(event.target.value)}
-                    multiline
-                    minRows={2}
-                  />
-                  <LoadingButton
-                    color={lead.archivedAt ? 'primary' : 'warning'}
-                    variant="outlined"
-                    loading={archiveState.isLoading || reopenState.isLoading}
-                    onClick={() => {
-                      if (!requireReason()) return;
-                      run(
-                        () =>
-                          lead.archivedAt
-                            ? reopenLead({
-                                leadId: lead.id,
-                                body: { reason: reason.trim() },
-                              }).unwrap()
-                            : archiveLead({
-                                leadId: lead.id,
-                                body: { reason: reason.trim() },
-                              }).unwrap(),
-                        lead.archivedAt ? 'Inquiry reopened.' : 'Inquiry archived.'
-                      );
-                    }}
-                    sx={{ alignSelf: 'flex-start' }}
-                  >
-                    {lead.archivedAt ? 'Reopen Inquiry' : 'Archive Inquiry'}
-                  </LoadingButton>
-                </>
-              )}
-
-              <Divider />
-              <Typography variant="subtitle2">Timeline</Typography>
-              {timelineQuery.isFetching && (
-                <LinearProgress aria-label="Loading applicant timeline" />
-              )}
-              <Stack spacing={1.25}>
-                {(timelineQuery.data?.items || []).map((event) => (
-                  <Box key={event.id} sx={{ borderLeft: 2, borderColor: 'divider', pl: 1.5 }}>
-                    <Typography variant="subtitle2">{event.title}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {dayjs(event.occurredAt).format('DD MMM YYYY, HH:mm')}
-                    </Typography>
-                    {event.details && <Typography variant="body2">{event.details}</Typography>}
-                  </Box>
-                ))}
-              </Stack>
-            </Stack>
-          )}
-
-          {leadId && academicYearId && tab === 'registration' && (
-            <Stack spacing={2}>
-              <ApplicantRegistrationOperations leadId={leadId} academicYearId={academicYearId} />
+              />
               <GeneratedDocumentOperations leadId={leadId} />
             </Stack>
-          )}
-          {leadId && academicYearId && tab === 'offer' && (
+          ) : null}
+          {leadId && academicYearId && tab === 'offer' ? (
             <Stack spacing={2}>
               <ApplicantFinalAdmissionOperations leadId={leadId} academicYearId={academicYearId} />
               <ApplicantFinancialReadiness leadId={leadId} academicYearId={academicYearId} />
             </Stack>
-          )}
-          {leadId && academicYearId && tab === 'activation' && (
+          ) : null}
+          {leadId && academicYearId && tab === 'activation' ? (
             <ApplicantActivationOperations leadId={leadId} academicYearId={academicYearId} />
-          )}
-          {leadId && academicYearId && tab === 'governance' && (
+          ) : null}
+          {leadId && academicYearId && tab === 'governance' ? (
             <Stack spacing={2}>
               <ApplicantRouteOperations leadId={leadId} academicYearId={academicYearId} />
               <ApplicantPolicyReadiness leadId={leadId} academicYearId={academicYearId} />
               <ApplicantHouseholdIdentityOperations leadId={leadId} />
             </Stack>
-          )}
+          ) : null}
         </Box>
       </Stack>
     </Drawer>
+  );
+}
+
+export function ApplicantWorkspaceDrawer(props: Props) {
+  return (
+    <ApplicantWorkspaceDirtyProvider>
+      <ApplicantWorkspaceDrawerContent {...props} />
+    </ApplicantWorkspaceDirtyProvider>
   );
 }

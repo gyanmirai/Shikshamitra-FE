@@ -6,7 +6,7 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useMemo, useEffect, useContext, useCallback, createContext } from 'react';
+import { useRef, useMemo, useEffect, useContext, useCallback, createContext } from 'react';
 
 import {
   getWorkspaceFromPathname,
@@ -20,6 +20,7 @@ import {
 import type {
   EnrollmentPersona,
   EnrollmentWorkspace,
+  EnrollmentApplicantTab,
   EnrollmentWorkspaceState,
   EnrollmentWorkspaceStatePatch,
 } from './enrollment-workspace-state';
@@ -40,7 +41,7 @@ type EnrollmentWorkspaceContextValue = {
   currentUserId?: string;
   state: EnrollmentWorkspaceState;
   updateState: (patch: EnrollmentWorkspaceStatePatch, mode?: 'push' | 'replace') => void;
-  openApplicant: (leadId: string) => void;
+  openApplicant: (leadId: string, tab?: EnrollmentApplicantTab) => void;
   closeApplicant: () => void;
 };
 
@@ -62,6 +63,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
   const searchParams = useSearchParams();
   const { currentYear } = useSelector((root: RootState) => root.globalState);
   const { permissions, user } = useSelector((root: RootState) => root.auth);
+  const applicantOriginRef = useRef<HTMLElement | null>(null);
   const workspace = getWorkspaceFromPathname(pathname);
   const persona = resolvePersona(permissions);
   const defaults = useMemo(
@@ -108,7 +110,7 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
     const cycle = current.get('cycle') || (currentYear?.id as string | undefined);
 
     sessionStorage.removeItem(legacyKey);
-    if (!cycle && !Object.keys(legacy).length) return;
+    if (!cycle && !Object.keys(legacy).length && current.size === 0) return;
 
     const next = { ...defaults, ...legacy, ...state, cycle, page: state.page || 1 };
     const canonical = serializeEnrollmentWorkspaceState(next as EnrollmentWorkspaceState);
@@ -116,6 +118,19 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       navigate(next as EnrollmentWorkspaceState, 'replace');
     }
   }, [currentYear?.id, defaults, navigate, searchParams, state, workspace]);
+
+  const openApplicant = useCallback(
+    (leadId: string, tab: EnrollmentApplicantTab = 'overview') => {
+      applicantOriginRef.current = document.activeElement as HTMLElement | null;
+      updateState({ applicant: leadId, applicantTab: tab }, 'push');
+    },
+    [updateState]
+  );
+
+  const closeApplicant = useCallback(() => {
+    updateState({ applicant: undefined, applicantTab: undefined }, 'replace');
+    window.setTimeout(() => applicantOriginRef.current?.focus(), 0);
+  }, [updateState]);
 
   const value = useMemo<EnrollmentWorkspaceContextValue>(
     () => ({
@@ -125,10 +140,20 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       currentUserId: user?.sub || user?.id,
       state,
       updateState,
-      openApplicant: (leadId) => updateState({ applicant: leadId }, 'push'),
-      closeApplicant: () => updateState({ applicant: undefined }, 'replace'),
+      openApplicant,
+      closeApplicant,
     }),
-    [currentYear?.id, persona, state, updateState, user?.id, user?.sub, workspace]
+    [
+      closeApplicant,
+      currentYear?.id,
+      openApplicant,
+      persona,
+      state,
+      updateState,
+      user?.id,
+      user?.sub,
+      workspace,
+    ]
   );
 
   return (
