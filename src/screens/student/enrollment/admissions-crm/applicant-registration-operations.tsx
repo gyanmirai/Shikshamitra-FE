@@ -1,9 +1,21 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import { useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
-import { Replay, History, TaskAlt, FactCheck, CheckCircle, Description } from '@mui/icons-material';
+import {
+  Replay,
+  History,
+  TaskAlt,
+  FactCheck,
+  UploadFile,
+  CheckCircle,
+  Description,
+} from '@mui/icons-material';
 import {
   Box,
   Chip,
@@ -34,6 +46,7 @@ import {
   useReviewAdmissionCrmApplicantDocumentMutation,
   useConfirmAdmissionCrmDocumentReadinessMutation,
   useGetCurrentAdmissionCrmRegistrationByLeadQuery,
+  useUploadAdmissionCrmRegistrationDocumentMutation,
   useGetAdmissionCrmApplicantDocumentChecklistQuery,
   useGetAdmissionCrmDocumentChecklistTemplatesQuery,
   useConfirmAdmissionCrmDocumentOriginalSeenMutation,
@@ -95,6 +108,11 @@ export function ApplicantRegistrationOperations({
   academicYearId,
   hasRegistration,
 }: Props) {
+  const permissions = useSelector((root: RootState) => root.auth.permissions);
+  const canUploadDocuments = hasGrantedPermission(
+    permissions,
+    'Students.Enrollment.AdmissionsCrm.ReviewDocuments'
+  );
   const registrationQuery = useGetCurrentAdmissionCrmRegistrationByLeadQuery(
     { leadId },
     { skip: !hasRegistration }
@@ -133,8 +151,15 @@ export function ApplicantRegistrationOperations({
   const [paymentReference, setPaymentReference] = useState('');
   const [overrideReadiness, setOverrideReadiness] = useState(false);
   const [documentReasonByKey, setDocumentReasonByKey] = useState<Record<string, string>>({});
+  const [documentFileByKey, setDocumentFileByKey] = useState<Record<string, File | undefined>>({});
+  const [documentValidUntilByKey, setDocumentValidUntilByKey] = useState<Record<string, string>>(
+    {}
+  );
 
-  useApplicantWorkspaceDirtyState(`registration-issue-${leadId}`, issueFormOpen);
+  useApplicantWorkspaceDirtyState(
+    `registration-issue-${leadId}`,
+    issueFormOpen || Object.values(documentFileByKey).some(Boolean)
+  );
 
   const [issue, issueState] = useIssueAdmissionCrmRegistrationApplicationMutation();
   const [returnForCorrection, correctionState] =
@@ -150,6 +175,7 @@ export function ApplicantRegistrationOperations({
   const [markOriginalSeen, originalState] = useConfirmAdmissionCrmDocumentOriginalSeenMutation();
   const [waiveDocument, waiveDocumentState] = useWaiveAdmissionCrmApplicantDocumentMutation();
   const [confirmReadiness, readinessState] = useConfirmAdmissionCrmDocumentReadinessMutation();
+  const [uploadDocument, uploadState] = useUploadAdmissionCrmRegistrationDocumentMutation();
 
   const allFieldKeys = useMemo(
     () =>
@@ -172,8 +198,10 @@ export function ApplicantRegistrationOperations({
       await action();
       setReason('');
       shikshaMitraToast.success({ message: success });
+      return true;
     } catch (error) {
       shikshaMitraToast.error({ message: readError(error, 'Unable to complete the action.') });
+      return false;
     }
   };
 
@@ -569,6 +597,109 @@ export function ApplicantRegistrationOperations({
                     />
                   </Stack>
                   <Stack direction={{ xs: 'column', md: 'row' }} gap={1}>
+                    {canUploadDocuments ? (
+                      <Button
+                        component="label"
+                        size="small"
+                        variant="outlined"
+                        startIcon={<UploadFile />}
+                      >
+                        Choose File
+                        <input
+                          hidden
+                          type="file"
+                          accept={document.acceptedExtensions
+                            .map((extension) => `.${extension}`)
+                            .join(',')}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file && file.size > document.maximumSizeMb * 1024 * 1024) {
+                              shikshaMitraToast.error({
+                                message: `${document.requirementName} must be ${document.maximumSizeMb} MB or smaller.`,
+                              });
+                              event.target.value = '';
+                              return;
+                            }
+                            const extension = file?.name.split('.').pop()?.toLowerCase();
+                            if (
+                              file &&
+                              extension &&
+                              !document.acceptedExtensions.some(
+                                (accepted) => accepted.toLowerCase() === extension
+                              )
+                            ) {
+                              shikshaMitraToast.error({
+                                message: `${document.requirementName} accepts ${document.acceptedExtensions.join(', ')} files.`,
+                              });
+                              event.target.value = '';
+                              return;
+                            }
+                            setDocumentFileByKey((current) => ({
+                              ...current,
+                              [document.requirementKey]: file,
+                            }));
+                            event.target.value = '';
+                          }}
+                        />
+                      </Button>
+                    ) : null}
+                    {canUploadDocuments && document.validityDateRequired ? (
+                      <TextField
+                        size="small"
+                        type="date"
+                        label="Valid Until"
+                        value={documentValidUntilByKey[document.requirementKey] || ''}
+                        onChange={(event) =>
+                          setDocumentValidUntilByKey((current) => ({
+                            ...current,
+                            [document.requirementKey]: event.target.value,
+                          }))
+                        }
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                    ) : null}
+                    {canUploadDocuments && documentFileByKey[document.requirementKey] ? (
+                      <Stack direction="row" gap={1} alignItems="center" minWidth={0}>
+                        <Typography
+                          variant="caption"
+                          noWrap
+                          title={documentFileByKey[document.requirementKey]?.name}
+                          sx={{ maxWidth: 180 }}
+                        >
+                          {documentFileByKey[document.requirementKey]?.name}
+                        </Typography>
+                        <LoadingButton
+                          size="small"
+                          variant="contained"
+                          loading={uploadState.isLoading}
+                          disabled={
+                            document.validityDateRequired &&
+                            !documentValidUntilByKey[document.requirementKey]
+                          }
+                          onClick={() =>
+                            perform(
+                              () =>
+                                uploadDocument({
+                                  registrationApplicationId: registration.id,
+                                  requirementKey: document.requirementKey,
+                                  file: documentFileByKey[document.requirementKey]!,
+                                  validUntil:
+                                    documentValidUntilByKey[document.requirementKey] || null,
+                                }).unwrap(),
+                              `${document.requirementName} uploaded.`
+                            ).then((saved) => {
+                              if (!saved) return;
+                              setDocumentFileByKey((current) => ({
+                                ...current,
+                                [document.requirementKey]: undefined,
+                              }));
+                            })
+                          }
+                        >
+                          Upload
+                        </LoadingButton>
+                      </Stack>
+                    ) : null}
                     <TextField
                       size="small"
                       label="Decision or waiver reason"

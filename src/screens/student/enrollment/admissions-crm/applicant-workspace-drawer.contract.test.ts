@@ -69,6 +69,48 @@ describe('Student Enrollment applicant workspace drawer contracts', () => {
     expect(queueColumns).toContain('openApplicant(item.leadId, applicantTab)');
   });
 
+  it('keeps the pipeline focused on the applicant current stage', () => {
+    const pipeline = read('pipeline-workspace.tsx');
+    const drawer = read('applicant-workspace-drawer.tsx');
+
+    expect(pipeline).toContain('context="pipeline"');
+    expect(pipeline).toContain("label: 'Registration'");
+    expect(pipeline).toContain('Issued ·');
+    expect(pipeline).toContain('lead.registrationFormNumber');
+    expect(pipeline).toContain("openApplicant(lead.id, 'registration')");
+    expect(pipeline).toContain('allowRegistrationBeforeExam={registrationRequiredBeforeExam}');
+    expect(pipeline).toContain('!registrationRequiredBeforeExam || isRegistrationIssued(lead)');
+    expect(pipeline).not.toContain('<DialogTitle>Issue Registration Form</DialogTitle>');
+    expect(drawer).toContain('pipelineExamStages.has(lead.stage)');
+    expect(drawer).toContain("if (section.value === 'overview') return true");
+    expect(drawer).toContain("if (section.value === 'registration')");
+    expect(drawer).toContain('return false;');
+  });
+
+  it('keeps generated documents in their owning workflow', () => {
+    const drawer = read('applicant-workspace-drawer.tsx');
+    const documents = read('generated-document-operations.tsx');
+
+    expect(drawer).toContain('allowedDocumentTypes={examDocumentTypes}');
+    expect(drawer).toContain('AdmissionCrmGeneratedDocumentType.HallTicket');
+    expect(drawer).toContain('allowedDocumentTypes={registrationDocumentTypes}');
+    expect(drawer).toContain('allowedDocumentTypes={offerDocumentTypes}');
+    expect(drawer).toContain('allowedDocumentTypes={activationDocumentTypes}');
+    expect(documents).toContain('useGetAdmissionCrmGeneratedDocumentAvailabilityQuery');
+    expect(documents).toContain('availableDocumentTypes.length === 0');
+  });
+
+  it('allows staff to upload registration checklist documents', () => {
+    const registration = read('applicant-registration-operations.tsx');
+
+    expect(registration).toContain('useUploadAdmissionCrmRegistrationDocumentMutation');
+    expect(registration).toContain('type="file"');
+    expect(registration).toContain('registrationApplicationId: registration.id');
+    expect(registration).toContain('document.validityDateRequired');
+    expect(registration).toContain('Students.Enrollment.AdmissionsCrm.ReviewDocuments');
+    expect(registration).toContain('canUploadDocuments ?');
+  });
+
   it('uses switches and chips for operational booleans while retaining explicit consent', () => {
     const activation = read('applicant-activation-operations.tsx');
     const offers = read('applicant-final-admission-operations.tsx');

@@ -957,6 +957,7 @@ export type AdmissionCrmExamDefinitionDto = {
   board?: string | null;
   medium?: string | null;
   durationMinutes: number;
+  hallTicketEnabled: boolean;
   instructions?: string | null;
   components: AdmissionCrmExamComponentDto[];
   resultRule: AdmissionCrmExamResultRuleDto;
@@ -3811,6 +3812,13 @@ export type AdmissionCrmGeneratedDocumentHistoryDto = {
   actorUserId?: string | null;
 };
 
+export type AdmissionCrmGeneratedDocumentAvailabilityDto = {
+  documentType: AdmissionCrmGeneratedDocumentType;
+  isAvailable: boolean;
+  reasonCode?: string | null;
+  message: string;
+};
+
 export const StudentAdmissionsCrmApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getAdmissionCrmInquirySources: builder.query<
@@ -3910,6 +3918,16 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         method: 'GET',
       }),
       providesTags: [studentAdmissionsCrmType.timeline],
+    }),
+    getAdmissionCrmGeneratedDocumentAvailability: builder.query<
+      AdmissionCrmGeneratedDocumentAvailabilityDto[],
+      { leadId: string }
+    >({
+      query: ({ leadId }) => ({
+        url: `/student-enrollment/admissions-crm/leads/${leadId}/documents/availability`,
+        method: 'GET',
+      }),
+      providesTags: [studentAdmissionsCrmType.lead, studentAdmissionsCrmType.exam],
     }),
     createAdmissionCrmLead: builder.mutation<
       AdmissionCrmLeadDto,
@@ -4596,6 +4614,28 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         method: 'GET',
       }),
       providesTags: [studentAdmissionsCrmType.lead],
+    }),
+    uploadAdmissionCrmRegistrationDocument: builder.mutation<
+      AdmissionCrmApplicantDocumentChecklistDto,
+      {
+        registrationApplicationId: string;
+        requirementKey: string;
+        file: File;
+        validUntil?: string | null;
+      }
+    >({
+      query: ({ registrationApplicationId, requirementKey, file, validUntil }) => {
+        const body = new FormData();
+        body.append('requirementKey', requirementKey);
+        body.append('file', file);
+        if (validUntil) body.append('validUntil', validUntil);
+        return {
+          url: `/student-enrollment/admissions-crm/registrations/${registrationApplicationId}/documents`,
+          method: 'POST',
+          body,
+        };
+      },
+      invalidatesTags: [studentAdmissionsCrmType.lead, studentAdmissionsCrmType.timeline],
     }),
     reviewAdmissionCrmApplicantDocument: builder.mutation<
       AdmissionCrmApplicantDocumentDto,
@@ -6559,6 +6599,7 @@ export const {
   usePreviewAdmissionCrmGeneratedDocumentMutation,
   useIssueAdmissionCrmGeneratedDocumentMutation,
   useGetAdmissionCrmGeneratedDocumentHistoryQuery,
+  useGetAdmissionCrmGeneratedDocumentAvailabilityQuery,
   useCreateAdmissionCrmLeadMutation,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
   useAssignAdmissionCrmLeadOwnerMutation,
@@ -6627,6 +6668,7 @@ export const {
   useRetireAdmissionCrmDocumentChecklistTemplateMutation,
   useAssignAdmissionCrmDocumentChecklistMutation,
   useGetAdmissionCrmApplicantDocumentChecklistQuery,
+  useUploadAdmissionCrmRegistrationDocumentMutation,
   useReviewAdmissionCrmApplicantDocumentMutation,
   useConfirmAdmissionCrmDocumentOriginalSeenMutation,
   useWaiveAdmissionCrmApplicantDocumentMutation,

@@ -239,6 +239,61 @@ async function createCrmLead(page: Page, academicYearId: string, phone: string, 
   return response.json();
 }
 
+async function createPublishedRegistrationTemplate(
+  page: Page,
+  academicYearId: string,
+  desiredClass: string,
+  name: string
+) {
+  const createResponse = await crmApiRequest(
+    page,
+    `/student-enrollment/admissions-crm/${academicYearId}/configuration/registration-templates`,
+    {
+      method: 'POST',
+      body: {
+        name,
+        isFallback: false,
+        applicability: { desiredClass },
+        sections: [
+          {
+            key: 'student',
+            title: 'Student details',
+            displayOrder: 10,
+            parentVisible: true,
+            fields: [
+              {
+                key: 'studentFirstName',
+                label: 'Student first name',
+                fieldType: 0,
+                systemField: 'firstName',
+                required: true,
+                parentEditable: false,
+                displayOrder: 10,
+                options: [],
+              },
+            ],
+          },
+        ],
+        linkExpiryDays: 14,
+        allowPartialSave: true,
+        feeRequired: false,
+        feeAmount: 0,
+      },
+    }
+  );
+  await expectOk(createResponse, 'create registration template for UI issuance');
+  const template = await createResponse.json();
+  await expectOk(
+    await crmApiRequest(
+      page,
+      `/student-enrollment/admissions-crm/configuration/registration-templates/${template.id}/publish`,
+      { method: 'POST' }
+    ),
+    'publish registration template for UI issuance'
+  );
+  return template;
+}
+
 async function getAvailableEntranceExamSlot(page: Page, academicYearId: string) {
   const response = await crmApiRequest(
     page,
@@ -693,7 +748,7 @@ test.describe('Student admissions CRM E2E', () => {
       timeout: 60_000,
     });
     await expect(page).toHaveURL(
-      new RegExp(`/student/enrollment/settings/journey/?\\?cycle=${academicYearId}`)
+      new RegExp(`/student/enrollment/settings/?\\?cycle=${academicYearId}`)
     );
 
     await page.goto('/student/enrollment/pipeline?stage=999&page=-2', {
@@ -713,6 +768,11 @@ test.describe('Student admissions CRM E2E', () => {
       timeout: 60_000,
     });
     await expect(page).toHaveURL(
+      new RegExp(`/student/enrollment/settings/?\\?cycle=${academicYearId}`)
+    );
+    await expect(page.getByRole('heading', { name: 'Enrollment Setup Center' })).toBeVisible();
+    await page.locator('a[href^="/student/enrollment/settings/journey"]').first().click();
+    await expect(page).toHaveURL(
       new RegExp(`/student/enrollment/settings/journey/?\\?cycle=${academicYearId}`)
     );
     await expect(page.getByRole('heading', { name: 'Admission Journey' })).toBeVisible();
@@ -722,11 +782,11 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(cycleName).not.toHaveValue('');
     const originalCycleName = await cycleName.inputValue();
     await cycleName.fill(`${originalCycleName} unsaved`);
-    await page.getByRole('link', { name: /Applicant Stages/ }).click();
+    await page.getByRole('tab', { name: /Applicant Stages/ }).click();
     await expect(page.getByRole('dialog', { name: 'Discard Unsaved Changes?' })).toBeVisible();
     await page.getByRole('button', { name: 'Discard & Continue' }).click();
     await expect(page).toHaveURL(/panel=pipeline/);
-    await page.getByRole('link', { name: /Admission Cycle/ }).click();
+    await page.getByRole('tab', { name: /Admission Cycle/ }).click();
     await expect(page.getByRole('textbox', { name: 'Cycle name' })).toHaveValue(originalCycleName);
 
     const inquiryCaptureLink = page.getByRole('link', { name: 'Inquiry Forms & Sources' });
@@ -749,7 +809,18 @@ test.describe('Student admissions CRM E2E', () => {
     await expect(page.getByRole('button', { name: 'Columns' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Export' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'New Playbook' }).click();
+    await page.getByRole('button', { name: 'Quick setup' }).click();
+    const quickSetupDialog = page.getByRole('dialog', { name: 'Quick admission setup' });
+    await expect(quickSetupDialog).toBeVisible();
+    await expect(quickSetupDialog.getByLabel('Assessment process')).toHaveText(
+      'Written entrance exam'
+    );
+    await expect(
+      quickSetupDialog.getByRole('switch', { name: 'Generate hall tickets for this exam' })
+    ).not.toBeChecked();
+    await quickSetupDialog.getByRole('button', { name: 'Cancel' }).click();
+
+    await page.getByRole('button', { name: 'Advanced setup' }).click();
     await expect(page.getByRole('dialog', { name: 'New Admissions Playbook' })).toBeVisible();
     await expect(page.getByText('General', { exact: true })).toBeVisible();
     await expect(page.getByText('Slots & Rules', { exact: true })).toBeVisible();
@@ -1089,9 +1160,17 @@ test.describe('Student admissions CRM E2E', () => {
     const academicYearId = await resolveAcademicYearId(page);
     const originalCycle = await getCrmCycleConfiguration(page, academicYearId);
     await updateCrmCycleRegistrationGate(page, academicYearId, originalCycle, true);
+    let registrationTemplate: { id: string } | undefined;
 
     try {
       const lead = await createCrmLead(page, academicYearId, uniquePhone(), 'FormGate');
+      const registrationTemplateName = uniqueToken('Playwright exam gate ');
+      registrationTemplate = await createPublishedRegistrationTemplate(
+        page,
+        academicYearId,
+        'Grade 1',
+        registrationTemplateName
+      );
       const slot = await getAvailableEntranceExamSlot(page, academicYearId);
 
       const blockedSchedule = await crmApiRequest(
@@ -1110,28 +1189,30 @@ test.describe('Student admissions CRM E2E', () => {
       );
 
       const leadCard = await openLeadCardInWorkspace(page, lead.firstName, academicYearId);
-      await expect(leadCard.getByText('Form pending')).toBeVisible();
-      await leadCard.getByRole('button', { name: /Issue Form/i }).click();
-
-      const formNumber = `E2E-${uniqueToken('').toUpperCase()}`;
-      const formDialog = page.getByRole('dialog', { name: /Issue Registration Form/i });
-      await expect(formDialog).toBeVisible({ timeout: 15_000 });
-      await formDialog.getByLabel('Form number').fill(formNumber);
-      await formDialog.getByLabel('Amount').fill('250');
-      await formDialog.getByRole('button', { name: /^Issue Form$/i }).click();
+      await expect(leadCard.getByText('Registration not issued')).toBeVisible();
+      await leadCard.getByRole('button', { name: 'Registration' }).click();
+      await expect(page.getByText('Registration has not been issued')).toBeVisible();
+      await page.getByRole('button', { name: 'Issue registration' }).click();
+      await page.getByLabel('Registration template').click();
+      await page.getByRole('option', { name: `${registrationTemplateName} - v1` }).click();
+      await page.getByRole('button', { name: 'Issue', exact: true }).click();
 
       await expect
         .poll(async () => (await getCrmLead(page, lead.id)).registrationFormNumber, {
           timeout: 30_000,
           message: 'Registration form issue should persist.',
         })
-        .toBe(formNumber);
+        .not.toBeFalsy();
+      const issuedLead = await getCrmLead(page, lead.id);
+      expect(issuedLead.registrationFormNumber).toBeTruthy();
+      const issuedFormNumber = String(issuedLead.registrationFormNumber);
+      await expect(leadCard.getByText(new RegExp(escapeRegExp(issuedFormNumber)))).toBeVisible();
 
       const timeline = await getCrmTimeline(page, lead.id);
       expect(
         timeline?.items?.some(
           (item: { eventType?: number; details?: string }) =>
-            item.eventType === 20 && item.details?.includes(formNumber)
+            item.eventType === 20 && item.details?.includes(issuedFormNumber)
         ),
         'Registration form issue should be recorded in the CRM timeline.'
       ).toBe(true);
@@ -1149,6 +1230,13 @@ test.describe('Student admissions CRM E2E', () => {
       expect(scheduled?.leadId).toBe(lead.id);
       expect(scheduled?.entranceExamSlotId).toBe(slot.id);
     } finally {
+      if (registrationTemplate?.id) {
+        await crmApiRequest(
+          page,
+          `/student-enrollment/admissions-crm/configuration/registration-templates/${registrationTemplate.id}/retire`,
+          { method: 'POST' }
+        );
+      }
       await updateCrmCycleRegistrationGate(
         page,
         academicYearId,
