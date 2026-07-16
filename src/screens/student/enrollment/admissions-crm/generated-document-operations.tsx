@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import { Download, Visibility, Description } from '@mui/icons-material';
@@ -10,12 +10,16 @@ import {
   useIssueAdmissionCrmGeneratedDocumentMutation,
   useGetAdmissionCrmGeneratedDocumentHistoryQuery,
   usePreviewAdmissionCrmGeneratedDocumentMutation,
+  useGetAdmissionCrmGeneratedDocumentAvailabilityQuery,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { ApplicantSection } from './applicant-workspace-primitives';
 
 type Props = {
   leadId: string;
+  allowedDocumentTypes?: readonly AdmissionCrmGeneratedDocumentType[];
+  title?: string;
+  description?: string;
 };
 
 const documentTypeLabels: Record<AdmissionCrmGeneratedDocumentType, string> = {
@@ -61,9 +65,35 @@ const openPdf = (content: string, fileName: string, download: boolean) => {
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 };
 
-export function GeneratedDocumentOperations({ leadId }: Props) {
+export function GeneratedDocumentOperations({
+  leadId,
+  allowedDocumentTypes,
+  title = 'Generated documents',
+  description = 'Preview and issue applicant-safe documents with an audited history.',
+}: Props) {
+  const configuredDocumentTypes = useMemo(
+    () => (allowedDocumentTypes?.length ? [...allowedDocumentTypes] : documentTypes),
+    [allowedDocumentTypes]
+  );
+  const availabilityQuery = useGetAdmissionCrmGeneratedDocumentAvailabilityQuery({ leadId });
+  const availableDocumentTypes = useMemo(
+    () =>
+      configuredDocumentTypes.filter(
+        (type) =>
+          !availabilityQuery.data ||
+          availabilityQuery.data.some((item) => item.documentType === type && item.isAvailable)
+      ),
+    [availabilityQuery.data, configuredDocumentTypes]
+  );
+  const unavailableDocuments = useMemo(
+    () =>
+      (availabilityQuery.data || []).filter(
+        (item) => configuredDocumentTypes.includes(item.documentType) && !item.isAvailable
+      ),
+    [availabilityQuery.data, configuredDocumentTypes]
+  );
   const [documentType, setDocumentType] = useState<AdmissionCrmGeneratedDocumentType>(
-    AdmissionCrmGeneratedDocumentType.HallTicket
+    configuredDocumentTypes[0]
   );
   const [language, setLanguage] = useState('en');
   const [reason, setReason] = useState('');
@@ -71,6 +101,23 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
   const [preview, previewState] = usePreviewAdmissionCrmGeneratedDocumentMutation();
   const [issue, issueState] = useIssueAdmissionCrmGeneratedDocumentMutation();
   const historyQuery = useGetAdmissionCrmGeneratedDocumentHistoryQuery({ leadId });
+  const visibleHistory = useMemo(
+    () =>
+      (historyQuery.data || []).filter((item) =>
+        configuredDocumentTypes.includes(item.documentType)
+      ),
+    [configuredDocumentTypes, historyQuery.data]
+  );
+
+  useEffect(() => {
+    if (availableDocumentTypes.length > 0 && !availableDocumentTypes.includes(documentType)) {
+      setDocumentType(availableDocumentTypes[0]);
+    }
+  }, [availableDocumentTypes, documentType]);
+
+  useEffect(() => {
+    if (availabilityQuery.data && availableDocumentTypes.length === 0) setEditorOpen(false);
+  }, [availabilityQuery.data, availableDocumentTypes.length]);
 
   const runPreview = async () => {
     try {
@@ -100,13 +147,14 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
 
   return (
     <ApplicantSection
-      title="Generated documents"
-      description="Preview and issue applicant-safe documents with an audited history."
+      title={title}
+      description={description}
       action={
         <Button
           size="small"
           variant={editorOpen ? 'text' : 'outlined'}
           startIcon={<Description />}
+          disabled={availabilityQuery.isFetching || availableDocumentTypes.length === 0}
           onClick={() => setEditorOpen((current) => !current)}
         >
           {editorOpen ? 'Close' : 'Generate document'}
@@ -121,6 +169,13 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
           variant="outlined"
           sx={{ alignSelf: 'flex-start' }}
         />
+        {availableDocumentTypes.length === 0
+          ? unavailableDocuments.map((item) => (
+              <Alert key={item.documentType} severity="info">
+                {item.message}
+              </Alert>
+            ))
+          : null}
         {editorOpen ? (
           <>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
@@ -134,7 +189,7 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
                   setDocumentType(Number(event.target.value) as AdmissionCrmGeneratedDocumentType)
                 }
               >
-                {documentTypes.map((type) => (
+                {availableDocumentTypes.map((type) => (
                   <MenuItem key={type} value={type}>
                     {documentTypeLabels[type]}
                   </MenuItem>
@@ -187,12 +242,12 @@ export function GeneratedDocumentOperations({ leadId }: Props) {
         {historyQuery.isError ? (
           <Alert severity="warning">Document history is temporarily unavailable.</Alert>
         ) : null}
-        {(historyQuery.data || []).length > 0 ? (
+        {visibleHistory.length > 0 ? (
           <Stack spacing={0.75}>
             <Typography variant="caption" color="text.secondary">
               Issue history
             </Typography>
-            {(historyQuery.data || []).map((item) => (
+            {visibleHistory.map((item) => (
               <Stack
                 key={item.timelineEventId}
                 direction={{ xs: 'column', sm: 'row' }}

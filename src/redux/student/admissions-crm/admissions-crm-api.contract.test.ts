@@ -964,6 +964,10 @@ describe('admissions CRM API contracts', () => {
     expect(StudentAdmissionsCrmApi.endpoints.verifyAdmissionCrmRegistration).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.extendAdmissionCrmRegistration).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.reissueAdmissionCrmRegistration).toBeTruthy();
+    expect(StudentAdmissionsCrmApi.endpoints.uploadAdmissionCrmRegistrationDocument).toBeTruthy();
+    expect(
+      StudentAdmissionsCrmApi.endpoints.getAdmissionCrmGeneratedDocumentAvailability
+    ).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.reviewAdmissionCrmApplicantDocument).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.waiveAdmissionCrmApplicantDocument).toBeTruthy();
     expect(StudentAdmissionsCrmApi.endpoints.confirmAdmissionCrmDocumentReadiness).toBeTruthy();

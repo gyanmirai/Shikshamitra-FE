@@ -10,10 +10,6 @@ import { useMemo, useState, useEffect } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { CustomTabs } from 'src/components/custom-tabs';
 import {
-  useGetAdmissionCrmLeadQuery,
-  useGetAdmissionCrmPipelineStagesQuery,
-} from 'src/redux/student/admissions-crm/admissions-crm-api';
-import {
   Box,
   Tab,
   Chip,
@@ -28,6 +24,12 @@ import {
   IconButton,
   LinearProgress,
 } from '@mui/material';
+import {
+  AdmissionInquiryStage,
+  useGetAdmissionCrmLeadQuery,
+  AdmissionCrmGeneratedDocumentType,
+  useGetAdmissionCrmPipelineStagesQuery,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { AdmissionCrmStageChip } from './admission-crm-stage-chip';
 import { ApplicantWorkspaceOverview } from './applicant-workspace-overview';
@@ -90,6 +92,8 @@ type Props = {
   initialTab?: ApplicantDrawerTab;
   onTabChange?: (tab: ApplicantDrawerTab) => void;
   onClose: () => void;
+  context?: 'full' | 'pipeline';
+  allowRegistrationBeforeExam?: boolean;
 };
 
 const sections: Array<{ value: ApplicantDrawerTab; label: string; icon: string }> = [
@@ -101,12 +105,34 @@ const sections: Array<{ value: ApplicantDrawerTab; label: string; icon: string }
   { value: 'governance', label: 'Governance', icon: 'solar:shield-check-bold-duotone' },
 ];
 
+const examDocumentTypes = [AdmissionCrmGeneratedDocumentType.HallTicket] as const;
+const registrationDocumentTypes = [
+  AdmissionCrmGeneratedDocumentType.RegistrationAcknowledgement,
+  AdmissionCrmGeneratedDocumentType.CorrectionNotice,
+] as const;
+const offerDocumentTypes = [AdmissionCrmGeneratedDocumentType.OfferLetter] as const;
+const activationDocumentTypes = [
+  AdmissionCrmGeneratedDocumentType.AdmissionLetter,
+  AdmissionCrmGeneratedDocumentType.CancellationLetter,
+] as const;
+
+const pipelineExamStages = new Set([
+  AdmissionInquiryStage.ExamReady,
+  AdmissionInquiryStage.ExamScheduled,
+  AdmissionInquiryStage.ExamCompleted,
+  AdmissionInquiryStage.Eligible,
+  AdmissionInquiryStage.Waitlisted,
+  AdmissionInquiryStage.Rejected,
+]);
+
 function ApplicantWorkspaceDrawerContent({
   leadId,
   academicYearId,
   initialTab = 'overview',
   onTabChange,
   onClose,
+  context = 'full',
+  allowRegistrationBeforeExam = false,
 }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -127,9 +153,32 @@ function ApplicantWorkspaceDrawerContent({
     lead && currentStage?.slaTargetHours
       ? dayjs(lead.lastActivityTime).add(currentStage.slaTargetHours, 'hour')
       : null;
-  const selectedSection = sections.find((section) => section.value === tab) || sections[0];
+  const availableSections = useMemo(() => {
+    if (context !== 'pipeline' || !lead) return sections;
+    return sections.filter((section) => {
+      if (section.value === 'overview') return true;
+      if (section.value === 'exam') return pipelineExamStages.has(lead.stage);
+      if (section.value === 'registration') {
+        return Boolean(
+          allowRegistrationBeforeExam ||
+          lead.registrationFormIssuedAt ||
+          lead.registrationFormNumber ||
+          lead.stage === AdmissionInquiryStage.Eligible ||
+          lead.stage === AdmissionInquiryStage.Waitlisted
+        );
+      }
+      return false;
+    });
+  }, [allowRegistrationBeforeExam, context, lead]);
+  const selectedSection =
+    availableSections.find((section) => section.value === tab) || availableSections[0];
 
   useEffect(() => setTab(initialTab), [initialTab, leadId]);
+  useEffect(() => {
+    if (!lead || availableSections.some((section) => section.value === tab)) return;
+    setTab('overview');
+    onTabChange?.('overview');
+  }, [availableSections, lead, onTabChange, tab]);
 
   const changeTab = (nextTab: ApplicantDrawerTab) => {
     if (nextTab === tab) return;
@@ -237,7 +286,7 @@ function ApplicantWorkspaceDrawerContent({
               MenuListProps={{ 'aria-label': 'Applicant workspace sections' }}
               slotProps={{ paper: { sx: { width: 'calc(100vw - 24px)', maxWidth: 420 } } }}
             >
-              {sections.map((section) => (
+              {availableSections.map((section) => (
                 <MenuItem
                   key={section.value}
                   selected={section.value === tab}
@@ -265,7 +314,7 @@ function ApplicantWorkspaceDrawerContent({
               tab: { px: 1.25, minHeight: 40 },
             }}
           >
-            {sections.map((section) => (
+            {availableSections.map((section) => (
               <Tab
                 key={section.value}
                 value={section.value}
@@ -316,7 +365,15 @@ function ApplicantWorkspaceDrawerContent({
           ) : null}
 
           {leadId && academicYearId && tab === 'exam' ? (
-            <ApplicantExamSummary leadId={leadId} academicYearId={academicYearId} />
+            <Stack spacing={2}>
+              <ApplicantExamSummary leadId={leadId} academicYearId={academicYearId} />
+              <GeneratedDocumentOperations
+                leadId={leadId}
+                allowedDocumentTypes={examDocumentTypes}
+                title="Exam documents"
+                description="Generate a hall ticket only when the school uses one for entrance exams."
+              />
+            </Stack>
           ) : null}
           {leadId && academicYearId && tab === 'registration' ? (
             <Stack spacing={2}>
@@ -327,17 +384,37 @@ function ApplicantWorkspaceDrawerContent({
                   lead?.registrationFormIssuedAt || lead?.registrationFormNumber
                 )}
               />
-              <GeneratedDocumentOperations leadId={leadId} />
+              <GeneratedDocumentOperations
+                leadId={leadId}
+                allowedDocumentTypes={registrationDocumentTypes}
+                title="Registration documents"
+                description="Generate registration acknowledgements and correction notices."
+              />
             </Stack>
           ) : null}
           {leadId && academicYearId && tab === 'offer' ? (
             <Stack spacing={2}>
               <ApplicantFinalAdmissionOperations leadId={leadId} academicYearId={academicYearId} />
               <ApplicantFinancialReadiness leadId={leadId} academicYearId={academicYearId} />
+              <GeneratedDocumentOperations
+                leadId={leadId}
+                allowedDocumentTypes={offerDocumentTypes}
+                title="Offer documents"
+                description="Preview and issue the applicant's approved seat offer letter."
+              />
             </Stack>
           ) : null}
           {leadId && academicYearId && tab === 'activation' ? (
-            <ApplicantActivationOperations leadId={leadId} academicYearId={academicYearId} />
+            <Stack spacing={2}>
+              <ApplicantFinancialReadiness leadId={leadId} academicYearId={academicYearId} />
+              <ApplicantActivationOperations leadId={leadId} academicYearId={academicYearId} />
+              <GeneratedDocumentOperations
+                leadId={leadId}
+                allowedDocumentTypes={activationDocumentTypes}
+                title="Admission documents"
+                description="Issue admission or cancellation letters from the activation workflow."
+              />
+            </Stack>
           ) : null}
           {leadId && academicYearId && tab === 'governance' ? (
             <Stack spacing={2}>

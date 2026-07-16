@@ -178,6 +178,34 @@ describe('Enrollment settings route contracts', () => {
     expect(registrations).toContain("label: 'Issue Method'");
   });
 
+  it('offers a concise school-first exam setup while retaining advanced rules', () => {
+    const playbooks = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'admissions-playbook-configuration.tsx'
+    );
+    const route = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'setting',
+      'exam-settings-route.tsx'
+    );
+
+    expect(playbooks).toContain('Quick admission setup');
+    expect(playbooks).toContain('Written entrance exam');
+    expect(playbooks).toContain('Student interaction only');
+    expect(playbooks).toContain('No entrance assessment');
+    expect(playbooks).toContain('Generate hall tickets for this exam');
+    expect(playbooks).toContain('Advanced setup');
+    expect(playbooks).toContain('hallTicketEnabled: false');
+    expect(route).toContain('whether the school issues hall tickets');
+  });
+
   it('explains operational handoffs and progressively discloses applicant stage editing', () => {
     const guidance = read(
       'src',

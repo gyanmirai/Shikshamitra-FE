@@ -60,9 +60,9 @@ import {
   useBulkCreateAdmissionCrmTasksMutation,
   useBulkChangeAdmissionCrmStagesMutation,
   useBulkArchiveAdmissionCrmLeadsMutation,
+  useGetAdmissionCrmCycleConfigurationQuery,
   useScheduleAdmissionCrmEntranceExamMutation,
   useBulkAssignAdmissionCrmLeadOwnersMutation,
-  useIssueAdmissionCrmRegistrationFormMutation,
   usePreviewAdmissionCrmLeadDuplicatesMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
@@ -177,17 +177,29 @@ const isExamReady = (lead: AdmissionCrmLeadDto) =>
     (lead.desiredClassName || lead.targetStandardId)
   );
 
+const canOpenRegistration = (lead: AdmissionCrmLeadDto, registrationRequiredBeforeExam = false) =>
+  Boolean(
+    registrationRequiredBeforeExam ||
+    lead.registrationFormNumber ||
+    lead.registrationFormIssuedAt ||
+    lead.stage === AdmissionInquiryStage.Eligible ||
+    lead.stage === AdmissionInquiryStage.Waitlisted
+  );
+
+const isRegistrationIssued = (lead: AdmissionCrmLeadDto) =>
+  Boolean(lead.registrationFormNumber || lead.registrationFormIssuedAt);
+
 type LeadCardProps = {
   lead: AdmissionCrmLeadDto;
   ownerName: string;
   selected?: boolean;
   showSelection?: boolean;
   canScheduleExam: boolean;
-  canIssueRegistrationForm: boolean;
+  canManageRegistration: boolean;
   onSelect?: () => void;
   onOpen: () => void;
   onSchedule: () => void;
-  onIssueRegistrationForm: () => void;
+  onOpenRegistration: () => void;
 };
 
 function PipelineLeadCard({
@@ -196,11 +208,11 @@ function PipelineLeadCard({
   selected,
   showSelection,
   canScheduleExam,
-  canIssueRegistrationForm,
+  canManageRegistration,
   onSelect,
   onOpen,
   onSchedule,
-  onIssueRegistrationForm,
+  onOpenRegistration,
 }: LeadCardProps) {
   return (
     <Card variant="outlined" sx={{ p: 1.25, borderRadius: 1, minWidth: 0 }}>
@@ -235,9 +247,28 @@ function PipelineLeadCard({
             size="small"
             icon={<ReceiptLongRounded />}
             label={
-              lead.registrationFormNumber ? `Form ${lead.registrationFormNumber}` : 'Form pending'
+              lead.registrationFormNumber
+                ? `Registration ${lead.registrationFormNumber}`
+                : isRegistrationIssued(lead)
+                  ? 'Registration issued'
+                  : 'Registration not issued'
             }
             variant="outlined"
+            color="default"
+            sx={
+              isRegistrationIssued(lead)
+                ? (theme) => ({
+                    color: theme.palette.text.primary,
+                    borderColor: theme.palette.success.main,
+                    '& .MuiChip-icon': {
+                      color:
+                        theme.palette.mode === 'dark'
+                          ? theme.palette.success.light
+                          : theme.palette.success.dark,
+                    },
+                  })
+                : undefined
+            }
           />
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
@@ -248,13 +279,9 @@ function PipelineLeadCard({
             {dayjs(lead.lastActivityTime).format('DD MMM, HH:mm')}
           </Typography>
           <Stack direction="row" gap={1}>
-            {canIssueRegistrationForm && !lead.registrationFormNumber && !lead.archivedAt && (
-              <Button
-                size="small"
-                startIcon={<ReceiptLongRounded />}
-                onClick={onIssueRegistrationForm}
-              >
-                Issue Form
+            {canManageRegistration && !lead.archivedAt && (
+              <Button size="small" startIcon={<ReceiptLongRounded />} onClick={onOpenRegistration}>
+                Registration
               </Button>
             )}
             {canScheduleExam && isExamReady(lead) && !lead.archivedAt && (
@@ -288,9 +315,6 @@ export function PipelineWorkspace() {
   );
   const [duplicateReviewed, setDuplicateReviewed] = useState(false);
   const [scheduleLead, setScheduleLead] = useState<AdmissionCrmLeadDto | null>(null);
-  const [registrationLead, setRegistrationLead] = useState<AdmissionCrmLeadDto | null>(null);
-  const [registrationFormNumber, setRegistrationFormNumber] = useState('');
-  const [registrationFormAmount, setRegistrationFormAmount] = useState('250');
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [overrideCapacity, setOverrideCapacity] = useState(false);
   const [capacityOverrideReason, setCapacityOverrideReason] = useState('');
@@ -362,13 +386,18 @@ export function PipelineWorkspace() {
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId || !scheduleLead }
   );
+  const cycleConfigurationQuery = useGetAdmissionCrmCycleConfigurationQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !academicYearId }
+  );
+  const registrationRequiredBeforeExam = Boolean(
+    cycleConfigurationQuery.data?.registrationFormRequiredBeforeExam
+  );
 
   const [createLead, createLeadState] = useCreateAdmissionCrmLeadMutation();
   const [previewDuplicates, previewDuplicatesState] =
     usePreviewAdmissionCrmLeadDuplicatesMutation();
   const [scheduleExam, scheduleExamState] = useScheduleAdmissionCrmEntranceExamMutation();
-  const [issueRegistrationForm, issueRegistrationFormState] =
-    useIssueAdmissionCrmRegistrationFormMutation();
   const [bulkAssignOwners, bulkAssignOwnersState] = useBulkAssignAdmissionCrmLeadOwnersMutation();
   const [bulkCreateTasks, bulkCreateTasksState] = useBulkCreateAdmissionCrmTasksMutation();
   const [bulkChangeStages, bulkChangeStagesState] = useBulkChangeAdmissionCrmStagesMutation();
@@ -587,6 +616,39 @@ export function PipelineWorkspace() {
         render: (value) => <AdmissionCrmStageChip stage={value as AdmissionInquiryStage} />,
       },
       {
+        id: 'registrationFormNumber',
+        label: 'Registration',
+        width: 180,
+        minWidth: 165,
+        isSort: false,
+        isFilter: false,
+        render: (_value, row) => {
+          const lead = row as AdmissionCrmLeadDto;
+          return (
+            <Chip
+              size="small"
+              variant="outlined"
+              color="default"
+              sx={
+                isRegistrationIssued(lead)
+                  ? (theme) => ({
+                      color: theme.palette.text.primary,
+                      borderColor: theme.palette.success.main,
+                    })
+                  : undefined
+              }
+              label={
+                lead.registrationFormNumber
+                  ? `Issued · ${lead.registrationFormNumber}`
+                  : isRegistrationIssued(lead)
+                    ? 'Issued'
+                    : 'Not issued'
+              }
+            />
+          );
+        },
+      },
+      {
         id: 'channel',
         label: 'Channel',
         width: 155,
@@ -661,17 +723,19 @@ export function PipelineWorkspace() {
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
           const canSchedule =
-            hasGrantedPermission(permissions, actionPermissions.scheduleExam) && isExamReady(lead);
-          const canIssueForm =
+            hasGrantedPermission(permissions, actionPermissions.scheduleExam) &&
+            isExamReady(lead) &&
+            (!registrationRequiredBeforeExam || isRegistrationIssued(lead));
+          const canManageRegistration =
             hasGrantedPermission(permissions, actionPermissions.issueRegistrationForm) &&
-            !lead.registrationFormNumber;
+            canOpenRegistration(lead, registrationRequiredBeforeExam);
           return (
             <ThreeDotsActions
               placement="right-top"
               showViewIcon
               viewLabel="Open Applicant"
               handleViewClick={() => openApplicant(lead.id, 'overview')}
-              showThreeDots={canSchedule || canIssueForm}
+              showThreeDots={canSchedule || canManageRegistration}
               actions={({ popover }) => (
                 <MenuList>
                   {canSchedule && (
@@ -685,17 +749,15 @@ export function PipelineWorkspace() {
                       Schedule Exam
                     </MenuItem>
                   )}
-                  {canIssueForm && (
+                  {canManageRegistration && (
                     <MenuItem
                       onClick={() => {
                         popover.onClose();
-                        setRegistrationLead(lead);
-                        setRegistrationFormNumber('');
-                        setRegistrationFormAmount('250');
+                        openApplicant(lead.id, 'registration');
                       }}
                     >
                       <ReceiptLongRounded fontSize="small" />
-                      Issue Registration Form
+                      Open Registration
                     </MenuItem>
                   )}
                 </MenuList>
@@ -711,6 +773,7 @@ export function PipelineWorkspace() {
       ownerFilterOptions,
       ownerName,
       permissions,
+      registrationRequiredBeforeExam,
       selectedLeadIds.length,
       selectedLeadSet,
       stages,
@@ -797,34 +860,6 @@ export function PipelineWorkspace() {
     }
   };
 
-  const handleIssueRegistrationForm = async () => {
-    if (!registrationLead) return;
-    const formNumber = registrationFormNumber.trim().toUpperCase();
-    const amount = Number(registrationFormAmount);
-    if (!formNumber) {
-      shikshaMitraToast.error({ message: 'Enter a registration form number.' });
-      return;
-    }
-    if (!Number.isFinite(amount) || amount <= 0) {
-      shikshaMitraToast.error({ message: 'Enter a valid registration amount.' });
-      return;
-    }
-    try {
-      await issueRegistrationForm({
-        leadId: registrationLead.id,
-        body: { formNumber, amount },
-      }).unwrap();
-      setRegistrationLead(null);
-      setRegistrationFormNumber('');
-      setRegistrationFormAmount('250');
-      shikshaMitraToast.success({ message: 'Registration form issued.' });
-    } catch {
-      shikshaMitraToast.error({
-        message: 'The registration form could not be issued. Review the number and retry.',
-      });
-    }
-  };
-
   const handleBulkAction = async () => {
     if (!academicYearId || !bulkAction || !selectedLeadIds.length) return;
     try {
@@ -884,8 +919,14 @@ export function PipelineWorkspace() {
       ownerName={ownerName(lead)}
       selected={selectedLeadSet.has(lead.id)}
       showSelection={state.view === 'list'}
-      canScheduleExam={can(actionPermissions.scheduleExam)}
-      canIssueRegistrationForm={can(actionPermissions.issueRegistrationForm)}
+      canScheduleExam={
+        can(actionPermissions.scheduleExam) &&
+        (!registrationRequiredBeforeExam || isRegistrationIssued(lead))
+      }
+      canManageRegistration={
+        can(actionPermissions.issueRegistrationForm) &&
+        canOpenRegistration(lead, registrationRequiredBeforeExam)
+      }
       onSelect={() =>
         setSelectedLeadIds((current) =>
           current.includes(lead.id) ? current.filter((id) => id !== lead.id) : [...current, lead.id]
@@ -893,11 +934,7 @@ export function PipelineWorkspace() {
       }
       onOpen={() => openApplicant(lead.id)}
       onSchedule={() => setScheduleLead(lead)}
-      onIssueRegistrationForm={() => {
-        setRegistrationLead(lead);
-        setRegistrationFormNumber('');
-        setRegistrationFormAmount('250');
-      }}
+      onOpenRegistration={() => openApplicant(lead.id, 'registration')}
     />
   );
 
@@ -1339,51 +1376,6 @@ export function PipelineWorkspace() {
       </Dialog>
 
       <Dialog
-        open={Boolean(registrationLead)}
-        onClose={() => setRegistrationLead(null)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Issue Registration Form</DialogTitle>
-        <DialogContent>
-          <Stack spacing={1.25} sx={{ pt: 1 }}>
-            {registrationLead && (
-              <Alert severity="info">
-                {getAdmissionCrmLeadName(registrationLead)} ·{' '}
-                {registrationLead.desiredClassName || registrationLead.admissionIntent}
-              </Alert>
-            )}
-            <TextField
-              autoFocus
-              fullWidth
-              label="Form number"
-              value={registrationFormNumber}
-              onChange={(event) => setRegistrationFormNumber(event.target.value.toUpperCase())}
-            />
-            <TextField
-              fullWidth
-              label="Amount"
-              type="number"
-              value={registrationFormAmount}
-              onChange={(event) => setRegistrationFormAmount(event.target.value)}
-              slotProps={{ htmlInput: { min: 0.01, step: 0.01 } }}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRegistrationLead(null)}>Cancel</Button>
-          <LoadingButton
-            variant="contained"
-            loading={issueRegistrationFormState.isLoading}
-            disabled={!registrationFormNumber.trim() || Number(registrationFormAmount) <= 0}
-            onClick={handleIssueRegistrationForm}
-          >
-            Issue Form
-          </LoadingButton>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
         open={Boolean(scheduleLead)}
         onClose={() => setScheduleLead(null)}
         fullWidth
@@ -1564,6 +1556,8 @@ export function PipelineWorkspace() {
         initialTab={(state.applicantTab as ApplicantDrawerTab | undefined) || 'overview'}
         onTabChange={(nextTab) => updateState({ applicantTab: nextTab }, 'replace')}
         onClose={closeApplicant}
+        context="pipeline"
+        allowRegistrationBeforeExam={registrationRequiredBeforeExam}
       />
     </Stack>
   );

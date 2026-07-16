@@ -160,6 +160,17 @@ export function ApplicantFinancialReadiness({ leadId, academicYearId }: Props) {
         {readiness?.blockingReason ? (
           <Alert severity="warning">{readiness.blockingReason}</Alert>
         ) : null}
+        {!quotation && policies.length === 0 && !policiesQuery.isFetching ? (
+          <Alert severity="warning">
+            No published fee policy is available. Payment is treated as not required until a policy
+            and quotation are issued.
+          </Alert>
+        ) : (
+          <Alert severity="info">
+            Finance integration placeholder: record the confirmed amount and finance reference here.
+            Pending, reversed, or disputed gates block later admission milestones.
+          </Alert>
+        )}
 
         {!quotation ? (
           <Stack direction={{ xs: 'column', md: 'row' }} gap={1} alignItems={{ md: 'center' }}>

@@ -12,7 +12,7 @@ export function ExamSettingsRoute() {
   return (
     <EnrollmentSettingsPage
       title="Exam & Eligibility"
-      description="Configure admission paths, exam slots, assignment, result rules, and eligibility decisions."
+      description="Choose whether applicants need an exam, how results are decided, and whether the school issues hall tickets."
     >
       <ExamRegistrationHandoffGuidance />
       {academicYearId ? (
