@@ -212,11 +212,14 @@ export function EnrollmentOverviewWorkspace() {
         />
       ) : (
         <>
-          <Box
+          <Paper
+            variant="outlined"
             sx={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))',
-              gap: 1,
+              gridTemplateColumns: `repeat(${Math.max(metrics.length, 1)}, minmax(140px, 1fr))`,
+              borderRadius: 1.5,
+              overflowX: 'auto',
+              overflowY: 'hidden',
             }}
           >
             {metrics.map((metric) => {
@@ -224,56 +227,58 @@ export function EnrollmentOverviewWorkspace() {
                 metricPresentation[metric.key as keyof typeof metricPresentation];
 
               return (
-                <Paper
+                <Stack
                   key={metric.key}
-                  variant="outlined"
+                  direction="row"
+                  alignItems="center"
+                  gap={1}
                   sx={{
-                    p: 1.5,
+                    px: 1.25,
+                    py: 1,
                     minWidth: 0,
-                    borderRadius: 1.5,
-                    borderTop: 3,
-                    borderTopColor: presentation.color,
+                    minHeight: 68,
+                    borderRight: 1,
+                    borderRightColor: 'divider',
+                    '&:last-of-type': { borderRight: 0 },
                   }}
                 >
-                  <Stack
-                    direction="row"
-                    alignItems="flex-start"
-                    justifyContent="space-between"
-                    gap={1}
+                  <Box
+                    aria-hidden="true"
+                    sx={{
+                      display: 'grid',
+                      placeItems: 'center',
+                      flexShrink: 0,
+                      width: 30,
+                      height: 30,
+                      borderRadius: 1,
+                      color: presentation.color,
+                      bgcolor: presentation.surface,
+                      '& .MuiSvgIcon-root': { fontSize: 18 },
+                    }}
                   >
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="h5" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                        {metric.value}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ lineHeight: 1.35 }}
-                      >
-                        {metric.label}
-                      </Typography>
-                    </Box>
-                    <Box
-                      aria-hidden="true"
-                      sx={{
-                        display: 'grid',
-                        placeItems: 'center',
-                        flexShrink: 0,
-                        width: 32,
-                        height: 32,
-                        borderRadius: 1,
-                        color: presentation.color,
-                        bgcolor: presentation.surface,
-                        '& .MuiSvgIcon-root': { fontSize: 19 },
-                      }}
+                    {presentation.icon}
+                  </Box>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}
                     >
-                      {presentation.icon}
-                    </Box>
-                  </Stack>
-                </Paper>
+                      {metric.value}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      noWrap
+                      title={metric.label}
+                      sx={{ display: 'block', mt: 0.5 }}
+                    >
+                      {metric.label}
+                    </Typography>
+                  </Box>
+                </Stack>
               );
             })}
-          </Box>
+          </Paper>
           <CustomizableTable
             tableId="student-enrollment-overview-urgent-work"
             tableTitle="Urgent Work"

@@ -129,6 +129,22 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(settings).toContain('Only active HR employees with Enrollment CRM access');
   });
 
+  it('filters pipeline owners through the shared table instead of a separate list filter', () => {
+    const pipeline = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'pipeline-workspace.tsx'
+    );
+
+    expect(pipeline).not.toContain('label="Pipeline owner"');
+    expect(pipeline).toContain("column: 'ownerUserId'");
+    expect(pipeline).toContain("owner: getLatestStringFilter(filters, 'ownerUserId')");
+    expect(pipeline).toContain('enumOptions: ownerFilterOptions');
+  });
+
   it('keeps the Enrollment navigation and registration title concise', () => {
     const menu = read('src', 'constants', 'student-menu.ts');
     const registration = read(
