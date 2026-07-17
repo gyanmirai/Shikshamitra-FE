@@ -193,6 +193,20 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(state).not.toContain("set('email'");
   });
 
+  it('renders legacy or unknown admission pathway values without crashing Pipeline', () => {
+    const pipeline = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'pipeline-workspace.tsx'
+    );
+
+    expect(pipeline).toContain("typeof value === 'string' && /^\\d+$/.test(value)");
+    expect(pipeline).toContain("|| 'Unknown pathway'");
+  });
+
   it('uses the global vertical menu without rendering duplicate workspace navigation', () => {
     const shell = read('src', 'screens', 'student', 'enrollment', 'enrollment-shell.tsx');
     expect(shell).not.toContain('Student enrollment workspaces');

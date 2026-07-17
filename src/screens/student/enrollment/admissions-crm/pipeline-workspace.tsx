@@ -113,8 +113,13 @@ const priorities = Object.values(AdmissionCrmLeadPriority).filter(
 const routeTypes = Object.values(AdmissionCrmRouteType).filter(
   (value): value is AdmissionCrmRouteType => typeof value === 'number'
 );
-const routeTypeLabel = (value: AdmissionCrmRouteType) =>
-  AdmissionCrmRouteType[value].replace(/([a-z])([A-Z])/g, '$1 $2');
+const routeTypeLabel = (value: AdmissionCrmRouteType | string | null | undefined) => {
+  const numericValue =
+    typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value;
+  const enumLabel =
+    typeof numericValue === 'number' ? AdmissionCrmRouteType[numericValue] : numericValue;
+  return enumLabel?.replace(/([a-z])([A-Z])/g, '$1 $2') || 'Unknown pathway';
+};
 
 const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
   const filter = [...filters].reverse().find((item) => item.column === column);
