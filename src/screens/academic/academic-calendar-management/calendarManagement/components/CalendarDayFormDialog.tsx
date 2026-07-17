@@ -451,6 +451,14 @@ const CalendarDayFormDialog = ({
                             name="divisionId"
                             value={formik.values.divisionId}
                             onChange={formik.handleChange}
+                            displayEmpty
+                            renderValue={(selected) => {
+                              if (!selected) return 'All Divisions';
+                              const selectedDivision = standards
+                                .find((s) => s.id === formik.values.standardIds[0])
+                                ?.divisions?.find((d: any) => d.id === selected);
+                              return selectedDivision?.name ?? String(selected);
+                            }}
                           >
                             <MenuItem value="">All Divisions</MenuItem>
                             {(

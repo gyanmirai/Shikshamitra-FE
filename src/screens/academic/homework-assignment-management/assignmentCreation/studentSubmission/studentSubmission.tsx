@@ -24,6 +24,7 @@ import {
   EvaluationStatusChip,
   filterEvaluationRows,
   getEvaluationSummary,
+  dedupeEvaluationRows,
   EvaluationActionButton,
   EvaluationSummaryCards,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
@@ -102,7 +103,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const viewSubmissionDialog = useBoolean();
 
   const normalizedData = React.useMemo(
-    () => assignmentSubmissions?.data || [],
+    () => dedupeEvaluationRows(assignmentSubmissions?.data || []),
     [assignmentSubmissions?.data]
   );
 

@@ -1,4 +1,5 @@
 import type { FormikProps } from 'formik';
+import type { Dayjs } from 'dayjs';
 import type { Standards } from 'src/types/school';
 
 import dayjs from 'dayjs';
@@ -49,6 +50,10 @@ interface ISlotConfigurationAccordionProps {
   // New props for class selection
   classes: Standards[];
   className: string;
+  canConfigureSlots: boolean;
+  classShiftMessage: string;
+  shiftStartTime: Dayjs | null;
+  shiftEndTime: Dayjs | null;
   classNameError?: string;
   onClassChange: (val: string) => void;
   isFirstGroup: boolean;
@@ -66,6 +71,10 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
   onTotalSlotsChange,
   classes,
   className,
+  canConfigureSlots,
+  classShiftMessage,
+  shiftStartTime,
+  shiftEndTime,
   classNameError,
   onClassChange,
   isFirstGroup,
@@ -84,6 +93,7 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
 
   // Class selected check for enabling slot controls
   const isClassSelected = Boolean(className);
+  const slotControlsDisabled = disabled || !isClassSelected || !canConfigureSlots;
   const lockedByEdit = disabled || (isEdit && !!hasData);
 
   // Week range error
@@ -355,13 +365,22 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
                   </ShakingTextField>
                 </Grid>
               </Grid>
+              {isClassSelected && !canConfigureSlots && (
+                <Typography
+                  variant="caption"
+                  color="warning.main"
+                  sx={{ mt: 1, display: 'block' }}
+                >
+                  {classShiftMessage}
+                </Typography>
+              )}
             </Box>
           )}
 
           {/* Active Days Slider */}
           <ActiveDaysSlider
             value={config.weekRange}
-            disabled={disabled || !isClassSelected}
+            disabled={slotControlsDisabled}
             error={weekRangeError}
             onChange={(next) =>
               formik.setFieldValue(`slotConfigurations[${configIndex}].weekRange`, next)
@@ -384,7 +403,7 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
             </Typography>
             <SlotCounterControl
               value={Number(config.totalSlots) || 0}
-              disabled={disabled || !isClassSelected}
+              disabled={slotControlsDisabled}
               error={totalSlotsError}
               min={1}
               max={20}
@@ -450,9 +469,10 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
               <SlotTimesTable
                 configId={config.id ?? configIndex}
                 slots={config.timeSlots as any}
-                disabled={disabled}
-                isEdit={isEdit}
+                disabled={slotControlsDisabled}
                 errors={slotErrorsMap}
+                minTime={shiftStartTime}
+                maxTime={shiftEndTime}
                 onChange={(next) =>
                   formik.setFieldValue(`slotConfigurations[${configIndex}].timeSlots`, next)
                 }

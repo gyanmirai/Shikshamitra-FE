@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { Organization } from 'src/types/school';
+import type { LabelColor } from 'src/components/label';
 import type {
   ClassTeacherSummary,
   ClassTeacherEligibleTeacher,
@@ -9,13 +10,26 @@ import type {
   ClassTeacherAssignmentRowDto,
 } from 'src/redux/classManagementApi/classTeacherAssignmentApi/classTeacherAssignmentApi';
 
+import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { Save, History, FactCheck, RestartAlt, AssignmentTurnedIn } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import {
+  Save,
+  School,
+  History,
+  EditNote,
+  FactCheck,
+  AccessTime,
+  RestartAlt,
+  ErrorOutline,
+  HourglassEmpty,
+  CheckCircleOutline,
+  AssignmentTurnedIn,
+} from '@mui/icons-material';
 import {
   Box,
   Card,
-  Chip,
   Alert,
   Stack,
   Button,
@@ -30,6 +44,7 @@ import {
 import { useState, useEffect } from 'react';
 
 import CustomSelect from 'src/components/custom-select';
+import { Label } from 'src/components/label';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -171,17 +186,14 @@ const TeacherAssignmentCell = ({
               {option.employeeCode || 'No code'} · {option.department || 'No department'}
             </Typography>
             <Stack direction="row" spacing={0.75} mt={0.5} flexWrap="wrap">
-              <Chip
-                size="small"
-                label={`${option.currentClassTeacherCount}/${option.maximumClassTeacherCount} classes`}
-              />
-              <Chip size="small" label={option.workloadStatus} color="default" />
-              <Chip
-                size="small"
-                label={option.availabilityStatus}
-                color={option.isActive ? 'success' : 'error'}
-              />
-              <Chip size="small" label={`${option.recommendationScore}% match`} />
+              <Label variant="soft">
+                {`${option.currentClassTeacherCount}/${option.maximumClassTeacherCount} classes`}
+              </Label>
+              <Label variant="soft">{option.workloadStatus}</Label>
+              <Label variant="soft" color={option.isActive ? 'success' : 'error'}>
+                {option.availabilityStatus}
+              </Label>
+              <Label variant="soft" color="info">{`${option.recommendationScore}% match`}</Label>
             </Stack>
             {!option.isEligible && (
               <Typography variant="caption" color="error">
@@ -196,6 +208,8 @@ const TeacherAssignmentCell = ({
   );
 };
 
+type SummaryAccent = 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary';
+
 const SummaryCards = ({
   summary,
   activeFilter,
@@ -205,46 +219,77 @@ const SummaryCards = ({
   activeFilter: string;
   onFilter: (filter: string) => void;
 }) => {
-  const cards = [
-    { key: 'all', label: 'Total Classes', value: summary.totalClasses },
-    { key: 'assigned', label: 'Assigned', value: summary.assigned },
-    { key: 'unassigned', label: 'Unassigned', value: summary.unassigned },
-    { key: 'conflict', label: 'Conflicts', value: summary.conflicts },
-    { key: 'changed', label: 'Pending Changes', value: summary.pendingChanges },
-    { key: 'temporary', label: 'Temporary', value: summary.temporaryAssignments },
+  const cards: {
+    key: string;
+    label: string;
+    value: number;
+    icon: JSX.Element;
+    accent: SummaryAccent;
+  }[] = [
+    { key: 'all', label: 'Total Classes', value: summary.totalClasses, icon: <School fontSize="small" />, accent: 'primary' },
+    { key: 'assigned', label: 'Assigned', value: summary.assigned, icon: <CheckCircleOutline fontSize="small" />, accent: 'success' },
+    { key: 'unassigned', label: 'Unassigned', value: summary.unassigned, icon: <HourglassEmpty fontSize="small" />, accent: 'warning' },
+    { key: 'conflict', label: 'Conflicts', value: summary.conflicts, icon: <ErrorOutline fontSize="small" />, accent: 'error' },
+    { key: 'changed', label: 'Pending Changes', value: summary.pendingChanges, icon: <EditNote fontSize="small" />, accent: 'info' },
+    { key: 'temporary', label: 'Temporary', value: summary.temporaryAssignments, icon: <AccessTime fontSize="small" />, accent: 'secondary' },
   ];
 
   return (
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-        gap: 1,
+        gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+        gap: 1.5,
       }}
     >
-      {cards.map((card) => (
-        <Card
-          key={card.key}
-          role="button"
-          tabIndex={0}
-          onClick={() => onFilter(card.key)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') onFilter(card.key);
-          }}
-          sx={{
-            p: 1.25,
-            borderRadius: 1,
-            cursor: 'pointer',
-            border: activeFilter === card.key ? '1px solid' : '1px solid transparent',
-            borderColor: activeFilter === card.key ? 'primary.main' : 'transparent',
-          }}
-        >
-          <Typography variant="caption" color="text.secondary">
-            {card.label}
-          </Typography>
-          <Typography variant="h6">{card.value}</Typography>
-        </Card>
-      ))}
+      {cards.map((card) => {
+        const isActive = activeFilter === card.key;
+        return (
+          <Card
+            key={card.key}
+            role="button"
+            tabIndex={0}
+            onClick={() => onFilter(card.key)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') onFilter(card.key);
+            }}
+            sx={{
+              p: 1.75,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              borderRadius: 2,
+              cursor: 'pointer',
+              border: '1px solid',
+              borderColor: isActive ? `${card.accent}.main` : 'transparent',
+              boxShadow: isActive ? (theme) => theme.customShadows[card.accent] : (theme) => theme.customShadows.z1,
+              transition: (theme) => theme.transitions.create(['box-shadow', 'transform', 'border-color']),
+              '&:hover': {
+                borderColor: `${card.accent}.main`,
+                boxShadow: (theme) => theme.customShadows[card.accent],
+                transform: 'translateY(-2px)',
+              },
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 40,
+                height: 40,
+                color: `${card.accent}.dark`,
+                bgcolor: `${card.accent}.lighter`,
+              }}
+            >
+              {card.icon}
+            </Avatar>
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                {card.label}
+              </Typography>
+              <Typography variant="h6">{card.value}</Typography>
+            </Box>
+          </Card>
+        );
+      })}
     </Box>
   );
 };
@@ -527,7 +572,7 @@ const ClassTeacherAssignment = () => {
         description="Assign and manage class teachers while checking workload, availability, conflicts, and continuity."
       />
 
-      <Card sx={{ p: 1.25 }}>
+      <Card sx={{ p: 1.75, borderRadius: 2, boxShadow: (theme) => theme.customShadows.z1 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent="space-between">
           <CustomSelect
             options={allOrganization}
@@ -577,7 +622,7 @@ const ClassTeacherAssignment = () => {
 
       <SummaryCards summary={summary} activeFilter={statusFilter} onFilter={setStatusFilter} />
 
-      <Alert severity={summary.status === 'Ready' ? 'success' : 'warning'}>
+      <Alert severity={summary.status === 'Ready' ? 'success' : 'warning'} sx={{ borderRadius: 2 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
           <Typography variant="body2" fontWeight={700}>
             Allocation Status: {summary.status}
@@ -588,7 +633,7 @@ const ClassTeacherAssignment = () => {
         </Stack>
       </Alert>
 
-      <Card sx={{ p: 1 }}>
+      <Card sx={{ p: 1.25, borderRadius: 2, boxShadow: (theme) => theme.customShadows.z1 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
           <TextField
             size="small"
@@ -654,14 +699,11 @@ const ClassTeacherAssignment = () => {
               const typedRow = row as unknown as AssignmentTableRow;
               return (
                 <Stack spacing={0.5}>
-                  <Chip
-                    size="small"
-                    label={
-                      typedRow.assignedTeacher
-                        ? `${typedRow.assignedTeacher.currentClassTeacherCount}/${typedRow.assignedTeacher.maximumClassTeacherCount} classes`
-                        : 'No teacher'
-                    }
-                  />
+                  <Label variant="soft">
+                    {typedRow.assignedTeacher
+                      ? `${typedRow.assignedTeacher.currentClassTeacherCount}/${typedRow.assignedTeacher.maximumClassTeacherCount} classes`
+                      : 'No teacher'}
+                  </Label>
                   <Typography variant="caption" color="text.secondary">
                     {typedRow.assignedTeacher?.workloadStatus || 'Unassigned'}
                   </Typography>
@@ -678,11 +720,9 @@ const ClassTeacherAssignment = () => {
             render: (_: unknown, row) => {
               const typedRow = row as unknown as AssignmentTableRow;
               return (
-                <Chip
-                  size="small"
-                  label={typedRow.assignedTeacher?.availabilityStatus || 'Unassigned'}
-                  color={typedRow.assignedTeacher?.isActive ? 'success' : 'default'}
-                />
+                <Label variant="soft" color={typedRow.assignedTeacher?.isActive ? 'success' : 'default'}>
+                  {typedRow.assignedTeacher?.availabilityStatus || 'Unassigned'}
+                </Label>
               );
             },
           },
@@ -692,13 +732,16 @@ const ClassTeacherAssignment = () => {
             minWidth: 150,
             render: (_: unknown, row) => {
               const typedRow = row as unknown as AssignmentTableRow;
+              const statusColor: LabelColor = typedRow.conflictCount
+                ? 'error'
+                : typedRow.classTeacher
+                  ? 'success'
+                  : 'warning';
               return (
                 <Stack spacing={0.5}>
-                  <Chip
-                    size="small"
-                    label={typedRow.assignmentStatus}
-                    color={typedRow.conflictCount ? 'error' : typedRow.classTeacher ? 'success' : 'warning'}
-                  />
+                  <Label variant="soft" color={statusColor}>
+                    {typedRow.assignmentStatus}
+                  </Label>
                   {typedRow.conflictCount > 0 && (
                     <Typography variant="caption" color="error">
                       {typedRow.conflictCount} issue(s)
@@ -717,13 +760,15 @@ const ClassTeacherAssignment = () => {
             render: (_: unknown, row) => {
               const typedRow = row as unknown as AssignmentTableRow;
               return (
-                <TextField
-                  size="small"
-                  type="date"
-                  value={typedRow.effectiveFromDraft}
-                  onChange={(event) =>
-                    updateRow(getRowKey(typedRow), { effectiveFromDraft: event.target.value })
+                <DatePicker
+                  value={typedRow.effectiveFromDraft ? dayjs(typedRow.effectiveFromDraft) : null}
+                  onChange={(newValue) =>
+                    updateRow(getRowKey(typedRow), {
+                      effectiveFromDraft: newValue?.isValid() ? newValue.format('YYYY-MM-DD') : '',
+                    })
                   }
+                  format="DD-MM-YYYY"
+                  slotProps={{ textField: { size: 'small', sx: { width: 155 } } }}
                 />
               );
             },

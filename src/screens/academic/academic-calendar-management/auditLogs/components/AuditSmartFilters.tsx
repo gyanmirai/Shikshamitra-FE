@@ -142,11 +142,7 @@ const AuditSmartFilters = ({
                     <Iconify icon="mdi:close" width={16} />
                   </IconButton>
                 </InputAdornment>
-              ) : (
-                <InputAdornment position="end">
-                  <Chip label="/" size="small" sx={{ height: 18, fontSize: 10 }} />
-                </InputAdornment>
-              ),
+              ) : null,
             }}
           />
         </Grid>
@@ -157,8 +153,16 @@ const AuditSmartFilters = ({
             <InputLabel>Action</InputLabel>
             <Select
               label="Action"
+              displayEmpty
               value={filters.action}
               onChange={(e) => set('action', e.target.value)}
+              renderValue={(selected) => {
+                if (!selected) {
+                  return 'All Actions';
+                }
+
+                return CALENDAR_AUDIT_ACTION_LABELS[Number(selected) as CalendarAuditAction];
+              }}
             >
               {ACTION_OPTIONS.map((opt) => (
                 <MenuItem key={opt.value} value={opt.value}>

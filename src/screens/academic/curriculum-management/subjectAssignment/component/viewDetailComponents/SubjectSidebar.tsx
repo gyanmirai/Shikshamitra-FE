@@ -7,7 +7,8 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { SubjectType } from 'src/enums/subject-type';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Card, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Card, Stack, Typography } from '@mui/material';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   PublishUnpublishStatusType,
@@ -38,6 +39,15 @@ const getStatusLabelAndColor = (status: any) => {
   const config = STATUS_CONFIG[status];
   if (config) return config;
   return { label: String(status), color: 'default' as LabelColor };
+};
+
+const STATUS_DESCRIPTIONS: Record<string, string> = {
+  Draft: 'Draft: setup is still in progress and this allocation is hidden from teachers and timetable/exam scheduling.',
+  Published: 'Published: this allocation is live and visible to teachers, timetable and examination modules.',
+  'In Review': 'In Review: setup is complete and awaiting approval before it can be published.',
+  'Needs Setup': 'Needs Setup: required details (teacher, syllabus, etc.) are missing before this can be published.',
+  Archived: 'Archived: no longer active for the current academic year but kept for historical records.',
+  Inactive: 'Inactive: temporarily disabled and not visible to teachers or students.',
 };
 
 interface SubjectSidebarProps {
@@ -99,9 +109,27 @@ const SubjectSidebar = ({
           {(() => {
             const { label, color } = getStatusLabelAndColor(subjectAssignmentData?.data?.status);
             return (
-              <Label variant="soft" color={color}>
-                {label}
-              </Label>
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <Label variant="soft" color={color}>
+                  {label}
+                </Label>
+                <CustomTooltip
+                  arrow
+                  placement="left"
+                  sx={{ textAlign: 'justify' }}
+                  title={
+                    STATUS_DESCRIPTIONS[label] ||
+                    'Current status of this subject allocation for the selected class.'
+                  }
+                >
+                  <Iconify
+                    icon="lucide:info"
+                    width={16}
+                    sx={{ cursor: 'pointer' }}
+                    color="info.main"
+                  />
+                </CustomTooltip>
+              </Stack>
             );
           })()}
         </Box>
@@ -123,7 +151,7 @@ const SubjectSidebar = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1,
-                  p: 1.5,
+                  p: 1,
                   cursor: 'pointer',
                   borderRadius: 1.5,
                   transition: 'all 0.2s',
@@ -157,11 +185,13 @@ const SubjectSidebar = ({
                 </Typography>
 
                 {isSelected && (
-                  <Iconify
-                    icon="eva:arrow-ios-forward-fill"
-                    width={16}
-                    sx={{ ml: 'auto', color: 'primary.main' }}
-                  />
+                  <CustomTooltip title="Currently viewing" arrow placement="top">
+                    <Iconify
+                      icon="eva:checkmark-fill"
+                      width={16}
+                      sx={{ ml: 'auto', color: 'primary.main' }}
+                    />
+                  </CustomTooltip>
                 )}
               </Box>
             );

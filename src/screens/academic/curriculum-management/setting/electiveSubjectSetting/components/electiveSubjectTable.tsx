@@ -249,12 +249,13 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
   );
 
   return (
-    <Box display="flex" flexDirection="column" gap={1}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minHeight: 0 }}>
       <Box
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' },
           gap: 1,
+          flexShrink: 0,
         }}
       >
         {[

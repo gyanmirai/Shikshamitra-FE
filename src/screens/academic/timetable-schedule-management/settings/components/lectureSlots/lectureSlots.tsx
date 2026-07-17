@@ -9,6 +9,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import React, { useMemo, useState, useCallback } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -30,6 +31,10 @@ const TIMETABLE_SETTING_STATUS_FILTER_OPTIONS = Object.values(TIMETABLE_STATUS_L
 );
 
 const LectureSlots = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [editData, setEditData] = useState<any>(null);
   const [disabled, setDisabled] = useState(false);
   const addLectureSlotDialog = useBoolean(false);
@@ -37,6 +42,17 @@ const LectureSlots = () => {
   const viewSlotsDialog = useBoolean();
 
   const assignSlotsDialog = useBoolean();
+
+  React.useEffect(() => {
+    const action = searchParams.get('action');
+    if (!action) {
+      addLectureSlotDialog.onFalse();
+      assignSlotsDialog.onFalse();
+      viewSlotsDialog.onFalse();
+      setEditData(null);
+      setIsEdit(false);
+    }
+  }, [searchParams, pathname, addLectureSlotDialog, assignSlotsDialog, viewSlotsDialog]);
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -137,6 +153,7 @@ const LectureSlots = () => {
             setEditData(row);
             assignSlotsDialog.onTrue();
             pop.onClose();
+            router.push(`${pathname}?action=assign`);
           }}
         >
           <Iconify icon="mdi:arrow-right-circle" sx={{ height: '16px', width: '16px' }} />
@@ -144,7 +161,7 @@ const LectureSlots = () => {
         </MenuItem>
       </MenuList>
     ),
-    [assignSlotsDialog, setEditData]
+    [assignSlotsDialog, setEditData, router, pathname]
   );
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -153,6 +170,7 @@ const LectureSlots = () => {
       setDisabled(false);
       setEditData(null);
       dispatch(setIsChanges(false));
+      router.push(pathname);
     };
 
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -294,12 +312,14 @@ const LectureSlots = () => {
                 setDisabled(true);
                 setIsEdit(false);
                 setEditData(row as any);
+                router.push(`${pathname}?action=view`);
               }}
               handleEditClick={() => {
                 setDisabled(false);
                 setIsEdit(true);
                 setEditData(row as any);
                 addLectureSlotDialog.onTrue();
+                router.push(`${pathname}?action=edit`);
               }}
               placement="right-top"
             />
@@ -307,7 +327,7 @@ const LectureSlots = () => {
         },
       },
     ],
-    [actions, addLectureSlotDialog, viewSlotsDialog, canAdd, canView]
+    [actions, addLectureSlotDialog, viewSlotsDialog, canAdd, canView, router, pathname]
   );
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -375,6 +395,7 @@ const LectureSlots = () => {
                   setEditData(null);
                   setIsEdit(false);
                   addLectureSlotDialog.onTrue();
+                  router.push(`${pathname}?action=add`);
                 }}
                 variant="contained"
                 size="small"

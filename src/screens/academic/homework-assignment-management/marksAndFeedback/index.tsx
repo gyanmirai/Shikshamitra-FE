@@ -54,7 +54,7 @@ const MarksFeedbackHomeworkAssignment = () => {
         heading="Evaluation & Feedback"
         description={
           currentActiveComponent?.value === 'homeworkMarks'
-            ? 'Record and manage marks and feedback for homework tasks.'
+            ? 'Record and manage qualitative feedback for homework tasks.'
             : 'Add and manage marks/feedback for academic assignments'
         }
         links={[

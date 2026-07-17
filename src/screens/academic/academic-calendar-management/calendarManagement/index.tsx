@@ -3,6 +3,8 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState } from 'react';
@@ -31,6 +33,9 @@ import {
 import CalendarYearView from './components/CalendarYearView';
 import CalendarMonthView from './components/CalendarMonthView';
 import CalendarDayFormDialog from './components/CalendarDayFormDialog';
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 // ─── Tabs ────────────────────────────────────────────────────────────────────
 
@@ -67,6 +72,27 @@ const addDateRangeToSet = (dateSet: Set<string>, startDate?: string, endDate?: s
     cursor = cursor.add(1, 'day');
   }
 };
+
+const expandCalendarDayRanges = (days: any[]) =>
+  days.flatMap((day) => {
+    let cursor = dayjs(day.date).startOf('day');
+    let end = dayjs(day.endDate || day.date).startOf('day');
+
+    if (!cursor.isValid()) return [];
+    if (!end.isValid() || end.isBefore(cursor, 'day')) end = cursor;
+
+    const expandedDays: any[] = [];
+    while (cursor.isBefore(end, 'day') || cursor.isSame(end, 'day')) {
+      expandedDays.push({
+        ...day,
+        date: cursor.format('YYYY-MM-DDTHH:mm:ssZ'),
+        rangeStartDate: day.date,
+        rangeEndDate: day.endDate,
+      });
+      cursor = cursor.add(1, 'day');
+    }
+    return expandedDays;
+  });
 
 const calculateCalendarSummary = (
   days: any[],
@@ -217,6 +243,11 @@ const CalendarManagement = () => {
     return calendarDays.filter((d) => d.appliesToAll || d.standardId === filterStandardId);
   }, [calendarDays, filterStandardId]);
 
+  const visibleCalendarDays = useMemo(
+    () => expandCalendarDayRanges(filteredCalendarDays),
+    [filteredCalendarDays]
+  );
+
   const calendarStartDate = selectedCalendar?.startDate || currentBoard?.startDate || '';
   const calendarEndDate = selectedCalendar?.endDate || currentBoard?.endDate || '';
   const calendarSummary = calculateCalendarSummary(
@@ -335,9 +366,19 @@ const CalendarManagement = () => {
   const selectedDayEditData = useMemo(() => {
     if (!selectedDayDate) return undefined;
     const key = dayjs(selectedDayDate).format('YYYY-MM-DD');
-    const markers = filteredCalendarDays.filter(
-      (d) => d.status === CalendarDayStatus.Active && dayjs(d.date).format('YYYY-MM-DD') === key
-    );
+    const markers = filteredCalendarDays.filter((d) => {
+      const start = dayjs(d.date).startOf('day');
+      const end = dayjs(d.endDate || d.date).startOf('day');
+      const selected = dayjs(key).startOf('day');
+      const isActive = !d.status || Number(d.status) === CalendarDayStatus.Active;
+
+      return (
+        isActive &&
+        start.isValid() &&
+        selected.isSameOrAfter(start, 'day') &&
+        selected.isSameOrBefore(end.isValid() ? end : start, 'day')
+      );
+    });
     if (markers.length === 0) return undefined;
     const first = markers[0];
     const group = markers.filter((m) => m.title === first.title && m.dayType === first.dayType);
@@ -544,7 +585,7 @@ const CalendarManagement = () => {
               </Paper>
             ) : (
               <CalendarYearView
-                calendarDays={filteredCalendarDays}
+                calendarDays={visibleCalendarDays}
                 calendarStartDate={calendarStartDate}
                 calendarEndDate={calendarEndDate}
                 isLoading={daysLoading}
@@ -565,13 +606,11 @@ const CalendarManagement = () => {
               </Paper>
             ) : (
               <CalendarMonthView
-                calendarDays={filteredCalendarDays}
+                calendarDays={visibleCalendarDays}
                 currentMonth={currentMonth}
                 onMonthChange={setCurrentMonth}
                 onDayClick={handleDayClick}
                 isLoading={daysLoading}
-                activeDayType={activeDayType}
-                onToggleDayType={(type) => setActiveDayType((prev) => (prev === type ? null : type))}
               />
             )}
           </>

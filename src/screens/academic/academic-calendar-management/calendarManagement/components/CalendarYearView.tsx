@@ -60,8 +60,10 @@ const MonthInner = ({
   while (cells.length % 7 !== 0) cells.push(null);
 
   // Count marked days in this month
-  const markedCount = Object.keys(dayMap).filter((k) =>
-    k.startsWith(monthStart.format('YYYY-MM'))
+  const markedCount = Object.entries(dayMap).filter(
+    ([key, value]) =>
+      key.startsWith(monthStart.format('YYYY-MM')) &&
+      (!activeDayType || value.dayType === activeDayType)
   ).length;
 
   return (
@@ -126,7 +128,11 @@ const MonthInner = ({
           }
 
           const key = day.format('YYYY-MM-DD');
-          const calDay = dayMap[key];
+          const dayMarker = dayMap[key];
+          const calDay =
+            dayMarker && (!activeDayType || dayMarker.dayType === activeDayType)
+              ? dayMarker
+              : null;
           const isWeekend = day.day() === 0;
           const isSaturday = day.day() === 6;
           const isToday = key === today;
@@ -239,6 +245,7 @@ const MonthCard = (props: {
   endDate: string;
   today: string;
   onDayClick: (date: string) => void;
+  activeDayType: DayType | null;
 }) => {
   const theme = useTheme();
   return (
@@ -271,6 +278,7 @@ const DualMonthCard = ({
   endDate,
   today,
   onDayClick,
+  activeDayType,
 }: {
   months: dayjs.Dayjs[];
   dayMap: Record<string, any>;
@@ -278,6 +286,7 @@ const DualMonthCard = ({
   endDate: string;
   today: string;
   onDayClick: (date: string) => void;
+  activeDayType: DayType | null;
 }) => {
   const theme = useTheme();
 
@@ -313,6 +322,7 @@ const DualMonthCard = ({
             endDate={endDate}
             today={today}
             onDayClick={onDayClick}
+            activeDayType={activeDayType}
           />
         </Box>
       ))}
@@ -349,7 +359,8 @@ const CalendarYearView = ({
   // Build date map
   const dayMap: Record<string, any> = {};
   days.forEach((d) => {
-    dayMap[dayjs(d.date).format('YYYY-MM-DD')] = d;
+    const key = dayjs(d.date).format('YYYY-MM-DD');
+    if (!dayMap[key]) dayMap[key] = d;
   });
 
   // Build months list
@@ -617,6 +628,7 @@ const CalendarYearView = ({
               endDate={endDate}
               today={today}
               onDayClick={onDayClick}
+              activeDayType={activeDayType}
             />
           </Box>
         ))}

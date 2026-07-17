@@ -52,6 +52,68 @@ const computeSchoolHours = (slotConfigurations: any[]): string => {
   return `${fmt(minStartMins)} - ${fmt(maxEndMins)}`;
 };
 
+interface IClassShiftInfo {
+  label: string;
+  start: dayjs.Dayjs;
+  end: dayjs.Dayjs;
+}
+
+const parseShiftTime = (value?: string | null) => {
+  if (!value) return null;
+  const timeValue = value.length === 5 ? `${value}:00` : value;
+  const parsed = dayjs(`2024-01-01T${timeValue}`);
+  return parsed.isValid() ? parsed : null;
+};
+
+const getClassShiftInfo = (standard?: Standards | null): IClassShiftInfo | null => {
+  if (!standard?.shiftId || !standard.shift?.startTime || !standard.shift?.endTime) {
+    return null;
+  }
+
+  const start = parseShiftTime(standard.shift.startTime);
+  const end = parseShiftTime(standard.shift.endTime);
+  if (!start || !end || !end.isAfter(start)) {
+    return null;
+  }
+
+  return {
+    label: `${standard.shift.shiftName || 'Assigned shift'} (${start.format('hh:mm A')} - ${end.format(
+      'hh:mm A'
+    )})`,
+    start,
+    end,
+  };
+};
+
+const getSlotTimingError = (
+  slotConfigurations: any[],
+  shiftInfo: IClassShiftInfo | null
+): string | null => {
+  if (!shiftInfo) {
+    return 'Please assign the school shift to this class before configuring lecture slots.';
+  }
+
+  const outsideShiftSlot = slotConfigurations
+    .flatMap((config) => config.timeSlots || [])
+    .find((slot) => {
+      const start = slot.startTime ? dayjs(slot.startTime) : null;
+      const end = slot.endTime ? dayjs(slot.endTime) : null;
+      return (
+        start?.isValid() &&
+        end?.isValid() &&
+        (start.isBefore(shiftInfo.start) || end.isAfter(shiftInfo.end))
+      );
+    });
+
+  if (outsideShiftSlot) {
+    return `Lecture slot timing must be within the class shift timing ${shiftInfo.start.format(
+      'hh:mm A'
+    )} - ${shiftInfo.end.format('hh:mm A')}.`;
+  }
+
+  return null;
+};
+
 interface IUseSlotFormParams {
   isEdit?: boolean;
   data?: any;
@@ -121,6 +183,13 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
     onSubmit: async (values) => {
       const selectedClassName =
         allClass.find((c) => c.id === values.className)?.name || values.className;
+      const selectedClass = allClass.find((c) => c.id === values.className);
+      const shiftInfo = getClassShiftInfo(selectedClass);
+      const slotTimingError = getSlotTimingError(values.slotConfigurations, shiftInfo);
+      if (slotTimingError) {
+        shikshaMitraToast.error({ message: slotTimingError });
+        return;
+      }
 
       const slotConfigurationsPayload = mapSlotConfigurations(values.slotConfigurations);
       const schoolHours = computeSchoolHours(values.slotConfigurations);
@@ -228,13 +297,27 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
         return;
       }
 
+      const shiftInfo = getClassShiftInfo(allClass.find((c) => c.id === formik.values.className));
       formik.setFieldValue(
         `slotConfigurations[${configIndex}].timeSlots`,
-        generateSlots(value, configIndex, formik.values.slotConfigurations[configIndex]?.timeSlots)
+        generateSlots(
+          value,
+          configIndex,
+          formik.values.slotConfigurations[configIndex]?.timeSlots,
+          shiftInfo?.start
+        )
       );
     },
-    [formik]
+    [allClass, formik]
   );
+
+  const selectedClass = allClass.find((c) => c.id === formik.values.className);
+  const selectedClassShift = getClassShiftInfo(selectedClass);
+  const classShiftMessage = formik.values.className
+    ? selectedClassShift?.label ||
+      'Please assign the school shift to this class before configuring lecture slots.'
+    : 'Select a class to view class timing.';
+  const canConfigureSlots = Boolean(selectedClassShift);
 
   const isSubmitting = useMemo(
     () => isAddLoading || isUpdateLoading,
@@ -244,6 +327,9 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
   return {
     formik,
     allClass,
+    canConfigureSlots,
+    classShiftMessage,
+    selectedClassShift,
     isLectureSlotsLoading:
       isLectureSlotsLoading || (!!selectedClassSlotId && isExistingSlotLoading),
     isSubmitting,

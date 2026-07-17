@@ -14,15 +14,6 @@ const SUBMISSION_TYPE_MAP: Record<number, string> = {
   3: 'No Submission Required',
 };
 
-const EVALUATION_METHOD_MAP: Record<number, string> = {
-  0: 'Marks',
-  1: 'Grade',
-  2: 'Rubric',
-  3: 'Checklist',
-  4: 'Feedback Only',
-  5: 'No Evaluation',
-};
-
 const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
   isLoading,
   data,
@@ -53,23 +44,6 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
               {SUBMISSION_TYPE_MAP[type] || 'Unknown'}
             </Label>
           );
-        },
-      },
-      {
-        id: 'defaultEvaluationMethod',
-        label: 'Evaluation',
-        align: 'left',
-        render: (_value, row) => {
-          if (!row.evaluationRequired) {
-            return (
-              <Label variant="soft" color="default">
-                No Evaluation
-              </Label>
-            );
-          }
-          const method = row.defaultEvaluationMethod;
-          if (method === undefined || method === null || (method as any) === '') return '-';
-          return EVALUATION_METHOD_MAP[method] || 'Unknown';
         },
       },
       {

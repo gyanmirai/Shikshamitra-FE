@@ -7,7 +7,11 @@ export interface TimetableValidationIssue {
 
 type ApiErrorLike = {
   data?: {
+    errorCode?: string;
+    detail?: string;
+    data?: Record<string, unknown>;
     error?: {
+      code?: string;
       message?: string;
       details?: string;
       data?: Record<string, unknown>;
@@ -82,13 +86,63 @@ const formatConflictIssue = (conflict: Record<string, unknown>): TimetableValida
   };
 };
 
+const formatDayAndTime = (data: Record<string, unknown>) => {
+  const day = toTitleCase(getValue(data, 'Day', 'day'));
+  const startTime = getValue(data, 'StartTime', 'startTime');
+  const endTime = getValue(data, 'EndTime', 'endTime');
+  const timeRange = [startTime, endTime].filter(Boolean).join(' - ');
+
+  return {
+    day,
+    timeRange,
+    details: {
+      ...(day ? { Day: day } : {}),
+      ...(timeRange ? { Time: timeRange } : {}),
+    },
+  };
+};
+
+const formatKnownTimetableIssue = (
+  errorCode: string,
+  data: Record<string, unknown>
+): TimetableValidationIssue | null => {
+  const { day, timeRange, details } = formatDayAndTime(data);
+  const slotText = [day, timeRange].filter(Boolean).join(' ');
+
+  if (errorCode === 'Academic:Timetable:TeacherRequiredBeforePublish') {
+    return {
+      title: 'Teacher assignment required',
+      description: `A teaching period${slotText ? ` on ${slotText}` : ''} is missing a teacher. Assign teachers for every subject before publishing.`,
+      severity: 'error',
+      details,
+    };
+  }
+
+  if (errorCode === 'Academic:Timetable:RoomRequiredBeforePublish') {
+    return {
+      title: 'Room assignment required',
+      description: `A teaching period${slotText ? ` on ${slotText}` : ''} is missing a room. Assign rooms for every subject before publishing.`,
+      severity: 'error',
+      details,
+    };
+  }
+
+  return null;
+};
+
 export const extractTimetableApiIssues = (
   error: unknown,
   fallbackTitle = 'Server validation failed'
 ): TimetableValidationIssue[] => {
   const apiError = error as any;
   const innerError = apiError?.data?.error ?? apiError?.error ?? apiError;
-  const customData = innerError?.data ?? {};
+  const customData = innerError?.data ?? apiError?.data?.data ?? {};
+  const errorCode = apiError?.data?.errorCode ?? innerError?.code ?? innerError?.errorCode;
+
+  if (typeof errorCode === 'string') {
+    const knownIssue = formatKnownTimetableIssue(errorCode, customData);
+    if (knownIssue) return [knownIssue];
+  }
 
   const conflictDetails = tryParseConflictDetails(
     customData.ConflictDetails ??
@@ -106,6 +160,7 @@ export const extractTimetableApiIssues = (
   const message =
     (typeof customData.message === 'string' && customData.message) ||
     (typeof customData.Message === 'string' && customData.Message) ||
+    apiError?.data?.detail ||
     innerError?.message ||
     innerError?.details ||
     apiError?.data?.message ||
