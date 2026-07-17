@@ -11,8 +11,10 @@ export interface IGeneratedSlot {
 export const DEFAULT_SLOT_DURATION_MIN = 30;
 export const DEFAULT_START_HOUR = 7;
 
-export const getDefaultStartTime = () =>
-  dayjs().hour(DEFAULT_START_HOUR).minute(0).second(0).millisecond(0);
+export const getDefaultStartTime = (startTime?: dayjs.Dayjs | null) =>
+  (startTime && startTime.isValid() ? startTime : dayjs().hour(DEFAULT_START_HOUR).minute(0))
+    .second(0)
+    .millisecond(0);
 
 /**
  * Generate `count` consecutive slots starting at 7:00 AM, each 30 minutes long.
@@ -21,7 +23,8 @@ export const getDefaultStartTime = () =>
 export const generateSlots = (
   count: number,
   configKey: string | number = 0,
-  existingSlots: IGeneratedSlot[] = []
+  existingSlots: IGeneratedSlot[] = [],
+  startAt?: dayjs.Dayjs | null
 ): IGeneratedSlot[] => {
   if (!Number.isFinite(count) || count < 1) return [];
 
@@ -29,7 +32,7 @@ export const generateSlots = (
   const preserved = existingSlots.slice(0, count);
   if (preserved.length === count) return preserved;
 
-  let cursor = getDefaultStartTime();
+  let cursor = getDefaultStartTime(startAt);
   if (preserved.length > 0) {
     const lastSlot = preserved[preserved.length - 1];
     if (lastSlot.endTime) {

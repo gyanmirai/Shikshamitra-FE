@@ -4,6 +4,7 @@ import React from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import {
@@ -35,6 +36,9 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
     removeRow,
     getDuplicateError,
     resetAndClose,
+    requestClose,
+    confirmCloseOpen,
+    setConfirmCloseOpen,
     handleSave,
   } = useSubjectAddDrawer({ onClose });
 
@@ -42,7 +46,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
     <Drawer
       anchor="right"
       open={open}
-      onClose={resetAndClose}
+      onClose={requestClose}
       PaperProps={{
         sx: { width: { xs: '100%', sm: 440 }, display: 'flex', flexDirection: 'column' },
       }}
@@ -77,7 +81,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
             sx={{ height: 20, fontSize: '11px', fontWeight: 700 }}
           />
         </Box>
-        <IconButton size="small" onClick={resetAndClose} disabled={isSaving}>
+        <IconButton size="small" onClick={requestClose} disabled={isSaving}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
@@ -338,7 +342,7 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           flexShrink: 0,
         }}
       >
-        <Button variant="outlined" size="small" onClick={resetAndClose} disabled={isSaving}>
+        <Button variant="outlined" size="small" onClick={requestClose} disabled={isSaving}>
           Cancel
         </Button>
         <LoadingButton
@@ -351,6 +355,19 @@ const SubjectAddDrawer: React.FC<SubjectAddDrawerProps> = ({ open, onClose }) =>
           Save{rows.length > 1 ? ` (${rows.length})` : ''}
         </LoadingButton>
       </Box>
+
+      <ConfirmDialog
+        open={confirmCloseOpen}
+        onClose={() => setConfirmCloseOpen(false)}
+        icon="warning"
+        title="Unsaved Changes"
+        content="You have unsaved subject details. Closing now will discard them. Do you want to continue?"
+        action={
+          <Button variant="contained" color="warning" onClick={resetAndClose}>
+            Discard and Close
+          </Button>
+        }
+      />
     </Drawer>
   );
 };

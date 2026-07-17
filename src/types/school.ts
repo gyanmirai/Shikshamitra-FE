@@ -51,6 +51,13 @@ export interface Standards {
   lastModifierId: string;
   name: string;
   educationMediumStageId: string;
+  shiftId?: string | null;
+  shift?: {
+    id?: string;
+    shiftName?: string;
+    startTime?: string;
+    endTime?: string;
+  } | null;
   divisions: Division[];
 }
 

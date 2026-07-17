@@ -21,6 +21,8 @@ import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-p
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -29,7 +31,10 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Add,
+  Save,
+  Send,
   Print,
+  Close as CloseIcon,
   MoreVert,
   FactCheck,
   PersonOff,
@@ -668,6 +673,13 @@ const SubstitutionManagementScreen = () => {
   const [settingsForm, setSettingsForm] = useState(settingsResultDefaults);
   const [actionAnchor, setActionAnchor] = useState<HTMLElement | null>(null);
   const [actionRowId, setActionRowId] = useState('');
+  const [createFormDirty, setCreateFormDirty] = useState(false);
+  const [createUnsavedConfirmOpen, setCreateUnsavedConfirmOpen] = useState(false);
+  const [availabilityFormDirty, setAvailabilityFormDirty] = useState(false);
+  const [availabilityUnsavedConfirmOpen, setAvailabilityUnsavedConfirmOpen] = useState(false);
+  const [availabilitySubmitted, setAvailabilitySubmitted] = useState(false);
+  const createFormSnapshotRef = useRef<string>(JSON.stringify(defaultSubstitutionForm));
+  const availabilityFormSnapshotRef = useRef<string>(JSON.stringify(defaultAvailabilityForm));
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const { data: substitutionResult } = useSubstitutionsDataQuery({
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
@@ -1467,23 +1479,34 @@ const SubstitutionManagementScreen = () => {
     }
   };
 
+  const availabilityStartTime = availabilityForm.isFullDay ? '09:00' : availabilityForm.startTime;
+  const availabilityEndTime = availabilityForm.isFullDay ? '14:15' : availabilityForm.endTime;
+
+  const availabilityFieldErrors = useMemo(
+    () => ({
+      teacherName: !availabilityForm.teacherName ? 'Select a teacher.' : '',
+      availabilityDate: !availabilityForm.availabilityDate ? 'Select a date.' : '',
+      reason: !availabilityForm.reason.trim() ? 'Reason is required.' : '',
+      time:
+        !availabilityForm.isFullDay &&
+        toMinutes(availabilityEndTime) <= toMinutes(availabilityStartTime)
+          ? 'End time must be later than start time.'
+          : '',
+    }),
+    [availabilityForm, availabilityEndTime, availabilityStartTime]
+  );
+
+  const hasAvailabilityFieldErrors = Object.values(availabilityFieldErrors).some(Boolean);
+
   const handleMarkUnavailable = useCallback(async () => {
-    if (
-      !availabilityForm.teacherName ||
-      !availabilityForm.availabilityDate ||
-      !availabilityForm.reason
-    ) {
-      setAvailabilityError('Teacher, date and reason are required.');
+    setAvailabilitySubmitted(true);
+    if (hasAvailabilityFieldErrors) {
+      setAvailabilityError('Please fix the highlighted fields before saving.');
       return;
     }
 
-    const startTime = availabilityForm.isFullDay ? '09:00' : availabilityForm.startTime;
-    const endTime = availabilityForm.isFullDay ? '14:15' : availabilityForm.endTime;
-
-    if (toMinutes(endTime) <= toMinutes(startTime)) {
-      setAvailabilityError('End time must be greater than start time.');
-      return;
-    }
+    const startTime = availabilityStartTime;
+    const endTime = availabilityEndTime;
 
     const date = availabilityForm.availabilityDate.format('YYYY-MM-DD');
     const payloadDate = toDateTimeOffset(availabilityForm.availabilityDate.startOf('day'));
@@ -1526,7 +1549,69 @@ const SubstitutionManagementScreen = () => {
         error instanceof Error ? error.message : 'Unable to save teacher availability.';
       setAvailabilityError(message);
     }
-  }, [availabilityForm, createTeacherAvailability, teacherAvailability]);
+  }, [
+    availabilityForm,
+    availabilityStartTime,
+    availabilityEndTime,
+    hasAvailabilityFieldErrors,
+    createTeacherAvailability,
+    teacherAvailability,
+  ]);
+
+  const handleCloseCreateDialog = useCallback(() => {
+    if (createFormDirty) {
+      setCreateUnsavedConfirmOpen(true);
+    } else {
+      setCreateDialogOpen(false);
+    }
+  }, [createFormDirty]);
+
+  const handleDiscardCreateDialog = useCallback(() => {
+    setCreateUnsavedConfirmOpen(false);
+    setCreateDialogOpen(false);
+  }, []);
+
+  const handleCloseAvailabilityDialog = useCallback(() => {
+    if (availabilityFormDirty) {
+      setAvailabilityUnsavedConfirmOpen(true);
+    } else {
+      setAvailabilityDialogOpen(false);
+    }
+  }, [availabilityFormDirty]);
+
+  const handleDiscardAvailabilityDialog = useCallback(() => {
+    setAvailabilityUnsavedConfirmOpen(false);
+    setAvailabilityDialogOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (createDialogOpen) {
+      createFormSnapshotRef.current = JSON.stringify(substitutionForm);
+      setCreateFormDirty(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createDialogOpen]);
+
+  useEffect(() => {
+    if (!createDialogOpen) return;
+    setCreateFormDirty(JSON.stringify(substitutionForm) !== createFormSnapshotRef.current);
+  }, [substitutionForm, createDialogOpen]);
+
+  useEffect(() => {
+    if (availabilityDialogOpen) {
+      availabilityFormSnapshotRef.current = JSON.stringify(availabilityForm);
+      setAvailabilityFormDirty(false);
+      setAvailabilitySubmitted(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availabilityDialogOpen]);
+
+  useEffect(() => {
+    if (!availabilityDialogOpen) return;
+    setAvailabilityFormDirty(
+      JSON.stringify(availabilityForm) !== availabilityFormSnapshotRef.current
+    );
+  }, [availabilityForm, availabilityDialogOpen]);
 
   const handleTeacherDutyAction = useCallback(
     async (id: string, action: 'accept' | 'reject' | 'change') => {
@@ -3206,9 +3291,21 @@ const SubstitutionManagementScreen = () => {
 
       <CustomDialog
         open={createDialogOpen}
-        title="Create Substitution"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Create Substitution</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Select the affected lecture, review the auto-filled details, add one or more free substitute teachers from the list, then save as draft or assign and notify immediately."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="md"
-        handleClose={() => setCreateDialogOpen(false)}
+        handleClose={handleCloseCreateDialog}
       >
         <DialogScrollContent>
           <Stack spacing={1}>
@@ -3484,42 +3581,27 @@ const SubstitutionManagementScreen = () => {
                         <Button
                           size="small"
                           variant={isSelected ? 'contained' : 'outlined'}
-                          disabled={teacher.conflictSeverity === 'Hard Block'}
-                          onClick={() => addSubstituteCoverage(teacher)}
+                          color={isSelected ? 'error' : 'primary'}
+                          startIcon={
+                            isSelected ? (
+                              <CloseIcon fontSize="small" />
+                            ) : (
+                              <Add fontSize="small" />
+                            )
+                          }
+                          disabled={!isSelected && teacher.conflictSeverity === 'Hard Block'}
+                          onClick={() =>
+                            isSelected
+                              ? removeSubstituteCoverage(teacher.teacherId)
+                              : addSubstituteCoverage(teacher)
+                          }
                         >
-                          {isSelected ? 'Added' : 'Add'}
+                          {isSelected ? 'Remove' : 'Add'}
                         </Button>
                       </Stack>
                     </Box>
                   );
                 })}
-                {substitutionForm.selectedSubstitutes.length > 0 && (
-                  <Stack spacing={1}>
-                    <Typography variant="caption" color="text.secondary">
-                      Selected coverage
-                    </Typography>
-                    {substitutionForm.selectedSubstitutes.map((selection) => (
-                      <Stack
-                        key={selection.teacherId}
-                        direction="row"
-                        spacing={1}
-                        alignItems="center"
-                        justifyContent="space-between"
-                      >
-                        <Typography variant="body2">
-                          {selection.teacherName} | {selection.startTime}-{selection.endTime}
-                        </Typography>
-                        <Button
-                          size="small"
-                          color="error"
-                          onClick={() => removeSubstituteCoverage(selection.teacherId)}
-                        >
-                          Remove
-                        </Button>
-                      </Stack>
-                    ))}
-                  </Stack>
-                )}
               </Stack>
             </Card>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -3660,17 +3742,40 @@ const SubstitutionManagementScreen = () => {
         </DialogScrollContent>
         <Divider />
         <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
-          <Button variant="outlined" onClick={() => setCreateDialogOpen(false)}>
+          <Button size="small" variant="outlined" startIcon={<CloseIcon />} onClick={handleCloseCreateDialog}>
             Cancel
           </Button>
-          <Button variant="outlined" onClick={() => handleCreateSubstitution(false)}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Save />}
+            onClick={() => handleCreateSubstitution(false)}
+          >
             Save Draft
           </Button>
-          <Button variant="contained" onClick={() => handleCreateSubstitution(true)}>
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Send />}
+            onClick={() => handleCreateSubstitution(true)}
+          >
             Assign & Notify
           </Button>
         </Stack>
       </CustomDialog>
+
+      <ConfirmDialog
+        open={createUnsavedConfirmOpen}
+        onClose={() => setCreateUnsavedConfirmOpen(false)}
+        icon="warning"
+        title="Unsaved Changes"
+        content="You have unsaved substitution details. Closing now will discard them. Do you want to continue?"
+        action={
+          <Button variant="contained" color="warning" onClick={handleDiscardCreateDialog}>
+            Discard and Close
+          </Button>
+        }
+      />
 
       <CustomDialog
         open={assignDialogOpen}
@@ -3789,9 +3894,21 @@ const SubstitutionManagementScreen = () => {
 
       <CustomDialog
         open={availabilityDialogOpen}
-        title="Mark Teacher Unavailable"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Mark Teacher Unavailable</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Mark a teacher unavailable for a date and time range. Affected lectures are detected automatically and, if enabled, substitutions are auto-created and admins are notified."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="md"
-        handleClose={() => setAvailabilityDialogOpen(false)}
+        handleClose={handleCloseAvailabilityDialog}
       >
         <DialogScrollContent>
           <Stack spacing={1}>
@@ -3823,6 +3940,8 @@ const SubstitutionManagementScreen = () => {
                 debounceMs={1500}
                 size="small"
                 fullWidth
+                error={availabilitySubmitted && !!availabilityFieldErrors.teacherName}
+                helperText={availabilitySubmitted ? availabilityFieldErrors.teacherName : ''}
               />
               <DatePicker
                 label="Date"
@@ -3831,7 +3950,16 @@ const SubstitutionManagementScreen = () => {
                 onChange={(value) =>
                   setAvailabilityForm((current) => ({ ...current, availabilityDate: value }))
                 }
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: availabilitySubmitted && !!availabilityFieldErrors.availabilityDate,
+                    helperText: availabilitySubmitted
+                      ? availabilityFieldErrors.availabilityDate
+                      : '',
+                  },
+                }}
               />
             </Stack>
             <FormControlLabel
@@ -3860,6 +3988,7 @@ const SubstitutionManagementScreen = () => {
                 onChange={(event) =>
                   setAvailabilityForm((current) => ({ ...current, startTime: event.target.value }))
                 }
+                error={availabilitySubmitted && !!availabilityFieldErrors.time}
                 fullWidth
               />
               <TextField
@@ -3871,6 +4000,8 @@ const SubstitutionManagementScreen = () => {
                 onChange={(event) =>
                   setAvailabilityForm((current) => ({ ...current, endTime: event.target.value }))
                 }
+                error={availabilitySubmitted && !!availabilityFieldErrors.time}
+                helperText={availabilitySubmitted ? availabilityFieldErrors.time : ''}
                 fullWidth
               />
             </Stack>
@@ -3932,6 +4063,8 @@ const SubstitutionManagementScreen = () => {
               onChange={(event) =>
                 setAvailabilityForm((current) => ({ ...current, reason: event.target.value }))
               }
+              error={availabilitySubmitted && !!availabilityFieldErrors.reason}
+              helperText={availabilitySubmitted ? availabilityFieldErrors.reason : ''}
               fullWidth
             />
             <TextField
@@ -4005,14 +4138,32 @@ const SubstitutionManagementScreen = () => {
         </DialogScrollContent>
         <Divider />
         <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
-          <Button variant="outlined" onClick={() => setAvailabilityDialogOpen(false)}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<CloseIcon />}
+            onClick={handleCloseAvailabilityDialog}
+          >
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleMarkUnavailable}>
+          <Button size="small" variant="contained" startIcon={<Send />} onClick={handleMarkUnavailable}>
             Save and Notify
           </Button>
         </Stack>
       </CustomDialog>
+
+      <ConfirmDialog
+        open={availabilityUnsavedConfirmOpen}
+        onClose={() => setAvailabilityUnsavedConfirmOpen(false)}
+        icon="warning"
+        title="Unsaved Changes"
+        content="You have unsaved teacher unavailability details. Closing now will discard them. Do you want to continue?"
+        action={
+          <Button variant="contained" color="warning" onClick={handleDiscardAvailabilityDialog}>
+            Discard and Close
+          </Button>
+        }
+      />
 
       <CustomDialog
         open={auditDialogOpen}

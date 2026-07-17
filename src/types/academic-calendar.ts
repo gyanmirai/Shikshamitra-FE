@@ -216,6 +216,10 @@ export interface CheckDateResponse {
 
 export interface EmergencyClosurePayload {
   date: string;
+  startDate?: string;
+  endDate?: string;
+  startTime?: string | null;
+  endTime?: string | null;
   title: string;
   description: string;
   appliesToAll: boolean;
@@ -224,6 +228,7 @@ export interface EmergencyClosurePayload {
   notifyParents: boolean;
   notifyTeachers: boolean;
   notifyStudents: boolean;
+  notifyStaff: boolean;
   autoScanImpacts: boolean;
 }
 

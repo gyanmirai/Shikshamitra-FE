@@ -75,22 +75,19 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      marks: typeof data?.marks === 'number' ? data.marks : '',
-      totalMarks: typeof data?.totalMarks === 'number' ? data.totalMarks : '',
       feedback: data?.feedback || '',
     },
     validationSchema: assignGradeValidationSchema,
     async onSubmit(values) {
-      const isUpdate = typeof data?.marks === 'number' || Boolean(data?.feedback);
+      const isUpdate = Boolean(data?.feedback);
       try {
         await updateSubmissionFeedback({
           homeworkId: homeworkId || data?.homeworkId,
           studentId: data?.studentId,
           academicMediumId: medium?.id,
           body: {
-            marks: values.marks !== '' ? Number(values.marks) : null,
-            totalMarks: values.totalMarks !== '' ? Number(values.totalMarks) : null,
             feedback: values.feedback,
+            status: 4,
           },
         }).unwrap();
 
@@ -104,7 +101,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
         }).unwrap();
 
         shikshaMitraToast.success({
-          message: `Feedback and marks have been ${
+          message: `Feedback has been ${
             isUpdate ? 'updated' : 'added'
           } successfully for ${data?.studentName ?? 'the student'}.`,
         });
@@ -116,7 +113,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
           onClose(null, true);
         }
       } catch (error) {
-        console.error('Failed to submit feedback and marks', error);
+        console.error('Failed to submit feedback', error);
       }
     },
   });
@@ -292,50 +289,14 @@ I have completed all answers according to the given instructions and provided sc
                 </Card>
               </Grid>
 
-              {/* Evaluation & Feedback Section */}
+              {/* Feedback Section */}
               <Grid size={{ xs: 12 }}>
                 <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
                   <Typography variant="h6" sx={{ mb: 3 }}>
-                    Evaluation & Feedback
+                    Feedback
                   </Typography>
 
                   <Grid container spacing={1}>
-                    <Grid size={{ xs: 12, md: 6 }}>
-                      <ShakingTextField
-                        error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}
-                      >
-                        <TextField
-                          label="Total Marks *"
-                          fullWidth
-                          name="totalMarks"
-                          type="number"
-                          value={formik.values.totalMarks}
-                          onChange={formik.handleChange}
-                          error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
-                          helperText={formik.touched.totalMarks && formik.errors.totalMarks}
-                          disabled={!isEdit}
-                        />
-                      </ShakingTextField>
-                    </Grid>
-
-                    <Grid size={{ xs: 12, md: 6 }}>
-                      <ShakingTextField
-                        error={!!(formik.touched.marks && formik.errors.marks) || false}
-                      >
-                        <TextField
-                          label="Obtained Marks *"
-                          fullWidth
-                          name="marks"
-                          type="number"
-                          value={formik.values.marks}
-                          onChange={formik.handleChange}
-                          error={formik.touched.marks && Boolean(formik.errors.marks)}
-                          helperText={formik.touched.marks && formik.errors.marks}
-                          disabled={!isEdit}
-                        />
-                      </ShakingTextField>
-                    </Grid>
-
                     <Grid size={{ xs: 12 }}>
                       <ShakingTextField
                         error={!!(formik.touched.feedback && formik.errors.feedback) || false}

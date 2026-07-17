@@ -3,12 +3,12 @@
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useMemo, useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { formatDateOnly } from 'src/utils/date-only';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Archive, Restore, RemoveCircle } from '@mui/icons-material';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -144,9 +144,7 @@ const SubjectTable = ({
         primaryTeacherDisplay: item?.primaryTeacherName || '—',
         chaptersDisplay: item.chaptersCount ?? 0,
         weeklyPeriodsDisplay: item.weeklyPeriods ? `${item.weeklyPeriods}` : '—',
-        lastUpdatedDisplay: item.lastUpdatedAt
-          ? dayjs(item.lastUpdatedAt).format('DD MMM YY')
-          : '—',
+        lastUpdatedDisplay: item.lastUpdatedAt ? formatDateOnly(item.lastUpdatedAt) : '—',
       })) || [],
     [subjectTableData]
   );

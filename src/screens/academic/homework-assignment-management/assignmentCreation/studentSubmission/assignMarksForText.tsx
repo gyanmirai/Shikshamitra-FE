@@ -80,6 +80,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
             marks: values.marks,
             totalMarks: values.totalMarks,
             feedback: values.feedback,
+            status: 4,
           },
         }).unwrap();
 

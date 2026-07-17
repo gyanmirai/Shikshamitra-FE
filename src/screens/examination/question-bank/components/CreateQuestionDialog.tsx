@@ -18,9 +18,11 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useCreateQuestionMutation } from 'src/redux/academicAPI/ExaminationApi/QuestionBankApi/question-bank-api';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Grid,
+  Alert,
   Stack,
   Button,
   Switch,
@@ -399,16 +401,33 @@ function QuestionFormFields({
 
           {showOptions && (
             <Grid size={12}>
-              <Typography
-                variant="overline"
-                color="text.disabled"
-                letterSpacing={1}
-                mb={1.5}
-                display="block"
+              <Stack direction="row" spacing={0.5} alignItems="center" mb={1.5}>
+                <Typography variant="overline" color="text.disabled" letterSpacing={1}>
+                  Answer Options
+                </Typography>
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  title={
+                    formik.values.questionType === 2
+                      ? 'Turn on the switch for every option that is correct. At least one option must be marked correct.'
+                      : 'Turn on the switch next to the one correct option. A question cannot be saved without a correct answer.'
+                  }
+                >
+                  <Iconify
+                    icon="lucide:info"
+                    width={14}
+                    sx={{ cursor: 'pointer' }}
+                    color="info.main"
+                  />
+                </CustomTooltip>
+              </Stack>
+              <ShakingTextField
+                error={
+                  formik.submitCount > 0 && typeof formik.errors.options === 'string'
+                }
               >
-                Answer Options
-              </Typography>
-              <Stack spacing={1}>
+                <Stack spacing={1}>
                 {formik.values.options.map((option: any, index: number) => (
                   <Box
                     key={index}
@@ -482,12 +501,13 @@ function QuestionFormFields({
                     Add Option
                   </Button>
                 )}
-                {formik.submitCount > 0 && typeof formik.errors.options === 'string' && (
-                  <Typography variant="caption" color="error.main">
-                    {formik.errors.options}
-                  </Typography>
-                )}
-              </Stack>
+                </Stack>
+              </ShakingTextField>
+              {formik.submitCount > 0 && typeof formik.errors.options === 'string' && (
+                <Alert severity="error" sx={{ mt: 1 }}>
+                  {formik.errors.options}
+                </Alert>
+              )}
             </Grid>
           )}
 

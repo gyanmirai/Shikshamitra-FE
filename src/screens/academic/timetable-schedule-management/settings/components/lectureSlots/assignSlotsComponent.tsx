@@ -28,6 +28,9 @@ interface AssignSlotsProps {
   sourceClassName?: string;
 }
 
+const hasClassShift = (standard: Standards) =>
+  Boolean(standard.shiftId && standard.shift?.startTime && standard.shift?.endTime);
+
 const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsProps) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // Get current board, medium and medium setter from global state
@@ -56,6 +59,12 @@ const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsPro
   // StandardIds that already have a lecture slot configured — these should be disabled in the dropdown
   const configuredStandardIds: string[] = (allSlotsData?.items ?? []).map(
     (slot: any) => slot.standardId
+  );
+  const missingShiftStandardIds = allClass
+    .filter((standard) => !hasClassShift(standard))
+    .map((standard) => standard.id);
+  const disabledStandardIds = Array.from(
+    new Set([...configuredStandardIds, ...missingShiftStandardIds])
   );
 
   const formik = useFormik({
@@ -256,10 +265,20 @@ const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsPro
                       ? formik.errors.classNames
                       : undefined
                   }
-                  disabledValues={configuredStandardIds}
-                  disabledLabel="Already configured"
+                  disabledValues={disabledStandardIds}
+                  disabledLabel="Already configured or shift missing"
                 />
               </ShakingTextField>
+              {missingShiftStandardIds.length > 0 && (
+                <Typography
+                  variant="caption"
+                  color="warning.main"
+                  sx={{ mt: 1, display: 'block' }}
+                >
+                  Classes without a school shift are disabled. First assign the school shift to the
+                  class, then assign lecture slots.
+                </Typography>
+              )}
             </Stack>
           </Box>
         </Box>

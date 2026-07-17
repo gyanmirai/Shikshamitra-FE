@@ -124,6 +124,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             marks: values.marks,
             totalMarks: resolveTotalMarks(values.totalMarks),
             feedback: values.feedback,
+            status: 4,
           },
         }).unwrap();
 

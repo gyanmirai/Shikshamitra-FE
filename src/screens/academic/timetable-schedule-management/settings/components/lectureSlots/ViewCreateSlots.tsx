@@ -30,6 +30,7 @@ interface ViewCreateSlotsProps {
 // Normalised shape used exclusively for rendering
 interface NormalisedSlotData {
   className: string;
+  shiftTiming: string;
   schoolHours: string;
   previousClassSlots: string;
   slotConfigurations: Array<{
@@ -60,6 +61,7 @@ const getDayLabel = (value: number) => dayMarks.find((d) => d.value === value)?.
 /** Maps raw API detail response → normalised view model */
 const mapApiToViewModel = (apiData: any, standardName?: string): NormalisedSlotData => ({
   className: standardName || apiData?.standardName || apiData?.standardId || '—',
+  shiftTiming: apiData?.shiftTimingLabel || 'Shift not assigned',
   schoolHours: apiData?.schoolHours || '—',
   previousClassSlots: apiData?.previousStandardId || 'None',
   slotConfigurations: (apiData?.slotConfigurations ?? []).map((config: any, ci: number) => {
@@ -179,6 +181,27 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
               </Typography>
               <Typography variant="body2" fontWeight={700} color="primary.main">
                 {viewData?.className || '—'}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 1.5,
+                py: 0.75,
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.info.main, 0.08),
+                border: '1px solid',
+                borderColor: alpha(theme.palette.info.main, 0.2),
+              }}
+            >
+              <Iconify icon="mdi:clock-time-four-outline" width={16} color="info.main" />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.68rem' }}>
+                Timing:
+              </Typography>
+              <Typography variant="body2" fontWeight={700} color="info.main">
+                {viewData?.shiftTiming || 'Shift not assigned'}
               </Typography>
             </Box>
           </Stack>

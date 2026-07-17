@@ -10,6 +10,7 @@ import type { TimetableValidationIssue } from 'src/components/timetable/timetabl
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
@@ -39,6 +40,7 @@ import {
   Box,
   Card,
   Chip,
+  Alert,
   Paper,
   Button,
   Divider,
@@ -1238,10 +1240,12 @@ const TimeTableForm = ({
         });
         setIsDirty(false);
         onClose();
+        return true;
       } catch (error) {
         shikshaMitraToast.error({
           message: getTimetableApiErrorMessage(error),
         });
+        return false;
       }
     },
     [createTimetable, divisionId, onClose, setIsDirty, standardId, transformSlotsToPayload]
@@ -1556,6 +1560,7 @@ const TimeTableForm = ({
       return;
     }
 
+    setValidationResult(null);
     setPublishConfirmOpen(true);
   };
 
@@ -1992,15 +1997,15 @@ const TimeTableForm = ({
             Close
           </Button>
           {validationResult?.passed && (
-            <Button
+            <LoadingButton
               onClick={handlePublishFromValidation}
               variant="contained"
               color="primary"
               startIcon={<Iconify icon={GlobalIcons.publish} />}
-              disabled={isSubmitting}
+              loading={isSubmitting}
             >
               Publish Now
-            </Button>
+            </LoadingButton>
           )}
         </DialogActions>
       </Dialog>
@@ -2008,7 +2013,9 @@ const TimeTableForm = ({
       {/* Publish Confirmation Dialog */}
       <Dialog
         open={publishConfirmOpen}
-        onClose={() => setPublishConfirmOpen(false)}
+        onClose={() => {
+          if (!isSubmitting) setPublishConfirmOpen(false);
+        }}
         maxWidth="xs"
         fullWidth
       >
@@ -2020,7 +2027,11 @@ const TimeTableForm = ({
           <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
             Ready to publish Class {selectedClass} Division {selectedDivision}
           </Typography>
-          <Stack spacing={1} sx={{ mb: 2.5 }}>
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Validation is complete. Publishing will make this timetable visible to teachers,
+            students, and parents.
+          </Alert>
+          <Stack spacing={1} sx={{ mb: 2.5, display: 'none' }}>
             <Typography variant="caption" sx={{ display: 'block', color: 'success.main', fontWeight: 600 }}>
               ✓ {slotSummary.filled}/{slotSummary.total} slots filled
             </Typography>
@@ -2035,23 +2046,30 @@ const TimeTableForm = ({
             </Typography>
           </Stack>
           <Typography variant="body2" color="text.secondary">
-            After publishing, this timetable will be visible to teachers, students, and parents. Do you want to continue?
+            This action updates the timetable status to Published. Continue?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPublishConfirmOpen(false)} variant="outlined" color="inherit">
+          <Button
+            onClick={() => setPublishConfirmOpen(false)}
+            variant="outlined"
+            color="inherit"
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button
-            onClick={() => {
-              setPublishConfirmOpen(false);
-              handleSubmit(formik.values.slots, 2);
+          <LoadingButton
+            onClick={async () => {
+              const published = await handleSubmit(formik.values.slots, 2);
+              if (published) setPublishConfirmOpen(false);
             }}
             variant="contained"
             color="primary"
+            loading={isSubmitting}
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
           >
             Publish
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </Dialog>
 

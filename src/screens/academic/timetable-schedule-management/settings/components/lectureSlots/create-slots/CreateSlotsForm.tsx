@@ -4,7 +4,7 @@ import React from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import { Iconify } from 'src/components/iconify';
 import { alpha, lighten } from '@mui/material/styles';
-import { Box, Fade, Stack, Button, Tooltip, Typography } from '@mui/material';
+import { Box, Fade, Alert, Stack, Button, Tooltip, Typography } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { useSlotForm } from './useSlotForm';
@@ -24,6 +24,9 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
   const {
     formik,
     allClass,
+    canConfigureSlots,
+    classShiftMessage,
+    selectedClassShift,
     isLectureSlotsLoading,
     isSubmitting,
     handleClassChange,
@@ -129,12 +132,35 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                     size="small"
                     startIcon={<AddIcon fontSize="small" />}
                     onClick={handleAddSlotConfiguration}
+                    disabled={!canConfigureSlots}
                   >
                     Add Slot Group
                   </Button>
                 </Tooltip>
               )}
             </Stack>
+
+            <Alert
+              severity={selectedClassShift ? 'info' : 'warning'}
+              icon={
+                <Iconify
+                  icon={
+                    selectedClassShift ? 'mdi:clock-check-outline' : 'mdi:clock-alert-outline'
+                  }
+                />
+              }
+              sx={{
+                borderRadius: 1.5,
+                '& .MuiAlert-message': { width: '100%' },
+              }}
+            >
+              <Typography variant="body2" fontWeight={600}>
+                Class Timing
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {classShiftMessage}
+              </Typography>
+            </Alert>
 
             {hasSlotConfigs && <CapacitySummary slotConfigurations={slotConfigs} />}
 
@@ -181,6 +207,10 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                     onTotalSlotsChange={(value) => handleTotalSlotsChange(configIndex, value)}
                     classes={allClass}
                     className={formik.values.className}
+                    canConfigureSlots={canConfigureSlots}
+                    classShiftMessage={classShiftMessage}
+                    shiftStartTime={selectedClassShift?.start ?? null}
+                    shiftEndTime={selectedClassShift?.end ?? null}
                     classNameError={
                       formik.touched.className && typeof formik.errors.className === 'string'
                         ? formik.errors.className

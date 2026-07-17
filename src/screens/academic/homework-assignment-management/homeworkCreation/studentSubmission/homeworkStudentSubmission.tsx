@@ -16,7 +16,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { HomeworkSubmissionStatusOptions } from 'src/enums/homework-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import RubricEvaluationPanel from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 import { useGetHomeworkSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 import {
   FeedbackStatusChip,
@@ -24,6 +23,7 @@ import {
   EvaluationStatusChip,
   filterEvaluationRows,
   getEvaluationSummary,
+  dedupeEvaluationRows,
   EvaluationActionButton,
   EvaluationSummaryCards,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
@@ -83,7 +83,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const viewSubmissionDialog = useBoolean();
 
   const normalizedData = React.useMemo(
-    () => homeworkSubmissions?.data || [],
+    () => dedupeEvaluationRows(homeworkSubmissions?.data || []),
     [homeworkSubmissions?.data]
   );
 
@@ -158,7 +158,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   return (
     <>
       <Stack spacing={1}>
-        <EvaluationSummaryCards summary={summary} />
+        <EvaluationSummaryCards summary={summary} showMarks={false} />
         <EvaluationFilterBar value={activeFilter} onChange={setActiveFilter} />
       </Stack>
       <Box sx={{ mt: 1.5 }}>
@@ -248,36 +248,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               align: 'left',
               filterType: 'date',
               minWidth: 140,
-            },
-            {
-              id: 'totalMarks',
-              label: 'Total Marks',
-              align: 'left',
-              minWidth: 130,
-              filterType: 'number',
-              render: (value) =>
-                value !== undefined && value !== null && value !== '-' ? (
-                  <Typography variant="caption" fontSize="13px">
-                    {value}
-                  </Typography>
-                ) : (
-                  <Typography variant="caption">-</Typography>
-                ),
-            },
-            {
-              id: 'marks',
-              label: 'Obtained Marks',
-              filterType: 'number',
-              minWidth: 150,
-              align: 'left',
-              render: (value) =>
-                value !== undefined && value !== null && value !== '-' ? (
-                  <Typography variant="caption" fontSize="13px">
-                    {value}
-                  </Typography>
-                ) : (
-                  <Typography variant="caption">-</Typography>
-                ),
             },
             {
               id: 'feedback',
@@ -408,18 +378,16 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedStudent?.marks !== undefined && selectedStudent?.marks !== null
-                ? 'Edit Feedback & Marks'
-                : 'Add Feedback & Marks'}
+              {selectedStudent?.feedback ? 'Edit Feedback' : 'Add Feedback'}
             </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
               title={
-                selectedStudent?.marks !== undefined && selectedStudent?.marks !== null
-                  ? 'You can modify the feedback & marks given to the student for their homework submission.'
-                  : "You can provide feedback & marks for the student's homework submission."
+                selectedStudent?.feedback
+                  ? 'You can modify the feedback given to the student for their homework submission.'
+                  : "You can provide feedback for the student's homework submission."
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -428,18 +396,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         }
         maxWidth="sm"
       >
-        {selectedStudent && selectedClass && selectedSubject && selectedHomework?.id && (
-          <Box sx={{ p: 2, pb: 0 }}>
-            <RubricEvaluationPanel
-              mode="homework"
-              standardId={selectedClass}
-              subjectId={selectedSubject}
-              taskId={selectedHomework.id}
-              taskTitle={selectedHomework.label}
-              studentRow={selectedStudent}
-            />
-          </Box>
-        )}
         {selectedHomework?.submissionType === 'file_upload' ? (
           <AssignGrade
             data={selectedStudent}

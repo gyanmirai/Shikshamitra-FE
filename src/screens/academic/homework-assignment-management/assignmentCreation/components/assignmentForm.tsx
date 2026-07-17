@@ -820,7 +820,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                                       format="DD/MM/YYYY hh:mm"
                                       minDate={dayjs(currentYear?.startDate)}
                                       maxDate={dayjs(currentYear?.endDate)}
-                                      minDateTime={dayjs()}
+                                      disablePast
                                       value={div.publishDate ? dayjs(div.publishDate) : null}
                                       onChange={(val) => {
                                         formik.setFieldValue(`divisions[${idx}].publishDate`, val);

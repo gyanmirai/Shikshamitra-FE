@@ -46,6 +46,18 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
     },
   ]);
   const [showErrors, setShowErrors] = useState(false);
+  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
+
+  const isDirty = rows.some(
+    (row) =>
+      row.name.trim() !== '' ||
+      row.displayName.trim() !== '' ||
+      row.color !== '' ||
+      row.sortOrder !== '' ||
+      row.category !== 'General' ||
+      row.icon !== '' ||
+      row.status !== 'Active'
+  );
 
   /**
    * Memoization Justification:
@@ -115,6 +127,7 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
 
   const resetAndClose = useCallback(() => {
     onClose();
+    setConfirmCloseOpen(false);
     setTimeout(() => {
       setRows([
         {
@@ -131,6 +144,14 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
       setShowErrors(false);
     }, 300);
   }, [onClose]);
+
+  const requestClose = useCallback(() => {
+    if (isDirty) {
+      setConfirmCloseOpen(true);
+      return;
+    }
+    resetAndClose();
+  }, [isDirty, resetAndClose]);
 
   const handleSave = async () => {
     const hasError = rows.some((r) => {
@@ -191,6 +212,9 @@ export const useSubjectAddDrawer = ({ onClose }: UseSubjectAddDrawerProps) => {
     removeRow,
     getDuplicateError,
     resetAndClose,
+    requestClose,
+    confirmCloseOpen,
+    setConfirmCloseOpen,
     handleSave,
   };
 };
