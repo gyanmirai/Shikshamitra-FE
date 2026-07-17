@@ -49,6 +49,7 @@ import {
   buildPreviewAdmissionCrmExamResultRequest,
   buildAdmissionCrmActivationPreviewRequest,
   buildAdmissionCrmEnrollmentOverviewRequest,
+  buildAdmissionCrmMyWorkRequest,
   buildChangeAdmissionCrmLeadPriorityRequest,
   buildMergeAdmissionCrmDuplicateLeadRequest,
   buildAssignAdmissionCrmSpecialRouteRequest,
@@ -230,6 +231,18 @@ describe('admissions CRM API contracts', () => {
     expect(buildAdmissionCrmEnrollmentOverviewRequest({ academicYearId: 'year-1' })).toEqual({
       url: '/student-enrollment/admissions-crm/year-1/operations/overview',
       method: 'GET',
+    });
+    expect(
+      buildAdmissionCrmMyWorkRequest({
+        academicYearId: 'year-1',
+        skipCount: 25,
+        maxResultCount: 25,
+        sorting: 'dueAt asc',
+      })
+    ).toEqual({
+      url: '/student-enrollment/admissions-crm/year-1/operations/my-work',
+      method: 'GET',
+      params: { skipCount: 25, maxResultCount: 25, sorting: 'dueAt asc' },
     });
     expect(
       buildAdmissionCrmOperationsQueueRequest({

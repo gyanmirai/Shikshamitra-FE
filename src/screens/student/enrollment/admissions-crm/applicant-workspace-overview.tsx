@@ -169,7 +169,7 @@ export function ApplicantWorkspaceOverview({
       academicYearId,
       ownerOnly: true,
     },
-    { skip: !ownerEditorOpen }
+    { skip: !ownerEditorOpen && !lead.ownerUserId }
   );
   const taskStaffQuery = useGetAdmissionCrmStaffQuery(
     {
@@ -206,11 +206,10 @@ export function ApplicantWorkspaceOverview({
     return () => window.clearTimeout(timer);
   }, [taskSearch]);
   useEffect(() => {
-    if (!ownerEditorOpen) return;
     const selectedOwner = ownerStaffQuery.data?.find((staff) => staff.id === lead.ownerUserId);
     if (selectedOwner) setOwner(selectedOwner);
     else if (!lead.ownerUserId) setOwner(null);
-  }, [lead.ownerUserId, ownerEditorOpen, ownerStaffQuery.data]);
+  }, [lead.ownerUserId, ownerStaffQuery.data]);
 
   const hasUnsavedOverviewInput = Boolean(
     (noteFormOpen && note.trim()) ||
