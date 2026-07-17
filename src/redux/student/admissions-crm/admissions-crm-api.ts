@@ -2330,6 +2330,7 @@ export type AdmissionCrmOperationsQueueFilters = {
   seatPoolId?: string;
   activationStatus?: AdmissionCrmActivationStatus;
   serviceHandoffStatus?: AdmissionCrmServiceHandoffStatus;
+  sorting?: string;
   skipCount?: number;
   maxResultCount?: number;
 };
@@ -5052,7 +5053,10 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         studentAdmissionsCrmType.exam,
       ],
     }),
-    getAdmissionCrmStandardOptions: builder.query<AdmissionCrmStandardOptionDto[], { mediumId: string }>({
+    getAdmissionCrmStandardOptions: builder.query<
+      AdmissionCrmStandardOptionDto[],
+      { mediumId: string }
+    >({
       query: ({ mediumId }) => ({
         url: `/education-medium/${mediumId}/standards`,
         method: 'GET',

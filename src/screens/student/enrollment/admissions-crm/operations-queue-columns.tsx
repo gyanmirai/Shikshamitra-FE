@@ -3,6 +3,14 @@ import type { AdmissionCrmOperationsQueueItemDto } from 'src/redux/student/admis
 
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { Chip, Stack, Typography, LinearProgress } from '@mui/material';
+import {
+  AdmissionCrmRouteType,
+  AdmissionCrmSeatOfferStatus,
+  AdmissionCrmActivationStatus,
+  AdmissionCrmRegistrationStatus,
+  AdmissionCrmServiceHandoffStatus,
+  AdmissionCrmApplicantDocumentStatus,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { enrollmentActionsColumn } from './workspace-table-patterns';
 import {
@@ -29,13 +37,13 @@ type Options = {
 
 const applicantColumn: IColumn = {
   id: 'applicantName',
+  originalId: 'ApplicantName',
   label: 'Applicant',
   width: 220,
   minWidth: 200,
   sticky: true,
   stickyPosition: 'left',
   stickyOnMobile: false,
-  isSort: false,
   isFilter: false,
   render: (value) => (
     <Typography variant="subtitle2" noWrap>
@@ -46,10 +54,10 @@ const applicantColumn: IColumn = {
 
 const nextActionColumn: IColumn = {
   id: 'title',
+  originalId: 'Title',
   label: 'Next Action',
   width: 290,
   minWidth: 250,
-  isSort: false,
   isFilter: false,
   render: (value, row) => {
     const item = row as AdmissionCrmOperationsQueueItemDto;
@@ -70,10 +78,10 @@ const nextActionColumn: IColumn = {
 
 const ownerColumn = (staffById: ReadonlyMap<string, string>): IColumn => ({
   id: 'owner',
+  originalId: 'OwnerUserId',
   label: 'Owner',
   width: 180,
   minWidth: 155,
-  isSort: false,
   isFilter: false,
   render: (_value, row) => {
     const { ownerUserId } = row as AdmissionCrmOperationsQueueItemDto;
@@ -106,11 +114,14 @@ const registrationColumns = (options: Options): IColumn[] => [
   applicantColumn,
   {
     id: 'registration',
+    originalId: 'RegistrationStatus',
     label: 'Registration',
     width: 190,
     minWidth: 170,
-    isSort: false,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: Object.values(AdmissionCrmRegistrationStatus)
+      .filter((value): value is AdmissionCrmRegistrationStatus => typeof value === 'number')
+      .map((value) => ({ value, label: getRegistrationStatusLabel(value) })),
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).registration;
       return (
@@ -129,10 +140,10 @@ const registrationColumns = (options: Options): IColumn[] => [
   },
   {
     id: 'completion',
+    originalId: 'CompletionPercentage',
     label: 'Completion',
     width: 170,
     minWidth: 150,
-    isSort: false,
     isFilter: false,
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).registration;
@@ -151,11 +162,14 @@ const registrationColumns = (options: Options): IColumn[] => [
   },
   {
     id: 'documents',
+    originalId: 'DocumentPendingCount',
     label: 'Documents',
     width: 150,
     minWidth: 135,
-    isSort: false,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: Object.values(AdmissionCrmApplicantDocumentStatus)
+      .filter((value): value is AdmissionCrmApplicantDocumentStatus => typeof value === 'number')
+      .map((value) => ({ value, label: AdmissionCrmApplicantDocumentStatus[value] })),
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).registration;
       return context?.documentTotalCount
@@ -165,10 +179,10 @@ const registrationColumns = (options: Options): IColumn[] => [
   },
   {
     id: 'linkExpiry',
+    originalId: 'LinkExpiresAt',
     label: 'Link Expiry',
     width: 140,
     minWidth: 125,
-    isSort: false,
     isFilter: false,
     render: (_value, row) =>
       formatEnrollmentDate((row as AdmissionCrmOperationsQueueItemDto).registration?.linkExpiresAt),
@@ -182,21 +196,27 @@ const offerColumns = (options: Options): IColumn[] => [
   applicantColumn,
   {
     id: 'route',
+    originalId: 'RouteType',
     label: 'Admission Route',
     width: 170,
     minWidth: 150,
-    isSort: false,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: Object.values(AdmissionCrmRouteType)
+      .filter((value): value is AdmissionCrmRouteType => typeof value === 'number')
+      .map((value) => ({ value, label: getRouteTypeLabel(value) })),
     render: (_value, row) =>
       getRouteTypeLabel((row as AdmissionCrmOperationsQueueItemDto).offer?.routeType),
   },
   {
     id: 'decision',
+    originalId: 'OfferStatus',
     label: 'Decision / Offer',
     width: 190,
     minWidth: 170,
-    isSort: false,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: Object.values(AdmissionCrmSeatOfferStatus)
+      .filter((value): value is AdmissionCrmSeatOfferStatus => typeof value === 'number')
+      .map((value) => ({ value, label: getOfferStatusLabel(value) })),
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).offer;
       return (
@@ -211,10 +231,10 @@ const offerColumns = (options: Options): IColumn[] => [
   },
   {
     id: 'seatPool',
+    originalId: 'SeatPoolName',
     label: 'Seat Pool',
     width: 180,
     minWidth: 155,
-    isSort: false,
     isFilter: false,
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).offer;
@@ -225,10 +245,10 @@ const offerColumns = (options: Options): IColumn[] => [
   },
   {
     id: 'payment',
+    originalId: 'PaymentGateSatisfied',
     label: 'Payment Condition',
     width: 175,
     minWidth: 155,
-    isSort: false,
     isFilter: false,
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).offer;
@@ -240,10 +260,10 @@ const offerColumns = (options: Options): IColumn[] => [
   },
   {
     id: 'offerExpiry',
+    originalId: 'OfferExpiresAt',
     label: 'Offer Expiry',
     width: 140,
     minWidth: 125,
-    isSort: false,
     isFilter: false,
     render: (_value, row) =>
       formatEnrollmentDate((row as AdmissionCrmOperationsQueueItemDto).offer?.offerExpiresAt),
@@ -257,11 +277,14 @@ const activationColumns = (options: Options): IColumn[] => [
   applicantColumn,
   {
     id: 'activationStatus',
+    originalId: 'ActivationStatus',
     label: 'Activation',
     width: 175,
     minWidth: 155,
-    isSort: false,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: Object.values(AdmissionCrmActivationStatus)
+      .filter((value): value is AdmissionCrmActivationStatus => typeof value === 'number')
+      .map((value) => ({ value, label: getActivationStatusLabel(value) })),
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).activation;
       return (
@@ -276,10 +299,10 @@ const activationColumns = (options: Options): IColumn[] => [
   },
   {
     id: 'placement',
+    originalId: 'PlacementConfigured',
     label: 'Placement',
     width: 150,
     minWidth: 135,
-    isSort: false,
     isFilter: false,
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).activation;
@@ -325,11 +348,12 @@ const operationsColumns = (options: Options): IColumn[] => [
   nextActionColumn,
   {
     id: 'severity',
+    originalId: 'IsUrgent',
     label: 'Severity',
     width: 120,
     minWidth: 110,
-    isSort: false,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: [{ value: true, label: 'Urgent' }],
     render: (_value, row) => {
       const item = row as AdmissionCrmOperationsQueueItemDto;
       return (
@@ -344,10 +368,10 @@ const operationsColumns = (options: Options): IColumn[] => [
   },
   {
     id: 'assignment',
+    originalId: 'OwnerUserId',
     label: 'Assignment',
     width: 135,
     minWidth: 120,
-    isSort: false,
     isFilter: false,
     render: (_value, row) => {
       const item = row as AdmissionCrmOperationsQueueItemDto;
@@ -359,11 +383,11 @@ const operationsColumns = (options: Options): IColumn[] => [
   },
   {
     id: 'due',
+    originalId: 'AgeDays',
     label: 'Age / Due',
     width: 150,
     minWidth: 135,
-    isSort: false,
-    isFilter: false,
+    filterType: 'number',
     render: (_value, row) => {
       const item = row as AdmissionCrmOperationsQueueItemDto;
       return `${item.ageDays} days · ${formatEnrollmentDate(item.dueAt)}`;
@@ -371,11 +395,14 @@ const operationsColumns = (options: Options): IColumn[] => [
   },
   {
     id: 'retry',
+    originalId: 'ServiceHandoffStatus',
     label: 'Retry State',
     width: 145,
     minWidth: 130,
-    isSort: false,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: Object.values(AdmissionCrmServiceHandoffStatus)
+      .filter((value): value is AdmissionCrmServiceHandoffStatus => typeof value === 'number')
+      .map((value) => ({ value, label: getHandoffStatusLabel(value) })),
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).operation;
       if (context?.serviceHandoffStatus == null) return 'Not applicable';

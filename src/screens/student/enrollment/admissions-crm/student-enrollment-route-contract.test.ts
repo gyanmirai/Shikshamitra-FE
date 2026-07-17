@@ -278,6 +278,42 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(tableHeader).toContain('aria-hidden="true"');
   });
 
+  it('keeps every paginated Enrollment workspace server-filtered and server-sorted', () => {
+    const paginatedTableFiles = [
+      'overview-workspace.tsx',
+      'pipeline-workspace.tsx',
+      'exams-workspace.tsx',
+      'operations-queue-workspace.tsx',
+    ];
+
+    paginatedTableFiles.forEach((file) => {
+      const source = read('src', 'screens', 'student', 'enrollment', 'admissions-crm', file);
+      expect(source, file).toContain('serverSideFilter');
+      expect(source, file).toContain('onServerFilter');
+      expect(source, file).toContain('serverSideSort');
+      expect(source, file).toContain('onServerSort');
+    });
+
+    const analytics = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'analytics-workspace.tsx'
+    );
+    const rteImport = read(
+      'src',
+      'screens',
+      'student',
+      'enrollment',
+      'admissions-crm',
+      'rte-allotment-import.tsx'
+    );
+    expect(analytics).not.toContain('isFilter={false}');
+    expect(rteImport).not.toContain('isFilter={false}');
+  });
+
   it('keeps the simulated scale contract paginated instead of materializing 25,000 leads', () => {
     const fixture = read('e2e', 'student', 'fixtures', 'admission-crm-scale.ts');
     const browserFlow = read('e2e', 'student', 'admissions-crm-flow.guest.spec.ts');

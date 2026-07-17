@@ -187,7 +187,7 @@ export function ExamsWorkspace() {
       eligibilityDecision: state.eligibility,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
-      sorting: 'ExamStartTime ASC',
+      sorting: state.sorting || 'ExamStartTime ASC',
     },
     { skip: !academicYearId }
   );
@@ -271,13 +271,13 @@ export function ExamsWorkspace() {
     () => [
       {
         id: 'applicantName',
+        originalId: 'ApplicantName',
         label: 'Applicant',
         width: 190,
         minWidth: 180,
         sticky: true,
         stickyPosition: 'left',
         stickyOnMobile: false,
-        isSort: false,
         isFilter: false,
         render: (value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
@@ -298,7 +298,6 @@ export function ExamsWorkspace() {
         label: 'Exam schedule',
         width: 190,
         minWidth: 180,
-        isSort: false,
         isFilter: false,
         render: (value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
@@ -328,7 +327,6 @@ export function ExamsWorkspace() {
           value: Number(value),
           label,
         })),
-        isSort: false,
         render: (value) => (
           <Label
             color={attendanceColors[value as AdmissionCrmExamAttendanceStatus]}
@@ -348,7 +346,6 @@ export function ExamsWorkspace() {
           value: Number(value),
           label,
         })),
-        isSort: false,
         render: (value) => (
           <Label color={resultColors[value as EntranceExamStatusEnum]} sx={accessibleStatusSx}>
             {resultLabels[value as EntranceExamStatusEnum]}
@@ -360,7 +357,6 @@ export function ExamsWorkspace() {
         label: 'Marks',
         width: 80,
         minWidth: 75,
-        isSort: false,
         isFilter: false,
         render: (value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
@@ -382,7 +378,6 @@ export function ExamsWorkspace() {
           value: Number(value),
           label,
         })),
-        isSort: false,
         render: (value) => (
           <Label
             color={eligibilityColors[value as AdmissionCrmEligibilityDecision]}
@@ -440,6 +435,7 @@ export function ExamsWorkspace() {
           serverSide
           serverSidePagination
           serverSideSearch
+          serverSideSort
           serverSideFilter
           defaultSearchTerm={search}
           searchFieldProps={{
@@ -457,6 +453,16 @@ export function ExamsWorkspace() {
             updateState({ page: 1 }, 'replace');
           }}
           onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
+          onServerSort={(_column, sorts) => {
+            const sort = sorts[0];
+            updateState(
+              {
+                sorting: sort ? `${sort.originalId || sort.column} ${sort.direction}` : undefined,
+                page: 1,
+              },
+              'push'
+            );
+          }}
           onServerFilter={(filters) =>
             updateState(
               {
