@@ -114,8 +114,7 @@ const routeTypes = Object.values(AdmissionCrmRouteType).filter(
   (value): value is AdmissionCrmRouteType => typeof value === 'number'
 );
 const routeTypeLabel = (value: AdmissionCrmRouteType | string | null | undefined) => {
-  const numericValue =
-    typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value;
+  const numericValue = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value;
   const enumLabel =
     typeof numericValue === 'number' ? AdmissionCrmRouteType[numericValue] : numericValue;
   return enumLabel?.replace(/([a-z])([A-Z])/g, '$1 $2') || 'Unknown pathway';
@@ -383,7 +382,7 @@ export function PipelineWorkspace() {
       academicMediumId,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
-      sorting: 'LastActivityTime DESC',
+      sorting: state.sorting || 'LastActivityTime DESC',
     },
     { skip: !academicYearId || state.view === 'board' }
   );
@@ -567,24 +566,28 @@ export function PipelineWorkspace() {
           ]),
       ...(!state.className
         ? []
-        : [{
-            column: 'desiredClassName',
-            type: 'contains',
-            value: state.className,
-            valueType: 'string',
-            label: 'Target Class',
-            displayValue: state.className,
-          }]),
+        : [
+            {
+              column: 'desiredClassName',
+              type: 'contains',
+              value: state.className,
+              valueType: 'string',
+              label: 'Target Class',
+              displayValue: state.className,
+            },
+          ]),
       ...(state.routeType == null
         ? []
-        : [{
-            column: 'intendedRouteType',
-            type: 'equals',
-            value: state.routeType,
-            valueType: 'enum',
-            label: 'Admission Pathway',
-            displayValue: routeTypeLabel(state.routeType),
-          }]),
+        : [
+            {
+              column: 'intendedRouteType',
+              type: 'equals',
+              value: state.routeType,
+              valueType: 'enum',
+              label: 'Admission Pathway',
+              displayValue: routeTypeLabel(state.routeType),
+            },
+          ]),
       ...(!resolvedOwner
         ? []
         : [
@@ -598,7 +601,15 @@ export function PipelineWorkspace() {
             },
           ]),
     ],
-    [resolvedOwner, staffById, state.channel, state.className, state.priority, state.routeType, state.stage]
+    [
+      resolvedOwner,
+      staffById,
+      state.channel,
+      state.className,
+      state.priority,
+      state.routeType,
+      state.stage,
+    ]
   );
 
   const columns = useMemo<IColumn[]>(
@@ -655,13 +666,13 @@ export function PipelineWorkspace() {
       },
       {
         id: 'applicant',
+        originalId: 'ApplicantName',
         label: 'Applicant',
         width: 250,
         minWidth: 220,
         sticky: true,
         stickyPosition: 'left',
         stickyOnMobile: false,
-        isSort: false,
         isFilter: false,
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
@@ -687,7 +698,6 @@ export function PipelineWorkspace() {
           value: stage.systemStage,
           label: stage.stageName,
         })),
-        isSort: false,
         render: (value) => <AdmissionCrmStageChip stage={value as AdmissionInquiryStage} />,
       },
       {
@@ -695,7 +705,6 @@ export function PipelineWorkspace() {
         label: 'Registration',
         width: 180,
         minWidth: 165,
-        isSort: false,
         isFilter: false,
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
@@ -733,7 +742,6 @@ export function PipelineWorkspace() {
           value: channel,
           label: getAdmissionCrmChannelLabel(channel),
         })),
-        isSort: false,
         render: (value) => getAdmissionCrmChannelLabel(value as AdmissionInquiryChannel),
       },
       {
@@ -741,7 +749,6 @@ export function PipelineWorkspace() {
         label: 'Target Class',
         width: 220,
         minWidth: 180,
-        isSort: false,
         isFilter: true,
         render: (value) => value || 'Placement missing',
       },
@@ -751,10 +758,14 @@ export function PipelineWorkspace() {
         width: 190,
         minWidth: 170,
         filterType: 'enum',
-        enumOptions: routeTypes.map((routeType) => ({ value: routeType, label: routeTypeLabel(routeType) })),
-        isSort: false,
+        enumOptions: routeTypes.map((routeType) => ({
+          value: routeType,
+          label: routeTypeLabel(routeType),
+        })),
         render: (value, row) =>
-          value == null ? (row as AdmissionCrmLeadDto).admissionIntent : routeTypeLabel(value as AdmissionCrmRouteType),
+          value == null
+            ? (row as AdmissionCrmLeadDto).admissionIntent
+            : routeTypeLabel(value as AdmissionCrmRouteType),
       },
       {
         id: 'ownerUserId',
@@ -763,7 +774,6 @@ export function PipelineWorkspace() {
         minWidth: 150,
         filterType: 'enum',
         enumOptions: ownerFilterOptions,
-        isSort: false,
         render: (_value, row) => ownerName(row as AdmissionCrmLeadDto),
       },
       {
@@ -776,7 +786,6 @@ export function PipelineWorkspace() {
           value: priority,
           label: priorityLabels[priority],
         })),
-        isSort: false,
         render: (value) => priorityLabels[value as AdmissionCrmLeadPriority],
       },
       {
@@ -785,7 +794,6 @@ export function PipelineWorkspace() {
         width: 90,
         minWidth: 80,
         align: 'right',
-        isSort: false,
         isFilter: false,
       },
       {
@@ -793,7 +801,6 @@ export function PipelineWorkspace() {
         label: 'Last Activity',
         width: 150,
         minWidth: 140,
-        isSort: false,
         isFilter: false,
         render: (value) => dayjs(value).format('DD MMM, HH:mm'),
       },
@@ -1266,6 +1273,7 @@ export function PipelineWorkspace() {
             serverSide
             serverSidePagination
             serverSideSearch
+            serverSideSort
             serverSideFilter
             searchTerm={search}
             defaultSearchTerm={search}
@@ -1284,6 +1292,16 @@ export function PipelineWorkspace() {
               setDebouncedSearch(value.trim());
             }}
             onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
+            onServerSort={(_column, sorts) => {
+              const sort = sorts[0];
+              updateState(
+                {
+                  sorting: sort ? `${sort.originalId || sort.column} ${sort.direction}` : undefined,
+                  page: 1,
+                },
+                'push'
+              );
+            }}
             onServerFilter={(filters) =>
               updateState(
                 {
@@ -1328,15 +1346,23 @@ export function PipelineWorkspace() {
             <Paper variant="outlined" sx={{ p: 1.25 }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.5}>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary">Academic year</Typography>
-                  <Typography variant="body2">{academicYearName || 'Selected academic year'}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Academic year
+                  </Typography>
+                  <Typography variant="body2">
+                    {academicYearName || 'Selected academic year'}
+                  </Typography>
                 </Box>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary">Board</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Board
+                  </Typography>
                   <Typography variant="body2">{academicBoardName || 'Selected board'}</Typography>
                 </Box>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary">Medium</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Medium
+                  </Typography>
                   <Typography variant="body2">{academicMediumName || 'Selected medium'}</Typography>
                 </Box>
               </Stack>
@@ -1406,7 +1432,9 @@ export function PipelineWorkspace() {
                 }}
               >
                 {mediumStages.map((stage) => (
-                  <MenuItem key={stage.id} value={stage.id}>{stage.stageName || stage.label}</MenuItem>
+                  <MenuItem key={stage.id} value={stage.id}>
+                    {stage.stageName || stage.label}
+                  </MenuItem>
                 ))}
               </TextField>
               <TextField
@@ -1422,7 +1450,9 @@ export function PipelineWorkspace() {
                 }}
               >
                 {standardOptions.map((standard) => (
-                  <MenuItem key={standard.id} value={standard.id}>{standard.name}</MenuItem>
+                  <MenuItem key={standard.id} value={standard.id}>
+                    {standard.name}
+                  </MenuItem>
                 ))}
               </TextField>
             </Stack>
@@ -1434,12 +1464,17 @@ export function PipelineWorkspace() {
                 label="Admission pathway"
                 value={quickForm.intendedRouteType}
                 onChange={(event) => {
-                  setQuickForm((current) => ({ ...current, intendedRouteType: Number(event.target.value) }));
+                  setQuickForm((current) => ({
+                    ...current,
+                    intendedRouteType: Number(event.target.value),
+                  }));
                   setDuplicateReviewed(false);
                 }}
               >
                 {routeTypes.map((routeType) => (
-                  <MenuItem key={routeType} value={routeType}>{routeTypeLabel(routeType)}</MenuItem>
+                  <MenuItem key={routeType} value={routeType}>
+                    {routeTypeLabel(routeType)}
+                  </MenuItem>
                 ))}
               </TextField>
               <TextField

@@ -1,5 +1,6 @@
 'use client';
 
+import type { IParams } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmStaffLookupDto,
   AdmissionCrmOperationsSavedViewDto,
@@ -120,6 +121,19 @@ const enumOptions = <T extends number>(source: Record<string, string | number>) 
     .filter((entry): entry is [string, T] => typeof entry[1] === 'number')
     .map(([key, value]) => ({ value, label: formatEnumLabel(key) }));
 
+const getLatestFilter = (filters: IParams['filters'], column: string) =>
+  [...filters].reverse().find((filter) => filter.column === column)?.value;
+
+const getLatestEnumFilter = <T extends number>(filters: IParams['filters'], column: string) => {
+  const value = getLatestFilter(filters, column);
+  return value === undefined || value === null || value === '' ? undefined : (Number(value) as T);
+};
+
+const getLatestNumberFilter = (filters: IParams['filters'], column: string) => {
+  const value = getLatestFilter(filters, column);
+  return value === undefined || value === null || value === '' ? undefined : Number(value);
+};
+
 export function OperationsQueueWorkspace({
   title,
   description,
@@ -197,6 +211,7 @@ export function OperationsQueueWorkspace({
       seatPoolId: state.seatPoolId,
       activationStatus: state.activationStatus,
       serviceHandoffStatus: state.serviceHandoffStatus,
+      sorting: state.sorting,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
     },
@@ -262,6 +277,122 @@ export function OperationsQueueWorkspace({
     () => buildOperationsQueueColumns({ variant, applicantTab, openApplicant, staffById }),
     [applicantTab, openApplicant, staffById, variant]
   );
+  const tableFilters = useMemo<IParams['filters']>(
+    () => [
+      ...(state.registrationStatus == null
+        ? []
+        : [
+            {
+              column: 'registration',
+              type: 'enum',
+              value: state.registrationStatus,
+              valueType: 'enum',
+              label: 'Registration',
+              displayValue: formatEnumLabel(
+                AdmissionCrmRegistrationStatus[state.registrationStatus]
+              ),
+            },
+          ]),
+      ...(state.documentStatus == null
+        ? []
+        : [
+            {
+              column: 'documents',
+              type: 'enum',
+              value: state.documentStatus,
+              valueType: 'enum',
+              label: 'Documents',
+              displayValue: formatEnumLabel(
+                AdmissionCrmApplicantDocumentStatus[state.documentStatus]
+              ),
+            },
+          ]),
+      ...(state.offerStatus == null
+        ? []
+        : [
+            {
+              column: 'decision',
+              type: 'enum',
+              value: state.offerStatus,
+              valueType: 'enum',
+              label: 'Offer',
+              displayValue: formatEnumLabel(AdmissionCrmSeatOfferStatus[state.offerStatus]),
+            },
+          ]),
+      ...(state.routeType == null
+        ? []
+        : [
+            {
+              column: 'route',
+              type: 'enum',
+              value: state.routeType,
+              valueType: 'enum',
+              label: 'Admission route',
+              displayValue: formatEnumLabel(AdmissionCrmRouteType[state.routeType]),
+            },
+          ]),
+      ...(state.activationStatus == null
+        ? []
+        : [
+            {
+              column: 'activationStatus',
+              type: 'enum',
+              value: state.activationStatus,
+              valueType: 'enum',
+              label: 'Activation',
+              displayValue: formatEnumLabel(AdmissionCrmActivationStatus[state.activationStatus]),
+            },
+          ]),
+      ...(state.serviceHandoffStatus == null
+        ? []
+        : [
+            {
+              column: 'retry',
+              type: 'enum',
+              value: state.serviceHandoffStatus,
+              valueType: 'enum',
+              label: 'Handoff status',
+              displayValue: formatEnumLabel(
+                AdmissionCrmServiceHandoffStatus[state.serviceHandoffStatus]
+              ),
+            },
+          ]),
+      ...(state.minimumAgeDays == null
+        ? []
+        : [
+            {
+              column: 'due',
+              type: 'number',
+              value: state.minimumAgeDays,
+              valueType: 'number',
+              label: 'Minimum age',
+              displayValue: `${state.minimumAgeDays} days`,
+            },
+          ]),
+      ...(state.urgent
+        ? [
+            {
+              column: 'severity',
+              type: 'enum',
+              value: true,
+              valueType: 'enum',
+              label: 'Severity',
+              displayValue: 'Urgent',
+            },
+          ]
+        : []),
+    ],
+    [
+      state.activationStatus,
+      state.documentStatus,
+      state.minimumAgeDays,
+      state.offerStatus,
+      state.registrationStatus,
+      state.routeType,
+      state.serviceHandoffStatus,
+      state.urgent,
+    ]
+  );
 
   const applySavedView = (savedView: AdmissionCrmOperationsSavedViewDto) => {
     if (!allowedQueues.includes(savedView.queueType)) {
@@ -274,6 +405,7 @@ export function OperationsQueueWorkspace({
     updateState(
       {
         queue: savedView.queueType,
+        sorting: savedView.filters.sorting,
         owner: savedView.filters.ownerUserId,
         assignee: savedView.filters.assignedToUserId,
         urgent: savedView.filters.urgentOnly || undefined,
@@ -310,6 +442,7 @@ export function OperationsQueueWorkspace({
           seatPoolId: state.seatPoolId,
           activationStatus: state.activationStatus,
           serviceHandoffStatus: state.serviceHandoffStatus,
+          sorting: state.sorting,
         },
         isShared: false,
       }).unwrap();
@@ -381,7 +514,11 @@ export function OperationsQueueWorkspace({
           value={selectedQueue}
           onChange={(event) =>
             updateState(
-              { queue: Number(event.target.value) as AdmissionCrmOperationsQueueType, page: 1 },
+              {
+                queue: Number(event.target.value) as AdmissionCrmOperationsQueueType,
+                sorting: undefined,
+                page: 1,
+              },
               'push'
             )
           }
@@ -713,6 +850,7 @@ export function OperationsQueueWorkspace({
           serverSide
           serverSidePagination
           serverSideSearch
+          serverSideSort
           serverSideFilter
           searchTerm={search}
           defaultSearchTerm={search}
@@ -721,12 +859,51 @@ export function OperationsQueueWorkspace({
             inputProps: { 'aria-label': 'Search this admissions queue' },
           }}
           totalCount={queueQuery.data?.totalCount || 0}
+          filters={tableFilters}
           page={page}
           rowsPerPage={pageSize}
           defaultRowsPerPage={pageSize}
           rowsPerPageOptions={[pageSize]}
           onServerSearch={setSearch}
           onServerPagination={(nextPage) => updateState({ page: nextPage }, 'push')}
+          onServerSort={(_column, sorts) => {
+            const sort = sorts[0];
+            updateState(
+              {
+                sorting: sort ? `${sort.originalId || sort.column} ${sort.direction}` : undefined,
+                page: 1,
+              },
+              'push'
+            );
+          }}
+          onServerFilter={(filters) =>
+            updateState(
+              {
+                registrationStatus: getLatestEnumFilter<AdmissionCrmRegistrationStatus>(
+                  filters,
+                  'registration'
+                ),
+                documentStatus: getLatestEnumFilter<AdmissionCrmApplicantDocumentStatus>(
+                  filters,
+                  'documents'
+                ),
+                offerStatus: getLatestEnumFilter<AdmissionCrmSeatOfferStatus>(filters, 'decision'),
+                routeType: getLatestEnumFilter<AdmissionCrmRouteType>(filters, 'route'),
+                activationStatus: getLatestEnumFilter<AdmissionCrmActivationStatus>(
+                  filters,
+                  'activationStatus'
+                ),
+                serviceHandoffStatus: getLatestEnumFilter<AdmissionCrmServiceHandoffStatus>(
+                  filters,
+                  'retry'
+                ),
+                minimumAgeDays: getLatestNumberFilter(filters, 'due'),
+                urgent: getLatestFilter(filters, 'severity') === true || undefined,
+                page: 1,
+              },
+              'push'
+            )
+          }
           noDataText={
             <EnrollmentTableEmptyState
               title="Queue cleared"

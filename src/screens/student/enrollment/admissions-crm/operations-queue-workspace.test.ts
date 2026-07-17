@@ -43,6 +43,10 @@ describe('Enrollment operations queue workspace', () => {
     expect(source).toContain("sx={{ minWidth: 0, width: '100%' }}");
     expect(source).not.toContain('minWidth: { lg: 240 }');
     expect(source).not.toContain('width: { lg: 170 }');
+    expect(source).toContain('serverSideSort');
+    expect(source).toContain('onServerSort');
+    expect(source).toContain('onServerFilter');
+    expect(source).toContain('filters={tableFilters}');
   });
 
   it('puts eligible applicants awaiting manual registration first', () => {

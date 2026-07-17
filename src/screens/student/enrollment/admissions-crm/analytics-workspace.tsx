@@ -5,7 +5,6 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useGetAdmissionCrmAnalyticsSummaryQuery } from 'src/redux/student/admissions-crm/admissions-crm-api';
 import {
   Box,
   Chip,
@@ -17,6 +16,11 @@ import {
   Typography,
   LinearProgress,
 } from '@mui/material';
+import {
+  AdmissionInquiryStage,
+  AdmissionInquiryChannel,
+  useGetAdmissionCrmAnalyticsSummaryQuery,
+} from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
 import { useEnrollmentWorkspace } from './enrollment-workspace-context';
@@ -30,8 +34,10 @@ const stageFunnelColumns: IColumn[] = [
     id: 'stage',
     label: 'Stage',
     minWidth: 180,
-    isSort: false,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: Object.values(AdmissionInquiryStage)
+      .filter((value): value is AdmissionInquiryStage => typeof value === 'number')
+      .map((value) => ({ value, label: getAdmissionCrmStageLabel(value) })),
     render: (value) => getAdmissionCrmStageLabel(value),
   },
   {
@@ -39,8 +45,7 @@ const stageFunnelColumns: IColumn[] = [
     label: 'Leads',
     minWidth: 100,
     align: 'right',
-    isSort: false,
-    isFilter: false,
+    filterType: 'number',
     render: (value) => integerFormatter.format(value),
   },
   {
@@ -48,8 +53,7 @@ const stageFunnelColumns: IColumn[] = [
     label: 'Share of leads',
     minWidth: 140,
     align: 'right',
-    isSort: false,
-    isFilter: false,
+    filterType: 'number',
     render: (value) => formatPercent(value),
   },
 ];
@@ -58,8 +62,10 @@ const channelPerformanceColumns: IColumn[] = [
     id: 'channel',
     label: 'Channel',
     minWidth: 180,
-    isSort: false,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: Object.values(AdmissionInquiryChannel)
+      .filter((value): value is AdmissionInquiryChannel => typeof value === 'number')
+      .map((value) => ({ value, label: getAdmissionCrmChannelLabel(value) })),
     render: (value) => getAdmissionCrmChannelLabel(value),
   },
   {
@@ -67,8 +73,7 @@ const channelPerformanceColumns: IColumn[] = [
     label: 'Leads',
     minWidth: 90,
     align: 'right',
-    isSort: false,
-    isFilter: false,
+    filterType: 'number',
     render: (value) => integerFormatter.format(value),
   },
   {
@@ -76,8 +81,7 @@ const channelPerformanceColumns: IColumn[] = [
     label: 'Exam rate',
     minWidth: 120,
     align: 'right',
-    isSort: false,
-    isFilter: false,
+    filterType: 'number',
     render: (value) => formatPercent(value),
   },
   {
@@ -85,8 +89,7 @@ const channelPerformanceColumns: IColumn[] = [
     label: 'Eligibility rate',
     minWidth: 140,
     align: 'right',
-    isSort: false,
-    isFilter: false,
+    filterType: 'number',
     render: (value) => formatPercent(value),
   },
 ];
@@ -209,7 +212,6 @@ export function AnalyticsWorkspace() {
                 columns={stageFunnelColumns}
                 data={analytics.stageFunnel}
                 isSearch={false}
-                isFilter={false}
                 isPagination={false}
                 isShowedDense={false}
                 tableContainerProps={{ sx: { minHeight: 280 } }}
@@ -227,7 +229,6 @@ export function AnalyticsWorkspace() {
                   examRate: item.leadCount ? (item.examScheduledCount / item.leadCount) * 100 : 0,
                 }))}
                 isSearch={false}
-                isFilter={false}
                 isPagination={false}
                 isShowedDense={false}
                 tableContainerProps={{ sx: { minHeight: 280 } }}
