@@ -7,7 +7,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
+import { AcademicDatePicker } from 'src/components/academic-date-picker';
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import { Add, EventBusy, MeetingRoom, CheckCircle } from '@mui/icons-material';
 import {
@@ -60,8 +60,6 @@ const RoomAvailabilityScreen = () => {
   const [filters, setFilters] = useState<RoomAvailabilityFilters>(
     DEFAULT_ROOM_AVAILABILITY_FILTERS
   );
-  const [startDate, setStartDate] = useState<any>(dayjs(DEFAULT_ROOM_AVAILABILITY_FILTERS.date));
-  const [endDate, setEndDate] = useState<any>(dayjs(DEFAULT_ROOM_AVAILABILITY_FILTERS.date));
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [detailRoom, setDetailRoom] = useState<RoomAvailabilityItem | null>(null);
   const [isDetailOpen, setDetailOpen] = useState(false);
@@ -301,17 +299,15 @@ const RoomAvailabilityScreen = () => {
           {/* Right side: View Switcher & Filters — only for availability tab */}
           {activeTab === 'availability' && (
             <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
-              <CustomDateRangePicker
-                label="Select Date Range"
-                value={[startDate, endDate]}
-                dateFormat="DD/MM/YYYY"
+              <AcademicDatePicker
+                label="Date"
+                value={dayjs(filters.date)}
                 onChange={(value) => {
-                  setStartDate(value[0]);
-                  setEndDate(value[1]);
-                  if (value[0]) {
-                    patchFilters({ date: value[0].format('YYYY-MM-DD') });
+                  if (value) {
+                    patchFilters({ date: value.format('YYYY-MM-DD') });
                   }
                 }}
+                slotProps={{ textField: { size: 'small', sx: { minWidth: 150 } } }}
               />
 
               <CustomSelect

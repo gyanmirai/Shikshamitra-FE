@@ -10,7 +10,7 @@ import TimelineSeparator from '@mui/lab/TimelineSeparator';
 import TimelineConnector from '@mui/lab/TimelineConnector';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import TimelineOppositeContent from '@mui/lab/TimelineOppositeContent';
-import { Box, Chip, Paper, Avatar, Typography, CircularProgress } from '@mui/material';
+import { Box, Chip, Paper, Stack, Avatar, Typography, CircularProgress } from '@mui/material';
 import { useGetChapterProgressLogsQuery } from 'src/redux/classManagementApi/subjectProgressManageApi/subjectProgressManageApi';
 
 import type { ICourseDetail } from '../type';
@@ -121,6 +121,9 @@ const ViewChapterLogs = ({ onClose, selectedChapter, divisionId }: ViewChapterLo
           const initials = teacherName ? getInitials(teacherName) : '';
           const chipColor = getChipColor(item.progress);
           const dotColor = item.color ?? (item.progress >= 100 ? 'success' : 'primary');
+          const description = item.description || item.des;
+          const previousProgress = item.previousProgress;
+          const changeAmount = item.changeAmount;
           const isLast = index === logs.length - 1;
 
           return (
@@ -154,23 +157,45 @@ const ViewChapterLogs = ({ onClose, selectedChapter, divisionId }: ViewChapterLo
                   variant="outlined"
                   sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}
                 >
-                  {/* Progress chip */}
                   {item.progress !== undefined && item.progress !== null && (
-                    <Box sx={{ mb: 1 }}>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1 }}>
                       <Chip
-                        label={item.progress >= 100 ? 'Completed' : `${item.progress}% Completed`}
+                        label={
+                          previousProgress !== undefined && previousProgress !== null
+                            ? `${previousProgress}% -> ${item.progress}%`
+                            : item.progress >= 100
+                              ? 'Completed'
+                              : `${item.progress}% Completed`
+                        }
                         color={chipColor}
                         size="small"
-                        variant="soft"
+                        variant="filled"
                         sx={{ fontWeight: 600, fontSize: '0.75rem' }}
                       />
-                    </Box>
+                      {typeof changeAmount === 'number' && changeAmount !== 0 && (
+                        <Chip
+                          label={`${changeAmount > 0 ? '+' : ''}${changeAmount}%`}
+                          color={changeAmount > 0 ? 'success' : 'warning'}
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
+                      {item.status && <Chip label={item.status} size="small" variant="outlined" />}
+                      {item.delayReason && (
+                        <Chip label={item.delayReason} size="small" color="warning" variant="outlined" />
+                      )}
+                    </Stack>
                   )}
 
-                  {/* Description */}
-                  {item.des && (
+                  {description && (
                     <Typography variant="body2" sx={{ color: 'text.primary', mb: 1.5 }}>
-                      {item.des}
+                      {description}
+                    </Typography>
+                  )}
+
+                  {item.revisedEndDate && dayjs(item.revisedEndDate).isValid() && (
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                      Revised end date: {dayjs(item.revisedEndDate).format('DD MMM YYYY')}
                     </Typography>
                   )}
 

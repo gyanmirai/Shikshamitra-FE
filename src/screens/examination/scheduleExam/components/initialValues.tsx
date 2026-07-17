@@ -348,7 +348,9 @@ export function serializeBasicDetailsPayload(values: IExamFormValues) {
     subjectIds: values.subjects.flatMap((s: any) => {
       // Elective group: send each individual subject's ID, not the group ID
       if (s.electiveGroupId && Array.isArray(s.subjects) && s.subjects.length > 0) {
-        return s.subjects.map((sub: any) => sub.subjectId || sub.id);
+        return s.subjects
+          .filter((sub: any) => !sub.isExamSelectionDisabled)
+          .map((sub: any) => sub.subjectId || sub.id);
       }
       // Core subject (or individual elective entry): send subjectId directly
       return [s.subjectId];
@@ -372,19 +374,21 @@ export function serializeSchedulePayload(values: IExamFormValues) {
   values.subjects.forEach((sub) => {
     // Elective group in Separate mode: expand individual subjects into entries
     if (sub.electiveGroupId && sub.schedulingMode === 'separate' && (sub as any).subjects?.length) {
-      ((sub as any).subjects as any[]).forEach((s: any) => {
-        subjects.push({
-          subjectId: s.subjectId || s.id,
-          // electiveGroupId: sub.electiveGroupId,
-          examDate: dateConvertor(s.examDate.format(dateFormat)) ?? null,
-          startTime: dateConvertor(s.startTime.format(dateFormat)) ?? null,
-          endTime: dateConvertor(s.endTime.format(dateFormat)) ?? null,
-          gradeScalingId: s.gradeScalingId ?? null,
-          totalMarks: Number(s.totalMarks),
-          passingMarks: Number(s.passingMarks),
-          notes: s.notes ?? '',
+      ((sub as any).subjects as any[])
+        .filter((s: any) => !s.isExamSelectionDisabled)
+        .forEach((s: any) => {
+          subjects.push({
+            subjectId: s.subjectId || s.id,
+            // electiveGroupId: sub.electiveGroupId,
+            examDate: dateConvertor(s.examDate.format(dateFormat)) ?? null,
+            startTime: dateConvertor(s.startTime.format(dateFormat)) ?? null,
+            endTime: dateConvertor(s.endTime.format(dateFormat)) ?? null,
+            gradeScalingId: s.gradeScalingId ?? null,
+            totalMarks: Number(s.totalMarks),
+            passingMarks: Number(s.passingMarks),
+            notes: s.notes ?? '',
+          });
         });
-      });
     } else {
       // Core subject or elective group in Combined mode
       subjects.push({
@@ -422,22 +426,24 @@ export function serializeRoomAssignmentPayload(values: IExamFormValues) {
   values.subjects.forEach((sub) => {
     if (sub.electiveGroupId && (sub as any).subjects?.length) {
       // Elective group: expand into one entry per individual subject
-      ((sub as any).subjects as any[]).forEach((s: any) => {
-        const sId = s.subjectId || s.id;
-        const mappedDivisions = validDivisionIds.map((divId) => ({
-          divisionId: divId,
-          roomIds: values.roomDetails[sId]?.[divId]?.roomIds ?? [],
-          capacity: values.roomDetails[sId]?.[divId]?.capacity ?? 0,
-        }));
-        subjectEntries.push({
-          subjectId: sId,
-          electiveGroupId: sub.electiveGroupId ?? null,
-          examDate: s.examDate?.toISOString?.() ?? null,
-          divisions: values.isRoomAssign
-            ? mappedDivisions.filter((div) => div.roomIds.length > 0)
-            : mappedDivisions,
+      ((sub as any).subjects as any[])
+        .filter((s: any) => !s.isExamSelectionDisabled)
+        .forEach((s: any) => {
+          const sId = s.subjectId || s.id;
+          const mappedDivisions = validDivisionIds.map((divId) => ({
+            divisionId: divId,
+            roomIds: values.roomDetails[sId]?.[divId]?.roomIds ?? [],
+            capacity: values.roomDetails[sId]?.[divId]?.capacity ?? 0,
+          }));
+          subjectEntries.push({
+            subjectId: sId,
+            electiveGroupId: sub.electiveGroupId ?? null,
+            examDate: s.examDate?.toISOString?.() ?? null,
+            divisions: values.isRoomAssign
+              ? mappedDivisions.filter((div) => div.roomIds.length > 0)
+              : mappedDivisions,
+          });
         });
-      });
     } else {
       // Core subject
       const mappedDivisions = validDivisionIds.map((divId) => ({

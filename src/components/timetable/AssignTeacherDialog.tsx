@@ -4,8 +4,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetSubjectAssignmentByIdQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
+  Alert,
   Button,
   Checkbox,
+  Divider,
   TextField,
   Typography,
   Autocomplete,
@@ -19,6 +21,7 @@ import { Iconify } from '../iconify';
 import CustomDialog from '../customDialog';
 
 import type { TimeSlot, DayOfWeek, SlotSubject } from './types';
+import type { TimetableValidationIssue } from './timetableValidationIssues';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -44,7 +47,7 @@ interface AssignTeacherDialogProps {
     bulkOptions?: {
       applyTeacherToAllSubjectSlots: Record<string, boolean>;
     }
-  ) => void;
+  ) => Promise<TimetableValidationIssue[]> | TimetableValidationIssue[] | void;
 }
 
 // ---------------------------------------------------------------------------
@@ -220,6 +223,8 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
   const [selectedIds, setSelectedIds] = useState<Record<string, string>>({});
   const [selectedNames, setSelectedNames] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [conflictIssues, setConflictIssues] = useState<TimetableValidationIssue[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [applyTeacherToAllSubjectSlots, setApplyTeacherToAllSubjectSlots] = useState<
     Record<string, boolean>
   >({});
@@ -238,6 +243,8 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
       });
       setSelectedIds(initialIds);
       setSelectedNames(initialNames);
+      setErrors({});
+      setConflictIssues([]);
       setApplyTeacherToAllSubjectSlots({});
     }
   }
@@ -286,9 +293,11 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setConflictIssues([]);
       return;
     }
     setErrors({});
+    setConflictIssues([]);
 
     const { day, slotIndex } = open;
     const updatedSubjects: SlotSubject[] = splitSubjects.map((sub) => ({
@@ -297,10 +306,22 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
       teacherName: selectedNames[sub.subjectId] || undefined,
     }));
 
-    onSave(day, slotIndex, updatedSubjects, {
-      applyTeacherToAllSubjectSlots,
-    });
-    onClose();
+    setIsSubmitting(true);
+    try {
+      const issues =
+        (await onSave(day, slotIndex, updatedSubjects, {
+          applyTeacherToAllSubjectSlots,
+        })) ?? [];
+
+      if (issues.length > 0) {
+        setConflictIssues(issues);
+        return;
+      }
+
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -313,6 +334,22 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
     >
       <DialogContent sx={{ pb: 2 }}>
         <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {conflictIssues.length > 0 && (
+            <Alert severity="error" icon={<Iconify icon="mdi:account-alert-outline" />}>
+              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                Teacher is not available for this time slot
+              </Typography>
+              {conflictIssues.map((issue, index) => (
+                <Box key={`${issue.title}-${index}`} sx={{ mt: index === 0 ? 0 : 1 }}>
+                  {index > 0 && <Divider sx={{ my: 1 }} />}
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                    {issue.title}
+                  </Typography>
+                  <Typography variant="body2">{issue.description}</Typography>
+                </Box>
+              ))}
+            </Alert>
+          )}
           {splitSubjects.length > 0 ? (
             splitSubjects.map((sub) => (
               <Box
@@ -382,9 +419,10 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
           onClick={handleSave}
           variant="contained"
           size="small"
+          disabled={isSubmitting}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
         >
-          Submit
+          {isSubmitting ? 'Checking...' : 'Submit'}
         </Button>
       </DialogActions>
     </CustomDialog>

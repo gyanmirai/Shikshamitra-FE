@@ -77,7 +77,8 @@ const scheduleFieldsSchema = {
     .mixed()
     .nullable()
     .test('is-valid-date', 'Exam date is required', function (value) {
-      const { electiveGroupId, schedulingMode } = this.parent || {};
+      const { electiveGroupId, schedulingMode, isExamSelectionDisabled } = this.parent || {};
+      if (isExamSelectionDisabled) return true;
       if (electiveGroupId && schedulingMode === 'separate') return true;
       if (!value) return false;
       if (!dayjs(value as any).isValid()) return false;
@@ -87,12 +88,15 @@ const scheduleFieldsSchema = {
     .mixed()
     .nullable()
     .test('is-valid-time', 'Start time is required', function (value) {
-      const { electiveGroupId, schedulingMode } = this.parent || {};
+      const { electiveGroupId, schedulingMode, isExamSelectionDisabled } = this.parent || {};
+      if (isExamSelectionDisabled) return true;
       if (electiveGroupId && schedulingMode === 'separate') return true;
       return !!(value && dayjs(value as any).isValid());
     })
     .test('not-in-past-for-today', 'Start time cannot be in the past for today', function (value) {
-      const { examDate, electiveGroupId, schedulingMode } = this.parent || {};
+      const { examDate, electiveGroupId, schedulingMode, isExamSelectionDisabled } =
+        this.parent || {};
+      if (isExamSelectionDisabled) return true;
       if (electiveGroupId && schedulingMode === 'separate') return true;
       if (!value || !examDate) return true;
       const isToday = dayjs(examDate as any).isSame(dayjs(), 'day');
@@ -103,7 +107,15 @@ const scheduleFieldsSchema = {
       return !startDateTime.isBefore(dayjs());
     })
     .test('no-time-conflict', 'Time conflicts with another subject', function (value) {
-      const { examDate, endTime, subjectId, electiveGroupId, schedulingMode } = this.parent || {};
+      const {
+        examDate,
+        endTime,
+        subjectId,
+        electiveGroupId,
+        schedulingMode,
+        isExamSelectionDisabled,
+      } = this.parent || {};
+      if (isExamSelectionDisabled) return true;
       if (electiveGroupId && schedulingMode === 'separate') return true;
       const rootSubjects = getRootSubjects(this);
       if (!value || !examDate || !endTime || !rootSubjects || !subjectId) return true;
@@ -148,12 +160,15 @@ const scheduleFieldsSchema = {
     .mixed()
     .nullable()
     .test('is-valid-dayjs', 'End time is required', function (value) {
-      const { electiveGroupId, schedulingMode } = this.parent || {};
+      const { electiveGroupId, schedulingMode, isExamSelectionDisabled } = this.parent || {};
+      if (isExamSelectionDisabled) return true;
       if (electiveGroupId && schedulingMode === 'separate') return true;
       return !!(value && dayjs(value as any).isValid());
     })
     .test('is-after-start', 'End time must be after start time', function (value) {
-      const { startTime, electiveGroupId, schedulingMode } = this.parent || {};
+      const { startTime, electiveGroupId, schedulingMode, isExamSelectionDisabled } =
+        this.parent || {};
+      if (isExamSelectionDisabled) return true;
       if (electiveGroupId && schedulingMode === 'separate') return true;
       if (!value || !startTime) return true;
       const dummyDate = dayjs('2000-01-01');
@@ -164,7 +179,9 @@ const scheduleFieldsSchema = {
       return dEnd.isAfter(dStart);
     })
     .test('minimum-duration', 'Exam duration must be at least 30 minutes', function (value) {
-      const { startTime, electiveGroupId, schedulingMode } = this.parent || {};
+      const { startTime, electiveGroupId, schedulingMode, isExamSelectionDisabled } =
+        this.parent || {};
+      if (isExamSelectionDisabled) return true;
       if (electiveGroupId && schedulingMode === 'separate') return true;
       if (!value || !startTime) return true;
       const dummyDate = dayjs('2000-01-01');
@@ -178,7 +195,8 @@ const scheduleFieldsSchema = {
     .mixed()
     .nullable()
     .test('total-marks-valid', 'Total Marks is required', function (value) {
-      const { electiveGroupId, schedulingMode } = this.parent || {};
+      const { electiveGroupId, schedulingMode, isExamSelectionDisabled } = this.parent || {};
+      if (isExamSelectionDisabled) return true;
       if (electiveGroupId && schedulingMode === 'separate') return true;
       if (value === '' || value === undefined || value === null) return false;
       const n = Number(value);
@@ -193,7 +211,9 @@ const scheduleFieldsSchema = {
     .mixed()
     .nullable()
     .test('passing-marks-valid', 'Passing Marks is required', function (value) {
-      const { totalMarks, electiveGroupId, schedulingMode } = this.parent || {};
+      const { totalMarks, electiveGroupId, schedulingMode, isExamSelectionDisabled } =
+        this.parent || {};
+      if (isExamSelectionDisabled) return true;
       if (electiveGroupId && schedulingMode === 'separate') return true;
       if (value === '' || value === undefined || value === null) return false;
       const n = Number(value);
@@ -210,7 +230,8 @@ const scheduleFieldsSchema = {
     .mixed()
     .nullable()
     .test('grade-scale-required', 'Grade Scale is required', function (value) {
-      const { electiveGroupId, schedulingMode } = this.parent || {};
+      const { electiveGroupId, schedulingMode, isExamSelectionDisabled } = this.parent || {};
+      if (isExamSelectionDisabled) return true;
       if (electiveGroupId && schedulingMode === 'separate') return true;
       return !!value;
     }),
@@ -283,6 +304,7 @@ export const validationSchema = [
           // Elective group: validate each nested subject separately (roomDetails keyed by subjectId)
           if (subject?.electiveGroupId && Array.isArray(subject?.subjects)) {
             return subject.subjects.some((nested: any) => {
+              if (nested?.isExamSelectionDisabled) return false;
               const nestedSubjectId = nested?.subjectId;
               if (!nestedSubjectId) return false;
 

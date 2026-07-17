@@ -5,9 +5,10 @@ import { instituteSetupApi } from '../instituteSetupApi';
 export const roomsApi = instituteSetupApi.injectEndpoints({
   endpoints: (builder) => ({
     getRooms: builder.query({
-      query: () => ({
+      query: (params) => ({
         url: '/app/room',
         method: 'GET',
+        params,
       }),
       providesTags: [instituteSetupType.rooms],
     }),

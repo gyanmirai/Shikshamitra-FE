@@ -17,7 +17,6 @@ import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
-  Grid,
   Chip,
   Alert,
   Button,
@@ -38,7 +37,6 @@ import ReviewAndLockDrawer from './components/ReviewAndLockDrawer';
 import UnsavedChangesDialog from './components/UnsavedChangesDialog';
 import ValidationIssuesDrawer from './components/ValidationIssuesDrawer';
 import SubjectSelectionControl from './components/SubjectSelectionControl';
-import SubjectCapacityOverview from './components/SubjectCapacityOverview';
 import useElectiveAssignmentState from './hooks/useElectiveAssignmentState';
 import AssignmentProgressSummary from './components/AssignmentProgressSummary';
 
@@ -371,35 +369,24 @@ const AssignElectiveSubject = () => {
 
       {electiveGroupId && (
         <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          {/* INSIGHTS & CAPACITY OVERVIEW */}
-          <Grid container spacing={1} sx={{ mb: 1 }}>
-            <Grid item xs={12} lg={8.5}>
-              <AssignmentProgressSummary
-                total={summary.total}
-                assigned={summary.assigned}
-                unassigned={summary.unassigned}
-                issues={summary.issues}
-                preferenceMatchPct={summary.preferenceMatchPct}
-                activeFilter={statusFilter}
-                onFilterAssigned={() => setStatusFilter(statusFilter === 'assigned' ? 'all' : 'assigned')}
-                onFilterUnassigned={() =>
-                  setStatusFilter(statusFilter === 'unassigned' ? 'all' : 'unassigned')
-                }
-                onFilterPreferenceMismatch={() =>
-                  setStatusFilter(statusFilter === 'preferenceMismatch' ? 'all' : 'preferenceMismatch')
-                }
-                onOpenIssues={issuesDrawer.onTrue}
-                sx={{ mb: 0 }}
-              />
-            </Grid>
-            <Grid item xs={12} lg={3.5}>
-              <SubjectCapacityOverview
-                subjects={subjectCapacity}
-                totalStudents={summary.total}
-                sx={{ mb: 0, height: '100%' }}
-              />
-            </Grid>
-          </Grid>
+          {/* INSIGHTS */}
+          <AssignmentProgressSummary
+            total={summary.total}
+            assigned={summary.assigned}
+            unassigned={summary.unassigned}
+            issues={summary.issues}
+            preferenceMatchPct={summary.preferenceMatchPct}
+            activeFilter={statusFilter}
+            onFilterAssigned={() => setStatusFilter(statusFilter === 'assigned' ? 'all' : 'assigned')}
+            onFilterUnassigned={() =>
+              setStatusFilter(statusFilter === 'unassigned' ? 'all' : 'unassigned')
+            }
+            onFilterPreferenceMismatch={() =>
+              setStatusFilter(statusFilter === 'preferenceMismatch' ? 'all' : 'preferenceMismatch')
+            }
+            onOpenIssues={issuesDrawer.onTrue}
+            sx={{ mb: 1, width: 1 }}
+          />
 
           {/* BULK ASSIGNMENT BAR */}
           {!isLocked && (

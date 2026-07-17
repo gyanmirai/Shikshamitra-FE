@@ -154,6 +154,8 @@ interface SubjectRowValues {
   totalMarks?: any;
   passingMarks?: any;
   notes?: string;
+  assignedStudentCount?: number;
+  isExamSelectionDisabled?: boolean;
 }
 
 interface SubjectScheduleRowProps {
@@ -222,6 +224,21 @@ const SubjectScheduleRow = memo(
               <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
                 {values.subjectCode}
               </Typography>
+            )}
+            {typeof values.assignedStudentCount === 'number' && (
+              <Chip
+                label={
+                  values.assignedStudentCount === 0
+                    ? 'No students'
+                    : `${values.assignedStudentCount} student${
+                        values.assignedStudentCount === 1 ? '' : 's'
+                      }`
+                }
+                size="small"
+                color={values.assignedStudentCount === 0 ? 'default' : 'warning'}
+                variant="soft"
+                sx={{ mt: 0.5, height: 18, fontSize: '0.62rem', fontWeight: 600 }}
+              />
             )}
           </Box>
         </Box>
@@ -674,7 +691,12 @@ const ElectiveGroupCard = memo(
         if (!Object.keys(values).length) return;
         const updated = formik.values.subjects.map((sub: any, idx: number) => {
           if (idx !== groupIndex) return sub;
-          return { ...sub, subjects: (sub.subjects || []).map((s: any) => ({ ...s, ...values })) };
+          return {
+            ...sub,
+            subjects: (sub.subjects || []).map((s: any) =>
+              s.isExamSelectionDisabled ? s : { ...s, ...values }
+            ),
+          };
         });
         await formik.setValues({ ...formik.values, subjects: updated }, true);
 
@@ -788,6 +810,8 @@ const ElectiveGroupCard = memo(
                         totalMarks: subSchedule.totalMarks ?? '',
                         passingMarks: subSchedule.passingMarks ?? '',
                         notes: subSchedule.notes ?? '',
+                        assignedStudentCount: sub.assignedStudentCount,
+                        isExamSelectionDisabled: sub.isExamSelectionDisabled,
                       }}
                       errors={subErrors}
                       touched={subTouched}
@@ -797,6 +821,7 @@ const ElectiveGroupCard = memo(
                       isGradeScalingsLoading={isGradeScalingsLoading}
                       currentYear={currentYear}
                       standardId={standardId}
+                      isReadOnly={!!sub.isExamSelectionDisabled}
                     />
                   );
                 })}
