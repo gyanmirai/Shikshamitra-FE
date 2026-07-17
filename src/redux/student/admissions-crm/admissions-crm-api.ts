@@ -541,6 +541,9 @@ export type AdmissionCrmLeadListParams = AdmissionCrmListParams & {
   campaignName?: string;
   ownerUserId?: string;
   priority?: AdmissionCrmLeadPriority;
+  intendedRouteType?: AdmissionCrmRouteType;
+  desiredClassName?: string;
+  academicMediumId?: string;
 };
 
 export type AdmissionCrmAnalyticsSummaryParams = {
@@ -574,6 +577,7 @@ export type AdmissionCrmLeadDto = {
   primaryContactNo?: string | null;
   email?: string | null;
   admissionIntent: string;
+  intendedRouteType?: AdmissionCrmRouteType | null;
   targetStandardId?: string | null;
   desiredClassName?: string | null;
   stage: AdmissionInquiryStage;
@@ -624,7 +628,10 @@ export type CreateAdmissionCrmLeadDto = {
   primaryContactNo?: string | null;
   email?: string | null;
   admissionIntent: string;
+  intendedRouteType?: AdmissionCrmRouteType | null;
   targetStandardId?: string | null;
+  academicBoardId?: string | null;
+  academicMediumId?: string | null;
   desiredClassName?: string | null;
   notes?: string | null;
   duplicateContinueReason?: string | null;
@@ -2213,6 +2220,93 @@ export type AdmissionCrmEnrollmentOverviewDto = {
   urgentItems: AdmissionCrmEnrollmentOverviewItemDto[];
 };
 
+export enum AdmissionCrmMyWorkType {
+  Task = 0,
+  OperationalBlocker = 1,
+}
+
+export enum AdmissionCrmWorkUrgency {
+  Normal = 0,
+  DueSoon = 1,
+  DueToday = 2,
+  Overdue = 3,
+}
+
+export enum AdmissionCrmRecommendedAction {
+  OpenApplicant = 0,
+  CompleteTask = 1,
+  ScheduleExam = 2,
+  RecordAttendance = 3,
+  RescheduleExam = 4,
+  RecordResult = 5,
+  DecideEligibility = 6,
+  ReviewRegistration = 7,
+  ReviewDocuments = 8,
+  ReviewOffer = 9,
+  RepairActivation = 10,
+}
+
+export enum AdmissionCrmWorkspaceSection {
+  Overview = 0,
+  EntranceExam = 1,
+  Registration = 2,
+  Offer = 3,
+  Activation = 4,
+  Governance = 5,
+}
+
+export type AdmissionCrmMyWorkItemDto = {
+  key: string;
+  workType: AdmissionCrmMyWorkType;
+  taskId?: string | null;
+  queueType?: AdmissionCrmOperationsQueueType | null;
+  leadId: string;
+  examRecordId?: string | null;
+  applicantName: string;
+  contact?: string | null;
+  targetStandardId?: string | null;
+  targetClassName?: string | null;
+  stage: AdmissionInquiryStage;
+  priority: AdmissionCrmLeadPriority;
+  title: string;
+  details?: string | null;
+  dueAt?: string | null;
+  urgency: AdmissionCrmWorkUrgency;
+  isUrgent: boolean;
+  ownerUserId?: string | null;
+  ownerDisplayName?: string | null;
+  assignedUserId?: string | null;
+  assignedDisplayName?: string | null;
+  recommendedAction: AdmissionCrmRecommendedAction;
+  recommendedSection: AdmissionCrmWorkspaceSection;
+  allowedActions: AdmissionCrmRecommendedAction[];
+};
+
+export type AdmissionCrmMyWorkDto = {
+  academicYearId: string;
+  generatedAt: string;
+  assignedTotal: number;
+  overdueCount: number;
+  dueTodayCount: number;
+  urgentBlockerCount: number;
+  totalCount: number;
+  items: AdmissionCrmMyWorkItemDto[];
+};
+
+export type AdmissionCrmMyWorkFilters = {
+  search?: string;
+  workType?: AdmissionCrmMyWorkType;
+  queueType?: AdmissionCrmOperationsQueueType;
+  stage?: AdmissionInquiryStage;
+  targetStandardId?: string;
+  priority?: AdmissionCrmLeadPriority;
+  academicMediumId?: string;
+  urgency?: AdmissionCrmWorkUrgency;
+  sorting?: string;
+  skipCount?: number;
+  maxResultCount?: number;
+};
+
 export type AdmissionCrmOperationsQueueDto = {
   academicYearId: string;
   queueType: AdmissionCrmOperationsQueueType;
@@ -2248,6 +2342,12 @@ export type AdmissionCrmOperationsSavedViewDto = {
   queueType: AdmissionCrmOperationsQueueType;
   filters: AdmissionCrmOperationsQueueFilters;
   isShared: boolean;
+};
+
+export type AdmissionCrmStandardOptionDto = {
+  id: string;
+  name: string;
+  educationMediumStageId: string;
 };
 
 export type AdmissionCrmExamClassPerformanceDto = {
@@ -2495,6 +2595,15 @@ export const buildAdmissionCrmEnrollmentOverviewRequest = ({
 }): FetchArgs => ({
   url: `/student-enrollment/admissions-crm/${academicYearId}/operations/overview`,
   method: 'GET',
+});
+
+export const buildAdmissionCrmMyWorkRequest = ({
+  academicYearId,
+  ...params
+}: { academicYearId: string } & AdmissionCrmMyWorkFilters): FetchArgs => ({
+  url: `/student-enrollment/admissions-crm/${academicYearId}/operations/my-work`,
+  method: 'GET',
+  params,
 });
 
 export const buildAdmissionCrmOperationsQueueRequest = ({
@@ -4943,6 +5052,24 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         studentAdmissionsCrmType.exam,
       ],
     }),
+    getAdmissionCrmStandardOptions: builder.query<AdmissionCrmStandardOptionDto[], { mediumId: string }>({
+      query: ({ mediumId }) => ({
+        url: `/education-medium/${mediumId}/standards`,
+        method: 'GET',
+      }),
+    }),
+    getAdmissionCrmMyWork: builder.query<
+      AdmissionCrmMyWorkDto,
+      { academicYearId: string } & AdmissionCrmMyWorkFilters
+    >({
+      query: buildAdmissionCrmMyWorkRequest,
+      providesTags: [
+        studentAdmissionsCrmType.analytics,
+        studentAdmissionsCrmType.lead,
+        studentAdmissionsCrmType.exam,
+        studentAdmissionsCrmType.task,
+      ],
+    }),
     getAdmissionCrmOperationsQueue: builder.query<
       AdmissionCrmOperationsQueueDto,
       {
@@ -6696,7 +6823,9 @@ export const {
   useGetAdmissionCrmEntranceExamsQuery,
   useGetAdmissionCrmAnalyticsSummaryQuery,
   useGetAdmissionCrmOperationsQueueSummaryQuery,
+  useGetAdmissionCrmStandardOptionsQuery,
   useGetAdmissionCrmEnrollmentOverviewQuery,
+  useGetAdmissionCrmMyWorkQuery,
   useGetAdmissionCrmOperationsQueueQuery,
   useGetAdmissionCrmOperationsSavedViewsQuery,
   useCreateAdmissionCrmOperationsSavedViewMutation,

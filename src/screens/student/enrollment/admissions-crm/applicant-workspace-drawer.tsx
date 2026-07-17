@@ -1,6 +1,7 @@
 'use client';
 
 import type { MouseEvent } from 'react';
+import type { AdmissionCrmMyWorkItemDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import dayjs from 'dayjs';
 import dynamic from 'next/dynamic';
@@ -26,6 +27,9 @@ import {
 } from '@mui/material';
 import {
   AdmissionInquiryStage,
+  AdmissionCrmLeadPriority,
+  AdmissionCrmRecommendedAction,
+  AdmissionCrmWorkspaceSection,
   useGetAdmissionCrmLeadQuery,
   AdmissionCrmGeneratedDocumentType,
   useGetAdmissionCrmPipelineStagesQuery,
@@ -92,8 +96,9 @@ type Props = {
   initialTab?: ApplicantDrawerTab;
   onTabChange?: (tab: ApplicantDrawerTab) => void;
   onClose: () => void;
-  context?: 'full' | 'pipeline';
+  context?: 'full' | 'pipeline' | 'my-work';
   allowRegistrationBeforeExam?: boolean;
+  workItem?: AdmissionCrmMyWorkItemDto;
 };
 
 const sections: Array<{ value: ApplicantDrawerTab; label: string; icon: string }> = [
@@ -125,6 +130,37 @@ const pipelineExamStages = new Set([
   AdmissionInquiryStage.Rejected,
 ]);
 
+const workActionLabels: Record<AdmissionCrmRecommendedAction, string> = {
+  [AdmissionCrmRecommendedAction.OpenApplicant]: 'Open applicant',
+  [AdmissionCrmRecommendedAction.CompleteTask]: 'Review task',
+  [AdmissionCrmRecommendedAction.ScheduleExam]: 'Schedule exam',
+  [AdmissionCrmRecommendedAction.RecordAttendance]: 'Record attendance',
+  [AdmissionCrmRecommendedAction.RescheduleExam]: 'Reschedule exam',
+  [AdmissionCrmRecommendedAction.RecordResult]: 'Record result',
+  [AdmissionCrmRecommendedAction.DecideEligibility]: 'Decide eligibility',
+  [AdmissionCrmRecommendedAction.ReviewRegistration]: 'Review registration',
+  [AdmissionCrmRecommendedAction.ReviewDocuments]: 'Review documents',
+  [AdmissionCrmRecommendedAction.ReviewOffer]: 'Review offer',
+  [AdmissionCrmRecommendedAction.RepairActivation]: 'Repair activation',
+};
+
+const workPriorityLabels: Record<AdmissionCrmLeadPriority, string> = {
+  [AdmissionCrmLeadPriority.None]: 'Not set',
+  [AdmissionCrmLeadPriority.Hot]: 'Hot',
+  [AdmissionCrmLeadPriority.Warm]: 'Warm',
+  [AdmissionCrmLeadPriority.Cold]: 'Cold',
+  [AdmissionCrmLeadPriority.Low]: 'Low',
+};
+
+const workSectionTabs: Record<AdmissionCrmWorkspaceSection, ApplicantDrawerTab> = {
+  [AdmissionCrmWorkspaceSection.Overview]: 'overview',
+  [AdmissionCrmWorkspaceSection.EntranceExam]: 'exam',
+  [AdmissionCrmWorkspaceSection.Registration]: 'registration',
+  [AdmissionCrmWorkspaceSection.Offer]: 'offer',
+  [AdmissionCrmWorkspaceSection.Activation]: 'activation',
+  [AdmissionCrmWorkspaceSection.Governance]: 'governance',
+};
+
 function ApplicantWorkspaceDrawerContent({
   leadId,
   academicYearId,
@@ -133,6 +169,7 @@ function ApplicantWorkspaceDrawerContent({
   onClose,
   context = 'full',
   allowRegistrationBeforeExam = false,
+  workItem,
 }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -154,9 +191,14 @@ function ApplicantWorkspaceDrawerContent({
       ? dayjs(lead.lastActivityTime).add(currentStage.slaTargetHours, 'hour')
       : null;
   const availableSections = useMemo(() => {
-    if (context !== 'pipeline' || !lead) return sections;
+    if (context === 'my-work') {
+      const recommendedTab = workItem ? workSectionTabs[workItem.recommendedSection] : 'overview';
+      return sections.filter((section) => section.value === 'overview' || section.value === recommendedTab);
+    }
+    if (!lead) return sections.filter((section) => section.value === 'overview');
     return sections.filter((section) => {
       if (section.value === 'overview') return true;
+      if (section.value === initialTab) return true;
       if (section.value === 'exam') return pipelineExamStages.has(lead.stage);
       if (section.value === 'registration') {
         return Boolean(
@@ -169,7 +211,7 @@ function ApplicantWorkspaceDrawerContent({
       }
       return false;
     });
-  }, [allowRegistrationBeforeExam, context, lead]);
+  }, [allowRegistrationBeforeExam, context, initialTab, lead, workItem]);
   const selectedSection =
     availableSections.find((section) => section.value === tab) || availableSections[0];
 
@@ -262,6 +304,34 @@ function ApplicantWorkspaceDrawerContent({
           ) : null}
         </Box>
         <Divider />
+
+        {context === 'my-work' && workItem ? (
+          <Box sx={{ px: { xs: 1.5, sm: 2 }, py: 1.25, flexShrink: 0, bgcolor: 'action.hover' }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1.25}>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="overline" color="text.secondary">Current work</Typography>
+                <Typography variant="subtitle2">{workItem.title}</Typography>
+                {workItem.details ? <Typography variant="body2" color="text.secondary">{workItem.details}</Typography> : null}
+                <Typography variant="caption" color="text.secondary">
+                  {joinEnrollmentMetadata(
+                    workItem.dueAt ? `Due ${formatEnrollmentDate(workItem.dueAt, true)}` : 'No due date',
+                    `Priority ${workPriorityLabels[workItem.priority]}`,
+                    workItem.assignedDisplayName ? `Assigned to ${workItem.assignedDisplayName}` : undefined
+                  )}
+                </Typography>
+              </Box>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => changeTab(workSectionTabs[workItem.recommendedSection])}
+                sx={{ alignSelf: { sm: 'center' }, flexShrink: 0 }}
+              >
+                {workActionLabels[workItem.recommendedAction]}
+              </Button>
+            </Stack>
+          </Box>
+        ) : null}
+        {context === 'my-work' && workItem ? <Divider /> : null}
 
         {isMobile ? (
           <Box sx={{ px: 1.5, py: 1, flexShrink: 0 }}>

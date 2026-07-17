@@ -38,6 +38,11 @@ type EnrollmentWorkspaceContextValue = {
   workspace: EnrollmentWorkspace;
   persona: EnrollmentPersona;
   academicYearId?: string;
+  academicYearName?: string;
+  academicBoardId?: string;
+  academicBoardName?: string;
+  academicMediumId?: string;
+  academicMediumName?: string;
   currentUserId?: string;
   state: EnrollmentWorkspaceState;
   updateState: (patch: EnrollmentWorkspaceStatePatch, mode?: 'push' | 'replace') => void;
@@ -61,7 +66,9 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { currentYear } = useSelector((root: RootState) => root.globalState);
+  const { currentYear, currentBoard, currentMedium } = useSelector(
+    (root: RootState) => root.globalState
+  );
   const { permissions, user } = useSelector((root: RootState) => root.auth);
   const applicantOriginRef = useRef<HTMLElement | null>(null);
   const workspace = getWorkspaceFromPathname(pathname);
@@ -108,16 +115,18 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       ? migrateLegacyWorkspaceFilters(sessionStorage.getItem(legacyKey))
       : {};
     const cycle = current.get('cycle') || (currentYear?.id as string | undefined);
+    const board = current.get('board') || (currentBoard?.id as string | undefined);
+    const medium = current.get('medium') || (currentMedium?.id as string | undefined);
 
     sessionStorage.removeItem(legacyKey);
     if (!cycle && !Object.keys(legacy).length && current.size === 0) return;
 
-    const next = { ...defaults, ...legacy, ...state, cycle, page: state.page || 1 };
+    const next = { ...defaults, ...legacy, ...state, cycle, board, medium, page: state.page || 1 };
     const canonical = serializeEnrollmentWorkspaceState(next as EnrollmentWorkspaceState);
     if (!areSearchParamsEquivalent(canonical, current)) {
       navigate(next as EnrollmentWorkspaceState, 'replace');
     }
-  }, [currentYear?.id, defaults, navigate, searchParams, state, workspace]);
+  }, [currentBoard?.id, currentMedium?.id, currentYear?.id, defaults, navigate, searchParams, state, workspace]);
 
   const openApplicant = useCallback(
     (leadId: string, tab: EnrollmentApplicantTab = 'overview') => {
@@ -137,6 +146,11 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
       workspace,
       persona,
       academicYearId: state.cycle || (currentYear?.id as string | undefined),
+      academicYearName: currentYear?.name as string | undefined,
+      academicBoardId: state.board || (currentBoard?.id as string | undefined),
+      academicBoardName: currentBoard?.name as string | undefined,
+      academicMediumId: state.medium || (currentMedium?.id as string | undefined),
+      academicMediumName: currentMedium?.name as string | undefined,
       currentUserId: user?.sub || user?.id,
       state,
       updateState,
@@ -145,7 +159,12 @@ export function EnrollmentWorkspaceProvider({ children }: { children: ReactNode 
     }),
     [
       closeApplicant,
+      currentBoard?.id,
+      currentBoard?.name,
+      currentMedium?.id,
+      currentMedium?.name,
       currentYear?.id,
+      currentYear?.name,
       openApplicant,
       persona,
       state,

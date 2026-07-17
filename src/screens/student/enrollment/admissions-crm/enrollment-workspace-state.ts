@@ -8,6 +8,8 @@ import {
   AdmissionCrmActivationStatus,
   AdmissionCrmRegistrationStatus,
   AdmissionCrmOperationsQueueType,
+  AdmissionCrmMyWorkType,
+  AdmissionCrmWorkUrgency,
   AdmissionCrmEligibilityDecision,
   AdmissionCrmServiceHandoffStatus,
   AdmissionCrmExamAttendanceStatus,
@@ -59,9 +61,17 @@ export type EnrollmentSettingsPanel =
 
 export type EnrollmentWorkspaceState = {
   cycle?: string;
+  board?: string;
+  medium?: string;
   applicant?: string;
+  workItem?: string;
   applicantTab?: EnrollmentApplicantTab;
   page: number;
+  pageSize?: number;
+  search?: string;
+  sorting?: string;
+  workType?: AdmissionCrmMyWorkType;
+  urgency?: AdmissionCrmWorkUrgency;
   view?: PipelineView;
   stageGroup?: PipelineStageGroup;
   stage?: AdmissionInquiryStage;
@@ -116,6 +126,8 @@ const stages = enumValues<AdmissionInquiryStage>(AdmissionInquiryStage);
 const channels = enumValues<AdmissionInquiryChannel>(AdmissionInquiryChannel);
 const priorities = enumValues<AdmissionCrmLeadPriority>(AdmissionCrmLeadPriority);
 const queues = enumValues<AdmissionCrmOperationsQueueType>(AdmissionCrmOperationsQueueType);
+const workTypes = enumValues<AdmissionCrmMyWorkType>(AdmissionCrmMyWorkType);
+const workUrgencies = enumValues<AdmissionCrmWorkUrgency>(AdmissionCrmWorkUrgency);
 const registrationStatuses = enumValues<AdmissionCrmRegistrationStatus>(
   AdmissionCrmRegistrationStatus
 );
@@ -230,12 +242,20 @@ export const parseEnrollmentWorkspaceState = (
   return {
     ...defaults,
     cycle: parseToken(searchParams.get('cycle')) ?? defaults.cycle,
+    board: parseToken(searchParams.get('board')) ?? defaults.board,
+    medium: parseToken(searchParams.get('medium')) ?? defaults.medium,
     applicant: parseToken(searchParams.get('applicant')) ?? defaults.applicant,
+    workItem: parseToken(searchParams.get('workItem')) ?? defaults.workItem,
     applicantTab:
       applicantTabValue && applicantTabs.has(applicantTabValue)
         ? applicantTabValue
         : defaults.applicantTab,
     page: parsePositiveInteger(searchParams.get('page')) ?? defaults.page ?? 1,
+    pageSize: parsePositiveInteger(searchParams.get('pageSize'), 200) ?? defaults.pageSize,
+    search: parseToken(searchParams.get('search'), 500) ?? defaults.search,
+    sorting: parseToken(searchParams.get('sorting')) ?? defaults.sorting,
+    workType: parseEnum(searchParams.get('workType'), workTypes) ?? defaults.workType,
+    urgency: parseEnum(searchParams.get('urgency'), workUrgencies) ?? defaults.urgency,
     view:
       viewValue === 'board' || viewValue === 'list'
         ? viewValue
@@ -289,9 +309,17 @@ export const serializeEnrollmentWorkspaceState = (state: EnrollmentWorkspaceStat
   };
 
   set('cycle', state.cycle);
+  set('board', state.board);
+  set('medium', state.medium);
   set('applicant', state.applicant);
+  set('workItem', state.workItem);
   set('tab', state.applicantTab);
   if (state.page > 1) set('page', state.page);
+  set('pageSize', state.pageSize);
+  set('search', state.search);
+  set('sorting', state.sorting);
+  set('workType', state.workType);
+  set('urgency', state.urgency);
   set('view', state.view);
   set('group', state.stageGroup);
   set('stage', state.stage);

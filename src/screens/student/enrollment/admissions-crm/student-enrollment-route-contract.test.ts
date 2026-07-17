@@ -177,7 +177,7 @@ describe('Student Enrollment workspace route contracts', () => {
     expect(exams).toContain('icon="solar:door-2-bold-duotone"');
   });
 
-  it('keeps free-text applicant searches out of URL state', () => {
+  it('keeps My Work search and filters shareable in URL state', () => {
     const state = read(
       'src',
       'screens',
@@ -186,7 +186,9 @@ describe('Student Enrollment workspace route contracts', () => {
       'admissions-crm',
       'enrollment-workspace-state.ts'
     );
-    expect(state).not.toContain("set('search'");
+    expect(state).toContain("set('search'");
+    expect(state).toContain("set('workType'");
+    expect(state).toContain("set('urgency'");
     expect(state).not.toContain("set('phone'");
     expect(state).not.toContain("set('email'");
   });
@@ -214,6 +216,7 @@ describe('Student Enrollment workspace route contracts', () => {
 
   it('uses the shared project table and action patterns throughout Enrollment', () => {
     const tableFiles = [
+      'overview-workspace.tsx',
       'pipeline-workspace.tsx',
       'exams-workspace.tsx',
       'operations-queue-workspace.tsx',
@@ -231,6 +234,8 @@ describe('Student Enrollment workspace route contracts', () => {
     });
     expect(sources.join('\n')).toContain('ThreeDotsActions');
     expect(sources.join('\n')).toContain('enrollmentActionsColumn');
+    expect(sources[0]).toContain("stickyPosition: 'left'");
+    expect(sources[0]).toContain('actionLabels[item.recommendedAction]');
     expect(
       fs.existsSync(
         path.join(

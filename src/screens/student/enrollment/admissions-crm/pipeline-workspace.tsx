@@ -21,6 +21,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import ViewColumnRounded from '@mui/icons-material/ViewColumnRounded';
 import ReceiptLongRounded from '@mui/icons-material/ReceiptLongRounded';
 import FormatListBulletedRounded from '@mui/icons-material/FormatListBulletedRounded';
+import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 import {
   Box,
   Chip,
@@ -50,6 +51,7 @@ import {
 } from '@mui/material';
 import {
   AdmissionInquiryStage,
+  AdmissionCrmRouteType,
   AdmissionInquiryChannel,
   AdmissionCrmLeadPriority,
   useGetAdmissionCrmStaffQuery,
@@ -57,6 +59,7 @@ import {
   useGetAdmissionCrmExamSlotsQuery,
   useCreateAdmissionCrmLeadMutation,
   useGetAdmissionCrmPipelineStagesQuery,
+  useGetAdmissionCrmStandardOptionsQuery,
   useBulkCreateAdmissionCrmTasksMutation,
   useBulkChangeAdmissionCrmStagesMutation,
   useBulkArchiveAdmissionCrmLeadsMutation,
@@ -107,6 +110,11 @@ const channels = Object.values(AdmissionInquiryChannel).filter(
 const priorities = Object.values(AdmissionCrmLeadPriority).filter(
   (value): value is AdmissionCrmLeadPriority => typeof value === 'number'
 );
+const routeTypes = Object.values(AdmissionCrmRouteType).filter(
+  (value): value is AdmissionCrmRouteType => typeof value === 'number'
+);
+const routeTypeLabel = (value: AdmissionCrmRouteType) =>
+  AdmissionCrmRouteType[value].replace(/([a-z])([A-Z])/g, '$1 $2');
 
 const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
   const filter = [...filters].reverse().find((item) => item.column === column);
@@ -148,7 +156,9 @@ type QuickInquiryForm = {
   primaryContactNo: string;
   email: string;
   admissionIntent: string;
-  desiredClassName: string;
+  intendedRouteType: AdmissionCrmRouteType;
+  mediumStageId: string;
+  targetStandardId: string;
   channel: AdmissionInquiryChannel;
   campaignName: string;
   notes: string;
@@ -161,7 +171,9 @@ const emptyQuickInquiry: QuickInquiryForm = {
   primaryContactNo: '',
   email: '',
   admissionIntent: '',
-  desiredClassName: '',
+  intendedRouteType: AdmissionCrmRouteType.Fresh,
+  mediumStageId: '',
+  targetStandardId: '',
   channel: AdmissionInquiryChannel.WalkInReception,
   campaignName: '',
   notes: '',
@@ -301,8 +313,19 @@ function PipelineLeadCard({
 
 export function PipelineWorkspace() {
   const permissions = useSelector((root: RootState) => root.auth.permissions);
-  const { academicYearId, currentUserId, state, updateState, openApplicant, closeApplicant } =
-    useEnrollmentWorkspace();
+  const {
+    academicYearId,
+    academicYearName,
+    academicBoardId,
+    academicBoardName,
+    academicMediumId,
+    academicMediumName,
+    currentUserId,
+    state,
+    updateState,
+    openApplicant,
+    closeApplicant,
+  } = useEnrollmentWorkspace();
   const page = Math.max(0, state.page - 1);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -350,6 +373,9 @@ export function PipelineWorkspace() {
       campaignName: state.campaign,
       ownerUserId: resolvedOwner,
       priority: state.priority,
+      intendedRouteType: state.routeType,
+      desiredClassName: state.className,
+      academicMediumId,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
       sorting: 'LastActivityTime DESC',
@@ -389,6 +415,30 @@ export function PipelineWorkspace() {
   const cycleConfigurationQuery = useGetAdmissionCrmCycleConfigurationQuery(
     { academicYearId: academicYearId || '' },
     { skip: !academicYearId }
+  );
+  const organizationOptionsQuery = useGetAcademicOrganizationOptionsQuery(
+    { academicYearId: academicYearId || '' },
+    { skip: !academicYearId || !quickDialogOpen }
+  );
+  const standardOptionsQuery = useGetAdmissionCrmStandardOptionsQuery(
+    { mediumId: academicMediumId || '' },
+    { skip: !academicMediumId || !quickDialogOpen }
+  );
+  const mediumStages = useMemo(
+    () =>
+      (organizationOptionsQuery.data?.items || []).filter(
+        (option) =>
+          option.mediumId === academicMediumId &&
+          (!academicBoardId || option.boardId === academicBoardId)
+      ),
+    [academicBoardId, academicMediumId, organizationOptionsQuery.data?.items]
+  );
+  const standardOptions = useMemo(
+    () =>
+      (standardOptionsQuery.data || []).filter(
+        (standard) => standard.educationMediumStageId === quickForm.mediumStageId
+      ),
+    [quickForm.mediumStageId, standardOptionsQuery.data]
   );
   const registrationRequiredBeforeExam = Boolean(
     cycleConfigurationQuery.data?.registrationFormRequiredBeforeExam
@@ -510,6 +560,26 @@ export function PipelineWorkspace() {
               displayValue: priorityLabels[state.priority as AdmissionCrmLeadPriority],
             },
           ]),
+      ...(!state.className
+        ? []
+        : [{
+            column: 'desiredClassName',
+            type: 'contains',
+            value: state.className,
+            valueType: 'string',
+            label: 'Target Class',
+            displayValue: state.className,
+          }]),
+      ...(state.routeType == null
+        ? []
+        : [{
+            column: 'intendedRouteType',
+            type: 'equals',
+            value: state.routeType,
+            valueType: 'enum',
+            label: 'Admission Pathway',
+            displayValue: routeTypeLabel(state.routeType),
+          }]),
       ...(!resolvedOwner
         ? []
         : [
@@ -523,7 +593,7 @@ export function PipelineWorkspace() {
             },
           ]),
     ],
-    [resolvedOwner, staffById, state.channel, state.priority, state.stage]
+    [resolvedOwner, staffById, state.channel, state.className, state.priority, state.routeType, state.stage]
   );
 
   const columns = useMemo<IColumn[]>(
@@ -662,16 +732,24 @@ export function PipelineWorkspace() {
         render: (value) => getAdmissionCrmChannelLabel(value as AdmissionInquiryChannel),
       },
       {
-        id: 'admissionIntent',
-        label: 'Intent',
+        id: 'desiredClassName',
+        label: 'Target Class',
         width: 220,
         minWidth: 180,
         isSort: false,
-        isFilter: false,
-        render: (value, row) => {
-          const lead = row as AdmissionCrmLeadDto;
-          return lead.desiredClassName || value;
-        },
+        isFilter: true,
+        render: (value) => value || 'Placement missing',
+      },
+      {
+        id: 'intendedRouteType',
+        label: 'Admission Pathway',
+        width: 190,
+        minWidth: 170,
+        filterType: 'enum',
+        enumOptions: routeTypes.map((routeType) => ({ value: routeType, label: routeTypeLabel(routeType) })),
+        isSort: false,
+        render: (value, row) =>
+          value == null ? (row as AdmissionCrmLeadDto).admissionIntent : routeTypeLabel(value as AdmissionCrmRouteType),
       },
       {
         id: 'ownerUserId',
@@ -792,10 +870,12 @@ export function PipelineWorkspace() {
       shikshaMitraToast.error({ message: 'Contact number or email is required.' });
       return;
     }
-    if (!quickForm.admissionIntent.trim()) {
-      shikshaMitraToast.error({ message: 'Admission intent is required.' });
+    if (!quickForm.mediumStageId || !quickForm.targetStandardId) {
+      shikshaMitraToast.error({ message: 'Select the target stage and class.' });
       return;
     }
+    const selectedStandard = standardOptions.find((item) => item.id === quickForm.targetStandardId);
+    if (!selectedStandard) return;
     const body: CreateAdmissionCrmLeadDto = {
       channel: quickForm.channel,
       campaignName: quickForm.campaignName.trim() || undefined,
@@ -803,8 +883,13 @@ export function PipelineWorkspace() {
       parentGuardianName: quickForm.parentGuardianName.trim() || undefined,
       primaryContactNo: quickForm.primaryContactNo.trim() || undefined,
       email: quickForm.email.trim() || undefined,
-      admissionIntent: quickForm.admissionIntent.trim(),
-      desiredClassName: quickForm.desiredClassName.trim() || undefined,
+      admissionIntent:
+        quickForm.admissionIntent.trim() || routeTypeLabel(quickForm.intendedRouteType),
+      intendedRouteType: quickForm.intendedRouteType,
+      targetStandardId: selectedStandard.id,
+      academicBoardId,
+      academicMediumId,
+      desiredClassName: selectedStandard.name,
       notes: quickForm.notes.trim() || undefined,
       duplicateContinueReason: quickForm.duplicateContinueReason.trim() || undefined,
     };
@@ -1200,6 +1285,8 @@ export function PipelineWorkspace() {
                   stage: getLatestEnumFilter(filters, 'stage'),
                   channel: getLatestEnumFilter(filters, 'channel'),
                   priority: getLatestEnumFilter(filters, 'priority'),
+                  routeType: getLatestEnumFilter(filters, 'intendedRouteType'),
+                  className: getLatestStringFilter(filters, 'desiredClassName'),
                   owner: getLatestStringFilter(filters, 'ownerUserId'),
                   page: 1,
                 },
@@ -1231,8 +1318,24 @@ export function PipelineWorkspace() {
         <DialogContent>
           <Stack spacing={1.25} sx={{ pt: 1 }}>
             <Alert severity="info">
-              Contact details and admission intent are enough to create an inquiry.
+              The selected academic context determines where this inquiry enters the pipeline.
             </Alert>
+            <Paper variant="outlined" sx={{ p: 1.25 }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.5}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">Academic year</Typography>
+                  <Typography variant="body2">{academicYearName || 'Selected academic year'}</Typography>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">Board</Typography>
+                  <Typography variant="body2">{academicBoardName || 'Selected board'}</Typography>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">Medium</Typography>
+                  <Typography variant="body2">{academicMediumName || 'Selected medium'}</Typography>
+                </Box>
+              </Stack>
+            </Paper>
             <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
                 fullWidth
@@ -1281,25 +1384,59 @@ export function PipelineWorkspace() {
                 }}
               />
             </Stack>
-            <TextField
-              required
-              label="Admission intent"
-              value={quickForm.admissionIntent}
-              onChange={(event) => {
-                setQuickForm((current) => ({ ...current, admissionIntent: event.target.value }));
-                setDuplicateReviewed(false);
-              }}
-            />
             <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
               <TextField
+                required
+                select
                 fullWidth
-                label="Desired class"
-                value={quickForm.desiredClassName}
+                label="Medium stage"
+                value={quickForm.mediumStageId}
                 onChange={(event) => {
-                  setQuickForm((current) => ({ ...current, desiredClassName: event.target.value }));
+                  setQuickForm((current) => ({
+                    ...current,
+                    mediumStageId: event.target.value,
+                    targetStandardId: '',
+                  }));
                   setDuplicateReviewed(false);
                 }}
-              />
+              >
+                {mediumStages.map((stage) => (
+                  <MenuItem key={stage.id} value={stage.id}>{stage.stageName || stage.label}</MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                required
+                select
+                fullWidth
+                label="Target class"
+                value={quickForm.targetStandardId}
+                disabled={!quickForm.mediumStageId || standardOptionsQuery.isFetching}
+                onChange={(event) => {
+                  setQuickForm((current) => ({ ...current, targetStandardId: event.target.value }));
+                  setDuplicateReviewed(false);
+                }}
+              >
+                {standardOptions.map((standard) => (
+                  <MenuItem key={standard.id} value={standard.id}>{standard.name}</MenuItem>
+                ))}
+              </TextField>
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+              <TextField
+                required
+                select
+                fullWidth
+                label="Admission pathway"
+                value={quickForm.intendedRouteType}
+                onChange={(event) => {
+                  setQuickForm((current) => ({ ...current, intendedRouteType: Number(event.target.value) }));
+                  setDuplicateReviewed(false);
+                }}
+              >
+                {routeTypes.map((routeType) => (
+                  <MenuItem key={routeType} value={routeType}>{routeTypeLabel(routeType)}</MenuItem>
+                ))}
+              </TextField>
               <TextField
                 select
                 fullWidth
@@ -1316,6 +1453,15 @@ export function PipelineWorkspace() {
                 ))}
               </TextField>
             </Stack>
+            <TextField
+              label="Intent notes"
+              value={quickForm.admissionIntent}
+              onChange={(event) => {
+                setQuickForm((current) => ({ ...current, admissionIntent: event.target.value }));
+                setDuplicateReviewed(false);
+              }}
+              helperText="Optional context beyond the selected admission pathway."
+            />
             <TextField
               label="Campaign"
               value={quickForm.campaignName}
