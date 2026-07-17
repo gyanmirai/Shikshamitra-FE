@@ -5,6 +5,7 @@ import type { LabelColor } from 'src/components/label';
 import type { Standards, Organization } from 'src/types/school';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { TimeSlot, DayOfWeek } from 'src/components/timetable/types';
+import type { TimetableValidationIssue } from 'src/components/timetable/timetableValidationIssues';
 
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
@@ -28,6 +29,7 @@ import TimetableBoard from 'src/components/timetable/TimetableBoard';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { extractTimetableApiIssues } from 'src/components/timetable/timetableValidationIssues';
 import {
   TimetableStatusType,
   TimetableStatusColors,
@@ -389,27 +391,20 @@ const transformScheduleToGrid = (scheduleData: any[]): TimetableSlot[] => {
 const timetableData: TimetableSlot[] = transformScheduleToGrid(mockDayScheduleData);
 
 const getTimetableApiErrorMessage = (error: unknown) => {
-  const apiError = error as {
-    data?: {
-      error?: {
-        message?: string;
-        data?: {
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-    error?: string;
-  };
-
-  return (
-    apiError.data?.error?.data?.message ||
-    apiError.data?.error?.message ||
-    apiError.data?.message ||
-    apiError.error ||
-    'Server validation failed. Please review timetable conflicts and try again.'
-  );
+  const [issue] = extractTimetableApiIssues(error);
+  return issue?.description || 'Server validation failed. Please review timetable conflicts and try again.';
 };
+
+const createValidationIssue = (
+  title: string,
+  description: string,
+  details?: Record<string, string>
+): TimetableValidationIssue => ({
+  title,
+  description,
+  severity: 'error',
+  details,
+});
 
 const getDisplayStatus = (row: any) => {
   if (!row.isReady) return 'Not Ready';
@@ -1414,16 +1409,18 @@ const TimeTableForm = ({
 
   const [validationResult, setValidationResult] = useState<{
     passed: boolean;
-    conflicts: string[];
+    conflicts: TimetableValidationIssue[];
     emptySlots: number;
-    incompleteSubjects: string[];
+    incompleteSubjects: TimetableValidationIssue[];
   } | null>(null);
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
 
   const handleValidate = useCallback(async () => {
-    const errors: string[] = [...conflicts];
+    const errors: TimetableValidationIssue[] = conflicts.map((conflict) =>
+      createValidationIssue('Timetable conflict', conflict)
+    );
     let emptySlots = 0;
     
     Object.values(formik.values.slots).forEach((daySlots) => {
@@ -1437,10 +1434,16 @@ const TimeTableForm = ({
     });
 
     if (emptySlots > 0) {
-      errors.push(`${emptySlots} empty period slots found.`);
+      errors.push(
+        createValidationIssue(
+          'Empty period slots found',
+          `${emptySlots} lecture slot${emptySlots > 1 ? 's are' : ' is'} still empty.`,
+          { Slots: String(emptySlots) }
+        )
+      );
     }
 
-    const incompleteSubjects: string[] = [];
+    const incompleteSubjects: TimetableValidationIssue[] = [];
     subjects.forEach((subject: any) => {
       const subjectKey = subject.electiveGroupId || subject.subjectId;
       let count = 0;
@@ -1451,9 +1454,31 @@ const TimeTableForm = ({
         });
       });
       if (count < subject.totalLectures) {
-        incompleteSubjects.push(`${subject.name}: requires ${subject.totalLectures} lectures, but only ${count} are assigned (missing ${subject.totalLectures - count}).`);
+        incompleteSubjects.push(
+          createValidationIssue(
+            'Subject lectures missing',
+            `${subject.name} requires ${subject.totalLectures} lectures, but only ${count} are assigned.`,
+            {
+              Subject: subject.name,
+              Required: String(subject.totalLectures),
+              Assigned: String(count),
+              Missing: String(subject.totalLectures - count),
+            }
+          )
+        );
       } else if (count > subject.totalLectures) {
-        incompleteSubjects.push(`${subject.name}: requires ${subject.totalLectures} lectures, but ${count} are assigned (over-assigned by ${count - subject.totalLectures}).`);
+        incompleteSubjects.push(
+          createValidationIssue(
+            'Subject lectures over-assigned',
+            `${subject.name} requires ${subject.totalLectures} lectures, but ${count} are assigned.`,
+            {
+              Subject: subject.name,
+              Required: String(subject.totalLectures),
+              Assigned: String(count),
+              Extra: String(count - subject.totalLectures),
+            }
+          )
+        );
       }
     });
 
@@ -1461,7 +1486,7 @@ const TimeTableForm = ({
       const body = transformSlotsToPayload(formik.values.slots, 1);
       await validateTimetable({ standardId, divisionId, body }).unwrap();
     } catch (error) {
-      errors.push(getTimetableApiErrorMessage(error));
+      errors.push(...extractTimetableApiIssues(error, 'Timetable conflict found'));
     }
 
     setValidationResult({
@@ -1479,6 +1504,25 @@ const TimeTableForm = ({
     transformSlotsToPayload,
     validateTimetable,
   ]);
+
+  const validateProspectiveSlots = useCallback(
+    async (
+      nextSlots: Record<DayOfWeek, TimeSlot[]>,
+      source: 'teacher' | 'room'
+    ): Promise<TimetableValidationIssue[]> => {
+      try {
+        const body = transformSlotsToPayload(nextSlots, 1);
+        await validateTimetable({ standardId, divisionId, body }).unwrap();
+        return [];
+      } catch (error) {
+        return extractTimetableApiIssues(
+          error,
+          source === 'teacher' ? 'Teacher conflict found' : 'Room conflict found'
+        );
+      }
+    },
+    [divisionId, standardId, transformSlotsToPayload, validateTimetable]
+  );
 
   const handlePublishClick = () => {
     let emptySlots = 0;
@@ -1772,6 +1816,7 @@ const TimeTableForm = ({
               standardId={standardId}
               divisionId={divisionId}
               timetableStatus={timetableStatus}
+              validateSlots={validateProspectiveSlots}
             />
           )}
         </Box>
@@ -1781,27 +1826,52 @@ const TimeTableForm = ({
       <Dialog
         open={Boolean(validationResult)}
         onClose={() => setValidationResult(null)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Iconify
-            icon={validationResult?.passed ? 'mdi:check-circle-outline' : 'mdi:alert-circle-outline'}
-            color={validationResult?.passed ? 'success.main' : 'error.main'}
-          />
-          <Typography variant="h6">
-            {validationResult?.passed ? 'Validation Passed' : 'Validation Failed'}
-          </Typography>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1.5 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 1,
+              display: 'grid',
+              placeItems: 'center',
+              color: validationResult?.passed ? 'success.main' : 'error.main',
+              bgcolor: (theme) =>
+                alpha(
+                  validationResult?.passed ? theme.palette.success.main : theme.palette.error.main,
+                  0.1
+                ),
+            }}
+          >
+            <Iconify
+              icon={
+                validationResult?.passed ? 'mdi:check-circle-outline' : 'mdi:alert-circle-outline'
+              }
+              width={24}
+            />
+          </Box>
+          <Box>
+            <Typography variant="h6">
+              {validationResult?.passed ? 'Validation Passed' : 'Validation Failed'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {validationResult?.passed
+                ? 'The timetable is complete and ready to publish.'
+                : 'Review the exact issues below before publishing.'}
+            </Typography>
+          </Box>
         </DialogTitle>
         <DialogContent dividers>
           {validationResult && (
-            <Stack spacing={1}>
+            <Stack spacing={2}>
               {validationResult.passed ? (
                 <Box>
                   <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
                     All checks passed successfully! The timetable is complete and ready to be published.
                   </Typography>
-                  <Stack spacing={1}>
+                  <Stack spacing={1.5}>
                     <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
                       ✓ {slotSummary.filled}/{slotSummary.total} slots filled
                     </Typography>
@@ -1820,20 +1890,92 @@ const TimeTableForm = ({
                   </Typography>
                   <Stack spacing={1}>
                     {validationResult.conflicts.map((err, idx) => (
-                      <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                        <Iconify icon="lucide:x-circle" color="error.main" sx={{ mt: 0.25, flexShrink: 0 }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {err}
-                        </Typography>
-                      </Box>
+                      <Card
+                        key={`${err.title}-${idx}`}
+                        variant="outlined"
+                        sx={{
+                          p: 1.5,
+                          borderColor: 'error.light',
+                          bgcolor: (theme) => alpha(theme.palette.error.main, 0.03),
+                        }}
+                      >
+                        <Stack direction="row" spacing={1.25} alignItems="flex-start">
+                          <Iconify
+                            icon="lucide:x-circle"
+                            color="error.main"
+                            sx={{ mt: 0.25, flexShrink: 0 }}
+                          />
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="subtitle2">{err.title}</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                              {err.description}
+                            </Typography>
+                            {err.details && Object.keys(err.details).length > 0 && (
+                              <Stack
+                                direction="row"
+                                spacing={0.75}
+                                useFlexGap
+                                flexWrap="wrap"
+                                sx={{ mt: 1 }}
+                              >
+                                {Object.entries(err.details).map(([label, value]) => (
+                                  <Chip
+                                    key={`${label}-${value}`}
+                                    size="small"
+                                    variant="soft"
+                                    color="error"
+                                    label={`${label}: ${value}`}
+                                  />
+                                ))}
+                              </Stack>
+                            )}
+                          </Box>
+                        </Stack>
+                      </Card>
                     ))}
                     {validationResult.incompleteSubjects.map((err, idx) => (
-                      <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                        <Iconify icon="lucide:x-circle" color="error.main" sx={{ mt: 0.25, flexShrink: 0 }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {err}
-                        </Typography>
-                      </Box>
+                      <Card
+                        key={`${err.title}-${idx}`}
+                        variant="outlined"
+                        sx={{
+                          p: 1.5,
+                          borderColor: 'error.light',
+                          bgcolor: (theme) => alpha(theme.palette.error.main, 0.03),
+                        }}
+                      >
+                        <Stack direction="row" spacing={1.25} alignItems="flex-start">
+                          <Iconify
+                            icon="lucide:x-circle"
+                            color="error.main"
+                            sx={{ mt: 0.25, flexShrink: 0 }}
+                          />
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="subtitle2">{err.title}</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                              {err.description}
+                            </Typography>
+                            {err.details && Object.keys(err.details).length > 0 && (
+                              <Stack
+                                direction="row"
+                                spacing={0.75}
+                                useFlexGap
+                                flexWrap="wrap"
+                                sx={{ mt: 1 }}
+                              >
+                                {Object.entries(err.details).map(([label, value]) => (
+                                  <Chip
+                                    key={`${label}-${value}`}
+                                    size="small"
+                                    variant="soft"
+                                    color="error"
+                                    label={`${label}: ${value}`}
+                                  />
+                                ))}
+                              </Stack>
+                            )}
+                          </Box>
+                        </Stack>
+                      </Card>
                     ))}
                   </Stack>
                 </Box>

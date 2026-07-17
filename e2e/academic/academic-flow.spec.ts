@@ -22,37 +22,37 @@ test.describe('Academic Module Operational Flow Tests', () => {
       await expect(page.locator('body')).toBeVisible();
 
       // Check for search filters or grid structures typical for subject allocation
-      const allocationTitle = page.locator('main, #root, body');
+      const allocationTitle = page.locator('body');
       await expect(allocationTitle).toContainText(/Subject Allocation|Allocation/i);
 
       // 2. Navigate to Syllabus/Chapters management
       await page.goto(`${baseUrl()}/academic/courseSubjects`, { waitUntil: 'domcontentloaded' });
       await expect(page.locator('body')).toBeVisible();
-      await expect(page.locator('main, #root, body')).toContainText(/Syllabus|Chapters|Subjects/i);
+      await expect(page.locator('body')).toContainText(/Syllabus|Chapters|Subjects/i);
     });
 
     test('should inspect Exam Schedule and Seating Plan configurations', async ({ page }) => {
       // 1. Navigate to Schedule Exam
       await page.goto(`${baseUrl()}/academic/scheduleExam`, { waitUntil: 'domcontentloaded' });
       await expect(page.locator('body')).toBeVisible();
-      await expect(page.locator('main, #root, body')).toContainText(/Schedule Exam|Exam/i);
+      await expect(page.locator('body')).toContainText(/Schedule Exam|Exam/i);
 
       // 2. Navigate to Seating Plan
       await page.goto(`${baseUrl()}/academic/seatallocation`, { waitUntil: 'domcontentloaded' });
       await expect(page.locator('body')).toBeVisible();
-      await expect(page.locator('main, #root, body')).toContainText(/Seating Plan|Seat Allocation/i);
+      await expect(page.locator('body')).toContainText(/Seating Plan|Seat Allocation/i);
     });
 
     test('should load Calendar Settings and Emergency Closure forms', async ({ page }) => {
       // 1. Navigate to Calendar Management
       await page.goto(`${baseUrl()}/academic/calendarManagement`, { waitUntil: 'domcontentloaded' });
       await expect(page.locator('body')).toBeVisible();
-      await expect(page.locator('main, #root, body')).toContainText(/Calendar|Academic Calendar/i);
+      await expect(page.locator('body')).toContainText(/Calendar|Academic Calendar/i);
 
       // 2. Navigate to Emergency Closure
       await page.goto(`${baseUrl()}/academic/calendarEmergencyClosure`, { waitUntil: 'domcontentloaded' });
       await expect(page.locator('body')).toBeVisible();
-      await expect(page.locator('main, #root, body')).toContainText(/Emergency Closure/i);
+      await expect(page.locator('body')).toContainText(/Emergency Closure/i);
     });
   });
 
@@ -70,7 +70,7 @@ test.describe('Academic Module Operational Flow Tests', () => {
       await expect(page.locator('body')).toBeVisible();
       
       // Ensure the diary view, calendar, or lesson planning layout loads
-      await expect(page.locator('main, #root, body')).toContainText(/Lesson Plan|Teacher Diary/i);
+      await expect(page.locator('body')).toContainText(/Lesson Plan|Teacher Diary/i);
     });
 
     test('should test Homework Creation and check form validations', async ({ page }) => {
@@ -78,7 +78,7 @@ test.describe('Academic Module Operational Flow Tests', () => {
       await expect(page.locator('body')).toBeVisible();
 
       // Ensure homework creation/learning tasks page is shown
-      await expect(page.locator('main, #root, body')).toContainText(/Learning Tasks|Homework/i);
+      await expect(page.locator('body')).toContainText(/Learning Tasks|Homework/i);
 
       // Find 'Create' or 'Add' button if present to trigger form drawer/modal
       const createBtn = page.getByRole('button', { name: /create|add|new/i }).first();
@@ -105,7 +105,7 @@ test.describe('Academic Module Operational Flow Tests', () => {
       await expect(page.locator('body')).toBeVisible();
 
       // Ensure grade entry / record marks layout loads
-      await expect(page.locator('main, #root, body')).toContainText(/Grade Entry|Record Marks/i);
+      await expect(page.locator('body')).toContainText(/Grade Entry|Record Marks/i);
     });
   });
 });

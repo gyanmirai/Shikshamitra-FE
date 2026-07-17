@@ -1,6 +1,8 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
+import type { Organization } from 'src/types/school';
 import type {
   ApiLookupOption,
   ApiAffectedLecture,
@@ -13,6 +15,7 @@ import type {
 } from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
 
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
@@ -68,13 +71,11 @@ import {
 import {
   todayIso,
   roomOptions,
-  classOptions,
   reasonOptions,
   periodTimeMap,
   teacherOptions,
   subjectOptions,
   priorityOptions,
-  divisionOptions,
   sourceTypeOptions,
   suggestedTeachers,
   lectureSlotOptions,
@@ -213,7 +214,7 @@ const sourceTypeLabelMap: Record<number, string> = {
   5: 'Event',
 };
 
-const viewDateFormat = 'DD/MM/YYYY';
+const viewDateFormat = 'DD-MM-YYYY';
 
 const formatViewDate = (value?: string | null) =>
   value && dayjs(value).isValid() ? dayjs(value).format(viewDateFormat) : '-';
@@ -637,6 +638,15 @@ const buildAudit = (action: string, actor = 'System') => ({
   action,
 });
 
+const uniqueLookupOptions = <T extends ApiLookupOption>(items: T[]): T[] => {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (!item.id || seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+};
+
 const SubstitutionManagementScreen = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [boardView, setBoardView] = useState<SubstitutionViewType>('table');
@@ -658,6 +668,7 @@ const SubstitutionManagementScreen = () => {
   const [settingsForm, setSettingsForm] = useState(settingsResultDefaults);
   const [actionAnchor, setActionAnchor] = useState<HTMLElement | null>(null);
   const [actionRowId, setActionRowId] = useState('');
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const { data: substitutionResult } = useSubstitutionsDataQuery({
     fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
@@ -814,19 +825,30 @@ const SubstitutionManagementScreen = () => {
   const metadataSubjects = createMetadata?.subjects ?? [];
   const metadataTeachers = createMetadata?.teachers ?? [];
   const metadataRooms = createMetadata?.rooms ?? [];
-  const classSelectOptions: SelectOption[] =
-    metadataStandards.length > 0
-      ? metadataStandards.map((item: ApiLookupOption) => ({ value: item.id, label: item.name }))
-      : classOptions;
+  const academicStandards =
+    medium?.educationMediumStages?.flatMap(
+      (stage: Organization) => stage?.standards || []
+    ) || [];
+  const selectedAcademicStandard = academicStandards.find(
+    (item) => item.id === substitutionForm.standardId
+  );
+  const classSelectOptions: SelectOption[] = academicStandards.length
+    ? academicStandards.map((item) => ({ value: item.id, label: item.name }))
+    : uniqueLookupOptions(metadataStandards).map((item) => ({
+        value: item.id,
+        label: item.name,
+      }));
   const divisionSelectOptions: SelectOption[] =
-    metadataDivisions.length > 0
-      ? metadataDivisions
-          .filter(
-            (item) =>
-              !substitutionForm.standardId || item.standardId === substitutionForm.standardId
-          )
-          .map((item) => ({ value: item.id, label: item.name }))
-      : divisionOptions;
+    selectedAcademicStandard?.divisions?.length
+      ? selectedAcademicStandard.divisions.map((item) => ({ value: item.id, label: item.name }))
+      : metadataDivisions.length > 0
+        ? uniqueLookupOptions(metadataDivisions)
+            .filter(
+              (item) =>
+                !substitutionForm.standardId || item.standardId === substitutionForm.standardId
+            )
+            .map((item) => ({ value: item.id, label: item.name }))
+        : [];
   const subjectSelectOptions: SelectOption[] =
     metadataSubjects.length > 0
       ? metadataSubjects
@@ -3228,7 +3250,9 @@ const SubstitutionManagementScreen = () => {
                 options={classSelectOptions}
                 value={substitutionForm.standardId || substitutionForm.className}
                 onChange={(value) => {
-                  const selected = createMetadata?.standards.find((item) => item.id === value);
+                  const selected =
+                    academicStandards.find((item) => item.id === value) ||
+                    createMetadata?.standards.find((item) => item.id === value);
                   setSubstitutionForm((current) => ({
                     ...current,
                     standardId: selected?.id || '',
@@ -3258,7 +3282,9 @@ const SubstitutionManagementScreen = () => {
                 options={divisionSelectOptions}
                 value={substitutionForm.divisionId || substitutionForm.divisionName}
                 onChange={(value) => {
-                  const selected = createMetadata?.divisions.find((item) => item.id === value);
+                  const selected =
+                    selectedAcademicStandard?.divisions?.find((item) => item.id === value) ||
+                    createMetadata?.divisions.find((item) => item.id === value);
                   setSubstitutionForm((current) => ({
                     ...current,
                     divisionId: selected?.id || '',

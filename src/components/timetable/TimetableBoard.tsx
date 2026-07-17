@@ -20,6 +20,7 @@ import {
   TIMELINE_START_HOUR,
   generateTimelineStamps,
 } from './utils';
+import type { TimetableValidationIssue } from './timetableValidationIssues';
 
 import type { RoomAssignment } from './AssignRoomDialog';
 import type { TeacherAssignment } from './AssignTeacherDialog';
@@ -35,6 +36,10 @@ export interface TimetableBoardProps {
   standardId?: string;
   divisionId?: string;
   timetableStatus?: number | null;
+  validateSlots?: (
+    slots: Record<DayOfWeek, TimeSlot[]>,
+    source: 'teacher' | 'room'
+  ) => Promise<TimetableValidationIssue[]>;
 }
 
 const TimetableBoard: React.FC<TimetableBoardProps> = ({
@@ -47,6 +52,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   standardId = '',
   divisionId = '',
   timetableStatus,
+  validateSlots,
 }) => {
   const { timelineStartHour, timelineEndHour, timelineStamps } = useMemo(() => {
     let minMin = Infinity;
@@ -324,14 +330,14 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     setRoomDialog({ day, slotIndex: parseInt(slotId, 10), subjects: slot.subjects });
   };
 
-  const handleTeacherSave = (
+  const handleTeacherSave = async (
     day: DayOfWeek,
     slotIndex: number,
     updatedSubjects: SlotSubject[],
     bulkOptions?: {
       applyTeacherToAllSubjectSlots: Record<string, boolean>;
     }
-  ) => {
+  ): Promise<TimetableValidationIssue[]> => {
     const newWeeklySlots = { ...slots };
 
     // Update current slot
@@ -407,10 +413,18 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
       });
     }
 
+    if (validateSlots) {
+      const issues = await validateSlots(newWeeklySlots, 'teacher');
+      if (issues.length > 0) {
+        return issues;
+      }
+    }
+
     onChange(newWeeklySlots);
+    return [];
   };
 
-  const handleRoomSave = (
+  const handleRoomSave = async (
     day: DayOfWeek,
     slotIndex: number,
     updatedSubjects: SlotSubject[],
@@ -418,7 +432,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
       applyToAllSlots: Record<string, boolean>;
       applyToAllSubjectSlots: Record<string, boolean>;
     }
-  ) => {
+  ): Promise<TimetableValidationIssue[]> => {
     const newWeeklySlots = { ...slots };
 
     // Update current slot
@@ -492,7 +506,15 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
       });
     }
 
+    if (validateSlots) {
+      const issues = await validateSlots(newWeeklySlots, 'room');
+      if (issues.length > 0) {
+        return issues;
+      }
+    }
+
     onChange(newWeeklySlots);
+    return [];
   };
 
   const triggerConfetti = () => {

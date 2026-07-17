@@ -185,7 +185,7 @@ test.describe('Academic Module Navigation Smoke Tests', () => {
       expect(bodyText).not.toContain('Internal Server Error');
 
       // Verify page container or content matches expected pattern
-      await expect(page.locator('main, #root, body')).toContainText(route.expected, { timeout: 15000 });
+      await expect(page.locator('body')).toContainText(route.expected, { timeout: 15000 });
     });
   }
 });

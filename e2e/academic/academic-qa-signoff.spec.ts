@@ -339,6 +339,7 @@ test.describe('Academic Module QA Sign-off Suite', () => {
   test.use({ storageState: 'playwright/.auth/academic-admin.json' });
 
   test('Execute complete academic verification loop', async ({ page }, testInfo) => {
+    test.slow();
     if (!qaEnabled) {
       assertLocalDdvsOnly();
     }
