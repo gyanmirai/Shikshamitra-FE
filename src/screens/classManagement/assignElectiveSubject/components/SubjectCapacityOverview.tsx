@@ -54,14 +54,9 @@ export default function SubjectCapacityOverview({
     plotOptions: {
       pie: {
         donut: {
-          size: '62%',
+          size: '58%',
           labels: {
-            show: true,
-            total: {
-              show: true,
-              label: 'Students',
-              formatter: () => `${totalStudents}`,
-            },
+            show: false,
           },
         },
       },
@@ -71,15 +66,26 @@ export default function SubjectCapacityOverview({
   if (subjects.length === 0) return null;
 
   return (
-    <Card sx={{ p: 1.5, mb: 1.5, ...sx }}>
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+    <Card
+      sx={{
+        p: 1.25,
+        mb: 1.5,
+        minHeight: 94,
+        maxHeight: 104,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        ...sx,
+      }}
+    >
+      <Typography variant="subtitle2" sx={{ mb: 0.75, lineHeight: 1.2 }}>
         Subject Allocation Progress
       </Typography>
-      <Stack direction="row" alignItems="center" spacing={1.25}>
-        <Box sx={{ width: 112, minWidth: 112 }} dir="ltr">
-          <Chart type="donut" series={series} options={chartOptions} height={112} />
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <Box sx={{ width: 56, minWidth: 56 }} dir="ltr">
+          <Chart type="donut" series={series} options={chartOptions} height={56} />
         </Box>
-        <Stack spacing={0.75} sx={{ minWidth: 0, flex: 1 }}>
+        <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
           {chartRows.length > 0 ? (
             chartRows.map((item) => (
               <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>

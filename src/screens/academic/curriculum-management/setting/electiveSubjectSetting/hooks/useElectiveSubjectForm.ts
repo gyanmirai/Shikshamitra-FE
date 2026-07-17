@@ -59,6 +59,10 @@ export const useElectiveSubjectForm = ({
     params: { academicMediumId: (currentMedium as Medium)?.id },
     options: {
       skip: !(currentMedium as Medium)?.id,
+      // The elective group list is already loaded (and kept fresh via tag
+      // invalidation) by the parent table. Avoid forcing a duplicate
+      // network fetch every time this form mounts (e.g. on dialog open).
+      refetchOnMountOrArgChange: false,
     },
   });
 

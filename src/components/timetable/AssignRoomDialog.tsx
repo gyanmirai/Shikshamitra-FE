@@ -5,8 +5,10 @@ import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import { useGetRoomAvailabilityQuery } from 'src/redux/academicAPI/timetableApi/roomAvailabilityApi';
 import {
   Box,
+  Alert,
   Button,
   Checkbox,
+  Divider,
   TextField,
   Typography,
   Autocomplete,
@@ -20,6 +22,7 @@ import CustomDialog from '../customDialog';
 import CustomTooltip from '../custom-tooltip';
 
 import type { TimeSlot, DayOfWeek, SlotSubject } from './types';
+import type { TimetableValidationIssue } from './timetableValidationIssues';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -46,7 +49,7 @@ interface AssignRoomDialogProps {
       applyToAllSlots: Record<string, boolean>;
       applyToAllSubjectSlots: Record<string, boolean>;
     }
-  ) => void;
+  ) => Promise<TimetableValidationIssue[]> | TimetableValidationIssue[] | void;
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +161,8 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
 
   const [selectedIds, setSelectedIds] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [conflictIssues, setConflictIssues] = useState<TimetableValidationIssue[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [applyToAllSlots, setApplyToAllSlots] = useState<Record<string, boolean>>({});
   const [applyToAllSubjectSlots, setApplyToAllSubjectSlots] = useState<Record<string, boolean>>({});
 
@@ -171,6 +176,8 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
         if (sub.roomId) initial[sub.subjectId] = sub.roomId;
       });
       setSelectedIds(initial);
+      setErrors({});
+      setConflictIssues([]);
       setApplyToAllSlots({});
       setApplyToAllSubjectSlots({});
     }
@@ -238,9 +245,11 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setConflictIssues([]);
       return;
     }
     setErrors({});
+    setConflictIssues([]);
 
     const { day, slotIndex } = open;
 
@@ -254,17 +263,45 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
       };
     });
 
-    onSave(day, slotIndex, updatedSubjects, {
-      applyToAllSlots,
-      applyToAllSubjectSlots,
-    });
-    onClose();
+    setIsSubmitting(true);
+    try {
+      const issues =
+        (await onSave(day, slotIndex, updatedSubjects, {
+          applyToAllSlots,
+          applyToAllSubjectSlots,
+        })) ?? [];
+
+      if (issues.length > 0) {
+        setConflictIssues(issues);
+        return;
+      }
+
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <CustomDialog open={!!open} handleClose={onClose} maxWidth="xs" fullWidth title="Assign Room">
       <DialogContent sx={{ pb: 2 }}>
         <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {conflictIssues.length > 0 && (
+            <Alert severity="error" icon={<Iconify icon="mdi:door-closed-lock" />}>
+              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                Room is not available for this time slot
+              </Typography>
+              {conflictIssues.map((issue, index) => (
+                <Box key={`${issue.title}-${index}`} sx={{ mt: index === 0 ? 0 : 1 }}>
+                  {index > 0 && <Divider sx={{ my: 1 }} />}
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                    {issue.title}
+                  </Typography>
+                  <Typography variant="body2">{issue.description}</Typography>
+                </Box>
+              ))}
+            </Alert>
+          )}
           {splitSubjects.length > 0 ? (
             splitSubjects.map((sub) => (
               <Box
@@ -388,9 +425,10 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
           onClick={handleSave}
           variant="contained"
           size="small"
+          disabled={isSubmitting}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
         >
-          Submit
+          {isSubmitting ? 'Checking...' : 'Submit'}
         </Button>
       </DialogActions>
     </CustomDialog>
