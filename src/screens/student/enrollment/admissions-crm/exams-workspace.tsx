@@ -1,13 +1,16 @@
 'use client';
 
 import type { ComponentProps } from 'react';
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { AdmissionCrmEntranceExamDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -22,6 +25,7 @@ import {
   Dialog,
   Switch,
   Divider,
+  Checkbox,
   MenuItem,
   MenuList,
   TextField,
@@ -41,6 +45,7 @@ import {
   useDecideAdmissionCrmEligibilityMutation,
   useGetAdmissionCrmEligibilityHandoffQuery,
   useMarkAdmissionCrmExamAttendanceMutation,
+  useBulkMarkAdmissionCrmExamAttendanceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { EnrollmentWorkspaceHeader } from './workspace-header';
@@ -106,6 +111,29 @@ const getLatestEnumFilter = (filters: IParams['filters'], column: string) => {
   return filter ? Number(filter.value) : undefined;
 };
 
+const getLatestStringFilter = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  return filter?.value ? String(filter.value) : undefined;
+};
+
+const getDateFilterBounds = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  if (!filter || typeof filter.value !== 'string') return {};
+  const [day, month, year] = filter.value.split('-').map(Number);
+  if (!day || !month || !year) return {};
+  const value = new Date(Date.UTC(year, month - 1, day));
+  if (filter.type === 'after') {
+    value.setUTCDate(value.getUTCDate() + 1);
+    return { from: value.toISOString() };
+  }
+  if (filter.type === 'before') {
+    value.setUTCDate(value.getUTCDate() - 1);
+    return { until: value.toISOString() };
+  }
+  const iso = value.toISOString();
+  return { from: iso, until: iso };
+};
+
 type ExamRowActionsProps = {
   exam: AdmissionCrmEntranceExamDto;
   openApplicant: (leadId: string, tab?: ApplicantDrawerTab) => void;
@@ -162,10 +190,13 @@ const ExamRowActions = memo(
 );
 
 export function ExamsWorkspace() {
+  const permissions = useSelector((root: RootState) => root.auth.permissions);
   const { academicYearId, state, updateState, openApplicant, closeApplicant } =
     useEnrollmentWorkspace();
   const page = Math.max(0, state.page - 1);
   const [search, setSearch] = useState('');
+  const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
+  const [selectedExamIds, setSelectedExamIds] = useState<string[]>([]);
   const [selectedExam, setSelectedExam] = useState<AdmissionCrmEntranceExamDto | null>(null);
   const [handoffExamId, setHandoffExamId] = useState('');
   const [attendance, setAttendance] = useState(AdmissionCrmExamAttendanceStatus.NotMarked);
@@ -182,6 +213,9 @@ export function ExamsWorkspace() {
     {
       academicYearId: academicYearId || '',
       filterText: search.trim() || undefined,
+      applicantSearch: getLatestStringFilter(columnFilters, 'applicantName'),
+      examStartFrom: getDateFilterBounds(columnFilters, 'examStartTime').from,
+      examStartUntil: getDateFilterBounds(columnFilters, 'examStartTime').until,
       attendanceStatus: state.attendance,
       examStatus: state.examStatus,
       eligibilityDecision: state.eligibility,
@@ -192,6 +226,7 @@ export function ExamsWorkspace() {
     { skip: !academicYearId }
   );
   const [markAttendance, markAttendanceState] = useMarkAdmissionCrmExamAttendanceMutation();
+  const [bulkMarkAttendance, bulkAttendanceState] = useBulkMarkAdmissionCrmExamAttendanceMutation();
   const [uploadResult, uploadResultState] = useUploadAdmissionCrmExamResultMutation();
   const [decideEligibility, decideEligibilityState] = useDecideAdmissionCrmEligibilityMutation();
   const handoffQuery = useGetAdmissionCrmEligibilityHandoffQuery(
@@ -211,6 +246,10 @@ export function ExamsWorkspace() {
     setOverrideDecision(false);
     setOverrideReason('');
   }, [selectedExam]);
+
+  useEffect(() => {
+    setSelectedExamIds([]);
+  }, [state.page, state.attendance, state.examStatus, state.eligibility]);
 
   const run = async (action: () => Promise<unknown>, message: string) => {
     try {
@@ -267,8 +306,81 @@ export function ExamsWorkspace() {
     [state.attendance, state.eligibility, state.examStatus]
   );
 
+  const exams = useMemo(() => examsQuery.data?.items || [], [examsQuery.data?.items]);
+  const selectedExamSet = useMemo(() => new Set(selectedExamIds), [selectedExamIds]);
+
+  const markSelectedAttendance = async (value: AdmissionCrmExamAttendanceStatus) => {
+    if (!academicYearId || selectedExamIds.length === 0) return;
+    try {
+      const result = await bulkMarkAttendance({
+        academicYearId,
+        examRecordIds: selectedExamIds,
+        attendanceStatus: value,
+      }).unwrap();
+      if (result.failedCount > 0) {
+        setSelectedExamIds(
+          result.items.filter((item) => !item.success).map((item) => item.entityId)
+        );
+        shikshaMitraToast.error({
+          message: `${result.succeededCount} updated; ${result.failedCount} failed and remain selected.`,
+        });
+        return;
+      }
+      setSelectedExamIds([]);
+      shikshaMitraToast.success({
+        message: `${result.succeededCount} exam attendance record${result.succeededCount === 1 ? '' : 's'} updated.`,
+      });
+    } catch {
+      shikshaMitraToast.error({ message: 'The selected exam attendance could not be updated.' });
+    }
+  };
+
   const columns = useMemo<IColumn[]>(
     () => [
+      {
+        id: 'selection',
+        label: '',
+        width: 56,
+        minWidth: 56,
+        maxWidth: 56,
+        sticky: true,
+        stickyPosition: 'left',
+        stickyOnMobile: false,
+        isSort: false,
+        isFilter: false,
+        excludeFromExport: true,
+        renderColumn: () => (
+          <Checkbox
+            size="small"
+            checked={exams.length > 0 && exams.every((exam) => selectedExamSet.has(exam.id))}
+            indeterminate={
+              selectedExamIds.length > 0 && !exams.every((exam) => selectedExamSet.has(exam.id))
+            }
+            onChange={(_event, checked) =>
+              setSelectedExamIds(checked ? exams.map((exam) => exam.id) : [])
+            }
+            inputProps={{ 'aria-label': 'Select visible entrance exams' }}
+          />
+        ),
+        render: (_value, row) => {
+          const exam = row as AdmissionCrmEntranceExamDto;
+          return (
+            <Checkbox
+              size="small"
+              checked={selectedExamSet.has(exam.id)}
+              onClick={(event) => event.stopPropagation()}
+              onChange={() =>
+                setSelectedExamIds((current) =>
+                  current.includes(exam.id)
+                    ? current.filter((id) => id !== exam.id)
+                    : [...current, exam.id]
+                )
+              }
+              inputProps={{ 'aria-label': `Select ${exam.applicantName}` }}
+            />
+          );
+        },
+      },
       {
         id: 'applicantName',
         originalId: 'ApplicantName',
@@ -278,7 +390,7 @@ export function ExamsWorkspace() {
         sticky: true,
         stickyPosition: 'left',
         stickyOnMobile: false,
-        isFilter: false,
+        filterType: 'string',
         render: (value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
           return (
@@ -298,7 +410,7 @@ export function ExamsWorkspace() {
         label: 'Exam schedule',
         width: 190,
         minWidth: 180,
-        isFilter: false,
+        filterType: 'date',
         render: (value, row) => {
           const exam = row as AdmissionCrmEntranceExamDto;
           return (
@@ -406,7 +518,7 @@ export function ExamsWorkspace() {
         },
       },
     ],
-    [openApplicant]
+    [exams, openApplicant, selectedExamIds.length, selectedExamSet]
   );
 
   if (!academicYearId) {
@@ -420,6 +532,39 @@ export function ExamsWorkspace() {
         description="Process attendance, results, merit, and eligibility decisions from one queue."
       />
 
+      {selectedExamIds.length > 0 ? (
+        <Paper variant="outlined" role="region" aria-label="Bulk exam actions" sx={{ p: 1 }}>
+          <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+            <Chip color="primary" label={`${selectedExamIds.length} selected`} />
+            {hasGrantedPermission(
+              permissions,
+              'Students.Enrollment.AdmissionsCrm.BulkOperations'
+            ) ? (
+              <>
+                <LoadingButton
+                  size="small"
+                  loading={bulkAttendanceState.isLoading}
+                  onClick={() => markSelectedAttendance(AdmissionCrmExamAttendanceStatus.Present)}
+                >
+                  Mark present
+                </LoadingButton>
+                <LoadingButton
+                  size="small"
+                  color="warning"
+                  loading={bulkAttendanceState.isLoading}
+                  onClick={() => markSelectedAttendance(AdmissionCrmExamAttendanceStatus.Absent)}
+                >
+                  Mark absent
+                </LoadingButton>
+              </>
+            ) : null}
+            <Button size="small" color="inherit" onClick={() => setSelectedExamIds([])}>
+              Clear selection
+            </Button>
+          </Stack>
+        </Paper>
+      ) : null}
+
       {examsQuery.isError ? (
         <EnrollmentWorkspaceErrorState
           message="Entrance exams are unavailable."
@@ -430,7 +575,7 @@ export function ExamsWorkspace() {
           tableId="student-enrollment-entrance-exams"
           tableTitle="Entrance Exams"
           columns={columns}
-          data={examsQuery.data?.items || []}
+          data={exams}
           isLoading={examsQuery.isLoading}
           serverSide
           serverSidePagination
@@ -442,7 +587,7 @@ export function ExamsWorkspace() {
             placeholder: 'Search applicant or exam slot',
             inputProps: { 'aria-label': 'Search entrance exams' },
           }}
-          filters={tableFilters}
+          filters={[...tableFilters, ...columnFilters]}
           totalCount={examsQuery.data?.totalCount || 0}
           page={page}
           rowsPerPage={pageSize}
@@ -463,7 +608,9 @@ export function ExamsWorkspace() {
               'push'
             );
           }}
-          onServerFilter={(filters) =>
+          onServerFilter={(filters) => {
+            const stateColumns = new Set(['attendanceStatus', 'examStatus', 'eligibilityDecision']);
+            setColumnFilters(filters.filter((filter) => !stateColumns.has(filter.column)));
             updateState(
               {
                 attendance: getLatestEnumFilter(filters, 'attendanceStatus'),
@@ -472,8 +619,8 @@ export function ExamsWorkspace() {
                 page: 1,
               },
               'push'
-            )
-          }
+            );
+          }}
           noDataText={
             <EnrollmentTableEmptyState
               title="No matching exams"

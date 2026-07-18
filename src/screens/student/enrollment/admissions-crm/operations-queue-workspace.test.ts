@@ -46,7 +46,7 @@ describe('Enrollment operations queue workspace', () => {
     expect(source).toContain('serverSideSort');
     expect(source).toContain('onServerSort');
     expect(source).toContain('onServerFilter');
-    expect(source).toContain('filters={tableFilters}');
+    expect(source).toContain('filters={[...tableFilters, ...columnFilters]}');
   });
 
   it('puts eligible applicants awaiting manual registration first', () => {

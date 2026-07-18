@@ -1,16 +1,36 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 import type { AdmissionCrmMyWorkItemDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
-import { useMemo, useCallback } from 'react';
+import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
 import TodayRounded from '@mui/icons-material/TodayRounded';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { LoadingButton } from 'src/components/loading-button';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import WarningAmberRounded from '@mui/icons-material/WarningAmberRounded';
 import AssignmentIndRounded from '@mui/icons-material/AssignmentIndRounded';
 import ReportProblemRounded from '@mui/icons-material/ReportProblemRounded';
-import { Box, Chip, Alert, Stack, Paper, Button, Typography } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Alert,
+  Stack,
+  Paper,
+  Button,
+  Dialog,
+  Checkbox,
+  TextField,
+  Typography,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material';
 import {
   AdmissionInquiryStage,
   AdmissionCrmMyWorkType,
@@ -19,6 +39,7 @@ import {
   AdmissionCrmWorkspaceSection,
   AdmissionCrmRecommendedAction,
   useGetAdmissionCrmMyWorkQuery,
+  useBulkCreateAdmissionCrmTasksMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import { formatEnrollmentDate } from './enrollment-display';
@@ -81,15 +102,43 @@ const enumValue = (value: unknown) => {
 };
 
 export function EnrollmentOverviewWorkspace() {
+  const permissions = useSelector((root: RootState) => root.auth.permissions);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { academicYearId, academicMediumId } = useEnrollmentWorkspace();
+  const { academicYearId, academicMediumId, currentUserId } = useEnrollmentWorkspace();
   const page = Math.max(0, Number(searchParams.get('page') || '1') - 1);
   const pageSize = Math.min(100, Math.max(10, Number(searchParams.get('pageSize') || '25')));
   const search = searchParams.get('search') || '';
   const sorting = searchParams.get('sorting') || undefined;
   const applicantId = searchParams.get('applicant') || undefined;
   const workItemKey = searchParams.get('workItem') || undefined;
+  const [selectedWorkKeys, setSelectedWorkKeys] = useState<string[]>([]);
+  const [bulkTaskOpen, setBulkTaskOpen] = useState(false);
+  const [bulkTaskTitle, setBulkTaskTitle] = useState('');
+  const [bulkTaskDueAt, setBulkTaskDueAt] = useState(() =>
+    dayjs().add(1, 'day').format('YYYY-MM-DDTHH:mm')
+  );
+  const [bulkCreateTasks, bulkCreateTasksState] = useBulkCreateAdmissionCrmTasksMutation();
+
+  const selectionScope = [
+    academicYearId,
+    academicMediumId,
+    page,
+    pageSize,
+    search,
+    sorting,
+    searchParams.get('applicantSearch'),
+    searchParams.get('targetClassSearch'),
+    searchParams.get('assignedSearch'),
+    searchParams.get('workType'),
+    searchParams.get('stage'),
+    searchParams.get('priority'),
+    searchParams.get('urgency'),
+  ].join('|');
+
+  useEffect(() => {
+    setSelectedWorkKeys([]);
+  }, [selectionScope]);
 
   const numberParam = useCallback(
     (key: string) => {
@@ -103,6 +152,9 @@ export function EnrollmentOverviewWorkspace() {
     {
       academicYearId: academicYearId || '',
       search: search || undefined,
+      applicantSearch: searchParams.get('applicantSearch') || undefined,
+      targetClassSearch: searchParams.get('targetClassSearch') || undefined,
+      assignedSearch: searchParams.get('assignedSearch') || undefined,
       workType: numberParam('workType') as AdmissionCrmMyWorkType | undefined,
       stage: numberParam('stage') as AdmissionInquiryStage | undefined,
       priority: numberParam('priority') as AdmissionCrmLeadPriority | undefined,
@@ -116,7 +168,10 @@ export function EnrollmentOverviewWorkspace() {
   );
 
   const updateUrl = useCallback(
-    (changes: Record<string, string | number | undefined | null>, mode: 'push' | 'replace' = 'replace') => {
+    (
+      changes: Record<string, string | number | undefined | null>,
+      mode: 'push' | 'replace' = 'replace'
+    ) => {
       const params = new URLSearchParams(searchParams.toString());
       Object.entries(changes).forEach(([key, value]) => {
         if (value == null || value === '') params.delete(key);
@@ -147,6 +202,8 @@ export function EnrollmentOverviewWorkspace() {
   );
 
   const selectedWorkItem = query.data?.items.find((item) => item.key === workItemKey);
+  const workItems = useMemo(() => query.data?.items || [], [query.data?.items]);
+  const selectedWorkSet = useMemo(() => new Set(selectedWorkKeys), [selectedWorkKeys]);
   const activeTab = (searchParams.get('tab') as ApplicantDrawerTab | null) || 'overview';
 
   const metrics = useMemo(
@@ -195,6 +252,52 @@ export function EnrollmentOverviewWorkspace() {
   const columns = useMemo<IColumn[]>(
     () => [
       {
+        id: 'selection',
+        label: '',
+        width: 56,
+        minWidth: 56,
+        maxWidth: 56,
+        sticky: true,
+        stickyPosition: 'left',
+        isSort: false,
+        isFilter: false,
+        excludeFromExport: true,
+        renderColumn: () => (
+          <Checkbox
+            size="small"
+            checked={
+              workItems.length > 0 && workItems.every((item) => selectedWorkSet.has(item.key))
+            }
+            indeterminate={
+              selectedWorkKeys.length > 0 &&
+              !workItems.every((item) => selectedWorkSet.has(item.key))
+            }
+            onChange={(_event, checked) =>
+              setSelectedWorkKeys(checked ? workItems.map((item) => item.key) : [])
+            }
+            inputProps={{ 'aria-label': 'Select visible work items' }}
+          />
+        ),
+        render: (_value, row) => {
+          const item = row as AdmissionCrmMyWorkItemDto;
+          return (
+            <Checkbox
+              size="small"
+              checked={selectedWorkSet.has(item.key)}
+              onClick={(event) => event.stopPropagation()}
+              onChange={() =>
+                setSelectedWorkKeys((current) =>
+                  current.includes(item.key)
+                    ? current.filter((key) => key !== item.key)
+                    : [...current, item.key]
+                )
+              }
+              inputProps={{ 'aria-label': `Select work for ${item.applicantName}` }}
+            />
+          );
+        },
+      },
+      {
         id: 'applicantName',
         label: 'Applicant',
         width: 230,
@@ -202,7 +305,7 @@ export function EnrollmentOverviewWorkspace() {
         sticky: true,
         stickyPosition: 'left',
         isSort: true,
-        isFilter: false,
+        filterType: 'string',
         render: (_value, row) => {
           const item = row as AdmissionCrmMyWorkItemDto;
           return (
@@ -232,7 +335,10 @@ export function EnrollmentOverviewWorkspace() {
             <Stack spacing={0.15}>
               <Typography variant="body2">{item.title}</Typography>
               <Typography variant="caption" color="text.secondary" noWrap>
-                {item.details || (item.workType === AdmissionCrmMyWorkType.Task ? 'Assigned task' : 'Operational blocker')}
+                {item.details ||
+                  (item.workType === AdmissionCrmMyWorkType.Task
+                    ? 'Assigned task'
+                    : 'Operational blocker')}
               </Typography>
             </Stack>
           );
@@ -248,7 +354,9 @@ export function EnrollmentOverviewWorkspace() {
         enumOptions: Object.values(AdmissionInquiryStage)
           .filter((value): value is number => typeof value === 'number')
           .map((value) => ({ label: AdmissionInquiryStage[value], value })),
-        render: (_value, row) => <AdmissionCrmStageChip stage={(row as AdmissionCrmMyWorkItemDto).stage} />,
+        render: (_value, row) => (
+          <AdmissionCrmStageChip stage={(row as AdmissionCrmMyWorkItemDto).stage} />
+        ),
       },
       {
         id: 'targetClassName',
@@ -256,7 +364,7 @@ export function EnrollmentOverviewWorkspace() {
         width: 145,
         minWidth: 125,
         isSort: false,
-        isFilter: false,
+        filterType: 'string',
         render: (value) => value || 'Placement missing',
       },
       {
@@ -278,7 +386,13 @@ export function EnrollmentOverviewWorkspace() {
               <Chip
                 size="small"
                 variant="outlined"
-                color={item.urgency === AdmissionCrmWorkUrgency.Overdue ? 'error' : item.urgency === AdmissionCrmWorkUrgency.DueToday ? 'warning' : 'default'}
+                color={
+                  item.urgency === AdmissionCrmWorkUrgency.Overdue
+                    ? 'error'
+                    : item.urgency === AdmissionCrmWorkUrgency.DueToday
+                      ? 'warning'
+                      : 'default'
+                }
                 label={urgencyLabels[item.urgency]}
                 sx={{ width: 'fit-content' }}
               />
@@ -296,7 +410,9 @@ export function EnrollmentOverviewWorkspace() {
         enumOptions: Object.values(AdmissionCrmLeadPriority)
           .filter((value): value is number => typeof value === 'number')
           .map((value) => ({ label: priorityLabels[value as AdmissionCrmLeadPriority], value })),
-        render: (value) => <Chip size="small" label={priorityLabels[value as AdmissionCrmLeadPriority]} />,
+        render: (value) => (
+          <Chip size="small" label={priorityLabels[value as AdmissionCrmLeadPriority]} />
+        ),
       },
       {
         id: 'assignedDisplayName',
@@ -304,7 +420,7 @@ export function EnrollmentOverviewWorkspace() {
         width: 170,
         minWidth: 150,
         isSort: false,
-        isFilter: false,
+        filterType: 'string',
         render: (value) => value || 'Me',
       },
       {
@@ -335,13 +451,60 @@ export function EnrollmentOverviewWorkspace() {
         },
       },
     ],
-    [openItem]
+    [openItem, selectedWorkKeys.length, selectedWorkSet, workItems]
   );
+
+  const createTasksForSelection = async () => {
+    if (!academicYearId || !bulkTaskTitle.trim() || selectedWorkKeys.length === 0) return;
+    const leadIds = Array.from(
+      new Set(workItems.filter((item) => selectedWorkSet.has(item.key)).map((item) => item.leadId))
+    );
+    try {
+      const result = await bulkCreateTasks({
+        academicYearId,
+        leadIds,
+        title: bulkTaskTitle.trim(),
+        dueAt: new Date(bulkTaskDueAt).toISOString(),
+        assignedUserId: currentUserId,
+      }).unwrap();
+      if (result.failedCount > 0) {
+        const failedLeadIds = new Set(
+          result.items.filter((item) => !item.success).map((item) => item.entityId)
+        );
+        setSelectedWorkKeys(
+          workItems.filter((item) => failedLeadIds.has(item.leadId)).map((item) => item.key)
+        );
+        shikshaMitraToast.error({
+          message: `${result.succeededCount} completed; ${result.failedCount} failed and remain selected.`,
+        });
+        return;
+      }
+      setSelectedWorkKeys([]);
+      setBulkTaskTitle('');
+      setBulkTaskOpen(false);
+      shikshaMitraToast.success({
+        message: `Tasks created for ${leadIds.length} applicant${leadIds.length === 1 ? '' : 's'}.`,
+      });
+    } catch {
+      shikshaMitraToast.error({
+        message: 'Tasks could not be created for the selected applicants.',
+      });
+    }
+  };
 
   const handleFilters = useCallback(
     (filters: IParams['filters']) => {
       const byColumn = new Map(filters.map((filter) => [filter.column, filter.value]));
       updateUrl({
+        applicantSearch: byColumn.get('applicantName')
+          ? String(byColumn.get('applicantName'))
+          : undefined,
+        targetClassSearch: byColumn.get('targetClassName')
+          ? String(byColumn.get('targetClassName'))
+          : undefined,
+        assignedSearch: byColumn.get('assignedDisplayName')
+          ? String(byColumn.get('assignedDisplayName'))
+          : undefined,
         workType: enumValue(byColumn.get('workType')),
         stage: enumValue(byColumn.get('stage')),
         urgency: enumValue(byColumn.get('urgency')),
@@ -352,7 +515,8 @@ export function EnrollmentOverviewWorkspace() {
     [updateUrl]
   );
 
-  if (!academicYearId) return <Alert severity="info">Select an academic year to open My Work.</Alert>;
+  if (!academicYearId)
+    return <Alert severity="info">Select an academic year to open My Work.</Alert>;
 
   return (
     <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
@@ -360,34 +524,90 @@ export function EnrollmentOverviewWorkspace() {
         title="My Admissions Work"
         description="Tasks and operational blockers assigned to you for this admission cycle."
       />
+      {selectedWorkKeys.length > 0 ? (
+        <Paper variant="outlined" role="region" aria-label="Bulk work actions" sx={{ p: 1 }}>
+          <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+            <Chip color="primary" label={`${selectedWorkKeys.length} selected`} />
+            {hasGrantedPermission(
+              permissions,
+              'Students.Enrollment.AdmissionsCrm.BulkOperations'
+            ) ? (
+              <Button size="small" onClick={() => setBulkTaskOpen(true)}>
+                Create follow-up tasks
+              </Button>
+            ) : null}
+            <Button size="small" color="inherit" onClick={() => setSelectedWorkKeys([])}>
+              Clear selection
+            </Button>
+          </Stack>
+        </Paper>
+      ) : null}
       {query.isError ? (
-        <EnrollmentWorkspaceErrorState message="Admissions work could not be loaded." onRetry={() => query.refetch()} />
+        <EnrollmentWorkspaceErrorState
+          message="Admissions work could not be loaded."
+          onRetry={() => query.refetch()}
+        />
       ) : (
         <>
           <Paper
             variant="outlined"
-            sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(150px, 1fr))', borderRadius: 1.5, overflowX: 'auto' }}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, minmax(150px, 1fr))',
+              borderRadius: 1.5,
+              overflowX: 'auto',
+            }}
           >
             {metrics.map((metric) => {
-              const selected = metric.urgency != null
-                ? numberParam('urgency') === metric.urgency
-                : metric.workType != null
-                  ? numberParam('workType') === metric.workType
-                  : !numberParam('urgency') && !numberParam('workType');
+              const selected =
+                metric.urgency != null
+                  ? numberParam('urgency') === metric.urgency
+                  : metric.workType != null
+                    ? numberParam('workType') === metric.workType
+                    : !numberParam('urgency') && !numberParam('workType');
               return (
                 <Button
                   key={metric.key}
                   color="inherit"
                   aria-pressed={selected}
-                  onClick={() => updateUrl({ urgency: metric.urgency, workType: metric.workType, page: 1 })}
-                  sx={{ justifyContent: 'flex-start', px: 1.5, py: 1.15, borderRadius: 0, borderRight: 1, borderColor: 'divider', bgcolor: selected ? 'action.selected' : undefined }}
+                  onClick={() =>
+                    updateUrl({ urgency: metric.urgency, workType: metric.workType, page: 1 })
+                  }
+                  sx={{
+                    justifyContent: 'flex-start',
+                    px: 1.5,
+                    py: 1.15,
+                    borderRadius: 0,
+                    borderRight: 1,
+                    borderColor: 'divider',
+                    bgcolor: selected ? 'action.selected' : undefined,
+                  }}
                 >
-                  <Box aria-hidden="true" sx={{ display: 'grid', placeItems: 'center', mr: 1, width: 32, height: 32, borderRadius: 1, color: metric.color, bgcolor: metric.surface }}>
+                  <Box
+                    aria-hidden="true"
+                    sx={{
+                      display: 'grid',
+                      placeItems: 'center',
+                      mr: 1,
+                      width: 32,
+                      height: 32,
+                      borderRadius: 1,
+                      color: metric.color,
+                      bgcolor: metric.surface,
+                    }}
+                  >
                     {metric.icon}
                   </Box>
                   <Box sx={{ textAlign: 'left' }}>
-                    <Typography variant="h6" sx={{ lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{metric.value}</Typography>
-                    <Typography variant="caption" color="text.secondary">{metric.label}</Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{ lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}
+                    >
+                      {metric.value}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {metric.label}
+                    </Typography>
                   </Box>
                 </Button>
               );
@@ -397,7 +617,7 @@ export function EnrollmentOverviewWorkspace() {
             tableId="student-enrollment-my-work"
             tableTitle="My Work"
             columns={columns}
-            data={query.data?.items || []}
+            data={workItems}
             isLoading={query.isLoading || query.isFetching}
             serverSide
             serverSidePagination
@@ -410,11 +630,16 @@ export function EnrollmentOverviewWorkspace() {
             searchTerm={search}
             defaultRowsPerPage={25}
             rowsPerPageOptions={[10, 25, 50, 100]}
-            onServerPagination={(nextPage, nextPageSize) => updateUrl({ page: nextPage + 1, pageSize: nextPageSize })}
+            onServerPagination={(nextPage, nextPageSize) =>
+              updateUrl({ page: nextPage + 1, pageSize: nextPageSize })
+            }
             onServerSearch={(value) => updateUrl({ search: value || null, page: 1 })}
             onServerSort={(_column, sorts) => {
               const sort = sorts[0];
-              updateUrl({ sorting: sort ? `${sort.originalId || sort.column} ${sort.direction}` : null, page: 1 });
+              updateUrl({
+                sorting: sort ? `${sort.originalId || sort.column} ${sort.direction}` : null,
+                page: 1,
+              });
             }}
             onServerFilter={handleFilters}
             handleRowClick={(row) => openItem(row as AdmissionCrmMyWorkItemDto)}
@@ -428,13 +653,57 @@ export function EnrollmentOverviewWorkspace() {
                 }
               },
             })}
-            noDataText={<EnrollmentTableEmptyState title="Your work queue is clear" description="No assigned tasks or owned blockers match the current filters." />}
+            noDataText={
+              <EnrollmentTableEmptyState
+                title="Your work queue is clear"
+                description="No assigned tasks or owned blockers match the current filters."
+              />
+            }
             wrapperProps={{ sx: enrollmentTableWrapperSx }}
             tableContainerProps={{ sx: enrollmentTableContainerSx }}
           />
-          {query.data ? <Typography variant="caption" color="text.secondary" textAlign="right">Updated {formatEnrollmentDate(query.data.generatedAt, true)}</Typography> : null}
+          {query.data ? (
+            <Typography variant="caption" color="text.secondary" textAlign="right">
+              Updated {formatEnrollmentDate(query.data.generatedAt, true)}
+            </Typography>
+          ) : null}
         </>
       )}
+      <Dialog open={bulkTaskOpen} onClose={() => setBulkTaskOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Create follow-up tasks</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5} sx={{ pt: 1 }}>
+            <Alert severity="info">
+              One task will be assigned to you for each selected applicant.
+            </Alert>
+            <TextField
+              required
+              label="Task title"
+              value={bulkTaskTitle}
+              onChange={(event) => setBulkTaskTitle(event.target.value)}
+            />
+            <TextField
+              required
+              type="datetime-local"
+              label="Due at"
+              value={bulkTaskDueAt}
+              onChange={(event) => setBulkTaskDueAt(event.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkTaskOpen(false)}>Cancel</Button>
+          <LoadingButton
+            variant="contained"
+            loading={bulkCreateTasksState.isLoading}
+            disabled={!bulkTaskTitle.trim() || !bulkTaskDueAt}
+            onClick={createTasksForSelection}
+          >
+            Create tasks
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
       <ApplicantWorkspaceDrawer
         leadId={applicantId}
         academicYearId={academicYearId}

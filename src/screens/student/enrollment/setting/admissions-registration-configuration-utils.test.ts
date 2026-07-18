@@ -4,6 +4,7 @@ import {
   createRegistrationTemplate,
   validateRegistrationTemplate,
   normalizeRegistrationTemplate,
+  createBlankRegistrationTemplate,
   validateRegistrationTemplateStep,
   findRegistrationTemplateValidationIssue,
 } from './admissions-registration-configuration-utils';
@@ -11,13 +12,15 @@ import {
 describe('admissions registration configuration', () => {
   it('creates a structured starter template', () => {
     const template = createRegistrationTemplate();
-    expect(template.sections).toHaveLength(1);
-    expect(template.sections[0].fields).toHaveLength(1);
+    expect(template.name).toBe('Standard School Registration');
+    expect(template.sections).toHaveLength(4);
+    expect(template.sections.flatMap((section) => section.fields)).toHaveLength(16);
+    expect(validateRegistrationTemplate(template)).toEqual([]);
     expect(template.allowPartialSave).toBe(true);
   });
 
   it('validates the current guided-editor step before advancing', () => {
-    const template = createRegistrationTemplate();
+    const template = createBlankRegistrationTemplate();
     expect(validateRegistrationTemplateStep(template, 0)).toContain('Template name is required.');
     expect(findRegistrationTemplateValidationIssue(template)?.step).toBe(0);
 

@@ -55,6 +55,7 @@ import {
   useRecordAdmissionCrmRegistrationPaymentReferenceMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { RegistrationResponseEditor } from './registration-response-editor';
 import { useApplicantWorkspaceDirtyState } from './applicant-workspace-dirty-context';
 import { ApplicantSwitchRow, ApplicantEmptyState } from './applicant-workspace-primitives';
 
@@ -299,6 +300,8 @@ export function ApplicantRegistrationOperations({
 
   return (
     <Stack spacing={1.25}>
+      <RegistrationResponseEditor registration={registration} />
+
       <Box component="section">
         <Stack spacing={1.25}>
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>

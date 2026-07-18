@@ -2,7 +2,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdmissionCrmOperationsQueueItemDto } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import { Chip, Stack, Typography, LinearProgress } from '@mui/material';
+import { Chip, Stack, Checkbox, Typography, LinearProgress } from '@mui/material';
 import {
   AdmissionCrmRouteType,
   AdmissionCrmSeatOfferStatus,
@@ -33,7 +33,55 @@ type Options = {
   applicantTab: ApplicantDrawerTab;
   openApplicant: (leadId: string, tab?: ApplicantDrawerTab) => void;
   staffById: ReadonlyMap<string, string>;
+  items: AdmissionCrmOperationsQueueItemDto[];
+  selectedLeadIds: ReadonlySet<string>;
+  onToggleLead: (leadId: string) => void;
+  onToggleVisible: (checked: boolean) => void;
+  seatPoolOptions: Array<{ value: string; label: string }>;
 };
+
+const selectionColumn = (options: Options): IColumn => ({
+  id: 'selection',
+  label: '',
+  width: 56,
+  minWidth: 56,
+  maxWidth: 56,
+  sticky: true,
+  stickyPosition: 'left',
+  stickyOnMobile: false,
+  isSort: false,
+  isFilter: false,
+  excludeFromExport: true,
+  renderColumn: () => {
+    const allVisibleSelected =
+      options.items.length > 0 &&
+      options.items.every((item) => options.selectedLeadIds.has(item.leadId));
+    const someVisibleSelected = options.items.some((item) =>
+      options.selectedLeadIds.has(item.leadId)
+    );
+    return (
+      <Checkbox
+        size="small"
+        checked={allVisibleSelected}
+        indeterminate={someVisibleSelected && !allVisibleSelected}
+        onChange={(_event, checked) => options.onToggleVisible(checked)}
+        inputProps={{ 'aria-label': 'Select visible applicants' }}
+      />
+    );
+  },
+  render: (_value, row) => {
+    const item = row as AdmissionCrmOperationsQueueItemDto;
+    return (
+      <Checkbox
+        size="small"
+        checked={options.selectedLeadIds.has(item.leadId)}
+        onClick={(event) => event.stopPropagation()}
+        onChange={() => options.onToggleLead(item.leadId)}
+        inputProps={{ 'aria-label': `Select ${item.applicantName}` }}
+      />
+    );
+  },
+});
 
 const applicantColumn: IColumn = {
   id: 'applicantName',
@@ -44,7 +92,7 @@ const applicantColumn: IColumn = {
   sticky: true,
   stickyPosition: 'left',
   stickyOnMobile: false,
-  isFilter: false,
+  filterType: 'string',
   render: (value) => (
     <Typography variant="subtitle2" noWrap>
       {value}
@@ -58,7 +106,7 @@ const nextActionColumn: IColumn = {
   label: 'Next Action',
   width: 290,
   minWidth: 250,
-  isFilter: false,
+  filterType: 'string',
   render: (value, row) => {
     const item = row as AdmissionCrmOperationsQueueItemDto;
     return (
@@ -82,7 +130,8 @@ const ownerColumn = (staffById: ReadonlyMap<string, string>): IColumn => ({
   label: 'Owner',
   width: 180,
   minWidth: 155,
-  isFilter: false,
+  filterType: 'enum',
+  enumOptions: Array.from(staffById, ([value, label]) => ({ value, label })),
   render: (_value, row) => {
     const { ownerUserId } = row as AdmissionCrmOperationsQueueItemDto;
     if (!ownerUserId) return 'Unassigned';
@@ -111,6 +160,7 @@ const actionsColumn = ({ applicantTab, openApplicant }: Omit<Options, 'variant'>
 });
 
 const registrationColumns = (options: Options): IColumn[] => [
+  selectionColumn(options),
   applicantColumn,
   {
     id: 'registration',
@@ -183,7 +233,7 @@ const registrationColumns = (options: Options): IColumn[] => [
     label: 'Link Expiry',
     width: 140,
     minWidth: 125,
-    isFilter: false,
+    filterType: 'date',
     render: (_value, row) =>
       formatEnrollmentDate((row as AdmissionCrmOperationsQueueItemDto).registration?.linkExpiresAt),
   },
@@ -193,6 +243,7 @@ const registrationColumns = (options: Options): IColumn[] => [
 ];
 
 const offerColumns = (options: Options): IColumn[] => [
+  selectionColumn(options),
   applicantColumn,
   {
     id: 'route',
@@ -235,7 +286,8 @@ const offerColumns = (options: Options): IColumn[] => [
     label: 'Seat Pool',
     width: 180,
     minWidth: 155,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: options.seatPoolOptions,
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).offer;
       return context?.seatPoolName
@@ -249,7 +301,11 @@ const offerColumns = (options: Options): IColumn[] => [
     label: 'Payment Condition',
     width: 175,
     minWidth: 155,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: [
+      { value: true, label: 'Satisfied' },
+      { value: false, label: 'Not satisfied' },
+    ],
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).offer;
       if (context?.paymentGateSatisfied == null) return 'Not configured';
@@ -264,7 +320,7 @@ const offerColumns = (options: Options): IColumn[] => [
     label: 'Offer Expiry',
     width: 140,
     minWidth: 125,
-    isFilter: false,
+    filterType: 'date',
     render: (_value, row) =>
       formatEnrollmentDate((row as AdmissionCrmOperationsQueueItemDto).offer?.offerExpiresAt),
   },
@@ -274,6 +330,7 @@ const offerColumns = (options: Options): IColumn[] => [
 ];
 
 const activationColumns = (options: Options): IColumn[] => [
+  selectionColumn(options),
   applicantColumn,
   {
     id: 'activationStatus',
@@ -303,7 +360,11 @@ const activationColumns = (options: Options): IColumn[] => [
     label: 'Placement',
     width: 150,
     minWidth: 135,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: [
+      { value: true, label: 'Configured' },
+      { value: false, label: 'Pending' },
+    ],
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).activation;
       if (!context?.placementConfigured) return 'Pending';
@@ -316,7 +377,11 @@ const activationColumns = (options: Options): IColumn[] => [
     width: 160,
     minWidth: 145,
     isSort: false,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: [
+      { value: true, label: 'Provisioning pending' },
+      { value: false, label: 'Provisioned' },
+    ],
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).activation;
       if (!context) return 'Not started';
@@ -332,7 +397,7 @@ const activationColumns = (options: Options): IColumn[] => [
     width: 230,
     minWidth: 200,
     isSort: false,
-    isFilter: false,
+    filterType: 'string',
     render: (_value, row) => {
       const context = (row as AdmissionCrmOperationsQueueItemDto).activation;
       return context?.repairStep || context?.repairReason || 'No blocker recorded';
@@ -344,6 +409,7 @@ const activationColumns = (options: Options): IColumn[] => [
 ];
 
 const operationsColumns = (options: Options): IColumn[] => [
+  selectionColumn(options),
   applicantColumn,
   nextActionColumn,
   {
@@ -372,7 +438,8 @@ const operationsColumns = (options: Options): IColumn[] => [
     label: 'Assignment',
     width: 135,
     minWidth: 120,
-    isFilter: false,
+    filterType: 'enum',
+    enumOptions: Array.from(options.staffById, ([value, label]) => ({ value, label })),
     render: (_value, row) => {
       const item = row as AdmissionCrmOperationsQueueItemDto;
       if (!item.ownerUserId) return 'Unassigned';

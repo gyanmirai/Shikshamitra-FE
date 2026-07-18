@@ -1,15 +1,21 @@
 'use client';
 
+import type { ReactNode } from 'react';
+import type { RootState } from 'src/redux/store';
 import type { IParams } from 'src/components/customizabaleTable/types';
 import type {
   AdmissionCrmStaffLookupDto,
+  AdmissionCrmBulkOperationResultDto,
+  AdmissionCrmOperationsQueueFilters,
   AdmissionCrmOperationsSavedViewDto,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
 import dynamic from 'next/dynamic';
-import { useMemo, useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import BookmarkAddOutlined from '@mui/icons-material/BookmarkAddOutlined';
 import DeleteOutlineRounded from '@mui/icons-material/DeleteOutlineRounded';
@@ -34,6 +40,7 @@ import {
 } from '@mui/material';
 import {
   AdmissionCrmRouteType,
+  AdmissionCrmSeatOfferType,
   AdmissionCrmSeatOfferStatus,
   useGetAdmissionCrmStaffQuery,
   AdmissionCrmActivationStatus,
@@ -43,7 +50,10 @@ import {
   useGetAdmissionCrmSeatPoolsQuery,
   AdmissionCrmApplicantDocumentStatus,
   useGetAdmissionCrmOperationsQueueQuery,
+  useBulkCreateAdmissionCrmTasksMutation,
+  useBulkCreateAdmissionCrmOffersMutation,
   useGetAdmissionCrmOperationsSavedViewsQuery,
+  useBulkAssignAdmissionCrmLeadOwnersMutation,
   useGetAdmissionCrmOperationsQueueSummaryQuery,
   useCreateAdmissionCrmOperationsSavedViewMutation,
   useDeleteAdmissionCrmOperationsSavedViewMutation,
@@ -84,9 +94,11 @@ type Props = {
   applicantTab?: ApplicantDrawerTab;
   variant?: EnrollmentQueueVariant;
   showOperationsUtilities?: boolean;
+  headerActions?: ReactNode;
 };
 
 const pageSize = 50;
+type BulkAction = 'owner' | 'task' | 'offer';
 const queueLabels: Record<AdmissionCrmOperationsQueueType, string> = {
   [AdmissionCrmOperationsQueueType.UnassignedExam]: 'Unassigned Exams',
   [AdmissionCrmOperationsQueueType.CapacityConflict]: 'Capacity Conflicts',
@@ -134,6 +146,149 @@ const getLatestNumberFilter = (filters: IParams['filters'], column: string) => {
   return value === undefined || value === null || value === '' ? undefined : Number(value);
 };
 
+const getLatestStringFilter = (filters: IParams['filters'], column: string) => {
+  const value = getLatestFilter(filters, column);
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+};
+
+const getLatestBooleanFilter = (filters: IParams['filters'], column: string) => {
+  const value = getLatestFilter(filters, column);
+  if (value === true || value === 'true') return true;
+  if (value === false || value === 'false') return false;
+  return undefined;
+};
+
+const getDateFilterBounds = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  if (!filter || typeof filter.value !== 'string') return {};
+  const [day, month, year] = filter.value.split('-').map(Number);
+  if (!day || !month || !year) return {};
+  const value = new Date(Date.UTC(year, month - 1, day));
+  if (filter.type === 'after') {
+    value.setUTCDate(value.getUTCDate() + 1);
+    return { from: value.toISOString() };
+  }
+  if (filter.type === 'before') {
+    value.setUTCDate(value.getUTCDate() - 1);
+    return { until: value.toISOString() };
+  }
+  const iso = value.toISOString();
+  return { from: iso, until: iso };
+};
+
+const formatFilterDate = (value: string, dayOffset = 0) => {
+  const date = new Date(value);
+  date.setUTCDate(date.getUTCDate() + dayOffset);
+  return [
+    String(date.getUTCDate()).padStart(2, '0'),
+    String(date.getUTCMonth() + 1).padStart(2, '0'),
+    date.getUTCFullYear(),
+  ].join('-');
+};
+
+const restoreDateFilter = (
+  column: string,
+  label: string,
+  from?: string,
+  until?: string
+): IParams['filters'] => {
+  if (from && until) {
+    return [{ column, label, type: 'equals', value: formatFilterDate(from), valueType: 'date' }];
+  }
+  if (from) {
+    return [{ column, label, type: 'after', value: formatFilterDate(from, -1), valueType: 'date' }];
+  }
+  if (until) {
+    return [
+      { column, label, type: 'before', value: formatFilterDate(until, 1), valueType: 'date' },
+    ];
+  }
+  return [];
+};
+
+const restoreSavedColumnFilters = (
+  filters: AdmissionCrmOperationsQueueFilters
+): IParams['filters'] => [
+  ...(filters.applicantSearch
+    ? [
+        {
+          column: 'applicantName',
+          label: 'Applicant',
+          type: 'contains',
+          value: filters.applicantSearch,
+          valueType: 'string',
+        },
+      ]
+    : []),
+  ...(filters.actionSearch
+    ? [
+        {
+          column: 'title',
+          label: 'Next Action',
+          type: 'contains',
+          value: filters.actionSearch,
+          valueType: 'string',
+        },
+      ]
+    : []),
+  ...restoreDateFilter(
+    'linkExpiry',
+    'Link Expiry',
+    filters.registrationLinkExpiresFrom,
+    filters.registrationLinkExpiresUntil
+  ),
+  ...restoreDateFilter(
+    'offerExpiry',
+    'Offer Expiry',
+    filters.offerExpiresFrom,
+    filters.offerExpiresUntil
+  ),
+  ...(filters.paymentGateSatisfied == null
+    ? []
+    : [
+        {
+          column: 'payment',
+          label: 'Payment Condition',
+          type: 'equals',
+          value: filters.paymentGateSatisfied,
+          valueType: 'enum',
+        },
+      ]),
+  ...(filters.placementConfigured == null
+    ? []
+    : [
+        {
+          column: 'placement',
+          label: 'Placement',
+          type: 'equals',
+          value: filters.placementConfigured,
+          valueType: 'enum',
+        },
+      ]),
+  ...(filters.accountProvisioningPending == null
+    ? []
+    : [
+        {
+          column: 'accounts',
+          label: 'Accounts',
+          type: 'equals',
+          value: filters.accountProvisioningPending,
+          valueType: 'enum',
+        },
+      ]),
+  ...(filters.repairSearch
+    ? [
+        {
+          column: 'repair',
+          label: 'Repair / Blocker',
+          type: 'contains',
+          value: filters.repairSearch,
+          valueType: 'string',
+        },
+      ]
+    : []),
+];
+
 export function OperationsQueueWorkspace({
   title,
   description,
@@ -142,9 +297,11 @@ export function OperationsQueueWorkspace({
   applicantTab = 'overview',
   variant = 'operations',
   showOperationsUtilities = false,
+  headerActions,
 }: Props) {
   const { academicYearId, state, updateState, openApplicant, closeApplicant } =
     useEnrollmentWorkspace();
+  const permissions = useSelector((root: RootState) => root.auth.permissions);
   const selectedQueue =
     state.queue != null && allowedQueues.includes(state.queue) ? state.queue : defaultQueue;
   const page = Math.max(0, state.page - 1);
@@ -158,9 +315,27 @@ export function OperationsQueueWorkspace({
   const [savedViewName, setSavedViewName] = useState('');
   const [savedViewsOpen, setSavedViewsOpen] = useState(false);
   const [showUtilities, setShowUtilities] = useState(false);
+  const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
+  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState<BulkAction | null>(null);
+  const [bulkStaff, setBulkStaff] = useState<AdmissionCrmStaffLookupDto | null>(null);
+  const [bulkStaffSearch, setBulkStaffSearch] = useState('');
+  const [debouncedBulkStaffSearch, setDebouncedBulkStaffSearch] = useState('');
+  const [bulkTaskTitle, setBulkTaskTitle] = useState('');
+  const [bulkTaskDueAt, setBulkTaskDueAt] = useState(() => new Date().toISOString().slice(0, 16));
+  const [bulkSeatPoolId, setBulkSeatPoolId] = useState('');
+  const [bulkOfferValidUntil, setBulkOfferValidUntil] = useState(() => {
+    const value = new Date();
+    value.setDate(value.getDate() + 14);
+    return value.toISOString().slice(0, 10);
+  });
+  const canBulkOperate = hasGrantedPermission(
+    permissions,
+    'Students.Enrollment.AdmissionsCrm.BulkOperations'
+  );
   const seatPoolsQuery = useGetAdmissionCrmSeatPoolsQuery(
     { academicYearId: academicYearId || '', maxResultCount: 100 },
-    { skip: !academicYearId || variant !== 'offer' }
+    { skip: !academicYearId || (variant !== 'offer' && variant !== 'registration') }
   );
 
   useEffect(() => {
@@ -171,6 +346,10 @@ export function OperationsQueueWorkspace({
     const timer = window.setTimeout(() => setDebouncedAssigneeSearch(assigneeSearch.trim()), 300);
     return () => window.clearTimeout(timer);
   }, [assigneeSearch]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedBulkStaffSearch(bulkStaffSearch.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [bulkStaffSearch]);
 
   const ownerStaffQuery = useGetAdmissionCrmStaffQuery(
     {
@@ -190,6 +369,14 @@ export function OperationsQueueWorkspace({
       academicYearId,
     },
     { skip: !academicYearId }
+  );
+  const bulkStaffQuery = useGetAdmissionCrmStaffQuery(
+    {
+      filter: debouncedBulkStaffSearch || undefined,
+      maxResultCount: 25,
+      academicYearId,
+    },
+    { skip: !academicYearId || (bulkAction !== 'owner' && bulkAction !== 'task') }
   );
   const summaryQuery = useGetAdmissionCrmOperationsQueueSummaryQuery(
     { academicYearId: academicYearId || '' },
@@ -211,6 +398,16 @@ export function OperationsQueueWorkspace({
       seatPoolId: state.seatPoolId,
       activationStatus: state.activationStatus,
       serviceHandoffStatus: state.serviceHandoffStatus,
+      applicantSearch: getLatestStringFilter(columnFilters, 'applicantName'),
+      actionSearch: getLatestStringFilter(columnFilters, 'title'),
+      registrationLinkExpiresFrom: getDateFilterBounds(columnFilters, 'linkExpiry').from,
+      registrationLinkExpiresUntil: getDateFilterBounds(columnFilters, 'linkExpiry').until,
+      offerExpiresFrom: getDateFilterBounds(columnFilters, 'offerExpiry').from,
+      offerExpiresUntil: getDateFilterBounds(columnFilters, 'offerExpiry').until,
+      paymentGateSatisfied: getLatestBooleanFilter(columnFilters, 'payment'),
+      placementConfigured: getLatestBooleanFilter(columnFilters, 'placement'),
+      accountProvisioningPending: getLatestBooleanFilter(columnFilters, 'accounts'),
+      repairSearch: getLatestStringFilter(columnFilters, 'repair'),
       sorting: state.sorting,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
@@ -240,6 +437,24 @@ export function OperationsQueueWorkspace({
     useCreateAdmissionCrmOperationsSavedViewMutation();
   const [deleteSavedView, deleteSavedViewState] =
     useDeleteAdmissionCrmOperationsSavedViewMutation();
+  const [bulkAssignOwners, bulkAssignOwnersState] = useBulkAssignAdmissionCrmLeadOwnersMutation();
+  const [bulkCreateTasks, bulkCreateTasksState] = useBulkCreateAdmissionCrmTasksMutation();
+  const [bulkCreateOffers, bulkCreateOffersState] = useBulkCreateAdmissionCrmOffersMutation();
+
+  useEffect(() => {
+    setSelectedLeadIds([]);
+  }, [
+    selectedQueue,
+    state.page,
+    state.registrationStatus,
+    state.documentStatus,
+    state.offerStatus,
+    state.activationStatus,
+    state.serviceHandoffStatus,
+  ]);
+  useEffect(() => {
+    setColumnFilters([]);
+  }, [selectedQueue]);
 
   useEffect(() => {
     setOwner((ownerStaffQuery.data || []).find((item) => item.id === state.owner) || null);
@@ -273,9 +488,50 @@ export function OperationsQueueWorkspace({
       ),
     [assigneeStaffQuery.data, ownerStaffQuery.data, rowStaffQuery.data]
   );
+  const items = useMemo(() => queueQuery.data?.items || [], [queueQuery.data?.items]);
+  const selectedLeadSet = useMemo(() => new Set(selectedLeadIds), [selectedLeadIds]);
+  const toggleLead = useCallback((leadId: string) => {
+    setSelectedLeadIds((current) =>
+      current.includes(leadId) ? current.filter((id) => id !== leadId) : [...current, leadId]
+    );
+  }, []);
+  const toggleVisible = useCallback(
+    (checked: boolean) => {
+      setSelectedLeadIds((current) => {
+        const visibleIds = items.map((item) => item.leadId);
+        if (!checked) return current.filter((id) => !visibleIds.includes(id));
+        return Array.from(new Set([...current, ...visibleIds]));
+      });
+    },
+    [items]
+  );
   const columns = useMemo(
-    () => buildOperationsQueueColumns({ variant, applicantTab, openApplicant, staffById }),
-    [applicantTab, openApplicant, staffById, variant]
+    () =>
+      buildOperationsQueueColumns({
+        variant,
+        applicantTab,
+        openApplicant,
+        staffById,
+        items,
+        selectedLeadIds: selectedLeadSet,
+        onToggleLead: toggleLead,
+        onToggleVisible: toggleVisible,
+        seatPoolOptions: (seatPoolsQuery.data?.items || []).map((pool) => ({
+          value: pool.id,
+          label: pool.name,
+        })),
+      }),
+    [
+      applicantTab,
+      items,
+      openApplicant,
+      seatPoolsQuery.data?.items,
+      selectedLeadSet,
+      staffById,
+      toggleLead,
+      toggleVisible,
+      variant,
+    ]
   );
   const tableFilters = useMemo<IParams['filters']>(
     () => [
@@ -381,16 +637,47 @@ export function OperationsQueueWorkspace({
             },
           ]
         : []),
+      ...(!state.owner || state.owner === 'me'
+        ? []
+        : [
+            {
+              column: variant === 'operations' ? 'assignment' : 'owner',
+              type: 'equals',
+              value: state.owner,
+              valueType: 'enum',
+              label: variant === 'operations' ? 'Assignment' : 'Owner',
+              displayValue: staffById.get(state.owner) || 'Assigned staff',
+            },
+          ]),
+      ...(!state.seatPoolId
+        ? []
+        : [
+            {
+              column: 'seatPool',
+              type: 'equals',
+              value: state.seatPoolId,
+              valueType: 'enum',
+              label: 'Seat Pool',
+              displayValue:
+                seatPoolsQuery.data?.items.find((pool) => pool.id === state.seatPoolId)?.name ||
+                'Selected seat pool',
+            },
+          ]),
     ],
     [
       state.activationStatus,
       state.documentStatus,
       state.minimumAgeDays,
+      state.owner,
       state.offerStatus,
       state.registrationStatus,
       state.routeType,
       state.serviceHandoffStatus,
+      state.seatPoolId,
       state.urgent,
+      staffById,
+      seatPoolsQuery.data?.items,
+      variant,
     ]
   );
 
@@ -402,6 +689,7 @@ export function OperationsQueueWorkspace({
       return;
     }
     setSearch('');
+    setColumnFilters(restoreSavedColumnFilters(savedView.filters));
     updateState(
       {
         queue: savedView.queueType,
@@ -431,6 +719,8 @@ export function OperationsQueueWorkspace({
         name: savedViewName.trim(),
         queueType: selectedQueue,
         filters: {
+          applicantSearch: getLatestStringFilter(columnFilters, 'applicantName'),
+          actionSearch: getLatestStringFilter(columnFilters, 'title'),
           ownerUserId: state.owner && state.owner !== 'me' ? state.owner : undefined,
           assignedToUserId: state.assignee,
           urgentOnly: state.urgent || undefined,
@@ -442,6 +732,14 @@ export function OperationsQueueWorkspace({
           seatPoolId: state.seatPoolId,
           activationStatus: state.activationStatus,
           serviceHandoffStatus: state.serviceHandoffStatus,
+          registrationLinkExpiresFrom: getDateFilterBounds(columnFilters, 'linkExpiry').from,
+          registrationLinkExpiresUntil: getDateFilterBounds(columnFilters, 'linkExpiry').until,
+          offerExpiresFrom: getDateFilterBounds(columnFilters, 'offerExpiry').from,
+          offerExpiresUntil: getDateFilterBounds(columnFilters, 'offerExpiry').until,
+          paymentGateSatisfied: getLatestBooleanFilter(columnFilters, 'payment'),
+          placementConfigured: getLatestBooleanFilter(columnFilters, 'placement'),
+          accountProvisioningPending: getLatestBooleanFilter(columnFilters, 'accounts'),
+          repairSearch: getLatestStringFilter(columnFilters, 'repair'),
           sorting: state.sorting,
         },
         isShared: false,
@@ -453,6 +751,78 @@ export function OperationsQueueWorkspace({
     }
   };
 
+  const closeBulkDialog = () => {
+    setBulkAction(null);
+    setBulkStaff(null);
+    setBulkStaffSearch('');
+    setBulkTaskTitle('');
+    setBulkSeatPoolId('');
+  };
+
+  const handleBulkAction = async () => {
+    if (!academicYearId || !bulkAction || selectedLeadIds.length === 0) return;
+    try {
+      let result: AdmissionCrmBulkOperationResultDto;
+      if (bulkAction === 'owner') {
+        if (!bulkStaff) return;
+        result = await bulkAssignOwners({
+          academicYearId,
+          items: selectedLeadIds.map((leadId) => ({ leadId, ownerUserId: bulkStaff.id })),
+        }).unwrap();
+      } else if (bulkAction === 'task') {
+        if (!bulkStaff || !bulkTaskTitle.trim()) return;
+        result = await bulkCreateTasks({
+          academicYearId,
+          leadIds: selectedLeadIds,
+          title: bulkTaskTitle.trim(),
+          dueAt: new Date(bulkTaskDueAt).toISOString(),
+          assignedUserId: bulkStaff.id,
+        }).unwrap();
+      } else {
+        if (!bulkSeatPoolId) return;
+        result = await bulkCreateOffers({
+          academicYearId,
+          leadIds: selectedLeadIds,
+          offer: {
+            seatPoolId: bulkSeatPoolId,
+            offerType: AdmissionCrmSeatOfferType.Provisional,
+            terms: {},
+            language: 'en',
+            validFrom: new Date().toISOString(),
+            validUntil: new Date(`${bulkOfferValidUntil}T23:59:59`).toISOString(),
+          },
+        }).unwrap();
+      }
+      if (result.failedCount > 0) {
+        setSelectedLeadIds(
+          result.items.filter((item) => !item.success).map((item) => item.entityId)
+        );
+        shikshaMitraToast.error({
+          message: `${result.succeededCount} completed; ${result.failedCount} failed and remain selected.`,
+        });
+        return;
+      }
+      shikshaMitraToast.success({
+        message:
+          bulkAction === 'owner'
+            ? 'Owners updated for the selected applicants.'
+            : bulkAction === 'task'
+              ? 'Tasks created for the selected applicants.'
+              : 'Eligible offers created. Blocked applicants were left unchanged.',
+      });
+      setSelectedLeadIds([]);
+      closeBulkDialog();
+    } catch (error) {
+      shikshaMitraToast.error({
+        message:
+          typeof error === 'object' && error && 'data' in error
+            ? ((error as { data?: { detail?: string } }).data?.detail ??
+              'The bulk action could not be completed.')
+            : 'The bulk action could not be completed.',
+      });
+    }
+  };
+
   if (!academicYearId) {
     return (
       <Alert severity="info">Select an academic year to open this Enrollment workspace.</Alert>
@@ -461,10 +831,11 @@ export function OperationsQueueWorkspace({
 
   return (
     <Stack spacing={1.5} sx={showOperationsUtilities ? { minWidth: 0 } : enrollmentWorkspaceRootSx}>
-      <EnrollmentWorkspaceHeader title={title} description={description} />
+      <EnrollmentWorkspaceHeader title={title} description={description} actions={headerActions} />
 
       <EnrollmentWorkspaceFilterPanel
         clearDisabled={
+          columnFilters.length === 0 &&
           !state.owner &&
           !state.assignee &&
           !state.minimumAgeDays &&
@@ -477,7 +848,8 @@ export function OperationsQueueWorkspace({
           state.activationStatus == null &&
           state.serviceHandoffStatus == null
         }
-        onClear={() =>
+        onClear={() => {
+          setColumnFilters([]);
           updateState(
             {
               owner: undefined,
@@ -494,8 +866,8 @@ export function OperationsQueueWorkspace({
               page: 1,
             },
             'push'
-          )
-        }
+          );
+        }}
         actions={
           <Button
             size="small"
@@ -766,6 +1138,136 @@ export function OperationsQueueWorkspace({
         />
       </EnrollmentWorkspaceFilterPanel>
 
+      {selectedLeadIds.length > 0 ? (
+        <Paper
+          variant="outlined"
+          role="region"
+          aria-label="Bulk enrollment actions"
+          sx={{ p: 1, position: 'sticky', top: 8, zIndex: 2 }}
+        >
+          <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="center">
+            <Chip color="primary" label={`${selectedLeadIds.length} selected`} />
+            {canBulkOperate ? (
+              <>
+                <Button size="small" onClick={() => setBulkAction('owner')}>
+                  Assign owner
+                </Button>
+                <Button size="small" onClick={() => setBulkAction('task')}>
+                  Create task
+                </Button>
+                {(variant === 'registration' || variant === 'offer') && (
+                  <Button size="small" variant="contained" onClick={() => setBulkAction('offer')}>
+                    Create offers
+                  </Button>
+                )}
+              </>
+            ) : null}
+            <Button size="small" color="inherit" onClick={() => setSelectedLeadIds([])}>
+              Clear selection
+            </Button>
+          </Stack>
+        </Paper>
+      ) : null}
+
+      <Dialog open={Boolean(bulkAction)} onClose={closeBulkDialog} fullWidth maxWidth="sm">
+        <DialogTitle>
+          {bulkAction === 'owner'
+            ? 'Assign owner'
+            : bulkAction === 'task'
+              ? 'Create tasks'
+              : 'Create offers'}
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5} sx={{ pt: 1 }}>
+            <Alert severity="info">{selectedLeadIds.length} selected applicants</Alert>
+            {(bulkAction === 'owner' || bulkAction === 'task') && (
+              <Autocomplete
+                options={bulkStaffQuery.data || []}
+                value={bulkStaff}
+                inputValue={bulkStaffSearch}
+                onInputChange={(_event, value) => setBulkStaffSearch(value)}
+                onChange={(_event, value) => setBulkStaff(value)}
+                getOptionLabel={(option) => `${option.displayName} (${option.employeeCode})`}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                loading={bulkStaffQuery.isFetching}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={bulkAction === 'owner' ? 'Owner' : 'Task assignee'}
+                  />
+                )}
+              />
+            )}
+            {bulkAction === 'task' ? (
+              <>
+                <TextField
+                  label="Task title"
+                  value={bulkTaskTitle}
+                  onChange={(event) => setBulkTaskTitle(event.target.value)}
+                />
+                <TextField
+                  type="datetime-local"
+                  label="Due at"
+                  value={bulkTaskDueAt}
+                  onChange={(event) => setBulkTaskDueAt(event.target.value)}
+                  slotProps={{ inputLabel: { shrink: true } }}
+                />
+              </>
+            ) : null}
+            {bulkAction === 'offer' ? (
+              <>
+                <TextField
+                  select
+                  label="Seat pool"
+                  value={bulkSeatPoolId}
+                  onChange={(event) => setBulkSeatPoolId(event.target.value)}
+                >
+                  {(seatPoolsQuery.data?.items || []).map((pool) => (
+                    <MenuItem key={pool.id} value={pool.id}>
+                      {pool.name} ({pool.remainingCapacity} seats available)
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  type="date"
+                  label="Offer valid until"
+                  value={bulkOfferValidUntil}
+                  onChange={(event) => setBulkOfferValidUntil(event.target.value)}
+                  slotProps={{ inputLabel: { shrink: true } }}
+                />
+                <Alert severity="warning">
+                  Admission criteria are checked for every applicant. Applicants with missing
+                  registration, documents, payment, or capacity remain unchanged.
+                </Alert>
+              </>
+            ) : null}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeBulkDialog}>Cancel</Button>
+          <LoadingButton
+            variant="contained"
+            loading={
+              bulkAssignOwnersState.isLoading ||
+              bulkCreateTasksState.isLoading ||
+              bulkCreateOffersState.isLoading
+            }
+            disabled={
+              (bulkAction === 'owner' && !bulkStaff) ||
+              (bulkAction === 'task' && (!bulkStaff || !bulkTaskTitle.trim() || !bulkTaskDueAt)) ||
+              (bulkAction === 'offer' && (!bulkSeatPoolId || !bulkOfferValidUntil))
+            }
+            onClick={handleBulkAction}
+          >
+            {bulkAction === 'owner'
+              ? 'Assign'
+              : bulkAction === 'task'
+                ? 'Create tasks'
+                : 'Create eligible offers'}
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
+
       <Dialog
         open={savedViewsOpen}
         onClose={() => setSavedViewsOpen(false)}
@@ -859,7 +1361,7 @@ export function OperationsQueueWorkspace({
             inputProps: { 'aria-label': 'Search this admissions queue' },
           }}
           totalCount={queueQuery.data?.totalCount || 0}
-          filters={tableFilters}
+          filters={[...tableFilters, ...columnFilters]}
           page={page}
           rowsPerPage={pageSize}
           defaultRowsPerPage={pageSize}
@@ -876,7 +1378,21 @@ export function OperationsQueueWorkspace({
               'push'
             );
           }}
-          onServerFilter={(filters) =>
+          onServerFilter={(filters) => {
+            const stateFilterColumns = new Set([
+              'registration',
+              'documents',
+              'decision',
+              'route',
+              'activationStatus',
+              'retry',
+              'due',
+              'severity',
+              'owner',
+              'assignment',
+              'seatPool',
+            ]);
+            setColumnFilters(filters.filter((filter) => !stateFilterColumns.has(filter.column)));
             updateState(
               {
                 registrationStatus: getLatestEnumFilter<AdmissionCrmRegistrationStatus>(
@@ -899,11 +1415,15 @@ export function OperationsQueueWorkspace({
                 ),
                 minimumAgeDays: getLatestNumberFilter(filters, 'due'),
                 urgent: getLatestFilter(filters, 'severity') === true || undefined,
+                owner:
+                  getLatestStringFilter(filters, 'owner') ||
+                  getLatestStringFilter(filters, 'assignment'),
+                seatPoolId: getLatestStringFilter(filters, 'seatPool'),
                 page: 1,
               },
               'push'
-            )
-          }
+            );
+          }}
           noDataText={
             <EnrollmentTableEmptyState
               title="Queue cleared"
