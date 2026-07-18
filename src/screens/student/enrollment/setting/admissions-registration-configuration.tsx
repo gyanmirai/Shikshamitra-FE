@@ -19,6 +19,7 @@ import {
   Edit,
   Archive,
   Publish,
+  Visibility,
   ContentCopy,
   DeleteOutline,
   FormatListNumbered,
@@ -63,6 +64,7 @@ import {
   useCreateAdmissionCrmRegistrationTemplateVersionMutation,
 } from 'src/redux/student/admissions-crm/admissions-crm-api';
 
+import { RegistrationTemplatePreview } from './registration-template-preview';
 import { getAdmissionCrmStageLabel } from '../admissions-crm/admissions-crm-utils';
 import { useEnrollmentSettingsDirtyState } from './enrollment-settings-dirty-state';
 import {
@@ -70,6 +72,7 @@ import {
   createRegistrationSection,
   createRegistrationTemplate,
   normalizeRegistrationTemplate,
+  createBlankRegistrationTemplate,
   validateRegistrationTemplateStep,
   findRegistrationTemplateValidationIssue,
 } from './admissions-registration-configuration-utils';
@@ -155,6 +158,8 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   const [tab, setTab] = useState(0);
   const [templateStep, setTemplateStep] = useState(0);
   const [templateOpen, setTemplateOpen] = useState(false);
+  const [previewTemplate, setPreviewTemplate] =
+    useState<AdmissionCrmRegistrationTemplateUpsertDto | null>(null);
   const [editingTemplate, setEditingTemplate] =
     useState<AdmissionCrmRegistrationTemplateDto | null>(null);
   const [templateForm, setTemplateForm] = useState<AdmissionCrmRegistrationTemplateUpsertDto>(() =>
@@ -186,6 +191,13 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
   const openNewTemplate = () => {
     setEditingTemplate(null);
     setTemplateForm(createRegistrationTemplate());
+    setTemplateStep(0);
+    setTemplateOpen(true);
+  };
+
+  const openBlankTemplate = () => {
+    setEditingTemplate(null);
+    setTemplateForm(createBlankRegistrationTemplate());
     setTemplateStep(0);
     setTemplateOpen(true);
   };
@@ -437,6 +449,15 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
               handleEditClick={() => openTemplate(template)}
               actions={({ popover }) => (
                 <MenuList>
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      setPreviewTemplate(toTemplateForm(template));
+                    }}
+                  >
+                    <Visibility fontSize="small" />
+                    Preview online and print
+                  </MenuItem>
                   {template.status === AdmissionCrmRegistrationTemplateStatus.Draft ? (
                     <MenuItem
                       disabled={lifecycleBusy}
@@ -518,7 +539,15 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
 
         {tab === 0 && !templatesQuery.isError ? (
           <Stack spacing={1.25}>
-            <Stack direction="row" justifyContent="flex-end">
+            <Stack direction="row" justifyContent="flex-end" gap={1}>
+              <Button
+                size="small"
+                startIcon={<Add />}
+                disabled={!academicYearId}
+                onClick={openBlankTemplate}
+              >
+                Blank Template
+              </Button>
               <Button
                 size="small"
                 variant="contained"
@@ -526,7 +555,7 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                 disabled={!academicYearId}
                 onClick={openNewTemplate}
               >
-                New Template
+                Use Starter Template
               </Button>
             </Stack>
             {templatesQuery.isFetching ? <LinearProgress /> : null}
@@ -1012,6 +1041,9 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setTemplateOpen(false)}>Close</Button>
+          <Button startIcon={<Visibility />} onClick={() => setPreviewTemplate(templateForm)}>
+            Preview
+          </Button>
           {!editingTemplate && templateStep > 0 ? (
             <Button onClick={() => setTemplateStep(0)}>Back</Button>
           ) : null}
@@ -1031,6 +1063,14 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
           ) : null}
         </DialogActions>
       </Dialog>
+
+      {previewTemplate ? (
+        <RegistrationTemplatePreview
+          open
+          template={previewTemplate}
+          onClose={() => setPreviewTemplate(null)}
+        />
+      ) : null}
 
       <Dialog open={seriesOpen} onClose={() => setSeriesOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>

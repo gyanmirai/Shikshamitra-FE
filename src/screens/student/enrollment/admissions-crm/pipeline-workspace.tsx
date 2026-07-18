@@ -130,6 +130,24 @@ const getLatestStringFilter = (filters: IParams['filters'], column: string) => {
   return filter?.value ? String(filter.value) : undefined;
 };
 
+const getDateFilterBounds = (filters: IParams['filters'], column: string) => {
+  const filter = [...filters].reverse().find((item) => item.column === column);
+  if (!filter || typeof filter.value !== 'string') return {};
+  const [day, month, year] = filter.value.split('-').map(Number);
+  if (!day || !month || !year) return {};
+  const value = new Date(Date.UTC(year, month - 1, day));
+  if (filter.type === 'after') {
+    value.setUTCDate(value.getUTCDate() + 1);
+    return { from: value.toISOString() };
+  }
+  if (filter.type === 'before') {
+    value.setUTCDate(value.getUTCDate() - 1);
+    return { until: value.toISOString() };
+  }
+  const iso = value.toISOString();
+  return { from: iso, until: iso };
+};
+
 const priorityLabels: Record<AdmissionCrmLeadPriority, string> = {
   [AdmissionCrmLeadPriority.None]: 'Not set',
   [AdmissionCrmLeadPriority.Hot]: 'Hot',
@@ -346,6 +364,7 @@ export function PipelineWorkspace() {
   const [overrideCapacity, setOverrideCapacity] = useState(false);
   const [capacityOverrideReason, setCapacityOverrideReason] = useState('');
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+  const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
   const [bulkAction, setBulkAction] = useState<BulkAction | null>(null);
   const [bulkOwner, setBulkOwner] = useState<AdmissionCrmStaffLookupDto | null>(null);
   const [bulkTitle, setBulkTitle] = useState('');
@@ -372,6 +391,10 @@ export function PipelineWorkspace() {
     {
       academicYearId: academicYearId || '',
       filterText: debouncedSearch || undefined,
+      applicantSearch: getLatestStringFilter(columnFilters, 'applicant'),
+      registrationFormNumber: getLatestStringFilter(columnFilters, 'registrationFormNumber'),
+      lastActivityFrom: getDateFilterBounds(columnFilters, 'lastActivityTime').from,
+      lastActivityUntil: getDateFilterBounds(columnFilters, 'lastActivityTime').until,
       stage: state.stage,
       channel: state.channel,
       campaignName: state.campaign,
@@ -673,7 +696,7 @@ export function PipelineWorkspace() {
         sticky: true,
         stickyPosition: 'left',
         stickyOnMobile: false,
-        isFilter: false,
+        filterType: 'string',
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
           return (
@@ -705,7 +728,7 @@ export function PipelineWorkspace() {
         label: 'Registration',
         width: 180,
         minWidth: 165,
-        isFilter: false,
+        filterType: 'string',
         render: (_value, row) => {
           const lead = row as AdmissionCrmLeadDto;
           return (
@@ -801,7 +824,7 @@ export function PipelineWorkspace() {
         label: 'Last Activity',
         width: 150,
         minWidth: 140,
-        isFilter: false,
+        filterType: 'date',
         render: (value) => dayjs(value).format('DD MMM, HH:mm'),
       },
       {
@@ -1281,7 +1304,7 @@ export function PipelineWorkspace() {
               placeholder: 'Search applicants',
               inputProps: { 'aria-label': 'Search applicants' },
             }}
-            filters={tableFilters}
+            filters={[...tableFilters, ...columnFilters]}
             totalCount={leadsQuery.data?.totalCount || 0}
             page={page}
             rowsPerPage={pageSize}
@@ -1302,7 +1325,16 @@ export function PipelineWorkspace() {
                 'push'
               );
             }}
-            onServerFilter={(filters) =>
+            onServerFilter={(filters) => {
+              const stateColumns = new Set([
+                'stage',
+                'channel',
+                'priority',
+                'intendedRouteType',
+                'desiredClassName',
+                'ownerUserId',
+              ]);
+              setColumnFilters(filters.filter((filter) => !stateColumns.has(filter.column)));
               updateState(
                 {
                   stage: getLatestEnumFilter(filters, 'stage'),
@@ -1314,8 +1346,8 @@ export function PipelineWorkspace() {
                   page: 1,
                 },
                 'push'
-              )
-            }
+              );
+            }}
             noDataText={
               <EnrollmentTableEmptyState
                 title="No matching inquiries"

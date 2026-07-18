@@ -535,6 +535,10 @@ export type AdmissionCrmListParams = {
 
 export type AdmissionCrmLeadListParams = AdmissionCrmListParams & {
   filterText?: string;
+  applicantSearch?: string;
+  registrationFormNumber?: string;
+  lastActivityFrom?: string;
+  lastActivityUntil?: string;
   stage?: AdmissionInquiryStage;
   channel?: AdmissionInquiryChannel;
   inquirySourceId?: string;
@@ -1183,6 +1187,20 @@ export type IssueAdmissionCrmRegistrationApplicationDto = {
   linkExpiryDays?: number | null;
   waiveFee: boolean;
   waiverReason?: string | null;
+};
+
+export type CreateDirectAdmissionCrmRegistrationDto = {
+  applicant: CreateAdmissionCrmLeadDto;
+  registration: IssueAdmissionCrmRegistrationApplicationDto;
+};
+
+export type AdmissionCrmDirectRegistrationResultDto = {
+  applicant: AdmissionCrmLeadDto;
+  registration: AdmissionCrmRegistrationApplicationDto;
+};
+
+export type SaveAdmissionCrmRegistrationResponsesDto = {
+  responses: Record<string, unknown>;
 };
 
 export type AdmissionCrmRegistrationApplicationDto = {
@@ -2295,6 +2313,9 @@ export type AdmissionCrmMyWorkDto = {
 
 export type AdmissionCrmMyWorkFilters = {
   search?: string;
+  applicantSearch?: string;
+  targetClassSearch?: string;
+  assignedSearch?: string;
   workType?: AdmissionCrmMyWorkType;
   queueType?: AdmissionCrmOperationsQueueType;
   stage?: AdmissionInquiryStage;
@@ -2318,6 +2339,8 @@ export type AdmissionCrmOperationsQueueDto = {
 
 export type AdmissionCrmOperationsQueueFilters = {
   search?: string;
+  applicantSearch?: string;
+  actionSearch?: string;
   ownerUserId?: string;
   assignedToUserId?: string;
   urgentOnly?: boolean;
@@ -2330,6 +2353,14 @@ export type AdmissionCrmOperationsQueueFilters = {
   seatPoolId?: string;
   activationStatus?: AdmissionCrmActivationStatus;
   serviceHandoffStatus?: AdmissionCrmServiceHandoffStatus;
+  registrationLinkExpiresFrom?: string;
+  registrationLinkExpiresUntil?: string;
+  offerExpiresFrom?: string;
+  offerExpiresUntil?: string;
+  paymentGateSatisfied?: boolean;
+  placementConfigured?: boolean;
+  accountProvisioningPending?: boolean;
+  repairSearch?: string;
   sorting?: string;
   skipCount?: number;
   maxResultCount?: number;
@@ -2371,6 +2402,9 @@ export type AdmissionCrmExamClassPerformanceDto = {
 
 export type AdmissionCrmEntranceExamListParams = AdmissionCrmListParams & {
   filterText?: string;
+  applicantSearch?: string;
+  examStartFrom?: string;
+  examStartUntil?: string;
   attendanceStatus?: AdmissionCrmExamAttendanceStatus;
   examStatus?: EntranceExamStatusEnum;
   eligibilityDecision?: AdmissionCrmEligibilityDecision;
@@ -4547,6 +4581,21 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
       query: buildIssueAdmissionCrmRegistrationApplicationRequest,
       invalidatesTags: [studentAdmissionsCrmType.lead, studentAdmissionsCrmType.timeline],
     }),
+    createDirectAdmissionCrmRegistration: builder.mutation<
+      AdmissionCrmDirectRegistrationResultDto,
+      { academicYearId: string; body: CreateDirectAdmissionCrmRegistrationDto }
+    >({
+      query: ({ academicYearId, body }) => ({
+        url: `/student-enrollment/admissions-crm/${academicYearId}/registrations/direct`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        studentAdmissionsCrmType.lead,
+        studentAdmissionsCrmType.timeline,
+        studentAdmissionsCrmType.analytics,
+      ],
+    }),
     getAdmissionCrmRegistrationApplication: builder.query<
       AdmissionCrmRegistrationApplicationDto,
       { applicationId: string }
@@ -4566,6 +4615,28 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         method: 'GET',
       }),
       providesTags: [studentAdmissionsCrmType.lead],
+    }),
+    saveAdmissionCrmStaffRegistrationResponses: builder.mutation<
+      AdmissionCrmRegistrationApplicationDto,
+      { applicationId: string; body: SaveAdmissionCrmRegistrationResponsesDto }
+    >({
+      query: ({ applicationId, body }) => ({
+        url: `/student-enrollment/admissions-crm/registrations/${applicationId}/staff-responses`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.lead, studentAdmissionsCrmType.timeline],
+    }),
+    submitAdmissionCrmStaffRegistrationResponses: builder.mutation<
+      AdmissionCrmRegistrationApplicationDto,
+      { applicationId: string; body: SaveAdmissionCrmRegistrationResponsesDto }
+    >({
+      query: ({ applicationId, body }) => ({
+        url: `/student-enrollment/admissions-crm/registrations/${applicationId}/staff-submit`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [studentAdmissionsCrmType.lead, studentAdmissionsCrmType.timeline],
     }),
     returnAdmissionCrmRegistrationForCorrection: builder.mutation<
       AdmissionCrmRegistrationApplicationDto,
@@ -6622,6 +6693,26 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
       }),
       invalidatesTags: [studentAdmissionsCrmType.lead, studentAdmissionsCrmType.timeline],
     }),
+    bulkMarkAdmissionCrmExamAttendance: builder.mutation<
+      AdmissionCrmBulkOperationResultDto,
+      {
+        academicYearId: string;
+        examRecordIds: string[];
+        attendanceStatus: AdmissionCrmExamAttendanceStatus;
+      }
+    >({
+      query: ({ academicYearId, ...body }) => ({
+        url: `/student-enrollment/admissions-crm/${academicYearId}/bulk/exams/attendance`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        studentAdmissionsCrmType.exam,
+        studentAdmissionsCrmType.lead,
+        studentAdmissionsCrmType.timeline,
+        studentAdmissionsCrmType.analytics,
+      ],
+    }),
     bulkChangeAdmissionCrmStages: builder.mutation<
       AdmissionCrmBulkOperationResultDto,
       { academicYearId: string; leadIds: string[]; stage: AdmissionInquiryStage; reason: string }
@@ -6782,8 +6873,11 @@ export const {
   useCreateAdmissionCrmFormNumberSeriesMutation,
   useUpdateAdmissionCrmFormNumberSeriesMutation,
   useIssueAdmissionCrmRegistrationApplicationMutation,
+  useCreateDirectAdmissionCrmRegistrationMutation,
   useGetAdmissionCrmRegistrationApplicationQuery,
   useGetCurrentAdmissionCrmRegistrationByLeadQuery,
+  useSaveAdmissionCrmStaffRegistrationResponsesMutation,
+  useSubmitAdmissionCrmStaffRegistrationResponsesMutation,
   useReturnAdmissionCrmRegistrationForCorrectionMutation,
   useVerifyAdmissionCrmRegistrationMutation,
   useExtendAdmissionCrmRegistrationMutation,
@@ -6954,6 +7048,7 @@ export const {
   useGetAdmissionCrmAdvisoryForecastQuery,
   useBulkAssignAdmissionCrmLeadOwnersMutation,
   useBulkCreateAdmissionCrmTasksMutation,
+  useBulkMarkAdmissionCrmExamAttendanceMutation,
   useBulkChangeAdmissionCrmStagesMutation,
   useBulkArchiveAdmissionCrmLeadsMutation,
   useBulkSendAdmissionCrmMessagesMutation,

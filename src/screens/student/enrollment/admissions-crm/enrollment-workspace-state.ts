@@ -2,14 +2,14 @@ import {
   AdmissionInquiryStage,
   AdmissionCrmRouteType,
   EntranceExamStatusEnum,
+  AdmissionCrmMyWorkType,
   AdmissionInquiryChannel,
+  AdmissionCrmWorkUrgency,
   AdmissionCrmLeadPriority,
   AdmissionCrmSeatOfferStatus,
   AdmissionCrmActivationStatus,
   AdmissionCrmRegistrationStatus,
   AdmissionCrmOperationsQueueType,
-  AdmissionCrmMyWorkType,
-  AdmissionCrmWorkUrgency,
   AdmissionCrmEligibilityDecision,
   AdmissionCrmServiceHandoffStatus,
   AdmissionCrmExamAttendanceStatus,
@@ -53,6 +53,7 @@ export type EnrollmentSettingsPanel =
   | 'routing'
   | 'registration'
   | 'documents'
+  | 'criteria'
   | 'routes'
   | 'policy-packs'
   | 'compliance'
@@ -166,6 +167,7 @@ const settingsPanels = new Set<EnrollmentSettingsPanel>([
   'routing',
   'registration',
   'documents',
+  'criteria',
   'routes',
   'policy-packs',
   'compliance',

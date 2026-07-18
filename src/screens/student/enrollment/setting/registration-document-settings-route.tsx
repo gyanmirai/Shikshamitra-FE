@@ -3,6 +3,7 @@
 import { Alert, Stack } from '@mui/material';
 
 import { RegistrationOfferHandoffGuidance } from './admission-journey-guidance';
+import AdmissionCriteriaConfiguration from './admission-criteria-configuration';
 import AdmissionsDocumentConfiguration from './admissions-document-configuration';
 import { useEnrollmentWorkspace } from '../admissions-crm/enrollment-workspace-context';
 import AdmissionsRegistrationConfiguration from './admissions-registration-configuration';
@@ -10,7 +11,10 @@ import { EnrollmentSettingsPage, EnrollmentSettingsSetupSteps } from './enrollme
 
 export function RegistrationDocumentSettingsRoute() {
   const { academicYearId, state } = useEnrollmentWorkspace();
-  const panel = state.settingsPanel === 'documents' ? 'documents' : 'registration';
+  const panel =
+    state.settingsPanel === 'documents' || state.settingsPanel === 'criteria'
+      ? state.settingsPanel
+      : 'registration';
 
   return (
     <EnrollmentSettingsPage
@@ -32,14 +36,21 @@ export function RegistrationDocumentSettingsRoute() {
             label: 'Required Documents',
             description: 'Checklist rules, verification, correction, and readiness.',
           },
+          {
+            value: 'criteria',
+            label: 'Admission Criteria',
+            description: 'Registration, document, and payment gates before confirmation.',
+          },
         ]}
       />
       {academicYearId ? (
         <Stack spacing={1.5}>
           {panel === 'registration' ? (
             <AdmissionsRegistrationConfiguration academicYearId={academicYearId} />
-          ) : (
+          ) : panel === 'documents' ? (
             <AdmissionsDocumentConfiguration academicYearId={academicYearId} />
+          ) : (
+            <AdmissionCriteriaConfiguration />
           )}
         </Stack>
       ) : (
