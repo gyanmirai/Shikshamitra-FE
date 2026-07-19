@@ -63,6 +63,7 @@ import EmployeeView from './employee-view';
 import EmployeeFrom from './employee-form';
 import ChangeStatusForm from './chnage-status-form';
 import { RenderComponents } from './employee-form-fields/PayrollFields';
+import { getEmployeeStatusDisplayValue } from './employee-status-display';
 import {
   isSalaryComponentFixed,
   toApplicableMonthPayload,
@@ -230,7 +231,7 @@ const HrEmployee = () => {
           genderValue: item?.gender,
           doi: dayjs(item?.doj).format('DD-MM-YYYY'),
           roleValue: item?.roleName || 'Not Assigned',
-          statusValue: EmployeeStatusType[item?.status],
+          statusValue: getEmployeeStatusDisplayValue(item?.status, item?.doj),
           shiftName: item?.shift?.name ? `${item.shift.name}${shiftTime}` : 'Not Assigned',
           organization:
             item?.organizationNames?.join(', ') ||
@@ -390,15 +391,18 @@ const HrEmployee = () => {
         cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
       },
       {
-        id: 'status',
+        id: 'statusValue',
         label: 'Status',
         isFilter: false,
         width: 92,
         minWidth: 84,
         align: 'left',
         render(value, row) {
-          const color = EmployeeStatusTypeColor[row.status as EmployeeStatusType] as LabelColor;
-          return <Label color={color}>{EmployeeStatusType[value]}</Label>;
+          const color =
+            value === 'Upcoming'
+              ? 'info'
+              : (EmployeeStatusTypeColor[row.status as EmployeeStatusType] as LabelColor);
+          return <Label color={color}>{String(value || '-')}</Label>;
         },
       },
       {

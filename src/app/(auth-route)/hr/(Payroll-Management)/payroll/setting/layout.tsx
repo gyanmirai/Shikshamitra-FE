@@ -2,7 +2,7 @@
 
 import { Box, Alert, Button } from '@mui/material';
 import { RouterLink } from 'src/routes/components';
-import { hrPermissions } from 'src/constants/hr-menus';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import StudentPermissionGuard from 'src/components/student-permission-guard';
 
 const PayrollSettingLayout = ({ children }: { children: React.ReactNode }) => (
@@ -16,7 +16,7 @@ const PayrollSettingLayout = ({ children }: { children: React.ReactNode }) => (
             size="small"
             color="inherit"
             component={RouterLink}
-            href="/hr/policies?tab=payroll"
+            href={hrPaths.policies.payroll}
           >
             Open Payroll Policies
           </Button>
