@@ -90,7 +90,7 @@ const HrAttendanceSettingScreen = () => {
         <Button
           sx={{ width: '190px' }}
           component={RouterLink}
-          href="/hr/policies?tab=attendance"
+          href={hrPaths.policies.attendance}
           startIcon={<Iconify icon="mdi:open-in-new" />}
           variant="contained"
           size="small"
@@ -214,7 +214,7 @@ const AttendancePolicyBridge = () => (
     <Box>
       <Button
         component={RouterLink}
-        href="/hr/policies?tab=attendance"
+        href={hrPaths.policies.attendance}
         variant="contained"
         size="small"
         startIcon={<Iconify icon="mdi:open-in-new" />}

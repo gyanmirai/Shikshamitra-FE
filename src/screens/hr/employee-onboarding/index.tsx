@@ -86,6 +86,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { getOnboardingErrorMessage } from './error-message';
 import { buildOnboardingAcademicPermissionScopeRows } from './employeeOnboardingAcademicPermission';
 import {
   getValidNextStatuses,
@@ -457,8 +458,10 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
       );
       setForm(defaultInviteForm);
       onClose();
-    } catch {
-      shikshaMitraToast.error({ message: 'Could not create invite' });
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getOnboardingErrorMessage(error, 'Could not create invite'),
+      });
     }
   };
 
