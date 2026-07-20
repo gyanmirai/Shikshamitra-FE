@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import AddRounded from '@mui/icons-material/AddRounded';
 import { shikshaMitraToast } from 'src/components/toast';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import EventRounded from '@mui/icons-material/EventRounded';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
@@ -33,10 +34,12 @@ import {
   Dialog,
   Select,
   Switch,
+  Tooltip,
   Checkbox,
   MenuItem,
   MenuList,
   TextField,
+  IconButton,
   Typography,
   InputLabel,
   DialogTitle,
@@ -78,6 +81,7 @@ import {
   getAdmissionCrmLeadName,
   getAdmissionCrmStageLabel,
   getAdmissionCrmChannelLabel,
+  getAdmissionCrmStageTooltipLines,
 } from './admissions-crm-utils';
 import {
   enrollmentActionsColumn,
@@ -216,12 +220,23 @@ const canOpenRegistration = (lead: AdmissionCrmLeadDto, registrationRequiredBefo
     registrationRequiredBeforeExam ||
     lead.registrationFormNumber ||
     lead.registrationFormIssuedAt ||
+    lead.stage === AdmissionInquiryStage.NewInquiry ||
+    lead.stage === AdmissionInquiryStage.FollowUp ||
     lead.stage === AdmissionInquiryStage.Eligible ||
     lead.stage === AdmissionInquiryStage.Waitlisted
   );
 
 const isRegistrationIssued = (lead: AdmissionCrmLeadDto) =>
   Boolean(lead.registrationFormNumber || lead.registrationFormIssuedAt);
+
+const isExamAlreadyScheduled = (lead: AdmissionCrmLeadDto) =>
+  [
+    AdmissionInquiryStage.ExamScheduled,
+    AdmissionInquiryStage.ExamCompleted,
+    AdmissionInquiryStage.Eligible,
+    AdmissionInquiryStage.Waitlisted,
+    AdmissionInquiryStage.Rejected,
+  ].includes(lead.stage);
 
 type LeadCardProps = {
   lead: AdmissionCrmLeadDto;
@@ -249,7 +264,7 @@ function PipelineLeadCard({
   onOpenRegistration,
 }: LeadCardProps) {
   return (
-    <Card variant="outlined" sx={{ p: 1.25, borderRadius: 1, minWidth: 0 }}>
+    <Card variant="outlined" sx={{ p: 1.25, borderRadius: 1, minWidth: 0, flexShrink: 0 }}>
       <Stack spacing={1}>
         <Stack direction="row" gap={1} justifyContent="space-between" alignItems="flex-start">
           <Box sx={{ minWidth: 0 }}>
@@ -308,6 +323,11 @@ function PipelineLeadCard({
         <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
           {lead.admissionIntent}
         </Typography>
+        {canManageRegistration && !lead.ownerUserId && !lead.archivedAt ? (
+          <Alert severity="warning" sx={{ py: 0.25 }}>
+            Registration can continue, but no owner is assigned for follow-up.
+          </Alert>
+        ) : null}
         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
           <Typography variant="caption" color="text.secondary">
             {dayjs(lead.lastActivityTime).format('DD MMM, HH:mm')}
@@ -721,7 +741,31 @@ export function PipelineWorkspace() {
           value: stage.systemStage,
           label: stage.stageName,
         })),
-        render: (value) => <AdmissionCrmStageChip stage={value as AdmissionInquiryStage} />,
+        render: (value) => {
+          const stage = stages.find((item) => item.systemStage === value);
+          if (!stage) return <AdmissionCrmStageChip stage={value as AdmissionInquiryStage} />;
+          return (
+            <Stack direction="row" alignItems="center" gap={0.5}>
+              <AdmissionCrmStageChip stage={stage.systemStage} />
+              <Tooltip
+                arrow
+                title={
+                  <Stack spacing={0.25}>
+                    {getAdmissionCrmStageTooltipLines(stage).map((line) => (
+                      <Typography key={line} variant="caption" color="inherit">
+                        {line}
+                      </Typography>
+                    ))}
+                  </Stack>
+                }
+              >
+                <IconButton size="small" aria-label={`${stage.stageName} stage details`}>
+                  <InfoOutlined fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          );
+        },
       },
       {
         id: 'registrationFormNumber',
@@ -838,6 +882,7 @@ export function PipelineWorkspace() {
           const canSchedule =
             hasGrantedPermission(permissions, actionPermissions.scheduleExam) &&
             isExamReady(lead) &&
+            !isExamAlreadyScheduled(lead) &&
             (!registrationRequiredBeforeExam || isRegistrationIssued(lead));
           const canManageRegistration =
             hasGrantedPermission(permissions, actionPermissions.issueRegistrationForm) &&
@@ -1049,6 +1094,7 @@ export function PipelineWorkspace() {
       showSelection={state.view === 'list'}
       canScheduleExam={
         can(actionPermissions.scheduleExam) &&
+        !isExamAlreadyScheduled(lead) &&
         (!registrationRequiredBeforeExam || isRegistrationIssued(lead))
       }
       canManageRegistration={

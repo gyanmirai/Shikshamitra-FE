@@ -17,6 +17,7 @@ import {
   getAdmissionCrmLeadName,
   buildAdmissionCrmBoardColumns,
   canRetryAdmissionCrmDeliveryLog,
+  getAdmissionCrmStageTooltipLines,
   getAdmissionCrmMessageChannelLabel,
   getAdmissionCrmDeliveryLogStatusLabel,
   getAdmissionCrmRecipientForMessageChannel,
@@ -141,6 +142,17 @@ describe('admissions CRM workspace utilities', () => {
     expect(canRetryAdmissionCrmDeliveryLog('ProviderNotConfigured')).toBe(true);
     expect(canRetryAdmissionCrmDeliveryLog('BlockedByOptOut')).toBe(true);
     expect(canRetryAdmissionCrmDeliveryLog('Delivered')).toBe(false);
+  });
+
+  it('builds pipeline stage tooltip lines from configured metadata', () => {
+    expect(
+      getAdmissionCrmStageTooltipLines({
+        ...makeStage(AdmissionInquiryStage.FollowUp, 20),
+        ownerResponsibility: 'Admissions counselor',
+        slaTargetHours: 24,
+        allowedNextStages: [AdmissionInquiryStage.ExamReady, AdmissionInquiryStage.Archived],
+      })
+    ).toEqual(['Owner: Admissions counselor', 'SLA: 24h', 'Next: Exam Ready, Archived']);
   });
 
   it('selects the correct lead recipient for each communication channel', () => {

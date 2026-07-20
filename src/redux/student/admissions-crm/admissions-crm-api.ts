@@ -6713,6 +6713,29 @@ export const StudentAdmissionsCrmApi = api.injectEndpoints({
         studentAdmissionsCrmType.analytics,
       ],
     }),
+    bulkUploadAdmissionCrmExamResults: builder.mutation<
+      AdmissionCrmBulkOperationResultDto,
+      {
+        academicYearId: string;
+        examRecordIds: string[];
+        totalMarks: number;
+        passingMarks: number;
+        obtainedMarks: number;
+        meritRank?: number;
+      }
+    >({
+      query: ({ academicYearId, ...body }) => ({
+        url: `/student-enrollment/admissions-crm/${academicYearId}/bulk/exams/results`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        studentAdmissionsCrmType.exam,
+        studentAdmissionsCrmType.lead,
+        studentAdmissionsCrmType.timeline,
+        studentAdmissionsCrmType.analytics,
+      ],
+    }),
     bulkChangeAdmissionCrmStages: builder.mutation<
       AdmissionCrmBulkOperationResultDto,
       { academicYearId: string; leadIds: string[]; stage: AdmissionInquiryStage; reason: string }
@@ -7049,6 +7072,7 @@ export const {
   useBulkAssignAdmissionCrmLeadOwnersMutation,
   useBulkCreateAdmissionCrmTasksMutation,
   useBulkMarkAdmissionCrmExamAttendanceMutation,
+  useBulkUploadAdmissionCrmExamResultsMutation,
   useBulkChangeAdmissionCrmStagesMutation,
   useBulkArchiveAdmissionCrmLeadsMutation,
   useBulkSendAdmissionCrmMessagesMutation,
