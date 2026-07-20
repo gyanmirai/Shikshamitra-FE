@@ -48,6 +48,7 @@ export type AdmissionCrmCycleForm = {
   cycleName: string;
   isActive: boolean;
   registrationFormRequiredBeforeExam: boolean;
+  entranceExamRequired: boolean;
   staleAfterDays: number;
   archiveAfterDays: number;
   defaultLeadSlaHours: number;
@@ -69,10 +70,16 @@ export type AdmissionCrmCycleForm = {
   journeyRules: AdmissionCrmJourneyRuleDto[];
   applicantChecklist: AdmissionCrmApplicantChecklistItemDto[];
   channelSettings: AdmissionCrmChannelSettingDto[];
+  journeyLocked: boolean;
+  journeyLockedAt?: string | null;
+  journeyLockedByUserId?: string | null;
+  journeyLockReason?: string | null;
   notes: string;
 };
 
 export type AdmissionCrmPipelineStageForm = {
+  stageKey: string;
+  baseSystemStage: AdmissionInquiryStage;
   stageName: string;
   displayOrder: number;
   isEnabled: boolean;

@@ -74,6 +74,7 @@ import {
   normalizeRegistrationTemplate,
   createBlankRegistrationTemplate,
   validateRegistrationTemplateStep,
+  normalizeRegistrationFieldForType,
   findRegistrationTemplateValidationIssue,
 } from './admissions-registration-configuration-utils';
 
@@ -909,9 +910,14 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                             value={field.fieldType}
                             disabled={templateReadOnly}
                             onChange={(event) =>
-                              updateField(sectionIndex, fieldIndex, {
-                                fieldType: Number(event.target.value) as AdmissionCrmFormFieldType,
-                              })
+                              updateField(
+                                sectionIndex,
+                                fieldIndex,
+                                normalizeRegistrationFieldForType(
+                                  field,
+                                  Number(event.target.value) as AdmissionCrmFormFieldType
+                                )
+                              )
                             }
                           >
                             {Object.entries(fieldTypeLabel).map(([value, label]) => (
@@ -927,9 +933,14 @@ export default function AdmissionsRegistrationConfiguration({ academicYearId }: 
                             value={field.systemField || ''}
                             disabled={templateReadOnly}
                             onChange={(event) =>
-                              updateField(sectionIndex, fieldIndex, {
-                                systemField: event.target.value || null,
-                              })
+                              updateField(
+                                sectionIndex,
+                                fieldIndex,
+                                normalizeRegistrationFieldForType(
+                                  { ...field, systemField: event.target.value || null },
+                                  field.fieldType
+                                )
+                              )
                             }
                           >
                             <MenuItem value="">Custom field</MenuItem>
