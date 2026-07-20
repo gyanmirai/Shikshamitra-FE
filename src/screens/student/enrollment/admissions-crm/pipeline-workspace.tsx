@@ -1029,7 +1029,15 @@ export function PipelineWorkspace() {
   };
 
   if (!academicYearId) {
-    return <Alert severity="info">Select an academic year to open the Admissions Pipeline.</Alert>;
+    return (
+      <Stack spacing={1.5} sx={enrollmentWorkspaceRootSx}>
+        <EnrollmentWorkspaceHeader
+          title="Admissions Pipeline"
+          description="Capture, qualify, assign, and progress inquiries through exam readiness."
+        />
+        <Alert severity="info">Select an academic year to open the Admissions Pipeline.</Alert>
+      </Stack>
+    );
   }
 
   const renderLeadCard = (lead: AdmissionCrmLeadDto) => (
