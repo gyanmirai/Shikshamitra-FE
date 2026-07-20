@@ -57,4 +57,5 @@ Use focused unit, lint, and E2E commands when the touched module already has the
 - The change follows existing route, client, and component patterns.
 - The relevant docs and source paths agree.
 - The focused validation commands pass or the remaining blocker is stated.
+- When browser validation is part of the task, automated checks may run first, but the final browser smoke test must be performed in the Codex in-app browser with `browser:control-in-app-browser` unless the user explicitly requests another browser.
 - The final diff contains only intentional source, docs, workflow, or test changes.
